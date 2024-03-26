@@ -36,14 +36,17 @@ def visualize(
     batch_idx: int,
 ) -> None:
     """
-    Visualize input images, target images, and generated images.
+    Visualizes input, target, and generated images and saves them to the output directory.
 
     Args:
-        output_dir: Directory to save the visualization images.
-        x: Input tensor.
-        y: Target tensor.
-        y_hat: Generated tensor.
-        batch_idx: Index of the current batch.
+        output_dir (str): Directory to save the visualization images.
+        x (paddle.Tensor): Input images tensor.
+        y (paddle.Tensor): Target images tensor.
+        y_hat (paddle.Tensor): Generated images tensor.
+        batch_idx (int): Batch index.
+
+    Returns:
+        None
     """
     images = x[0]
     future_images = y[0]
@@ -90,10 +93,10 @@ def validation(
     validation step.
 
     Args:
-        cfg: Configuration object.
-        solver: Solver object containing the model and related components.
-        batch: Input batch consisting of images and corresponding future images.
-        batch_idx: Index of the current batch.
+        cfg (DictConfig): Configuration object.
+        solver (ppsci.solver.Solver): Solver object containing the model and related components.
+        batch (tuple): Input batch consisting of images and corresponding future images.
+        batch_idx (int): Index of the current batch.
 
     Returns:
         discriminator_loss: Loss incurred by the discriminator.

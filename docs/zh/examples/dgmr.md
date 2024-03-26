@@ -52,14 +52,14 @@ $$
 对随机向量 $Z$ 的积分确保了模型产生的预测具有空间相关性。DGMR 专门用于降水预测问题。四个连续的雷达观测数据（前20分钟）被用作生成器的输入，该生成器允许对未来降水的多个实现进行抽样，每个实现包含18帧（90分钟）。模型架构示意图如图所示。
 
 <figure markdown>
-  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/dgmr/dgmr.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/DGMR/dgmr.png){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 模型架构示意图。</figcaption>
 </figure>
 
 DGMR 是一个使用两个判别器和一个附加正则化项进行训练的生成器。下图显示了生成模型和判别器的详细示意图：
 
 <figure markdown>
-  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/dgmr/g_d.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/DGMR/g_d.png){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> a、生成器架构。b，生成器的时间鉴别器架构（左上）、空间鉴别器（左中）和潜在条件堆栈（左下）。右侧是 G 块（上）、D 和 3D 块（中）以及 L 块（右）的架构。</figcaption>
 </figure>
 
@@ -158,12 +158,12 @@ examples/dgmr/dgmr.py
 如图所示为分别在 $T+5, T+10, \cdots, T+45$ 分钟的气象降水预测，与真实的降水情况相比可以看出，该模型可以给出比较好的短临降水预测。
 
 <figure markdown>
-  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/dgmr/Generated_Image_Frame.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/DGMR/Generated_Image_Frame.png){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 模型预测的降水情况</figcaption>
 </figure>
 
 <figure markdown>
-  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/dgmr/Target_Image_Frame.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/DGMR/Target_Image_Frame.png){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 真实降水情况</figcaption>
 </figure>
 

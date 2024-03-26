@@ -9,10 +9,7 @@ from ppsci.arch import base
 try:
     import einops
 except ModuleNotFoundError:
-    raise ModuleNotFoundError(
-        "Please install einops with 'pip install einops'"
-        " before exporting DGMR model."
-    )
+    pass
 
 
 class DGMR(base.Arch):
@@ -117,6 +114,17 @@ class DGMR(base.Arch):
 
 
 class Sampler(nn.Layer):
+    """
+    Sampler from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    The sampler takes the output from the Latent and Context conditioning stacks and
+    creates one stack of ConvGRU layers per future timestep.
+
+    Args:
+        forecast_steps: Number of forecast steps
+        latent_channels: Number of input channels to the lowest ConvGRU layer
+    """
+
     def __init__(
         self,
         forecast_steps: int = 18,
@@ -124,16 +132,6 @@ class Sampler(nn.Layer):
         context_channels: int = 384,
         output_channels: int = 1,
     ):
-        """
-        Sampler from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        The sampler takes the output from the Latent and Context conditioning stacks and
-        creates one stack of ConvGRU layers per future timestep.
-
-        Args:
-            forecast_steps: Number of forecast steps
-            latent_channels: Number of input channels to the lowest ConvGRU layer
-        """
         super().__init__()
         self.forecast_steps = forecast_steps
         self.convGRU1 = ConvGRU(
@@ -262,20 +260,21 @@ class Sampler(nn.Layer):
 
 
 class Generator(nn.Layer):
+    """
+    Wraps the three parts of the generator for simpler calling
+
+    Args:
+        conditioning_stack: A layer representing the conditioning stack.
+        latent_stack: A layer representing the latent stack.
+        sampler: A layer representing the sampler.
+    """
+
     def __init__(
         self,
         conditioning_stack: nn.Layer,
         latent_stack: nn.Layer,
         sampler: nn.Layer,
     ):
-        """
-        Wraps the three parts of the generator for simpler calling
-
-        Args:
-            conditioning_stack: A layer representing the conditioning stack.
-            latent_stack: A layer representing the latent stack.
-            sampler: A layer representing the sampler.
-        """
         super().__init__()
         self.conditioning_stack = conditioning_stack
         self.latent_stack = latent_stack
@@ -312,21 +311,22 @@ class Discriminator(nn.Layer):
 
 
 class TemporalDiscriminator(nn.Layer):
+    """
+    Temporal Discriminator from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of channels per timestep
+        crop_size: Size of the crop, in the paper half the width of the input images
+        num_layers: Number of intermediate DBlock layers to use
+        conv_type: Type of 2d convolutions to use, see satflow/models/utils.py for options
+    """
+
     def __init__(
         self,
         input_channels: int = 12,
         num_layers: int = 3,
         conv_type: str = "standard",
     ):
-        """
-        Temporal Discriminator from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of channels per timestep
-            crop_size: Size of the crop, in the paper half the width of the input images
-            num_layers: Number of intermediate DBlock layers to use
-            conv_type: Type of 2d convolutions to use, see satflow/models/utils.py for options
-        """
         super().__init__()
         self.downsample = nn.AvgPool3D(
             kernel_size=(1, 2, 2), stride=(1, 2, 2), exclusive=False
@@ -397,6 +397,16 @@ class TemporalDiscriminator(nn.Layer):
 
 
 class SpatialDiscriminator(nn.Layer):
+    """
+    Spatial discriminator from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels per timestep
+        num_timesteps: Number of timesteps to use, in the paper 8/18 timesteps were chosen
+        num_layers: Number of intermediate DBlock layers to use
+        conv_type: Type of 2d convolutions to use, see satflow/models/utils.py for options
+    """
+
     def __init__(
         self,
         input_channels: int = 12,
@@ -404,15 +414,6 @@ class SpatialDiscriminator(nn.Layer):
         num_layers: int = 4,
         conv_type: str = "standard",
     ):
-        """
-        Spatial discriminator from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels per timestep
-            num_timesteps: Number of timesteps to use, in the paper 8/18 timesteps were chosen
-            num_layers: Number of intermediate DBlock layers to use
-            conv_type: Type of 2d convolutions to use, see satflow/models/utils.py for options
-        """
         super().__init__()
         self.num_timesteps = num_timesteps
         self.mean_pool = nn.AvgPool2D(kernel_size=2, exclusive=False)
@@ -488,7 +489,13 @@ class SpatialDiscriminator(nn.Layer):
 
 
 class GBlock(nn.Layer):
-    """Residual generator block without upsampling"""
+    """Residual generator block without upsampling. G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels
+        output_channels: Number of output channels
+        conv_type: Type of convolution desired, see satflow/models/utils.py for options
+    """
 
     def __init__(
         self,
@@ -497,14 +504,6 @@ class GBlock(nn.Layer):
         conv_type: str = "standard",
         spectral_normalized_eps=0.0001,
     ):
-        """
-        G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels
-            output_channels: Number of output channels
-            conv_type: Type of convolution desired, see satflow/models/utils.py for options
-        """
         super().__init__()
         self.output_channels = output_channels
         self.bn1 = nn.BatchNorm2D(num_features=input_channels)
@@ -552,7 +551,14 @@ class GBlock(nn.Layer):
 
 
 class UpsampleGBlock(nn.Layer):
-    """Residual generator block with upsampling"""
+    """Residual generator block with upsampling
+    G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels
+        output_channels: Number of output channels
+        conv_type: Type of convolution desired, see satflow/models/utils.py for options
+    """
 
     def __init__(
         self,
@@ -561,14 +567,6 @@ class UpsampleGBlock(nn.Layer):
         conv_type: str = "standard",
         spectral_normalized_eps=0.0001,
     ):
-        """
-        G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels
-            output_channels: Number of output channels
-            conv_type: Type of convolution desired, see satflow/models/utils.py for options
-        """
         super().__init__()
         self.output_channels = output_channels
         self.bn1 = nn.BatchNorm2D(num_features=input_channels)
@@ -616,6 +614,17 @@ class UpsampleGBlock(nn.Layer):
 
 
 class DBlock(nn.Layer):
+    """
+    D and 3D Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels
+        output_channels: Number of output channels
+        conv_type: Convolution type, see satflow/models/utils.py for options
+        first_relu: Whether to have an ReLU before the first 3x3 convolution
+        keep_same_output: Whether the output should have the same spatial dimensions as input, if False, downscales by 2
+    """
+
     def __init__(
         self,
         input_channels: int = 12,
@@ -624,16 +633,6 @@ class DBlock(nn.Layer):
         first_relu: bool = True,
         keep_same_output: bool = False,
     ):
-        """
-        D and 3D Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels
-            output_channels: Number of output channels
-            conv_type: Convolution type, see satflow/models/utils.py for options
-            first_relu: Whether to have an ReLU before the first 3x3 convolution
-            keep_same_output: Whether the output should have the same spatial dimensions as input, if False, downscales by 2
-        """
         super().__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
@@ -688,7 +687,15 @@ class DBlock(nn.Layer):
 
 
 class LBlock(nn.Layer):
-    """Residual block for the Latent Stack."""
+    """Residual block for the Latent Stack.
+        L-Block for increasing the number of channels in the input
+        from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels
+        output_channels: Number of output channels
+        conv_type: Which type of convolution desired, see satflow/models/utils.py for options
+    """
 
     def __init__(
         self,
@@ -697,15 +704,6 @@ class LBlock(nn.Layer):
         kernel_size: int = 3,
         conv_type: str = "standard",
     ):
-        """
-        L-Block for increasing the number of channels in the input
-         from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels
-            output_channels: Number of output channels
-            conv_type: Which type of convolution desired, see satflow/models/utils.py for options
-        """
         super().__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
@@ -745,6 +743,15 @@ class LBlock(nn.Layer):
 
 
 class ContextConditioningStack(nn.Layer):
+    """
+    Conditioning Stack using the context images from Skillful Nowcasting, , see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        input_channels: Number of input channels per timestep
+        output_channels: Number of output channels for the lowest block
+        conv_type: Type of 2D convolution to use, see satflow/models/utils.py for options
+    """
+
     def __init__(
         self,
         input_channels: int = 1,
@@ -752,14 +759,6 @@ class ContextConditioningStack(nn.Layer):
         num_context_steps: int = 4,
         conv_type: str = "standard",
     ):
-        """
-        Conditioning Stack using the context images from Skillful Nowcasting, , see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            input_channels: Number of input channels per timestep
-            output_channels: Number of output channels for the lowest block
-            conv_type: Type of 2D convolution to use, see satflow/models/utils.py for options
-        """
         super().__init__()
         conv2d = get_conv_layer(conv_type)
         self.space2depth = nn.PixelUnshuffle(downscale_factor=2)
@@ -857,20 +856,21 @@ class ContextConditioningStack(nn.Layer):
 
 
 class LatentConditioningStack(nn.Layer):
+    """
+    Latent conditioning stack from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
+
+    Args:
+        shape: Shape of the latent space, Should be (H/32,W/32,x) of the final image shape
+        output_channels: Number of output channels for the conditioning stack
+        use_attention: Whether to have a self-attention block or not
+    """
+
     def __init__(
         self,
         shape: (int, int, int) = (8, 8, 8),
         output_channels: int = 768,
         use_attention: bool = True,
     ):
-        """
-        Latent conditioning stack from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
-
-        Args:
-            shape: Shape of the latent space, Should be (H/32,W/32,x) of the final image shape
-            output_channels: Number of output channels for the conditioning stack
-            use_attention: Whether to have a self-attention block or not
-        """
         super().__init__()
         self.shape = shape
         self.use_attention = use_attention
@@ -906,7 +906,6 @@ class LatentConditioningStack(nn.Layer):
 
     def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         """
-
         Args:
             x: tensor on the correct device, to move over the latent distribution
         Returns: z
@@ -1054,17 +1053,16 @@ class CoordConv(nn.Layer):
 
 
 class ConvGRUCell(nn.Layer):
-    """A ConvGRU implementation."""
+    """A ConvGRU implementation.
+
+    Args:
+        kernel_size: kernel size of the convolutions. Default: 3.
+        sn_eps: constant for spectral normalization. Default: 1e-4.
+    """
 
     def __init__(
         self, input_channels: int, output_channels: int, kernel_size=3, sn_eps=0.0001
     ):
-        """Constructor.
-
-        Args:
-          kernel_size: kernel size of the convolutions. Default: 3.
-          sn_eps: constant for spectral normalization. Default: 1e-4.
-        """
         super().__init__()
         self._kernel_size = kernel_size
         self._sn_eps = sn_eps

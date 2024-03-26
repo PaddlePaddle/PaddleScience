@@ -18,8 +18,12 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-from datasets import load_dataset
 from numpy.random import default_rng
+
+try:
+    import datasets
+except ModuleNotFoundError:
+    pass
 
 
 class DGMRDataset(paddle.io.Dataset):
@@ -59,7 +63,7 @@ class DGMRDataset(paddle.io.Dataset):
         self.num_input_frames = num_input_frames
         self.num_target_frames = num_target_frames
         self.number = number
-        self.reader = load_dataset(
+        self.reader = datasets.load_dataset(
             dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
         )
         self.iter_reader = self.reader
