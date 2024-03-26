@@ -54,7 +54,6 @@ def visualize(
         alpha[alpha < 1] = 0
         alpha[alpha > 1] = 1
         ax.imshow(images[i].transpose([1, 2, 0]).numpy(), alpha=alpha, cmap="viridis")
-        ax.axis("off")
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
     plt.savefig(osp.join(output_dir, "Input_Image_Stack_Frame.png"))
     fig, axes = plt.subplots(3, 3)
@@ -77,7 +76,6 @@ def visualize(
             alpha=alpha,
             cmap="viridis",
         )
-        ax.axis("off")
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
     plt.savefig(osp.join(output_dir, "Generated_Image_Frame.png"))
 
@@ -216,12 +214,10 @@ def evaluate(cfg: DictConfig):
             images = batch[0][cfg.DATASET.input_keys]
             future_images = batch[1][cfg.DATASET.label_keys]
             generated_images = solver.predict(batch[0])[cfg.MODEL.output_keys]
-            if batch_idx % 100 == 0:
-                visual_dir = osp.join(cfg.output_dir, f"epoch_{batch_idx}")
-                logger.message(f"Saving plot of image frame to {visual_dir}")
-                visualize(
-                    cfg.output_dir, images, future_images, generated_images, batch_idx
-                )
+            logger.message(f"Saving plot of image frame to {cfg.output_dir}")
+            visualize(
+                cfg.output_dir, images, future_images, generated_images, batch_idx
+            )
 
         d_loss.append(out_dict[0])
         g_loss.append(out_dict[1])
