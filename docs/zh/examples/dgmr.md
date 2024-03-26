@@ -65,7 +65,7 @@ DGMR 是一个使用两个判别器和一个附加正则化项进行训练的生
 
 ### 2.2 目标函数
 
-生成器通过两个鉴别器的损失和一个网格单元正则化项（记为 $\mathcal{L}R(\theta)$ ）进行训练。空间鉴别器 $D\phi$ 具有参数 $\phi$，时间鉴别器 $T_\psi$ 具有参数 $\psi$，生成器 $G_\theta$ 具有参数 $\theta$。我们使用符号 ${X ; G}$ 表示两个字段的串联。最大化的生成器损失如下：
+生成器通过两个鉴别器的损失和一个网格单元正则化项（记为 $\mathcal{L}_R(\theta)$ ）进行训练。空间鉴别器 $D\phi$ 具有参数 $\phi$，时间鉴别器 $T_\psi$ 具有参数 $\psi$，生成器 $G_\theta$ 具有参数 $\theta$。我们使用符号 $\{X ; G\}$ 表示两个字段的串联。最大化的生成器损失如下：
 
 $$
 \begin{gathered}
@@ -83,7 +83,7 @@ $$
 \end{aligned}
 $$
 
-其中 $\operatorname{ReLU} = max(0,x)$. 更多详细的理论推导请参考 [Skillful Precipitation Nowcasting using Deep Generative Models of Radar](https://arxiv.org/pdf/2104.00954.pdf)。
+其中 $\operatorname{ReLU} = \max(0,x)$. 更多详细的理论推导请参考 [Skillful Precipitation Nowcasting using Deep Generative Models of Radar](https://arxiv.org/pdf/2104.00954.pdf)。
 
 ## 3. 问题求解
 
@@ -106,7 +106,7 @@ examples/dgmr/dgmr.py:197:199
 在 DGMR 模型中，输入过去四个雷达场数据，对 18 个未来雷达场（接下来的 90 分钟）进行预测。DGMR 网络可以表示为 $X_{1:4}$ 到输出 $X_{5:22}$ 的映射函数 $f$，即：
 
 $$
-X_{5:22}$ = f(X_{1:4}),\\
+X_{5:22} = f(X_{1:4}),\\
 $$
 
 上式中 $f$ 代表 DGMR 模型。我们定义 PaddleScience 内置的 DGMR 模型类，并调用，PaddleScience 代码表示如下
@@ -139,7 +139,7 @@ examples/dgmr/dgmr.py:85:187
 
 最后对数据中的每个 batch 进行遍历评估，同时对预测结果进行可视化。
 
-``` py linenums="497"
+``` py linenums="207"
 --8<--
 examples/dgmr/dgmr.py:207:229
 --8<--
