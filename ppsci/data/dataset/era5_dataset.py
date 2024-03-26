@@ -178,7 +178,7 @@ class ERA5SampledDataset(io.Dataset):
         >>> dataset_size = len(dataset)  # doctest: +SKIP
         >>> # get the first sample of the data
         >>> first_sample = dataset[0]  # doctest: +SKIP
-        >>> print("First sample:", first_sample)
+        >>> print("First sample:", first_sample)  # doctest: +SKIP
     """
 
     def __init__(

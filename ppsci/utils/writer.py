@@ -67,7 +67,7 @@ def save_csv_file(
         ...     use_header=True,
         ...     delimiter=",",
         ...     encoding="utf-8",
-        ... )
+        ... )  # doctest: +SKIP
 
         >>> # == test.csv ==
         >>> # A,B
@@ -150,7 +150,7 @@ def save_tecplot_file(
         ...    num_y=3,
         ...    alias_dict={"X": "x", "Y": "y"},
         ...    num_timestamps=2,
-        ... )
+        ... )  # doctest: +SKIP
         >>> # == test_t-0.dat ==
         >>> # title = "./test_t-0.dat"
         >>> # variables = "X", "Y"

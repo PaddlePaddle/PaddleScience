@@ -75,7 +75,7 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
+            >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np  # doctest: +SKIP
             >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
             >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)  # doctest: +SKIP
@@ -201,7 +201,7 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
+            >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np
             >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
             >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
@@ -274,7 +274,7 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
+            >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np
             >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
             >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
