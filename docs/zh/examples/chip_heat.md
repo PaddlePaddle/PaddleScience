@@ -48,7 +48,7 @@ $$
 $$
 
 <figure markdown>
-  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/domain_chip.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/chip_domain.PNG){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 内部具有随机热源分布的 2D 芯片模拟区域，边界上可以为任意的边界条件。</figcaption>
 </figure>
 
@@ -94,7 +94,7 @@ PI-DeepONet模型，将 DeepONet 和 PINN 方法相结合，是一种结合了�
 对于芯片热仿真问题，PI-DeepONet 模型可以表示为如图所示的模型结构：
 
 <figure markdown>
-  ![pi_deeponet.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/pi_deeponet.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![pi_deeponet.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/pi_deeponet.PNG){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 如图所示，我们一共使用了 3 个分支网络和一个主干网络，分支网络分别输入边界类型指标、随机热源分布 $S(x, y)$ 和边界函数 $Q(x, y)$，主干网络输入二维坐标点坐标信息。每个分支网和主干网均输出 $q$ 维特征向量，通过 Hadamard（逐元素）乘积组合所有这些输出特征，然后将所得向量相加为预测温度场的标量输出。
