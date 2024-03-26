@@ -30,13 +30,13 @@ from ppsci.utils.reader import load_mat_file
 from ppsci.utils.reader import load_npz_file
 from ppsci.utils.reader import load_vtk_file
 from ppsci.utils.reader import load_vtk_with_time_file
+from ppsci.utils.registry import Registry
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
 from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
-from ppsci.utils.registry import Registry
 
 __all__ = [
     "AttrDict",
