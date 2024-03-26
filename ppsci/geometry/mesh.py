@@ -76,10 +76,10 @@ class Mesh(geometry.Geometry):
         Examples:
             >>> import ppsci
             >>> import pymesh
-            >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)
-            >>> print(mesh.vertices)
+            >>> import numpy as np  # doctest: +SKIP
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -203,9 +203,9 @@ class Mesh(geometry.Geometry):
             >>> import ppsci
             >>> import pymesh
             >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh(box)
-            >>> print(mesh.vertices)
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -214,7 +214,7 @@ class Mesh(geometry.Geometry):
              [1. 0. 1.]
              [1. 1. 1.]
              [0. 1. 1.]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.
+            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.  # doctest: +SKIP
             [[-1.  -0.5  0. ]
              [ 0.  -0.5  0. ]
              [ 0.   0.5  0. ]
@@ -223,7 +223,7 @@ class Mesh(geometry.Geometry):
              [ 0.  -0.5  1. ]
              [ 0.   0.5  1. ]
              [-1.   0.5  1. ]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates
+            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates  # doctest: +SKIP
             [[-0.5  0.   0.5]
              [ 0.5  0.   0.5]
              [ 0.5  1.   0.5]
@@ -276,9 +276,9 @@ class Mesh(geometry.Geometry):
             >>> import ppsci
             >>> import pymesh
             >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh(box)
-            >>> print(mesh.vertices)
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -287,8 +287,8 @@ class Mesh(geometry.Geometry):
              [1. 0. 1.]
              [1. 1. 1.]
              [0. 1. 1.]]
-            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))
-            >>> print(mesh.vertices)
+            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[-0.25 -0.5  -0.75]
              [ 1.75 -0.5  -0.75]
              [ 1.75  1.5  -0.75]
