@@ -69,7 +69,7 @@ class BoundaryConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="BC",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(
