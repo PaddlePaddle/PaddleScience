@@ -18,7 +18,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [dgmr_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams) | d_loss: 130.5056<br>g_loss: 61.4635<br>grid_loss: 1.7939 |
+| [dgmr_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams) | d_loss: 127.041<br>g_loss: 59.2409<br>grid_loss: 1.7699 |
 
 ## 1. 背景简介
 
