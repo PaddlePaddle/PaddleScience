@@ -212,9 +212,12 @@ class Timer(ContextDecorator):
 
         >>> timer = misc.Timer("cost_of_func", auto_print=False)
         >>> timer.start()
+        >>> def func():
+        ...     w = sum(range(0, 10))
         >>> func()
         >>> timer.end()
         >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
+        time cost of 'cost_of_func' is 0.00
     """
 
     interval: float  # Time cost for code within Timer context
