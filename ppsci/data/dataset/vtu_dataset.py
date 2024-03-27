@@ -39,7 +39,7 @@ class VtuDataset(io.Dataset):
             transform(s).
 
     Examples:
-        >>> from ppsci.dataset import VtuDataset
+        >>> from ppsci.data.dataset import VtuDataset
 
         >>> dataset = VtuDataset(file_path='example.vtu') # doctest: +SKIP
 
@@ -47,7 +47,7 @@ class VtuDataset(io.Dataset):
         >>> dataset_size = len(dataset) # doctest: +SKIP
         >>> # get the first sample of the data
         >>> first_sample = dataset[0] # doctest: +SKIP
-        >>> print("First sample:", first_sample)
+        >>> print("First sample:", first_sample) # doctest: +SKIP
     """
 
     # Whether support batch indexing for speeding up fetching process.
