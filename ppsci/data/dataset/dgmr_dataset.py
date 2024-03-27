@@ -39,7 +39,6 @@ class DGMRDataset(paddle.io.Dataset):
         num_input_frames (int, optional): Number of input frames. Defaults to 4.
         num_target_frames (int, optional): Number of target frames. Defaults to 18.
         dataset_path (str, optional): Path to the dataset. Defaults to "openclimatefix/nimrod-uk-1km".
-        number (int, optional): Number of samples in the dataset. Defaults to 1000.
 
     Examples:
         >>> import ppsci
@@ -54,27 +53,25 @@ class DGMRDataset(paddle.io.Dataset):
         num_input_frames: int = 4,
         num_target_frames: int = 18,
         dataset_path: str = "openclimatefix/nimrod-uk-1km",
-        number: int = 1000,
     ):
         super().__init__()
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.num_input_frames = num_input_frames
         self.num_target_frames = num_target_frames
-        self.number = number
         self.reader = datasets.load_dataset(
             dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
         )
         self.iter_reader = self.reader
 
     def __len__(self):
-        return self.number
+        return 1000
 
     def __getitem__(self, idx):
         try:
             row = next(self.iter_reader)
         except Exception:
-            rng = default_rng()
+            rng = default_rng(42)
             self.iter_reader = iter(
                 self.reader.shuffle(
                     seed=rng.integers(low=0, high=100000), buffer_size=1000

@@ -373,10 +373,10 @@ class TemporalDiscriminator(nn.Layer):
         if len(x.shape) == 4:
             x = self.space2depth(x)
         elif len(x.shape) == 5:
-            x_list = []
-            for i in range(x.shape[0]):
-                x_list.append(self.space2depth(x[i]))
-            x = paddle.stack(x_list, axis=0)
+            B, T = x.shape[0], x.shape[1]
+            x_reshaped = paddle.reshape(x, [-1] + list(x.shape[2:]))
+            x = self.space2depth(x_reshaped)
+            x = paddle.reshape(x, [B, T] + list(x.shape[1:]))
         x = paddle.transpose(x=x, perm=(0, 2, 1, 3, 4))
         x = self.d1(x)
         x = self.d2(x)
@@ -457,10 +457,10 @@ class SpatialDiscriminator(nn.Layer):
             if len(rep.shape) == 4:
                 rep = self.space2depth(rep)
             elif len(rep.shape) == 5:
-                rep_list = []
-                for i in range(rep.shape[0]):
-                    rep_list.append(self.space2depth(rep[i]))
-                rep = paddle.stack(rep_list, axis=0)
+                B, T = rep.shape[0], rep.shape[1]
+                rep_reshaped = paddle.reshape(rep, [-1] + list(rep.shape[2:]))
+                rep = self.space2depth(rep_reshaped)
+                rep = paddle.reshape(rep, [B, T] + list(rep.shape[1:]))
             rep = self.d1(rep)
             for d in self.intermediate_dblocks:
                 rep = d(rep)
@@ -822,10 +822,10 @@ class ContextConditioningStack(nn.Layer):
         if len(x.shape) == 4:
             x = self.space2depth(x)
         elif len(x.shape) == 5:
-            x_list = []
-            for i in range(x.shape[0]):
-                x_list.append(self.space2depth(x[i]))
-            x = paddle.stack(x_list, axis=0)
+            B, T = x.shape[0], x.shape[1]
+            x_reshaped = paddle.reshape(x, [-1] + list(x.shape[2:]))
+            x = self.space2depth(x_reshaped)
+            x = paddle.reshape(x, [B, T] + list(x.shape[1:]))
         steps = x.shape[1]
         scale_1 = []
         scale_2 = []
