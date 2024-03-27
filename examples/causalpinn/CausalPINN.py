@@ -2,7 +2,11 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 from paddle.io import Dataset
-
+paddle.framework.core.set_prim_eager_enabled(True)
+# def exponential_decay(step_size, decay_steps, decay_rate):
+#   def schedule(i):
+#     return step_size * decay_rate ** (i / decay_steps)
+#   return schedule
 class DataGenerator(Dataset):
     def __init__(self, t0, t1, n_t=10, n_x=64):
         'Initialization'
@@ -103,7 +107,7 @@ class PINN((paddle.nn.Layer)):
         # Use optimizers to set optimizer initialization and update functions
         # self.optimizer = paddle.optimizer.Adam(learning_rate=paddle.optimizer.lr.ExponentialDecay(1e-3, gamma=0.9),
         #                                        parameters=self.network.parameters())
-
+        lr=exponential_decay(1e-3, decay_steps=10000,decay_rate=0.9)
         self.optimizer = paddle.optimizer.Adam(learning_rate=1e-3,
                                                parameters=self.network.parameters())
 
@@ -133,8 +137,8 @@ class PINN((paddle.nn.Layer)):
         w_x = paddle.grad(w, x, create_graph=True)[0]
         w_y = paddle.grad(w, y, create_graph=True)[0]
 
-        w_xx = paddle.grad(w_x, x, create_graph=False)[0]
-        w_yy = paddle.grad(w_y, y, create_graph=False)[0]
+        w_xx = paddle.grad(w_x, x, create_graph=True)[0]
+        w_yy = paddle.grad(w_y, y, create_graph=True)[0]
 
         res_w = w_t + u * w_x + v * w_y - nu * (w_xx + w_yy)
         res_c = u_x + v_y
@@ -156,8 +160,8 @@ class PINN((paddle.nn.Layer)):
         u_v = self.network(paddle.concat([x,y,t], 1))
         u0_pred = u_v[:, 0:1]
         v0_pred = u_v[:, 1:2]
-        v_x = paddle.grad(v0_pred, x, create_graph=False)[0]
-        u_y = paddle.grad(u0_pred, y, create_graph=False)[0]
+        v_x = paddle.grad(v0_pred, x, create_graph=True)[0]
+        u_y = paddle.grad(u0_pred, y, create_graph=True)[0]
         w0_pred = v_x - u_y
         # Compute loss
         loss_u0 = paddle.mean((u0_pred.flatten() - self.state0[0, :, :].flatten()) ** 2)
@@ -176,8 +180,8 @@ class PINN((paddle.nn.Layer)):
         u = u_v[:, 0:1]
         v = u_v[:, 1:2]
 
-        u_y = paddle.grad(u, y, create_graph=False)[0]
-        v_x = paddle.grad(v, x, create_graph=False)[0]
+        u_y = paddle.grad(u, y, create_graph=True)[0]
+        v_x = paddle.grad(v, x, create_graph=True)[0]
         w_pred = v_x - u_y
         l2_error = paddle.linalg.norm(w_pred - paddle.transpose(self.w_exact,(1,2,0)).reshape((-1,1))) / paddle.linalg.norm(self.w_exact.reshape((-1,1)))
         return l2_error
@@ -193,7 +197,7 @@ class PINN((paddle.nn.Layer)):
             self.optimizer.step()
             self.optimizer.clear_grad()
 
-            if it % 1 == 0:
+            if it % 1000 == 0:
                 l2_error_value = self.compute_l2_error(paddle.tile(self.x_star, (1, num_step)).reshape((-1,1)),paddle.tile(self.y_star, (1, num_step)).reshape((-1,1)),(paddle.tile(self.t_star[:num_step], (1, Nx**2)).T).reshape((-1,1)))
                 print("ite:{},loss:{:.3e},error:{:.3e}".format(it,self.loss(batch).item(),l2_error_value.item()))
                 # print("ite:{},loss:{:.3e}".format(it,loss.item()))
