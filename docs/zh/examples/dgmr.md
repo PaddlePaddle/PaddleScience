@@ -2,19 +2,23 @@
 
 === "模型训练命令"
 
-    ``` sh
-    python dgmr.py
-    ```
+    暂无
 
 === "模型评估命令"
 
     ``` sh
+    # Download data from Huggingface
+    mkdir openclimatefix/nimrod-uk-1km/20200718/valid/subsampled_tiles_256_20min_stride
+    cd openclimatefix/nimrod-uk-1km/20200718/valid/subsampled_tiles_256_20min_stride
+    git lfs install
+    git lfs pull --include="seq-24-*-of-00033.tfrecord.gz"
+
     python dgmr.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [dgmr_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams) | d_loss: 141.8436<br>g_loss: 55.7824<br>grid_loss: 1.7168 |
+| [dgmr_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams) | d_loss: 130.5056<br>g_loss: 61.4635<br>grid_loss: 1.7939 |
 
 ## 1. 背景简介
 

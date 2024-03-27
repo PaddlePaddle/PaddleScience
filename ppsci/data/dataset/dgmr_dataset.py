@@ -57,7 +57,6 @@ class DGMRDataset(paddle.io.Dataset):
         number: int = 1000,
     ):
         super().__init__()
-        paddle.seed(42)
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.num_input_frames = num_input_frames
@@ -75,7 +74,7 @@ class DGMRDataset(paddle.io.Dataset):
         try:
             row = next(self.iter_reader)
         except Exception:
-            rng = default_rng(42)
+            rng = default_rng()
             self.iter_reader = iter(
                 self.reader.shuffle(
                     seed=rng.integers(low=0, high=100000), buffer_size=1000

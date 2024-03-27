@@ -35,7 +35,7 @@ DATASET:
   num_input_frames: 4
   num_target_frames: 18
   dataset_path: openclimatefix/nimrod-uk-1km
-  number: 20
+  number: 1000
 
 # model settings
 MODEL:
