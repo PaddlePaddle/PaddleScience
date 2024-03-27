@@ -212,7 +212,7 @@ def evaluate(cfg: DictConfig):
     grid_loss = []
     for batch_idx, batch in enumerate(val_loader):
         with paddle.no_grad():
-            out_dict = validation(cfg, solver, batch, batch_idx)
+            out_dict = validation(cfg, solver, batch)
 
             # visualize
             images = batch[0][cfg.DATASET.input_keys]
