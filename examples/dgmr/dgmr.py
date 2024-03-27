@@ -16,6 +16,8 @@
 Reference: https://github.com/openclimatefix/skillful_nowcasting
 """
 from os import path as osp
+from typing import Dict
+from typing import Tuple
 
 import hydra
 import matplotlib.pyplot as plt
@@ -81,13 +83,13 @@ def visualize(
         )
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
     plt.savefig(osp.join(output_dir, f"Generated_Image_Frame_{batch_idx}.png"))
+    plt.close()
 
 
 def validation(
     cfg: DictConfig,
     solver: ppsci.solver.Solver,
-    batch: tuple,
-    batch_idx: int,
+    batch: Tuple[Dict[str, paddle.Tensor], ...],
 ):
     """
     validation step.
@@ -95,8 +97,7 @@ def validation(
     Args:
         cfg (DictConfig): Configuration object.
         solver (ppsci.solver.Solver): Solver object containing the model and related components.
-        batch (tuple): Input batch consisting of images and corresponding future images.
-        batch_idx (int): Index of the current batch.
+        batch (Tuple[Dict[str, paddle.Tensor], ...]): Input batch consisting of images and corresponding future images.
 
     Returns:
         discriminator_loss: Loss incurred by the discriminator.
