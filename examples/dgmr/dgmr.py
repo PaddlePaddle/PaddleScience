@@ -198,7 +198,7 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.DGMR(**cfg.MODEL)
     # load evaluate data
     dataset = ppsci.data.dataset.DGMRDataset(**cfg.DATASET)
-    val_loader = paddle.io.DataLoader(dataset, batch_size=1)
+    val_loader = paddle.io.DataLoader(dataset, batch_size=4)
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -218,7 +218,7 @@ def evaluate(cfg: DictConfig):
             images = batch[0][cfg.DATASET.input_keys]
             future_images = batch[1][cfg.DATASET.label_keys]
             generated_images = solver.predict(batch[0])[cfg.MODEL.output_keys]
-            if batch_idx % 100 == 0:
+            if batch_idx % 50 == 0:
                 logger.message(f"Saving plot of image frame to {cfg.output_dir}")
                 visualize(
                     cfg.output_dir, images, future_images, generated_images, batch_idx
