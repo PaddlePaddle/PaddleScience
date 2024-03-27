@@ -99,9 +99,9 @@ $$
 
 在该模型的PaddleScience 代码中，我们可以调用`ppsci.data.dataset.DGMRDataset` 来加载数据集，代码如下：
 
-``` py linenums="197"
+``` py linenums="199"
 --8<--
-examples/dgmr/dgmr.py:197:199
+examples/dgmr/dgmr.py:199:201
 --8<--
 ```
 
@@ -115,9 +115,9 @@ $$
 
 上式中 $f$ 代表 DGMR 模型。我们定义 PaddleScience 内置的 DGMR 模型类，并调用，PaddleScience 代码表示如下
 
-``` py linenums="195"
+``` py linenums="197"
 --8<--
-examples/dgmr/dgmr.py:195:196
+examples/dgmr/dgmr.py:197:198
 --8<--
 ```
 
@@ -127,25 +127,25 @@ examples/dgmr/dgmr.py:195:196
 
 模型构建和加载数据后，将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动评估和可视化。首先我们初始化模型：
 
-``` py linenums="200"
+``` py linenums="202"
 --8<--
-examples/dgmr/dgmr.py:200:205
+examples/dgmr/dgmr.py:202:207
 --8<--
 ```
 
 然后自定义评估方式和损失函数，代码如下：
 
-``` py linenums="87"
+``` py linenums="89"
 --8<--
-examples/dgmr/dgmr.py:87:187
+examples/dgmr/dgmr.py:89:189
 --8<--
 ```
 
 最后对数据中的每个 batch 进行遍历评估，同时对预测结果进行可视化。
 
-``` py linenums="207"
+``` py linenums="209"
 --8<--
-examples/dgmr/dgmr.py:207:230
+examples/dgmr/dgmr.py:209:232
 --8<--
 ```
 
