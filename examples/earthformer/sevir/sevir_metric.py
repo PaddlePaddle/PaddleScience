@@ -5,8 +5,7 @@ from typing import Sequence
 import numpy as np
 import paddle
 from paddle.nn import functional as F
-
-from ppsci.data.dataset.sevir_dataset import SEVIRDataset
+from ppsci.data.dataset import sevir_dataset
 
 
 def _threshold(target, pred, T):
@@ -162,10 +161,10 @@ class SEVIRSkillScore:
 
     def preprocess(self, pred, target):
         if self.preprocess_type == "sevir":
-            pred = SEVIRDataset.process_data_dict_back(
+            pred = sevir_dataset.SEVIRDataset.process_data_dict_back(
                 data_dict={"vil": pred.detach().astype("float32")}
             )["vil"]
-            target = SEVIRDataset.process_data_dict_back(
+            target = sevir_dataset.SEVIRDataset.process_data_dict_back(
                 data_dict={"vil": target.detach().astype("float32")}
             )["vil"]
         else:
@@ -306,16 +305,3 @@ def train_mse_func(
     vil_target = label_dict["vil"]
     target = vil_target.reshape([-1, *vil_target.shape[2:]])
     return F.mse_loss(pred, target)
-
-
-def get_parameter_names(model, forbidden_layer_types):
-    result = []
-    for name, child in model.named_children():
-        result += [
-            f"{name}.{n}"
-            for n in get_parameter_names(child, forbidden_layer_types)
-            if not isinstance(child, tuple(forbidden_layer_types))
-        ]
-    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
-    result += list(model._parameters.keys())
-    return result

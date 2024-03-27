@@ -45,16 +45,12 @@ DATASET:
 
 # model settings
 MODEL:
-  self_pattern: "axial"
-  cross_self_pattern: "axial"
-  cross_pattern: "cross_1x1"
   afno:
     input_keys: ["sst_data"]
     output_keys: ["sst_target","nino_target"]
     input_shape: [12, 24, 48, 1]
     target_shape: [14, 24, 48, 1]
     base_units: 64
-    # block_units: null
     scale_alpha: 1.0
 
     enc_depth: [1, 1]
@@ -76,6 +72,9 @@ MODEL:
     separate_global_qkv: false
     global_dim_ratio: 1
 
+    self_pattern: "axial"
+    cross_self_pattern: "axial"
+    cross_pattern: "cross_1x1"
     dec_cross_last_n_frames: null
 
     attn_drop: 0.1
@@ -94,7 +93,7 @@ MODEL:
 
     z_init_method: "zeros"
     initial_downsample_type: "conv"
-    initial_downsample_activation: "leaky"
+    initial_downsample_activation: "leaky_relu"
     initial_downsample_scale: [1, 1, 2]
     initial_downsample_conv_layers: 2
     final_upsample_conv_layers: 1

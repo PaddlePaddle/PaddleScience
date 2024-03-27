@@ -2,15 +2,12 @@ import hydra
 import numpy as np
 import paddle
 import xarray as xr
-from helps import eval_rmse_func
-from helps import get_parameter_names
-from helps import train_mse_func
+import enso_metric
 from omegaconf import DictConfig
 from paddle import nn
 
 import ppsci
-from ppsci.data.dataset.enso_dataset import fold
-from ppsci.data.dataset.enso_dataset import prepare_inputs_targets
+from ppsci.data.dataset import enso_dataset
 
 
 def train(cfg: DictConfig):
@@ -41,7 +38,7 @@ def train(cfg: DictConfig):
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
-        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        loss=ppsci.loss.FunctionalLoss(enso_metric.train_mse_func),
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -69,32 +66,19 @@ def train(cfg: DictConfig):
 
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
-        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        loss=ppsci.loss.FunctionalLoss(enso_metric.train_mse_func),
         metric={
-            "rmse": ppsci.metric.FunctionalMetric(eval_rmse_func, keep_batch=False),
+            "rmse": ppsci.metric.FunctionalMetric(enso_metric.eval_rmse_func),
         },
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
 
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
-    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
+    decay_parameters = enso_metric.get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
         {
@@ -111,15 +95,14 @@ def train(cfg: DictConfig):
 
     # # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
-    lr_scheduler_cfg.update({"iters_per_epoch": ITERS_PER_EPOCH})
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eta_min=cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
-    # optimizer = ppsci.optimizer.AdamW(lr_scheduler)(model)
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+        lr_scheduler, parameters=optimizer_grouped_parameters
     )
 
     # initialize solver
@@ -165,28 +148,16 @@ def evaluate(cfg: DictConfig):
 
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
-        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        loss=ppsci.loss.FunctionalLoss(enso_metric.train_mse_func),
         metric={
-            "rmse": ppsci.metric.FunctionalMetric(eval_rmse_func, keep_batch=False),
+            "rmse": ppsci.metric.FunctionalMetric(enso_metric.eval_rmse_func),
         },
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
 
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
     # initialize solver
@@ -206,21 +177,8 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
     # initialize solver
@@ -253,9 +211,9 @@ def inference(cfg: DictConfig):
     lon = lon[np.logical_and(lon >= 95, lon <= 330)]
     train_cmip = train_cmip.sel(lon=lon)
     data = train_cmip.sst.values
-    data = fold(data)
+    data = enso_dataset.fold(data)
 
-    idx_sst = prepare_inputs_targets(
+    idx_sst = enso_dataset.prepare_inputs_targets(
         len_time=data.shape[0],
         input_length=cfg.INFER.in_len,
         input_gap=cfg.INFER.in_stride,
@@ -269,7 +227,7 @@ def inference(cfg: DictConfig):
     idx = np.random.choice(len(data), None, False)
     in_seq = sst_data[idx, : cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
     in_seq = in_seq[np.newaxis, ...]
-    target_seq = sst_data[idx, cfg.INFER.in_len :, ...]  # ( out_len, lat, lon, 1)
+    target_seq = sst_data[idx, cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
     target_seq = target_seq[np.newaxis, ...]
 
     output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)

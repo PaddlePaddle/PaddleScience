@@ -2,13 +2,11 @@ import h5py
 import hydra
 import numpy as np
 import paddle
-from helps import eval_rmse_func
-from helps import get_parameter_names
-from helps import train_mse_func
+import sevir_metric
+from examples.earthformer.enso import enso_metric
 from omegaconf import DictConfig
 from paddle import nn
-from sevir_vis_seq import save_example_vis_results
-
+import sevir_vis_seq
 import ppsci
 
 
@@ -47,7 +45,7 @@ def train(cfg: DictConfig):
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
-        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        loss=ppsci.loss.FunctionalLoss(sevir_metric.train_mse_func),
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -84,7 +82,7 @@ def train(cfg: DictConfig):
         loss=ppsci.loss.MSELoss(),
         metric={
             "rmse": ppsci.metric.FunctionalMetric(
-                eval_rmse_func(
+                sevir_metric.eval_rmse_func(
                     out_len=cfg.DATASET.seq_len,
                     layout=cfg.DATASET.layout,
                     metrics_mode=cfg.EVAL.metrics_mode,
@@ -98,24 +96,11 @@ def train(cfg: DictConfig):
     )
     validator = {sup_validator.name: sup_validator}
 
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
-    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
+    decay_parameters = enso_metric.get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
         {
@@ -132,14 +117,14 @@ def train(cfg: DictConfig):
 
     # # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
-    lr_scheduler_cfg.update({"iters_per_epoch": ITERS_PER_EPOCH})
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eta_min=cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+        lr_scheduler, parameters=optimizer_grouped_parameters
     )
 
     # initialize solver
@@ -194,7 +179,7 @@ def evaluate(cfg: DictConfig):
         loss=ppsci.loss.MSELoss(),
         metric={
             "rmse": ppsci.metric.FunctionalMetric(
-                eval_rmse_func(
+                sevir_metric.eval_rmse_func(
                     out_len=cfg.DATASET.seq_len,
                     layout=cfg.DATASET.layout,
                     metrics_mode=cfg.EVAL.metrics_mode,
@@ -208,21 +193,8 @@ def evaluate(cfg: DictConfig):
     )
     validator = {sup_validator.name: sup_validator}
 
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
     # initialize solver
@@ -242,21 +214,8 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    num_blocks = len(cfg.MODEL.afno["enc_depth"])
-    if isinstance(cfg.MODEL["self_pattern"], str):
-        enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_self_pattern"], str):
-        dec_self_attn_patterns = [cfg.MODEL["cross_self_pattern"]] * num_blocks
-
-    if isinstance(cfg.MODEL["cross_pattern"], str):
-        dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
-
-    model = ppsci.arch.CuboidTransformerModel(
+    model = ppsci.arch.CuboidTransformer(
         **cfg.MODEL.afno,
-        enc_attn_patterns=enc_attn_patterns,
-        dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns,
     )
 
     # initialize solver
@@ -289,7 +248,7 @@ def inference(cfg: DictConfig):
     data = data_vil[idx]
     input_data = data[: cfg.INFER.in_len, ...]
     input_data = input_data.reshape(1, *input_data.shape, 1).astype(np.float32)
-    target_data = data[cfg.INFER.in_len : cfg.INFER.in_len + cfg.INFER.out_len, ...]
+    target_data = data[cfg.INFER.in_len: cfg.INFER.in_len + cfg.INFER.out_len, ...]
     target_data = target_data.reshape(1, *target_data.shape, 1).astype(np.float32)
 
     output_dict = predictor.predict({"input": input_data}, cfg.INFER.batch_size)
@@ -298,7 +257,7 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip({"output"}, output_dict.keys())
     }
 
-    save_example_vis_results(
+    sevir_vis_seq.save_example_vis_results(
         save_dir=cfg.INFER.sevir_vis_save,
         save_prefix=f"data_{idx}",
         in_seq=input_data,

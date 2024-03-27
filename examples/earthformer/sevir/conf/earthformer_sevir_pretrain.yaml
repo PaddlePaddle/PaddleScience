@@ -36,11 +36,11 @@ FILE_PATH: ./datasets/sevir/sevir_data
 
 # dataset setting
 DATASET:
-  label_keys: ["vil",]
-  data_types: ["vil",]
+  label_keys: ["vil"]
+  data_types: ["vil"]
   seq_len: 25
   raw_seq_len: 49
-  sample_mode: 'sequent'
+  sample_mode: "sequent"
   stride: 12
   batch_size: 2
   layout: "NTHWC"
@@ -49,22 +49,18 @@ DATASET:
   split_mode: "uneven"
 
   shuffle_seed: 1
-  rescale_method: '01'
+  rescale_method: "01"
   downsample_dict: None
   verbose: False
 
 # model settings
 MODEL:
-  self_pattern: "axial"
-  cross_self_pattern: "axial"
-  cross_pattern: "cross_1x1"
   afno:
-    input_keys: ["input",]
-    output_keys: ["vil",""]
+    input_keys: ["input"]
+    output_keys: ["vil"]
     input_shape: [13, 384, 384, 1]
     target_shape: [12, 384, 384, 1]
     base_units: 128
-    # block_units: null
     scale_alpha: 1.0
 
     enc_depth: [1, 1]
@@ -86,6 +82,9 @@ MODEL:
     separate_global_qkv: true
     global_dim_ratio: 1
 
+    self_pattern: "axial"
+    cross_self_pattern: "axial"
+    cross_pattern: "cross_1x1"
     dec_cross_last_n_frames: null
 
     attn_drop: 0.1
@@ -104,7 +103,7 @@ MODEL:
 
     z_init_method: "zeros"
     initial_downsample_type: "stack_conv"
-    initial_downsample_activation: "leaky"
+    initial_downsample_activation: "leaky_relu"
     initial_downsample_stack_conv_num_layers: 3
     initial_downsample_stack_conv_dim_list: [16, 64, 128]
     initial_downsample_stack_conv_downscale_list: [3, 2, 2]
@@ -146,7 +145,7 @@ EVAL:
   end_date: [2019, 9, 1]
 
   metrics_mode: "0"
-  metrics_list: ['csi', 'pod', 'sucr', 'bias']
+  metrics_list: ["csi", "pod", "sucr", "bias"]
   threshold_list: [16, 74, 133, 160, 181, 219]
 
 

@@ -23,6 +23,7 @@ from ppsci.utils.checker import run_check
 from ppsci.utils.checker import run_check_mesh
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
+from ppsci.utils.get_param import get_parameter_names
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
 from ppsci.utils.reader import load_csv_file
@@ -30,7 +31,6 @@ from ppsci.utils.reader import load_mat_file
 from ppsci.utils.reader import load_npz_file
 from ppsci.utils.reader import load_vtk_file
 from ppsci.utils.reader import load_vtk_with_time_file
-from ppsci.utils.registry import Registry
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
@@ -38,10 +38,12 @@ from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
 
+
 __all__ = [
     "AttrDict",
     "AverageMeter",
     "ExpressionSolver",
+    "get_parameter_names",
     "initializer",
     "logger",
     "misc",
@@ -56,7 +58,6 @@ __all__ = [
     "save_csv_file",
     "save_tecplot_file",
     "dynamic_import_to_globals",
-    "Registry",
     "run_check",
     "run_check_mesh",
     "set_random_seed",

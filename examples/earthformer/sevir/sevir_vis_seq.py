@@ -5,11 +5,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
-from sevir_cmap import VIL_COLORS
-from sevir_cmap import VIL_LEVELS
-from sevir_cmap import get_cmap
-
-from ppsci.data.dataset.sevir_dataset import change_layout_np
+import sevir_cmap
+from ppsci.data.dataset import sevir_dataset
 
 HMF_COLORS = (
     np.array([[82, 82, 82], [252, 141, 89], [255, 255, 191], [145, 191, 219]]) / 255
@@ -43,10 +40,10 @@ def plot_hit_miss_fa_all_thresholds(ax, y_true, y_pred, **unused_kwargs):
 
 def get_cmap_dict(s):
     return {
-        "cmap": get_cmap(s, encoded=True)[0],
-        "norm": get_cmap(s, encoded=True)[1],
-        "vmin": get_cmap(s, encoded=True)[2],
-        "vmax": get_cmap(s, encoded=True)[3],
+        "cmap": sevir_cmap.get_cmap(s, encoded=True)[0],
+        "norm": sevir_cmap.get_cmap(s, encoded=True)[1],
+        "vmin": sevir_cmap.get_cmap(s, encoded=True)[2],
+        "vmax": sevir_cmap.get_cmap(s, encoded=True)[3],
     }
 
 
@@ -167,11 +164,11 @@ def visualize_result(
             ax[j][i].yaxis.set_ticks([])
 
     # Legend of thresholds
-    num_thresh_legend = len(VIL_LEVELS) - 1
+    num_thresh_legend = len(sevir_cmap.VIL_LEVELS) - 1
     legend_elements = [
         Patch(
-            facecolor=VIL_COLORS[i],
-            label=f"{int(VIL_LEVELS[i - 1])}-{int(VIL_LEVELS[i])}",
+            facecolor=sevir_cmap.VIL_COLORS[i],
+            label=f"{int(sevir_cmap.VIL_LEVELS[i - 1])}-{int(sevir_cmap.VIL_LEVELS[i])}",
         )
         for i in range(1, num_thresh_legend + 1)
     ]
@@ -232,9 +229,9 @@ def save_example_vis_results(
     interval_real_time: float
         The minutes of each plot interval
     """
-    in_seq = change_layout_np(in_seq, in_layout=layout).astype(np.float32)
-    target_seq = change_layout_np(target_seq, in_layout=layout).astype(np.float32)
-    pred_seq = change_layout_np(pred_seq, in_layout=layout).astype(np.float32)
+    in_seq = sevir_dataset.change_layout_np(in_seq, in_layout=layout).astype(np.float32)
+    target_seq = sevir_dataset.change_layout_np(target_seq, in_layout=layout).astype(np.float32)
+    pred_seq = sevir_dataset.change_layout_np(pred_seq, in_layout=layout).astype(np.float32)
     fig_path = os.path.join(save_dir, f"{save_prefix}.png")
     fig, ax = visualize_result(
         in_seq=in_seq,
