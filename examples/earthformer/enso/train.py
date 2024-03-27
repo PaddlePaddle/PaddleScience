@@ -1,8 +1,8 @@
+import enso_metric
 import hydra
 import numpy as np
 import paddle
 import xarray as xr
-import enso_metric
 from omegaconf import DictConfig
 from paddle import nn
 
@@ -227,7 +227,7 @@ def inference(cfg: DictConfig):
     idx = np.random.choice(len(data), None, False)
     in_seq = sst_data[idx, : cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
     in_seq = in_seq[np.newaxis, ...]
-    target_seq = sst_data[idx, cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
+    target_seq = sst_data[idx, cfg.INFER.in_len :, ...]  # ( out_len, lat, lon, 1)
     target_seq = target_seq[np.newaxis, ...]
 
     output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)

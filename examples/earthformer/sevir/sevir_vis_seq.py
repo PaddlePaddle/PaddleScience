@@ -2,10 +2,11 @@ import os
 from typing import List
 
 import numpy as np
+import sevir_cmap
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
-import sevir_cmap
+
 from ppsci.data.dataset import sevir_dataset
 
 HMF_COLORS = (
@@ -230,8 +231,12 @@ def save_example_vis_results(
         The minutes of each plot interval
     """
     in_seq = sevir_dataset.change_layout_np(in_seq, in_layout=layout).astype(np.float32)
-    target_seq = sevir_dataset.change_layout_np(target_seq, in_layout=layout).astype(np.float32)
-    pred_seq = sevir_dataset.change_layout_np(pred_seq, in_layout=layout).astype(np.float32)
+    target_seq = sevir_dataset.change_layout_np(target_seq, in_layout=layout).astype(
+        np.float32
+    )
+    pred_seq = sevir_dataset.change_layout_np(pred_seq, in_layout=layout).astype(
+        np.float32
+    )
     fig_path = os.path.join(save_dir, f"{save_prefix}.png")
     fig, ax = visualize_result(
         in_seq=in_seq,

@@ -38,7 +38,6 @@ from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
 
-
 __all__ = [
     "AttrDict",
     "AverageMeter",

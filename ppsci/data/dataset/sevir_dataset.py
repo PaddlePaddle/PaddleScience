@@ -1,15 +1,19 @@
 import datetime
 import os
 from copy import deepcopy
-from typing import Dict,Optional,Sequence,Tuple,Union
+from typing import Dict
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
+
 import h5py
 import numpy as np
 import numpy.random as nprand
 import paddle
+import paddle.nn.functional as F
 import pandas as pd
 from paddle import io
-import paddle.nn.functional as F
-
 
 # SEVIR Dataset constants
 SEVIR_DATA_TYPES = ["vis", "ir069", "ir107", "vil", "lght"]
@@ -107,7 +111,7 @@ def change_layout_np(data, in_layout="NHWT", out_layout="NHWT", ret_contiguous=F
 
 
 def change_layout_paddle(
-        data, in_layout="NHWT", out_layout="NHWT", ret_contiguous=False
+    data, in_layout="NHWT", out_layout="NHWT", ret_contiguous=False
 ):
     # first convert to 'NHWT'
     if in_layout == "NHWT":
@@ -169,39 +173,39 @@ class SEVIRDataset(io.Dataset):
     batch_index: bool = False
 
     def __init__(
-            self,
-            input_keys: Tuple[str, ...],
-            label_keys: Tuple[str, ...],
-            data_dir: str,
-            weight_dict: Optional[Dict[str, float]] = None,
-            data_types: Sequence[str] = [
-                "vil",
-            ],
-            seq_len: int = 49,
-            raw_seq_len: int = 49,
-            sample_mode: str = "sequent",
-            stride: int = 12,
-            batch_size: int = 1,
-            layout: str = "NHWT",
-            in_len: int = 13,
-            out_len: int = 12,
-            num_shard: int = 1,
-            rank: int = 0,
-            split_mode: str = "uneven",
-            sevir_catalog: Union[str, pd.DataFrame] = None,
-            sevir_data_dir: str = None,
-            start_date: datetime.datetime = None,
-            end_date: datetime.datetime = None,
-            datetime_filter=None,
-            catalog_filter="default",
-            shuffle: bool = False,
-            shuffle_seed: int = 1,
-            output_type=np.float32,
-            preprocess: bool = True,
-            rescale_method: str = "01",
-            downsample_dict: Dict[str, Sequence[int]] = None,
-            verbose: bool = False,
-            training="train",
+        self,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        data_dir: str,
+        weight_dict: Optional[Dict[str, float]] = None,
+        data_types: Sequence[str] = [
+            "vil",
+        ],
+        seq_len: int = 49,
+        raw_seq_len: int = 49,
+        sample_mode: str = "sequent",
+        stride: int = 12,
+        batch_size: int = 1,
+        layout: str = "NHWT",
+        in_len: int = 13,
+        out_len: int = 12,
+        num_shard: int = 1,
+        rank: int = 0,
+        split_mode: str = "uneven",
+        sevir_catalog: Union[str, pd.DataFrame] = None,
+        sevir_data_dir: str = None,
+        start_date: datetime.datetime = None,
+        end_date: datetime.datetime = None,
+        datetime_filter=None,
+        catalog_filter="default",
+        shuffle: bool = False,
+        shuffle_seed: int = 1,
+        output_type=np.float32,
+        preprocess: bool = True,
+        rescale_method: str = "01",
+        downsample_dict: Dict[str, Sequence[int]] = None,
+        verbose: bool = False,
+        training="train",
     ):
         r"""
         Parameters
@@ -302,7 +306,7 @@ class SEVIRDataset(io.Dataset):
 
         self.raw_seq_len = raw_seq_len
         assert (
-                seq_len <= self.raw_seq_len
+            seq_len <= self.raw_seq_len
         ), f"seq_len must not be larger than raw_seq_len = {raw_seq_len}, got {seq_len}."
         self.seq_len = seq_len
         assert sample_mode in [
@@ -464,7 +468,7 @@ class SEVIRDataset(io.Dataset):
         """
         if self.split_mode == "ceil":
             _last_start_event_idx = (
-                    self.total_num_event // self.num_shard * (self.num_shard - 1)
+                self.total_num_event // self.num_shard * (self.num_shard - 1)
             )
             _num_event = self.total_num_event - _last_start_event_idx
             return self.start_event_idx + _num_event
@@ -509,7 +513,7 @@ class SEVIRDataset(io.Dataset):
                 lght_data = self._hdf_files[fname][idx][:]
                 data_i = self._lght_to_grid(lght_data, t_slice)
             else:
-                data_i = self._hdf_files[fname][t][idx: idx + 1, :, :, t_slice]
+                data_i = self._hdf_files[fname][t][idx : idx + 1, :, :, t_slice]
             data[t] = (
                 np.concatenate((data[t], data_i), axis=0) if (t in data) else data_i
             )
@@ -572,7 +576,9 @@ class SEVIRDataset(io.Dataset):
         while it should be 1440 in the original .h5 file.
         """
         import os
+
         from skimage.measure import block_reduce
+
         assert not os.path.exists(save_dir), f"save_dir {save_dir} already exists!"
         os.makedirs(save_dir)
         sample_counter = 0
@@ -588,12 +594,12 @@ class SEVIRDataset(io.Dataset):
                     data_i = self._lght_to_grid(lght_data, t_slice)
                 else:
                     data_i = self._hdf_files[fname][data_type][
-                             idx: idx + 1, :, :, t_slice
-                             ]
+                        idx : idx + 1, :, :, t_slice
+                    ]
                 # Downsample t
                 t_slice = [
-                              slice(None, None),
-                          ] * 4
+                    slice(None, None),
+                ] * 4
                 t_slice[-1] = slice(
                     None, None, downsample_dict[data_type][0]
                 )  # layout = 'NHWT'
@@ -620,7 +626,7 @@ class SEVIRDataset(io.Dataset):
                         hf[data_type].resize(
                             (hf[data_type].shape[0] + data_i.shape[0]), axis=0
                         )
-                        hf[data_type][-data_i.shape[0]:] = data_i
+                        hf[data_type][-data_i.shape[0] :] = data_i
 
             sample_counter += 1
 
@@ -633,7 +639,9 @@ class SEVIRDataset(io.Dataset):
             Notice that this is different from `self.downsample_dict`, which is used during runtime.
         """
         import os
+
         from skimage.measure import block_reduce
+
         assert not os.path.exists(save_dir), f"save_dir {save_dir} already exists!"
         os.makedirs(save_dir)
         for fname, hdf_file in self._hdf_files.items():
@@ -650,8 +658,8 @@ class SEVIRDataset(io.Dataset):
                 data_i = self._hdf_files[fname][data_type]
             # Downsample t
             t_slice = [
-                          slice(None, None),
-                      ] * 4
+                slice(None, None),
+            ] * 4
             t_slice[-1] = slice(
                 None, None, downsample_dict[data_type][0]
             )  # layout = 'NHWT'
@@ -726,9 +734,9 @@ class SEVIRDataset(io.Dataset):
             # compute the remaining number of sequences in current event
             curr_event_remain_seq = self.num_seq_per_event - self.curr_seq_idx
             all_remain_seq = (
-                    curr_event_remain_seq
-                    + (self.end_event_idx - self.curr_event_idx - 1)
-                    * self.num_seq_per_event
+                curr_event_remain_seq
+                + (self.end_event_idx - self.curr_event_idx - 1)
+                * self.num_seq_per_event
             )
             if self.split_mode == "floor":
                 # This approach does not cover all available data, but avoid dealing with masks
@@ -765,8 +773,8 @@ class SEVIRDataset(io.Dataset):
             event_batch = []
             for t in self.data_types:
                 pad_shape = [
-                                pad_size,
-                            ] + list(data[t].shape[1:])
+                    pad_size,
+                ] + list(data[t].shape[1:])
                 data_pad = np.concatenate(
                     (
                         data[t].astype(self.output_type),
@@ -843,7 +851,7 @@ class SEVIRDataset(io.Dataset):
             if key in data_types:
                 if isinstance(data, np.ndarray):
                     data = scale_dict[key] * (
-                            data.astype(np.float32) + offset_dict[key]
+                        data.astype(np.float32) + offset_dict[key]
                     )
                     data = change_layout_np(
                         data=data, in_layout="NHWT", out_layout=layout
@@ -912,7 +920,7 @@ class SEVIRDataset(io.Dataset):
 
     @staticmethod
     def downsample_data_dict(
-            data_dict, data_types=None, factors_dict=None, layout="NHWT"
+        data_dict, data_types=None, factors_dict=None, layout="NHWT"
     ):
         """
         Parameters
@@ -941,8 +949,8 @@ class SEVIRDataset(io.Dataset):
                 )
                 # downsample t dimension
                 t_slice = [
-                              slice(None, None),
-                          ] * 4
+                    slice(None, None),
+                ] * 4
                 t_slice[1] = slice(None, None, factors[0])
                 downsampled_data_dict[key] = downsampled_data_dict[key][tuple(t_slice)]
                 # downsample spatial dimensions
@@ -984,13 +992,13 @@ class SEVIRDataset(io.Dataset):
             )
             for imgt_idx, imgt in enumerate(self.data_types):
                 sampled_seq = event[imgt_idx][
-                              [
-                                  0,
-                              ],
-                              :,
-                              :,
-                              seq_slice_list[num_sampled],
-                              ]  # keep the dim of batch_size for concatenation
+                    [
+                        0,
+                    ],
+                    :,
+                    :,
+                    seq_slice_list[num_sampled],
+                ]  # keep the dim of batch_size for concatenation
                 if imgt in ret_dict:
                     ret_dict[imgt] = np.concatenate(
                         (ret_dict[imgt], sampled_seq), axis=0
@@ -1060,13 +1068,13 @@ class SEVIRDataset(io.Dataset):
         return ret_dict
 
     def layout_to_in_out_slice(
-            self,
+        self,
     ):
         t_axis = self.layout.find("T")
         num_axes = len(self.layout)
         in_slice = [
-                       slice(None, None),
-                   ] * num_axes
+            slice(None, None),
+        ] * num_axes
         out_slice = deepcopy(in_slice)
         in_slice[t_axis] = slice(None, self.in_len)
         if self.out_len is None:

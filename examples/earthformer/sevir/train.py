@@ -3,11 +3,12 @@ import hydra
 import numpy as np
 import paddle
 import sevir_metric
-from examples.earthformer.enso import enso_metric
+import sevir_vis_seq
 from omegaconf import DictConfig
 from paddle import nn
-import sevir_vis_seq
+
 import ppsci
+from examples.earthformer.enso import enso_metric
 
 
 def train(cfg: DictConfig):
@@ -248,7 +249,7 @@ def inference(cfg: DictConfig):
     data = data_vil[idx]
     input_data = data[: cfg.INFER.in_len, ...]
     input_data = input_data.reshape(1, *input_data.shape, 1).astype(np.float32)
-    target_data = data[cfg.INFER.in_len: cfg.INFER.in_len + cfg.INFER.out_len, ...]
+    target_data = data[cfg.INFER.in_len : cfg.INFER.in_len + cfg.INFER.out_len, ...]
     target_data = target_data.reshape(1, *target_data.shape, 1).astype(np.float32)
 
     output_dict = predictor.predict({"input": input_data}, cfg.INFER.batch_size)

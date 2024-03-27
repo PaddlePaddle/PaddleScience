@@ -1,16 +1,23 @@
-import re
 import inspect
+import re
 from collections import OrderedDict
-from typing import Dict, List, Any, Optional, Callable, Set, Tuple
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+
 import pyparsing as pp
+
 
 class Inspector(object):
     def __init__(self, base_class: Any):
         self.base_class: Any = base_class
         self.params: Dict[str, Dict[str, Any]] = {}
 
-    def inspect(self, func: Callable,
-                pop_first: bool = False) -> Dict[str, Any]:
+    def inspect(self, func: Callable, pop_first: bool = False) -> Dict[str, Any]:
         params = inspect.signature(func).parameters
         params = OrderedDict(params)
         if pop_first:
@@ -24,7 +31,7 @@ class Inspector(object):
         return set(keys)
 
     def __implements__(self, cls, func_name: str) -> bool:
-        if cls.__name__ == 'MessagePassing':
+        if cls.__name__ == "MessagePassing":
             return False
         if func_name in cls.__dict__.keys():
             return True
@@ -39,30 +46,31 @@ class Inspector(object):
             data = kwargs.get(key, inspect.Parameter.empty)
             if data is inspect.Parameter.empty:
                 if param.default is inspect.Parameter.empty:
-                    raise TypeError(f'Required parameter {key} is empty.')
+                    raise TypeError(f"Required parameter {key} is empty.")
                 data = param.default
             out[key] = data
         return out
+
 
 def func_header_repr(func: Callable, keep_annotation: bool = True) -> str:
     source = inspect.getsource(func)
     signature = inspect.signature(func)
 
     if keep_annotation:
-        return ''.join(re.split(r'(\).*?:.*?\n)', source,
-                                maxsplit=1)[:2]).strip()
+        return "".join(re.split(r"(\).*?:.*?\n)", source, maxsplit=1)[:2]).strip()
 
-    params_repr = ['self']
+    params_repr = ["self"]
     for param in signature.parameters.values():
         params_repr.append(param.name)
         if param.default is not inspect.Parameter.empty:
-            params_repr[-1] += f'={param.default}'
+            params_repr[-1] += f"={param.default}"
 
     return f'def {func.__name__}({", ".join(params_repr)}):'
 
+
 def func_body_repr(func: Callable, keep_annotation: bool = True) -> str:
     source = inspect.getsource(func)
-    body_repr = re.split(r'\).*?:.*?\n', source, maxsplit=1)[1]
+    body_repr = re.split(r"\).*?:.*?\n", source, maxsplit=1)[1]
     if not keep_annotation:
-        body_repr = re.sub(r'\s*# type:.*\n', '', body_repr)
+        body_repr = re.sub(r"\s*# type:.*\n", "", body_repr)
     return body_repr
