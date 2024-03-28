@@ -41,7 +41,9 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
         if solver.nvtx_flag:  # only for nsight analysis
-            core.nvprof_nvtx_push(f"Training iteration {solver.global_step + 1}")
+            core.nvprof_nvtx_push(
+                f"Training iteration {solver.global_step + 1}"
+            )  # Training iteration
 
         total_loss = 0.0
         total_batch_size = 0
@@ -171,12 +173,12 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         batch_tic = time.perf_counter()
 
         if solver.nvtx_flag:  # only for nsight analysis
-            core.nvprof_nvtx_pop()
+            core.nvprof_nvtx_pop()  # Training iteration
             NVTX_STOP_ITER = 25
             if solver.global_step >= NVTX_STOP_ITER:
                 print(
                     f"Only run {NVTX_STOP_ITER} steps when 'NVTX' is set in environment"
-                    " for nsight analysis. Exit now ......"
+                    " for nsight analysis. Exit now ......\n"
                 )
                 core.nvprof_stop()
                 sys.exit(0)
