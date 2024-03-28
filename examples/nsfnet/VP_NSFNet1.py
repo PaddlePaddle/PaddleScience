@@ -1,6 +1,7 @@
 import hydra
 import numpy as np
 from omegaconf import DictConfig
+import paddle
 
 import ppsci
 from ppsci.utils import logger
@@ -24,16 +25,16 @@ def main(cfg: DictConfig):
 
 
 def generate_data(N_TRAIN, lam, seed):
-    x = np.linspace(-0.5, 1.0, 101)
-    y = np.linspace(-0.5, 1.5, 101)
+    x = np.linspace(-0.5, 1.0, 201)
+    y = np.linspace(-0.5, 1.5, 201)
 
-    yb1 = np.array([-0.5] * 100)
-    yb2 = np.array([1] * 100)
-    xb1 = np.array([-0.5] * 100)
-    xb2 = np.array([1.5] * 100)
+    yb1 = np.array([-0.5] * 200)
+    yb2 = np.array([1] * 200)
+    xb1 = np.array([-0.5] * 200)
+    xb2 = np.array([1.5] * 200)
 
-    y_train1 = np.concatenate([y[1:101], y[0:100], xb1, xb2], 0).astype("float32")
-    x_train1 = np.concatenate([yb1, yb2, x[0:100], x[1:101]], 0).astype("float32")
+    y_train1 = np.concatenate([y[1:201], y[0:200], xb1, xb2], 0).astype("float32")
+    x_train1 = np.concatenate([yb1, yb2, x[0:200], x[1:201]], 0).astype("float32")
 
     xb_train = x_train1.reshape(x_train1.shape[0], 1).astype("float32")
     yb_train = y_train1.reshape(y_train1.shape[0], 1).astype("float32")
@@ -67,6 +68,8 @@ def generate_data(N_TRAIN, lam, seed):
 def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    paddle.framework.core.set_prim_eager_enabled(True)
+    paddle.framework.core._set_prim_all_enabled(True)
 
     # set random seed for reproducibility
     SEED = cfg.seed
@@ -102,11 +105,12 @@ def train(cfg: DictConfig):
         p_star,
     ) = generate_data(N_TRAIN, lam, SEED)
 
+
     train_dataloader_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
             "input": {"x": xb_train, "y": yb_train},
-            "label": {"u": ub_train, "v": vb_train},
+            "label": {"u": ub_train, "v": vb_train, "p": vb_train},
         },
         "batch_size": NB_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
@@ -210,47 +214,12 @@ def train(cfg: DictConfig):
         visualizer=None,
         eval_with_no_grad=False,
         output_dir=OUTPUT_DIR,
+        to_static=True,
     )
 
     # train model
     solver.train()
 
-    solver.eval()
-
-    # plot the loss
-    solver.plot_loss_history()
-
-    # set LBFGS optimizer
-    EPOCHS = 5000
-    optimizer = ppsci.optimizer.LBFGS(
-        max_iter=50000, tolerance_change=np.finfo(float).eps, history_size=50
-    )(model)
-
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
-
-    # initialize solver
-    solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
-        optimizer=optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=False,
-        log_freq=2000,
-        eval_freq=2000,
-        seed=SEED,
-        equation=equation,
-        geom=geom,
-        validator=validator,
-        visualizer=None,
-        eval_with_no_grad=False,
-        output_dir=OUTPUT_DIR,
-    )
-    # train model
-    solver.train()
-
-    # evaluate after finished training
-    solver.eval()
 
 
 def evaluate(cfg: DictConfig):
