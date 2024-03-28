@@ -23,4 +23,5 @@
         - MeshCylinderDataset
         - RadarDataset
         - build_dataset
+        - DGMRDataset
       show_root_heading: true
