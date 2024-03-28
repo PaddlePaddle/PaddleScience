@@ -444,10 +444,18 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
+        # set up nvtx flag for nsight analysis
+        self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
+        self.forward_helper.nvtx_flag = self.nvtx_flag
+
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.nvtx_flag:
+            paddle.framework.core.nvprof_start()
+            paddle.framework.core.nvprof_enable_record_event()
 
         for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
