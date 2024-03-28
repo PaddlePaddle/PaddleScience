@@ -84,9 +84,9 @@ class DGMRDataset(paddle.io.Dataset):
         ]
         target_frames = radar_frames[-self.num_target_frames :]
         input_item = {
-            self.input_keys: np.moveaxis(input_frames, [0, 1, 2, 3], [0, 2, 3, 1])
+            self.input_keys[0]: np.moveaxis(input_frames, [0, 1, 2, 3], [0, 2, 3, 1])
         }
         label_item = {
-            self.label_keys: np.moveaxis(target_frames, [0, 1, 2, 3], [0, 2, 3, 1])
+            self.label_keys[0]: np.moveaxis(target_frames, [0, 1, 2, 3], [0, 2, 3, 1])
         }
         return input_item, label_item

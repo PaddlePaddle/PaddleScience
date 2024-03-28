@@ -105,12 +105,12 @@ def validation(
         grid_cell_reg: Regularization term to encourage smooth transitions.
     """
     images, future_images = batch
-    images_value = images[cfg.DATASET.input_keys]
-    future_images_value = future_images[cfg.DATASET.label_keys]
+    images_value = images[cfg.DATASET.input_keys[0]]
+    future_images_value = future_images[cfg.DATASET.label_keys[0]]
     # Two discriminator steps per generator step
     for _ in range(2):
         predictions = solver.predict(images)
-        predictions_value = predictions[cfg.MODEL.output_keys]
+        predictions_value = predictions[cfg.MODEL.output_keys[0]]
         generated_sequence = paddle.concat(x=[images_value, predictions_value], axis=1)
         real_sequence = paddle.concat(x=[images_value, future_images_value], axis=1)
         concatenated_inputs = paddle.concat(
@@ -133,7 +133,7 @@ def validation(
         ) + _loss_hinge_disc(score_generated_temporal, score_real_temporal)
 
     predictions_value = [
-        solver.predict(images)[cfg.MODEL.output_keys] for _ in range(6)
+        solver.predict(images)[cfg.MODEL.output_keys[0]] for _ in range(6)
     ]
     grid_cell_reg = _grid_cell_regularizer(
         paddle.stack(x=predictions_value, axis=0), future_images_value
@@ -215,9 +215,9 @@ def evaluate(cfg: DictConfig):
             out_dict = validation(cfg, solver, batch)
 
             # visualize
-            images = batch[0][cfg.DATASET.input_keys]
-            future_images = batch[1][cfg.DATASET.label_keys]
-            generated_images = solver.predict(batch[0])[cfg.MODEL.output_keys]
+            images = batch[0][cfg.DATASET.input_keys[0]]
+            future_images = batch[1][cfg.DATASET.label_keys[0]]
+            generated_images = solver.predict(batch[0])[cfg.MODEL.output_keys[0]]
             if batch_idx % 50 == 0:
                 logger.message(f"Saving plot of image frame to {cfg.output_dir}")
                 visualize(

@@ -29,8 +29,8 @@ output_dir: ${hydra:run.dir}
 
 # dataset settings
 DATASET:
-  input_keys: 'input_frames'
-  label_keys: 'target_frames'
+  input_keys: ['input_frames']
+  label_keys: ['target_frames']
   split: validation # train or validation
   num_input_frames: 4
   num_target_frames: 18
@@ -38,8 +38,8 @@ DATASET:
 
 # model settings
 MODEL:
-  input_keys: 'input_frames'
-  output_keys: 'future_images'
+  input_keys: ['input_frames']
+  output_keys: ['future_images']
   forecast_steps: 18
   input_channels: 1
   output_shape: 256

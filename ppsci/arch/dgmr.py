@@ -104,9 +104,9 @@ class DGMR(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
-        x_tensor = self.concat_to_tensor(x, [self.input_keys])
+        x_tensor = self.concat_to_tensor(x, self.input_keys)
         y = [self.generator(x_tensor)]
-        y = self.split_to_dict(y, [self.output_keys])
+        y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
             y = self._output_transform(x, y)
