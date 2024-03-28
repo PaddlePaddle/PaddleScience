@@ -52,7 +52,7 @@ class HEDeepONets(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.HEDeepONet(
+        >>> model = ppsci.arch.HEDeepONets(
         ...     ('qm_h',),
         ...     ('qm_c',),
         ...     ("x",'t'),

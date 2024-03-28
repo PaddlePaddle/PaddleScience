@@ -38,7 +38,9 @@ class FractionalPoisson(PDE):
 
     Examples:
         >>> import ppsci
-        >>> fpde = ppsci.equation.FractionalPoisson(ALPHA, geom["disk"], [8, 100])
+        >>> geom_disk = ppsci.geometry.Disk([0, 0], 1)
+        >>> ALPHA = 0.5
+        >>> fpde = ppsci.equation.FractionalPoisson(ALPHA, geom_disk, [8, 100])
     """
     dtype = paddle.get_default_dtype()
 
