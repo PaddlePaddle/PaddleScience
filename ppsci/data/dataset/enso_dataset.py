@@ -23,8 +23,9 @@ import numpy as np
 from paddle import io
 
 try:
-    import xarray as xr
     from pathlib import Path
+
+    import xarray as xr
 except ModuleNotFoundError:
     pass
 
