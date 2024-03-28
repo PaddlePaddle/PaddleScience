@@ -60,9 +60,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="32"
+``` py linenums="23"
 --8<--
-examples/laplace/laplace2d.py:32:33
+examples/laplace/laplace2d.py:23:24
 --8<--
 ```
 
@@ -74,9 +74,9 @@ examples/laplace/laplace2d.py:32:33
 
 由于 2D-Laplace 使用的是 Laplace 方程的2维形式，因此可以直接使用 PaddleScience 内置的 `Laplace`，指定该类的参数 `dim` 为2。
 
-``` py linenums="35"
+``` py linenums="26"
 --8<--
-examples/laplace/laplace2d.py:35:36
+examples/laplace/laplace2d.py:26:27
 --8<--
 ```
 
@@ -85,9 +85,9 @@ examples/laplace/laplace2d.py:35:36
 本文中 2D Laplace 问题作用在以 (0.0, 0.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-``` py linenums="38"
+``` py linenums="29"
 --8<--
-examples/laplace/laplace2d.py:38:43
+examples/laplace/laplace2d.py:29:34
 --8<--
 ```
 
@@ -97,9 +97,9 @@ examples/laplace/laplace2d.py:38:43
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` yaml linenums="26"
+``` yaml linenums="30"
 --8<--
-examples/laplace/conf/laplace2d.yaml:26:27
+examples/laplace/conf/laplace2d.yaml:30:31
 --8<--
 ```
 
@@ -107,9 +107,9 @@ examples/laplace/conf/laplace2d.yaml:26:27
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="60"
+``` py linenums="50"
 --8<--
-examples/laplace/laplace2d.py:60:68
+examples/laplace/laplace2d.py:50:59
 --8<--
 ```
 
@@ -131,9 +131,9 @@ examples/laplace/laplace2d.py:60:68
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-``` py linenums="69"
+``` py linenums="60"
 --8<--
-examples/laplace/laplace2d.py:69:76
+examples/laplace/laplace2d.py:60:72
 --8<--
 ```
 
@@ -141,9 +141,9 @@ examples/laplace/laplace2d.py:69:76
 
 第二个参数是指我们约束对象的真值如何获得，这里我们直接通过其解析解进行计算，定义解析解的代码如下：
 
-``` py linenums="45"
+``` py linenums="36"
 --8<--
-examples/laplace/laplace2d.py:45:49
+examples/laplace/laplace2d.py:36:40
 --8<--
 ```
 
@@ -153,9 +153,9 @@ examples/laplace/laplace2d.py:45:49
 
 接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。
 
-``` yaml linenums="41"
+``` yaml linenums="45"
 --8<--
-examples/laplace/conf/laplace2d.yaml:41:46
+examples/laplace/conf/laplace2d.yaml:45:50
 --8<--
 ```
 
@@ -163,9 +163,9 @@ examples/laplace/conf/laplace2d.yaml:41:46
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="83"
+``` py linenums="74"
 --8<--
-examples/laplace/laplace2d.py:83:84
+examples/laplace/laplace2d.py:74:75
 --8<--
 ```
 
@@ -173,9 +173,9 @@ examples/laplace/laplace2d.py:83:84
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="86"
+``` py linenums="77"
 --8<--
-examples/laplace/laplace2d.py:86:100
+examples/laplace/laplace2d.py:77:92
 --8<--
 ```
 
@@ -185,9 +185,9 @@ examples/laplace/laplace2d.py:86:100
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="103"
+``` py linenums="94"
 --8<--
-examples/laplace/laplace2d.py:103:112
+examples/laplace/laplace2d.py:94:103
 --8<--
 ```
 
@@ -195,9 +195,9 @@ examples/laplace/laplace2d.py:103:112
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="114"
+``` py linenums="105"
 --8<--
-examples/laplace/laplace2d.py:114:134
+examples/laplace/laplace2d.py:105:125
 --8<--
 ```
 
