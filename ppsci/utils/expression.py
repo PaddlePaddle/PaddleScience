@@ -22,6 +22,7 @@ from typing import Tuple
 
 from paddle import jit
 from paddle import nn
+from paddle.framework import core
 
 if TYPE_CHECKING:
     import paddle
@@ -45,6 +46,8 @@ class ExpressionSolver(nn.Layer):
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
         >>> expr_solver = ExpressionSolver()
     """
+
+    nvtx_flag: bool  # only for nsight analysis
 
     def __init__(self):
         super().__init__()
@@ -79,14 +82,21 @@ class ExpressionSolver(nn.Layer):
             Tuple[paddle.Tensor, ...]: Tuple of losses for each constraint.
         """
         output_dicts = []
-        for i, expr_dict in enumerate(expr_dicts):
+        constraint_losses = []
+
+        for i, cst_name in enumerate(constraint):
+            cst_obj = constraint[cst_name]
+
             # model forward
+            if self.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push(f"Constraint {cst_name}")
+
             output_dict = model(input_dicts[i])
 
             # equation forward
             data_dict = {k: v for k, v in input_dicts[i].items()}
             data_dict.update(output_dict)
-            for name, expr in expr_dict.items():
+            for name, expr in expr_dicts[i].items():
                 output_dict[name] = expr(data_dict)
 
             # put field 'area' into output_dict
@@ -98,15 +108,17 @@ class ExpressionSolver(nn.Layer):
             # clear differentiation cache
             clear()
 
-        # compute loss for each constraint according to its' own output, label and weight
-        constraint_losses = []
-        for i, _constraint in enumerate(constraint.values()):
-            constraint_loss = _constraint.loss(
+            # compute loss for each constraint according to its' own output, label and weight
+            constraint_loss = cst_obj.loss(
                 output_dicts[i],
                 label_dicts[i],
                 weight_dicts[i],
             )
             constraint_losses.append(constraint_loss)
+
+            if self.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_pop()
+
         return constraint_losses
 
     @jit.to_static
