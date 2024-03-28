@@ -100,13 +100,12 @@ class PDE:
                    -4.), Parameter containing:
             Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=False,
                    0.)]
-
         """
         return self.learnable_parameters.parameters()
 
     def state_dict(self) -> Dict[str, paddle.Tensor]:
         """Return named learnable parameters in dict.
-        
+
         Args:
             None
 
@@ -122,21 +121,20 @@ class PDE:
                    -4.)), ('1', Parameter containing:
             Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=False,
                    0.))])
-        
         """
 
         return self.learnable_parameters.state_dict()
 
-    def set_state_dict(self, state_dict:Dict[str, paddle.Tensor]):
+    def set_state_dict(self, state_dict: Dict[str, paddle.Tensor]):
         """Set state dict from dict.
-        
+
         Args:
             state_dict (Dict[str, paddle.Tensor]): The state dict to be set.
 
         Returns:
             None
 
-        Examples: 
+        Examples:
             >>> import paddle
             >>> import ppsci
             >>> paddle.set_default_dtype("float64")
@@ -149,7 +147,6 @@ class PDE:
                    -3.10000000)), ('1', Parameter containing:
             Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=False,
                    0.))])
-
         """
         self.learnable_parameters.set_state_dict(state_dict)
 
