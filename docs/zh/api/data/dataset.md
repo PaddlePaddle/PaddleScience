@@ -23,4 +23,6 @@
         - MeshCylinderDataset
         - RadarDataset
         - build_dataset
+        - ENSODataset
+        - SEVIRDataset
       show_root_heading: true

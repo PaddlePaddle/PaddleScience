@@ -41,6 +41,7 @@ from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -54,6 +55,7 @@ __all__ = [
     "LorenzEmbedding",
     "RosslerEmbedding",
     "CylinderEmbedding",
+    "CuboidTransformer",
     "Generator",
     "Discriminator",
     "PhysformerGPT2",
