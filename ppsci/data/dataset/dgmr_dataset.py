@@ -42,7 +42,7 @@ class DGMRDataset(paddle.io.Dataset):
 
     Examples:
         >>> import ppsci
-        >>> dataset = ppsci.data.dataset.DGMRDataset(("input", ), ("output", ))
+        >>> dataset = ppsci.data.dataset.DGMRDataset(("input", ), ("output", )) # doctest: +SKIP
     """
 
     def __init__(
