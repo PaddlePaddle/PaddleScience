@@ -4,10 +4,6 @@ import paddle.nn as nn
 from paddle.io import Dataset
 from paddle.optimizer.lr import LRScheduler
 paddle.framework.core.set_prim_eager_enabled(True)
-# def exponential_decay(step_size, decay_steps, decay_rate):
-#   def schedule(i):
-#     return step_size * decay_rate ** (i / decay_steps)
-#   return schedule
 class exponential_decay(LRScheduler):
     def __init__(self,
                 learning_rate,
