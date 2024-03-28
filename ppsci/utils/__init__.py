@@ -23,7 +23,6 @@ from ppsci.utils.checker import run_check
 from ppsci.utils.checker import run_check_mesh
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
-from ppsci.utils.get_param import get_parameter_names
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
 from ppsci.utils.reader import load_csv_file
@@ -42,7 +41,6 @@ __all__ = [
     "AttrDict",
     "AverageMeter",
     "ExpressionSolver",
-    "get_parameter_names",
     "initializer",
     "logger",
     "misc",

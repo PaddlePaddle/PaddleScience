@@ -1,14 +1,25 @@
-import h5py
 import hydra
+import h5py
 import numpy as np
 import paddle
+from paddle import nn
+from omegaconf import DictConfig
+import ppsci
 import sevir_metric
 import sevir_vis_seq
-from omegaconf import DictConfig
-from paddle import nn
 
-import ppsci
-from examples.earthformer.enso import enso_metric
+
+def get_parameter_names(model, forbidden_layer_types):
+    result = []
+    for name, child in model.named_children():
+        result += [
+            f"{name}.{n}"
+            for n in get_parameter_names(child, forbidden_layer_types)
+            if not isinstance(child, tuple(forbidden_layer_types))
+        ]
+    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
+    result += list(model._parameters.keys())
+    return result
 
 
 def train(cfg: DictConfig):
@@ -101,13 +112,9 @@ def train(cfg: DictConfig):
         **cfg.MODEL.afno,
     )
 
-    decay_parameters = enso_metric.get_parameter_names(model, [nn.LayerNorm])
+    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
-            "weight_decay": cfg.TRAIN.wd,
-        },
         {
             "params": [
                 p for n, p in model.named_parameters() if n not in decay_parameters
@@ -116,7 +123,7 @@ def train(cfg: DictConfig):
         },
     ]
 
-    # # init optimizer and lr scheduler
+    # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
@@ -125,7 +132,7 @@ def train(cfg: DictConfig):
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters
+        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
     )
 
     # initialize solver
@@ -249,7 +256,7 @@ def inference(cfg: DictConfig):
     data = data_vil[idx]
     input_data = data[: cfg.INFER.in_len, ...]
     input_data = input_data.reshape(1, *input_data.shape, 1).astype(np.float32)
-    target_data = data[cfg.INFER.in_len : cfg.INFER.in_len + cfg.INFER.out_len, ...]
+    target_data = data[cfg.INFER.in_len: cfg.INFER.in_len + cfg.INFER.out_len, ...]
     target_data = target_data.reshape(1, *target_data.shape, 1).astype(np.float32)
 
     output_dict = predictor.predict({"input": input_data}, cfg.INFER.batch_size)

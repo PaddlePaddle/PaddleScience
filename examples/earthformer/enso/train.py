@@ -1,13 +1,32 @@
-import enso_metric
 import hydra
 import numpy as np
 import paddle
-import xarray as xr
 from omegaconf import DictConfig
 from paddle import nn
 
 import ppsci
 from ppsci.data.dataset import enso_dataset
+import enso_metric
+
+try:
+    import xarray as xr
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        "Please install xarray with `pip install xarray`."
+    )
+
+
+def get_parameter_names(model, forbidden_layer_types):
+    result = []
+    for name, child in model.named_children():
+        result += [
+            f"{name}.{n}"
+            for n in get_parameter_names(child, forbidden_layer_types)
+            if not isinstance(child, tuple(forbidden_layer_types))
+        ]
+    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
+    result += list(model._parameters.keys())
+    return result
 
 
 def train(cfg: DictConfig):
@@ -78,13 +97,9 @@ def train(cfg: DictConfig):
         **cfg.MODEL.afno,
     )
 
-    decay_parameters = enso_metric.get_parameter_names(model, [nn.LayerNorm])
+    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
-            "weight_decay": cfg.TRAIN.wd,
-        },
         {
             "params": [
                 p for n, p in model.named_parameters() if n not in decay_parameters
@@ -102,7 +117,7 @@ def train(cfg: DictConfig):
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters
+        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
     )
 
     # initialize solver
@@ -227,7 +242,7 @@ def inference(cfg: DictConfig):
     idx = np.random.choice(len(data), None, False)
     in_seq = sst_data[idx, : cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
     in_seq = in_seq[np.newaxis, ...]
-    target_seq = sst_data[idx, cfg.INFER.in_len :, ...]  # ( out_len, lat, lon, 1)
+    target_seq = sst_data[idx, cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
     target_seq = target_seq[np.newaxis, ...]
 
     output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)

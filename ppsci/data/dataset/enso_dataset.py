@@ -14,14 +14,19 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import importlib
 from typing import Dict
 from typing import Optional
 from typing import Tuple
 
 import numpy as np
-import xarray as xr
 from paddle import io
+
+try:
+    import xarray as xr
+    from pathlib import Path
+except ModuleNotFoundError:
+    pass
 
 NINO_WINDOW_T = 3  # Nino index is the sliding average over sst, window size is 3
 CMIP6_SST_MAX = 10.198975563049316
@@ -51,7 +56,8 @@ def prepare_inputs_targets(
     # input_length=12: the number of input frames
     # pred_shift=26: the lead_time of the last target to be predicted
     # pred_length=26: the number of frames to be predicted
-    assert pred_shift >= pred_length
+    if pred_shift >= pred_length:
+        raise ValueError("pred_shift should be small than pred_length")
     input_span = input_gap * (input_length - 1) + 1
     pred_gap = pred_shift // pred_length
     input_ind = np.arange(0, input_span, input_gap)
@@ -70,7 +76,8 @@ def fold(data, size=36, stride=12):
     # data (N, size, *)
     # outdata (N_, *)
     # N/size is the number/width of sliding blocks
-    assert size % stride == 0
+    if size % stride == 0:
+        raise ValueError("size modulo stride should be non-zero")
     times = size // stride
     remain = (data.shape[0] - 1) % times
     if remain > 0:
@@ -219,6 +226,16 @@ class ENSODataset(io.Dataset):
             e.g., samples_gap = 10, the first seq contains [0, 1, ..., T-1] frame indices, the second seq contains [10, 11, .., T+9]
         """
         super(ENSODataset, self).__init__()
+        if importlib.util.find_spec("xarray") is None:
+            raise ModuleNotFoundError(
+                "To use RadarDataset, please install 'xarray' via: `pip install "
+                "xarray` first."
+            )
+        if importlib.util.find_spec("pathlib") is None:
+            raise ModuleNotFoundError(
+                "To use RadarDataset, please install 'pathlib' via: `pip install "
+                "pathlib` first."
+            )
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.data_dir = data_dir
@@ -236,9 +253,10 @@ class ENSODataset(io.Dataset):
         self.normalize_sst = normalize_sst
         # datamodule_only
         self.batch_size = batch_size
-        assert num_workers == 1, ValueError(
-            "Current implementation does not support `num_workers != 1`!"
-        )
+        if num_workers == 1:
+            raise ValueError(
+                "Current implementation does not support `num_workers != 1`!"
+            )
         self.num_workers = num_workers
         self.training = training
 
@@ -329,7 +347,7 @@ class ENSODataset(io.Dataset):
         assert self.target_nino.shape[1] == self.out_len - NINO_WINDOW_T + 1
         return self.sst, self.target_nino
 
-    def GetDataShape(self):
+    def get_datashape(self):
         return {"sst": self.sst.shape, "nino target": self.target_nino.shape}
 
     def __len__(self):
