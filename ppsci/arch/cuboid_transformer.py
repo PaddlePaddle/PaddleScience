@@ -10,11 +10,11 @@ import paddle.nn.functional as F
 from paddle import nn
 from paddle.distributed import fleet
 
+from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.arch.cuboid_transformer_patterns import CuboidCrossAttentionPatterns
 from ppsci.arch.cuboid_transformer_patterns import CuboidSelfAttentionPatterns
 from ppsci.utils import initializer
-from ppsci.arch import activation as act_mod
 
 """A space-time Transformer with Cuboid Attention"""
 
@@ -84,11 +84,11 @@ class RMSNorm(paddle.nn.Layer):
 
 
 def get_norm_layer(
-        normalization: str = "layer_norm",
-        axis: int = -1,
-        epsilon: float = 1e-05,
-        in_channels: int = 0,
-        **kwargs,
+    normalization: str = "layer_norm",
+    axis: int = -1,
+    epsilon: float = 1e-05,
+    in_channels: int = 0,
+    **kwargs,
 ):
     """Get the normalization layer based on the provided type
 
@@ -181,7 +181,7 @@ def _generalize_unpadding(x, pad_t, pad_h, pad_w, padding_type):
 
 
 def apply_initialization(
-        m, linear_mode="0", conv_mode="0", norm_mode="0", embed_mode="0"
+    m, linear_mode="0", conv_mode="0", norm_mode="0", embed_mode="0"
 ):
     if isinstance(m, paddle.nn.Linear):
         if linear_mode in ("0",):
@@ -195,13 +195,13 @@ def apply_initialization(
         if hasattr(m, "bias") and m.bias is not None:
             m.bias = initializer.zeros_(m.bias)
     elif isinstance(
-            m,
-            (
-                    paddle.nn.Conv2D,
-                    paddle.nn.Conv3D,
-                    paddle.nn.Conv2DTranspose,
-                    paddle.nn.Conv3DTranspose,
-            ),
+        m,
+        (
+            paddle.nn.Conv2D,
+            paddle.nn.Conv3D,
+            paddle.nn.Conv2DTranspose,
+            paddle.nn.Conv3DTranspose,
+        ),
     ):
         if conv_mode in ("0",):
             m.weight = initializer.kaiming_normal_(
@@ -299,17 +299,17 @@ class PosEmbed(paddle.nn.Layer):
         w_idx = paddle.arange(end=W)
         if self.typ == "t+h+w":
             return (
-                    x
-                    + self.T_embed(t_idx).reshape([T, 1, 1, self.embed_dim])
-                    + self.H_embed(h_idx).reshape([1, H, 1, self.embed_dim])
-                    + self.W_embed(w_idx).reshape([1, 1, W, self.embed_dim])
+                x
+                + self.T_embed(t_idx).reshape([T, 1, 1, self.embed_dim])
+                + self.H_embed(h_idx).reshape([1, H, 1, self.embed_dim])
+                + self.W_embed(w_idx).reshape([1, 1, W, self.embed_dim])
             )
         elif self.typ == "t+hw":
             spatial_idx = h_idx.unsqueeze(axis=-1) * self.maxW + w_idx
             return (
-                    x
-                    + self.T_embed(t_idx).reshape([T, 1, 1, self.embed_dim])
-                    + self.HW_embed(spatial_idx)
+                x
+                + self.T_embed(t_idx).reshape([T, 1, 1, self.embed_dim])
+                + self.HW_embed(spatial_idx)
             )
         else:
             raise NotImplementedError
@@ -327,18 +327,18 @@ class PositionwiseFFN(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            units: int = 512,
-            hidden_size: int = 2048,
-            activation_dropout: float = 0.0,
-            dropout: float = 0.1,
-            gated_proj: bool = False,
-            activation="relu",
-            normalization: str = "layer_norm",
-            layer_norm_eps: float = 1e-05,
-            pre_norm: bool = False,
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        units: int = 512,
+        hidden_size: int = 2048,
+        activation_dropout: float = 0.0,
+        dropout: float = 0.1,
+        gated_proj: bool = False,
+        activation="relu",
+        normalization: str = "layer_norm",
+        layer_norm_eps: float = 1e-05,
+        pre_norm: bool = False,
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
         Parameters
@@ -386,7 +386,7 @@ class PositionwiseFFN(paddle.nn.Layer):
             self.ffn_1_gate = paddle.nn.Linear(
                 in_features=units, out_features=hidden_size, bias_attr=True
             )
-        if activation == 'leaky_relu':
+        if activation == "leaky_relu":
             self.activation = nn.LeakyReLU(negative_slope)
         else:
             self.activation = act_mod.get_activation(activation)
@@ -438,14 +438,14 @@ class PatchMerging3D(paddle.nn.Layer):
     """Patch Merging Layer"""
 
     def __init__(
-            self,
-            dim,
-            out_dim=None,
-            downsample=(1, 2, 2),
-            norm_layer="layer_norm",
-            padding_type="nearest",
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        out_dim=None,
+        downsample=(1, 2, 2),
+        norm_layer="layer_norm",
+        padding_type="nearest",
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -559,14 +559,14 @@ class Upsample3DLayer(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            dim,
-            out_dim,
-            target_size,
-            temporal_upsample=False,
-            kernel_size=3,
-            layout="THWC",
-            conv_init_mode="0",
+        self,
+        dim,
+        out_dim,
+        target_size,
+        temporal_upsample=False,
+        kernel_size=3,
+        layout="THWC",
+        conv_init_mode="0",
     ):
         """
 
@@ -685,7 +685,7 @@ def cuboid_reorder(data, cuboid_size, strategy):
     nblock_axis = []
     block_axis = []
     for i, (block_size, total_size, ele_strategy) in enumerate(
-            zip(cuboid_size, (T, H, W), strategy)
+        zip(cuboid_size, (T, H, W), strategy)
     ):
         if ele_strategy == "l":
             intermediate_shape.extend([total_size // block_size, block_size])
@@ -724,7 +724,7 @@ def cuboid_reorder_reverse(data, cuboid_size, strategy, orig_data_shape):
     T, H, W = orig_data_shape
     permutation_axis = [0]
     for i, (block_size, total_size, ele_strategy) in enumerate(
-            zip(cuboid_size, (T, H, W), strategy)
+        zip(cuboid_size, (T, H, W), strategy)
     ):
         if ele_strategy == "l":
             permutation_axis.append(i + 1)
@@ -754,7 +754,7 @@ def cuboid_reorder_reverse(data, cuboid_size, strategy, orig_data_shape):
 
 @lru_cache()
 def compute_cuboid_self_attention_mask(
-        data_shape, cuboid_size, shift_size, strategy, padding_type, device
+    data_shape, cuboid_size, shift_size, strategy, padding_type, device
 ):
     """Compute the shift window attention mask
 
@@ -808,19 +808,19 @@ def compute_cuboid_self_attention_mask(
     shift_mask = np.zeros(shape=(1, T + pad_t, H + pad_h, W + pad_w, 1))
     cnt = 0
     for t in (
-            slice(-cuboid_size[0]),
-            slice(-cuboid_size[0], -shift_size[0]),
-            slice(-shift_size[0], None),
+        slice(-cuboid_size[0]),
+        slice(-cuboid_size[0], -shift_size[0]),
+        slice(-shift_size[0], None),
     ):
         for h in (
-                slice(-cuboid_size[1]),
-                slice(-cuboid_size[1], -shift_size[1]),
-                slice(-shift_size[1], None),
+            slice(-cuboid_size[1]),
+            slice(-cuboid_size[1], -shift_size[1]),
+            slice(-shift_size[1], None),
         ):
             for w in (
-                    slice(-cuboid_size[2]),
-                    slice(-cuboid_size[2], -shift_size[2]),
-                    slice(-shift_size[2], None),
+                slice(-cuboid_size[2]),
+                slice(-cuboid_size[2], -shift_size[2]),
+                slice(-shift_size[2], None),
             ):
                 shift_mask[:, t, h, w, :] = cnt
                 cnt += 1
@@ -830,7 +830,7 @@ def compute_cuboid_self_attention_mask(
     attn_mask = shift_mask.unsqueeze(axis=1) - shift_mask.unsqueeze(axis=2) == 0
     if padding_type == "ignore":
         attn_mask = (
-                data_mask.unsqueeze(axis=1) * data_mask.unsqueeze(axis=2) * attn_mask
+            data_mask.unsqueeze(axis=1) * data_mask.unsqueeze(axis=2) * attn_mask
         )
     return attn_mask
 
@@ -929,28 +929,28 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            dim,
-            num_heads,
-            cuboid_size=(2, 7, 7),
-            shift_size=(0, 0, 0),
-            strategy=("l", "l", "l"),
-            padding_type="ignore",
-            qkv_bias=False,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            use_final_proj=True,
-            norm_layer="layer_norm",
-            use_global_vector=False,
-            use_global_self_attn=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            checkpoint_level=True,
-            use_relative_pos=True,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        num_heads,
+        cuboid_size=(2, 7, 7),
+        shift_size=(0, 0, 0),
+        strategy=("l", "l", "l"),
+        padding_type="ignore",
+        qkv_bias=False,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        use_final_proj=True,
+        norm_layer="layer_norm",
+        use_global_vector=False,
+        use_global_self_attn=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        checkpoint_level=True,
+        use_relative_pos=True,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -1009,12 +1009,12 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
         self.separate_global_qkv = separate_global_qkv
         if global_dim_ratio != 1:
             assert (
-                    separate_global_qkv is True
+                separate_global_qkv is True
             ), "Setting global_dim_ratio != 1 requires separate_global_qkv == True."
         self.global_dim_ratio = global_dim_ratio
         assert self.padding_type in ["ignore", "zeros", "nearest"]
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
         if use_relative_pos:
             init_data = paddle.zeros(
                 (
@@ -1045,7 +1045,7 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
             relative_coords[:, :, 1] += self.cuboid_size[1] - 1
             relative_coords[:, :, 2] += self.cuboid_size[2] - 1
             relative_coords[:, :, 0] *= (2 * self.cuboid_size[1] - 1) * (
-                    2 * self.cuboid_size[2] - 1
+                2 * self.cuboid_size[2] - 1
             )
             relative_coords[:, :, 1] *= 2 * self.cuboid_size[2] - 1
             relative_position_index = relative_coords.sum(axis=-1)
@@ -1431,42 +1431,42 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            dim,
-            num_heads,
-            block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-            block_shift_size=[(0, 0, 0), (2, 2, 2)],
-            block_strategy=[("d", "d", "d"), ("l", "l", "l")],
-            padding_type="ignore",
-            qkv_bias=False,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            ffn_drop=0.0,
-            activation="leaky",
-            gated_ffn=False,
-            norm_layer="layer_norm",
-            use_inter_ffn=False,
-            use_global_vector=False,
-            use_global_vector_ffn=True,
-            use_global_self_attn=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            checkpoint_level=True,
-            use_relative_pos=True,
-            use_final_proj=True,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        num_heads,
+        block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
+        block_shift_size=[(0, 0, 0), (2, 2, 2)],
+        block_strategy=[("d", "d", "d"), ("l", "l", "l")],
+        padding_type="ignore",
+        qkv_bias=False,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ffn_drop=0.0,
+        activation="leaky",
+        gated_ffn=False,
+        norm_layer="layer_norm",
+        use_inter_ffn=False,
+        use_global_vector=False,
+        use_global_vector_ffn=True,
+        use_global_self_attn=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        checkpoint_level=True,
+        use_relative_pos=True,
+        use_final_proj=True,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         super(StackCuboidSelfAttentionBlock, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
         self.ffn_linear_init_mode = ffn_linear_init_mode
         self.norm_init_mode = norm_init_mode
         assert (
-                len(block_cuboid_size[0]) > 0
-                and len(block_shift_size) > 0
-                and len(block_strategy) > 0
+            len(block_cuboid_size[0]) > 0
+            and len(block_shift_size) > 0
+            and len(block_strategy) > 0
         ), f"Format of the block cuboid size is not correct. block_cuboid_size={block_cuboid_size}"
         assert len(block_cuboid_size) == len(block_shift_size) == len(block_strategy)
         self.num_attn = len(block_cuboid_size)
@@ -1591,7 +1591,9 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
             if self.use_global_vector:
                 for idx, (attn, ffn) in enumerate(zip(self.attn_l, self.ffn_l)):
                     if self.checkpoint_level >= 2 and self.training:
-                        x_out, global_vectors_out = fleet.utils.recompute(attn, x, global_vectors)
+                        x_out, global_vectors_out = fleet.utils.recompute(
+                            attn, x, global_vectors
+                        )
                     else:
                         x_out, global_vectors_out = attn(x, global_vectors)
                     x = x + x_out
@@ -1621,7 +1623,9 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
         elif self.use_global_vector:
             for idx, attn in enumerate(self.attn_l):
                 if self.checkpoint_level >= 2 and self.training:
-                    x_out, global_vectors_out = fleet.utils.recompute(attn, x, global_vectors)
+                    x_out, global_vectors_out = fleet.utils.recompute(
+                        attn, x, global_vectors
+                    )
                 else:
                     x_out, global_vectors_out = attn(x, global_vectors)
                 x = x + x_out
@@ -1629,7 +1633,9 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
             if self.checkpoint_level >= 1 and self.training:
                 x = fleet.utils.recompute(self.ffn_l[0], x)
                 if self.use_global_vector_ffn:
-                    global_vectors = fleet.utils.recompute(self.global_ffn_l[0], global_vectors)
+                    global_vectors = fleet.utils.recompute(
+                        self.global_ffn_l[0], global_vectors
+                    )
             else:
                 x = self.ffn_l[0](x)
                 if self.use_global_vector_ffn:
@@ -1651,7 +1657,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
 
 @lru_cache()
 def compute_cuboid_cross_attention_mask(
-        T_x, T_mem, H, W, n_temporal, cuboid_hw, shift_hw, strategy, padding_type, device
+    T_x, T_mem, H, W, n_temporal, cuboid_hw, shift_hw, strategy, padding_type, device
 ):
     """
 
@@ -1718,14 +1724,14 @@ def compute_cuboid_cross_attention_mask(
     shift_mask = np.zeros(shape=(1, n_temporal, H + pad_h, W + pad_w, 1))
     cnt = 0
     for h in (
-            slice(-cuboid_hw[0]),
-            slice(-cuboid_hw[0], -shift_hw[0]),
-            slice(-shift_hw[0], None),
+        slice(-cuboid_hw[0]),
+        slice(-cuboid_hw[0], -shift_hw[0]),
+        slice(-shift_hw[0], None),
     ):
         for w in (
-                slice(-cuboid_hw[1]),
-                slice(-cuboid_hw[1], -shift_hw[1]),
-                slice(-shift_hw[1], None),
+            slice(-cuboid_hw[1]),
+            slice(-cuboid_hw[1], -shift_hw[1]),
+            slice(-shift_hw[1], None),
         ):
             shift_mask[:, :, h, w, :] = cnt
             cnt += 1
@@ -1735,9 +1741,9 @@ def compute_cuboid_cross_attention_mask(
     shift_mask = shift_mask.unsqueeze(axis=1) - shift_mask.unsqueeze(axis=2) == 0
     bh_bw = cuboid_hw[0] * cuboid_hw[1]
     attn_mask = (
-            shift_mask.reshape((num_cuboids, 1, bh_bw, 1, bh_bw))
-            * x_mask.reshape((num_cuboids, -1, bh_bw, 1, 1))
-            * mem_mask.reshape([num_cuboids, 1, 1, -1, bh_bw])
+        shift_mask.reshape((num_cuboids, 1, bh_bw, 1, bh_bw))
+        * x_mask.reshape((num_cuboids, -1, bh_bw, 1, 1))
+        * mem_mask.reshape([num_cuboids, 1, 1, -1, bh_bw])
     )
     attn_mask = attn_mask.reshape([num_cuboids, x_cuboid_volume, mem_cuboid_volume])
     return attn_mask
@@ -1765,29 +1771,29 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            dim,
-            num_heads,
-            n_temporal=1,
-            cuboid_hw=(7, 7),
-            shift_hw=(0, 0),
-            strategy=("d", "l", "l"),
-            padding_type="ignore",
-            cross_last_n_frames=None,
-            qkv_bias=False,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            max_temporal_relative=50,
-            norm_layer="layer_norm",
-            use_global_vector=True,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            checkpoint_level=1,
-            use_relative_pos=True,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        num_heads,
+        n_temporal=1,
+        cuboid_hw=(7, 7),
+        shift_hw=(0, 0),
+        strategy=("d", "l", "l"),
+        padding_type="ignore",
+        cross_last_n_frames=None,
+        qkv_bias=False,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        max_temporal_relative=50,
+        norm_layer="layer_norm",
+        use_global_vector=True,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        checkpoint_level=1,
+        use_relative_pos=True,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -1823,7 +1829,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         self.n_temporal = n_temporal
         assert n_temporal > 0
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
         shift_hw = list(shift_hw)
         if strategy[1] == "d":
             shift_hw[0] = 0
@@ -1840,7 +1846,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         self.separate_global_qkv = separate_global_qkv
         if global_dim_ratio != 1:
             assert (
-                    separate_global_qkv is True
+                separate_global_qkv is True
             ), "Setting global_dim_ratio != 1 requires separate_global_qkv == True."
         self.global_dim_ratio = global_dim_ratio
         assert self.padding_type in ["ignore", "zeros", "nearest"]
@@ -1874,11 +1880,11 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
             relative_coords[:, :, 1] += self.cuboid_hw[0] - 1
             relative_coords[:, :, 2] += self.cuboid_hw[1] - 1
             relative_position_index = (
-                    relative_coords[:, :, 0]
-                    * (2 * self.cuboid_hw[0] - 1)
-                    * (2 * self.cuboid_hw[1] - 1)
-                    + relative_coords[:, :, 1] * (2 * self.cuboid_hw[1] - 1)
-                    + relative_coords[:, :, 2]
+                relative_coords[:, :, 0]
+                * (2 * self.cuboid_hw[0] - 1)
+                * (2 * self.cuboid_hw[1] - 1)
+                + relative_coords[:, :, 1] * (2 * self.cuboid_hw[1] - 1)
+                + relative_coords[:, :, 2]
             )
             self.register_buffer(
                 name="relative_position_index", tensor=relative_position_index
@@ -1968,7 +1974,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         n_temporal = self.n_temporal
         shift_hw = self.shift_hw
         assert (
-                B_mem == B and H == H_mem and W == W_mem and C_in == C_mem
+            B_mem == B and H == H_mem and W == W_mem and C_in == C_mem
         ), f"Shape of memory and the input tensor does not match. x.shape={x.shape}, mem.shape={mem.shape}"
         pad_t_mem = (n_temporal - T_mem % n_temporal) % n_temporal
         pad_t_x = (n_temporal - T_x % n_temporal) % n_temporal
@@ -2003,7 +2009,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         _, num_cuboids_mem, mem_cuboid_volume, _ = reordered_mem.shape
         _, num_cuboids, x_cuboid_volume, _ = reordered_x.shape
         assert (
-                num_cuboids_mem == num_cuboids
+            num_cuboids_mem == num_cuboids
         ), f"Number of cuboids do not match. num_cuboids={num_cuboids}, num_cuboids_mem={num_cuboids_mem}"
         attn_mask = compute_cuboid_cross_attention_mask(
             T_x,
@@ -2037,7 +2043,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         if self.use_relative_pos:
             relative_position_bias = self.relative_position_bias_table[
                 self.relative_position_index[
-                :x_cuboid_volume, :mem_cuboid_volume
+                    :x_cuboid_volume, :mem_cuboid_volume
                 ].reshape([-1])
             ].reshape([x_cuboid_volume, mem_cuboid_volume, -1])
             relative_position_bias = relative_position_bias.transpose(
@@ -2135,14 +2141,14 @@ class DownSampling3D(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            original_size,
-            target_size,
-            in_channels,
-            out_dim,
-            mid_dim=16,
-            act_type="leaky",
-            arch_type="2d_interp_2d",
+        self,
+        original_size,
+        target_size,
+        in_channels,
+        out_dim,
+        mid_dim=16,
+        act_type="leaky",
+        arch_type="2d_interp_2d",
     ):
         """
 
@@ -2176,7 +2182,7 @@ class DownSampling3D(paddle.nn.Layer):
                 kernel_size=(3, 3, 3),
                 padding=(1, 1, 1),
             )
-            if act_type == 'leaky_relu':
+            if act_type == "leaky_relu":
                 self.act = nn.LeakyReLU(negative_slope)
             else:
                 self.act = act_mod.get_activation(act_type)
@@ -2187,7 +2193,7 @@ class DownSampling3D(paddle.nn.Layer):
                 kernel_size=(3, 3),
                 padding=(1, 1),
             )
-            if act_type == 'leaky_relu':
+            if act_type == "leaky_relu":
                 self.act = nn.LeakyReLU(negative_slope)
             else:
                 self.act = act_mod.get_activation(act_type)
@@ -2282,41 +2288,41 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            input_shape,
-            base_units=128,
-            block_units=None,
-            scale_alpha=1.0,
-            depth=[4, 4, 4],
-            downsample=2,
-            downsample_type="patch_merge",
-            block_attn_patterns=None,
-            block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-            block_strategy=[("l", "l", "l"), ("d", "d", "d")],
-            block_shift_size=[(0, 0, 0), (0, 0, 0)],
-            num_heads=4,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            ffn_drop=0.0,
-            activation="leaky",
-            ffn_activation="leaky",
-            gated_ffn=False,
-            norm_layer="layer_norm",
-            use_inter_ffn=True,
-            padding_type="ignore",
-            checkpoint_level=True,
-            use_relative_pos=True,
-            self_attn_use_final_proj=True,
-            use_global_vector=False,
-            use_global_vector_ffn=True,
-            use_global_self_attn=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            conv_init_mode="0",
-            down_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        input_shape,
+        base_units=128,
+        block_units=None,
+        scale_alpha=1.0,
+        depth=[4, 4, 4],
+        downsample=2,
+        downsample_type="patch_merge",
+        block_attn_patterns=None,
+        block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
+        block_strategy=[("l", "l", "l"), ("d", "d", "d")],
+        block_shift_size=[(0, 0, 0), (0, 0, 0)],
+        num_heads=4,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ffn_drop=0.0,
+        activation="leaky",
+        ffn_activation="leaky",
+        gated_ffn=False,
+        norm_layer="layer_norm",
+        use_inter_ffn=True,
+        padding_type="ignore",
+        checkpoint_level=True,
+        use_relative_pos=True,
+        self_attn_use_final_proj=True,
+        use_global_vector=False,
+        use_global_vector_ffn=True,
+        use_global_self_attn=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        conv_init_mode="0",
+        down_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -2435,19 +2441,19 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
                 block_cuboid_size = [block_cuboid_size for _ in range(self.num_blocks)]
             else:
                 assert (
-                        len(block_cuboid_size) == self.num_blocks
+                    len(block_cuboid_size) == self.num_blocks
                 ), f"Incorrect input format! Received block_cuboid_size={block_cuboid_size}"
             if not isinstance(block_strategy[0][0], (list, tuple)):
                 block_strategy = [block_strategy for _ in range(self.num_blocks)]
             else:
                 assert (
-                        len(block_strategy) == self.num_blocks
+                    len(block_strategy) == self.num_blocks
                 ), f"Incorrect input format! Received block_strategy={block_strategy}"
             if not isinstance(block_shift_size[0][0], (list, tuple)):
                 block_shift_size = [block_shift_size for _ in range(self.num_blocks)]
             else:
                 assert (
-                        len(block_shift_size) == self.num_blocks
+                    len(block_shift_size) == self.num_blocks
                 ), f"Incorrect input format! Received block_shift_size={block_shift_size}"
         self.block_cuboid_size = block_cuboid_size
         self.block_strategy = block_strategy
@@ -2583,42 +2589,42 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            dim,
-            num_heads,
-            block_cuboid_hw=[(4, 4), (4, 4)],
-            block_shift_hw=[(0, 0), (2, 2)],
-            block_n_temporal=[1, 2],
-            block_strategy=[("d", "d", "d"), ("l", "l", "l")],
-            padding_type="ignore",
-            cross_last_n_frames=None,
-            qkv_bias=False,
-            qk_scale=None,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            ffn_drop=0.0,
-            activation="leaky",
-            gated_ffn=False,
-            norm_layer="layer_norm",
-            use_inter_ffn=True,
-            max_temporal_relative=50,
-            checkpoint_level=1,
-            use_relative_pos=True,
-            use_global_vector=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        num_heads,
+        block_cuboid_hw=[(4, 4), (4, 4)],
+        block_shift_hw=[(0, 0), (2, 2)],
+        block_n_temporal=[1, 2],
+        block_strategy=[("d", "d", "d"), ("l", "l", "l")],
+        padding_type="ignore",
+        cross_last_n_frames=None,
+        qkv_bias=False,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ffn_drop=0.0,
+        activation="leaky",
+        gated_ffn=False,
+        norm_layer="layer_norm",
+        use_inter_ffn=True,
+        max_temporal_relative=50,
+        checkpoint_level=1,
+        use_relative_pos=True,
+        use_global_vector=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         super(StackCuboidCrossAttentionBlock, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
         self.ffn_linear_init_mode = ffn_linear_init_mode
         self.norm_init_mode = norm_init_mode
         assert (
-                len(block_cuboid_hw[0]) > 0
-                and len(block_shift_hw) > 0
-                and len(block_strategy) > 0
+            len(block_cuboid_hw[0]) > 0
+            and len(block_shift_hw) > 0
+            and len(block_strategy) > 0
         ), f"Incorrect format. block_cuboid_hw={block_cuboid_hw}, block_shift_hw={block_shift_hw}, block_strategy={block_strategy}"
         assert len(block_cuboid_hw) == len(block_shift_hw) == len(block_strategy)
         self.num_attn = len(block_cuboid_hw)
@@ -2753,51 +2759,51 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
     """
 
     def __init__(
-            self,
-            target_temporal_length,
-            mem_shapes,
-            cross_start=0,
-            depth=[2, 2],
-            upsample_type="upsample",
-            upsample_kernel_size=3,
-            block_self_attn_patterns=None,
-            block_self_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-            block_self_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
-            block_self_shift_size=[(1, 1, 1), (0, 0, 0)],
-            block_cross_attn_patterns=None,
-            block_cross_cuboid_hw=[(4, 4), (4, 4)],
-            block_cross_cuboid_strategy=[("l", "l", "l"), ("d", "l", "l")],
-            block_cross_shift_hw=[(0, 0), (0, 0)],
-            block_cross_n_temporal=[1, 2],
-            cross_last_n_frames=None,
-            num_heads=4,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            ffn_drop=0.0,
-            ffn_activation="leaky",
-            gated_ffn=False,
-            norm_layer="layer_norm",
-            use_inter_ffn=False,
-            hierarchical_pos_embed=False,
-            pos_embed_type="t+hw",
-            max_temporal_relative=50,
-            padding_type="ignore",
-            checkpoint_level=True,
-            use_relative_pos=True,
-            self_attn_use_final_proj=True,
-            use_first_self_attn=False,
-            use_self_global=False,
-            self_update_global=True,
-            use_cross_global=False,
-            use_global_vector_ffn=True,
-            use_global_self_attn=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            conv_init_mode="0",
-            up_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        target_temporal_length,
+        mem_shapes,
+        cross_start=0,
+        depth=[2, 2],
+        upsample_type="upsample",
+        upsample_kernel_size=3,
+        block_self_attn_patterns=None,
+        block_self_cuboid_size=[(4, 4, 4), (4, 4, 4)],
+        block_self_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
+        block_self_shift_size=[(1, 1, 1), (0, 0, 0)],
+        block_cross_attn_patterns=None,
+        block_cross_cuboid_hw=[(4, 4), (4, 4)],
+        block_cross_cuboid_strategy=[("l", "l", "l"), ("d", "l", "l")],
+        block_cross_shift_hw=[(0, 0), (0, 0)],
+        block_cross_n_temporal=[1, 2],
+        cross_last_n_frames=None,
+        num_heads=4,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ffn_drop=0.0,
+        ffn_activation="leaky",
+        gated_ffn=False,
+        norm_layer="layer_norm",
+        use_inter_ffn=False,
+        hierarchical_pos_embed=False,
+        pos_embed_type="t+hw",
+        max_temporal_relative=50,
+        padding_type="ignore",
+        checkpoint_level=True,
+        use_relative_pos=True,
+        self_attn_use_final_proj=True,
+        use_first_self_attn=False,
+        use_self_global=False,
+        self_update_global=True,
+        use_cross_global=False,
+        use_global_vector_ffn=True,
+        use_global_self_attn=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        conv_init_mode="0",
+        up_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -2879,7 +2885,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_self_cuboid_size) == self.num_blocks
+                    len(block_self_cuboid_size) == self.num_blocks
                 ), f"Incorrect input format! Received block_self_cuboid_size={block_self_cuboid_size}"
             if not isinstance(block_self_cuboid_strategy[0][0], (list, tuple)):
                 block_self_cuboid_strategy = [
@@ -2887,7 +2893,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_self_cuboid_strategy) == self.num_blocks
+                    len(block_self_cuboid_strategy) == self.num_blocks
                 ), f"Incorrect input format! Received block_self_cuboid_strategy={block_self_cuboid_strategy}"
             if not isinstance(block_self_shift_size[0][0], (list, tuple)):
                 block_self_shift_size = [
@@ -2895,7 +2901,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_self_shift_size) == self.num_blocks
+                    len(block_self_shift_size) == self.num_blocks
                 ), f"Incorrect input format! Received block_self_shift_size={block_self_shift_size}"
         self_blocks = []
         for i in range(self.num_blocks):
@@ -2965,7 +2971,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_cross_cuboid_hw) == self.num_blocks
+                    len(block_cross_cuboid_hw) == self.num_blocks
                 ), f"Incorrect input format! Received block_cross_cuboid_hw={block_cross_cuboid_hw}"
             if not isinstance(block_cross_cuboid_strategy[0][0], (list, tuple)):
                 block_cross_cuboid_strategy = [
@@ -2973,7 +2979,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_cross_cuboid_strategy) == self.num_blocks
+                    len(block_cross_cuboid_strategy) == self.num_blocks
                 ), f"Incorrect input format! Received block_cross_cuboid_strategy={block_cross_cuboid_strategy}"
             if not isinstance(block_cross_shift_hw[0][0], (list, tuple)):
                 block_cross_shift_hw = [
@@ -2981,7 +2987,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_cross_shift_hw) == self.num_blocks
+                    len(block_cross_shift_hw) == self.num_blocks
                 ), f"Incorrect input format! Received block_cross_shift_hw={block_cross_shift_hw}"
             if not isinstance(block_cross_n_temporal[0], (list, tuple)):
                 block_cross_n_temporal = [
@@ -2989,7 +2995,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 ]
             else:
                 assert (
-                        len(block_cross_n_temporal) == self.num_blocks
+                    len(block_cross_n_temporal) == self.num_blocks
                 ), f"Incorrect input format! Received block_cross_n_temporal={block_cross_n_temporal}"
         self.cross_blocks = paddle.nn.LayerList()
         for i in range(self.cross_start, self.num_blocks):
@@ -3033,7 +3039,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                             dim=self.mem_shapes[i + 1][-1],
                             out_dim=self.mem_shapes[i][-1],
                             target_size=(target_temporal_length,)
-                                        + self.mem_shapes[i][1:3],
+                            + self.mem_shapes[i][1:3],
                             kernel_size=upsample_kernel_size,
                             temporal_upsample=False,
                             conv_init_mode=conv_init_mode,
@@ -3136,16 +3142,16 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
 
 class InitialEncoder(paddle.nn.Layer):
     def __init__(
-            self,
-            dim,
-            out_dim,
-            downsample_scale: Union[int, Sequence[int]],
-            num_conv_layers=2,
-            activation="leaky",
-            padding_type="nearest",
-            conv_init_mode="0",
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        dim,
+        out_dim,
+        downsample_scale: Union[int, Sequence[int]],
+        num_conv_layers=2,
+        activation="leaky",
+        padding_type="nearest",
+        conv_init_mode="0",
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         super(InitialEncoder, self).__init__()
         self.num_conv_layers = num_conv_layers
@@ -3170,7 +3176,7 @@ class InitialEncoder(paddle.nn.Layer):
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(negative_slope)
-                    )
+                )
             else:
                 conv_block.append(
                     paddle.nn.Conv2D(
@@ -3187,7 +3193,7 @@ class InitialEncoder(paddle.nn.Layer):
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(negative_slope)
-                    )
+                )
         self.conv_block = paddle.nn.Sequential(*conv_block)
         if isinstance(downsample_scale, int):
             patch_merge_downsample = (1, downsample_scale, downsample_scale)
@@ -3246,14 +3252,14 @@ class InitialEncoder(paddle.nn.Layer):
 
 class FinalDecoder(paddle.nn.Layer):
     def __init__(
-            self,
-            target_thw,
-            dim,
-            num_conv_layers=2,
-            activation="leaky",
-            conv_init_mode="0",
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        target_thw,
+        dim,
+        num_conv_layers=2,
+        activation="leaky",
+        conv_init_mode="0",
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         super(FinalDecoder, self).__init__()
         self.target_thw = target_thw
@@ -3326,17 +3332,17 @@ class FinalDecoder(paddle.nn.Layer):
 
 class InitialStackPatchMergingEncoder(paddle.nn.Layer):
     def __init__(
-            self,
-            num_merge: int,
-            in_dim,
-            out_dim_list,
-            downsample_scale_list,
-            num_conv_per_merge_list=None,
-            activation="leaky",
-            padding_type="nearest",
-            conv_init_mode="0",
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        num_merge: int,
+        in_dim,
+        out_dim_list,
+        downsample_scale_list,
+        num_conv_per_merge_list=None,
+        activation="leaky",
+        padding_type="nearest",
+        conv_init_mode="0",
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         super(InitialStackPatchMergingEncoder, self).__init__()
         self.conv_init_mode = conv_init_mode
@@ -3380,7 +3386,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(negative_slope)
-                    )
+                )
             conv_block = paddle.nn.Sequential(*conv_block)
             self.conv_block_list.append(conv_block)
             patch_merge = PatchMerging3D(
@@ -3429,7 +3435,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
             Shape (B, T, H_new, W_new, C_out)
         """
         for i, (conv_block, patch_merge) in enumerate(
-                zip(self.conv_block_list, self.patch_merge_list)
+            zip(self.conv_block_list, self.patch_merge_list)
         ):
             B, T, H, W, C = x.shape
             if self.num_conv_per_merge_list[i] > 0:
@@ -3441,14 +3447,14 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
 
 class FinalStackUpsamplingDecoder(paddle.nn.Layer):
     def __init__(
-            self,
-            target_shape_list,
-            in_dim,
-            num_conv_per_up_list=None,
-            activation="leaky",
-            conv_init_mode="0",
-            linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        target_shape_list,
+        in_dim,
+        num_conv_per_up_list=None,
+        activation="leaky",
+        conv_init_mode="0",
+        linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
         Parameters
@@ -3507,7 +3513,7 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(negative_slope)
-                    )
+                )
             conv_block = paddle.nn.Sequential(*conv_block)
             self.conv_block_list.append(conv_block)
         self.reset_parameters()
@@ -3554,7 +3560,7 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
             Shape (B, T, H_new, W_new, C)
         """
         for i, (conv_block, upsample) in enumerate(
-                zip(self.conv_block_list, self.upsample_list)
+            zip(self.conv_block_list, self.upsample_list)
         ):
             x = upsample(x)
             if self.num_conv_per_up_list[i] > 0:
@@ -3584,78 +3590,77 @@ class CuboidTransformer(base.Arch):
     """
 
     def __init__(
-            self,
-            input_keys: Tuple[str, ...],
-            output_keys: Tuple[str, ...],
-            input_shape,
-            target_shape,
-            base_units=128,
-            block_units=None,
-            scale_alpha=1.0,
-            num_heads=4,
-            attn_drop=0.0,
-            proj_drop=0.0,
-            ffn_drop=0.0,
-            downsample=2,
-            downsample_type="patch_merge",
-            upsample_type="upsample",
-            upsample_kernel_size=3,
-            enc_depth=[4, 4, 4],
-            enc_attn_patterns=None,
-            enc_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-            enc_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
-            enc_shift_size=[(0, 0, 0), (0, 0, 0)],
-            enc_use_inter_ffn=True,
-            dec_depth=[2, 2],
-            dec_cross_start=0,
-            dec_self_attn_patterns=None,
-            dec_self_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-            dec_self_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
-            dec_self_shift_size=[(1, 1, 1), (0, 0, 0)],
-            dec_cross_attn_patterns=None,
-            dec_cross_cuboid_hw=[(4, 4), (4, 4)],
-            dec_cross_cuboid_strategy=[("l", "l", "l"), ("d", "l", "l")],
-            dec_cross_shift_hw=[(0, 0), (0, 0)],
-            dec_cross_n_temporal=[1, 2],
-            dec_cross_last_n_frames=None,
-            dec_use_inter_ffn=True,
-            dec_hierarchical_pos_embed=False,
-            num_global_vectors=4,
-            use_dec_self_global=True,
-            dec_self_update_global=True,
-            use_dec_cross_global=True,
-            use_global_vector_ffn=True,
-            use_global_self_attn=False,
-            separate_global_qkv=False,
-            global_dim_ratio=1,
-            self_pattern="axial",
-            cross_self_pattern="axial",
-            cross_pattern="cross_1x1",
-
-            z_init_method="nearest_interp",
-            initial_downsample_type="conv",
-            initial_downsample_activation="leaky",
-            initial_downsample_scale=1,
-            initial_downsample_conv_layers=2,
-            final_upsample_conv_layers=2,
-            initial_downsample_stack_conv_num_layers=1,
-            initial_downsample_stack_conv_dim_list=None,
-            initial_downsample_stack_conv_downscale_list=[1],
-            initial_downsample_stack_conv_num_conv_list=[2],
-            ffn_activation="leaky",
-            gated_ffn=False,
-            norm_layer="layer_norm",
-            padding_type="ignore",
-            pos_embed_type="t+hw",
-            checkpoint_level=True,
-            use_relative_pos=True,
-            self_attn_use_final_proj=True,
-            dec_use_first_self_attn=False,
-            attn_linear_init_mode="0",
-            ffn_linear_init_mode="0",
-            conv_init_mode="0",
-            down_up_linear_init_mode="0",
-            norm_init_mode="0",
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        input_shape,
+        target_shape,
+        base_units=128,
+        block_units=None,
+        scale_alpha=1.0,
+        num_heads=4,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ffn_drop=0.0,
+        downsample=2,
+        downsample_type="patch_merge",
+        upsample_type="upsample",
+        upsample_kernel_size=3,
+        enc_depth=[4, 4, 4],
+        enc_attn_patterns=None,
+        enc_cuboid_size=[(4, 4, 4), (4, 4, 4)],
+        enc_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
+        enc_shift_size=[(0, 0, 0), (0, 0, 0)],
+        enc_use_inter_ffn=True,
+        dec_depth=[2, 2],
+        dec_cross_start=0,
+        dec_self_attn_patterns=None,
+        dec_self_cuboid_size=[(4, 4, 4), (4, 4, 4)],
+        dec_self_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
+        dec_self_shift_size=[(1, 1, 1), (0, 0, 0)],
+        dec_cross_attn_patterns=None,
+        dec_cross_cuboid_hw=[(4, 4), (4, 4)],
+        dec_cross_cuboid_strategy=[("l", "l", "l"), ("d", "l", "l")],
+        dec_cross_shift_hw=[(0, 0), (0, 0)],
+        dec_cross_n_temporal=[1, 2],
+        dec_cross_last_n_frames=None,
+        dec_use_inter_ffn=True,
+        dec_hierarchical_pos_embed=False,
+        num_global_vectors=4,
+        use_dec_self_global=True,
+        dec_self_update_global=True,
+        use_dec_cross_global=True,
+        use_global_vector_ffn=True,
+        use_global_self_attn=False,
+        separate_global_qkv=False,
+        global_dim_ratio=1,
+        self_pattern="axial",
+        cross_self_pattern="axial",
+        cross_pattern="cross_1x1",
+        z_init_method="nearest_interp",
+        initial_downsample_type="conv",
+        initial_downsample_activation="leaky",
+        initial_downsample_scale=1,
+        initial_downsample_conv_layers=2,
+        final_upsample_conv_layers=2,
+        initial_downsample_stack_conv_num_layers=1,
+        initial_downsample_stack_conv_dim_list=None,
+        initial_downsample_stack_conv_downscale_list=[1],
+        initial_downsample_stack_conv_num_conv_list=[2],
+        ffn_activation="leaky",
+        gated_ffn=False,
+        norm_layer="layer_norm",
+        padding_type="ignore",
+        pos_embed_type="t+hw",
+        checkpoint_level=True,
+        use_relative_pos=True,
+        self_attn_use_final_proj=True,
+        dec_use_first_self_attn=False,
+        attn_linear_init_mode="0",
+        ffn_linear_init_mode="0",
+        conv_init_mode="0",
+        down_up_linear_init_mode="0",
+        norm_init_mode="0",
     ):
         """
 
@@ -3694,7 +3699,7 @@ class CuboidTransformer(base.Arch):
 
         if global_dim_ratio != 1:
             assert (
-                    separate_global_qkv is True
+                separate_global_qkv is True
             ), "Setting global_dim_ratio != 1 requires separate_global_qkv == True."
         self.global_dim_ratio = global_dim_ratio
         self.z_init_method = z_init_method
@@ -3826,17 +3831,17 @@ class CuboidTransformer(base.Arch):
         self.reset_parameters()
 
     def get_initial_encoder_final_decoder(
-            self,
-            initial_downsample_type,
-            activation,
-            initial_downsample_scale,
-            initial_downsample_conv_layers,
-            final_upsample_conv_layers,
-            padding_type,
-            initial_downsample_stack_conv_num_layers,
-            initial_downsample_stack_conv_dim_list,
-            initial_downsample_stack_conv_downscale_list,
-            initial_downsample_stack_conv_num_conv_list,
+        self,
+        initial_downsample_type,
+        activation,
+        initial_downsample_scale,
+        initial_downsample_conv_layers,
+        final_upsample_conv_layers,
+        padding_type,
+        initial_downsample_stack_conv_num_layers,
+        initial_downsample_stack_conv_dim_list,
+        initial_downsample_stack_conv_downscale_list,
+        initial_downsample_stack_conv_num_conv_list,
     ):
         T_in, H_in, W_in, C_in = self.input_shape
         T_out, H_out, W_out, C_out = self.target_shape
@@ -3886,8 +3891,8 @@ class CuboidTransformer(base.Arch):
         elif self.initial_downsample_type == "stack_conv":
             if initial_downsample_stack_conv_dim_list is None:
                 initial_downsample_stack_conv_dim_list = [
-                                                             self.base_units
-                                                         ] * initial_downsample_stack_conv_num_layers
+                    self.base_units
+                ] * initial_downsample_stack_conv_num_layers
             self.initial_encoder = InitialStackPatchMergingEncoder(
                 num_merge=initial_downsample_stack_conv_num_layers,
                 in_dim=C_in,

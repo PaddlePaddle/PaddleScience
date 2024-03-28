@@ -5,9 +5,11 @@ class CuboidSelfAttentionPatterns:
     def __init__(self):
         super().__init__()
         self.patterns = {}
-        self.patterns = {"full": self.full_attention,
-                         "axial": self.axial,
-                         "divided_st": self.divided_space_time}
+        self.patterns = {
+            "full": self.full_attention,
+            "axial": self.axial,
+            "divided_st": self.divided_space_time,
+        }
         for p in [1, 2, 4, 8, 10]:
             for m in [1, 2, 4, 8, 16, 32]:
                 key = f"video_swin_{p}x{m}"
