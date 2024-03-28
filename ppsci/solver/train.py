@@ -98,7 +98,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 )
 
                 if solver.nvtx_flag:  # only for nsight analysis
-                    core.nvprof_nvtx_pop()
+                    core.nvprof_nvtx_pop()  # Loss computation
 
                 # accumulate all losses
                 if solver.nvtx_flag:  # only for nsight analysis
@@ -113,7 +113,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     total_loss = total_loss / solver.update_freq
 
                 if solver.nvtx_flag:  # only for nsight analysis
-                    core.nvprof_nvtx_pop()
+                    core.nvprof_nvtx_pop()  # Loss aggregator
 
                 loss_dict["loss"] = float(total_loss)
 
@@ -131,13 +131,13 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 solver.loss_aggregator(constraint_losses, solver.global_step).backward()
 
             if solver.nvtx_flag:  # only for nsight analysis
-                core.nvprof_nvtx_pop()
+                core.nvprof_nvtx_pop()  # Loss backward
 
         # update parameters
-        if solver.nvtx_flag:  # only for nsight analysis
-            core.nvprof_nvtx_push("Optimizer update")
-
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push("Optimizer update")
+
             if solver.world_size > 1:
                 # fuse + allreduce manually before optimization if use DDP + no_sync
                 # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
@@ -148,7 +148,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 solver.optimizer.step()
 
             if solver.nvtx_flag:  # only for nsight analysis
-                core.nvprof_nvtx_pop()
+                core.nvprof_nvtx_pop()  # Optimizer update
 
             solver.optimizer.clear_grad()
 
@@ -178,7 +178,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     f"Only run {NVTX_STOP_ITER} steps when 'NVTX' is set in environment"
                     " for nsight analysis. Exit now ......"
                 )
-                paddle.framework.core.nvprof_stop()
+                core.nvprof_stop()
                 sys.exit(0)
 
 
