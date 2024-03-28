@@ -2,11 +2,35 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 from paddle.io import Dataset
+from paddle.optimizer.lr import LRScheduler
 paddle.framework.core.set_prim_eager_enabled(True)
 # def exponential_decay(step_size, decay_steps, decay_rate):
 #   def schedule(i):
 #     return step_size * decay_rate ** (i / decay_steps)
 #   return schedule
+class exponential_decay(LRScheduler):
+    def __init__(self,
+                learning_rate,
+                step_size,
+                gamma=0.1,
+                last_epoch=-1,
+                verbose=False):
+        if not isinstance(step_size, int):
+            raise TypeError(
+                "The type of 'step_size' must be 'int', but received %s." %
+                type(step_size))
+        if gamma >= 1.0:
+            raise ValueError('gamma should be < 1.0.')
+
+        self.step_size = step_size
+        self.gamma = gamma
+        super().__init__(learning_rate, last_epoch, verbose)
+
+    def get_lr(self):
+        i = self.last_epoch // self.step_size
+        return self.base_lr * (self.gamma**i)
+
+
 class DataGenerator(Dataset):
     def __init__(self, t0, t1, n_t=10, n_x=64):
         'Initialization'
@@ -107,8 +131,8 @@ class PINN((paddle.nn.Layer)):
         # Use optimizers to set optimizer initialization and update functions
         # self.optimizer = paddle.optimizer.Adam(learning_rate=paddle.optimizer.lr.ExponentialDecay(1e-3, gamma=0.9),
         #                                        parameters=self.network.parameters())
-        lr=exponential_decay(1e-3, decay_steps=10000,decay_rate=0.9)
-        self.optimizer = paddle.optimizer.Adam(learning_rate=1e-3,
+        
+        self.optimizer = paddle.optimizer.Adam(learning_rate=exponential_decay(1e-3, step_size=10000, gamma=0.9),
                                                parameters=self.network.parameters())
 
         # Logger
@@ -197,7 +221,7 @@ class PINN((paddle.nn.Layer)):
             self.optimizer.step()
             self.optimizer.clear_grad()
 
-            if it % 1000 == 0:
+            if it % 1 == 0:
                 l2_error_value = self.compute_l2_error(paddle.tile(self.x_star, (1, num_step)).reshape((-1,1)),paddle.tile(self.y_star, (1, num_step)).reshape((-1,1)),(paddle.tile(self.t_star[:num_step], (1, Nx**2)).T).reshape((-1,1)))
                 print("ite:{},loss:{:.3e},error:{:.3e}".format(it,self.loss(batch).item(),l2_error_value.item()))
                 # print("ite:{},loss:{:.3e}".format(it,loss.item()))
