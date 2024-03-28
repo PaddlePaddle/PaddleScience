@@ -125,9 +125,6 @@ class PINN((paddle.nn.Layer)):
                                        activation=nn.Tanh())
 
         # Use optimizers to set optimizer initialization and update functions
-        # self.optimizer = paddle.optimizer.Adam(learning_rate=paddle.optimizer.lr.ExponentialDecay(1e-3, gamma=0.9),
-        #                                        parameters=self.network.parameters())
-        
         self.optimizer = paddle.optimizer.Adam(learning_rate=exponential_decay(1e-3, step_size=10000, gamma=0.9),
                                                parameters=self.network.parameters())
 
