@@ -38,6 +38,7 @@ class DGMR(base.Arch):
 
     Examples:
         >>> import ppsci
+        >>> import paddle
         >>> model = ppsci.arch.DGMR(("input", ), ("output", ))
         >>> input_dict = {"input": paddle.randn((1, 4, 1, 256, 256))}
         >>> output_dict = model(input_dict)
