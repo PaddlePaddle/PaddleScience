@@ -13,15 +13,20 @@
 # limitations under the License.
 
 from __future__ import annotations
+import os
 
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Tuple
+# from jax.jax._src.api import T
+import jax
+T = jax.jax._src.api.T
 
 from paddle import jit
 from paddle import nn
+import paddle
 
 if TYPE_CHECKING:
     import paddle
@@ -45,16 +50,21 @@ class ExpressionSolver(nn.Layer):
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
         >>> expr_solver = ExpressionSolver()
     """
-
+    
     def __init__(self):
         super().__init__()
+        build_strategy = paddle.static.BuildStrategy()
+        build_strategy.build_cinn_pass=False
+        self.train_forward = paddle.jit.to_static(build_strategy=build_strategy, full_graph=True)(self.train_forward)
+        self.eval_forward = paddle.jit.to_static(build_strategy=build_strategy, full_graph=True)(self.eval_forward)
+        
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError(
             "Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
-    @jit.to_static
+    
     def train_forward(
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
@@ -109,7 +119,6 @@ class ExpressionSolver(nn.Layer):
             constraint_losses.append(constraint_loss)
         return constraint_losses
 
-    @jit.to_static
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
