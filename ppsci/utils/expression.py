@@ -119,7 +119,6 @@ class ExpressionSolver(nn.Layer):
             constraint_losses.append(constraint_loss)
         return constraint_losses
 
-    @jit.to_static
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
