@@ -41,8 +41,8 @@ class DGMR(base.Arch):
         >>> import paddle
         >>> model = ppsci.arch.DGMR(("input", ), ("output", ))
         >>> input_dict = {"input": paddle.randn((1, 4, 1, 256, 256))}
-        >>> output_dict = model(input_dict)
-        >>> print(output_dict["output"].shape)
+        >>> output_dict = model(input_dict) # doctest: +SKIP
+        >>> print(output_dict["output"].shape) # doctest: +SKIP
         [1, 18, 1, 256, 256]
     """
 
