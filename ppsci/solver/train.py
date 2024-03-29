@@ -14,11 +14,13 @@
 
 from __future__ import annotations
 
+import sys
 import time
 from typing import TYPE_CHECKING
 
 import paddle
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
+from paddle.framework import core
 
 from ppsci.solver import printer
 from ppsci.utils import misc
@@ -38,6 +40,11 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
+        if solver.nvtx_flag:  # only for nsight analysis
+            core.nvprof_nvtx_push(
+                f"Training iteration {solver.global_step + 1}"
+            )  # Training iteration
+
         total_loss = 0.0
         total_batch_size = 0
         reader_cost = 0.0
@@ -77,6 +84,9 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         # forward for every constraint, including model and equation expression
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
+                if solver.nvtx_flag:  # only for nsight analysis
+                    core.nvprof_nvtx_push("Loss computation")
+
                 constraint_losses = solver.forward_helper.train_forward(
                     tuple(
                         _constraint.output_expr
@@ -88,7 +98,14 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     label_dicts,
                     weight_dicts,
                 )
+
+                if solver.nvtx_flag:  # only for nsight analysis
+                    core.nvprof_nvtx_pop()  # Loss computation
+
                 # accumulate all losses
+                if solver.nvtx_flag:  # only for nsight analysis
+                    core.nvprof_nvtx_push("Loss aggregator")
+
                 for i, _constraint in enumerate(solver.constraint.values()):
                     total_loss += constraint_losses[i]
                     loss_dict[_constraint.name] += (
@@ -96,9 +113,16 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     )
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
+
+                if solver.nvtx_flag:  # only for nsight analysis
+                    core.nvprof_nvtx_pop()  # Loss aggregator
+
                 loss_dict["loss"] = float(total_loss)
 
             # backward
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push("Loss backward")
+
             if solver.loss_aggregator is None:
                 if solver.use_amp:
                     total_loss_scaled = solver.scaler.scale(total_loss)
@@ -108,8 +132,14 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             else:
                 solver.loss_aggregator(constraint_losses, solver.global_step).backward()
 
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_pop()  # Loss backward
+
         # update parameters
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push("Optimizer update")
+
             if solver.world_size > 1:
                 # fuse + allreduce manually before optimization if use DDP + no_sync
                 # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
@@ -118,6 +148,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 solver.scaler.minimize(solver.optimizer, total_loss_scaled)
             else:
                 solver.optimizer.step()
+
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_pop()  # Optimizer update
+
             solver.optimizer.clear_grad()
 
         # update learning rate by step
@@ -137,6 +171,17 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
+
+        if solver.nvtx_flag:  # only for nsight analysis
+            core.nvprof_nvtx_pop()  # Training iteration
+            NVTX_STOP_ITER = 25
+            if solver.global_step >= NVTX_STOP_ITER:
+                print(
+                    f"Only run {NVTX_STOP_ITER} steps when 'NVTX' is set in environment"
+                    " for nsight analysis. Exit now ......\n"
+                )
+                core.nvprof_stop()
+                sys.exit(0)
 
 
 def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
