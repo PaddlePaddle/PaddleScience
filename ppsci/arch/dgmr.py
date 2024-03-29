@@ -43,6 +43,7 @@ class DGMR(base.Arch):
         >>> input_dict = {"input": paddle.randn((1, 4, 1, 256, 256))}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["output"].shape)
+        [1, 18, 1, 256, 256]
     """
 
     def __init__(
