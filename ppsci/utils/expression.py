@@ -56,6 +56,7 @@ class ExpressionSolver(nn.Layer):
         build_strategy = paddle.static.BuildStrategy()
         build_strategy.build_cinn_pass=False
         self.train_forward = paddle.jit.to_static(build_strategy=build_strategy, full_graph=True)(self.train_forward)
+        self.eval_forward = paddle.jit.to_static(build_strategy=build_strategy, full_graph=True)(self.eval_forward)
         
 
     def forward(self, *args, **kwargs):
