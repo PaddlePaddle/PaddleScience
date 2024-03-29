@@ -795,3 +795,49 @@ solver = ppsci.solver.Solver(
     !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
+
+## 3. 使用 Nsight 进行性能分析
+
+Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
+
+PaddleScience 初步支持使用 Nsight 进行性能分析，以 linux 开发环境 + laplace2d 案例为例，按照如下步骤使用 nsight 工具生成性能分析报告并查看分析结果。
+
+1. 安装 nsight-system
+
+    开发机上下载 linux nsight-system 软件：nsight-systems/2023.4.1，并将 nsight 添加到环境变量 `PATH` 中：
+
+    执行：`PATH=/path/to/nsight-systems/2023.4.1/bin:$PATH`，同时在 windows 机器上安装**相同版本**的 nsight-system 软件。
+
+2. 用 nsys 命令运行程序，生成性能分析文件
+
+    ``` sh
+    {==NVTX=1 nsys profile -t cuda,nvtx --stats=true -o==} {++laplace2d++} python laplace2d.py
+    ```
+
+3. 查看分析结果
+
+    程序结束后，在终端内会打印出性能分析数据（如下所示），同时在上述 `-o` 参数指定的相对文件路径生成 `{++laplace2d++}.nsys-rep` 和 `{++laplace2d++}.sqlite` 两个文件。
+
+    在 windows 上使用 NVIDIA Nsight Systems 软件打开 `laplace2d.nsys-rep`，即可在图形化的界面上查看性能分析数据。
+
+    ``` log
+    ...
+    ...
+    Only run 25 steps when 'NVTX' is set in environment for nsight analysis. Exit now ......
+
+    Generating '/tmp/nsys-report-18e4.qdstrm'
+    [1/7] [========================100%] laplace2d.nsys-rep
+    [2/7] [========================100%] laplace2d.sqlite
+    [3/7] Executing 'nvtx_sum' stats report
+
+    Time (%)  Total Time (ns)  Instances    Avg (ns)       Med (ns)      Min (ns)     Max (ns)     StdDev (ns)    Style                  Range
+    --------  ---------------  ---------  -------------  -------------  -----------  -----------  -------------  -------  ------------------------------------
+        15.1      794,212,341         25   31,768,493.6    5,446,410.0    5,328,471  661,841,104  131,265,333.9  PushPop  Loss computation
+        14.5      766,452,142         25   30,658,085.7    4,369,873.0    4,281,927  659,795,434  131,070,475.4  PushPop  Constraint EQ
+        13.0      687,324,359      1,300      528,711.0       32,567.5       21,218  641,625,892   17,794,532.4  PushPop  matmul dygraph
+        12.9      678,475,194          1  678,475,194.0  678,475,194.0  678,475,194  678,475,194            0.0  PushPop  Training iteration 1
+        12.8      673,614,062      1,300      518,164.7       19,802.5       14,499  641,525,121   17,792,027.2  PushPop  matmul compute
+        3.9      203,945,648         25    8,157,825.9    8,029,819.0    7,797,185    9,119,496      359,173.3  PushPop  Loss backward
+        ...
+        ...
+    ```
