@@ -1,7 +1,9 @@
 import functools
+
 import paddle
-from paddle import nn
 import paddle.nn.functional as F
+from paddle import nn
+
 from ppsci.utils import initializer
 
 

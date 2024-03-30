@@ -1,16 +1,18 @@
+from collections import OrderedDict
+from functools import lru_cache
+
 import numpy as np
 import paddle
-from paddle import nn
-from collections import OrderedDict
 import paddle.nn.functional as F
-from functools import lru_cache
+from paddle import nn
 from paddle.distributed import fleet
 
-from ppsci.utils import initializer
-from ppsci.arch import activation as act_mod
 import ppsci.arch.cuboid_transformer_utils as cuboid_utils
+from ppsci.arch import activation as act_mod
+from ppsci.utils import initializer
 
 NEGATIVE_SLOPE = 0.1
+
 
 class PatchMerging3D(paddle.nn.Layer):
     """Patch Merging Layer

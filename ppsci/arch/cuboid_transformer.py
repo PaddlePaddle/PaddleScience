@@ -5,14 +5,14 @@ from typing import Union
 import paddle
 from paddle import nn
 
+import ppsci.arch.cuboid_transformer_decoder as cuboid_decoder
+import ppsci.arch.cuboid_transformer_encoder as cuboid_encoder
+import ppsci.arch.cuboid_transformer_utils as cuboid_utils
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
-import ppsci.arch.cuboid_transformer_utils as cuboid_utils
+from ppsci.arch.cuboid_transformer_encoder import NEGATIVE_SLOPE
 from ppsci.utils import initializer
 
-import ppsci.arch.cuboid_transformer_encoder as cuboid_encoder
-import ppsci.arch.cuboid_transformer_decoder as cuboid_decoder
-from ppsci.arch.cuboid_transformer_encoder import NEGATIVE_SLOPE
 """A space-time Transformer with Cuboid Attention"""
 
 

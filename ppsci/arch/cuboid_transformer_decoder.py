@@ -1,11 +1,13 @@
+from functools import lru_cache
+
 import numpy as np
 import paddle
-from paddle import nn
-from functools import lru_cache
-from paddle.distributed import fleet
 import paddle.nn.functional as F
-import ppsci.arch.cuboid_transformer_utils as cuboid_utils
+from paddle import nn
+from paddle.distributed import fleet
+
 import ppsci.arch.cuboid_transformer_encoder as cuboid_encoder
+import ppsci.arch.cuboid_transformer_utils as cuboid_utils
 from ppsci.utils import initializer
 
 

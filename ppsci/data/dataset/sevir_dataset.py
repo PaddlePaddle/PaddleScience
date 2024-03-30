@@ -5,11 +5,9 @@ from typing import Dict
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
-from typing import Union
 
 import h5py
 import numpy as np
-import numpy.random as nprand
 import paddle
 import paddle.nn.functional as F
 import pandas as pd
@@ -627,7 +625,7 @@ class SEVIRDataset(io.Dataset):
         return data_dict
 
     @staticmethod
-    def process_data_dict_back(data_dict, data_types=None, rescale='01'):
+    def process_data_dict_back(data_dict, data_types=None, rescale="01"):
         """
         Parameters
         ----------
@@ -642,22 +640,22 @@ class SEVIRDataset(io.Dataset):
         data_dict
             each data_dict[key] is the data processed back in torch.Tensor.
         """
-        if rescale == 'sevir':
+        if rescale == "sevir":
             scale_dict = PREPROCESS_SCALE_SEVIR
             offset_dict = PREPROCESS_OFFSET_SEVIR
-        elif rescale == '01':
+        elif rescale == "01":
             scale_dict = PREPROCESS_SCALE_01
             offset_dict = PREPROCESS_OFFSET_01
         else:
-            raise ValueError(f'Invalid rescale option: {rescale}.')
+            raise ValueError(f"Invalid rescale option: {rescale}.")
         if data_types is None:
             data_types = data_dict.keys()
         for key in data_types:
             data = data_dict[key]
-            data = data.astype('float32') / scale_dict[key] - offset_dict[key]
+            data = data.astype("float32") / scale_dict[key] - offset_dict[key]
             data_dict[key] = data
         return data_dict
-    
+
     @staticmethod
     def data_dict_to_tensor(data_dict, data_types=None):
         """
