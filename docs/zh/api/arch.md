@@ -24,6 +24,7 @@
         - USCNN
         - NowcastNet
         - HEDeepONets
+        - DGMR
         - ChipDeepONets
         - AutoEncoder
         - CuboidTransformer
