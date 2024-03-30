@@ -22,7 +22,8 @@
         - MeshAirfoilDataset
         - MeshCylinderDataset
         - RadarDataset
-        - build_dataset
         - ENSODataset
         - SEVIRDataset
+        - build_dataset
+        - DGMRDataset
       show_root_heading: true
