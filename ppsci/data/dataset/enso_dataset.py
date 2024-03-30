@@ -53,11 +53,19 @@ def scale_back_sst(sst):
 def prepare_inputs_targets(
     len_time, input_gap, input_length, pred_shift, pred_length, samples_gap
 ):
-    # input_gap=1: time gaps between two consecutive input frames
-    # input_length=12: the number of input frames
-    # pred_shift=26: the lead_time of the last target to be predicted
-    # pred_length=26: the number of frames to be predicted
-    if pred_shift >= pred_length:
+    """
+
+    Args:
+        len_time (int):
+        input_gap (int): time gaps between two consecutive input frames
+        input_length (int): the number of input frames
+        pred_shift (int): the lead_time of the last target to be predicted
+        pred_length (int): the number of frames to be predicted
+        samples_gap ():
+
+    """
+
+    if pred_shift < pred_length:
         raise ValueError("pred_shift should be small than pred_length")
     input_span = input_gap * (input_length - 1) + 1
     pred_gap = pred_shift // pred_length
@@ -72,13 +80,20 @@ def prepare_inputs_targets(
 
 
 def fold(data, size=36, stride=12):
-    # inverse of unfold/sliding window operation
-    # only applicable to the case where the size of the sliding windows is n*stride
-    # data (N, size, *)
-    # outdata (N_, *)
-    # N/size is the number/width of sliding blocks
-    if size % stride == 0:
-        raise ValueError("size modulo stride should be non-zero")
+    """inverse of unfold/sliding window operation
+    only applicable to the case where the size of the sliding windows is n*stride
+
+    Args:
+        data (tuple[int,...]): (N, size, *)
+        size (int, optional): Defaults to 36.
+        stride (int, optional): Defaults to 12.
+
+    Returns:
+        outdata : (N_, *).N/size is the number/width of sliding blocks
+    """
+
+    if size % stride != 0:
+        raise ValueError("size modulo stride should be zero")
     times = size // stride
     remain = (data.shape[0] - 1) % times
     if remain > 0:
@@ -93,8 +108,14 @@ def fold(data, size=36, stride=12):
 
 
 def data_transform(data, num_years_per_model):
-    # data (N, 36, *)
-    # num_years_per_model: 151/140
+    """
+
+    Args:
+        data (tuple[list,...]): (N, 36, *)
+        num_years_per_model (int): 151/140
+
+    """
+
     length = data.shape[0]
     assert length % num_years_per_model == 0
     num_models = length // num_years_per_model
@@ -118,7 +139,14 @@ def data_transform(data, num_years_per_model):
 
 
 def read_raw_data(ds_dir, out_dir=None):
-    # read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
+    """read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
+
+    Args:
+        ds_dir (str): the path of the dataset
+        out_dir (str): the path of output. Defaults to None.
+
+    """
+
     train_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_train.nc").transpose(
         "year", "month", "lat", "lon"
     )
@@ -189,15 +217,24 @@ def read_raw_data(ds_dir, out_dir=None):
 
 
 def cat_over_last_dim(data):
-    r"""
-    treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
+    """treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
     e.g., cmip6sst.shape = (178, 38, 24, 48, 15), converted_cmip6sst.shape = (2670, 38, 24, 48)
     e.g., cmip5sst.shape = (165, 38, 24, 48, 15), converted_cmip6sst.shape = (2475, 38, 24, 48)
+
     """
+
     return np.concatenate(np.moveaxis(data, -1, 0), axis=0)
 
 
 class ENSODataset(io.Dataset):
+    """_summary_
+
+    Args:
+        samples_gap (int): stride of seq sampling.
+            e.g., samples_gap = 10, the first seq contains [0, 1, ..., T-1] frame indices, the second seq contains [10, 11, .., T+9]
+
+    """
+
     # Whether support batch indexing for speeding up fetching process.
     batch_index: bool = False
 
@@ -219,13 +256,6 @@ class ENSODataset(io.Dataset):
         num_workers=1,
         training="train",
     ):
-        r"""
-        Parameters
-        ----------
-        samples_gap: int
-            stride of seq sampling.
-            e.g., samples_gap = 10, the first seq contains [0, 1, ..., T-1] frame indices, the second seq contains [10, 11, .., T+9]
-        """
         super(ENSODataset, self).__init__()
         if importlib.util.find_spec("xarray") is None:
             raise ModuleNotFoundError(
@@ -254,7 +284,7 @@ class ENSODataset(io.Dataset):
         self.normalize_sst = normalize_sst
         # datamodule_only
         self.batch_size = batch_size
-        if num_workers == 1:
+        if num_workers != 1:
             raise ValueError(
                 "Current implementation does not support `num_workers != 1`!"
             )

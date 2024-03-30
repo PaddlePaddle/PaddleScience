@@ -16,19 +16,15 @@ def _threshold(target, pred, T):
     t or p are nan.
     This is useful for counts that don't involve correct rejections.
 
-    Parameters
-    ----------
-    target
-        paddle.Tensor
-    pred
-        paddle.Tensor
-    T
-        numeric_type:   threshold
-    Returns
-    -------
-    t
-    p
+    Args:
+        target (paddle.Tensor): label
+        pred (paddle.Tensor): predict
+        T (numeric_type): threshold
+    Returns:
+        t
+        p
     """
+
     t = (target >= T).astype("float32")
     p = (pred >= T).astype("float32")
     is_nan = paddle.logical_or(paddle.isnan(target), paddle.isnan(pred))
@@ -42,27 +38,11 @@ class SEVIRSkillScore:
     The calculation of skill scores in SEVIR challenge is slightly different:
         `mCSI = sum(mCSI_t) / T`
     See https://github.com/MIT-AI-Accelerator/sevir_challenges/blob/dev/radar_nowcasting/RadarNowcastBenchmarks.ipynb for more details.
-    """
-    full_state_update: bool = True
 
-    def __init__(
-        self,
-        layout: str = "NHWT",
-        mode: str = "0",
-        seq_len: Optional[int] = None,
-        preprocess_type: str = "sevir",
-        threshold_list: Sequence[int] = (16, 74, 133, 160, 181, 219),
-        metrics_list: Sequence[str] = ("csi", "bias", "sucr", "pod"),
-        eps: float = 1e-4,
-        dist_sync_on_step: bool = False,
-    ):
-        """
-        Parameters
-        ----------
-        seq_len
-        layout
-        mode:   str
-            Should be in ("0", "1", "2")
+    Args:
+        seq_len (int): sequence length
+        layout (str): layout mode
+        mode (str): Should be in ("0", "1", "2")
             "0":
                 cumulates hits/misses/fas of all test pixels
                 score_avg takes average over all thresholds
@@ -81,9 +61,23 @@ class SEVIRSkillScore:
                 return
                     score_thresh shape = (1, )
                     score_avg shape = (1, )
-        preprocess_type
-        threshold_list
-        """
+        preprocess_type (str): prepprocess type
+        threshold_list (Sequence[int]): threshold list
+    """
+
+    full_state_update: bool = True
+
+    def __init__(
+        self,
+        layout: str = "NHWT",
+        mode: str = "0",
+        seq_len: Optional[int] = None,
+        preprocess_type: str = "sevir",
+        threshold_list: Sequence[int] = (16, 74, 133, 160, 181, 219),
+        metrics_list: Sequence[str] = ("csi", "bias", "sucr", "pod"),
+        eps: float = 1e-4,
+        dist_sync_on_step: bool = False,
+    ):
         super().__init__()
         self.layout = layout
         self.preprocess_type = preprocess_type
@@ -137,16 +131,18 @@ class SEVIRSkillScore:
 
     def calc_seq_hits_misses_fas(self, pred, target, threshold):
         """
-        Parameters
-        ----------
-        pred, target:   torch.Tensor
-        threshold:  int
+        Args:
+            pred (paddle.Tensor): predict data
+            target (paddle.Tensor): true data
+            threshold:  int
 
-        Returns
-        -------
-        hits, misses, fas:  torch.Tensor
-            each has shape (seq_len, )
+        Returns:
+            hits (paddle.Tensor):
+            misses (paddle.Tensor):
+            fas (paddle.Tensor):
+                each has shape (seq_len, )
         """
+
         with paddle.no_grad():
             t, p = _threshold(target, pred, threshold)
             hits = paddle.sum(t * p, axis=self.hits_misses_fas_reduce_dims).astype(
@@ -169,7 +165,7 @@ class SEVIRSkillScore:
                 data_dict={"vil": target.detach().astype("float32")}
             )["vil"]
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"{self.preprocess_type} not supported")
         return pred, target
 
     def compute(self, pred: paddle.Tensor, target: paddle.Tensor):
@@ -209,7 +205,7 @@ class SEVIRSkillScore:
                 elif self.mode in ("2",):
                     ret[threshold][metrics] = np.mean(score).item()
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError(f"{self.mode} is invalid.")
                 score_avg += score
             score_avg /= len(self.threshold_list)
             if self.mode in ("0", "1"):
@@ -217,7 +213,7 @@ class SEVIRSkillScore:
             elif self.mode in ("2",):
                 ret["avg"][metrics] = np.mean(score_avg).item()
             else:
-                raise NotImplementedError
+                raise NotImplementedError(f"{self.mode} is invalid.")
         return ret
 
 

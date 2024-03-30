@@ -63,15 +63,12 @@ def visualize_result(
     vis_hits_misses_fas=True,
 ):
     """
-    Parameters
-    ----------
-    model_list: list of nn.Module
-    layout_list: list of str
-    in_seq:     np.array
-    target_seq: np.array
-    interval_real_time: float
-        The minutes of each plot interval
+    Args:
+        in_seq (np.array):
+        target_seq (np.array):
+        interval_real_time (float): The minutes of each plot interval
     """
+
     if norm is None:
         norm = {"scale": 255, "shift": 0}
     in_len = in_seq.shape[-1]
@@ -100,7 +97,6 @@ def visualize_result(
         if i < out_len:
             xt = target_seq[idx, :, :, i] * norm["scale"] + norm["shift"]
             ax[1][i // plot_stride].imshow(xt, **get_cmap_dict("vil"))
-            # ax[1][i // plot_stride].set_title(f'{5*(i+plot_stride)} Minutes')
         else:
             ax[1][i // plot_stride].axis("off")
 
@@ -188,9 +184,7 @@ def visualize_result(
             Patch(facecolor=HMF_COLORS[2], edgecolor="k", label="Miss"),
             Patch(facecolor=HMF_COLORS[1], edgecolor="k", label="False Alarm"),
         ]
-        # ax[-1][0].legend(handles=legend_elements, loc='lower right',
-        #                  bbox_to_anchor=(6., -.6),
-        #                  ncol=5, borderaxespad=0, frameon=False, fontsize='16')
+
         ax[3][0].legend(
             handles=legend_elements,
             loc="center left",
@@ -219,17 +213,13 @@ def save_example_vis_results(
     norm=None,
 ):
     """
-    Parameters
-    ----------
-    in_seq: np.array
-        float value 0-1
-    target_seq: np.array
-        float value 0-1
-    pred_seq:   np.array
-        float value 0-1
-    interval_real_time: float
-        The minutes of each plot interval
+    Args:
+    in_seq (np.array): float value 0-1
+    target_seq (np.array): float value 0-1
+    pred_seq (np.array): float value 0-1
+    interval_real_time (float): The minutes of each plot interval
     """
+
     in_seq = sevir_dataset.change_layout_np(in_seq, in_layout=layout).astype(np.float32)
     target_seq = sevir_dataset.change_layout_np(target_seq, in_layout=layout).astype(
         np.float32

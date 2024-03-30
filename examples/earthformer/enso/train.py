@@ -33,7 +33,7 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ENSODataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
@@ -67,7 +67,7 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ENSODataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
@@ -92,7 +92,7 @@ def train(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
@@ -127,7 +127,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
-        eval_during_train=True,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
@@ -145,7 +145,7 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "ENSODataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
@@ -170,7 +170,7 @@ def evaluate(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     # initialize solver
@@ -191,7 +191,7 @@ def evaluate(cfg: DictConfig):
 def export(cfg: DictConfig):
     # set model
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     # initialize solver

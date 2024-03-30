@@ -45,65 +45,64 @@ DATASET:
 
 # model settings
 MODEL:
-  afno:
-    input_keys: ["sst_data"]
-    output_keys: ["sst_target","nino_target"]
-    input_shape: [12, 24, 48, 1]
-    target_shape: [14, 24, 48, 1]
-    base_units: 64
-    scale_alpha: 1.0
+  input_keys: ["sst_data"]
+  output_keys: ["sst_target","nino_target"]
+  input_shape: [12, 24, 48, 1]
+  target_shape: [14, 24, 48, 1]
+  base_units: 64
+  scale_alpha: 1.0
 
-    enc_depth: [1, 1]
-    dec_depth: [1, 1]
-    enc_use_inter_ffn: true
-    dec_use_inter_ffn: true
-    dec_hierarchical_pos_embed: false
+  enc_depth: [1, 1]
+  dec_depth: [1, 1]
+  enc_use_inter_ffn: true
+  dec_use_inter_ffn: true
+  dec_hierarchical_pos_embed: false
 
-    downsample: 2
-    downsample_type: "patch_merge"
-    upsample_type: "upsample"
+  downsample: 2
+  downsample_type: "patch_merge"
+  upsample_type: "upsample"
 
-    num_global_vectors: 0
-    use_dec_self_global: false
-    dec_self_update_global: true
-    use_dec_cross_global: false
-    use_global_vector_ffn: false
-    use_global_self_attn: false
-    separate_global_qkv: false
-    global_dim_ratio: 1
+  num_global_vectors: 0
+  use_dec_self_global: false
+  dec_self_update_global: true
+  use_dec_cross_global: false
+  use_global_vector_ffn: false
+  use_global_self_attn: false
+  separate_global_qkv: false
+  global_dim_ratio: 1
 
-    self_pattern: "axial"
-    cross_self_pattern: "axial"
-    cross_pattern: "cross_1x1"
-    dec_cross_last_n_frames: null
+  self_pattern: "axial"
+  cross_self_pattern: "axial"
+  cross_pattern: "cross_1x1"
+  dec_cross_last_n_frames: null
 
-    attn_drop: 0.1
-    proj_drop: 0.1
-    ffn_drop: 0.1
-    num_heads: 4
+  attn_drop: 0.1
+  proj_drop: 0.1
+  ffn_drop: 0.1
+  num_heads: 4
 
-    ffn_activation: "gelu"
-    gated_ffn: false
-    norm_layer: "layer_norm"
-    padding_type: "zeros"
-    pos_embed_type: "t+h+w"
-    use_relative_pos: true
-    self_attn_use_final_proj: true
-    dec_use_first_self_attn: false
+  ffn_activation: "gelu"
+  gated_ffn: false
+  norm_layer: "layer_norm"
+  padding_type: "zeros"
+  pos_embed_type: "t+h+w"
+  use_relative_pos: true
+  self_attn_use_final_proj: true
+  dec_use_first_self_attn: false
 
-    z_init_method: "zeros"
-    initial_downsample_type: "conv"
-    initial_downsample_activation: "leaky_relu"
-    initial_downsample_scale: [1, 1, 2]
-    initial_downsample_conv_layers: 2
-    final_upsample_conv_layers: 1
-    checkpoint_level: 2
+  z_init_method: "zeros"
+  initial_downsample_type: "conv"
+  initial_downsample_activation: "leaky_relu"
+  initial_downsample_scale: [1, 1, 2]
+  initial_downsample_conv_layers: 2
+  final_upsample_conv_layers: 1
+  checkpoint_level: 2
 
-    attn_linear_init_mode: "0"
-    ffn_linear_init_mode: "0"
-    conv_init_mode: "0"
-    down_up_linear_init_mode: "0"
-    norm_init_mode: "0"
+  attn_linear_init_mode: "0"
+  ffn_linear_init_mode: "0"
+  conv_init_mode: "0"
+  down_up_linear_init_mode: "0"
+  norm_init_mode: "0"
 
 
 # training settings
@@ -114,7 +113,7 @@ TRAIN:
   eval_freq: 10
   lr_scheduler:
     epochs: ${TRAIN.epochs}
-    learning_rate: 0.0002
+    learning_rate: 0.0001
     by_epoch: True
   min_lr_ratio: 1.0e-3
   wd: 1.0e-5

@@ -13,26 +13,23 @@ from ppsci.data.dataset.enso_dataset import scale_back_sst
 def compute_enso_score(
     y_pred, y_true, acc_weight: Optional[Union[str, np.ndarray, paddle.Tensor]] = None
 ):
-    """
-    Parameters
-    ----------
-    y_pred: paddle.Tensor
-    y_true: paddle.Tensor
-    acc_weight: Optional[Union[str, np.ndarray, paddle.Tensor]]
-        None:   not used
-        default:    use default acc_weight specified at https://tianchi.aliyun.com/competition/entrance/531871/information
+    """_summary_
+
+    Args:
+        y_pred (paddle.Tensor): predict data
+        y_true (paddle.Tensor): true data
+        acc_weight (Optional[Union[str, np.ndarray, paddle.Tensor]], optional): _description_. Defaults to None.use default acc_weight specified at https://tianchi.aliyun.com/competition/entrance/531871/information
         np.ndarray: custom weights
 
-    Returns
-    -------
-    acc
-    rmse
+    Returns:
+        acc:
+        rmse:
     """
+
     pred = y_pred - y_pred.mean(axis=0, keepdim=True)  # (N, 24)
     true = y_true - y_true.mean(axis=0, keepdim=True)  # (N, 24)
     cor = (pred * true).sum(axis=0) / (
-        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0))
-        + 1e-6
+        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0)) + 1e-6
     )
 
     if acc_weight is None:
@@ -56,18 +53,17 @@ def compute_enso_score(
 
 
 def sst_to_nino(sst: paddle.Tensor, normalize_sst: bool = True, detach: bool = True):
+    """_summary_
+
+    Args:
+        sst (paddle.Tensor): Shape = (N, T, H, W)
+        normalize_sst (bool, optional): Defaults to True.
+        detach (bool, optional): Defaults to True.
+
+    Returns:
+        nino_index (paddle.Tensor): Shape = (N, T-NINO_WINDOW_T+1)
     """
 
-    Parameters
-    ----------
-    sst:    paddle.Tensor
-        Shape = (N, T, H, W)
-
-    Returns
-    -------
-    nino_index: paddle.Tensor
-        Shape = (N, T-NINO_WINDOW_T+1)
-    """
     if detach:
         nino_index = sst.detach()
     else:
@@ -128,16 +124,3 @@ def eval_rmse_func(
         "corr_nino3.4_epoch": valid_acc,
         "corr_nino3.4_weighted_epoch": valid_weighted_acc,
     }
-
-
-def get_parameter_names(model, forbidden_layer_types):
-    result = []
-    for name, child in model.named_children():
-        result += [
-            f"{name}.{n}"
-            for n in get_parameter_names(child, forbidden_layer_types)
-            if not isinstance(child, tuple(forbidden_layer_types))
-        ]
-    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
-    result += list(model._parameters.keys())
-    return result

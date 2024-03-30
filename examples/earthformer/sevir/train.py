@@ -29,8 +29,9 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "SEVIRDataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
+            "data_types": cfg.DATASET.data_types,
             "seq_len": cfg.DATASET.seq_len,
             "raw_seq_len": cfg.DATASET.raw_seq_len,
             "sample_mode": cfg.DATASET.sample_mode,
@@ -42,6 +43,8 @@ def train(cfg: DictConfig):
             "split_mode": cfg.DATASET.split_mode,
             "start_date": cfg.TRAIN.start_date,
             "end_date": cfg.TRAIN.end_date,
+            "preprocess": cfg.DATASET.preprocess,
+            "rescale_method": cfg.DATASET.rescale_method,
             "shuffle": True,
             "verbose": False,
             "training": True,
@@ -70,8 +73,9 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "SEVIRDataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
+            "data_types": cfg.DATASET.data_types,
             "seq_len": cfg.DATASET.seq_len,
             "raw_seq_len": cfg.DATASET.raw_seq_len,
             "sample_mode": cfg.DATASET.sample_mode,
@@ -81,9 +85,11 @@ def train(cfg: DictConfig):
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
             "split_mode": cfg.DATASET.split_mode,
-            "start_date": cfg.TRAIN.end_date,
-            "end_date": cfg.EVAL.end_date,
-            "shuffle": True,
+            "start_date": cfg.TRAIN.start_date,
+            "end_date": cfg.TRAIN.end_date,
+            "preprocess": cfg.DATASET.preprocess,
+            "rescale_method": cfg.DATASET.rescale_method,
+            "shuffle": False,
             "verbose": False,
             "training": False,
         },
@@ -110,7 +116,7 @@ def train(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
@@ -145,7 +151,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
-        eval_during_train=True,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
@@ -163,8 +169,9 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "SEVIRDataset",
             "data_dir": cfg.FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
+            "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.DATASET.label_keys,
+            "data_types": cfg.DATASET.data_types,
             "seq_len": cfg.DATASET.seq_len,
             "raw_seq_len": cfg.DATASET.raw_seq_len,
             "sample_mode": cfg.DATASET.sample_mode,
@@ -174,9 +181,11 @@ def evaluate(cfg: DictConfig):
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
             "split_mode": cfg.DATASET.split_mode,
-            "start_date": cfg.TRAIN.end_date,
-            "end_date": cfg.EVAL.end_date,
-            "shuffle": True,
+            "start_date": cfg.TRAIN.start_date,
+            "end_date": cfg.TRAIN.end_date,
+            "preprocess": cfg.DATASET.preprocess,
+            "rescale_method": cfg.DATASET.rescale_method,
+            "shuffle": False,
             "verbose": False,
             "training": False,
         },
@@ -203,7 +212,7 @@ def evaluate(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     # initialize solver
@@ -224,7 +233,7 @@ def evaluate(cfg: DictConfig):
 def export(cfg: DictConfig):
     # set model
     model = ppsci.arch.CuboidTransformer(
-        **cfg.MODEL.afno,
+        **cfg.MODEL,
     )
 
     # initialize solver
