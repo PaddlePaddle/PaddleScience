@@ -44,7 +44,7 @@ class GeometryValidator(base.Validator):
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified domain. Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling. Defaults to False.
@@ -76,7 +76,7 @@ class GeometryValidator(base.Validator):
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
         loss: loss.Loss,
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         metric: Optional[Dict[str, metric.Metric]] = None,
