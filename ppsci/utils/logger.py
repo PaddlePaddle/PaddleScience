@@ -104,7 +104,7 @@ def init_logger(
     # add file_handler, output to log_file(if specified), only for rank 0 device
     if log_file is not None and dist.get_rank() == 0:
         log_file_folder = os.path.dirname(log_file)
-        if os.path.isdir(log_file_folder):
+        if len(log_file_folder):
             os.makedirs(log_file_folder, exist_ok=True)
         file_formatter = logging.Formatter(
             "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
