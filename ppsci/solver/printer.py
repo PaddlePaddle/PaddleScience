@@ -30,59 +30,59 @@ if TYPE_CHECKING:
 
 
 def update_train_loss(
-    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+    solver: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
 ):
     for key in loss_dict:
-        if key not in trainer.train_output_info:
-            trainer.train_output_info[key] = misc.AverageMeter(key, "7.5f")
-        trainer.train_output_info[key].update(float(loss_dict[key]), batch_size)
-        if key not in trainer.train_loss_info:
-            trainer.train_loss_info[key] = misc.AverageMeter(key, ".5f")
-        trainer.train_loss_info[key].update(float(loss_dict[key]))
+        if key not in solver.train_output_info:
+            solver.train_output_info[key] = misc.AverageMeter(key, "7.5f")
+        solver.train_output_info[key].update(float(loss_dict[key]), batch_size)
+        if key not in solver.train_loss_info:
+            solver.train_loss_info[key] = misc.AverageMeter(key, ".5f")
+        solver.train_loss_info[key].update(float(loss_dict[key]))
 
 
 def update_eval_loss(
-    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+    solver: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
 ):
     for key in loss_dict:
-        if key not in trainer.eval_output_info:
-            trainer.eval_output_info[key] = misc.AverageMeter(key, "7.5f")
-        trainer.eval_output_info[key].update(float(loss_dict[key]), batch_size)
+        if key not in solver.eval_output_info:
+            solver.eval_output_info[key] = misc.AverageMeter(key, "7.5f")
+        solver.eval_output_info[key].update(float(loss_dict[key]), batch_size)
 
 
 def log_train_info(
-    trainer: "solver.Solver", batch_size: int, epoch_id: int, iter_id: int
+    solver: "solver.Solver", batch_size: int, epoch_id: int, iter_id: int
 ):
-    lr_msg = f"lr: {trainer.optimizer.get_lr():.5f}"
+    lr_msg = f"lr: {solver.optimizer.get_lr():.5f}"
 
     metric_msg = ", ".join(
         [
-            f"{key}: {trainer.train_output_info[key].avg:.5f}"
-            for key in trainer.train_output_info
+            f"{key}: {solver.train_output_info[key].avg:.5f}"
+            for key in solver.train_output_info
         ]
     )
 
     time_msg = ", ".join(
-        [trainer.train_time_info[key].mean for key in trainer.train_time_info]
+        [solver.train_time_info[key].mean for key in solver.train_time_info]
     )
 
-    ips_msg = f"ips: {batch_size / trainer.train_time_info['batch_cost'].avg:.2f}"
-    if trainer.benchmark_flag:
+    ips_msg = f"ips: {batch_size / solver.train_time_info['batch_cost'].avg:.2f}"
+    if solver.benchmark_flag:
         ips_msg += " samples/s"
 
     eta_sec = (
-        (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
-    ) * trainer.train_time_info["batch_cost"].avg
+        (solver.epochs - epoch_id + 1) * solver.iters_per_epoch - iter_id
+    ) * solver.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec)))}"
 
-    epoch_width = len(str(trainer.epochs))
-    iters_width = len(str(trainer.iters_per_epoch))
+    epoch_width = len(str(solver.epochs))
+    iters_width = len(str(solver.iters_per_epoch))
     log_str = (
-        f"[Train][Epoch {epoch_id:>{epoch_width}}/{trainer.epochs}]"
-        f"[Iter {iter_id:>{iters_width}}/{trainer.iters_per_epoch}] {lr_msg}, "
+        f"[Train][Epoch {epoch_id:>{epoch_width}}/{solver.epochs}]"
+        f"[Iter {iter_id:>{iters_width}}/{solver.iters_per_epoch}] {lr_msg}, "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
-    if trainer.benchmark_flag:
+    if solver.benchmark_flag:
         max_mem_reserved_msg = (
             f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1 << 20)} MB"
         )
@@ -94,21 +94,21 @@ def log_train_info(
 
     logger.scalar(
         {
-            "train/lr": trainer.optimizer.get_lr(),
+            "train/lr": solver.optimizer.get_lr(),
             **{
-                f"train/{key}": trainer.train_output_info[key].avg
-                for key in trainer.train_output_info
+                f"train/{key}": solver.train_output_info[key].avg
+                for key in solver.train_output_info
             },
         },
-        step=trainer.global_step,
-        vdl_writer=trainer.vdl_writer,
-        wandb_writer=trainer.wandb_writer,
-        tbd_writer=trainer.tbd_writer,
+        step=solver.global_step,
+        vdl_writer=solver.vdl_writer,
+        wandb_writer=solver.wandb_writer,
+        tbd_writer=solver.tbd_writer,
     )
 
 
 def log_eval_info(
-    trainer: "solver.Solver",
+    solver: "solver.Solver",
     batch_size: int,
     epoch_id: int,
     iters_per_epoch: int,
@@ -116,35 +116,35 @@ def log_eval_info(
 ):
     metric_msg = ", ".join(
         [
-            f"{key}: {trainer.eval_output_info[key].avg:.5f}"
-            for key in trainer.eval_output_info
+            f"{key}: {solver.eval_output_info[key].avg:.5f}"
+            for key in solver.eval_output_info
         ]
     )
 
     time_msg = ", ".join(
-        [trainer.eval_time_info[key].mean for key in trainer.eval_time_info]
+        [solver.eval_time_info[key].mean for key in solver.eval_time_info]
     )
 
-    ips_msg = f"ips: {batch_size / trainer.eval_time_info['batch_cost'].avg:.2f}"
+    ips_msg = f"ips: {batch_size / solver.eval_time_info['batch_cost'].avg:.2f}"
 
-    eta_sec = (iters_per_epoch - iter_id) * trainer.eval_time_info["batch_cost"].avg
+    eta_sec = (iters_per_epoch - iter_id) * solver.eval_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec)))}"
 
-    epoch_width = len(str(trainer.epochs))
+    epoch_width = len(str(solver.epochs))
     iters_width = len(str(iters_per_epoch))
     logger.info(
-        f"[Eval][Epoch {epoch_id:>{epoch_width}}/{trainer.epochs}]"
+        f"[Eval][Epoch {epoch_id:>{epoch_width}}/{solver.epochs}]"
         f"[Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 
     logger.scalar(
         {
-            f"eval/{key}": trainer.eval_output_info[key].avg
-            for key in trainer.eval_output_info
+            f"eval/{key}": solver.eval_output_info[key].avg
+            for key in solver.eval_output_info
         },
-        step=trainer.global_step,
-        vdl_writer=trainer.vdl_writer,
-        wandb_writer=trainer.wandb_writer,
-        tbd_writer=trainer.tbd_writer,
+        step=solver.global_step,
+        vdl_writer=solver.vdl_writer,
+        wandb_writer=solver.wandb_writer,
+        tbd_writer=solver.tbd_writer,
     )

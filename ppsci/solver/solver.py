@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import importlib
 import itertools
 import os
@@ -39,6 +40,7 @@ from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
+from paddle.framework import core
 from paddle.static import InputSpec
 from typing_extensions import Literal
 
@@ -444,10 +446,18 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
+        # set up nvtx flag for nsight analysis
+        self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
+        self.forward_helper.nvtx_flag = self.nvtx_flag
+
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.nvtx_flag:
+            core.nvprof_start()
+            core.nvprof_enable_record_event()
 
         for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
@@ -734,7 +744,8 @@ class Solver:
         )
 
         # save static graph model to disk
-        os.makedirs(osp.dirname(export_path), exist_ok=True)
+        if osp.isdir(osp.dirname(export_path)):
+            os.makedirs(osp.dirname(export_path), exist_ok=True)
         try:
             jit.save(static_model, export_path)
         except Exception as e:
@@ -764,6 +775,7 @@ class Solver:
             )
             logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
+    @functools.lru_cache()
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
@@ -786,6 +798,7 @@ class Solver:
             )
         return ctx_manager
 
+    @functools.lru_cache()
     def no_grad_context_manager(
         self, enable: bool
     ) -> contextlib.AbstractContextManager:
@@ -807,6 +820,7 @@ class Solver:
             )
         return ctx_manager
 
+    @functools.lru_cache()
     def no_sync_context_manager(
         self,
         enable: bool,
