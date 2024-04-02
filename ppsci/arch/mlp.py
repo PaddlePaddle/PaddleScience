@@ -302,7 +302,7 @@ class ModifiedMLP(base.Arch):
 
         y = x
         skip = None
-        for i, linear in enumerate(self.linears, 1):
+        for i, linear in enumerate(self.linears):
             y = linear(y)
             y = self.acts[i](y)
             y = (1 - y) * u + y * v
