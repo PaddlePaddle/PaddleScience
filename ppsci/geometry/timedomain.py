@@ -60,9 +60,12 @@ class TimeDomain(geometry_1d.Interval):
         self.t0 = t0
         self.t1 = t1
         self.time_step = time_step
-        self.timestamps = np.array(
-            timestamps, dtype=paddle.get_default_dtype()
-        ).reshape([-1])
+        if timestamps is None:
+            self.timestamps = None
+        else:
+            self.timestamps = np.array(
+                timestamps, dtype=paddle.get_default_dtype()
+            ).reshape([-1])
         if time_step is not None:
             if time_step <= 0:
                 raise ValueError(f"time_step({time_step}) must be larger than 0.")
@@ -70,11 +73,11 @@ class TimeDomain(geometry_1d.Interval):
         elif timestamps is not None:
             self.num_timestamps = len(timestamps)
 
-    def on_initial(self, t):
-        """Check if a specific time is on the initial time point
+    def on_initial(self, t: np.ndarray):
+        """Check if a specific time is on the initial time point.
 
         Args:
-            t (float): The time to be checked.
+            t (np.ndarray): The time to be checked.
 
         Returns:
             bool: True or False for whether the specific time is on the initial time point.
@@ -82,12 +85,11 @@ class TimeDomain(geometry_1d.Interval):
         Examples:
             >>> import paddle
             >>> import ppsci
-            >>> paddle.set_default_dtype("float64")
             >>> geom = ppsci.geometry.TimeDomain(0, 1)
-            >>> check1 = geom.on_initial(0.00000001)
-            >>> check2 = geom.on_initial(0.6)
-            >>> print(check1, check2)
-            [ True] [False]
+            >>> T = [0, 0.01, 0.126, 0.2, 0.3]
+            >>> check = geom.on_initial(T)
+            >>> print(check)
+            [ True False False False False]
         """
         return np.isclose(t, self.t0).flatten()
 
@@ -128,9 +130,8 @@ class TimeXGeometry(geometry.Geometry):
         normal = self.geometry.boundary_normal(x[:, 1:])
         return np.hstack((x[:, :1], normal))
 
-    def uniform_points(self, n, boundary=True):
+    def uniform_points(self, n: int, boundary: bool = True):
         """Uniform points on the spatial-temporal domain.
-        Note: Before using this method, you need to specify time_step or timestamps.(See Examples)
         Geometry volume ~ bbox.
         Time volume ~ diam.
 
@@ -139,17 +140,19 @@ class TimeXGeometry(geometry.Geometry):
             boundary (bool): Indicates whether boundary points are included, default is True.
 
         Returns:
-            Ndarray: a set of spatial-temporal coordinate points 'tx' that represent sample points evenly distributed within the spatial-temporal domain.
+            np.ndarray: a set of spatial-temporal coordinate points 'tx' that represent sample points evenly distributed within the spatial-temporal domain.
 
         Examples:
             >>> import ppsci
-            >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+            >>> timedomain = ppsci.geometry.TimeDomain(0, 1, 0.001)
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
-            >>> time_geom.timedomain.time_step = 0.001
             >>> ts = time_geom.uniform_points(1000)
-
+            >>> print(ts.shape)
+            (1000, 3)
         """
+        if self.timedomain.time_step is None and self.timedomain.timestamps is None:
+            raise ValueError("Either time_step or timestamps must be provided.")
         if self.timedomain.time_step is not None:
             # exclude start time t0
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -197,9 +200,8 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_points(self, n, random="pseudo", criteria=None):
-        """ "Generate random points on the spatial-temporal domain.
-        Note: Before using this method, you need to specify time_step or timestamps.(See Examples)
+    def random_points(self, n: int, random: str = "pseudo", criteria: callable = None):
+        """Generate random points on the spatial-temporal domain.
 
         Args:
             n (int): The total number of random points to generate.
@@ -207,17 +209,19 @@ class TimeXGeometry(geometry.Geometry):
             criteria (method): A method that filters on the generated random points, defualt is None.
 
         Returns:
-            Ndarray: A set of random spatial-temporal points.
+            np.ndarray: A set of random spatial-temporal points.
 
         Examples:
             >>> import ppsci
-            >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+            >>> timedomain = ppsci.geometry.TimeDomain(0, 1, 0.001)
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
-            >>> time_geom.timedomain.time_step = 0.001
             >>> ts = time_geom.random_points(1000)
-
+            >>> print(ts.shape)
+            (1000, 3)
         """
+        if self.timedomain.time_step is None and self.timedomain.timestamps is None:
+            raise ValueError("Either time_step or timestamps must be provided.")
         # time evenly and geometry random, if time_step if specified
         if self.timedomain.time_step is not None:
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -341,7 +345,7 @@ class TimeXGeometry(geometry.Geometry):
         t = np.random.permutation(t)
         return np.hstack((t, x))
 
-    def uniform_boundary_points(self, n, criteria=None):
+    def uniform_boundary_points(self, n: int, criteria: callable = None):
         """Uniform boundary points on the spatial-temporal domain.
         Geometry surface area ~ bbox.
         Time surface area ~ diam.
@@ -351,7 +355,7 @@ class TimeXGeometry(geometry.Geometry):
             criteria (method): Used to filter the generated boundary points, only points that meet certain conditions are retained. Default is None.
 
         Returns:
-            Ndarray: A set of  point coordinates evenly distributed across geometry boundaries on the spatial-temporal domain.
+            np.ndarray: A set of  point coordinates evenly distributed across geometry boundaries on the spatial-temporal domain.
 
         Examples:
             >>> import ppsci
@@ -359,7 +363,8 @@ class TimeXGeometry(geometry.Geometry):
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
             >>> ts = time_geom.uniform_boundary_points(1000)
-
+            >>> print(ts.shape)
+            (1000, 3)
         """
         if self.geometry.ndim == 1:
             nx = 2
@@ -418,9 +423,10 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_boundary_points(self, n, random="pseudo", criteria=None):
+    def random_boundary_points(
+        self, n: int, random: str = "pseudo", criteria: callable = None
+    ):
         """Random boundary points on the spatial-temporal domain.
-        Note: Before using this method, you need to specify time_step or timestamps.(See Examples)
 
         Args:
             n (int): The total number of spatial-temporal points generated on a given geometry boundary.
@@ -428,16 +434,20 @@ class TimeXGeometry(geometry.Geometry):
             criteria (method): Used to filter the generated boundary points, only points that meet certain conditions are retained. Default is None.
 
         Returns:
-            Ndarray: A set of point coordinates randomly distributed across geometry boundaries on the spatial-temporal domain.
+            np.ndarray: A set of point coordinates randomly distributed across geometry boundaries on the spatial-temporal domain.
+
         Examples:
             >>> import ppsci
-            >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+            >>> timedomain = ppsci.geometry.TimeDomain(0, 1, 0.001)
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
-            >>> time_geom.timedomain.time_step = 0.001
             >>> ts = time_geom.random_boundary_points(1000)
+            >>> print(ts.shape)
+            (1000, 3)
 
         """
+        if self.timedomain.time_step is None and self.timedomain.timestamps is None:
+            raise ValueError("Either time_step or timestamps must be provided.")
         if self.timedomain.time_step is not None:
             # exclude start time t0
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -610,14 +620,14 @@ class TimeXGeometry(geometry.Geometry):
             else:
                 return t_x
 
-    def uniform_initial_points(self, n):
+    def uniform_initial_points(self, n: int):
         """Generate evenly distributed point coordinates on the spatial-temporal domain at the initial moment.
 
         Args:
             n (int): The total number of generated points.
 
         Returns:
-           Ndarray: A set of point coordinates evenly distributed on the spatial-temporal domain at the initial moment.
+           np.ndarray: A set of point coordinates evenly distributed on the spatial-temporal domain at the initial moment.
 
         Examples:
             >>> import ppsci
@@ -625,7 +635,8 @@ class TimeXGeometry(geometry.Geometry):
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
             >>> ts = time_geom.uniform_initial_points(1000)
-
+            >>> print(ts.shape)
+            (1000, 3)
         """
         x = self.geometry.uniform_points(n, True)
         t = self.timedomain.t0
@@ -633,7 +644,7 @@ class TimeXGeometry(geometry.Geometry):
             x = x[:n]
         return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
-    def random_initial_points(self, n, random="pseudo"):
+    def random_initial_points(self, n: int, random: str = "pseudo"):
         """Generate randomly distributed point coordinates on the spatial-temporal domain at the initial moment.
 
         Args:
@@ -641,7 +652,7 @@ class TimeXGeometry(geometry.Geometry):
             random (string): Controls the way to generate random points. Default is "pseudo".
 
         Returns:
-            Ndarray: A set of point coordinates randomly distributed on the spatial-temporal domain at the initial moment.
+            np.ndarray: A set of point coordinates randomly distributed on the spatial-temporal domain at the initial moment.
 
         Examples:
             >>> import ppsci
@@ -649,30 +660,37 @@ class TimeXGeometry(geometry.Geometry):
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
             >>> ts = time_geom.random_initial_points(1000)
-
+            >>> print(ts.shape)
+            (1000, 3)
         """
         x = self.geometry.random_points(n, random=random)
         t = self.timedomain.t0
         return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
-    def periodic_point(self, x, component):
-        """process given point coordinates to satisfy the periodic boundary conditions of the geometry
+    def periodic_point(self, x: dict[str, np.ndarray], component: int):
+        """process given point coordinates to satisfy the periodic boundary conditions of the geometry.
 
         Args:
-            x (Dict[str, ndarray]): Contains the coordinates and timestamps of the points. It represents the coordinates of the point to be processed.
-            component (int): Specifies the components or dimensions of specific spatial coordinates that are periodically processed
+            x (dict[str, np.ndarray]): Contains the coordinates and timestamps of the points. It represents the coordinates of the point to be processed.
+            component (int): Specifies the components or dimensions of specific spatial coordinates that are periodically processed.
 
         Returns:
-            Dict[str, ndarray] : contains the original timestamps and the coordinates of the spatial point after periodic processing.
+            dict[str, np.ndarray] : contains the original timestamps and the coordinates of the spatial point after periodic processing.
 
         Examples:
-            >>> import ppsci
-            >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
-            >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
-            >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
-            >>> time_geom.timedomain.time_step = 0.1
-            >>> ts = time_geom.sample_boundary(100)
-            >>> result = time_geom.periodic_point(ts, 0)
+        >>> import ppsci
+        >>> timedomain = ppsci.geometry.TimeDomain(0, 1, 0.1)
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
+        >>> ts = time_geom.sample_boundary(1000)
+        >>> result = time_geom.periodic_point(ts, 0)
+        >>> for k,v in result.items():
+        ...     print(k, v.shape)
+        t (1000, 1)
+        x (1000, 1)
+        y (1000, 1)
+        normal_x (1000, 1)
+        normal_y (1000, 1)
 
         """
         xp = self.geometry.periodic_point(x, component)
@@ -683,8 +701,8 @@ class TimeXGeometry(geometry.Geometry):
         self,
         n: int,
         random: str = "pseudo",
-        criteria=None,
-        evenly=False,
+        criteria: callable = None,
+        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the time-geometry and return those meet criteria.
@@ -697,7 +715,7 @@ class TimeXGeometry(geometry.Geometry):
             compute_sdf_derivatives (bool): Indicates whether to calculate the derivative of signed distance function or not. Default is False.
 
         Returns:
-            Ndarray: Contains the coordinates of the initial internal point generated, as well as the potentially computed signed distance function and its derivative.
+            np.ndarray: Contains the coordinates of the initial internal point generated, as well as the potentially computed signed distance function and its derivative.
 
         Examples:
             >>> import ppsci
@@ -705,6 +723,12 @@ class TimeXGeometry(geometry.Geometry):
             >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
             >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
             >>> ts = time_geom.sample_initial_interior(1000)
+            >>> for k,v in ts.items():
+            ...     print(k, v.shape)
+            t (1000, 1)
+            x (1000, 1)
+            y (1000, 1)
+            sdf (1000, 1)
 
         """
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
