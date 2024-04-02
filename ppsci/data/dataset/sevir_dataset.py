@@ -173,47 +173,6 @@ class SEVIRDataset(io.Dataset):
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
         data_dir (str): The path of the dataset.
-        data_types (str): A subset of SEVIR_DATA_TYPES.
-        seq_len (int): The length of the data sequences. Should be smaller than the max length raw_seq_len.
-        raw_seq_len (int): The length of the raw data sequences.
-        sample_mode (str): 'random' or 'sequent'.
-        stride : Useful when sample_mode == 'sequent'
-            stride must not be smaller than out_len to prevent data leakage in testing.
-        batch_size : Number of sequences in one batch.
-        layout (str): consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'
-            The layout of sampled data. Raw data layout is 'NHWT'.
-            valid layout: 'NHWT', 'NTHW', 'NTCHW', 'TNHW', 'TNCHW'.
-        num_shard : Split the whole dataset into num_shard parts for distributed training.
-        rank : Rank of the current process within num_shard.
-        split_mode : if 'ceil', all `num_shard` dataloaders have the same length = ceil(total_len / num_shard).
-            Different dataloaders may have some duplicated data batches, if the total size of datasets is not divided by num_shard.
-            if 'floor', all `num_shard` dataloaders have the same length = floor(total_len / num_shard).
-            The last several data batches may be wasted, if the total size of datasets is not divided by num_shard.
-            if 'uneven', the last datasets has larger length when the total length is not divided by num_shard.
-            The uneven split leads to synchronization error in dist.all_reduce() or dist.barrier().
-            See related issue: https://github.com/pytorch/pytorch/issues/33148
-            Notice: this also affects the behavior of `self.use_up`
-        start_date : Start time of SEVIR samples to generate.
-        end_date : End time of SEVIR samples to generate.
-        datetime_filter (function):
-            Mask function applied to time_utc column of catalog (return true to keep the row).
-            Pass function of the form   lambda t : COND(t)
-            Example:  lambda t: np.logical_and(t.dt.hour>=13,t.dt.hour<=21)  # Generate only day-time events
-        catalog_filter (function): function or None or 'default'
-            Mask function applied to entire catalog dataframe (return true to keep row).
-            Pass function of the form lambda catalog:  COND(catalog)
-            Example:  lambda c:  [s[0]=='S' for s in c.id]   # Generate only the 'S' events
-        shuffle (bool): bool, If True, data samples are shuffled before each epoch.
-        shuffle_seed (int): Seed to use for shuffling.
-        output_type (np.dtype): dtype of generated tensors
-        preprocess (bool): If True, self.preprocess_data_dict(data_dict) is called before each sample generated
-        downsample_dict (dict): downsample_dict.keys() == data_types. downsample_dict[key] is a Sequence of     (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions.
-        verbose (bool): verbose when opening raw data files
-
-    Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
-        data_dir (str): The path of the dataset.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each constraint variable. Defaults to None.
         data_types (Sequence[str], optional): A subset of SEVIR_DATA_TYPES.. Defaults to [ "vil", ].
         seq_len (int, optional): The length of the data sequences. Should be smaller than the max length raw_seq_len.. Defaults to 49.

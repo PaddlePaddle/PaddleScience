@@ -304,11 +304,6 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
 
 
 class FinalStackUpsamplingDecoder(paddle.nn.Layer):
-    """
-    Args:
-        target_shape_list (List[int,]): (T, H ,W ,C)
-    """
-
     def __init__(
         self,
         target_shape_list,

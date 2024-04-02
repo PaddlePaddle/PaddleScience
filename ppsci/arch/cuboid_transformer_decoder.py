@@ -187,21 +187,6 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
     The complexity of the layer is O((T2 / n_t * Bh * Bw) * (T1 / n_t * Bh * Bw) * n_t (H / Bh) (W / Bw)) = O(T2 * T1 / n_t H W Bh Bw)
 
     Args:
-        dim
-        num_heads
-        n_temporal
-        cuboid_hw
-        shift_hw : The shift window size as in shifted window attention
-        strategy : The decomposition strategy for the temporal axis, H axis and W axis
-        max_temporal_relative : The maximum temporal relative encoding difference
-        cross_last_n_frames : If provided, only cross attends to the last n frames of `mem`
-        use_global_vector : Whether the memory is coupled with global vectors
-        checkpoint_level : Level of checkpointing:
-            0 --> no_checkpointing
-            1 --> only checkpoint the FFN
-            2 --> checkpoint both FFN and attention
-
-    Args:
         dim (int): The dimention of input tensor.
         num_heads (int): The number of head.
         n_temporal (int, optional): The num of temporal. Defaults to 1.
