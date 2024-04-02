@@ -19,8 +19,12 @@ class PatchMerging3D(paddle.nn.Layer):
 
     Args:
         dim (int): Number of input channels.
-        downsample (Tuple[int,]): downsample factor
-        norm_layer :The normalization layer
+        out_dim (int, optional): The dim of output. Defaults to None.
+        downsample (tuple, optional): Downsample factor. Defaults to (1, 2, 2).
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        padding_type (str, optional): The type of padding. Defaults to "nearest".
+        linear_init_mode (str, optional): The mode of linear init. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization init. Defaults to "0".
 
     """
 
@@ -34,6 +38,7 @@ class PatchMerging3D(paddle.nn.Layer):
         linear_init_mode="0",
         norm_init_mode="0",
     ):
+        """_summary_"""
         super().__init__()
         self.linear_init_mode = linear_init_mode
         self.norm_init_mode = norm_init_mode
@@ -132,16 +137,19 @@ class PositionwiseFFN(paddle.nn.Layer):
         fc1_1 * act(fc1_2(data)) to map the data
 
     Args:
-        units (int):
-        hidden_size (int):
-        activation_dropout (float):
-        dropout (float):
-        activation (str):
-        normalization (str): layer_norm or no_norm
-        layer_norm_eps (float): layer_norm epsilon
-        pre_norm (bool): Pre-layer normalization as proposed in the paper:
+        units (int, optional): The units. Defaults to 512.
+        hidden_size (int, optional): The size of hidden layer. Defaults to 2048.
+        activation_dropout (float, optional): The dropout of activate. Defaults to 0.0.
+        dropout (float, optional): The drop ratio used in DropPat. Defaults to 0.1.
+        gated_proj (bool, optional): Whether to use gate projection. Defaults to False.
+        activation (str, optional): The activate. Defaults to "relu".
+        normalization (str, optional): The normalization. Defaults to "layer_norm".
+        layer_norm_eps (float, optional): The epsilon of layer normalization. Defaults to 1e-05.
+                pre_norm (bool): Pre-layer normalization as proposed in the paper:
                 "[ACL2018] The Best of Both Worlds: Combining Recent Advances in Neural Machine Translation" This will stabilize the training of Transformers.
-                You may also refer to "[Arxiv2020] Understanding the Difficulty of Training Transformers"
+                You may also refer to "[Arxiv2020] Understanding the Difficulty of Training Transformers". Defaults to False.
+        linear_init_mode (str, optional): The mode of linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
     """
 
     def __init__(
@@ -237,14 +245,14 @@ def update_cuboid_size_shift_size(data_shape, cuboid_size, shift_size, strategy)
     """Update the cuboid_size and shift_size
 
     Args:
-        data_shape : The shape of the data
-        cuboid_size : Size of the cuboid
-        shift_size : Size of the shift
-        strategy : The strategy of attention
+        data_shape (Tuple[int,...]): The shape of the data.
+        cuboid_size (Tuple[int,...]): Size of the cuboid.
+        shift_size (Tuple[int,...]): Size of the shift.
+        strategy (str): The strategy of attention.
 
     Returns:
-        new_cuboid_size : Size of the cuboid
-        new_shift_size : Size of the shift
+        new_cuboid_size (Tuple[int,...]): Size of the cuboid.
+        new_shift_size (Tuple[int,...]): Size of the shift.
     """
 
     new_cuboid_size = list(cuboid_size)
@@ -263,13 +271,13 @@ def cuboid_reorder(data, cuboid_size, strategy):
     We assume that the tensor shapes are divisible to the cuboid sizes.
 
     Args:
-        data : The input data
-        cuboid_size : The size of the cuboid
-        strategy : The cuboid strategy
+        data (paddle.Tensor): The input data.
+        cuboid_size (Tuple[int,...]): The size of the cuboid.
+        strategy (Tuple[int,...]): The cuboid strategy.
 
     Returns:
-        reordered_data : Shape will be (B, num_cuboids, bT * bH * bW, C)
-        num_cuboids = T / bT * H / bH * W / bW
+        reordered_data (paddle.Tensor): Shape will be (B, num_cuboids, bT * bH * bW, C)
+            num_cuboids = T / bT * H / bH * W / bW
     """
 
     B, T, H, W, C = data.shape
@@ -306,17 +314,17 @@ def compute_cuboid_self_attention_mask(
     """Compute the shift window attention mask
 
     Args:
-        data_shape : Should be T, H, W
-        cuboid_size : Size of the cuboid
-        shift_size : The shift size
-        strategy : The decomposition strategy
-        padding_type : Type of the padding
-        device : The device
+        data_shape (Tuple[int,....]): Should be (T, H, W).
+        cuboid_size (Tuple[int,....]): Size of the cuboid.
+        shift_size (Tuple[int,....]): The shift size.
+        strategy (str): The decomposition strategy.
+        padding_type (str): Type of the padding..
+        device (str): The device.
 
     Returns:
-        attn_mask : Mask with shape (num_cuboid, cuboid_vol, cuboid_vol)
-        The padded values will always be masked. The other masks will ensure that the shifted windows
-        will only attend to those in the shifted windows.
+        attn_mask (paddle.Tensor): Mask with shape (num_cuboid, cuboid_vol, cuboid_vol)
+            The padded values will always be masked. The other masks will ensure that the shifted windows
+            will only attend to those in the shifted windows.
     """
     T, H, W = data_shape
     pad_t = (cuboid_size[0] - T % cuboid_size[0]) % cuboid_size[0]
@@ -378,14 +386,14 @@ def masked_softmax(att_score, mask, axis: int = -1):
      The mask can be broadcastable.
 
     Args:
-        att_score : Shape (..., length, ...)
-        mask : Shape (..., length, ...)
+        att_score (paddle.Tensor): Shape (..., length, ...)
+        mask (paddle.Tensor): Shape (..., length, ...)
             1 --> The element is not masked
             0 --> The element is masked
-        axis : The axis to calculate the softmax. att_score.shape[axis] must be the same as mask.shape[axis]
+        axis (int): The axis to calculate the softmax. att_score.shape[axis] must be the same as mask.shape[axis]
 
     Returns:
-        att_weights : Shape (..., length, ...)
+        att_weights (paddle.Tensor): Shape (..., length, ...)
     """
 
     if mask is not None:
@@ -403,13 +411,13 @@ def cuboid_reorder_reverse(data, cuboid_size, strategy, orig_data_shape):
     """Reverse the reordered cuboid back to the original space
 
     Args:
-        data :
-        cuboid_size :
-        strategy :
-        orig_data_shape :
+        data (paddle.Tensor): The input data.
+        cuboid_size (Tuple[int,...]): The size of cuboid.
+        strategy (str): The strategy of reordering.
+        orig_data_shape (Tuple[int,...]): The original shape of the data.
 
     Returns:
-        data : The recovered data
+        data (paddle.Tensor): The recovered data
     """
 
     B, num_cuboids, cuboid_volume, C = data.shape
@@ -473,23 +481,27 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
      the vectors inside each individual cuboids will also attend to the global vectors so that they can peep into the global status of the system.
 
     Args:
-        dim : The dimension of the input tensor
-        num_heads : The number of heads
-        cuboid_size : The size of each cuboid
-        shift_size : The size for shifting the windows.
-        strategy : The decomposition strategy of the tensor. 'l' stands for local and 'd' stands for dilated.
-        padding_type : The type of padding.
-        qkv_bias : Whether to enable bias in calculating qkv attention
-        qk_scale : Whether to enable scale factor when calculating the attention.
-        attn_drop : The attention dropout
-        proj_drop : The projection dropout
-        use_final_proj : Whether to use the final projection or not
-        norm_layer : The normalization layer
-        use_global_vector : Whether to use the global vector or not.
-        use_global_self_attn : Whether to do self attention among global vectors
-        separate_global_qkv : Whether to different network to calc q_global, k_global, v_global
-        global_dim_ratio : The dim (channels) of global vectors is `global_dim_ratio*dim`.
-        checkpoint_level : Whether to enable gradient checkpointing.
+        dim (int): The dimension of the input tensor.
+        num_heads (int): The number of heads.
+        cuboid_size (tuple, optional): The size of cuboid. Defaults to (2, 7, 7).
+        shift_size (tuple, optional): The size of shift. Defaults to (0, 0, 0).
+        strategy (tuple, optional): The strategy. Defaults to ("l", "l", "l").
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        qkv_bias (bool, optional): Whether to enable bias in calculating qkv attention. Defaults to False.
+        qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
+        attn_drop (float, optional): The attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The projection dropout. Defaults to 0.0.
+        use_final_proj (bool, optional): Whether to use the final projection. Defaults to True.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to False.
+        use_global_self_attn (bool, optional): Whether to use self attention among global vectors. Defaults to False.
+        separate_global_qkv (bool, optional):  Whether to use different network to calc q_global, k_global, v_global. Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
+        checkpoint_level (bool, optional): Whether to enable gradient checkpointing. Defaults to True.
+        use_relative_pos (bool, optional): Whether to use relative pos. Defaults to True.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
     """
 
     def __init__(
@@ -946,7 +958,6 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
 
 class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
     """
-
     - "use_inter_ffn" is True
         x --> attn1 -----+-------> ffn1 ---+---> attn2 --> ... --> ffn_k --> out
            |             ^   |             ^
@@ -958,6 +969,32 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
            |             |   |            |             |  |           |
            |-------------|   |------------|   ----------|  |-----------|
     If we have enabled global memory vectors, each attention will be a
+
+    Args:
+        dim (int): The dimension of the input tensor.
+        num_heads (int): The number of heads.
+        block_cuboid_size (list, optional): The size of block cuboid . Defaults to [(4, 4, 4), (4, 4, 4)].
+        block_shift_size (list, optional): The shift size of block. Defaults to [(0, 0, 0), (2, 2, 2)].
+        block_strategy (list, optional): The strategy of block. Defaults to [("d", "d", "d"), ("l", "l", "l")].
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        qkv_bias (bool, optional): Whether to enable bias in calculating qkv attention. Defaults to False.
+        qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
+        attn_drop (float, optional): The attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The projection dropout. Defaults to 0.0.
+        use_final_proj (bool, optional): Whether to use the final projection. Defaults to True.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to False.
+        use_global_self_attn (bool, optional): Whether to use self attention among global vectors. Defaults to False.
+        separate_global_qkv (bool, optional):  Whether to use different network to calc q_global, k_global, v_global.
+        Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`.
+        Defaults to 1.
+        checkpoint_level (bool, optional): Whether to enable gradient checkpointing. Defaults to True.
+        use_relative_pos (bool, optional): Whether to use relative pos. Defaults to True.
+        use_relative_pos (bool, optional): Whether to use relative pos. Defaults to True.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
 
     """
 
@@ -1201,27 +1238,44 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
     x --> attn_block --> patch_merge --> attn_block --> patch_merge --> ... --> out
 
     Args:
-        input_shape : The shape of the input. Contains T, H, W, C
-        initial_data_thw : The shape of the first layer
-        base_units : The number of units
-        scale_alpha : We scale up the channels based on the formula:
-            - round_to(base_units * max(downsample_scale) ** units_alpha, 4)
-        depth : The number of layers for each block
-        downsample : The downsample ratio
-        downsample_type : Type of the downsampling layer
-        block_attn_patterns : Attention pattern for the cuboid attention for each block.
-        block_cuboid_size : A list of cuboid size parameters
-        block_strategy : A list of cuboid strategies
-        block_shift_size : A list of shift sizes
-        num_global : The number of global vectors
-        num_heads : The number of heads.
-        attn_drop
-        proj_drop
-        ffn_drop
-        gated_ffn : Whether to enable gated ffn or not
-        norm_layer : The normalization layer
-        use_inter_ffn : Whether to use intermediate FFN
-        padding_type
+        input_shape (Tuple[int,...]): The shape of the input. Contains T, H, W, C
+        base_units (int, optional): The number of units. Defaults to 128.
+        block_units (int, optional): The number of block units. Defaults to None.
+        scale_alpha (float, optional):  We scale up the channels based on the formula:
+            - round_to(base_units * max(downsample_scale) ** units_alpha, 4). Defaults to 1.0.
+        depth (list, optional): The number of layers for each block. Defaults to [4, 4, 4].
+        downsample (int, optional): The downsample ratio. Defaults to 2.
+        downsample_type (str, optional): The type of downsample. Defaults to "patch_merge".
+        block_attn_patterns (str, optional): Attention pattern for the cuboid attention for each block.. Defaults to None.
+        block_cuboid_size (list, optional): A list of cuboid size parameters. Defaults to [(4, 4, 4), (4, 4, 4)].
+        block_strategy (list, optional): A list of cuboid strategies. Defaults to [("l", "l", "l"), ("d", "d", "d")].
+        block_shift_size (list, optional): A list of shift sizes. Defaults to [(0, 0, 0), (0, 0, 0)].
+        num_heads (int, optional): The number of heads.. Defaults to 4.
+        attn_drop (float, optional): The ratio of attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The ratio of projection dropout. Defaults to 0.0.
+        ffn_drop (float, optional): The ratio of FFN dropout. Defaults to 0.0.
+        activation (str, optional): The activation. Defaults to "leaky".
+        ffn_activation (str, optional): The FFN activation. Defaults to "leaky".
+        gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_inter_ffn (bool, optional): Whether to use inter FFN. Defaults to True.
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        checkpoint_level (bool, optional): Whether to enable gradient checkpointing. Defaults to True.
+        use_relative_pos (bool, optional): Whether to use relative pos. Defaults to True.
+        self_attn_use_final_proj (bool, optional): Whether to use self attention for final projection. Defaults to True.
+        use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to False.
+        use_global_vector_ffn (bool, optional): Whether to use FFN global vectors. Defaults to False.
+        use_global_self_attn (bool, optional): Whether to use global self attention. Defaults to False.
+        separate_global_qkv (bool, optional):  Whether to use different network to calc q_global, k_global, v_global.
+            Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`.
+            Defaults to 1.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        conv_init_mode (str, optional): The mode of conv initialization. Defaults to "0".
+        down_linear_init_mode (str, optional): The mode of downsample linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization. Defaults to "0".
+
     """
 
     def __init__(
@@ -1433,7 +1487,7 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
                 - (B, T, H // 2, W // 2, 2 * C1)
                 - (B, T, H // 4, W // 4, 4 * C1)
                 ...
-            global_mem_out : Optional
+            global_mem_out (Optional): The output of the global vector.
         """
 
         B, T, H, W, C_in = x.shape

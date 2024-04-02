@@ -167,15 +167,16 @@ def path_splitall(path):
 
 
 class SEVIRDataset(io.Dataset):
-    """
+    """The Storm EVent ImagRy dataset.
+
     Args:
-        input_keys (Tuple[str, ...]): input keys,
-        label_keys (Tuple[str, ...]): label keys,
-        data_dir (str): the path of the dataset
-        data_types : A subset of SEVIR_DATA_TYPES.
-        seq_len : The length of the data sequences. Should be smaller than the max length raw_seq_len.
-        raw_seq_len : The length of the raw data sequences.
-        sample_mode : 'random' or 'sequent'
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
+        data_dir (str): The path of the dataset.
+        data_types (str): A subset of SEVIR_DATA_TYPES.
+        seq_len (int): The length of the data sequences. Should be smaller than the max length raw_seq_len.
+        raw_seq_len (int): The length of the raw data sequences.
+        sample_mode (str): 'random' or 'sequent'.
         stride : Useful when sample_mode == 'sequent'
             stride must not be smaller than out_len to prevent data leakage in testing.
         batch_size : Number of sequences in one batch.
@@ -208,6 +209,52 @@ class SEVIRDataset(io.Dataset):
         preprocess (bool): If True, self.preprocess_data_dict(data_dict) is called before each sample generated
         downsample_dict (dict): downsample_dict.keys() == data_types. downsample_dict[key] is a Sequence of     (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions.
         verbose (bool): verbose when opening raw data files
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
+        data_dir (str): The path of the dataset.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each constraint variable. Defaults to None.
+        data_types (Sequence[str], optional): A subset of SEVIR_DATA_TYPES.. Defaults to [ "vil", ].
+        seq_len (int, optional): The length of the data sequences. Should be smaller than the max length raw_seq_len.. Defaults to 49.
+        raw_seq_len (int, optional): The length of the raw data sequences.. Defaults to 49.
+        sample_mode (str, optional): The mode of sampling, eg.'random' or 'sequent'. Defaults to "sequent".
+        stride (int, optional): Useful when sample_mode == 'sequent'
+            stride must not be smaller than out_len to prevent data leakage in testing. Defaults to 12.
+        batch_size (int, optional): The batch size. Defaults to 1.
+        layout (str, optional): consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'
+            The layout of sampled data. Raw data layout is 'NHWT'.
+            valid layout: 'NHWT', 'NTHW', 'NTCHW', 'TNHW', 'TNCHW'. Defaults to "NHWT".
+        in_len (int, optional): The length of input data. Defaults to 13.
+        out_len (int, optional): The length of output data. Defaults to 12.
+        num_shard (int, optional): Split the whole dataset into num_shard parts for distributed training. Defaults to 1.
+        rank (int, optional): Rank of the current process within num_shard. Defaults to 0.
+        split_mode (str, optional): if 'ceil', all `num_shard` dataloaders have the same length = ceil(total_len / num_shard).
+            Different dataloaders may have some duplicated data batches, if the total size of datasets is not divided by num_shard.
+            if 'floor', all `num_shard` dataloaders have the same length = floor(total_len / num_shard).
+            The last several data batches may be wasted, if the total size of datasets is not divided by num_shard.
+            if 'uneven', the last datasets has larger length when the total length is not divided by num_shard.
+            The uneven split leads to synchronization error in dist.all_reduce() or dist.barrier().
+            See related issue: https://github.com/pytorch/pytorch/issues/33148
+            Notice: this also affects the behavior of `self.use_up`. Defaults to "uneven".
+        start_date (datetime.datetime, optional): Start time of SEVIR samples to generate. Defaults to None.
+        end_date (datetime.datetime, optional): End time of SEVIR samples to generate. Defaults to None.
+        datetime_filter (function, optional): Mask function applied to time_utc column of catalog (return true to keep the row).
+            Pass function of the form   lambda t : COND(t)
+            Example:  lambda t: np.logical_and(t.dt.hour>=13,t.dt.hour<=21)  # Generate only day-time events. Defaults to None.
+        catalog_filter (function, optional): function or None or 'default'
+            Mask function applied to entire catalog dataframe (return true to keep row).
+            Pass function of the form lambda catalog:  COND(catalog)
+            Example:  lambda c:  [s[0]=='S' for s in c.id]   # Generate only the 'S' events
+        shuffle (bool, optional): If True, data samples are shuffled before each epoch. Defaults to False.
+        shuffle_seed (int, optional): Seed to use for shuffling. Defaults to 1.
+        output_type (np.dtype, optional): The type of generated tensors. Defaults to np.float32.
+        preprocess (bool, optional): If True, self.preprocess_data_dict(data_dict) is called before each sample generated. Defaults to True.
+        rescale_method (str, optional): The method of rescale. Defaults to "01".
+        downsample_dict (Dict[str, Sequence[int]], optional): downsample_dict.keys() == data_types. downsample_dict[key] is a Sequence of
+            (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions. Defaults to None.
+        verbose (bool, optional): Verbose when opening raw data files. Defaults to False.
+        training (str, optional): Training pathse. Defaults to "train".
     """
 
     # Whether support batch indexing for speeding up fetching process.
@@ -468,11 +515,11 @@ class SEVIRDataset(io.Dataset):
         Iteratively read data into data dict. Finally data[imgt] gets shape (batch_size, height, width, raw_seq_len).
 
         Args:
-            row : A series with fields IMGTYPE_filename, IMGTYPE_index, IMGTYPE_time_index.
-            data : Dict, data[imgt] is a data tensor with shape = (tmp_batch_size, height, width, raw_seq_len).
+            row (Dict,optional): A series with fields IMGTYPE_filename, IMGTYPE_index, IMGTYPE_time_index.
+            data (Dict,optional): , data[imgt] is a data tensor with shape = (tmp_batch_size, height, width, raw_seq_len).
 
         Returns:
-            data : Updated data. Updated shape = (tmp_batch_size + 1, height, width, raw_seq_len).
+            data (np.array): Updated data. Updated shape = (tmp_batch_size + 1, height, width, raw_seq_len).
         """
 
         imgtyps = np.unique([x.split("_")[0] for x in list(row.keys())])
@@ -546,10 +593,10 @@ class SEVIRDataset(io.Dataset):
         Loads a selected batch of events (not batch of sequences) into memory.
 
         Args:
-            idx
-            event_batch_size : event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
+            idx (int): The index of the event in the batch.
+            event_batch_size (int): event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
         Returns:
-            event_batch : list of event batches.
+            event_batch (List[np.array,...]): list of event batches.
                 event_batch[i] is the event batch of the i-th data type.
                 Each event_batch[i] is a np.ndarray with shape = (event_batch_size, height, width, raw_seq_len)
         """
@@ -585,16 +632,16 @@ class SEVIRDataset(io.Dataset):
 
     @staticmethod
     def preprocess_data_dict(data_dict, data_types=None, layout="NHWT", rescale="01"):
-        """
+        """The preprocess of data dict.
         Args:
-            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]):
+            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): The dict of data.
             data_types (Sequence[str]) : The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
-            layout (str) : consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'
+            layout (str) : consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'.
             rescale (str):
                 'sevir': use the offsets and scale factors in original implementation.
-                '01': scale all values to range 0 to 1, currently only supports 'vil'
+                '01': scale all values to range 0 to 1, currently only supports 'vil'.
         Returns:
-            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]) : preprocessed data
+            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]) : preprocessed data.
         """
 
         if rescale == "sevir":
@@ -626,20 +673,6 @@ class SEVIRDataset(io.Dataset):
 
     @staticmethod
     def process_data_dict_back(data_dict, data_types=None, rescale="01"):
-        """
-        Parameters
-        ----------
-        data_dict
-            each data_dict[key] is a torch.Tensor.
-        rescale
-            str:
-                'sevir': data are scaled using the offsets and scale factors in original implementation.
-                '01': data are all scaled to range 0 to 1, currently only supports 'vil'
-        Returns
-        -------
-        data_dict
-            each data_dict[key] is the data processed back in torch.Tensor.
-        """
         if rescale == "sevir":
             scale_dict = PREPROCESS_SCALE_SEVIR
             offset_dict = PREPROCESS_OFFSET_SEVIR
@@ -682,15 +715,16 @@ class SEVIRDataset(io.Dataset):
     def downsample_data_dict(
         data_dict, data_types=None, factors_dict=None, layout="NHWT"
     ):
-        """
+        """The downsample of data.
+
         Args:
-            data_dict (Dict[str, Union[np.array, paddle.Tensor]]):
-            factors_dict ( Optional[Dict[str, Sequence[int]]]):
-                each element `factors` is a Sequence of int, representing (t_factor, h_factor, w_factor)
+            data_dict (Dict[str, Union[np.array, paddle.Tensor]]): The dict of data.
+            factors_dict ( Optional[Dict[str, Sequence[int]]]):each element `factors` is a Sequence of int, representing (t_factor,
+                  h_factor, w_factor)
 
         Returns:
-            downsampled_data_dict (Dict[str, paddle.Tensor]):
-                Modify on a deep copy of data_dict instead of directly modifying the original data_dict
+            downsampled_data_dict (Dict[str, paddle.Tensor]): Modify on a deep copy of data_dict instead of directly modifying the original
+              data_dict
         """
 
         if factors_dict is None:
@@ -741,15 +775,6 @@ class SEVIRDataset(io.Dataset):
         return in_slice, out_slice
 
     def __getitem__(self, index):
-        """
-        Args:
-            index : The index of the batch to sample.
-        Returns:
-            ret_dict : dict. ret_dict.keys() == self.data_types.
-                If self.preprocess == False:
-                    ret_dict[imgt].shape == (batch_size, height, width, seq_len)
-        """
-
         event_idx = (index * self.batch_size) // self.num_seq_per_event
         seq_idx = (index * self.batch_size) % self.num_seq_per_event
         num_sampled = 0

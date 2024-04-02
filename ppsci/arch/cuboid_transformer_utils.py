@@ -74,13 +74,13 @@ def get_norm_layer(
     """Get the normalization layer based on the provided type
 
     Args:
-        normalization (str): The type of the layer normalization from ['layer_norm']
-        axis (float): The axis to normalize the
-        epsilon (float): The epsilon of the normalization layer
-        in_channels (int): Input channel
+        normalization (str): The type of the layer normalization from ['layer_norm'].
+        axis (float): The axis to normalize the.
+        epsilon (float): The epsilon of the normalization layer.
+        in_channels (int): Input channel.
 
     Returns:
-        norm_layer: The layer normalization layer
+        norm_layer (norm): The layer normalization layer.
     """
 
     if isinstance(normalization, str):
@@ -105,21 +105,6 @@ def get_norm_layer(
 
 
 def generalize_padding(x, pad_t, pad_h, pad_w, padding_type, t_pad_left=False):
-    """generalize padding mode
-
-    Args:
-        x (Tuple[int, ...]): Shape (B, T, H, W, C)
-        pad_t
-        pad_h
-        pad_w
-        padding_type
-        t_pad_left
-
-    Returns:
-        out (paddle.Tensor):The result after padding the x.
-        Shape will be (B, T + pad_t, H + pad_h, W + pad_w, C)
-    """
-
     if pad_t == 0 and pad_h == 0 and pad_w == 0:
         return x
     assert padding_type in ["zeros", "ignore", "nearest"]
@@ -241,17 +226,15 @@ class CuboidSelfAttentionPatterns:
     def axial(self, input_shape):
         """Axial attention proposed in https://arxiv.org/abs/1912.12180
 
-        Parameters
-        ----------
-        input_shape
-            T, H, W
+        Args:
+            input_shape (Tuple[int,...]): The shape of the input tensor, T H W.
 
-        Returns
-        -------
-        cuboid_size
-        strategy
-        shift_size
+        Returns:
+            cuboid_size (Tuple[int,...]): The size of cuboid.
+            strategy (Tuple[str,...]): The strategy of the attention.
+            shift_size (Tuple[int,...]): The shift size of the attention.
         """
+
         T, H, W, _ = input_shape
         cuboid_size = [(T, 1, 1), (1, H, 1), (1, 1, W)]
         strategy = [("l", "l", "l"), ("l", "l", "l"), ("l", "l", "l")]
@@ -324,20 +307,6 @@ class CuboidCrossAttentionPatterns:
         return self.patterns[pattern_name]
 
     def cross_KxK(self, mem_shape, K):
-        """
-
-        Parameters
-        ----------
-        mem_shape
-        K
-
-        Returns
-        -------
-        cuboid_hw
-        shift_hw
-        strategy
-        n_temporal
-        """
         T_mem, H, W, _ = mem_shape
         K = min(K, H, W)
         cuboid_hw = [(K, K)]
@@ -347,20 +316,6 @@ class CuboidCrossAttentionPatterns:
         return cuboid_hw, shift_hw, strategy, n_temporal
 
     def cross_KxK_lg(self, mem_shape, K):
-        """
-
-        Parameters
-        ----------
-        mem_shape
-        K
-
-        Returns
-        -------
-        cuboid_hw
-        shift_hw
-        strategy
-        n_temporal
-        """
         T_mem, H, W, _ = mem_shape
         K = min(K, H, W)
         cuboid_hw = [(K, K), (K, K)]
@@ -370,20 +325,6 @@ class CuboidCrossAttentionPatterns:
         return cuboid_hw, shift_hw, strategy, n_temporal
 
     def cross_KxK_heter(self, mem_shape, K):
-        """
-
-        Parameters
-        ----------
-        mem_shape
-        K
-
-        Returns
-        -------
-        cuboid_hw
-        shift_hw
-        strategy
-        n_temporal
-        """
         T_mem, H, W, _ = mem_shape
         K = min(K, H, W)
         cuboid_hw = [(K, K), (K, K), (K, K)]

@@ -306,7 +306,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
 class FinalStackUpsamplingDecoder(paddle.nn.Layer):
     """
     Args:
-        target_shape_list : list of (T, H ,W ,C)
+        target_shape_list (List[int,]): (T, H ,W ,C)
     """
 
     def __init__(
@@ -439,10 +439,77 @@ class CuboidTransformer(base.Arch):
              y <--- upsample (optional) <--- dec <----------
 
     Args:
-        input_shape : Shape of the input tensor. It will be (T, H, W, C_in)
-        target_shape : Shape of the input tensor. It will be (T_out, H, W, C_out)
-        base_units : The base units
-        z_init_method : How the initial input to the decoder is initialized
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
+        input_shape (Tuple[int, ...]): The shape of the input data.
+        target_shape (Tuple[int, ...]): The shape of the target data.
+        base_units (int, optional): The base units. Defaults to 128.
+        block_units (int, optional): The block units. Defaults to None.
+        scale_alpha (float, optional): We scale up the channels based on the formula:
+            - round_to(base_units * max(downsample_scale) ** units_alpha, 4). Defaults to 1.0.
+        num_heads (int, optional): The number of heads. Defaults to 4.
+        attn_drop (float, optional): The attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The projection dropout. Defaults to 0.0.
+        ffn_drop (float, optional): The ffn dropout. Defaults to 0.0.
+        downsample (int, optional): The rate of downsample. Defaults to 2.
+        downsample_type (str, optional): The type of downsample. Defaults to "patch_merge".
+        upsample_type (str, optional): The rate of upsample. Defaults to "upsample".
+        upsample_kernel_size (int, optional): The kernel size of upsample. Defaults to 3.
+        enc_depth (list, optional): The depth of encoder. Defaults to [4, 4, 4].
+        enc_attn_patterns (str, optional): The pattern of encoder attention. Defaults to None.
+        enc_cuboid_size (list, optional): The cuboid size of encoder. Defaults to [(4, 4, 4), (4, 4, 4)].
+        enc_cuboid_strategy (list, optional): The cuboid strategy of encoder. Defaults to [("l", "l", "l"), ("d", "d", "d")].
+        enc_shift_size (list, optional): The shift size of encoder. Defaults to [(0, 0, 0), (0, 0, 0)].
+        enc_use_inter_ffn (bool, optional): Whether to use intermediate FFN for encoder. Defaults to True.
+        dec_depth (list, optional): The depth of decoder. Defaults to [2, 2].
+        dec_cross_start (int, optional): The cross start of decoder. Defaults to 0.
+        dec_self_attn_patterns (str, optional): The partterns of decoder. Defaults to None.
+        dec_self_cuboid_size (list, optional): The cuboid size of decoder. Defaults to [(4, 4, 4), (4, 4, 4)].
+        dec_self_cuboid_strategy (list, optional): The strategy of decoder. Defaults to [("l", "l", "l"), ("d", "d", "d")].
+        dec_self_shift_size (list, optional): The shift size of decoder. Defaults to [(1, 1, 1), (0, 0, 0)].
+        dec_cross_attn_patterns (_type_, optional): The cross attention patterns of decoder. Defaults to None.
+        dec_cross_cuboid_hw (list, optional): The cuboid_hw of decoder. Defaults to [(4, 4), (4, 4)].
+        dec_cross_cuboid_strategy (list, optional): The cuboid strategy of decoder. Defaults to [("l", "l", "l"), ("d", "l", "l")].
+        dec_cross_shift_hw (list, optional): The shift_hw of decoder. Defaults to [(0, 0), (0, 0)].
+        dec_cross_n_temporal (list, optional): The cross_n_temporal of decoder. Defaults to [1, 2].
+        dec_cross_last_n_frames (int, optional): The cross_last_n_frames of decoder. Defaults to None.
+        dec_use_inter_ffn (bool, optional): Whether to use intermediate FFN for decoder. Defaults to True.
+        dec_hierarchical_pos_embed (bool, optional): Whether to use hierarchical pos_embed for decoder. Defaults to False.
+        num_global_vectors (int, optional): The num of global vectors. Defaults to 4.
+        use_dec_self_global (bool, optional): Whether to use global vector for decoder. Defaults to True.
+        dec_self_update_global (bool, optional): Whether to update global vector for decoder. Defaults to True.
+        use_dec_cross_global (bool, optional): Whether to use cross global vector for decoder. Defaults to True.
+        use_global_vector_ffn (bool, optional): Whether to use global vector FFN. Defaults to True.
+        use_global_self_attn (bool, optional): Whether to use global attentions. Defaults to False.
+        separate_global_qkv (bool, optional): Whether to separate global qkv. Defaults to False.
+        global_dim_ratio (int, optional): The ratio of global dim. Defaults to 1.
+        self_pattern (str, optional): The pattern. Defaults to "axial".
+        cross_self_pattern (str, optional): The self cross pattern. Defaults to "axial".
+        cross_pattern (str, optional): The cross pattern. Defaults to "cross_1x1".
+        z_init_method (str, optional): How the initial input to the decoder is initialized. Defaults to "nearest_interp".
+        initial_downsample_type (str, optional): The downsample type of initial. Defaults to "conv".
+        initial_downsample_activation (str, optional): The downsample activation of initial. Defaults to "leaky".
+        initial_downsample_scale (int, optional): The downsample scale of initial. Defaults to 1.
+        initial_downsample_conv_layers (int, optional): The conv layer of downsample of initial. Defaults to 2.
+        final_upsample_conv_layers (int, optional): The conv layer of final upsample. Defaults to 2.
+        initial_downsample_stack_conv_num_layers (int, optional): The num of stack conv layer of initial downsample. Defaults to 1.
+        initial_downsample_stack_conv_dim_list (list, optional): The dim list of stack conv of initial downsample. Defaults to None.
+        initial_downsample_stack_conv_downscale_list (list, optional): The downscale list of stack conv of initial downsample. Defaults to [1].
+        initial_downsample_stack_conv_num_conv_list (list, optional): The num of stack conv list of initial downsample. Defaults to [2].
+        ffn_activation (str, optional): The activation of FFN. Defaults to "leaky".
+        gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
+        norm_layer (str, optional): The type of normilize. Defaults to "layer_norm".
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        pos_embed_type (str, optional): The type of pos embeding. Defaults to "t+hw".
+        checkpoint_level (bool, optional): Whether to use checkpoint. Defaults to True.
+        use_relative_pos (bool, optional): Whether to use relative pose. Defaults to True.
+        self_attn_use_final_proj (bool, optional): Whether to use final projection. Defaults to True.
+        dec_use_first_self_attn (bool, optional): Whether to use first self attention for decoder. Defaults to False.
+        attn_linear_init_mode (str, optional): The mode of attention linear init. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear init. Defaults to "0".
+        conv_init_mode (str, optional): The mode of conv init. Defaults to "0".
+        down_up_linear_init_mode (str, optional): The mode of downsample and upsample linear init. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization init. Defaults to "0".
     """
 
     def __init__(

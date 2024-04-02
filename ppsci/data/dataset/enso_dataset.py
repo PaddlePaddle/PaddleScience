@@ -53,15 +53,15 @@ def scale_back_sst(sst):
 def prepare_inputs_targets(
     len_time, input_gap, input_length, pred_shift, pred_length, samples_gap
 ):
-    """
+    """Prepares the input and target indices for training.
 
     Args:
-        len_time (int):
-        input_gap (int): time gaps between two consecutive input frames
-        input_length (int): the number of input frames
-        pred_shift (int): the lead_time of the last target to be predicted
-        pred_length (int): the number of frames to be predicted
-        samples_gap ():
+        len_time (int): The total number of time steps in the dataset.
+        input_gap (int): time gaps between two consecutive input frames.
+        input_length (int): the number of input frames.
+        pred_shift (int): the lead_time of the last target to be predicted.
+        pred_length (int): the number of frames to be predicted.
+        samples_gap (int): stride of seq sampling.
 
     """
 
@@ -84,12 +84,12 @@ def fold(data, size=36, stride=12):
     only applicable to the case where the size of the sliding windows is n*stride
 
     Args:
-        data (tuple[int,...]): (N, size, *)
-        size (int, optional): Defaults to 36.
-        stride (int, optional): Defaults to 12.
+        data (tuple[int,...]): The input data.(N, size, *)
+        size (int, optional): The size of a single datum.The  Defaults to 36.
+        stride (int, optional): The step.Defaults to 12.
 
     Returns:
-        outdata : (N_, *).N/size is the number/width of sliding blocks
+        outdata (np.array): (N_, *).N/size is the number/width of sliding blocks
     """
 
     if size % stride != 0:
@@ -108,11 +108,11 @@ def fold(data, size=36, stride=12):
 
 
 def data_transform(data, num_years_per_model):
-    """
+    """The transform of the input data.
 
     Args:
-        data (tuple[list,...]): (N, 36, *)
-        num_years_per_model (int): 151/140
+        data (Tuple[list,...]): The input data.Shape of (N, 36, *).
+        num_years_per_model (int): The number of years associated with each model.151/140.
 
     """
 
@@ -142,7 +142,7 @@ def read_raw_data(ds_dir, out_dir=None):
     """read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
 
     Args:
-        ds_dir (str): the path of the dataset
+        ds_dir (str): the path of the dataset.
         out_dir (str): the path of output. Defaults to None.
 
     """
@@ -227,11 +227,24 @@ def cat_over_last_dim(data):
 
 
 class ENSODataset(io.Dataset):
-    """_summary_
+    """The El Niño/Southern Oscillation dataset.
 
     Args:
-        samples_gap (int): stride of seq sampling.
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
+        data_dir (str): The directory  of data.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each constraint variable. Defaults to None.
+        in_len (int, optional): The length of input data. Defaults to 12.
+        out_len (int, optional): The length of out data. Defaults to 26.
+        in_stride (int, optional): The stride of input data. Defaults to 1.
+        out_stride (int, optional): The stride of output data. Defaults to 1.
+        train_samples_gap (int, optional): The stride of sequence sampling during training. Defaults to 10.
             e.g., samples_gap = 10, the first seq contains [0, 1, ..., T-1] frame indices, the second seq contains [10, 11, .., T+9]
+        eval_samples_gap (int, optional): The stride of sequence sampling during eval. Defaults to 11.
+        normalize_sst (bool, optional): Whether to use normalization. Defaults to True.
+        batch_size (int, optional): Batch size. Defaults to 1.
+        num_workers (int, optional): The num of workers. Defaults to 1.
+        training (str, optional): Training pathse. Defaults to "train".
 
     """
 

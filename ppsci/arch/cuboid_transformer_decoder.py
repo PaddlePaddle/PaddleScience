@@ -15,10 +15,10 @@ class PosEmbed(paddle.nn.Layer):
     """pose embeding
 
     Args:
-        embed_dim (int): embed dim
-        maxT (int)
-        maxH
-        maxW
+        embed_dim (int): The dimension of embeding.
+        maxT (int): The embeding max time.
+        maxH (int): The embeding max height.
+        maxW (int): The embeding max width.
         typ (str):
             The type of the positional embedding.
             - t+h+w:
@@ -95,25 +95,6 @@ class PosEmbed(paddle.nn.Layer):
 def compute_cuboid_cross_attention_mask(
     T_x, T_mem, H, W, n_temporal, cuboid_hw, shift_hw, strategy, padding_type, device
 ):
-    """
-    Args:
-        T_x :
-        T_mem :
-        H :
-        W :
-        n_temporal :
-        cuboid_hw :
-        shift_hw :
-        strategy :
-        padding_type :
-        device :
-
-    Returns:
-        attn_mask : Mask with shape (num_cuboid, x_cuboid_vol, mem_cuboid_vol)
-        The padded values will always be masked. The other masks will ensure that the shifted windows
-        will only attend to those in the shifted windows.
-    """
-
     pad_t_mem = (n_temporal - T_mem % n_temporal) % n_temporal
     pad_t_x = (n_temporal - T_x % n_temporal) % n_temporal
     pad_h = (cuboid_hw[0] - H % cuboid_hw[0]) % cuboid_hw[0]
@@ -219,6 +200,30 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
             0 --> no_checkpointing
             1 --> only checkpoint the FFN
             2 --> checkpoint both FFN and attention
+
+    Args:
+        dim (int): The dimention of input tensor.
+        num_heads (int): The number of head.
+        n_temporal (int, optional): The num of temporal. Defaults to 1.
+        cuboid_hw (tuple, optional): The height and width of cuboid. Defaults to (7, 7).
+        shift_hw (tuple, optional): The height and width of shift. Defaults to (0, 0).
+        strategy (tuple, optional): The strategy. Defaults to ("d", "l", "l").
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        cross_last_n_frames (int, optional): The cross_last_n_frames of decoder. Defaults to None.
+        qkv_bias (bool, optional): Whether to enable bias in calculating qkv attention. Defaults to False.
+        qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
+        attn_drop (float, optional): The attention dropout.. Defaults to 0.0.
+        proj_drop (float, optional): The projrction dropout.. Defaults to 0.0.
+        max_temporal_relative (int, optional): The max temporal. Defaults to 50.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to True.
+        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global. . Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
+        checkpoint_level (int, optional): Whether to enable gradient checkpointing. Defaults to 1.
+        use_relative_pos (bool, optional):  Whether to use relative pos. Defaults to True.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
     """
 
     def __init__(
@@ -381,12 +386,12 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         mem: 1,   4          dec: 2, 5
 
         Args:
-            x : The input of the layer. It will have shape (B, T, H, W, C)
-            mem : The memory. It will have shape (B, T_mem, H, W, C)
-            mem_global_vectors : The global vectors from the memory. It will have shape (B, N, C)
+            x (paddle.Tensor): The input of the layer. It will have shape (B, T, H, W, C)
+            mem (paddle.Tensor): The memory. It will have shape (B, T_mem, H, W, C)
+            mem_global_vectors (paddle.Tensor): The global vectors from the memory. It will have shape (B, N, C)
 
         Returns:
-            out : Output tensor should have shape (B, T, H, W, C_out)
+            out (paddle.Tensor): Output tensor should have shape (B, T, H, W, C_out)
         """
 
         if self.cross_last_n_frames is not None:
@@ -571,6 +576,34 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
            |             ^    |            ^             ^  |           ^
            |             |    |            |             |  |           |
            |-------------|----|------------|-- ----------|--|-----------|
+
+    Args:
+        dim (int): The dimension of the input.
+        num_heads (int): The number of head.
+        block_cuboid_hw (list, optional): The height and width of block cuboid.Defaults to [(4, 4), (4, 4)].
+        block_shift_hw (list, optional): The height and width of shift cuboid . Defaults to [(0, 0), (2, 2)].
+        block_n_temporal (list, optional): The length of block temporal. Defaults to [1, 2].
+        block_strategy (list, optional): The strategy of block. Defaults to [("d", "d", "d"), ("l", "l", "l")].
+        padding_type (str, optional): The type of paddling. Defaults to "ignore".
+        cross_last_n_frames (int, optional): The num of cross_last_n_frames. Defaults to None.
+        qkv_bias (bool, optional): Whether to enable bias in calculating qkv attention. Defaults to False.
+        qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
+        attn_drop (float, optional): The attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The projection dropout. Defaults to 0.0.
+        ffn_drop (float, optional): The ratio of FFN dropout. . Defaults to 0.0.
+        activation (str, optional): The activation. Defaults to "leaky".
+        gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_inter_ffn (bool, optional): Whether to use inter FFN. Defaults to True.
+        max_temporal_relative (int, optional): The max temporal. Defaults to 50.
+        checkpoint_level (int, optional): Whether to enable gradient checkpointing. Defaults to 1.
+        use_relative_pos (bool, optional): Whether to use relative pos. Defaults to True.
+        use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to False.
+        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global. Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization. Defaults to "0".
     """
 
     def __init__(
@@ -701,12 +734,12 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
     def forward(self, x, mem, mem_global_vector=None):
         """
         Args:
-            x : Shape (B, T_x, H, W, C)
-            mem : Shape (B, T_mem, H, W, C)
-            mem_global_vector : Shape (B, N_global, C)
+            x (paddle.Tensor): Shape (B, T_x, H, W, C)
+            mem (paddle.Tensor): Shape (B, T_mem, H, W, C)
+            mem_global_vector (paddle.Tensor): Shape (B, N_global, C)
 
         Returns:
-            out : (B, T_x, H, W, C_out)
+            out (paddle.Tensor): (B, T_x, H, W, C_out)
         """
 
         if self.use_inter_ffn:
@@ -741,15 +774,14 @@ class Upsample3DLayer(paddle.nn.Layer):
     Else:
         x --> interpolation-3d (nearest) --> conv3x3x3(dim, out_dim)
 
-
     Args:
-        dim
-        out_dim
-        target_size :Size of the output tensor. Will be a tuple/list that contains T_new, H_new, W_new
-        temporal_upsample : Whether the temporal axis will go through upsampling.
-        kernel_size : The kernel size of the Conv2D layer
-        layout : The layout of the inputs
-
+        dim (int): The dimension of the input tensor.
+        out_dim (int): The dimension of the output tensor.
+        target_size (Tuple[int,...]): The size of output tensor.
+        temporal_upsample (bool, optional): Whether the temporal axis will go through upsampling. Defaults to False.
+        kernel_size (int, optional): The kernel size of the Conv2D layer. Defaults to 3.
+        layout (str, optional): The layout of the inputs. Defaults to "THWC".
+        conv_init_mode (str, optional): The mode of conv initialization. Defaults to "0".
     """
 
     def __init__(
@@ -846,33 +878,50 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                                    mem --> |
 
     Args:
-        target_temporal_length
-        mem_shapes
-        cross_start : The block to start cross attention
-        depth : Depth of each block
-        upsample_type : The type of the upsampling layers
-        upsample_kernel_size
-        block_self_attn_patterns : Pattern of the block self attentions
-        block_self_cuboid_size
-        block_self_cuboid_strategy
-        block_self_shift_size
-        block_cross_attn_patterns
-        block_cross_cuboid_hw
-        block_cross_cuboid_strategy
-        block_cross_shift_hw
-        block_cross_n_temporal
-        num_heads
-        attn_drop
-        proj_drop
-        ffn_drop
-        ffn_activation
-        gated_ffn
-        norm_layer
-        use_inter_ffn
-        hierarchical_pos_embed : Whether to add pos embedding for each hierarchy.
-        max_temporal_relative
-        padding_type
-        checkpoint_level
+        target_temporal_length (int): The temporal length of the target.
+        mem_shapes (Tuple[int,...]): The mem shapes of the decoder.
+        cross_start (int, optional): The block to start cross attention. Defaults to 0.
+        depth (list, optional): The number of layers for each block. Defaults to [2, 2].
+        upsample_type (str, optional): The type of upsample. Defaults to "upsample".
+        upsample_kernel_size (int, optional): The kernel size of upsample. Defaults to 3.
+        block_self_attn_patterns (str, optional): The patterns of block attention. Defaults to None.
+        block_self_cuboid_size (list, optional): The size of cuboid block. Defaults to [(4, 4, 4), (4, 4, 4)].
+        block_self_cuboid_strategy (list, optional): The strategy of cuboid. Defaults to [("l", "l", "l"), ("d", "d", "d")].
+        block_self_shift_size (list, optional): The size of shift. Defaults to [(1, 1, 1), (0, 0, 0)].
+        block_cross_attn_patterns (str, optional): The patterns of cross attentions. Defaults to None.
+        block_cross_cuboid_hw (list, optional): The height and width of  cross cuboid. Defaults to [(4, 4), (4, 4)].
+        block_cross_cuboid_strategy (list, optional): The strategy of cross cuboid. Defaults to [("l", "l", "l"), ("d", "l", "l")].
+        block_cross_shift_hw (list, optional): The height and width of  cross shift. Defaults to [(0, 0), (0, 0)].
+        block_cross_n_temporal (list, optional): The cross temporal of block. Defaults to [1, 2].
+        cross_last_n_frames (int, optional): The num of cross last frames. Defaults to None.
+        num_heads (int, optional): The num of head. Defaults to 4.
+        attn_drop (float, optional): The ratio of attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The ratio of projection dropout. Defaults to 0.0.
+        ffn_drop (float, optional): The ratio of FFN dropout. Defaults to 0.0.
+        ffn_activation (str, optional): The activation layer of FFN. Defaults to "leaky".
+        gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
+        norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
+        use_inter_ffn (bool, optional): Whether to use inter FFN. Defaults to False.
+        hierarchical_pos_embed (bool, optional): Whether to use hierarchical pos_embed. Defaults to False.
+        pos_embed_type (str, optional): The type of pos embeding. Defaults to "t+hw".
+        max_temporal_relative (int, optional): The max number of teemporal relative. Defaults to 50.
+        padding_type (str, optional): The type of padding. Defaults to "ignore".
+        checkpoint_level (bool, optional):  Whether to enable gradient checkpointing. Defaults to True.
+        use_relative_pos (bool, optional):  Whether to use relative pos. Defaults to True.
+        self_attn_use_final_proj (bool, optional): Whether to use self attention for final projection. Defaults to True.
+        use_first_self_attn (bool, optional): Whether to use first self attention. Defaults to False.
+        use_self_global (bool, optional): Whether to use self global vector. Defaults to False.
+        self_update_global (bool, optional): Whether to update global vector. Defaults to True.
+        use_cross_global (bool, optional):  Whether to use cross global vector. Defaults to False.
+        use_global_vector_ffn (bool, optional): Whether to use FFN global vectors. Defaults to True.
+        use_global_self_attn (bool, optional):  Whether to use global self attention. Defaults to False.
+        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global.. Defaults to False.
+        global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
+        attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
+        ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
+        conv_init_mode (str, optional): The mode of conv initialization. Defaults to "0".
+        up_linear_init_mode (str, optional): The mode of up linear initialization. Defaults to "0".
+        norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
     """
 
     def __init__(
@@ -922,6 +971,13 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
         up_linear_init_mode="0",
         norm_init_mode="0",
     ):
+        """_summary_
+
+
+
+        Raises:
+            NotImplementedError: _description_
+        """
         super(CuboidTransformerDecoder, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
         self.ffn_linear_init_mode = ffn_linear_init_mode
