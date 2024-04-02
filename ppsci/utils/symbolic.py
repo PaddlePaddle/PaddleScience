@@ -615,7 +615,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.layout()
     image_path = f"{graph_filename}.png"
     dot_path = f"{graph_filename}.dot"
-    if os.path.isdir(os.path.dirname(image_path)):
+    if len(os.path.dirname(image_path)):
         os.makedirs(os.path.dirname(image_path), exist_ok=True)
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
