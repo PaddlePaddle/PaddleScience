@@ -744,7 +744,8 @@ class Solver:
         )
 
         # save static graph model to disk
-        os.makedirs(osp.dirname(export_path), exist_ok=True)
+        if osp.isdir(osp.dirname(export_path)):
+            os.makedirs(osp.dirname(export_path), exist_ok=True)
         try:
             jit.save(static_model, export_path)
         except Exception as e:
