@@ -182,7 +182,7 @@ def save_tecplot_file(
     nx, ny = num_x, num_y
     assert nx * ny == nxy, f"nx({nx}) * ny({ny}) != nxy({nxy})"
 
-    if os.path.isdir(os.path.dirname(filename)):
+    if len(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     if filename.endswith(".dat"):
