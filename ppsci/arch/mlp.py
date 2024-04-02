@@ -300,12 +300,9 @@ class ModifiedMLP(base.Arch):
         u = self.embed_u(x)
         v = self.embed_v(x)
 
-        x = self.linears[0](x)
-        x = self.acts[0](x)
-
         y = x
         skip = None
-        for i, linear in enumerate(self.linears[1:], 1):
+        for i, linear in enumerate(self.linears):
             y = linear(y)
             y = self.acts[i](y)
             y = (1 - y) * u + y * v
