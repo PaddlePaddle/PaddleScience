@@ -84,7 +84,7 @@ def fold(data, size=36, stride=12):
     only applicable to the case where the size of the sliding windows is n*stride
 
     Args:
-        data (tuple[int,...]): The input data.(N, size, *)
+        data (tuple[int,...]): The input data.(N, size, *).
         size (int, optional): The size of a single datum.The  Defaults to 36.
         stride (int, optional): The step.Defaults to 12.
 

@@ -197,12 +197,12 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         cross_last_n_frames (int, optional): The cross_last_n_frames of decoder. Defaults to None.
         qkv_bias (bool, optional): Whether to enable bias in calculating qkv attention. Defaults to False.
         qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
-        attn_drop (float, optional): The attention dropout.. Defaults to 0.0.
-        proj_drop (float, optional): The projrction dropout.. Defaults to 0.0.
+        attn_drop (float, optional): The attention dropout. Defaults to 0.0.
+        proj_drop (float, optional): The projrction dropout. Defaults to 0.0.
         max_temporal_relative (int, optional): The max temporal. Defaults to 50.
         norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
         use_global_vector (bool, optional): Whether to use the global vector or not. Defaults to True.
-        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global. . Defaults to False.
+        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global. Defaults to False.
         global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
         checkpoint_level (int, optional): Whether to enable gradient checkpointing. Defaults to 1.
         use_relative_pos (bool, optional):  Whether to use relative pos. Defaults to True.
@@ -575,7 +575,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
         qk_scale (float, optional): Whether to enable scale factor when calculating the attention. Defaults to None.
         attn_drop (float, optional): The attention dropout. Defaults to 0.0.
         proj_drop (float, optional): The projection dropout. Defaults to 0.0.
-        ffn_drop (float, optional): The ratio of FFN dropout. . Defaults to 0.0.
+        ffn_drop (float, optional): The ratio of FFN dropout. Defaults to 0.0.
         activation (str, optional): The activation. Defaults to "leaky".
         gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
         norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
@@ -900,7 +900,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
         use_cross_global (bool, optional):  Whether to use cross global vector. Defaults to False.
         use_global_vector_ffn (bool, optional): Whether to use FFN global vectors. Defaults to True.
         use_global_self_attn (bool, optional):  Whether to use global self attention. Defaults to False.
-        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global.. Defaults to False.
+        separate_global_qkv (bool, optional): Whether to use different network to calc q_global, k_global, v_global. Defaults to False.
         global_dim_ratio (int, optional): The dim (channels) of global vectors is `global_dim_ratio*dim`. Defaults to 1.
         attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
         ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".

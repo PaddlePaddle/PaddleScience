@@ -276,7 +276,7 @@ def cuboid_reorder(data, cuboid_size, strategy):
         strategy (Tuple[int,...]): The cuboid strategy.
 
     Returns:
-        reordered_data (paddle.Tensor): Shape will be (B, num_cuboids, bT * bH * bW, C)
+        reordered_data (paddle.Tensor): Shape will be (B, num_cuboids, bT * bH * bW, C).
             num_cuboids = T / bT * H / bH * W / bW
     """
 
@@ -318,11 +318,11 @@ def compute_cuboid_self_attention_mask(
         cuboid_size (Tuple[int,....]): Size of the cuboid.
         shift_size (Tuple[int,....]): The shift size.
         strategy (str): The decomposition strategy.
-        padding_type (str): Type of the padding..
+        padding_type (str): Type of the padding.
         device (str): The device.
 
     Returns:
-        attn_mask (paddle.Tensor): Mask with shape (num_cuboid, cuboid_vol, cuboid_vol)
+        attn_mask (paddle.Tensor): Mask with shape (num_cuboid, cuboid_vol, cuboid_vol).
             The padded values will always be masked. The other masks will ensure that the shifted windows
             will only attend to those in the shifted windows.
     """
@@ -393,7 +393,7 @@ def masked_softmax(att_score, mask, axis: int = -1):
         axis (int): The axis to calculate the softmax. att_score.shape[axis] must be the same as mask.shape[axis]
 
     Returns:
-        att_weights (paddle.Tensor): Shape (..., length, ...)
+        att_weights (paddle.Tensor): Shape (..., length, ...).
     """
 
     if mask is not None:
@@ -1246,11 +1246,11 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         depth (list, optional): The number of layers for each block. Defaults to [4, 4, 4].
         downsample (int, optional): The downsample ratio. Defaults to 2.
         downsample_type (str, optional): The type of downsample. Defaults to "patch_merge".
-        block_attn_patterns (str, optional): Attention pattern for the cuboid attention for each block.. Defaults to None.
+        block_attn_patterns (str, optional): Attention pattern for the cuboid attention for each block. Defaults to None.
         block_cuboid_size (list, optional): A list of cuboid size parameters. Defaults to [(4, 4, 4), (4, 4, 4)].
         block_strategy (list, optional): A list of cuboid strategies. Defaults to [("l", "l", "l"), ("d", "d", "d")].
         block_shift_size (list, optional): A list of shift sizes. Defaults to [(0, 0, 0), (0, 0, 0)].
-        num_heads (int, optional): The number of heads.. Defaults to 4.
+        num_heads (int, optional): The number of heads. Defaults to 4.
         attn_drop (float, optional): The ratio of attention dropout. Defaults to 0.0.
         proj_drop (float, optional): The ratio of projection dropout. Defaults to 0.0.
         ffn_drop (float, optional): The ratio of FFN dropout. Defaults to 0.0.

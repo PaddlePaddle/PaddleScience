@@ -174,9 +174,9 @@ class SEVIRDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Name of label keys, such as ("output",).
         data_dir (str): The path of the dataset.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each constraint variable. Defaults to None.
-        data_types (Sequence[str], optional): A subset of SEVIR_DATA_TYPES.. Defaults to [ "vil", ].
-        seq_len (int, optional): The length of the data sequences. Should be smaller than the max length raw_seq_len.. Defaults to 49.
-        raw_seq_len (int, optional): The length of the raw data sequences.. Defaults to 49.
+        data_types (Sequence[str], optional): A subset of SEVIR_DATA_TYPES. Defaults to [ "vil", ].
+        seq_len (int, optional): The length of the data sequences. Should be smaller than the max length raw_seq_len. Defaults to 49.
+        raw_seq_len (int, optional): The length of the raw data sequences. Defaults to 49.
         sample_mode (str, optional): The mode of sampling, eg.'random' or 'sequent'. Defaults to "sequent".
         stride (int, optional): Useful when sample_mode == 'sequent'
             stride must not be smaller than out_len to prevent data leakage in testing. Defaults to 12.
