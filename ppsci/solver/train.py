@@ -234,26 +234,27 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             """
             total_loss = 0
             with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
-                # forward for every constraint, including model and equation expression
-                constraint_losses = solver.forward_helper.train_forward(
-                    tuple(
-                        _constraint.output_expr
-                        for _constraint in solver.constraint.values()
-                    ),
-                    input_dicts,
-                    solver.model,
-                    solver.constraint,
-                    label_dicts,
-                    weight_dicts,
-                )
+                with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
+                    # forward for every constraint, including model and equation expression
+                    constraint_losses = solver.forward_helper.train_forward(
+                        tuple(
+                            _constraint.output_expr
+                            for _constraint in solver.constraint.values()
+                        ),
+                        input_dicts,
+                        solver.model,
+                        solver.constraint,
+                        label_dicts,
+                        weight_dicts,
+                    )
 
-                total_loss = solver.loss_aggregator(
-                    constraint_losses, solver.global_step
-                )
-                # accumulate all losses
-                for i, _constraint in enumerate(solver.constraint.values()):
-                    loss_dict[_constraint.name] = float(constraint_losses[i])
-                loss_dict["loss"] = float(total_loss)
+                    total_loss = solver.loss_aggregator(
+                        constraint_losses, solver.global_step
+                    )
+                    # accumulate all losses
+                    for i, _constraint in enumerate(solver.constraint.values()):
+                        loss_dict[_constraint.name] = float(constraint_losses[i])
+                    loss_dict["loss"] = float(total_loss)
 
                 # backward
                 solver.optimizer.clear_grad()
