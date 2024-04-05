@@ -81,12 +81,12 @@ class Relobralo(nn.Layer):
             self._softmax(losses_vec1 / (self.tau * losses_vec2 + self.eps))
         )
 
-    def __call__(self, losses: List["paddle.Tensor"], step: int = 0) -> "Relobralo":
-        self.step = step
+    def __call__(self, losses: List["paddle.Tensor"], step: int = 0) -> "paddle.Tensor":
         assert len(losses) == self.num_losses, (
             f"Length of given losses({len(losses)}) should be equal to "
             f"num_losses({self.num_losses})."
         )
+        self.step = step
         losses_stacked = paddle.stack(losses)  # [num_losses, ]
 
         if self.step == 0:
@@ -115,4 +115,5 @@ class Relobralo(nn.Layer):
         # update losses_prev at the end of each step
         with paddle.no_grad():
             paddle.assign(losses_stacked.detach(), self.losses_prev)
+
         return loss
