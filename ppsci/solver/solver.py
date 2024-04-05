@@ -398,8 +398,13 @@ class Solver:
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for computational optimization.")
 
-        # use loss aggregator, use summation if None
-        self.loss_aggregator = loss_aggregator
+        # use loss aggregator, use Sum if None
+        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
+            raise ValueError(
+                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
+                "please set use_amp=False."
+            )
+        self.loss_aggregator = loss_aggregator or mtl.Sum()
 
         # convert sympy to callable object if exist
         extra_parameters = []
