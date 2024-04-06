@@ -45,7 +45,6 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 f"Training iteration {solver.global_step + 1}"
             )  # Training iteration
 
-        total_loss = 0.0
         total_batch_size = 0
         reader_cost = 0.0
         batch_cost = 0.0
@@ -232,7 +231,6 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             Returns:
                 paddle.Tensor: Computed loss scalar.
             """
-            total_loss = 0
             with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
                 with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                     # forward for every constraint, including model and equation expression
