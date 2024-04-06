@@ -200,14 +200,99 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize equation
+    equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        equation=equation,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # Convert equation to callable function
+    func = ppsci.lambdify(
+        solver.equation["VIV"].equations["f"],
+        solver.model,
+        list(solver.equation["VIV"].learnable_parameters),
+    )
+    # export model and equation
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+
+    solver.export(input_spec, cfg.INFER.export_path)
+
+    from paddle import jit
+
+    jit.enable_to_static(True)
+
+    static_model = jit.to_static(
+        func,
+        input_spec=input_spec,
+        full_graph=True,
+    )
+
+    jit.save(static_model, cfg.INFER.export_path + "_equ", skip_prune_program=True)
+
+    jit.enable_to_static(False)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set equation predictor
+    cfg.INFER.pdmodel_path = cfg.INFER.pdmodel_equ_path
+    cfg.INFER.pdpiparams_path = cfg.INFER.pdpiparams_equ_path
+    equ_predictor = pinn_predictor.PINNPredictor(cfg)
+
+    infer_mat = ppsci.utils.reader.load_mat_file(
+        cfg.VIV_DATA_PATH,
+        ("t_f", "eta_gt", "f_gt"),
+        alias_dict={"eta_gt": "eta", "f_gt": "f"},
+    )
+
+    input_dict = {key: infer_mat[key] for key in cfg.MODEL.input_keys}
+
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    equ_output_dict = equ_predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+    for value in equ_output_dict.values():
+        output_dict["f"] = value
+    infer_mat.update(output_dict)
+
+    ppsci.visualize.plot.save_plot_from_1d_dict(
+        "./viv_pred", infer_mat, ("t_f",), ("eta", "eta_gt", "f", "f_gt")
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

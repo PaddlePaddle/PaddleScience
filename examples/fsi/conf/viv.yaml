@@ -11,6 +11,8 @@ hydra:
           - TRAIN.checkpoint_path
           - TRAIN.pretrained_model_path
           - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
+          - INFER.export_path
           - mode
           - output_dir
           - log_freq
@@ -60,3 +62,23 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   batch_size: 32
+
+# inference settings
+INFER:
+  pretrained_model_path: "./viv_pretrained"
+  export_path: ./inference/viv
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdmodel_equ_path: ${INFER.export_path}_equ.pdmodel
+  pdpiparams_equ_path: ${INFER.export_path}_equ.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 64
+  num_cpu_threads: 4
+  batch_size: 16
