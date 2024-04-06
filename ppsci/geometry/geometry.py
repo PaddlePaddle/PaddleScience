@@ -109,7 +109,7 @@ class Geometry:
         """Compute the equi-spaced points in the geometry.
         
         Warings:
-            This function is not implemented, please implement it in the subclass.
+            This function is not implemented, please use random_points instead.
         """
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
@@ -402,7 +402,7 @@ class Geometry:
         """Compute the periodic image of x(not implemented).
         
         Warings:
-            This function is not implemented, please implement it in the subclass.
+            This function is not implemented.
         """
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
 
