@@ -213,7 +213,9 @@ class Geometry:
 
         return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
-    def sample_boundary(self, n: int, random: str = "pseudo", criteria=None, evenly=False) -> np.ndarray:
+    def sample_boundary(
+        self, n: int, random: str = "pseudo", criteria=None, evenly=False
+    ) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria.
 
         Args:
