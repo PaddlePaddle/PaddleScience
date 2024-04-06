@@ -107,9 +107,9 @@ class Geometry:
 
     def uniform_points(self, n: int, boundary=True):
         """Compute the equi-spaced points in the geometry.
-        
+
         Warings:
-            This function is not implemented, please implement it in the subclass.
+            This function is not implemented, please use random_points instead.
         """
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
@@ -125,19 +125,19 @@ class Geometry:
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria.
-        
+
         Args:
             n (int): Number of points.
             random (str): Random method. Defaults to "pseudo".
             criteria (Callable): Criteria function. Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
-        
+
         Returns:
             (np.ndarray): Random points in the geometry. The shape is [N, D].
                         their signed distance function. The shape is [N, 1].
                         their derivatives of SDF(optional). The shape is [N, 1].
-        
+
         Examples:
             >>> import numpy as np
             >>> import ppsci
@@ -346,22 +346,9 @@ class Geometry:
 
     def uniform_boundary_points(self, n: int):
         """Compute the equi-spaced points on the boundary(not implemented).
-        Use random_boundary_points instead.
 
-        Args:
-            n (int): Number of points.
-
-        Returns:
-            (np.ndarray): Random points on the boundary. The shape is [N, D].
-
-        Examples:
-            >>> import numpy as np
-            >>> import ppsci
-            >>> np.random.seed(42)
-            >>> interval = ppsci.geometry.Interval(0, 1)
-            >>> interval.uniform_boundary_points(2)
-            array([[0.],
-                   [1.]], dtype=float32)
+        Warings:
+            This function is not implemented, please use random_boundary_points instead.
         """
         logger.warning(
             f"{self}.uniform_boundary_points not implemented. "
@@ -400,9 +387,9 @@ class Geometry:
 
     def periodic_point(self, x: np.ndarray, component: int):
         """Compute the periodic image of x(not implemented).
-        
+
         Warings:
-            This function is not implemented, please implement it in the subclass.
+            This function is not implemented.
         """
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
 
