@@ -46,7 +46,7 @@ class Geometry:
         return ("x", "y", "z")[: self.ndim]
 
     @abc.abstractmethod
-    def is_inside(self, x):
+    def is_inside(self, x: np.ndarray) -> np.ndarray:
         """Returns a boolean array where x is inside the geometry.
 
         Args:
@@ -54,7 +54,7 @@ class Geometry:
                 where D is the number of dimension of geometry.
 
         Returns:
-            (np.ndarray): Boolean array where x is inside the geometry. The shape is [N, 1].
+            np.ndarray: Boolean array where x is inside the geometry. The shape is [N].
 
         Examples:
             >>> import numpy as np
@@ -74,7 +74,7 @@ class Geometry:
         """
 
     @abc.abstractmethod
-    def on_boundary(self, x):
+    def on_boundary(self, x: np.ndarray) -> np.ndarray:
         """Returns a boolean array where x is on geometry boundary.
 
         Args:
@@ -82,7 +82,7 @@ class Geometry:
                 where D is the number of dimension of geometry.
 
         Returns:
-            (np.ndarray): Boolean array where x is on the geometry boundary. The shape is [N, 1].
+            np.ndarray: Boolean array where x is on the geometry boundary. The shape is [N].
 
         Examples:
             >>> import numpy as np
@@ -105,7 +105,7 @@ class Geometry:
         """Compute the unit normal at x."""
         raise NotImplementedError(f"{self}.boundary_normal is not implemented")
 
-    def uniform_points(self, n: int, boundary=True):
+    def uniform_points(self, n: int, boundary: bool = True):
         """Compute the equi-spaced points in the geometry.
 
         Warings:
@@ -118,12 +118,12 @@ class Geometry:
 
     def sample_interior(
         self,
-        n,
-        random="pseudo",
+        n: int,
+        random: str = "pseudo",
         criteria=None,
-        evenly=False,
+        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
-    ):
+    ) -> np.ndarray:
         """Sample random points in the geometry and return those meet criteria.
 
         Args:
@@ -134,9 +134,9 @@ class Geometry:
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
 
         Returns:
-            (np.ndarray): Random points in the geometry. The shape is [N, D].
-                        their signed distance function. The shape is [N, 1].
-                        their derivatives of SDF(optional). The shape is [N, 1].
+            np.ndarray: Random points in the geometry. The shape is [N, D].
+                        their signed distance function. The shape is [N].
+                        their derivatives of SDF(optional). The shape is [N].
 
         Examples:
             >>> import numpy as np
@@ -148,7 +148,7 @@ class Geometry:
                    [0.9507143 ]], dtype=float32), 'sdf': array([[0.37454012],
                    [0.04928571]], dtype=float32)}
             >>> rectangle = ppsci.geometry.Rectangle((0, 0), (1, 1))
-            >>> rectangle.sample_interior(2,"pseudo", None, False, True)
+            >>> rectangle.sample_interior(2, "pseudo", None, False, True)
             {'x': array([[0.7319939 ],
                    [0.15601864]], dtype=float32), 'y': array([[0.5986585 ],
                    [0.15599452]], dtype=float32), 'sdf': array([[0.2680061 ],
@@ -156,7 +156,7 @@ class Geometry:
                    [ 0.25868416]], dtype=float32), 'sdf__y': array([[-0.        ],
                    [ 0.74118376]], dtype=float32)}
             >>> cuboid = ppsci.geometry.Cuboid((0, 0, 0), (1, 1, 1))
-            >>> cuboid.sample_interior(2,"pseudo", None, True, True)
+            >>> cuboid.sample_interior(2, "pseudo", None, True, True)
             {'x': array([[0.],
                    [0.]], dtype=float32), 'y': array([[0.],
                    [0.]], dtype=float32), 'z': array([[0.],
@@ -213,7 +213,7 @@ class Geometry:
 
         return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
-    def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
+    def sample_boundary(self, n: int, random: str = "pseudo", criteria=None, evenly=False) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria.
 
         Args:
@@ -223,9 +223,9 @@ class Geometry:
             evenly (bool): Evenly sample points. Defaults to False.
 
         Returns:
-            (np.ndarray): Random points in the geometry. The shape is [N, D].
+            np.ndarray: Random points in the geometry. The shape is [N, D].
                         their normal vectors. The shape is [N, D].
-                        their area. The shape is [N, 1].(only if the geometry is a mesh)
+                        their area. The shape is [N].(only if the geometry is a mesh)
 
         Examples:
             >>> import numpy as np
@@ -316,7 +316,7 @@ class Geometry:
         return {**x_dict, **normal_dict}
 
     @abc.abstractmethod
-    def random_points(self, n: int, random: str = "pseudo"):
+    def random_points(self, n: int, random: str = "pseudo") -> np.ndarray:
         """Compute the random points in the geometry.
 
         Args:
@@ -324,7 +324,7 @@ class Geometry:
             random (str): Random method. Defaults to "pseudo".
 
         Returns:
-            (np.ndarray): Random points in the geometry. The shape is [N, D].
+            np.ndarray: Random points in the geometry. The shape is [N, D].
 
         Examples:
             >>> import numpy as np
@@ -357,7 +357,7 @@ class Geometry:
         return self.random_boundary_points(n)
 
     @abc.abstractmethod
-    def random_boundary_points(self, n, random="pseudo"):
+    def random_boundary_points(self, n: int, random: str = "pseudo") -> np.ndarray:
         """Compute the random points on the boundary.
 
         Args:
@@ -365,7 +365,7 @@ class Geometry:
             random (str): Random method. Defaults to "pseudo".
 
         Returns:
-            (np.ndarray): Random points on the boundary. The shape is [N, D].
+            np.ndarray: Random points on the boundary. The shape is [N, D].
 
         Examples:
             >>> import numpy as np
@@ -403,7 +403,7 @@ class Geometry:
             epsilon (float): Derivative step. Defaults to 1e-4.
 
         Returns:
-            (np.ndarray): Derivatives of corresponding SDF function.
+            np.ndarray: Derivatives of corresponding SDF function.
                 The shape is [N, D]. D is the number of dimension of geometry.
 
         Examples:
@@ -442,14 +442,14 @@ class Geometry:
             sdf_derives[:, i : i + 1] = derives_at_i
         return sdf_derives
 
-    def union(self, other):
+    def union(self, other: "Geometry") -> "Geometry":
         """CSG Union.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The union of two geometries.
+            Geometry: The union of two geometries.
 
         Examples:
             >>> import numpy as np
@@ -474,14 +474,14 @@ class Geometry:
 
         return csg.CSGUnion(self, other)
 
-    def __or__(self, other):
+    def __or__(self, other: "Geometry") -> "Geometry":
         """CSG Union.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The union of two geometries.
+            Geometry: The union of two geometries.
 
         Examples:
             >>> import numpy as np
@@ -506,14 +506,14 @@ class Geometry:
 
         return csg.CSGUnion(self, other)
 
-    def difference(self, other):
+    def difference(self, other: "Geometry") -> "Geometry":
         """CSG Difference.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The difference of two geometries.
+            Geometry: The difference of two geometries.
 
         Examples:
             >>> import numpy as np
@@ -538,14 +538,14 @@ class Geometry:
 
         return csg.CSGDifference(self, other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: "Geometry") -> "Geometry":
         """CSG Difference.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The difference of two geometries.
+            Geometry: The difference of two geometries.
 
         Examples:
             >>> import numpy as np
@@ -570,14 +570,14 @@ class Geometry:
 
         return csg.CSGDifference(self, other)
 
-    def intersection(self, other):
+    def intersection(self, other: "Geometry") -> "Geometry":
         """CSG Intersection.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The intersection of two geometries.
+            Geometry: The intersection of two geometries.
 
         Examples:
             >>> import numpy as np
@@ -602,14 +602,14 @@ class Geometry:
 
         return csg.CSGIntersection(self, other)
 
-    def __and__(self, other):
+    def __and__(self, other: "Geometry") -> "Geometry":
         """CSG Intersection.
 
         Args:
             other (Geometry): The other geometry.
 
         Returns:
-            other (Geometry): The intersection of two geometries.
+            Geometry: The intersection of two geometries.
 
         Examples:
             >>> import numpy as np
