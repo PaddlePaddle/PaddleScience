@@ -225,7 +225,7 @@ class Geometry:
         Returns:
             (np.ndarray): Random points in the geometry. The shape is [N, D].
                         their normal vectors. The shape is [N, D].
-                        their area. The shape is [N, 1](only if the geometry is a mesh).
+                        their area. The shape is [N, 1].(only if the geometry is a mesh)
 
         Examples:
             >>> import numpy as np
@@ -635,7 +635,7 @@ class Geometry:
         return csg.CSGIntersection(self, other)
 
     def __str__(self) -> str:
-        """Return the name of class
+        """Return the name of class.
 
         Args:
             None.
