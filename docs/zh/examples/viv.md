@@ -16,6 +16,20 @@
     python viv.py mode=eval EVAL.pretrained_model_path=./viv_pretrained
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
+    python viv.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python viv.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [viv_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdparams)<br>[viv_pretrained.pdeqn](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdeqn) | 'eta': 1.1416150300647132e-06<br>'f': 4.635014192899689e-06 |
