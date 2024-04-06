@@ -12,10 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 import hydra
 from omegaconf import DictConfig
+from paddle import nn
 
 import ppsci
+from ppsci.arch import base
+
+
+class EqnTranArch(base.Arch):
+    def __init__(self, funcs, input_keys: List, output_keys: List):
+        super().__init__()
+        if not isinstance(funcs, list):
+            funcs = [funcs]
+        self.modellist = nn.LayerList(funcs)
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+
+    def forward(self, x):
+        output_dict = {}
+        for i, model in enumerate(self.modellist):
+            output_dict[self.output_keys[i]] = model(x)
+        return output_dict
 
 
 def train(cfg: DictConfig):
@@ -213,32 +233,34 @@ def export(cfg: DictConfig):
         equation=equation,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    # Convert equation to callable function
-    func = ppsci.lambdify(
+    # Convert equation to Arch
+    funcs = ppsci.lambdify(
         solver.equation["VIV"].equations["f"],
         solver.model,
         list(solver.equation["VIV"].learnable_parameters),
     )
-    # export model and equation
+    eqn = EqnTranArch(funcs, cfg.INFER.input_keys, ["f"])
+
+    # Combine the two instances
+    models = ppsci.arch.ModelList((solver.model, eqn))
+    # export models
     from paddle.static import InputSpec
 
     input_spec = [
         {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
     ]
 
-    solver.export(input_spec, cfg.INFER.export_path)
-
     from paddle import jit
 
     jit.enable_to_static(True)
 
     static_model = jit.to_static(
-        func,
+        models,
         input_spec=input_spec,
         full_graph=True,
     )
 
-    jit.save(static_model, cfg.INFER.export_path + "_equ", skip_prune_program=True)
+    jit.save(static_model, cfg.INFER.export_path, skip_prune_program=True)
 
     jit.enable_to_static(False)
 
@@ -249,29 +271,21 @@ def inference(cfg: DictConfig):
     # set model predictor
     predictor = pinn_predictor.PINNPredictor(cfg)
 
-    # set equation predictor
-    cfg.INFER.pdmodel_path = cfg.INFER.pdmodel_equ_path
-    cfg.INFER.pdpiparams_path = cfg.INFER.pdpiparams_equ_path
-    equ_predictor = pinn_predictor.PINNPredictor(cfg)
-
     infer_mat = ppsci.utils.reader.load_mat_file(
         cfg.VIV_DATA_PATH,
         ("t_f", "eta_gt", "f_gt"),
         alias_dict={"eta_gt": "eta", "f_gt": "f"},
     )
 
-    input_dict = {key: infer_mat[key] for key in cfg.MODEL.input_keys}
+    input_dict = {key: infer_mat[key] for key in cfg.INFER.input_keys}
 
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
-    equ_output_dict = equ_predictor.predict(input_dict, cfg.INFER.batch_size)
 
     # mapping data to cfg.INFER.output_keys
     output_dict = {
         store_key: output_dict[infer_key]
-        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+        for store_key, infer_key in zip(cfg.INFER.output_keys, output_dict.keys())
     }
-    for value in equ_output_dict.values():
-        output_dict["f"] = value
     infer_mat.update(output_dict)
 
     ppsci.visualize.plot.save_plot_from_1d_dict(

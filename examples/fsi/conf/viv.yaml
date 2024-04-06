@@ -69,8 +69,8 @@ INFER:
   export_path: ./inference/viv
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
-  pdmodel_equ_path: ${INFER.export_path}_equ.pdmodel
-  pdpiparams_equ_path: ${INFER.export_path}_equ.pdiparams
+  input_keys: ["t_f"]
+  output_keys: ["eta", 'f']
   device: gpu
   engine: native
   precision: fp32

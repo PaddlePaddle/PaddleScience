@@ -490,7 +490,7 @@ class ComposedNode(nn.Layer):
     def __init__(self, callable_nodes: List[Node]):
         super().__init__()
         assert len(callable_nodes)
-        self.callable_nodes = paddle.nn.LayerList(callable_nodes)
+        self.callable_nodes = nn.LayerList(callable_nodes)
 
     def forward(self, data_dict: DATA_DICT) -> paddle.Tensor:
         # call all callable_nodes in order
