@@ -98,7 +98,24 @@ def load_pretrain(
         ...     path="path/to/pretrain_model") # doctest: +SKIP
     """
     if path.startswith("http"):
+        # download from path(url) and get its' physical path
+        eqn_path = path.replace(".pdparams", ".pdeq", 1)
         path = download.get_weights_path_from_url(path)
+
+        # automatically download additional equation weights if avaiable
+        def is_url_accessible(url: str):
+            try:
+                import requests
+
+                response = requests.head(url, timeout=5)
+                return response.status_code == requests.codes.ok
+            except requests.RequestException:
+                return False
+            except Exception:
+                return False
+
+        if is_url_accessible(eqn_path):
+            download.get_weights_path_from_url(eqn_path)
 
     # remove ".pdparams" in suffix of path for convenient
     if path.endswith(".pdparams"):
