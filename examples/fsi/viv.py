@@ -12,30 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
 import hydra
 from omegaconf import DictConfig
-from paddle import nn
 
 import ppsci
-from ppsci.arch import base
-
-
-class EqnTranArch(base.Arch):
-    def __init__(self, funcs, input_keys: List, output_keys: List):
-        super().__init__()
-        if not isinstance(funcs, list):
-            funcs = [funcs]
-        self.modellist = nn.LayerList(funcs)
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-
-    def forward(self, x):
-        output_dict = {}
-        for i, model in enumerate(self.modellist):
-            output_dict[self.output_keys[i]] = model(x)
-        return output_dict
 
 
 def train(cfg: DictConfig):
@@ -233,14 +213,32 @@ def export(cfg: DictConfig):
         equation=equation,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    # Convert equation to Arch
+    # Convert equation to func
     funcs = ppsci.lambdify(
         solver.equation["VIV"].equations["f"],
         solver.model,
         list(solver.equation["VIV"].learnable_parameters),
     )
-    eqn = EqnTranArch(funcs, cfg.INFER.input_keys, ["f"])
 
+    def wrap_prediction_to_dict(instance, func):
+        def wrapper(instance, *args, **kwargs):
+            result = func(*args, **kwargs)
+            return {"f": result}
+
+        if hasattr(func, "__func__"):
+            wrapper.__func__ = func.__func__
+        return wrapper
+
+    def wrap_forward_methods(instance):
+        instance.input_keys = cfg.MODEL.input_keys
+        instance.output_keys = ["f"]
+        for attr_name in dir(instance):
+            if attr_name == "forward":
+                attr = getattr(instance, attr_name)
+                setattr(instance, attr_name, wrap_prediction_to_dict(instance, attr))
+        return instance
+
+    eqn = wrap_forward_methods(funcs)
     # Combine the two instances
     models = ppsci.arch.ModelList((solver.model, eqn))
     # export models
