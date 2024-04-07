@@ -129,7 +129,7 @@ class Geometry:
         Args:
             n (int): Number of points.
             random (str): Random method. Defaults to "pseudo".
-            criteria (Callable): Criteria function. Defaults to None.
+            criteria (Optional[Callable]): Criteria function. Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
 
@@ -221,7 +221,7 @@ class Geometry:
         Args:
             n (int): Number of points.
             random (str): Random method. Defaults to "pseudo".
-            criteria (Callable): Criteria function. Defaults to None.
+            criteria (Optional[Callable]): Criteria function. Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
 
         Returns:
