@@ -659,11 +659,8 @@ class Geometry:
     def __str__(self) -> str:
         """Return the name of class.
 
-        Args:
-            None.
-
         Returns:
-            str: The name of class.
+            str: Meta information of geometry.
 
         Examples:
             >>> import ppsci
