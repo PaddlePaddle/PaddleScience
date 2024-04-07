@@ -120,7 +120,7 @@ class Geometry:
         self,
         n: int,
         random: str = "pseudo",
-        criteria=None,
+        criteria: Optional[Callable] = None,
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ) -> np.ndarray:
@@ -214,7 +214,7 @@ class Geometry:
         return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
     def sample_boundary(
-        self, n: int, random: str = "pseudo", criteria=None, evenly=False
+        self, n: int, random: str = "pseudo", criteria: Optional[Callable] = None, evenly: bool = False
     ) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria.
 
