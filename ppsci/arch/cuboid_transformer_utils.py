@@ -23,7 +23,13 @@ class RMSNorm(paddle.nn.Layer):
             because RMSNorm doesn't enforce re-centering invariance.Defaults to False.
     """
 
-    def __init__(self, d: Tuple[int,...], p: float = -1.0, eps: float = 1e-08, bias: bool = False):
+    def __init__(
+        self,
+        d: Tuple[int, ...],
+        p: float = -1.0,
+        eps: float = 1e-08,
+        bias: bool = False,
+    ):
         super().__init__()
         self.eps = eps
         self.d = d

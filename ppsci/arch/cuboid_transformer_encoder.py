@@ -1282,7 +1282,7 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
 
     def __init__(
         self,
-        input_shape: Tuple[int,...],
+        input_shape: Tuple[int, ...],
         base_units: int = 128,
         block_units: int = None,
         scale_alpha: float = 1.0,

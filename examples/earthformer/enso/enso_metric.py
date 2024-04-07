@@ -28,7 +28,8 @@ def compute_enso_score(
     pred = y_pred - y_pred.mean(axis=0, keepdim=True)  # (N, 24)
     true = y_true - y_true.mean(axis=0, keepdim=True)  # (N, 24)
     cor = (pred * true).sum(axis=0) / (
-        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0)) + 1e-6
+        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0))
+        + 1e-6
     )
 
     if acc_weight is None:
