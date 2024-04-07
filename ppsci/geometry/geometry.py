@@ -18,6 +18,9 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 from __future__ import annotations
 
 import abc
+from typing import Callable
+from typing import Dict
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -26,9 +29,6 @@ import paddle
 from ppsci.utils import logger
 from ppsci.utils import misc
 
-from typing import Callable
-from typing import Dict
-from typing import Optional
 
 class Geometry:
     """Base class for geometry.
