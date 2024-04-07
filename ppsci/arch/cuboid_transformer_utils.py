@@ -1,4 +1,5 @@
 import functools
+from typing import Tuple
 
 import paddle
 import paddle.nn.functional as F
@@ -15,14 +16,14 @@ class RMSNorm(paddle.nn.Layer):
     """Root Mean Square Layer Normalization proposed in "[NeurIPS2019] Root Mean Square Layer Normalization"
 
     Args:
-        d (Optional[int]): model size
-        p (float): partial RMSNorm, valid value [0, 1], default -1.0 (disabled)
-        eps (float): epsilon value, default 1e-8
-        bias (bool, optional): whether use bias term for RMSNorm, disabled by default
-                    because RMSNorm doesn't enforce re-centering invariance.
+        d (Optional[int]): The model size.
+        p (float, optional): The partial RMSNorm, valid value [0, 1]. Defaults to -1.0.
+        eps (float, optional): The epsilon value. Defaults to 1e-08.
+        bias (bool, optional): Whether use bias term for RMSNorm,
+            because RMSNorm doesn't enforce re-centering invariance.Defaults to False.
     """
 
-    def __init__(self, d, p=-1.0, eps=1e-08, bias=False):
+    def __init__(self, d: Tuple[int,...], p: float = -1.0, eps: float = 1e-08, bias: bool = False):
         super().__init__()
         self.eps = eps
         self.d = d
@@ -34,7 +35,7 @@ class RMSNorm(paddle.nn.Layer):
             dtype=init_data.dtype,
             default_initializer=nn.initializer.Constant(1.0),
         )
-        self.scale.stop_gradient = not True
+        self.scale.stop_gradient = False
         self.add_parameter(name="scale", parameter=self.scale)
         if self.bias:
             init_data = paddle.zeros(d)
@@ -43,7 +44,7 @@ class RMSNorm(paddle.nn.Layer):
                 dtype=init_data.dtype,
                 default_initializer=nn.initializer.Constant(0.0),
             )
-            self.offset.stop_gradient = not True
+            self.offset.stop_gradient = False
             self.add_parameter(name="offset", parameter=self.offset)
 
     def forward(self, x):
@@ -139,7 +140,11 @@ def generalize_unpadding(x, pad_t, pad_h, pad_w, padding_type):
 
 
 def apply_initialization(
-    m, linear_mode="0", conv_mode="0", norm_mode="0", embed_mode="0"
+    m: paddle.nn.Layer,
+    linear_mode: str = "0",
+    conv_mode: str = "0",
+    norm_mode: str = "0",
+    embed_mode: str = "0",
 ):
     if isinstance(m, paddle.nn.Linear):
         if linear_mode in ("0",):

@@ -11,26 +11,24 @@ from ppsci.data.dataset.enso_dataset import scale_back_sst
 
 
 def compute_enso_score(
-    y_pred, y_true, acc_weight: Optional[Union[str, np.ndarray, paddle.Tensor]] = None
+    y_pred: paddle.Tensor,
+    y_true: paddle.Tensor,
+    acc_weight: Optional[Union[str, np.ndarray, paddle.Tensor]] = None,
 ):
-    """_summary_
+    """Compute the accuracy and Root Mean Squared Error (RMSE) of enso dataset.
 
     Args:
-        y_pred (paddle.Tensor): predict data
-        y_true (paddle.Tensor): true data
-        acc_weight (Optional[Union[str, np.ndarray, paddle.Tensor]], optional): _description_. Defaults to None.use default acc_weight specified at https://tianchi.aliyun.com/competition/entrance/531871/information
-        np.ndarray: custom weights
+        y_pred (paddle.Tensor): The predict data.
+        y_true (paddle.Tensor): The label data.
+        acc_weight (Optional[Union[str, np.ndarray, paddle.Tensor]], optional): The wight of accuracy. Defaults to None.use
+            default acc_weight specified at https://tianchi.aliyun.com/competition/entrance/531871/information.
 
-    Returns:
-        acc:
-        rmse:
     """
 
     pred = y_pred - y_pred.mean(axis=0, keepdim=True)  # (N, 24)
     true = y_true - y_true.mean(axis=0, keepdim=True)  # (N, 24)
     cor = (pred * true).sum(axis=0) / (
-        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0))
-        + 1e-6
+        paddle.sqrt(paddle.sum(pred**2, axis=0) * paddle.sum(true**2, axis=0)) + 1e-6
     )
 
     if acc_weight is None:
@@ -54,15 +52,15 @@ def compute_enso_score(
 
 
 def sst_to_nino(sst: paddle.Tensor, normalize_sst: bool = True, detach: bool = True):
-    """_summary_
+    """Convert sst to nino index.
 
     Args:
-        sst (paddle.Tensor): Shape = (N, T, H, W)
-        normalize_sst (bool, optional): Defaults to True.
-        detach (bool, optional): Defaults to True.
+        sst (paddle.Tensor): The predict data for sst. Shape = (N, T, H, W)
+        normalize_sst (bool, optional): Whether to use normalize for sst. Defaults to True.
+        detach (bool, optional): Whether to detach the tensor. Defaults to True.
 
     Returns:
-        nino_index (paddle.Tensor): Shape = (N, T-NINO_WINDOW_T+1)
+        nino_index (paddle.Tensor): The nino index. Shape = (N, T-NINO_WINDOW_T+1)
     """
 
     if detach:
@@ -90,7 +88,7 @@ def train_mse_func(
 def eval_rmse_func(
     output_dict: Dict[str, "paddle.Tensor"],
     label_dict: Dict[str, "paddle.Tensor"],
-    nino_out_len=12,
+    nino_out_len: int = 12,
     *args,
 ) -> Dict[str, paddle.Tensor]:
     pred = output_dict["sst_target"]

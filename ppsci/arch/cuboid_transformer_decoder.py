@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Tuple
 
 import numpy as np
 import paddle
@@ -27,7 +28,7 @@ class PosEmbed(paddle.nn.Layer):
                 Embed the spatial position to embeddings
     """
 
-    def __init__(self, embed_dim, maxT, maxH, maxW, typ="t+h+w"):
+    def __init__(self, embed_dim, maxT, maxH, maxW, typ: str = "t+h+w"):
         super(PosEmbed, self).__init__()
         self.typ = typ
         assert self.typ in ["t+h+w", "t+hw"]
@@ -213,28 +214,28 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        num_heads,
-        n_temporal=1,
-        cuboid_hw=(7, 7),
-        shift_hw=(0, 0),
-        strategy=("d", "l", "l"),
-        padding_type="ignore",
-        cross_last_n_frames=None,
-        qkv_bias=False,
-        qk_scale=None,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        max_temporal_relative=50,
-        norm_layer="layer_norm",
-        use_global_vector=True,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        checkpoint_level=1,
-        use_relative_pos=True,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        norm_init_mode="0",
+        dim: int,
+        num_heads: int,
+        n_temporal: int = 1,
+        cuboid_hw: Tuple[int, ...] = (7, 7),
+        shift_hw: Tuple[int, ...] = (0, 0),
+        strategy: Tuple[str, ...] = ("d", "l", "l"),
+        padding_type: str = "ignore",
+        cross_last_n_frames: int = None,
+        qkv_bias: bool = False,
+        qk_scale: float = None,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        max_temporal_relative: int = 50,
+        norm_layer: str = "layer_norm",
+        use_global_vector: bool = True,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        checkpoint_level: int = 1,
+        use_relative_pos: bool = True,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super(CuboidCrossAttentionLayer, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
@@ -593,32 +594,35 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        num_heads,
-        block_cuboid_hw=[(4, 4), (4, 4)],
-        block_shift_hw=[(0, 0), (2, 2)],
-        block_n_temporal=[1, 2],
-        block_strategy=[("d", "d", "d"), ("l", "l", "l")],
-        padding_type="ignore",
-        cross_last_n_frames=None,
-        qkv_bias=False,
-        qk_scale=None,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        ffn_drop=0.0,
-        activation="leaky",
-        gated_ffn=False,
-        norm_layer="layer_norm",
-        use_inter_ffn=True,
-        max_temporal_relative=50,
-        checkpoint_level=1,
-        use_relative_pos=True,
-        use_global_vector=False,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        norm_init_mode="0",
+        dim: int,
+        num_heads: int,
+        block_cuboid_hw: Tuple[Tuple[int, ...], ...] = [(4, 4), (4, 4)],
+        block_shift_hw: Tuple[Tuple[int, ...], ...] = [(0, 0), (2, 2)],
+        block_n_temporal: Tuple[int, ...] = [1, 2],
+        block_strategy: Tuple[Tuple[str, ...], ...] = [
+            ("d", "d", "d"),
+            ("l", "l", "l"),
+        ],
+        padding_type: str = "ignore",
+        cross_last_n_frames: int = None,
+        qkv_bias: bool = False,
+        qk_scale: float = None,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        ffn_drop: float = 0.0,
+        activation: str = "leaky",
+        gated_ffn: bool = False,
+        norm_layer: str = "layer_norm",
+        use_inter_ffn: bool = True,
+        max_temporal_relative: int = 50,
+        checkpoint_level: int = 1,
+        use_relative_pos: bool = True,
+        use_global_vector: bool = False,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super(StackCuboidCrossAttentionBlock, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
@@ -771,13 +775,13 @@ class Upsample3DLayer(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        out_dim,
-        target_size,
-        temporal_upsample=False,
-        kernel_size=3,
-        layout="THWC",
-        conv_init_mode="0",
+        dim: int,
+        out_dim: int,
+        target_size: Tuple[int, ...],
+        temporal_upsample: bool = False,
+        kernel_size: int = 3,
+        layout: str = "THWC",
+        conv_init_mode: str = "0",
     ):
         super(Upsample3DLayer, self).__init__()
         self.conv_init_mode = conv_init_mode
@@ -911,58 +915,57 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
 
     def __init__(
         self,
-        target_temporal_length,
-        mem_shapes,
-        cross_start=0,
-        depth=[2, 2],
-        upsample_type="upsample",
-        upsample_kernel_size=3,
-        block_self_attn_patterns=None,
-        block_self_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-        block_self_cuboid_strategy=[("l", "l", "l"), ("d", "d", "d")],
-        block_self_shift_size=[(1, 1, 1), (0, 0, 0)],
-        block_cross_attn_patterns=None,
-        block_cross_cuboid_hw=[(4, 4), (4, 4)],
-        block_cross_cuboid_strategy=[("l", "l", "l"), ("d", "l", "l")],
-        block_cross_shift_hw=[(0, 0), (0, 0)],
-        block_cross_n_temporal=[1, 2],
-        cross_last_n_frames=None,
-        num_heads=4,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        ffn_drop=0.0,
-        ffn_activation="leaky",
-        gated_ffn=False,
-        norm_layer="layer_norm",
-        use_inter_ffn=False,
-        hierarchical_pos_embed=False,
-        pos_embed_type="t+hw",
-        max_temporal_relative=50,
-        padding_type="ignore",
-        checkpoint_level=True,
-        use_relative_pos=True,
-        self_attn_use_final_proj=True,
-        use_first_self_attn=False,
-        use_self_global=False,
-        self_update_global=True,
-        use_cross_global=False,
-        use_global_vector_ffn=True,
-        use_global_self_attn=False,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        conv_init_mode="0",
-        up_linear_init_mode="0",
-        norm_init_mode="0",
+        target_temporal_length: int,
+        mem_shapes: Tuple[int, ...],
+        cross_start: int = 0,
+        depth: Tuple[int, ...] = [2, 2],
+        upsample_type: str = "upsample",
+        upsample_kernel_size: int = 3,
+        block_self_attn_patterns: str = None,
+        block_self_cuboid_size: Tuple[Tuple[int, ...], ...] = [(4, 4, 4), (4, 4, 4)],
+        block_self_cuboid_strategy: Tuple[Tuple[str, ...], ...] = [
+            ("l", "l", "l"),
+            ("d", "d", "d"),
+        ],
+        block_self_shift_size: Tuple[Tuple[int, ...], ...] = [(1, 1, 1), (0, 0, 0)],
+        block_cross_attn_patterns: str = None,
+        block_cross_cuboid_hw: Tuple[Tuple[int, ...], ...] = [(4, 4), (4, 4)],
+        block_cross_cuboid_strategy: Tuple[Tuple[str, ...], ...] = [
+            ("l", "l", "l"),
+            ("d", "l", "l"),
+        ],
+        block_cross_shift_hw: Tuple[Tuple[int, ...], ...] = [(0, 0), (0, 0)],
+        block_cross_n_temporal: Tuple[int, ...] = [1, 2],
+        cross_last_n_frames: int = None,
+        num_heads: int = 4,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        ffn_drop: float = 0.0,
+        ffn_activation: str = "leaky",
+        gated_ffn: bool = False,
+        norm_layer: str = "layer_norm",
+        use_inter_ffn: bool = False,
+        hierarchical_pos_embed: bool = False,
+        pos_embed_type: str = "t+hw",
+        max_temporal_relative: int = 50,
+        padding_type: str = "ignore",
+        checkpoint_level: bool = True,
+        use_relative_pos: bool = True,
+        self_attn_use_final_proj: bool = True,
+        use_first_self_attn: bool = False,
+        use_self_global: bool = False,
+        self_update_global: bool = True,
+        use_cross_global: bool = False,
+        use_global_vector_ffn: bool = True,
+        use_global_self_attn: bool = False,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        conv_init_mode: str = "0",
+        up_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
-        """_summary_
-
-
-
-        Raises:
-            NotImplementedError: _description_
-        """
         super(CuboidTransformerDecoder, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
         self.ffn_linear_init_mode = ffn_linear_init_mode
@@ -1202,8 +1205,8 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
     def forward(self, x, mem_l, mem_global_vector_l=None):
         """
         Args:
-            x : Shape (B, T_top, H_top, W_top, C)
-            mem_l : A list of memory tensors
+            x : Shape (B, T_top, H_top, W_top, C).
+            mem_l : A list of memory tensors.
         """
 
         B, T_top, H_top, W_top, C = x.shape

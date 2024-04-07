@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from functools import lru_cache
+from typing import Tuple
 
 import numpy as np
 import paddle
@@ -30,15 +31,14 @@ class PatchMerging3D(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        out_dim=None,
-        downsample=(1, 2, 2),
-        norm_layer="layer_norm",
-        padding_type="nearest",
-        linear_init_mode="0",
-        norm_init_mode="0",
+        dim: int,
+        out_dim: int = None,
+        downsample: Tuple[int, ...] = (1, 2, 2),
+        norm_layer: str = "layer_norm",
+        padding_type: str = "nearest",
+        linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
-        """_summary_"""
         super().__init__()
         self.linear_init_mode = linear_init_mode
         self.norm_init_mode = norm_init_mode
@@ -159,12 +159,12 @@ class PositionwiseFFN(paddle.nn.Layer):
         activation_dropout: float = 0.0,
         dropout: float = 0.1,
         gated_proj: bool = False,
-        activation="relu",
+        activation: str = "relu",
         normalization: str = "layer_norm",
         layer_norm_eps: float = 1e-05,
         pre_norm: bool = False,
-        linear_init_mode="0",
-        norm_init_mode="0",
+        linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super().__init__()
         self.linear_init_mode = linear_init_mode
@@ -506,27 +506,27 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        num_heads,
-        cuboid_size=(2, 7, 7),
-        shift_size=(0, 0, 0),
-        strategy=("l", "l", "l"),
-        padding_type="ignore",
-        qkv_bias=False,
-        qk_scale=None,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        use_final_proj=True,
-        norm_layer="layer_norm",
-        use_global_vector=False,
-        use_global_self_attn=False,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        checkpoint_level=True,
-        use_relative_pos=True,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        norm_init_mode="0",
+        dim: int,
+        num_heads: int,
+        cuboid_size: Tuple[int, ...] = (2, 7, 7),
+        shift_size: Tuple[int, ...] = (0, 0, 0),
+        strategy: Tuple[str, ...] = ("l", "l", "l"),
+        padding_type: str = "ignore",
+        qkv_bias: bool = False,
+        qk_scale: float = None,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        use_final_proj: bool = True,
+        norm_layer: str = "layer_norm",
+        use_global_vector: bool = False,
+        use_global_self_attn: bool = False,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        checkpoint_level: bool = True,
+        use_relative_pos: bool = True,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super(CuboidSelfAttentionLayer, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
@@ -1000,32 +1000,35 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
 
     def __init__(
         self,
-        dim,
-        num_heads,
-        block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-        block_shift_size=[(0, 0, 0), (2, 2, 2)],
-        block_strategy=[("d", "d", "d"), ("l", "l", "l")],
-        padding_type="ignore",
-        qkv_bias=False,
-        qk_scale=None,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        ffn_drop=0.0,
-        activation="leaky",
-        gated_ffn=False,
-        norm_layer="layer_norm",
-        use_inter_ffn=False,
-        use_global_vector=False,
-        use_global_vector_ffn=True,
-        use_global_self_attn=False,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        checkpoint_level=True,
-        use_relative_pos=True,
-        use_final_proj=True,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        norm_init_mode="0",
+        dim: int,
+        num_heads: int,
+        block_cuboid_size: Tuple[Tuple[int, ...], ...] = [(4, 4, 4), (4, 4, 4)],
+        block_shift_size: Tuple[Tuple[int, ...], ...] = [(0, 0, 0), (2, 2, 2)],
+        block_strategy: Tuple[Tuple[str, ...], ...] = [
+            ("d", "d", "d"),
+            ("l", "l", "l"),
+        ],
+        padding_type: str = "ignore",
+        qkv_bias: bool = False,
+        qk_scale: float = None,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        ffn_drop: float = 0.0,
+        activation: str = "leaky",
+        gated_ffn: bool = False,
+        norm_layer: str = "layer_norm",
+        use_inter_ffn: bool = False,
+        use_global_vector: bool = False,
+        use_global_vector_ffn: bool = True,
+        use_global_self_attn: bool = False,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        checkpoint_level: bool = True,
+        use_relative_pos: bool = True,
+        use_final_proj: bool = True,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super(StackCuboidSelfAttentionBlock, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
@@ -1254,7 +1257,6 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         attn_drop (float, optional): The ratio of attention dropout. Defaults to 0.0.
         proj_drop (float, optional): The ratio of projection dropout. Defaults to 0.0.
         ffn_drop (float, optional): The ratio of FFN dropout. Defaults to 0.0.
-        activation (str, optional): The activation. Defaults to "leaky".
         ffn_activation (str, optional): The FFN activation. Defaults to "leaky".
         gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
         norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
@@ -1280,40 +1282,42 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
 
     def __init__(
         self,
-        input_shape,
-        base_units=128,
-        block_units=None,
-        scale_alpha=1.0,
-        depth=[4, 4, 4],
-        downsample=2,
-        downsample_type="patch_merge",
-        block_attn_patterns=None,
-        block_cuboid_size=[(4, 4, 4), (4, 4, 4)],
-        block_strategy=[("l", "l", "l"), ("d", "d", "d")],
-        block_shift_size=[(0, 0, 0), (0, 0, 0)],
-        num_heads=4,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        ffn_drop=0.0,
-        activation="leaky",
-        ffn_activation="leaky",
-        gated_ffn=False,
-        norm_layer="layer_norm",
-        use_inter_ffn=True,
-        padding_type="ignore",
-        checkpoint_level=True,
-        use_relative_pos=True,
-        self_attn_use_final_proj=True,
-        use_global_vector=False,
-        use_global_vector_ffn=True,
-        use_global_self_attn=False,
-        separate_global_qkv=False,
-        global_dim_ratio=1,
-        attn_linear_init_mode="0",
-        ffn_linear_init_mode="0",
-        conv_init_mode="0",
-        down_linear_init_mode="0",
-        norm_init_mode="0",
+        input_shape: Tuple[int,...],
+        base_units: int = 128,
+        block_units: int = None,
+        scale_alpha: float = 1.0,
+        depth: Tuple[int, ...] = [4, 4, 4],
+        downsample: int = 2,
+        downsample_type: str = "patch_merge",
+        block_attn_patterns: str = None,
+        block_cuboid_size: Tuple[Tuple[int, ...], ...] = [(4, 4, 4), (4, 4, 4)],
+        block_strategy: Tuple[Tuple[str, ...], ...] = [
+            ("l", "l", "l"),
+            ("d", "d", "d"),
+        ],
+        block_shift_size: Tuple[Tuple[int, ...], ...] = [(0, 0, 0), (0, 0, 0)],
+        num_heads: int = 4,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        ffn_drop: float = 0.0,
+        ffn_activation: str = "leaky",
+        gated_ffn: bool = False,
+        norm_layer: str = "layer_norm",
+        use_inter_ffn: bool = True,
+        padding_type: str = "ignore",
+        checkpoint_level: bool = True,
+        use_relative_pos: bool = True,
+        self_attn_use_final_proj: bool = True,
+        use_global_vector: bool = False,
+        use_global_vector_ffn: bool = True,
+        use_global_self_attn: bool = False,
+        separate_global_qkv: bool = False,
+        global_dim_ratio: int = 1,
+        attn_linear_init_mode: str = "0",
+        ffn_linear_init_mode: str = "0",
+        conv_init_mode: str = "0",
+        down_linear_init_mode: str = "0",
+        norm_init_mode: str = "0",
     ):
         super(CuboidTransformerEncoder, self).__init__()
         self.attn_linear_init_mode = attn_linear_init_mode
@@ -1482,12 +1486,13 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
             x : Shape (B, T, H, W, C)
 
         Returns:
-            out : A list of tensors from the bottom layer to the top layer of the encoder. For example, it can have shape
+            out (List[paddle.Tensor,..]): A list of tensors from the bottom layer to the top layer of the encoder. For
+                example, it can have shape
                 - (B, T, H, W, C1)
                 - (B, T, H // 2, W // 2, 2 * C1)
                 - (B, T, H // 4, W // 4, 4 * C1)
                 ...
-            global_mem_out (Optional): The output of the global vector.
+            global_mem_out (List,Optional): The output of the global vector.
         """
 
         B, T, H, W, C_in = x.shape
