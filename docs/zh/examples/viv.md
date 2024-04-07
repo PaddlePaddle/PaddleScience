@@ -17,8 +17,6 @@
 === "模型导出命令"
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
     python viv.py mode=export
     ```
 

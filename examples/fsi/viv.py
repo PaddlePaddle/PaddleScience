@@ -201,12 +201,13 @@ def evaluate(cfg: DictConfig):
 
 
 def export(cfg: DictConfig):
+    from paddle import nn
+    from paddle.static import InputSpec
+
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
-
     # initialize equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -214,53 +215,29 @@ def export(cfg: DictConfig):
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
     # Convert equation to func
-    funcs = ppsci.lambdify(
+    f_func = ppsci.lambdify(
         solver.equation["VIV"].equations["f"],
         solver.model,
         list(solver.equation["VIV"].learnable_parameters),
     )
 
-    def wrap_prediction_to_dict(instance, func):
-        def wrapper(instance, *args, **kwargs):
-            result = func(*args, **kwargs)
-            return {"f": result}
+    class Wrapped_Model(nn.Layer):
+        def __init__(self, model, func):
+            super().__init__()
+            self.model = model
+            self.func = func
 
-        if hasattr(func, "__func__"):
-            wrapper.__func__ = func.__func__
-        return wrapper
+        def forward(self, x):
+            model_out = self.model(x)
+            func_out = self.func(x)
+            return {**model_out, "f": func_out}
 
-    def wrap_forward_methods(instance):
-        instance.input_keys = cfg.MODEL.input_keys
-        instance.output_keys = ["f"]
-        for attr_name in dir(instance):
-            if attr_name == "forward":
-                attr = getattr(instance, attr_name)
-                setattr(instance, attr_name, wrap_prediction_to_dict(instance, attr))
-        return instance
-
-    eqn = wrap_forward_methods(funcs)
-    # Combine the two instances
-    models = ppsci.arch.ModelList((solver.model, eqn))
+    solver.model = Wrapped_Model(model, f_func)
     # export models
-    from paddle.static import InputSpec
-
     input_spec = [
         {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
     ]
-
-    from paddle import jit
-
-    jit.enable_to_static(True)
-
-    static_model = jit.to_static(
-        models,
-        input_spec=input_spec,
-        full_graph=True,
-    )
-
-    jit.save(static_model, cfg.INFER.export_path, skip_prune_program=True)
-
-    jit.enable_to_static(False)
+    solver.export(input_spec, cfg.INFER.export_path, skip_prune_program=True)
 
 
 def inference(cfg: DictConfig):
