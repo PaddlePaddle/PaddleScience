@@ -207,7 +207,7 @@ class TimeXGeometry(geometry.Geometry):
 
         Args:
             n (int): The total number of random points to generate.
-            random (string): Specifies the way to generate random points, default is "pseudo" , which means that a pseudo-random number generator is used.
+            random (str): Specifies the way to generate random points, default is "pseudo" , which means that a pseudo-random number generator is used.
             criteria (Optional[Callable]): A method that filters on the generated random points, defualt is None.
 
         Returns:
@@ -432,7 +432,7 @@ class TimeXGeometry(geometry.Geometry):
 
         Args:
             n (int): The total number of spatial-temporal points generated on a given geometry boundary.
-            random (string): Controls the way to generate random points. Default is "pseudo".
+            random (str): Controls the way to generate random points. Default is "pseudo".
             criteria (Optional[Callable]): Used to filter the generated boundary points, only points that meet certain conditions are retained. Default is None.
 
         Returns:
@@ -650,7 +650,7 @@ class TimeXGeometry(geometry.Geometry):
 
         Args:
             n (int): The total number of generated points.
-            random (string): Controls the way to generate random points. Default is "pseudo".
+            random (str): Controls the way to generate random points. Default is "pseudo".
 
         Returns:
             np.ndarray: A set of point coordinates randomly distributed on the spatial-temporal domain at the initial moment.
@@ -709,7 +709,7 @@ class TimeXGeometry(geometry.Geometry):
 
         Args:
             n (int): The total number of interior points generated.
-            random (string): The method used to specify the initial point of generation. Default is "pseudo".
+            random (str): The method used to specify the initial point of generation. Default is "pseudo".
             criteria (Optional[Callable]): Used to filter the generated interior points, only points that meet certain conditions are retained. Default is None.
             evenly (bool): Indicates whether the initial points are generated evenly. Default is False.
             compute_sdf_derivatives (bool): Indicates whether to calculate the derivative of signed distance function or not. Default is False.

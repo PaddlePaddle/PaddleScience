@@ -57,7 +57,7 @@ class AGDA(LossAggregator):
         self.Lf_tilde_acc = 0.0
         self.Lu_tilde_acc = 0.0
 
-    def __call__(self, losses, step: int = 0):
+    def __call__(self, losses, step: int = 0) -> "AGDA":
         if len(losses) != 2:
             raise ValueError(
                 f"Number of losses(tasks) for AGDA shoule be 2, but got {len(losses)}"
