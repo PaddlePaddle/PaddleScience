@@ -26,6 +26,9 @@ import paddle
 from ppsci.utils import logger
 from ppsci.utils import misc
 
+from typing import Callable
+from typing import Dict
+from typing import Optional
 
 class Geometry:
     """Base class for geometry.
@@ -105,11 +108,18 @@ class Geometry:
         """Compute the unit normal at x."""
         raise NotImplementedError(f"{self}.boundary_normal is not implemented")
 
-    def uniform_points(self, n: int, boundary: bool = True):
+    def uniform_points(self, n: int, boundary: bool = True) -> np.ndarray:
         """Compute the equi-spaced points in the geometry.
 
         Warings:
             This function is not implemented, please use random_points instead.
+
+        Args:
+            n (int): Number of points.
+            boundary (bool): Include boundary points. Defaults to True.
+
+        Returns:
+            np.ndarray: Random points in the geometry. The shape is [N, D].
         """
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
@@ -123,7 +133,7 @@ class Geometry:
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
-    ) -> np.ndarray:
+    ) -> Dict[str, np.ndarray]:
         """Sample random points in the geometry and return those meet criteria.
 
         Args:
@@ -134,9 +144,9 @@ class Geometry:
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
 
         Returns:
-            np.ndarray: Random points in the geometry. The shape is [N, D].
-                        their signed distance function. The shape is [N].
-                        their derivatives of SDF(optional). The shape is [N].
+            Dict[str, np.ndarray]: Random points in the geometry. The shape is [N, D].
+                                   their signed distance function. The shape is [N, 1].
+                                   their derivatives of SDF(optional). The shape is [N, D].
 
         Examples:
             >>> import numpy as np
@@ -215,7 +225,7 @@ class Geometry:
 
     def sample_boundary(
         self, n: int, random: str = "pseudo", criteria: Optional[Callable] = None, evenly: bool = False
-    ) -> np.ndarray:
+    ) -> Dict[str, np.ndarray]:
         """Compute the random points in the geometry and return those meet criteria.
 
         Args:
@@ -225,9 +235,9 @@ class Geometry:
             evenly (bool): Evenly sample points. Defaults to False.
 
         Returns:
-            np.ndarray: Random points in the geometry. The shape is [N, D].
-                        their normal vectors. The shape is [N, D].
-                        their area. The shape is [N].(only if the geometry is a mesh)
+            Dict[str, np.ndarray]: Random points in the geometry. The shape is [N, D].
+                                   their normal vectors. The shape is [N, D].
+                                   their area. The shape is [N, 1].(only if the geometry is a mesh)
 
         Examples:
             >>> import numpy as np
@@ -346,11 +356,17 @@ class Geometry:
                    [0.7080726 , 0.02058449, 0.96990985]], dtype=float32)
         """
 
-    def uniform_boundary_points(self, n: int):
+    def uniform_boundary_points(self, n: int) -> np.ndarray:
         """Compute the equi-spaced points on the boundary(not implemented).
 
         Warings:
             This function is not implemented, please use random_boundary_points instead.
+
+        Args:
+            n (int): Number of points.
+
+        Returns:
+            np.ndarray: Random points on the boundary. The shape is [N, D].
         """
         logger.warning(
             f"{self}.uniform_boundary_points not implemented. "
