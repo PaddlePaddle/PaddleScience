@@ -90,7 +90,7 @@ class Relobralo(nn.Layer):
         losses_stacked = paddle.stack(losses)  # [num_losses, ]
 
         if self.step == 0:
-            self.loss = losses_stacked.sum()
+            loss = losses_stacked.sum()
             with paddle.no_grad():
                 paddle.assign(losses_stacked.detach(), self.losses_init)
         else:
