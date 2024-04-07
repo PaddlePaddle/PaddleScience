@@ -224,7 +224,11 @@ class Geometry:
         return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
     def sample_boundary(
-        self, n: int, random: str = "pseudo", criteria: Optional[Callable] = None, evenly: bool = False
+        self,
+        n: int,
+        random: str = "pseudo",
+        criteria: Optional[Callable] = None,
+        evenly: bool = False,
     ) -> Dict[str, np.ndarray]:
         """Compute the random points in the geometry and return those meet criteria.
 
