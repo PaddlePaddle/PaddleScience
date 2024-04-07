@@ -75,14 +75,14 @@ class TimeDomain(geometry_1d.Interval):
         elif timestamps is not None:
             self.num_timestamps = len(timestamps)
 
-    def on_initial(self, t: np.ndarray):
+    def on_initial(self, t: np.ndarray) -> np.ndarray:
         """Check if a specific time is on the initial time point.
 
         Args:
             t (np.ndarray): The time to be checked.
 
         Returns:
-            bool: True or False for whether the specific time is on the initial time point.
+            np.ndarray: Bool numpy array of whether the specific time is on the initial time point.
 
         Examples:
             >>> import paddle
@@ -132,7 +132,7 @@ class TimeXGeometry(geometry.Geometry):
         normal = self.geometry.boundary_normal(x[:, 1:])
         return np.hstack((x[:, :1], normal))
 
-    def uniform_points(self, n: int, boundary: bool = True):
+    def uniform_points(self, n: int, boundary: bool = True) -> np.ndarray:
         """Uniform points on the spatial-temporal domain.
         Geometry volume ~ bbox.
         Time volume ~ diam.
@@ -202,7 +202,7 @@ class TimeXGeometry(geometry.Geometry):
 
     def random_points(
         self, n: int, random: str = "pseudo", criteria: Optional[Callable] = None
-    ):
+    ) -> np.ndarray:
         """Generate random points on the spatial-temporal domain.
 
         Args:
@@ -347,7 +347,9 @@ class TimeXGeometry(geometry.Geometry):
         t = np.random.permutation(t)
         return np.hstack((t, x))
 
-    def uniform_boundary_points(self, n: int, criteria: Optional[Callable] = None):
+    def uniform_boundary_points(
+        self, n: int, criteria: Optional[Callable] = None
+    ) -> np.ndarray:
         """Uniform boundary points on the spatial-temporal domain.
         Geometry surface area ~ bbox.
         Time surface area ~ diam.
@@ -427,7 +429,7 @@ class TimeXGeometry(geometry.Geometry):
 
     def random_boundary_points(
         self, n: int, random: str = "pseudo", criteria: Optional[Callable] = None
-    ):
+    ) -> np.ndarray:
         """Random boundary points on the spatial-temporal domain.
 
         Args:
@@ -621,7 +623,7 @@ class TimeXGeometry(geometry.Geometry):
             else:
                 return t_x
 
-    def uniform_initial_points(self, n: int):
+    def uniform_initial_points(self, n: int) -> np.ndarray:
         """Generate evenly distributed point coordinates on the spatial-temporal domain at the initial moment.
 
         Args:
@@ -645,7 +647,7 @@ class TimeXGeometry(geometry.Geometry):
             x = x[:n]
         return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
-    def random_initial_points(self, n: int, random: str = "pseudo"):
+    def random_initial_points(self, n: int, random: str = "pseudo") -> np.ndarray:
         """Generate randomly distributed point coordinates on the spatial-temporal domain at the initial moment.
 
         Args:
@@ -668,7 +670,9 @@ class TimeXGeometry(geometry.Geometry):
         t = self.timedomain.t0
         return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
-    def periodic_point(self, x: Dict[str, np.ndarray], component: int):
+    def periodic_point(
+        self, x: Dict[str, np.ndarray], component: int
+    ) -> Dict[str, np.ndarray]:
         """process given point coordinates to satisfy the periodic boundary conditions of the geometry.
 
         Args:
@@ -704,7 +708,7 @@ class TimeXGeometry(geometry.Geometry):
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
-    ):
+    ) -> Dict[str, np.ndarray]:
         """Sample random points in the time-geometry and return those meet criteria.
 
         Args:
