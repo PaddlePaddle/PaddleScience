@@ -366,9 +366,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| - | ✅ |
-| GPU | ✅ | ✅ | ✅ | - |
-| XPU | TODO | - | - | - |
+| CPU | ✅ | ✅| / | ✅ |
+| GPU | ✅ | ✅ | ✅ | / |
+| XPU | TODO | / | / | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -447,7 +447,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
