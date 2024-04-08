@@ -17,6 +17,7 @@ import copy
 from ppsci.equation.fpde import FractionalPoisson
 from ppsci.equation.ide import Volterra
 from ppsci.equation.pde import DETACH_FUNC_NAME
+from ppsci.equation.pde import NLSMB
 from ppsci.equation.pde import PDE
 from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import HeatExchanger
@@ -41,6 +42,7 @@ __all__ = [
     "Poisson",
     "Vibration",
     "Volterra",
+    "NLSMB",
     "FractionalPoisson",
     "build_equation",
 ]
