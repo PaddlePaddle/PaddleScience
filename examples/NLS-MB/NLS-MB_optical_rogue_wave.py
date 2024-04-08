@@ -23,6 +23,48 @@ import ppsci
 from ppsci.utils import logger
 
 
+def analytic_solution(out):
+    I = 1j
+    x = out["x"]
+    t = out["t"]
+    EExact = (
+        (-1565 * x**2 + (648 * I + 76 * t) * x - 68 * t**2 + 51)
+        * np.exp(-I / 8 * (-12 * t + 65 * x))
+        / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17)
+    )
+    pExact = (
+        (
+            9796900 * I * x**4
+            + (4056480 - 951520 * I * t) * x**3
+            + (-579432 * I + 874464 * I * t**2 - 196992 * t) * x**2
+            + (-36448 - 41344 * I * t**3 + 176256 * t**2 - 50592 * I * t) * x
+            + 884 * I
+            + 18496 * I * t**4
+            + 8160 * I * t**2
+            - 4352 * t
+        )
+        * np.exp(-I / 8 * (-12 * t + 65 * x))
+        / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
+    )
+    etaExact = (
+        4624 * t**4
+        - 10336 * t**3 * x
+        + (218616 * x**2 + 6664) * t**2
+        + (-237880 * x**3 + 158440 * x) * t
+        + 2449225 * x**4
+        - 136934 * x**2
+        - 799
+    ) / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
+
+    return (
+        np.real(EExact),
+        np.imag(EExact),
+        np.real(pExact),
+        np.imag(pExact),
+        etaExact,
+    )
+
+
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
@@ -52,48 +94,6 @@ def train(cfg: DictConfig):
             ppsci.geometry.Interval(x_lower, x_upper),
         )
     }
-
-    def analytic_solution(out):
-        I = 1j
-        x = out["x"]
-        t = out["t"]
-        EExact = (
-            (-1565 * x**2 + (648 * I + 76 * t) * x - 68 * t**2 + 51)
-            * np.exp(-I / 8 * (-12 * t + 65 * x))
-            / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17)
-        )
-        pExact = (
-            (
-                9796900 * I * x**4
-                + (4056480 - 951520 * I * t) * x**3
-                + (-579432 * I + 874464 * I * t**2 - 196992 * t) * x**2
-                + (-36448 - 41344 * I * t**3 + 176256 * t**2 - 50592 * I * t) * x
-                + 884 * I
-                + 18496 * I * t**4
-                + 8160 * I * t**2
-                - 4352 * t
-            )
-            * np.exp(-I / 8 * (-12 * t + 65 * x))
-            / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
-        )
-
-        etaExact = (
-            4624 * t**4
-            - 10336 * t**3 * x
-            + (218616 * x**2 + 6664) * t**2
-            + (-237880 * x**3 + 158440 * x) * t
-            + 2449225 * x**4
-            - 136934 * x**2
-            - 799
-        ) / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
-
-        return (
-            np.real(EExact),
-            np.imag(EExact),
-            np.real(pExact),
-            np.imag(pExact),
-            etaExact,
-        )
 
     X, T = np.meshgrid(
         np.linspace(x_lower, x_upper, 256), np.linspace(t_lower, t_upper, 256)
@@ -213,48 +213,44 @@ def train(cfg: DictConfig):
     # evaluate after finished training
     solver.eval()
 
-    # set LBFGS optimizer
-    EPOCHS = 5000
-    optimizer = ppsci.optimizer.LBFGS(
-        max_iter=50000, tolerance_change=np.finfo(float).eps, history_size=50
+    # fine-tuning pretrained model with L-BFGS
+    OUTPUT_DIR = cfg.TRAIN.lbfgs.output_dir
+    logger.init_logger("ppsci", osp.join(OUTPUT_DIR, f"{cfg.mode}.log"), "info")
+    EPOCHS = cfg.TRAIN.epochs // 10
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(
+        cfg.TRAIN.lbfgs.learning_rate, cfg.TRAIN.lbfgs.max_iter
     )(model)
-
-    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        OUTPUT_DIR,
+        optimizer_lbfgs,
+        None,
+        EPOCHS,
+        cfg.TRAIN.lbfgs.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
+        eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
     )
     # train model
     solver.train()
-
     # evaluate after finished training
     solver.eval()
 
-    vis_points = geom["time_interval"].sample_interior(10000, evenly=True)
+    # visualize prediction
+    vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
+    pred = solver.predict(vis_points, return_numpy=True)
     x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["Eu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["Ev"] ** 2
-    )
+    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)
     p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["pu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["pv"] ** 2
-    )
+    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)
     eta_ref = eta_true
-    eta_pred = solver.predict(vis_points, return_numpy=True)["eta"]
+    eta_pred = pred["eta"]
 
     plt.figure(figsize=(10, 10))
     plt.subplot(3, 3, 1)
@@ -286,7 +282,7 @@ def train(cfg: DictConfig):
     plt.tricontourf(
         x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
-    plt.savefig("optical_rogue_wave.png")
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_rogue_wave.png"))
 
 
 def evaluate(cfg: DictConfig):
@@ -317,48 +313,6 @@ def evaluate(cfg: DictConfig):
             ppsci.geometry.Interval(x_lower, x_upper),
         )
     }
-
-    def analytic_solution(out):
-        I = 1j
-        x = out["x"]
-        t = out["t"]
-        EExact = (
-            (-1565 * x**2 + (648 * I + 76 * t) * x - 68 * t**2 + 51)
-            * np.exp(-I / 8 * (-12 * t + 65 * x))
-            / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17)
-        )
-        pExact = (
-            (
-                9796900 * I * x**4
-                + (4056480 - 951520 * I * t) * x**3
-                + (-579432 * I + 874464 * I * t**2 - 196992 * t) * x**2
-                + (-36448 - 41344 * I * t**3 + 176256 * t**2 - 50592 * I * t) * x
-                + 884 * I
-                + 18496 * I * t**4
-                + 8160 * I * t**2
-                - 4352 * t
-            )
-            * np.exp(-I / 8 * (-12 * t + 65 * x))
-            / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
-        )
-
-        etaExact = (
-            4624 * t**4
-            - 10336 * t**3 * x
-            + (218616 * x**2 + 6664) * t**2
-            + (-237880 * x**3 + 158440 * x) * t
-            + 2449225 * x**4
-            - 136934 * x**2
-            - 799
-        ) / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
-
-        return (
-            np.real(EExact),
-            np.imag(EExact),
-            np.real(pExact),
-            np.imag(pExact),
-            etaExact,
-        )
 
     # set validator
     residual_validator = ppsci.validate.GeometryValidator(
@@ -395,22 +349,18 @@ def evaluate(cfg: DictConfig):
     )
     solver.eval()
 
-    vis_points = geom["time_interval"].sample_interior(10000, evenly=True)
+    # visualize prediction
+    vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
+    pred = solver.predict(vis_points, return_numpy=True)
     x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["Eu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["Ev"] ** 2
-    )
+    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)
     p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["pu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["pv"] ** 2
-    )
+    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)
     eta_ref = eta_true
-    eta_pred = solver.predict(vis_points, return_numpy=True)["eta"]
+    eta_pred = pred["eta"]
 
     plt.figure(figsize=(10, 10))
     plt.subplot(3, 3, 1)
@@ -442,7 +392,7 @@ def evaluate(cfg: DictConfig):
     plt.tricontourf(
         x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
-    plt.savefig("eval_optical_rogue_wave.png")
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_rogue_wave.png"))
 
 
 def export(cfg: DictConfig):
@@ -469,13 +419,22 @@ def inference(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # set geometry
+    x_lower = -0.5
+    x_upper = 0.5
+    t_lower = -2.5
+    t_upper = 2.5
+    # set timestamps(including initial t0)
+    timestamps = np.linspace(t_lower, t_upper, cfg.NTIME_ALL, endpoint=True)
+    # set time-geometry
     geom = {
-        "rect": ppsci.geometry.Rectangle(
-            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        "time_interval": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(t_lower, t_upper, timestamps=timestamps),
+            ppsci.geometry.Interval(x_lower, x_upper),
         )
     }
+
     NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
-    input_dict = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+    input_dict = geom["time_interval"].sample_interior(NPOINT_TOTAL, evenly=True)
 
     output_dict = predictor.predict(
         {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
@@ -487,16 +446,53 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    # save result
-    ppsci.visualize.save_vtu_from_dict(
-        "./laplace2d_pred.vtu",
-        {**input_dict, **output_dict},
-        input_dict.keys(),
-        cfg.MODEL.output_keys,
+    # visualize prediction
+    Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(input_dict)
+    x = input_dict["x"][:, 0]
+    t = input_dict["t"][:, 0]
+    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
+    E_pred = np.sqrt(output_dict["Eu"] ** 2 + output_dict["Ev"] ** 2)
+    p_ref = np.sqrt(pu_true**2 + pv_true**2)
+    p_pred = np.sqrt(output_dict["pu"] ** 2 + output_dict["pv"] ** 2)
+    eta_ref = eta_true
+    eta_pred = output_dict["eta"]
+
+    plt.figure(figsize=(10, 10))
+    plt.subplot(3, 3, 1)
+    plt.title("E_ref")
+    plt.tricontourf(x, t, E_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 2)
+    plt.title("E_pred")
+    plt.tricontourf(x, t, E_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 3)
+    plt.title("E_diff")
+    plt.tricontourf(x, t, np.abs(E_ref[:, 0] - E_pred[:, 0]), levels=256, cmap="jet")
+    plt.subplot(3, 3, 4)
+    plt.title("p_ref")
+    plt.tricontourf(x, t, p_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 5)
+    plt.title("p_pred")
+    plt.tricontourf(x, t, p_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 6)
+    plt.title("p_diff")
+    plt.tricontourf(x, t, np.abs(p_ref[:, 0] - p_pred[:, 0]), levels=256, cmap="jet")
+    plt.subplot(3, 3, 7)
+    plt.title("eta_ref")
+    plt.tricontourf(x, t, eta_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 8)
+    plt.title("eta_pred")
+    plt.tricontourf(x, t, eta_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 9)
+    plt.title("eta_diff")
+    plt.tricontourf(
+        x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_rogue_wave.png"))
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="NLS-MB.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="NLS-MB_rogue_wave.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

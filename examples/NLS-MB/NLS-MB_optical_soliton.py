@@ -211,10 +211,10 @@ def train(cfg: DictConfig):
         validator=validator,
     )
     # train model
-    # solver.train()
+    solver.train()
 
     # evaluate after finished training
-    # solver.eval()
+    solver.eval()
 
     vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
@@ -258,7 +258,7 @@ def train(cfg: DictConfig):
     plt.tricontourf(
         x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
-    plt.savefig("optical_soliton.png")
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_soliton.png"))
 
 
 def evaluate(cfg: DictConfig):
@@ -345,22 +345,17 @@ def evaluate(cfg: DictConfig):
     )
     solver.eval()
 
-    vis_points = geom["time_interval"].sample_interior(10000, evenly=True)
+    vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
+    pred = solver.predict(vis_points, return_numpy=True)
     x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["Eu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["Ev"] ** 2
-    )
+    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)
     p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(
-        solver.predict(vis_points, return_numpy=True)["pu"] ** 2
-        + solver.predict(vis_points, return_numpy=True)["pv"] ** 2
-    )
+    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)
     eta_ref = eta_true
-    eta_pred = solver.predict(vis_points, return_numpy=True)["eta"]
+    eta_pred = pred["eta"]
 
     plt.figure(figsize=(10, 10))
     plt.subplot(3, 3, 1)
@@ -392,7 +387,7 @@ def evaluate(cfg: DictConfig):
     plt.tricontourf(
         x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
-    plt.savefig("eval_optical_soliton.png")
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_soliton.png"))
 
 
 def export(cfg: DictConfig):
@@ -446,7 +441,7 @@ def inference(cfg: DictConfig):
     )
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="NLS-MB.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="NLS-MB_soliton.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

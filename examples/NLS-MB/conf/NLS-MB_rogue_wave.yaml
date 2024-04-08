@@ -24,8 +24,8 @@ mode: train # running mode: train/eval
 seed: 42
 log_freq: 20
 output_dir: ${hydra:run.dir}
-NPOINT_INTERIOR: 256*199
-NPOINT_BC: 256
+NPOINT_INTERIOR: 20000
+NPOINT_BC: 600
 NTIME_ALL: 200
 # set geometry
 DIAGONAL_COORD:
@@ -43,6 +43,13 @@ MODEL:
 TRAIN:
   epochs: 50000
   iters_per_epoch: 1
+  lbfgs:
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    output_dir: ./outputs_NLS-MB_L-BFGS
+    learning_rate: 1.0
+    max_iter: 1
+    eval_freq: ${TRAIN.eval_freq}
+    eval_during_train: ${TRAIN.eval_during_train}
   eval_during_train: true
   eval_freq: 1000
   learning_rate: 0.001
@@ -53,7 +60,7 @@ EVAL:
   eval_with_no_grad: true
 
 INFER:
-  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_pretrained.pdparams
+  pretrained_model_path: null
   export_path: ./inference/NLS-MB
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
