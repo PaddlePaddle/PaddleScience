@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: output_NLS-MB/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: output_NLS-MB_rogue_wave/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -27,10 +27,7 @@ output_dir: ${hydra:run.dir}
 NPOINT_INTERIOR: 20000
 NPOINT_BC: 600
 NTIME_ALL: 200
-# set geometry
-DIAGONAL_COORD:
-  xmin: [0.0, 0.0]
-  xmax: [1.0, 1.0]
+
 
 # model settings
 MODEL:
@@ -45,7 +42,7 @@ TRAIN:
   iters_per_epoch: 1
   lbfgs:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
-    output_dir: ./outputs_NLS-MB_L-BFGS
+    output_dir: ./outputs_NLS-MB_rogue_wave_L-BFGS
     learning_rate: 1.0
     max_iter: 1
     eval_freq: ${TRAIN.eval_freq}
@@ -61,7 +58,7 @@ EVAL:
 
 INFER:
   pretrained_model_path: null
-  export_path: ./inference/NLS-MB
+  export_path: ./inference/NLS-MB_rogue_wave
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
