@@ -23,6 +23,27 @@ import ppsci
 from ppsci.utils import logger
 
 
+def analytic_solution(out):
+    x, t = out["x"], out["t"]
+    Eu_true = 2 * np.cos(2 * t) / np.cosh(2 * t + 6 * x)
+
+    Ev_true = -2 * np.sin(2 * t) / np.cosh(2 * t + 6 * x)
+
+    pu_true = (
+        (np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
+        * np.cos(2 * t)
+        / np.cosh(2 * t + 6 * x) ** 2
+    )
+    pv_true = (
+        -(np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
+        * np.sin(2 * t)
+        / np.cosh(2 * t + 6 * x) ** 2
+    )
+    eta_true = (np.cosh(2 * t + 6 * x) ** 2 - 2) / np.cosh(2 * t + 6 * x) ** 2
+
+    return Eu_true, Ev_true, pu_true, pv_true, eta_true
+
+
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
@@ -51,26 +72,6 @@ def train(cfg: DictConfig):
             ppsci.geometry.Interval(x_lower, x_upper),
         )
     }
-
-    def analytic_solution(out):
-        x, t = out["x"], out["t"]
-        Eu_true = 2 * np.cos(2 * t) / np.cosh(2 * t + 6 * x)
-
-        Ev_true = -2 * np.sin(2 * t) / np.cosh(2 * t + 6 * x)
-
-        pu_true = (
-            (np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
-            * np.cos(2 * t)
-            / np.cosh(2 * t + 6 * x) ** 2
-        )
-        pv_true = (
-            -(np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
-            * np.sin(2 * t)
-            / np.cosh(2 * t + 6 * x) ** 2
-        )
-        eta_true = (np.cosh(2 * t + 6 * x) ** 2 - 2) / np.cosh(2 * t + 6 * x) ** 2
-
-        return Eu_true, Ev_true, pu_true, pv_true, eta_true
 
     X, T = np.meshgrid(
         np.linspace(x_lower, x_upper, 256), np.linspace(t_lower, t_upper, 256)
@@ -290,26 +291,6 @@ def evaluate(cfg: DictConfig):
         )
     }
 
-    def analytic_solution(out):
-        x, t = out["x"], out["t"]
-        Eu_true = 2 * np.cos(2 * t) / np.cosh(2 * t + 6 * x)
-
-        Ev_true = -2 * np.sin(2 * t) / np.cosh(2 * t + 6 * x)
-
-        pu_true = (
-            (np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
-            * np.cos(2 * t)
-            / np.cosh(2 * t + 6 * x) ** 2
-        )
-        pv_true = (
-            -(np.exp(-2 * t - 6 * x) - np.exp(2 * t + 6 * x))
-            * np.sin(2 * t)
-            / np.cosh(2 * t + 6 * x) ** 2
-        )
-        eta_true = (np.cosh(2 * t + 6 * x) ** 2 - 2) / np.cosh(2 * t + 6 * x) ** 2
-
-        return Eu_true, Ev_true, pu_true, pv_true, eta_true
-
     # set validator
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NLS-MB"].equations,
@@ -414,13 +395,22 @@ def inference(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # set geometry
+    x_lower = -1
+    x_upper = 1
+    t_lower = -1
+    t_upper = 1
+    # set timestamps(including initial t0)
+    timestamps = np.linspace(t_lower, t_upper, cfg.NTIME_ALL, endpoint=True)
+    # set time-geometry
     geom = {
-        "rect": ppsci.geometry.Rectangle(
-            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        "time_interval": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(t_lower, t_upper, timestamps=timestamps),
+            ppsci.geometry.Interval(x_lower, x_upper),
         )
     }
+
     NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
-    input_dict = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+    input_dict = geom["time_interval"].sample_interior(NPOINT_TOTAL, evenly=True)
 
     output_dict = predictor.predict(
         {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
@@ -432,13 +422,48 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    # save result
-    ppsci.visualize.save_vtu_from_dict(
-        "./laplace2d_pred.vtu",
-        {**input_dict, **output_dict},
-        input_dict.keys(),
-        cfg.MODEL.output_keys,
+    # visualize prediction
+    Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(input_dict)
+    x = input_dict["x"][:, 0]
+    t = input_dict["t"][:, 0]
+    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
+    E_pred = np.sqrt(output_dict["Eu"] ** 2 + output_dict["Ev"] ** 2)
+    p_ref = np.sqrt(pu_true**2 + pv_true**2)
+    p_pred = np.sqrt(output_dict["pu"] ** 2 + output_dict["pv"] ** 2)
+    eta_ref = eta_true
+    eta_pred = output_dict["eta"]
+
+    plt.figure(figsize=(10, 10))
+    plt.subplot(3, 3, 1)
+    plt.title("E_ref")
+    plt.tricontourf(x, t, E_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 2)
+    plt.title("E_pred")
+    plt.tricontourf(x, t, E_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 3)
+    plt.title("E_diff")
+    plt.tricontourf(x, t, np.abs(E_ref[:, 0] - E_pred[:, 0]), levels=256, cmap="jet")
+    plt.subplot(3, 3, 4)
+    plt.title("p_ref")
+    plt.tricontourf(x, t, p_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 5)
+    plt.title("p_pred")
+    plt.tricontourf(x, t, p_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 6)
+    plt.title("p_diff")
+    plt.tricontourf(x, t, np.abs(p_ref[:, 0] - p_pred[:, 0]), levels=256, cmap="jet")
+    plt.subplot(3, 3, 7)
+    plt.title("eta_ref")
+    plt.tricontourf(x, t, eta_ref[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 8)
+    plt.title("eta_pred")
+    plt.tricontourf(x, t, eta_pred[:, 0], levels=256, cmap="jet")
+    plt.subplot(3, 3, 9)
+    plt.title("eta_diff")
+    plt.tricontourf(
+        x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
     )
+    plt.savefig(osp.join(cfg.output_dir, "pred_optical_rogue_wave.png"))
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="NLS-MB_soliton.yaml")
