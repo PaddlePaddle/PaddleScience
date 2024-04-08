@@ -129,6 +129,7 @@ class PDE:
 
         Returns:
             Tuple[List[str], List[str]]: List of missing_keys and unexpected_keys.
+                Expected to be two empty tuples mostly.
 
         Examples:
             >>> import paddle
@@ -138,6 +139,7 @@ class PDE:
             >>> state = pde.state_dict()
             >>> state['0'] = paddle.to_tensor(-3.1)
             >>> pde.set_state_dict(state)
+            ([], [])
             >>> print(state)
             OrderedDict([('0', Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=True,
                    -3.10000000)), ('1', Parameter containing:
