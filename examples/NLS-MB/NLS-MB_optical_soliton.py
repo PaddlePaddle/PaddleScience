@@ -191,32 +191,33 @@ def train(cfg: DictConfig):
     # evaluate after finished training
     solver.eval()
 
-    # set LBFGS optimizer
-    EPOCHS = 5000
-    optimizer = ppsci.optimizer.LBFGS(
-        max_iter=50000, tolerance_change=np.finfo(float).eps, history_size=50
+    # fine-tuning pretrained model with L-BFGS
+    OUTPUT_DIR = cfg.TRAIN.lbfgs.output_dir
+    logger.init_logger("ppsci", osp.join(OUTPUT_DIR, f"{cfg.mode}.log"), "info")
+    EPOCHS = cfg.TRAIN.epochs // 10
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(
+        cfg.TRAIN.lbfgs.learning_rate, cfg.TRAIN.lbfgs.max_iter
     )(model)
-
-    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        OUTPUT_DIR,
+        optimizer_lbfgs,
+        None,
+        EPOCHS,
+        cfg.TRAIN.lbfgs.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
+        eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
     )
     # train model
     solver.train()
-
     # evaluate after finished training
     solver.eval()
 
+    # visualize prediction
     vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
     pred = solver.predict(vis_points, return_numpy=True)
@@ -326,6 +327,7 @@ def evaluate(cfg: DictConfig):
     )
     solver.eval()
 
+    # visualize prediction
     vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
     pred = solver.predict(vis_points, return_numpy=True)
