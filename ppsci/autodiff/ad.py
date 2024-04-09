@@ -310,15 +310,15 @@ def clear():
         None.
 
     Examples:
-    >>> import paddle
-    >>> import ppsci
-    >>> x = paddle.randn([4, 3])
-    >>> x.stop_gradient = False
-    >>> y = (x * x).sin()
-    >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
-    >>> ppsci.autodiff.clear()
-    >>> print(ppsci.autodiff.hessian.Hs)
-    {}
+        >>> import paddle
+        >>> import ppsci
+        >>> x = paddle.randn([4, 3])
+        >>> x.stop_gradient = False
+        >>> y = (x * x).sin()
+        >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
+        >>> ppsci.autodiff.clear()
+        >>> print(ppsci.autodiff.hessian.Hs)
+        {}
     """
     jacobian._clear()
     hessian._clear()
