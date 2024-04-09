@@ -14,65 +14,133 @@
 
 from __future__ import annotations
 
-import copy
-from typing import Callable
+from typing import Dict
 from typing import Optional
 
 import paddle
 from paddle import nn
 
 __all__ = [
-    "EMA",
+    "AveragedModel",
+    "ExponentialMovingAverage",
+    "StochasticWeightAverage",
 ]
 
 
-class EMA(nn.Layer):
-    """Class for exponential moving average.
+class AveragedModel(nn.Layer):
+    """Base class for Averaged Model.
 
     Args:
-        model (nn.Layer): Model used in moving average.
-        momentum (float, optional): Momentum of moving average. Defaults to 0.9.
-        update_lambda (Optional[Callable[[paddle.Tensor, paddle.Tensor, int], paddle.Tensor]], optional):
-            Custom update function, the three args corresponds to: (ema_param, model_param, ema_step). Defaults to None.
-            Other moving average algorithm can be implemented by update_lambda, e.g. SWA.
+        model (nn.Layer): The model to be averaged.
+        decay (float): The decay rate for averaging.
     """
 
-    def __init__(
+    def __init__(self, model: nn.Layer, decay: Optional[float] = None):
+        super().__init__()
+        self.model = model  # As a quick reference to online model
+        self.decay = decay
+
+        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param
+        self.params_backup: Dict[str, paddle.Tensor] = {}  # used for apply and restore
+        for name, param in self.model.named_parameters():
+            if paddle.is_floating_point(param) or paddle.is_complex(param):
+                if not param.stop_gradient:
+                    self.params_shadow[name] = param.clone().detach()
+
+        self.register_buffer("n_avg", paddle.to_tensor(0, "int64"), True)
+
+    def _update_fn_(
         self,
-        model: nn.Layer,
-        momentum: float = 0.9,
-        update_lambda: Optional[
-            Callable[["paddle.Tensor", "paddle.Tensor", int], "paddle.Tensor"]
-        ] = None,
+        shadow_param: paddle.Tensor,
+        model_param: paddle.Tensor,
+        step: paddle.Tensor,
     ):
-        self.ema_model = copy.deepcopy(model)
-        self.ema_model.eval()
-        # freeze parameters for ema model
-        for param in self.ema_model.parameters():
-            param.stop_gradient = True
+        raise NotImplementedError("AveragedModel._update_fn_ should be implemented.")
 
-        self.step = 0
-        self.momentum = momentum
-        self.update_lambda = update_lambda
+    def update(self):
+        for name, param in self.model.named_parameters():
+            if not param.stop_gradient:
+                assert (
+                    name in self.params_shadow
+                ), f"Parameter: {name} should be in params_shadow dict, but not found."
+                with paddle.no_grad():
+                    self._update_fn_(
+                        self.params_shadow[name],
+                        param,
+                        self.n_avg,
+                    )
+        self.n_avg += 1
 
-    def update(self, model: nn.Layer):
-        """Update ema model using given model
+    def apply_shadow(self):
+        """Set averaged model parameters to online model."""
+        for name, param in self.model.named_parameters():
+            if name in self.params_shadow:
+                stop_gradient = param.stop_gradient
+                with paddle.no_grad():
+                    self.params_backup[name] = paddle.assign(param)
+                    paddle.assign(self.params_shadow[name], param)
+                param.stop_gradient = stop_gradient
 
-        Args:
-            model (nn.Layer): Online model.
-        """
-        m_ = self.momentum
-        with paddle.no_grad():
-            if isinstance(model, (paddle.DataParallel,)):
-                msd, esd = model.module.state_dict(), self.ema_model.module.state_dict()
-            else:
-                msd, esd = model.state_dict(), self.ema_model.state_dict()
+    def restore(self):
+        """Restore online model parameters from backup parameter dict."""
+        assert self.params_backup, (
+            "params_backup should not be empty, may be caused by calling 'restore' "
+            "before 'apply_shadow'."
+        )
+        for name, param in self.model.named_parameters():
+            if name in self.params_backup:
+                assert name in self.params_shadow
+                stop_gradient = param.stop_gradient
+                with paddle.no_grad():
+                    paddle.assign(self.params_backup[name], param)
+                param.stop_gradient = stop_gradient
 
-            for k, v in esd.items():
-                if not paddle.is_floating_point(v):
-                    if self.update_lambda:
-                        esd[k] = self.update_lambda(v, msd[k], self.step)
-                    else:
-                        esd[k] = v * m_ + (1.0 - m_) * msd[k].detach()
+        self.params_backup = {}
 
-        self.step += 1
+
+class ExponentialMovingAverage(AveragedModel):
+    r"""Implements the exponential moving average (EMA) of the model.
+
+    All parameters are updated by the formula as below:
+
+    $$
+    \mathbf{\theta}_{EMA}^{t+1} = \alpha \mathbf{\theta}_{EMA}^{t} + (1 - \alpha) \mathbf{\theta}^{t}
+    $$
+
+    Where $\alpha$ is the decay rate, $\theta_{EMA}^{t}$ is the moving average parameters and $\theta^{t}$ is the online parameters at step $t$.
+
+    Args:
+        model (nn.Layer): The model to be averaged.
+        decay (float): The decay rate for averaging.
+    """
+
+    def __init__(self, model: nn.Layer, decay: float = 0.9):
+        super().__init__(model, decay)
+
+    def _update_fn_(self, shadow_param, model_param, step):
+        shadow_param.lerp_(model_param, 1.0 - self.decay)
+
+
+class StochasticWeightAverage(AveragedModel):
+    r"""Implements the stochastic weight averaging (SWA) of the model.
+
+    Stochastic Weight Averaging was proposed in [Averaging Weights Leads to Wider Optima and Better Generalization](https://arxiv.org/abs/1803.05407),
+
+    All parameters are updated by the formula as below:
+
+    $$
+    \mathbf{\theta}_{EMA}^{t+1} = \alpha \mathbf{\theta}_{EMA}^{t} + (1 - \alpha) \mathbf{\theta}^{t}
+    $$
+
+    Where $\theta_{EMA}^{t}$ is the moving average parameters and $\theta^{t}$ is the online parameters at step $t$.
+
+    Args:
+        model (nn.Layer): The model to be averaged.
+    """
+
+    def __init__(self, model: nn.Layer):
+        super().__init__(model, None)
+
+    def _update_fn_(self, shadow_param, model_param, step):
+        dynamic_decay = step / (step + 1)
+        shadow_param.lerp_(model_param, 1.0 - dynamic_decay)
