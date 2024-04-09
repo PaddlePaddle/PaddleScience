@@ -188,7 +188,7 @@ def load_checkpoint(
 
 def save_checkpoint(
     model: nn.Layer,
-    optimizer: optimizer.Optimizer,
+    optimizer: Optional[optimizer.Optimizer],
     metric: Dict[str, float],
     grad_scaler: Optional[amp.GradScaler] = None,
     output_dir: Optional[str] = None,
@@ -201,7 +201,7 @@ def save_checkpoint(
 
     Args:
         model (nn.Layer): Model with parameters.
-        optimizer (optimizer.Optimizer): Optimizer for model.
+        optimizer (Optional[optimizer.Optimizer]): Optimizer for model.
         metric (Dict[str, float]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         output_dir (Optional[str]): Directory for checkpoint storage.
@@ -231,7 +231,8 @@ def save_checkpoint(
     os.makedirs(ckpt_dir, exist_ok=True)
 
     paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
-    paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
+    if optimizer:
+        paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
     paddle.save(metric, f"{ckpt_path}.pdstates")
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
