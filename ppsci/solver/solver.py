@@ -21,6 +21,7 @@ import itertools
 import os
 import sys
 from os import path as osp
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -41,7 +42,6 @@ from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
 from paddle.framework import core
-from paddle.static import InputSpec
 from typing_extensions import Literal
 
 import ppsci
@@ -50,6 +50,9 @@ from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
+
+if TYPE_CHECKING:
+    from paddle.static import InputSpec
 
 
 class Solver:
@@ -300,6 +303,10 @@ class Solver:
 
         # choosing an appropriate training function for different optimizers
         if misc.typename(self.optimizer) == "LBFGS":
+            if self.use_amp:
+                raise ValueError(
+                    "Auto Mix Precision is not supported for L-BFGS optimizer."
+                )
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
@@ -398,8 +405,13 @@ class Solver:
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for computational optimization.")
 
-        # use loss aggregator, use summation if None
-        self.loss_aggregator = loss_aggregator
+        # use loss aggregator, use Sum if None
+        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
+            raise ValueError(
+                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
+                "please set use_amp=False."
+            )
+        self.loss_aggregator = loss_aggregator or mtl.Sum()
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -432,6 +444,10 @@ class Solver:
                     for name in container.output_expr:
                         if isinstance(container.output_expr[name], sp.Basic):
                             container.output_expr[name] = funcs[ind]
+                            if self.world_size > 1:
+                                container.output_expr[name] = dist_wrapper(
+                                    container.output_expr[name]
+                                )
                             ind += 1
 
         if self.constraint:
@@ -716,7 +732,11 @@ class Solver:
 
     @misc.run_on_eval_mode
     def export(
-        self, input_spec: List[InputSpec], export_path: str, with_onnx: bool = False
+        self,
+        input_spec: List["InputSpec"],
+        export_path: str,
+        with_onnx: bool = False,
+        skip_prune_program: bool = False,
     ):
         """
         Convert model to static graph model and export to files.
@@ -726,7 +746,9 @@ class Solver:
                 of the model input.
             export_path (str): The path prefix to save model.
             with_onnx (bool, optional): Whether to export model into onnx after
-                paddle inference models are exported.
+                paddle inference models are exported. Defaults to False.
+            skip_prune_program (bool, optional): Whether prune program, pruning program
+                may cause unexpectable result, e.g. llm-inference. Defaults to False.
         """
         jit.enable_to_static(True)
 
@@ -747,7 +769,7 @@ class Solver:
         if len(osp.dirname(export_path)):
             os.makedirs(osp.dirname(export_path), exist_ok=True)
         try:
-            jit.save(static_model, export_path)
+            jit.save(static_model, export_path, skip_prune_program=skip_prune_program)
         except Exception as e:
             raise e
         logger.message(
@@ -775,7 +797,6 @@ class Solver:
             )
             logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
-    @functools.lru_cache()
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
@@ -820,7 +841,6 @@ class Solver:
             )
         return ctx_manager
 
-    @functools.lru_cache()
     def no_sync_context_manager(
         self,
         enable: bool,

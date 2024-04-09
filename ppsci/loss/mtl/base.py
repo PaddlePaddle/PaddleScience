@@ -32,7 +32,7 @@ class LossAggregator:
             if not param.stop_gradient:
                 self.param_num += 1
 
-    def __call__(self, losses, step: int = 0):
+    def __call__(self, losses, step: int = 0) -> "LossAggregator":
         self.losses = losses
         self.loss_num = len(losses)
         self.step = step

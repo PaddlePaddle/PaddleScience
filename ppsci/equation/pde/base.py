@@ -85,9 +85,6 @@ class PDE:
     def parameters(self) -> List[paddle.Tensor]:
         """Return learnable parameters contained in PDE.
 
-        Args:
-            None
-
         Returns:
             List[Tensor]: A list of learnable parameters.
 
@@ -106,9 +103,6 @@ class PDE:
     def state_dict(self) -> Dict[str, paddle.Tensor]:
         """Return named learnable parameters in dict.
 
-        Args:
-            None
-
         Returns:
             Dict[str, Tensor]: A dict of states(str) and learnable parameters(Tensor).
 
@@ -125,14 +119,17 @@ class PDE:
 
         return self.learnable_parameters.state_dict()
 
-    def set_state_dict(self, state_dict: Dict[str, paddle.Tensor]):
+    def set_state_dict(
+        self, state_dict: Dict[str, paddle.Tensor]
+    ) -> Tuple[List[str], List[str]]:
         """Set state dict from dict.
 
         Args:
             state_dict (Dict[str, paddle.Tensor]): The state dict to be set.
 
         Returns:
-            None
+            Tuple[List[str], List[str]]: List of missing_keys and unexpected_keys.
+                Expected to be two empty tuples mostly.
 
         Examples:
             >>> import paddle
@@ -142,13 +139,14 @@ class PDE:
             >>> state = pde.state_dict()
             >>> state['0'] = paddle.to_tensor(-3.1)
             >>> pde.set_state_dict(state)
+            ([], [])
             >>> print(state)
             OrderedDict([('0', Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=True,
                    -3.10000000)), ('1', Parameter containing:
             Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=False,
                    0.))])
         """
-        self.learnable_parameters.set_state_dict(state_dict)
+        return self.learnable_parameters.set_state_dict(state_dict)
 
     def __str__(self):
         return ", ".join(
