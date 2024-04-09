@@ -366,9 +366,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| - | ✅ |
-| GPU | ✅ | ✅ | ✅ | - |
-| XPU | TODO | - | - | - |
+| CPU | ✅ | ✅| / | ✅ |
+| GPU | ✅ | ✅ | ✅ | / |
+| XPU | TODO | / | / | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -447,7 +447,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
@@ -561,124 +561,124 @@ solver.eval()
 
 ### 1.7 实验过程可视化
 
-#### 1.7.1 TensorBoardX
+=== "TensorBoardX"
 
-[TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+    [TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+    PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-1. 安装 Tensorboard 和 TensorBoardX
+    1. 安装 Tensorboard 和 TensorBoardX
 
-    ``` sh
-    pip install tensorboard tensorboardX
-    ```
+        ``` sh
+        pip install tensorboard tensorboardX
+        ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
+    2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
 
-    ``` py hl_lines="3"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_tbd=True,
-    )
-    ```
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_tbd=True,
+        )
+        ```
 
-3. 可视化记录数据
+    3. 可视化记录数据
 
-    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+        根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="3" hl_lines="2"
-    ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
-    tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
-    ```
+        ``` log hl_lines="3" hl_lines="2"
+        ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
+        tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
+        ```
 
-    !!! tip
+        !!! tip
 
-        也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
+            也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
 
-    在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+        在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-    ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
+        ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
 
-#### 1.7.2 VisualDL
+=== "VisualDL"
 
-[VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+    [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+    PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-1. 安装 VisualDL
+    1. 安装 VisualDL
 
-    ``` sh
-    pip install -U visualdl
-    ```
+        ``` sh
+        pip install -U visualdl
+        ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
+    2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
 
-    ``` py hl_lines="3"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_vdl=True,
-    )
-    ```
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_vdl=True,
+        )
+        ```
 
-3. 可视化记录数据
+    3. 可视化记录数据
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+        根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="4"
-    Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
-    device: 0, cuDNN Version: 8.4.
-    ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
-    visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
-    ```
+        ``` log hl_lines="4"
+        Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
+        device: 0, cuDNN Version: 8.4.
+        ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
+        visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
+        ```
 
-    在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+        在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+        ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
 
-#### 1.7.3 WandB
+=== "WandB"
 
-[WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
+    [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到用户的私人账户上，防止实验记录丢失。
 
-PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
+    PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
 
-1. 安装 wandb
+    1. 安装 wandb
 
-    ``` sh
-    pip install wandb
-    ```
+        ``` sh
+        pip install wandb
+        ```
 
-2. 注册 wandb 并在终端登录
+    2. 注册 wandb 并在终端登录
 
-    ``` sh
-    # 登录 wandb 获取 API key
-    wandb login
-    # 根据 login 提示，输入 API key 并回车确认
-    ```
+        ``` sh
+        # 登录 wandb 获取 API key
+        wandb login
+        # 根据 login 提示，输入 API key 并回车确认
+        ```
 
-3. 在案例中开启 wandb
+    3. 在案例中开启 wandb
 
-    ``` py hl_lines="3 4 5 6 7 8"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_wandb=True,
-        wandb_config={
-            "project": "PaddleScience",
-            "name": "Laplace2D",
-            "dir": OUTPUT_DIR,
-        },
-        ...
-    )
-    solver.train()
-    ```
+        ``` py hl_lines="3 4 5 6 7 8"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_wandb=True,
+            wandb_config={
+                "project": "PaddleScience",
+                "name": "Laplace2D",
+                "dir": OUTPUT_DIR,
+            },
+            ...
+        )
+        solver.train()
+        ```
 
-    如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
+        如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
 
-    !!! warning "注意"
+        !!! warning "注意"
 
-        由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
+            由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
 
-        否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
-        ![wandb_step settings](../images/overview/wandb_step.JPG)
+            否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
+            ![wandb_step settings](../images/overview/wandb_step.JPG)
 
 ## 2. 进阶功能
 
