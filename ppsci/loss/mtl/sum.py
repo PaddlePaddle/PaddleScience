@@ -43,8 +43,8 @@ class Sum(LossAggregator):
         ), f"Number of given losses({len(losses)}) can not be empty."
         self.step = step
 
-        loss = 0.0
-        for i in range(len(losses)):
+        loss = losses[0]
+        for i in range(1, len(losses)):
             loss += losses[i]
 
         return loss
