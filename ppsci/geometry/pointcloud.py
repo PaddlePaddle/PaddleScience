@@ -222,14 +222,14 @@ class PointCloud(geometry.Geometry):
 
     def random_points(self, n: int, random: str = "pseudo") -> np.ndarray:
         """Randomly sample points in the geometry.
-        
+
         Args:
             n (int): Number of sample points.
             random (str): Random method. Defaults to "pseudo".
 
         Returns:
             np.ndarray: Randomly sampled points in the geometry.The shape of the returned array is (n, ndim).
-        
+
         Examples:
             >>> import ppsci
             >>> import numpy as np
@@ -250,7 +250,7 @@ class PointCloud(geometry.Geometry):
 
     def uniform_points(self, n: int, boundary: bool = True) -> np.ndarray:
         """Compute the equi-spaced points in the geometry.
-        
+
         Args:
             n (int): Number of sample points.
             boundary (bool): Whether to include boundary points. Defaults to True.
