@@ -22,29 +22,31 @@ from ppsci.equation.pde import base
 
 
 class AllenCahn(base.PDE):
-    r"""Class for navier-stokes equation.
+    r"""Class for Allen-Cahn equation.
 
     $$
-    \dfrac{\partial u}{\partial t} + 5u^3 - 5u - 0.0001\dfrac{\partial^2 u}{\partial t^2} = 0
+    \dfrac{\partial u}{\partial t} - \epsilon^2 \Delta u + 5u^3 - 5u = 0
     $$
 
     Args:
-        nu (Union[float, str]): Dynamic viscosity.
+        eps (float): Represents the characteristicscale of interfacial width,
+            influencing the thickness and dynamics of phase boundaries.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
+        >>> pde = ppsci.equation.AllenCahn(0.01**2)
     """
 
     def __init__(
         self,
+        eps: float,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()
         self.detach_keys = detach_keys
-
+        self.eps = eps
         # t, x = self.create_symbols("t x")
         # invars = (t, x, )
         # u = self.create_function("u", invars)
@@ -58,6 +60,6 @@ class AllenCahn(base.PDE):
             u__t, u__x = jacobian(u, [t, x])
             u__x__x = jacobian(u__x, x)
 
-            return u__t + 5 * u * u * u - 5 * u - 0.0001 * u__x__x
+            return u__t - self.eps * u__x__x + 5 * u * u * u - 5 * u
 
         self.add_equation("allen_cahn", allen_cahn)
