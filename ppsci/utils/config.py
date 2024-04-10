@@ -20,6 +20,7 @@ import importlib.util
 import os
 from typing import Mapping
 from typing import Optional
+from typing import Tuple
 
 import yaml
 from paddle import static
@@ -77,6 +78,25 @@ if importlib.util.find_spec("pydantic") is not None:
 
         class SWAConfig(BaseModel):
             avg_freq: int = 1
+            avg_range: Optional[Tuple[int, int]] = None
+
+            @field_validator("avg_range")
+            def avg_range_check(cls, v, info: FieldValidationInfo):
+                if v[0] > v[1]:
+                    raise ValueError(
+                        f"'avg_range' should be a valid range, but got {v}."
+                    )
+                if v[0] < 0:
+                    raise ValueError(
+                        "The start epoch of 'avg_range' should be a non-negtive integer"
+                        f" , but got {v[0]}."
+                    )
+                if v[1] > info.data["epochs"]:
+                    raise ValueError(
+                        "The end epoch of 'avg_range' should not be lager than "
+                        f"'epochs'({info.data['epochs']}), but got {v[1]}."
+                    )
+                return v
 
             @field_validator("avg_freq")
             def avg_freq_check(cls, v):
