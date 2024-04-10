@@ -51,6 +51,41 @@ if importlib.util.find_spec("pydantic") is not None:
         eval_freq: int = 1
         checkpoint_path: Optional[str] = None
         pretrained_model_path: Optional[str] = None
+        ema: Optional[EMAConfig] = None
+        swa: Optional[SWAConfig] = None
+
+        class EMAConfig(BaseModel):
+            decay: float = 0.9
+            avg_freq: int = 1
+
+            @field_validator("decay")
+            def decay_check(cls, v):
+                if v <= 0 or v >= 1:
+                    raise ValueError(
+                        f"'decay' should be in (0, 1) when is type of float, but got {v}"
+                    )
+                return v
+
+            @field_validator("avg_freq")
+            def avg_freq_check(cls, v):
+                if v <= 0:
+                    raise ValueError(
+                        "'avg_freq' should be a positive integer when is type of int, "
+                        f"but got {v}"
+                    )
+                return v
+
+        class SWAConfig(BaseModel):
+            avg_freq: int = 1
+
+            @field_validator("avg_freq")
+            def avg_freq_check(cls, v):
+                if v <= 0:
+                    raise ValueError(
+                        "'avg_freq' should be a positive integer when is type of int, "
+                        f"but got {v}"
+                    )
+                return v
 
         # Fine-grained validator(s) below
         @field_validator("epochs")
