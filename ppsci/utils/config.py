@@ -164,6 +164,22 @@ if importlib.util.find_spec("pydantic") is not None:
                     )
             return v
 
+        @field_validator("ema")
+        def ema_check(cls, v, info: FieldValidationInfo):
+            if "swa" in info.data and info.data["swa"] is not None:
+                raise ValueError(
+                    "The config of 'swa' should not be used when 'ema' is specifed."
+                )
+            return v
+
+        @field_validator("swa")
+        def swa_check(cls, v, info: FieldValidationInfo):
+            if "ema" in info.data and info.data["ema"] is not None:
+                raise ValueError(
+                    "The config of 'ema' should not be used when 'swa' is specifed."
+                )
+            return v
+
     class EvalConfig(BaseModel):
         """
         Schema of evaluation config for pydantic validation.
