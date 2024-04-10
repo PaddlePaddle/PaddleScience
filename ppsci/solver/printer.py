@@ -138,13 +138,13 @@ def log_eval_info(
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 
-    logger.scalar(
-        {
-            f"eval/{key}": solver.eval_output_info[key].avg
-            for key in solver.eval_output_info
-        },
-        step=solver.global_step,
-        vdl_writer=solver.vdl_writer,
-        wandb_writer=solver.wandb_writer,
-        tbd_writer=solver.tbd_writer,
-    )
+    # logger.scalar(
+    #     {
+    #         f"eval/{key}": solver.eval_output_info[key].avg
+    #         for key in solver.eval_output_info
+    #     },
+    #     step=solver.global_step,
+    #     vdl_writer=solver.vdl_writer,
+    #     wandb_writer=solver.wandb_writer,
+    #     tbd_writer=solver.tbd_writer,
+    # )

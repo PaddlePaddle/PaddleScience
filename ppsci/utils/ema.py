@@ -97,19 +97,6 @@ class AveragedModel(nn.Layer):
 
         self.params_backup = {}
 
-    def set_state_dict(self, state_dict: Dict[str, paddle.Tensor]):
-        assert (
-            "n_avg" in state_dict
-        ), "state_dict should contain 'n_avg' key, but not found."
-        self.n_avg.set_value(state_dict.pop("n_avg"))
-        self.params_shadow.update(state_dict)
-
-    def state_dict(self) -> Dict[str, paddle.Tensor]:
-        return {
-            **self.params_shadow,
-            **self.state_dict(),
-        }
-
 
 class ExponentialMovingAverage(AveragedModel):
     r"""Implements the exponential moving average (EMA) of the model.

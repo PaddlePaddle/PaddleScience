@@ -35,6 +35,7 @@ import paddle
 import paddle.distributed as dist
 import sympy as sp
 import visualdl as vdl
+from omegaconf import DictConfig
 from packaging import version
 from paddle import amp
 from paddle import jit
@@ -46,6 +47,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.loss import mtl
+from ppsci.utils import ema
 from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -91,6 +93,7 @@ class Solver:
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
         loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
+        cfg: (Optional[DictConfig]): Running config dict. Defaults to None. NOTE: This will be required in the future.
 
     Examples:
         >>> import ppsci
@@ -151,7 +154,10 @@ class Solver:
         eval_with_no_grad: bool = False,
         to_static: bool = False,
         loss_aggregator: Optional[mtl.LossAggregator] = None,
+        *,
+        cfg: Optional[DictConfig] = None,
     ):
+        self.cfg = cfg
         # set model
         self.model = model
         # set constraint
@@ -269,6 +275,18 @@ class Solver:
                 "are training model."
             )
 
+        # set moving average model(optional)
+        self.ema_model = None
+        if self.cfg and any(key in self.cfg.TRAIN for key in ["ema", "swa"]):
+            if "ema" in self.cfg.TRAIN:
+                self.avg_freq = self.cfg.TRAIN.ema.avg_freq
+                self.ema_model = ema.ExponentialMovingAverage(
+                    self.model, self.cfg.TRAIN.ema.decay
+                )
+            elif "swa" in self.cfg.TRAIN:
+                self.avg_freq = self.cfg.TRAIN.swa.avg_freq
+                self.ema_model = ema.StochasticWeightAverage(self.model)
+
         # load pretrained model, usually used for transfer learning
         self.pretrained_model_path = pretrained_model_path
         if pretrained_model_path is not None:
@@ -287,7 +305,12 @@ class Solver:
                     "overridden by weights loaded from given 'checkpoint_path'."
                 )
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
+                checkpoint_path,
+                self.model,
+                self.optimizer,
+                self.scaler,
+                self.equation,
+                self.ema_model,
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -479,6 +502,10 @@ class Solver:
             self.train_epoch_func(self, epoch_id, self.log_freq)
             self.train_output_info.clear()
 
+            # update average model if exist
+            if self.ema_model and epoch_id % self.avg_freq == 0:
+                self.ema_model.update()
+
             cur_metric = float("inf")
             # evaluate during training
             if (
@@ -503,9 +530,9 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                for metric_dict in metric_dict_group.values():
+                for metric_name, metric_dict in metric_dict_group.items():
                     logger.scalar(
-                        {f"eval/{k}": v for k, v in metric_dict.items()},
+                        {f"eval/{metric_name}/{k}": v for k, v in metric_dict.items()},
                         epoch_id,
                         self.vdl_writer,
                         self.wandb_writer,
@@ -515,6 +542,38 @@ class Solver:
                 # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
+
+                # evaluation for moving average evaluation(almost same procedure)
+                if self.ema_model and epoch_id % self.avg_freq == 0:
+                    self.ema_model.apply_shadow()
+                    logger.info("Evaluating metric of averaging model...")
+                    cur_metric_ema, metric_dict_group_ema = self.eval(epoch_id)
+                    self.ema_model.restore()
+
+                    if cur_metric_ema < self.best_metric["metric"]:
+                        self.best_metric["metric"] = cur_metric_ema
+                        self.best_metric["epoch"] = epoch_id
+                        save_load.save_checkpoint(
+                            model=self.ema_model,
+                            metric=self.best_metric,
+                            output_dir=self.output_dir,
+                            prefix="best_model_ema",
+                        )
+                    logger.info(
+                        f"[Eval][Epoch {epoch_id}]"
+                        f"[best metric: {self.best_metric['metric']}]"
+                    )
+                    for metric_name, metric_dict in metric_dict_group_ema.items():
+                        logger.scalar(
+                            {
+                                f"eval_ema/{metric_name}/{k}": v
+                                for k, v in metric_dict.items()
+                            },
+                            epoch_id,
+                            self.vdl_writer,
+                            self.wandb_writer,
+                            self.tbd_writer,
+                        )
 
             # update learning rate by epoch
             if self.lr_scheduler is not None and self.lr_scheduler.by_epoch:
@@ -530,6 +589,7 @@ class Solver:
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
+                    self.ema_model,
                 )
 
             # save the latest model for convenient resume training
@@ -542,6 +602,7 @@ class Solver:
                 "latest",
                 self.equation,
                 print_log=(epoch_id == start_epoch),
+                ema_model=self.ema_model,
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
