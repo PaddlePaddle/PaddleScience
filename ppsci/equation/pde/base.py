@@ -43,13 +43,24 @@ class PDE:
     def create_symbols(
         symbol_str: str,
     ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
-        """Create symbols
+        """create symbolic variables.
 
         Args:
             symbol_str (str): String contains symbols, such as "x", "x y z".
 
         Returns:
             Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]: Created symbol(s).
+
+        Examples:
+            >>> import ppsci
+            >>> pde = ppsci.equation.PDE()
+            >>> symbol_x = pde.create_symbols('x')
+            >>> symbols_xyz = pde.create_symbols('x y z')
+            >>> print(symbol_x)
+            x
+            >>> print(symbols_xyz)
+            (x, y, z)
+
         """
         return sympy.symbols(symbol_str)
 
@@ -64,6 +75,18 @@ class PDE:
 
         Returns:
             sympy.Function: Named sympy function.
+
+        Examples:
+            >>> import ppsci
+            >>> pde = ppsci.equation.PDE()
+            >>> x, y, z = pde.create_symbols('x y z')
+            >>> u = pde.create_function('u', (x, y))
+            >>> f = pde.create_function('f', (x, y, z))
+            >>> print(u)
+            u(x, y)
+            >>> print(f)
+            f(x, y, z)
+
         """
         expr = sympy.Function(name)(*invars)
 
@@ -79,6 +102,19 @@ class PDE:
         Args:
             name (str): Name of equation
             equation (Callable): Computation function for equation.
+
+        Examples:
+            >>> import ppsci
+            >>> import sympy
+            >>> pde = ppsci.equation.PDE()
+            >>> x, y = pde.create_symbols('x y')
+            >>> u = x**2 + y**2
+            >>> equation = sympy.diff(u, x) + sympy.diff(u, y)
+            >>> pde.add_equation('linear_pde', equation)
+            >>> print(pde)
+            PDE, linear_pde: 2*x + 2*y
+
+
         """
         self.equations.update({name: equation})
 
