@@ -76,7 +76,7 @@ def load_csv_file(
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
         data_dict[key] = np.asarray(raw_data[fetch_key])
-        if data_dict[key].dtype in (np.float16, np.float32, np.float64):
+        if not np.issubdtype(data_dict[key].dtype, np.integer):
             data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
         data_dict[key] = data_dict[key].reshape([-1, 1])
 
@@ -114,7 +114,7 @@ def load_mat_file(
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
         data_dict[key] = np.asarray(raw_data[fetch_key])
-        if data_dict[key].dtype in (np.float16, np.float32, np.float64):
+        if not np.issubdtype(data_dict[key].dtype, np.integer):
             data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
         data_dict[key] = data_dict[key].reshape([-1, 1])
 
