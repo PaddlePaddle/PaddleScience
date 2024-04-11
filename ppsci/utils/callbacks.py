@@ -97,3 +97,12 @@ class InitCallback(Callback):
             else None,
             full_cfg.log_level,
         )
+
+        # enable prim if specified
+        if "prim" in full_cfg and bool(full_cfg.prim):
+            # Mostly for dy2st running, will be removed in the future
+            from paddle.framework import core
+
+            core.set_prim_eager_enabled(True)
+            core._set_prim_all_enabled(True)
+            logger.message("Prim mode is enabled.")

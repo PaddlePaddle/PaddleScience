@@ -578,7 +578,7 @@ if __name__ == "__main__":
     )
     plt.plot(
         x_fi2_train_plot[:, 0:1],
-        x_fi1_train_plot[:, 1:2],
+        x_fi2_train_plot[:, 1:2],
         "w-",
         markersize=2,
         label="Interface Pts",
