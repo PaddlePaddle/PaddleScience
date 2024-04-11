@@ -582,6 +582,7 @@ class Solver:
 
             # save epoch model every save_freq epochs
             if self.save_freq > 0 and epoch_id % self.save_freq == 0:
+                print("save here")
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
@@ -590,7 +591,7 @@ class Solver:
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
-                    self.ema_model,
+                    ema_model=self.ema_model,
                 )
 
             # save the latest model for convenient resume training
