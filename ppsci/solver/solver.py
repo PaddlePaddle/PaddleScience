@@ -554,7 +554,8 @@ class Solver:
                         self.best_metric["metric"] = cur_metric_ema
                         self.best_metric["epoch"] = epoch_id
                         save_load.save_checkpoint(
-                            model=self.ema_model,
+                            self.ema_model,
+                            None,
                             metric=self.best_metric,
                             output_dir=self.output_dir,
                             prefix="best_model_ema",
