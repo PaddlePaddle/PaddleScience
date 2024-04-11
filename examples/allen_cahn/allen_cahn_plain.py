@@ -269,7 +269,7 @@ def inference(cfg: DictConfig):
     tx_star = misc.cartesian_product(t_star, x_star)
 
     input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
-    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)["u"]
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     output_dict = {
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())

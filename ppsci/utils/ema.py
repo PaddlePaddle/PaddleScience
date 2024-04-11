@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import Dict
 from typing import Optional
 
@@ -40,12 +41,12 @@ class AveragedModel(nn.Layer):
         self.model = model  # As a quick reference to online model
         self.decay = decay
 
-        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param
+        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param or bufer
         self.params_backup: Dict[str, paddle.Tensor] = {}  # used for apply and restore
-        for name, param in self.model.named_parameters():
-            if paddle.is_floating_point(param) or paddle.is_complex(param):
-                if not param.stop_gradient:
-                    self.params_shadow[name] = param.clone().detach()
+        for name, param_or_buffer in itertools.chain(
+            self.model.named_parameters(), self.model.named_buffers()
+        ):
+            self.params_shadow[name] = param_or_buffer.clone().detach()
 
         self.register_buffer("n_avg", paddle.to_tensor(0, "int64"), True)
 
@@ -58,28 +59,37 @@ class AveragedModel(nn.Layer):
         raise NotImplementedError("AveragedModel._update_fn_ should be implemented.")
 
     def update(self):
-        for name, param in self.model.named_parameters():
-            if not param.stop_gradient:
+        for name, param_or_buffer in itertools.chain(
+            self.model.named_parameters(), self.model.named_buffers()
+        ):
+            if not param_or_buffer.stop_gradient:
                 assert (
                     name in self.params_shadow
                 ), f"Parameter: {name} should be in params_shadow dict, but not found."
-                with paddle.no_grad():
-                    self._update_fn_(
-                        self.params_shadow[name],
-                        param,
-                        self.n_avg,
-                    )
+
+                # only update floating and complex data
+                if paddle.is_floating_point(param_or_buffer) or paddle.is_complex(
+                    param_or_buffer
+                ):
+                    with paddle.no_grad():
+                        self._update_fn_(
+                            self.params_shadow[name],
+                            param_or_buffer,
+                            self.n_avg,
+                        )
         self.n_avg += 1
 
     def apply_shadow(self):
         """Set averaged model parameters to online model."""
-        for name, param in self.model.named_parameters():
+        for name, param_or_buffer in itertools.chain(
+            self.model.named_parameters(), self.model.named_buffers()
+        ):
             if name in self.params_shadow:
-                stop_gradient = param.stop_gradient
+                stop_gradient = param_or_buffer.stop_gradient
                 with paddle.no_grad():
-                    self.params_backup[name] = paddle.assign(param)
-                    paddle.assign(self.params_shadow[name], param)
-                param.stop_gradient = stop_gradient
+                    self.params_backup[name] = paddle.assign(param_or_buffer)
+                    paddle.assign(self.params_shadow[name], param_or_buffer)
+                param_or_buffer.stop_gradient = stop_gradient
 
     def restore(self):
         """Restore online model parameters from backup parameter dict."""
@@ -87,13 +97,15 @@ class AveragedModel(nn.Layer):
             "params_backup should not be empty, may be caused by calling 'restore' "
             "before 'apply_shadow'."
         )
-        for name, param in self.model.named_parameters():
+        for name, param_or_buffer in itertools.chain(
+            self.model.named_parameters(), self.model.named_buffers()
+        ):
             if name in self.params_backup:
                 assert name in self.params_shadow
-                stop_gradient = param.stop_gradient
+                stop_gradient = param_or_buffer.stop_gradient
                 with paddle.no_grad():
-                    paddle.assign(self.params_backup[name], param)
-                param.stop_gradient = stop_gradient
+                    paddle.assign(self.params_backup[name], param_or_buffer)
+                param_or_buffer.stop_gradient = stop_gradient
 
         self.params_backup = {}
 
@@ -107,7 +119,7 @@ class AveragedModel(nn.Layer):
     def state_dict(self) -> Dict[str, paddle.Tensor]:
         return {
             **self.params_shadow,
-            **{"n_avg": self.n_avg},
+            "n_avg": self.n_avg,
         }
 
 

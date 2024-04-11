@@ -70,7 +70,7 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/allen_cahn/allen_cahn_pretrained.pdparams
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_plain_pretrained.pdparams
   export_path: ./inference/allen_cahn
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams

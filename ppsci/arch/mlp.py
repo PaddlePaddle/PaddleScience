@@ -56,7 +56,7 @@ class WeightNormLinear(nn.Layer):
 class PeriodEmbedding(nn.Layer):
     def __init__(self, periods: Dict[str, Tuple[float, bool]]):
         super().__init__()
-        self.freqs = {
+        self.freqs_dict = {
             k: self.create_parameter(
                 [],
                 attr=paddle.ParamAttr(trainable=trainable),
@@ -64,11 +64,12 @@ class PeriodEmbedding(nn.Layer):
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }
+        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
 
     def forward(self, x: Dict[str, paddle.Tensor]):
         y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
 
-        for k, w in self.freqs.items():
+        for k, w in self.freqs_dict.items():
             y[k] = paddle.concat([paddle.cos(w * x[k]), paddle.sin(w * x[k])], axis=-1)
 
         return y
