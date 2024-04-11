@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
+import itertools
+
 import numpy as np
 import paddle
 import pytest
@@ -134,6 +137,71 @@ def test_ema_apply_restore():
         np.testing.assert_allclose(model.state_dict()[k], orignal_param[k], 1e-7, 1e-7)
         assert model.state_dict()[k].stop_gradient == orignal_param[k].stop_gradient
     assert len(avg_model.params_backup) == 0
+
+
+def test_ema_buffer():
+    model = ppsci.arch.MLP(
+        ("x", "y", "z"),
+        ("u", "v", "w"),
+        4,
+        25,
+        periods={"x": [1.0, True], "y": [2.0, False]},
+    )
+    model.linears[-1].weight.stop_gradient = True
+    model.linears[-2].bias.stop_gradient = True
+    model.register_buffer("buffer_1", paddle.randn([2, 3]))
+    model.register_buffer("buffer_2", paddle.randn([3, 3]))
+    model.register_buffer("buffer_3", paddle.randn([4, 3]))
+
+    decay = 0.5
+    avg_model = ema.ExponentialMovingAverage(model, decay)
+
+    N = 32
+    # update parames of model
+    opt = ppsci.optimizer.Adam()(model)
+    input_data = {
+        "x": paddle.randn([N, 1]),
+        "y": paddle.randn([N, 1]),
+        "z": paddle.randn([N, 1]),
+    }
+    label_data = {
+        "u": paddle.randn([N, 1]),
+        "v": paddle.randn([N, 1]),
+        "w": paddle.randn([N, 1]),
+    }
+    output_data = model(input_data)
+    loss = sum(
+        [
+            paddle.nn.functional.mse_loss(output, label)
+            for output, label in zip(output_data.values(), label_data.values())
+        ]
+    )
+    loss.backward()
+    opt.step()
+    opt.clear_grad()
+
+    model2 = copy.deepcopy(model)
+    avg_model.apply_shadow()
+
+    opt = ppsci.optimizer.Adam()(model)
+    output_data = model(input_data)
+    loss = sum(
+        [
+            paddle.nn.functional.mse_loss(output, label)
+            for output, label in zip(output_data.values(), label_data.values())
+        ]
+    )
+    loss.backward()
+    opt.step()
+    opt.clear_grad()
+
+    for (n1, p1), (n2, p2) in zip(
+        itertools.chain(model.named_parameters(), model.named_buffers()),
+        itertools.chain(model2.named_parameters(), model2.named_buffers()),
+    ):
+        assert n1 == n2, f"{n1} {n2} do not equal."
+        assert p1.stop_gradient == p2.stop_gradient, f"{n1} {n2} do not equal."
+        np.testing.assert_array_equal(p1, p2)
 
 
 if __name__ == "__main__":
