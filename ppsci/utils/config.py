@@ -290,6 +290,7 @@ if importlib.util.find_spec("pydantic") is not None:
         use_amp: bool = False
         amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
         to_static: bool = False
+        prim: bool = False
         log_level: Literal["debug", "info", "warning", "error"] = "info"
 
         # Training related config
