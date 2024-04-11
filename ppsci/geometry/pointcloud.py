@@ -49,7 +49,6 @@ class PointCloud(geometry.Geometry):
     ):
         # Interior points
         self.interior = misc.convert_to_array(interior, coord_keys)
-        print(self.interior.shape, self.interior.dtype)
         self.len = self.interior.shape[0]
 
         # Boundary points
