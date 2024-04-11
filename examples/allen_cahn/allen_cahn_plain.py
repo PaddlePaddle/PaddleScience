@@ -101,9 +101,7 @@ def train(cfg: DictConfig):
             },
         },
         output_expr=equation["AllenCahn"].equations,
-        loss=ppsci.loss.MSELoss(
-            # "mean", None, True, cfg.TRAIN.causal.n_windows, cfg.TRAIN.causal.tol
-        ),
+        loss=ppsci.loss.MSELoss(),
         name="PDE",
     )
 
@@ -137,15 +135,15 @@ def train(cfg: DictConfig):
     tx_star = misc.cartesian_product(t_star, x_star)
     eval_data = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     eval_label = {"u": u_ref.reshape([-1, 1])}
-    eval_dataloader_cfg = {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": eval_data,
-            "label": eval_label,
-        },
-    }
     u_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
+        {
+            "dataset": {
+                "name": "NamedArrayDataset",
+                "input": eval_data,
+                "label": eval_label,
+            },
+            "batch_size": cfg.EVAL.batch_size,
+        },
         ppsci.loss.MSELoss("mean"),
         {"u": lambda out: out["u"]},
         metric={"L2Rel": ppsci.metric.L2Rel()},
@@ -202,15 +200,15 @@ def evaluate(cfg: DictConfig):
     tx_star = misc.cartesian_product(t_star, x_star)
     eval_data = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     eval_label = {"u": u_ref.reshape([-1, 1])}
-    eval_dataloader_cfg = {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": eval_data,
-            "label": eval_label,
-        },
-    }
     u_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
+        {
+            "dataset": {
+                "name": "NamedArrayDataset",
+                "input": eval_data,
+                "label": eval_label,
+            },
+            "batch_size": cfg.EVAL.batch_size,
+        },
         ppsci.loss.MSELoss("mean"),
         {"u": lambda out: out["u"]},
         metric={"L2Rel": ppsci.metric.L2Rel()},
