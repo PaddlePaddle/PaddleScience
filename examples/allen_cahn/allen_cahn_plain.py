@@ -132,7 +132,7 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
-    tx_star = misc.cartesian_product(t_star, x_star)
+    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
     eval_data = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     eval_label = {"u": u_ref.reshape([-1, 1])}
     u_validator = ppsci.validate.SupervisedValidator(
@@ -197,7 +197,7 @@ def evaluate(cfg: DictConfig):
     x_star = data["x"].flatten().astype(dtype)  # [nx, ]
 
     # set validator
-    tx_star = misc.cartesian_product(t_star, x_star)
+    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
     eval_data = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     eval_label = {"u": u_ref.reshape([-1, 1])}
     u_validator = ppsci.validate.SupervisedValidator(
@@ -264,7 +264,7 @@ def inference(cfg: DictConfig):
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
     t_star = data["t"].flatten().astype(dtype)  # [nt, ]
     x_star = data["x"].flatten().astype(dtype)  # [nx, ]
-    tx_star = misc.cartesian_product(t_star, x_star)
+    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
 
     input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
