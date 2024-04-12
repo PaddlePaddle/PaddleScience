@@ -45,7 +45,7 @@ TRAIN:
   iters_per_epoch: 1
   lbfgs:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
-    output_dir: ./outputs_NLS-MB_rogue_wave_L-BFGS
+    output_dir: ${output_dir}LBFGS
     learning_rate: 1.0
     max_iter: 1
     eval_freq: ${TRAIN.eval_freq}
