@@ -14,6 +14,9 @@ hydra:
           - mode
           - output_dir
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -31,7 +34,7 @@ NTIME_ALL: 200
 # model settings
 MODEL:
   input_keys: ["x", "t"]
-  output_keys: ["Eu","Ev","pu","pv","eta"]
+  output_keys: ["Eu", "Ev", "pu", "pv", "eta"]
   num_layers: 5
   hidden_size: 64
 

@@ -22,6 +22,29 @@ from ppsci.equation.pde import base
 
 
 class NLSMB(base.PDE):
+    r"""Class for nonlinear Schrodinger-Maxwell-Bloch equation.
+
+    $$
+    \begin{cases}
+        \dfrac{\partial E}{\partial x} = i \alpha_1 \dfrac{\partial^2 E}{\partial t ^2} - i \alpha_2 |E|^2 E+2 p \\
+        \dfrac{\partial p}{\partial t} = 2 i \omega_0 p+2 E \eta \\
+        \dfrac{\partial \eta}{\partial t} = -(E p^* + E^* p)
+    \end{cases}
+    $$
+
+    Args:
+        alpha_1 (Union[float, str]): Group velocity dispersion.
+        alpha_2 (Union[float, str]): Kerr nonlinearity.
+        omega_0 (Union[float, str]): The offset of resonance frequency.
+        time (bool): Whether the equation is time-dependent.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.NLSMB(0.5, -1.0, 0.5, True)
+    """
+
     def __init__(
         self,
         alpha_1: Union[float, str],
@@ -32,7 +55,6 @@ class NLSMB(base.PDE):
     ):
         super().__init__()
         self.detach_keys = detach_keys
-        # self.dim = dim
         self.time = time
 
         t, x = self.create_symbols("t x")
