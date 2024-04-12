@@ -60,7 +60,6 @@ class PDE:
             x
             >>> print(symbols_xyz)
             (x, y, z)
-
         """
         return sympy.symbols(symbol_str)
 
