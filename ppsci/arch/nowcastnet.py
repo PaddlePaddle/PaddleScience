@@ -36,6 +36,11 @@ class NowcastNet(base.Arch):
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.NowcastNet(("input", ), ("output", ))
+        >>> input_data = paddle.rand([1, 9, 512, 512, 2])
+        >>> input_dict = {"input": input_data}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["output"].shape)
+        [1, 20, 512, 512, 1]
     """
 
     def __init__(
