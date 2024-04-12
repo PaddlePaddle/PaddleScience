@@ -579,7 +579,9 @@ class AMGNet(nn.Layer):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.AMGNet(("input", ), ("pred", ), 5, 3, 64, 2)
+        >>> model = ppsci.arch.AMGNet(
+        ...     ("input", ), ("pred", ), 5, 3, 64, 2, "sum", 6, "norm",
+        ... )
     """
 
     def __init__(

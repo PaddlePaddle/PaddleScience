@@ -82,6 +82,7 @@ nav:
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
+        - DGMR: zh/examples/dgmr.md
   - API文档:
     - " ":
       - ppsci.arch: zh/api/arch.md
@@ -210,6 +211,7 @@ markdown_extensions:
 extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
+  - javascripts/contributors.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 

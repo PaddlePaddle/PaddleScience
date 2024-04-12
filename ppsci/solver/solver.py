@@ -15,11 +15,13 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import importlib
 import itertools
 import os
 import sys
 from os import path as osp
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -39,7 +41,7 @@ from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
-from paddle.static import InputSpec
+from paddle.framework import core
 from typing_extensions import Literal
 
 import ppsci
@@ -48,6 +50,9 @@ from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
+
+if TYPE_CHECKING:
+    from paddle.static import InputSpec
 
 
 class Solver:
@@ -103,7 +108,7 @@ class Solver:
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
-        ... )
+        ... )  # doctest: +SKIP
         >>> solver = ppsci.solver.Solver(
         ...     model,
         ...     {"EQ": pde_constraint},
@@ -298,6 +303,10 @@ class Solver:
 
         # choosing an appropriate training function for different optimizers
         if misc.typename(self.optimizer) == "LBFGS":
+            if self.use_amp:
+                raise ValueError(
+                    "Auto Mix Precision is not supported for L-BFGS optimizer."
+                )
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
@@ -396,8 +405,13 @@ class Solver:
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for computational optimization.")
 
-        # use loss aggregator, use summation if None
-        self.loss_aggregator = loss_aggregator
+        # use loss aggregator, use Sum if None
+        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
+            raise ValueError(
+                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
+                "please set use_amp=False."
+            )
+        self.loss_aggregator = loss_aggregator or mtl.Sum()
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -430,6 +444,10 @@ class Solver:
                     for name in container.output_expr:
                         if isinstance(container.output_expr[name], sp.Basic):
                             container.output_expr[name] = funcs[ind]
+                            if self.world_size > 1:
+                                container.output_expr[name] = dist_wrapper(
+                                    container.output_expr[name]
+                                )
                             ind += 1
 
         if self.constraint:
@@ -444,10 +462,18 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
+        # set up nvtx flag for nsight analysis
+        self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
+        self.forward_helper.nvtx_flag = self.nvtx_flag
+
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.nvtx_flag:
+            core.nvprof_start()
+            core.nvprof_enable_record_event()
 
         for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
@@ -598,8 +624,8 @@ class Solver:
             >>> input_dict = {'x': paddle.rand([32, 1]),
             ...               'y': paddle.rand([32, 1])}
             >>> pred = solver.predict(input_dict) # doctest: +SKIP
-            >>> for k, v in pred.items():
-            ...     print(k, v.shape)
+            >>> for k, v in pred.items(): # doctest: +SKIP
+            ...     print(k, v.shape) # doctest: +SKIP
             u [32, 1]
             v [32, 1]
         """
@@ -706,7 +732,11 @@ class Solver:
 
     @misc.run_on_eval_mode
     def export(
-        self, input_spec: List[InputSpec], export_path: str, with_onnx: bool = False
+        self,
+        input_spec: List["InputSpec"],
+        export_path: str,
+        with_onnx: bool = False,
+        skip_prune_program: bool = False,
     ):
         """
         Convert model to static graph model and export to files.
@@ -716,7 +746,9 @@ class Solver:
                 of the model input.
             export_path (str): The path prefix to save model.
             with_onnx (bool, optional): Whether to export model into onnx after
-                paddle inference models are exported.
+                paddle inference models are exported. Defaults to False.
+            skip_prune_program (bool, optional): Whether prune program, pruning program
+                may cause unexpectable result, e.g. llm-inference. Defaults to False.
         """
         jit.enable_to_static(True)
 
@@ -734,9 +766,10 @@ class Solver:
         )
 
         # save static graph model to disk
-        os.makedirs(osp.dirname(export_path), exist_ok=True)
+        if len(osp.dirname(export_path)):
+            os.makedirs(osp.dirname(export_path), exist_ok=True)
         try:
-            jit.save(static_model, export_path)
+            jit.save(static_model, export_path, skip_prune_program=skip_prune_program)
         except Exception as e:
             raise e
         logger.message(
@@ -786,6 +819,7 @@ class Solver:
             )
         return ctx_manager
 
+    @functools.lru_cache()
     def no_grad_context_manager(
         self, enable: bool
     ) -> contextlib.AbstractContextManager:
