@@ -113,8 +113,6 @@ class PDE:
             >>> pde.add_equation('linear_pde', equation)
             >>> print(pde)
             PDE, linear_pde: 2*x + 2*y
-
-
         """
         self.equations.update({name: equation})
 
