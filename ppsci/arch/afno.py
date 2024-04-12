@@ -413,12 +413,12 @@ class AFNONet(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ), img_size=(180, 360))
-        >>> input_data = {"input": paddle.randn([4, 20, 180, 360])}
+        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
+        >>> input_data = {"input": paddle.randn([1, 20, 720, 1440])}
         >>> output_data = model(input_data)
         >>> for k, v in output_data.items():
         ...     print(k, v.shape)
-        output [4, 20, 176, 360]
+        output [1, 20, 720, 1440]
     """
 
     def __init__(

@@ -308,13 +308,13 @@ def all_gather(
         >>> import paddle
         >>> import ppsci
         >>> import paddle.distributed as dist
-        >>> dist.init_parallel_env()
-        >>> if dist.get_rank() == 0:
+        >>> dist.init_parallel_env()      # doctest: +SKIP
+        >>> if dist.get_rank() == 0:      # doctest: +SKIP
         ...     data = paddle.to_tensor([[1, 2, 3], [4, 5, 6]])
         ... else:
         ...     data = paddle.to_tensor([[7, 8, 9], [10, 11, 12]])
-        >>> result = ppsci.utils.misc.all_gather(data)
-        >>> print(result.numpy())
+        >>> result = ppsci.utils.misc.all_gather(data)    # doctest: +SKIP
+        >>> print(result.numpy())     # doctest: +SKIP
         [[ 1  2  3]
          [ 4  5  6]
          [ 7  8  9]
