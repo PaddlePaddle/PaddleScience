@@ -86,7 +86,6 @@ class PDE:
             u(x, y)
             >>> print(f)
             f(x, y, z)
-
         """
         expr = sympy.Function(name)(*invars)
 
