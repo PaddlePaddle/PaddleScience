@@ -582,7 +582,6 @@ class Solver:
 
             # save epoch model every save_freq epochs
             if self.save_freq > 0 and epoch_id % self.save_freq == 0:
-                print("save here")
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,

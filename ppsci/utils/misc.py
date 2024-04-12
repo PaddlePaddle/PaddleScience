@@ -489,7 +489,7 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
         arr[..., i] = a
-    return arr.reshape(-1, la).astype(paddle.get_default_dtype())
+    return arr.reshape(-1, la)
 
 
 def set_random_seed(seed: int):
