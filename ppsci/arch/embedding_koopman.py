@@ -285,8 +285,18 @@ class CylinderEmbedding(base.Arch):
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
-        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.CylinderEmbedding(("states", "visc"), ("pred_states", "recover_states"))
+        >>> states_shape = [32, 10, 3, 64, 128]
+        >>> visc_shape = [32, 1]
+        >>> input_dict = {"states" : paddle.rand(states_shape),
+        ...               "visc" : paddle.rand(visc_shape)}
+        >>> out_dict = model(input_dict)
+        >>> print(out_dict["pred_states"].shape)
+        [32, 9, 3, 64, 128]
+        >>> print(out_dict["recover_states"].shape)
+        [32, 10, 3, 64, 128]
     """
 
     def __init__(

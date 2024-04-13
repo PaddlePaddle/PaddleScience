@@ -97,7 +97,7 @@ class PINNPredictor(base.Predictor):
 
         # inference by batch
         for batch_id in range(1, batch_num + 1):
-            if batch_id % self.log_freq == 0 or batch_id == batch_num:
+            if batch_id == 1 or batch_id % self.log_freq == 0 or batch_id == batch_num:
                 logger.info(f"Predicting batch {batch_id}/{batch_num}")
 
             # prepare batch input dict

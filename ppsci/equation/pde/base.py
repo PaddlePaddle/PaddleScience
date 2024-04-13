@@ -43,13 +43,23 @@ class PDE:
     def create_symbols(
         symbol_str: str,
     ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
-        """Create symbols
+        """create symbolic variables.
 
         Args:
             symbol_str (str): String contains symbols, such as "x", "x y z".
 
         Returns:
             Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]: Created symbol(s).
+
+        Examples:
+            >>> import ppsci
+            >>> pde = ppsci.equation.PDE()
+            >>> symbol_x = pde.create_symbols('x')
+            >>> symbols_xyz = pde.create_symbols('x y z')
+            >>> print(symbol_x)
+            x
+            >>> print(symbols_xyz)
+            (x, y, z)
         """
         return sympy.symbols(symbol_str)
 
@@ -64,6 +74,17 @@ class PDE:
 
         Returns:
             sympy.Function: Named sympy function.
+
+        Examples:
+            >>> import ppsci
+            >>> pde = ppsci.equation.PDE()
+            >>> x, y, z = pde.create_symbols('x y z')
+            >>> u = pde.create_function('u', (x, y))
+            >>> f = pde.create_function('f', (x, y, z))
+            >>> print(u)
+            u(x, y)
+            >>> print(f)
+            f(x, y, z)
         """
         expr = sympy.Function(name)(*invars)
 
@@ -79,6 +100,17 @@ class PDE:
         Args:
             name (str): Name of equation
             equation (Callable): Computation function for equation.
+
+        Examples:
+            >>> import ppsci
+            >>> import sympy
+            >>> pde = ppsci.equation.PDE()
+            >>> x, y = pde.create_symbols('x y')
+            >>> u = x**2 + y**2
+            >>> equation = sympy.diff(u, x) + sympy.diff(u, y)
+            >>> pde.add_equation('linear_pde', equation)
+            >>> print(pde)
+            PDE, linear_pde: 2*x + 2*y
         """
         self.equations.update({name: equation})
 
@@ -129,6 +161,7 @@ class PDE:
 
         Returns:
             Tuple[List[str], List[str]]: List of missing_keys and unexpected_keys.
+                Expected to be two empty tuples mostly.
 
         Examples:
             >>> import paddle
@@ -138,6 +171,7 @@ class PDE:
             >>> state = pde.state_dict()
             >>> state['0'] = paddle.to_tensor(-3.1)
             >>> pde.set_state_dict(state)
+            ([], [])
             >>> print(state)
             OrderedDict([('0', Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=True,
                    -3.10000000)), ('1', Parameter containing:

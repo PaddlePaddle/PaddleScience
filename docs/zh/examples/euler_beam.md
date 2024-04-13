@@ -26,7 +26,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00000<br>L2Rel.u(L2Rel_Metric): 0.00080 |
+| [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00000<br>L2Rel.u(L2Rel_Metric): 0.00058 |
 
 ## 1. 问题定义
 
@@ -70,17 +70,17 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="36"
+``` py linenums="24"
 --8<--
-examples/euler_beam/euler_beam.py:36:37
+examples/euler_beam/euler_beam.py:24:25
 --8<--
 ```
 
 其中，用于初始化模型的参数通过配置文件进行配置：
 
-``` yaml linenums="34"
+``` yaml linenums="38"
 --8<--
-examples/euler_beam/conf/euler_beam.yaml:34:38
+examples/euler_beam/conf/euler_beam.yaml:38:43
 --8<--
 ```
 
@@ -90,9 +90,9 @@ examples/euler_beam/conf/euler_beam.yaml:34:38
 
 Euler Beam 的方程构建可以直接使用 PaddleScience 内置的 `Biharmonic`，指定该类的参数 `dim` 为 1，`q` 为 -1，`D` 为1。
 
-``` py linenums="42"
+``` py linenums="30"
 --8<--
-examples/euler_beam/euler_beam.py:42:43
+examples/euler_beam/euler_beam.py:30:31
 --8<--
 ```
 
@@ -101,9 +101,9 @@ examples/euler_beam/euler_beam.py:42:43
 本文中 Euler Beam 问题作用在以 (0.0, 1.0) 的一维区域上，
 因此可以直接使用 PaddleScience 内置的空间几何 `Interval` 作为计算域。
 
-``` py linenums="39"
+``` py linenums="27"
 --8<--
-examples/euler_beam/euler_beam.py:39:40
+examples/euler_beam/euler_beam.py:27:28
 --8<--
 ```
 
@@ -113,9 +113,9 @@ examples/euler_beam/euler_beam.py:39:40
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` yaml linenums="49"
+``` yaml linenums="45"
 --8<--
-examples/euler_beam/conf/euler_beam.yaml:49:50
+examples/euler_beam/conf/euler_beam.yaml:45:55
 --8<--
 ```
 
@@ -123,9 +123,9 @@ examples/euler_beam/conf/euler_beam.yaml:49:50
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="51"
+``` py linenums="33"
 --8<--
-examples/euler_beam/euler_beam.py:51:59
+examples/euler_beam/euler_beam.py:33:47
 --8<--
 ```
 
@@ -133,9 +133,9 @@ examples/euler_beam/euler_beam.py:51:59
 
 同理，我们还需要构建边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-``` py linenums="60"
+``` py linenums="48"
 --8<--
-examples/euler_beam/euler_beam.py:60:73
+examples/euler_beam/euler_beam.py:48:61
 --8<--
 ```
 
@@ -143,9 +143,9 @@ examples/euler_beam/euler_beam.py:60:73
 
 接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用一万轮训练轮数，评估间隔为一千轮。
 
-``` yaml linenums="41"
+``` yaml linenums="45"
 --8<--
-examples/euler_beam/conf/euler_beam.yaml:41:52
+examples/euler_beam/conf/euler_beam.yaml:45:51
 --8<--
 ```
 
@@ -153,9 +153,9 @@ examples/euler_beam/conf/euler_beam.yaml:41:52
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="80"
+``` py linenums="68"
 --8<--
-examples/euler_beam/euler_beam.py:80:81
+examples/euler_beam/euler_beam.py:68:69
 --8<--
 ```
 
@@ -163,9 +163,9 @@ examples/euler_beam/euler_beam.py:80:81
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="89"
+``` py linenums="77"
 --8<--
-examples/euler_beam/euler_beam.py:89:102
+examples/euler_beam/euler_beam.py:77:90
 --8<--
 ```
 
@@ -175,9 +175,9 @@ examples/euler_beam/euler_beam.py:89:102
 
 本文中的输出数据是一个曲线图，因此我们只需要将评估的输出数据保存成 **png** 文件即可。代码如下：
 
-``` py linenums="104"
+``` py linenums="92"
 --8<--
-examples/euler_beam/euler_beam.py:104:114
+examples/euler_beam/euler_beam.py:92:105
 --8<--
 ```
 
@@ -185,9 +185,9 @@ examples/euler_beam/euler_beam.py:104:114
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="117"
+``` py linenums="107"
 --8<--
-examples/euler_beam/euler_beam.py:117:141
+examples/euler_beam/euler_beam.py:107:132
 --8<--
 ```
 

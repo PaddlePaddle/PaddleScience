@@ -102,14 +102,78 @@ class PointCloud(geometry.Geometry):
             .any(axis=1)
         )
 
-    def translate(self, translation):
+    def translate(self, translation: np.ndarray) -> "PointCloud":
+        """
+        Translate the geometry by the given offset.
+
+        Args:
+            translation (np.ndarray): Translation offset.The shape of translation must be the same as the shape of the interior points.
+
+        Returns:
+            PointCloud: Translated point cloud.
+
+        Examples:
+            >>> import ppsci
+            >>> import numpy as np
+            >>> interior_points = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
+            >>> translation = np.array([1.0])
+            >>> print(geom.translate(translation).interior)
+            [[1. ]
+             [1.5]
+             [2. ]
+             [2.5]
+             [3. ]]
+            >>> interior_points_2d = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1)),
+            ...                       "y": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom_2d = ppsci.geometry.PointCloud(interior_points_2d, ("x", "y"))
+            >>> translation_2d = np.array([1.0, 3.0])
+            >>> print(geom_2d.translate(translation_2d).interior)
+            [[1.  3. ]
+             [1.5 3.5]
+             [2.  4. ]
+             [2.5 4.5]
+             [3.  5. ]]
+        """
         for i, offset in enumerate(translation):
             self.interior[:, i] += offset
             if self.boundary:
                 self.boundary += offset
         return self
 
-    def scale(self, scale):
+    def scale(self, scale: np.ndarray) -> "PointCloud":
+        """
+        Scale the geometry by the given factor.
+
+        Args:
+            scale (np.ndarray): Scale factor.The shape of scale must be the same as the shape of the interior points.
+
+        Returns:
+            PointCloud: Scaled point cloud.
+
+        Examples:
+            >>> import ppsci
+            >>> import numpy as np
+            >>> interior_points = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
+            >>> scale = np.array([2.0])
+            >>> print(geom.scale(scale).interior)
+            [[0.]
+             [1.]
+             [2.]
+             [3.]
+             [4.]]
+            >>> interior_points_2d = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1)),
+            ...                       "y": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom_2d = ppsci.geometry.PointCloud(interior_points_2d, ("x", "y"))
+            >>> scale_2d = np.array([2.0, 0.5])
+            >>> print(geom_2d.scale(scale_2d).interior)
+            [[0.   0.  ]
+             [1.   0.25]
+             [2.   0.5 ]
+             [3.   0.75]
+             [4.   1.  ]]
+        """
         for i, _scale in enumerate(scale):
             self.interior[:, i] *= _scale
             if self.boundary:
@@ -124,7 +188,26 @@ class PointCloud(geometry.Geometry):
             "PointCloud do not have 'uniform_boundary_points' method"
         )
 
-    def random_boundary_points(self, n, random="pseudo"):
+    def random_boundary_points(self, n: int, random: str = "pseudo") -> np.ndarray:
+        """Randomly sample points on the boundary.
+
+        Args:
+            n (int): Number of sample points.
+            random (str): Random method. Defaults to "pseudo".
+
+        Returns:
+            np.ndarray: Randomly sampled points on the boundary.The shape of the returned array is (n, ndim).
+
+        Examples:
+            >>> import ppsci
+            >>> import numpy as np
+            >>> np.random.seed(0)
+            >>> interior_points = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> boundary_points = {"x": np.array([0.0, 2.0], dtype="float32").reshape((-1, 1))}
+            >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",), boundary_points)
+            >>> print(geom.random_boundary_points(1))
+            [[2.]]
+        """
         assert self.boundary is not None, (
             "boundary points can't be empty when call "
             "'random_boundary_points' method"
@@ -137,7 +220,26 @@ class PointCloud(geometry.Geometry):
             np.random.choice(len(self.boundary), size=n, replace=False)
         ]
 
-    def random_points(self, n, random="pseudo"):
+    def random_points(self, n: int, random: str = "pseudo") -> np.ndarray:
+        """Randomly sample points in the geometry.
+
+        Args:
+            n (int): Number of sample points.
+            random (str): Random method. Defaults to "pseudo".
+
+        Returns:
+            np.ndarray: Randomly sampled points in the geometry.The shape of the returned array is (n, ndim).
+
+        Examples:
+            >>> import ppsci
+            >>> import numpy as np
+            >>> np.random.seed(0)
+            >>> interior_points = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
+            >>> print(geom.random_points(2))
+            [[1.]
+             [0.]]
+        """
         assert n <= len(self.interior), (
             f"number of sample points({n}) "
             f"can't be more than that in points({len(self.interior)})"
@@ -146,8 +248,25 @@ class PointCloud(geometry.Geometry):
             np.random.choice(len(self.interior), size=n, replace=False)
         ]
 
-    def uniform_points(self, n: int, boundary=True):
-        """Compute the equi-spaced points in the geometry."""
+    def uniform_points(self, n: int, boundary: bool = True) -> np.ndarray:
+        """Compute the equi-spaced points in the geometry.
+
+        Args:
+            n (int): Number of sample points.
+            boundary (bool): Whether to include boundary points. Defaults to True.
+
+        Returns:
+            np.ndarray: Equi-spaced points in the geometry.The shape of the returned array is (n, ndim).
+
+        Examples:
+            >>> import ppsci
+            >>> import numpy as np
+            >>> interior_points = {"x": np.linspace(0, 2, 5, dtype="float32").reshape((-1, 1))}
+            >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
+            >>> print(geom.uniform_points(2))
+            [[0. ]
+             [0.5]]
+        """
         return self.interior[:n]
 
     def union(self, other):
