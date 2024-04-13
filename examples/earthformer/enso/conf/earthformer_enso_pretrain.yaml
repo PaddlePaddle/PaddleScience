@@ -114,7 +114,7 @@ TRAIN:
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     learning_rate: 0.0001
-    by_epoch: True
+    by_epoch: true
   min_lr_ratio: 1.0e-3
   wd: 1.0e-5
   batch_size: 16
@@ -125,7 +125,7 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
-  compute_metric_by_batch: False
+  compute_metric_by_batch: false
   eval_with_no_grad: true
   batch_size: 1
 

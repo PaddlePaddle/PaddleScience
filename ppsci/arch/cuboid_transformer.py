@@ -922,7 +922,8 @@ class CuboidTransformer(base.Arch):
         """
 
         x = self.concat_to_tensor(x, self.input_keys)
-        if x.ndim == 6:
+        flag_ndim = x.ndim
+        if flag_ndim == 6:
             x = x.reshape([-1, *x.shape[2:]])
         B, _, _, _, _ = x.shape
 
@@ -955,5 +956,6 @@ class CuboidTransformer(base.Arch):
         dec_out = self.final_decoder(dec_out)
 
         out = self.dec_final_proj(dec_out)
-
+        if flag_ndim == 6:
+            out = out.reshape([-1, *out.shape])
         return {key: out for key in self.output_keys}

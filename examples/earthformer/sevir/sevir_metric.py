@@ -168,7 +168,7 @@ class SEVIRSkillScore:
             raise NotImplementedError(f"{self.preprocess_type} not supported")
         return pred, target
 
-    def compute(self, pred: paddle.Tensor, target: paddle.Tensor):
+    def update(self, pred: paddle.Tensor, target: paddle.Tensor):
         pred, target = self.preprocess(pred, target)
         for i, threshold in enumerate(self.threshold_list):
             hits, misses, fas = self.calc_seq_hits_misses_fas(pred, target, threshold)
@@ -176,6 +176,7 @@ class SEVIRSkillScore:
             self.misses[i] += misses
             self.fas[i] += fas
 
+    def compute(self, pred: paddle.Tensor, target: paddle.Tensor):
         metrics_dict = {
             "pod": self.pod,
             "csi": self.csi,
@@ -256,41 +257,24 @@ class eval_rmse_func:
             threshold_list=self.threshold_list,
             metrics_list=self.metrics_list,
         )
+        for i in range(vil_target.shape[0]):
+            sevir_score.update(pred[i, ...], vil_target[i, ...])
+        sevir_valid_score = sevir_score.compute(pred, vil_target)
 
-        B = pred.shape[0]
-        csi_m = paddle.zeros(shape=[B])
-        csi_219 = paddle.zeros(shape=[B])
-        csi_181 = paddle.zeros(shape=[B])
-        csi_160 = paddle.zeros(shape=[B])
-        csi_133 = paddle.zeros(shape=[B])
-        csi_74 = paddle.zeros(shape=[B])
-        csi_16 = paddle.zeros(shape=[B])
-        csi_loss = paddle.zeros(shape=[B])
-        for i in range(B):
-            sevir_valid_score = sevir_score.compute(
-                pred[i, ...].unsqueeze(0), vil_target[i, ...].unsqueeze(0)
+        metrics = {}
+        metrics["csi_avg_loss"] = 0
+        for metric in self.metrics_list:
+            for th in self.threshold_list:
+                metrics[f"{metric}_{th}"] = paddle.to_tensor(
+                    sevir_valid_score[th][metric]
+                )
+            metrics[f"{metric}_avg"] = paddle.to_tensor(
+                sevir_valid_score["avg"][metric]
             )
-            csi_loss[i] = -paddle.to_tensor(sevir_valid_score["avg"]["csi"])
-            csi_m[i] = paddle.to_tensor(sevir_valid_score["avg"]["csi"])
-            csi_219[i] = paddle.to_tensor(sevir_valid_score[219]["csi"])
-            csi_181[i] = paddle.to_tensor(sevir_valid_score[181]["csi"])
-            csi_160[i] = paddle.to_tensor(sevir_valid_score[160]["csi"])
-            csi_133[i] = paddle.to_tensor(sevir_valid_score[133]["csi"])
-            csi_74[i] = paddle.to_tensor(sevir_valid_score[74]["csi"])
-            csi_16[i] = paddle.to_tensor(sevir_valid_score[16]["csi"])
-
-        return {
-            "valid_loss_epoch": csi_loss,
-            "mse": mse,
-            "mae": mae,
-            "csi_m": csi_m,
-            "csi_219": csi_219,
-            "csi_181": csi_181,
-            "csi_160": csi_160,
-            "csi_133": csi_133,
-            "csi_74": csi_74,
-            "csi_16": csi_16,
-        }
+        metrics["mse"] = mse
+        metrics["mae"] = mae
+        metrics["csi_avg_loss"] = -paddle.to_tensor(metrics["csi_avg"])
+        return metrics
 
 
 def train_mse_func(

@@ -51,8 +51,8 @@ DATASET:
   shuffle_seed: 1
   rescale_method: "01"
   downsample_dict: None
-  verbose: False
-  preprocess: True
+  verbose: false
+  preprocess: true
 
 # model settings
 MODEL:
@@ -126,7 +126,7 @@ TRAIN:
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     learning_rate: 0.001
-    by_epoch: True
+    by_epoch: true
   min_lr_ratio: 1.0e-3
   wd: 0.0
   batch_size: 1
@@ -139,7 +139,7 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
-  compute_metric_by_batch: True
+  compute_metric_by_batch: false
   eval_with_no_grad: true
   batch_size: 1
   end_date: [2019, 9, 1]
@@ -151,7 +151,7 @@ EVAL:
 
 TEST:
   pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
-  compute_metric_by_batch: True
+  compute_metric_by_batch: true
   eval_with_no_grad: true
   batch_size: 1
   end_date: null

@@ -2,11 +2,10 @@ import h5py
 import hydra
 import numpy as np
 import paddle
-import sevir_metric
-import sevir_vis_seq
 from omegaconf import DictConfig
 from paddle import nn
-
+import sevir_metric
+import sevir_vis_seq
 import ppsci
 
 
@@ -107,8 +106,7 @@ def train(cfg: DictConfig):
                     metrics_mode=cfg.EVAL.metrics_mode,
                     metrics_list=cfg.EVAL.metrics_list,
                     threshold_list=cfg.EVAL.threshold_list,
-                ),
-                keep_batch=True,
+                )
             ),
         },
         name="Sup_Validator",
@@ -203,8 +201,7 @@ def evaluate(cfg: DictConfig):
                     metrics_mode=cfg.EVAL.metrics_mode,
                     metrics_list=cfg.EVAL.metrics_list,
                     threshold_list=cfg.EVAL.threshold_list,
-                ),
-                keep_batch=True,
+                )
             ),
         },
         name="Sup_Validator",
