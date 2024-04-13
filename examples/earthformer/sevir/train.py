@@ -2,10 +2,11 @@ import h5py
 import hydra
 import numpy as np
 import paddle
-from omegaconf import DictConfig
-from paddle import nn
 import sevir_metric
 import sevir_vis_seq
+from omegaconf import DictConfig
+from paddle import nn
+
 import ppsci
 
 
