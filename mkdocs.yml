@@ -108,6 +108,7 @@ nav:
         - ppsci.utils.initializer: zh/api/utils/initializer.md
         - ppsci.utils.logger: zh/api/utils/logger.md
         - ppsci.utils.misc: zh/api/utils/misc.md
+        - ppsci.utils.ema: zh/api/utils/ema.md
         - ppsci.utils.reader: zh/api/utils/reader.md
         - ppsci.utils.writer: zh/api/utils/writer.md
         - ppsci.utils.save_load: zh/api/utils/save_load.md

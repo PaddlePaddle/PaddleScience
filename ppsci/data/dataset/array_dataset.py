@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Callable
 from typing import Dict
 from typing import Optional
 
@@ -137,6 +138,86 @@ class IterableNamedArrayDataset(io.IterableDataset):
             yield input_, label_, weight_
         else:
             yield self.input, self.label, self.weight
+
+    def __len__(self):
+        return 1
+
+
+class ContinuousNamedArrayDataset(io.IterableDataset):
+    """ContinuousNamedArrayDataset for iterable sampling.
+
+    Args:
+        input (Callable): Function generate input dict.
+        label (Callable): Function generate label dict.
+        weight (Optional[Callable]): Function generate weight dict. Defaults to None.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> input = lambda : {"x": np.random.randn(100, 1)}
+        >>> label = lambda inp: {"u": np.random.randn(100, 1)}
+        >>> weight = lambda inp, label: {"u": 1 - (label["u"] ** 2)}
+        >>> dataset = ppsci.data.dataset.ContinuousNamedArrayDataset(input, label, weight)
+        >>> input_batch, label_batch, weight_batch = next(iter(dataset))
+        >>> print(input_batch["x"].shape)
+        [100, 1]
+        >>> print(label_batch["u"].shape)
+        [100, 1]
+        >>> print(weight_batch["u"].shape)
+        [100, 1]
+    """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
+    def __init__(
+        self,
+        input: Callable,
+        label: Callable,
+        weight: Optional[Callable] = None,
+        transforms: Optional[vision.Compose] = None,
+    ):
+        super().__init__()
+        self.input_fn = input
+        self.input_keys = tuple(self.input_fn().keys())
+
+        self.label_fn = label
+        input_ = self.input_fn()
+        self.label_keys = tuple(self.label_fn(input_).keys())
+
+        self.weight_fn = weight
+        self.transforms = transforms
+
+    @property
+    def num_samples(self):
+        """Number of samples within current dataset."""
+        raise NotImplementedError(
+            "ContinuousNamedArrayDataset has no fixed number of samples."
+        )
+
+    def __iter__(self):
+        def to_tensor_dict(_dict):
+            if _dict is None:
+                return None
+            return {k: paddle.to_tensor(v) for k, v in _dict.items()}
+
+        while True:
+            input_batch = self.input_fn()
+            label_batch = self.label_fn(input_batch)
+            if callable(self.weight_fn):
+                weight_batch = self.weight_fn(input_batch, label_batch)
+            else:
+                weight_batch = None
+
+            if callable(self.transforms):
+                input_batch, label_batch, weight_batch = self.transforms(
+                    input_batch, label_batch, weight_batch
+                )
+            yield to_tensor_dict(input_batch), to_tensor_dict(
+                label_batch
+            ), to_tensor_dict(weight_batch)
 
     def __len__(self):
         return 1

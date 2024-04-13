@@ -9,6 +9,7 @@
         - ChipHeatDataset
         - CSVDataset
         - IterableCSVDataset
+        - ContinuousNamedArrayDataset
         - ERA5Dataset
         - ERA5SampledDataset
         - IterableMatDataset

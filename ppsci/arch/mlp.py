@@ -14,10 +14,13 @@
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import numpy as np
+import paddle
 import paddle.nn as nn
 
 from ppsci.arch import activation as act_mod
@@ -50,6 +53,28 @@ class WeightNormLinear(nn.Layer):
         return nn.functional.linear(input, weight, self.bias)
 
 
+class PeriodEmbedding(nn.Layer):
+    def __init__(self, periods: Dict[str, Tuple[float, bool]]):
+        super().__init__()
+        self.freqs_dict = {
+            k: self.create_parameter(
+                [],
+                attr=paddle.ParamAttr(trainable=trainable),
+                default_initializer=nn.initializer.Constant(2 * np.pi / p),
+            )  # mu = 2*pi / period for sin/cos function
+            for k, (p, trainable) in periods.items()
+        }
+        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
+
+    def forward(self, x: Dict[str, paddle.Tensor]):
+        y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
+
+        for k, w in self.freqs_dict.items():
+            y[k] = paddle.concat([paddle.cos(w * x[k]), paddle.sin(w * x[k])], axis=-1)
+
+        return y
+
+
 class MLP(base.Arch):
     """Multi layer perceptron network.
 
@@ -64,6 +89,9 @@ class MLP(base.Arch):
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
+        periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
+            input in given channel will be period embeded if specified, each tuple of
+            periods list is [period, trainable]. Defaults to None.
 
     Examples:
         >>> import paddle
@@ -94,12 +122,17 @@ class MLP(base.Arch):
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
         output_dim: Optional[int] = None,
+        periods: Dict[int, Tuple[float, bool]] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
         self.acts = []
+        self.periods = periods
+        if periods:
+            self.period_emb = PeriodEmbedding(periods)
+
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -118,6 +151,11 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
+        if input_dim is None and periods:
+            # period embeded channel(s) will be doubled automatically
+            # if input_dim is not specified
+            cur_size += len(periods)
+
         for i, _size in enumerate(hidden_size):
             self.linears.append(
                 WeightNormLinear(cur_size, _size)
@@ -169,6 +207,9 @@ class MLP(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
+
+        if self.periods:
+            x = self.period_emb(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.forward_tensor(y)
