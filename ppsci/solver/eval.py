@@ -107,7 +107,7 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             for key, output in output_dict.items():
                 all_output[key].append(
@@ -164,7 +164,7 @@ def _eval_by_dataset(
                 k: float(v) for k, v in metric_dict.items()
             }
             for var_name, metric_value in metric_dict.items():
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
@@ -233,7 +233,7 @@ def _eval_by_batch(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
@@ -273,7 +273,7 @@ def _eval_by_batch(
                 metric_value = paddle.concat(metric_value)[:num_samples]
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
