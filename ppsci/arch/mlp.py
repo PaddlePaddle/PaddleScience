@@ -299,6 +299,9 @@ class MLP(base.Arch):
         if self.periods:
             x = self.period_emb(x)
 
+        if self.periods:
+            x = self.period_emb(x)
+
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
 
         if self.fourier:
