@@ -125,7 +125,7 @@ class CausalMSELoss(base.Loss):
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
         Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               4.47400045)
+               0.96841478)
     """
 
     def __init__(
