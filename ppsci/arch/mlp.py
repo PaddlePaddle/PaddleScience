@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -76,13 +77,16 @@ class RandomWeightFactorization(nn.Layer):
 
     def _init_weights(self, mean, std):
         with paddle.no_grad():
-            # vanilla xavier normal
-            initializer.xavier_normal_(self.weight_v)
+            # glorot normal
+            fin, fout = self.weight_v.shape
+            var = 2.0 / (fin + fout)
+            stddev = math.sqrt(var) * 0.87962566103423978
+            initializer.trunc_normal_(self.weight_v)
+            paddle.assign(self.weight_v * stddev, self.weight_v)
 
-            nn.initializer.Normal(std=std)(self.weight_g)
-            self.weight_g.set_value(self.weight_g + mean)
-            self.weight_g.set_value(paddle.exp(self.weight_g))
-            self.weight_v.set_value(self.weight_v / self.weight_g)
+            nn.initializer.Normal(mean, std)(self.weight_g)
+            paddle.assign(paddle.exp(self.weight_g), self.weight_g)
+            paddle.assign(self.weight_v / self.weight_g, self.weight_v)
             if self.bias is not None:
                 initializer.constant_(self.bias, 0.0)
 
@@ -101,7 +105,7 @@ class PeriodEmbedding(nn.Layer):
             k: self.create_parameter(
                 [],
                 attr=paddle.ParamAttr(trainable=trainable),
-                default_initializer=nn.initializer.Constant(2 * np.pi / p),
+                default_initializer=nn.initializer.Constant(2 * np.pi / eval(p)),
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }

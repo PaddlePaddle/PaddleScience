@@ -58,9 +58,6 @@ TRAIN:
   batch_size: 4096
   pretrained_model_path: null
   checkpoint_path: null
-  ema:
-    decay: 0.9
-    avg_freq: 1
 
 # evaluation settings
 EVAL:
