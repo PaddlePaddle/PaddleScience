@@ -1,5 +1,5 @@
 ===========================train_params===========================
-model_item:cylinder2d_unsteady_Re100
+model_name:cylinder2d_unsteady_Re100
 bs_item:1
 run_mode:DP
 device_num:N1C1
