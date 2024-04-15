@@ -19,7 +19,6 @@ def figsize(scale: float, nplots: float = 1):
     return fig_size
 
 
-# I make my own newfig and savefig functions
 def newfig(width: float, nplots: float = 1):
     fig = plt.figure(figsize=figsize(width, nplots))
     ax = fig.add_subplot(111)
