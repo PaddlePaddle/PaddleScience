@@ -47,7 +47,7 @@ class PeriodicConstraint(base.Constraint):
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         periodic_key (str): name of dimension which periodic constraint applied to.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
@@ -66,7 +66,7 @@ class PeriodicConstraint(base.Constraint):
         periodic_key: str,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Callable]] = None,
@@ -137,8 +137,9 @@ class PeriodicConstraint(base.Constraint):
             )
 
         # # prepare weight, keep weight the same shape as input_periodic
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)

@@ -129,3 +129,6 @@ FETCH_HEAD
 # vtk
 *.vtk
 *.vtu
+
+# auto generated version file by setuptools_scm
+ppsci/_version.py

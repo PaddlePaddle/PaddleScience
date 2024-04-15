@@ -45,7 +45,7 @@ class InitialConstraint(base.Constraint):
         geom (geometry.TimeXGeometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
@@ -74,7 +74,7 @@ class InitialConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IC",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(
@@ -84,7 +84,7 @@ class InitialConstraint(base.Constraint):
         geom: geometry.TimeXGeometry,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Callable]] = None,
@@ -138,8 +138,9 @@ class InitialConstraint(base.Constraint):
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # prepare weight
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)

@@ -34,11 +34,13 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
+      - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
       - 数学(AI for Math):
         - DeepHPMs: zh/examples/deephpms.md
         - DeepONet: zh/examples/deeponet.md
+        - Euler_Beam: zh/examples/euler_beam.md
         - Laplace2D: zh/examples/laplace2d.md
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - PIRBN: zh/examples/pirbn.md
@@ -54,13 +56,15 @@ nav:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
-          - Heat_PINN: zh/examples/heat_pinn.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+          - NSFNets: zh/examples/nsfnet.md
+          - PhyCRNet: zh/examples/phycrnet.md
           - ShockWave: zh/examples/shock_wave.md
-          - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
+          - NSFNet4: zh/examples/nsfnet4.md
+          - ViV: zh/examples/viv.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -68,11 +72,17 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+        - 传热:
+          - Heat_Exchanger: zh/examples/heat_exchanger.md
+          - Heat_PINN: zh/examples/heat_pinn.md
+          - PhyGeoNet: zh/examples/phygeonet.md
+          - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
+        - DGMR: zh/examples/dgmr.md
   - API文档:
     - " ":
       - ppsci.arch: zh/api/arch.md
@@ -84,7 +94,9 @@ nav:
         - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
-      - ppsci.loss: zh/api/loss.md
+      - ppsci.loss:
+        - ppsci.loss.loss: zh/api/loss/loss.md
+        - ppsci.loss.mtl: zh/api/loss/mtl.md
       - ppsci.metric: zh/api/metric.md
       - ppsci.optimizer:
         - ppsci.optimizer.optimizer: zh/api/optimizer.md
@@ -96,7 +108,9 @@ nav:
         - ppsci.utils.initializer: zh/api/utils/initializer.md
         - ppsci.utils.logger: zh/api/utils/logger.md
         - ppsci.utils.misc: zh/api/utils/misc.md
+        - ppsci.utils.ema: zh/api/utils/ema.md
         - ppsci.utils.reader: zh/api/utils/reader.md
+        - ppsci.utils.writer: zh/api/utils/writer.md
         - ppsci.utils.save_load: zh/api/utils/save_load.md
         - ppsci.utils.symbolic: zh/api/utils/symbolic.md
       - ppsci.validate: zh/api/validate.md
@@ -139,6 +153,7 @@ theme:
   icon:
     edit: material/pencil
     view: material/eye
+    annotation: fontawesome/solid/circle-question
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -197,6 +212,7 @@ markdown_extensions:
 extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
+  - javascripts/contributors.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 

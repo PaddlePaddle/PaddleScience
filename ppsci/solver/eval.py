@@ -26,8 +26,6 @@ from paddle import io
 from ppsci.solver import printer
 from ppsci.utils import misc
 
-# from ppsci.utils import profiler
-
 if TYPE_CHECKING:
     from pgl.utils import data as pgl_data
 
@@ -85,15 +83,16 @@ def _eval_by_dataset(
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
-            # profile code
-            # profiler.add_profiler_step(solver.cfg["profiler_options"])
+            reader_cost = time.perf_counter() - reader_tic
+
+            # NOTE: eliminate first 5 step for warmup
             if iter_id == 5:
-                # 5 step for warmup
                 for key in solver.eval_time_info:
                     solver.eval_time_info[key].reset()
-            reader_cost = time.perf_counter() - reader_tic
+
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # forward
             with solver.autocast_context_manager(
@@ -108,7 +107,7 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             for key, output in output_dict.items():
                 all_output[key].append(
@@ -129,7 +128,11 @@ def _eval_by_dataset(
             solver.eval_time_info["batch_cost"].update(batch_cost)
             batch_size = next(iter(input_dict.values())).shape[0]
             printer.update_eval_loss(solver, loss_dict, batch_size)
-            if iter_id == 1 or iter_id % log_freq == 0:
+            if (
+                iter_id == 1
+                or iter_id % log_freq == 0
+                or iter_id == len(_validator.data_loader)
+            ):
                 printer.log_eval_info(
                     solver,
                     batch_size,
@@ -161,7 +164,7 @@ def _eval_by_dataset(
                 k: float(v) for k, v in metric_dict.items()
             }
             for var_name, metric_value in metric_dict.items():
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
@@ -205,16 +208,17 @@ def _eval_by_batch(
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
-            # profile code
-            # profiler.add_profiler_step(solver.cfg["profiler_options"])
+            reader_cost = time.perf_counter() - reader_tic
+
+            # NOTE: eliminate first 5 step for warmup
             if iter_id == 5:
-                # 5 step for warmup
                 for key in solver.eval_time_info:
                     solver.eval_time_info[key].reset()
-            reader_cost = time.perf_counter() - reader_tic
+
             batch_size = next(iter(input_dict.values())).shape[0]
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # forward
             with solver.autocast_context_manager(
@@ -229,7 +233,7 @@ def _eval_by_batch(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
@@ -247,7 +251,11 @@ def _eval_by_batch(
             solver.eval_time_info["reader_cost"].update(reader_cost)
             solver.eval_time_info["batch_cost"].update(batch_cost)
             printer.update_eval_loss(solver, loss_dict, batch_size)
-            if iter_id == 1 or iter_id % log_freq == 0:
+            if (
+                iter_id == 1
+                or iter_id % log_freq == 0
+                or iter_id == len(_validator.data_loader)
+            ):
                 printer.log_eval_info(
                     solver,
                     batch_size,
@@ -265,7 +273,7 @@ def _eval_by_batch(
                 metric_value = paddle.concat(metric_value)[:num_samples]
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"

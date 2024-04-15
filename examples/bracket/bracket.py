@@ -4,22 +4,14 @@ STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/dat
 pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
 """
 
-from os import path as osp
-
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -360,11 +352,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)

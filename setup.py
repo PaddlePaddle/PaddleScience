@@ -5,9 +5,9 @@ Setup configuration
 import setuptools
 
 
-def readme():
-    """README"""
-    with open("README.md") as f:
+def get_readme() -> str:
+    """get README"""
+    with open("README.md", encoding="utf-8") as f:
         return f.read()
 
 
@@ -22,14 +22,13 @@ def get_requirements() -> list:
 if __name__ == "__main__":
     setuptools.setup(
         name="paddlesci",
-        version="1.0.0",
         author="PaddlePaddle",
         url="https://github.com/PaddlePaddle/PaddleScience",
         description=(
             "PaddleScience is SDK and library for developing AI-driven scientific computing"
             " applications based on PaddlePaddle."
         ),
-        long_description=readme(),
+        long_description=get_readme(),
         long_description_content_type="text/markdown",
         packages=setuptools.find_packages(
             exclude=(

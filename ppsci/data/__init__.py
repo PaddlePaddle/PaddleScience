@@ -69,27 +69,35 @@ def build_dataloader(_dataset, cfg):
     # build sampler
     sampler_cfg = cfg.pop("sampler", None)
     if sampler_cfg is not None:
-        sampler_cls = sampler_cfg.pop("name")
+        batch_sampler_cls = sampler_cfg.pop("name")
 
-        if sampler_cls == "BatchSampler":
+        if batch_sampler_cls == "BatchSampler":
             if world_size > 1:
-                sampler_cls = "DistributedBatchSampler"
+                batch_sampler_cls = "DistributedBatchSampler"
                 logger.warning(
                     f"Automatically use 'DistributedBatchSampler' instead of "
                     f"'BatchSampler' when world_size({world_size}) > 1."
                 )
 
         sampler_cfg["batch_size"] = cfg["batch_size"]
-        sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+        batch_sampler = getattr(io, batch_sampler_cls)(_dataset, **sampler_cfg)
     else:
-        if cfg["batch_size"] != 1:
-            raise ValueError(
-                f"`batch_size` should be 1 when sampler config is None, but got {cfg['batch_size']}."
+        batch_sampler_cls = "BatchSampler"
+        if world_size > 1:
+            batch_sampler_cls = "DistributedBatchSampler"
+            logger.warning(
+                f"Automatically use 'DistributedBatchSampler' instead of "
+                f"'BatchSampler' when world_size({world_size}) > 1."
             )
-        logger.warning(
-            "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
+        batch_sampler = getattr(io, batch_sampler_cls)(
+            _dataset,
+            batch_size=cfg["batch_size"],
+            shuffle=False,
+            drop_last=False,
         )
-        sampler = None
+        logger.message(
+            "'shuffle' and 'drop_last' are both set to False in default as sampler config is not specified."
+        )
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
@@ -128,14 +136,42 @@ def build_dataloader(_dataset, cfg):
             collate_fn=collate_fn,
         )
     else:
+        if (
+            cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
+            is False
+            and "transforms" not in cfg["dataset"]
+        ):
+            # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
+            # which can speed up the process of batch samples indexing from dataset. See
+            # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
+            batch_sampler = io.BatchSampler(sampler=batch_sampler, batch_size=1)
+            if collate_fn is not None:
+                logger.warning(
+                    "Detected collate_fn is not None, which will be ignored when "
+                    "'auto_collation' is False"
+                )
+            # 2. disable auto collation by given identity collate_fn which return the first
+            # (also the only) batch data in batch list, or there will be a redundant
+            # axis at the first dimension returned by dataloader. This step is necessary
+            # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
+            collate_fn = lambda batch: batch[0]  # noqa: E731
+            _DEFAULT_NUM_WORKERS = 0
+            logger.info(
+                "Auto collation is disabled and set num_workers to "
+                f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
+            )
+
         dataloader_ = io.DataLoader(
             dataset=_dataset,
             places=device.get_device(),
-            batch_sampler=sampler,
+            batch_sampler=batch_sampler,
             collate_fn=collate_fn,
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
+            # TODO: Do not enable 'persistent_workers' below for
+            # 'IndexError: pop from empty list ...' will be raised in certain cases
+            # persistent_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS) > 0,
         )
 
     if len(dataloader_) == 0:

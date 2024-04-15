@@ -110,11 +110,33 @@ class AverageMeter:
 
 
 class PrettyOrderedDict(collections.OrderedDict):
+    """
+    The ordered dict which can be prettily printed.
+
+    Examples:
+        >>> import ppsci
+        >>> dic = ppsci.utils.misc.PrettyOrderedDict()
+        >>> dic.update({'a':1, 'b':2, 'c':3})
+        >>> print(dic)
+        ('a', 1)('b', 2)('c', 3)
+    """
+
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
 class Prettydefaultdict(collections.defaultdict):
+    """
+    The default dict which can be prettily printed.
+
+    Examples:
+        >>> import ppsci
+        >>> dic = ppsci.utils.misc.Prettydefaultdict()
+        >>> dic.update({'a':1, 'b':2, 'c':3})
+        >>> print(dic)
+        ('a', 1)('b', 2)('c', 3)
+    """
+
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
 
@@ -136,7 +158,8 @@ class RankZeroOnly:
         >>> import paddle.distributed as dist
         >>> with RankZeroOnly(dist.get_rank()) as is_master:
         ...     if is_master:
-        ...         # code here that should only be executed by the master process
+        ...         # code here which should only be executed in the master process
+        ...         pass
     """
 
     def __init__(self, rank: Optional[int] = None):
@@ -187,6 +210,14 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()  # doctest: +SKIP
 
+        >>> timer = misc.Timer("cost_of_func", auto_print=False)
+        >>> timer.start()
+        >>> def func():
+        ...     w = sum(range(0, 10))
+        >>> func()
+        >>> timer.end()
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
+        time cost of 'cost_of_func' is 0.00
     """
 
     interval: float  # Time cost for code within Timer context
@@ -197,10 +228,31 @@ class Timer(ContextDecorator):
         self.auto_print = auto_print
 
     def __enter__(self):
+        paddle.device.synchronize()
         self.start_time = time.perf_counter()
         return self
 
     def __exit__(self, type, value, traceback):
+        paddle.device.synchronize()
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+    def start(self, name: str = "Timer"):
+        """Push a new timer context.
+
+        Args:
+            name (str, optional): Name of code block to be clocked. Defaults to "Timer".
+        """
+        paddle.device.synchronize()
+        self.start_time = time.perf_counter()
+
+    def end(self):
+        """
+        End current timer context and print time cost.
+        """
+        paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
@@ -216,6 +268,19 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
     Returns:
         Dict[str, np.ndarray]: Split dict.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> arr = np.array([[1., 2., 3.], [4., 5., 6.]])
+        >>> result = ppsci.utils.misc.convert_to_dict(arr, ("x", "y", "z"))
+        >>> print(arr.shape)
+        (2, 3)
+        >>> for k, v in result.items():
+        ...    print(k, v.shape)
+        x (2, 1)
+        y (2, 1)
+        z (2, 1)
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -238,6 +303,22 @@ def all_gather(
 
     Returns:
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> import paddle.distributed as dist
+        >>> dist.init_parallel_env()      # doctest: +SKIP
+        >>> if dist.get_rank() == 0:      # doctest: +SKIP
+        ...     data = paddle.to_tensor([[1, 2, 3], [4, 5, 6]])
+        ... else:
+        ...     data = paddle.to_tensor([[7, 8, 9], [10, 11, 12]])
+        >>> result = ppsci.utils.misc.all_gather(data)    # doctest: +SKIP
+        >>> print(result.numpy())     # doctest: +SKIP
+        [[ 1  2  3]
+         [ 4  5  6]
+         [ 7  8  9]
+         [10 11 12]]
     """
     result: List[paddle.Tensor] = []
 
@@ -264,6 +345,17 @@ def convert_to_array(dict_: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.
 
     Returns:
         np.ndarray: Concatenated array.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic = {"x": np.array([[1., 2.], [3., 4.]]),
+        ...        "y": np.array([[5., 6.], [7., 8.]]),
+        ...        "z": np.array([[9., 10.], [11., 12.]])}
+        >>> result = ppsci.utils.misc.convert_to_array(dic, ("x", "z"))
+        >>> print(result)
+        [[ 1.  2.  9. 10.]
+         [ 3.  4. 11. 12.]]
     """
     return np.concatenate([dict_[key] for key in keys], axis=-1)
 
@@ -278,6 +370,21 @@ def concat_dict_list(
 
     Returns:
         Dict[str, np.ndarray]: A dict with concatenated arrays for each key.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> result = ppsci.utils.misc.concat_dict_list((dic1, dic2))
+        >>> print(result)
+        {'x': array([[1., 2.],
+               [3., 4.],
+               [1., 2.],
+               [3., 4.]]), 'y': array([[5., 6.],
+               [7., 8.],
+               [5., 6.],
+               [7., 8.]])}
     """
     ret = {}
     for key in dict_list[0].keys():
@@ -295,6 +402,17 @@ def stack_dict_list(
 
     Returns:
         Dict[str, np.ndarray]: A dict with stacked arrays for each key.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> result = ppsci.utils.misc.stack_dict_list((dic1, dic2))
+        >>> for k, v in result.items():
+        ...     print(k, v.shape)
+        x (2, 2, 2)
+        y (2, 2, 2)
     """
     ret = {}
     for key in dict_list[0].keys():
@@ -326,6 +444,20 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
 
     Returns:
         np.ndarray: Combined data with shape of (N×T, D+1).
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> data_point = np.arange(10).reshape((2, 5))
+        >>> time = (1, 2, 3)
+        >>> result = ppsci.utils.misc.combine_array_with_time(data_point, time)
+        >>> print(result)
+        [[1. 0. 1. 2. 3. 4.]
+         [1. 5. 6. 7. 8. 9.]
+         [2. 0. 1. 2. 3. 4.]
+         [2. 5. 6. 7. 8. 9.]
+         [3. 0. 1. 2. 3. 4.]
+         [3. 5. 6. 7. 8. 9.]]
     """
     nx = len(x)
     tx = []
@@ -345,13 +477,13 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 
     Assume shapes of input arrays are: $(N_1,), (N_2,), (N_3,), ..., (N_M,)$,
-    then the cartesian product result will be shape of $(N_1×N_2×N_3×...×N_M, M)$.
+    then the cartesian product result will be shape of $(N_1xN_2xN_3x...xN_M, M)$.
 
     Args:
         arrays (np.ndarray): Input arrays.
 
     Returns:
-        np.ndarray: Cartesian product result of shape $(N_1×N_2×N_3×...×N_M, M)$.
+        np.ndarray: Cartesian product result of shape $(N_1xN_2xN_3x...xN_M, M)$.
 
     Examples:
         >>> t = np.array([1, 2])
@@ -429,6 +561,15 @@ def run_at_rank0(func: Callable) -> Callable:
     Returns:
         Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> @misc.run_at_rank0
+        ... def func():
+        ...     print(f"now_rank is {paddle.distributed.get_rank()}")
+        >>> func()
+        now_rank is 0
     """
 
     @functools.wraps(func)
@@ -479,13 +620,16 @@ def plot_curve(
     plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
-        loc="lower left",
+        loc="upper left",
+        bbox_to_anchor=(1, 1),
     )
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
+    plt.tight_layout()
 
-    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
+    plt.close()

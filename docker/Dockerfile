@@ -23,34 +23,35 @@ RUN apt-get update && \
     apt-get clean autoclean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget https://mirrors.huaweicloud.com/python/3.7.11/Python-3.7.11.tgz && \
-    tar -xf Python-3.7.11.tgz && \
-    cd Python-3.7.11 && \
+RUN wget https://mirrors.huaweicloud.com/python/3.9.7/Python-3.9.7.tgz && \
+    tar -xf Python-3.9.7.tgz && \
+    cd Python-3.9.7 && \
     ./configure --with-ssl && \
     make -j -notest && \
     make install && \
-    cd .. && rm -rf Python-3.7.11 && rm Python-3.7.11.tgz && \
-    ln -s /usr/local/bin/python3.7 /usr/local/bin/python
+    cd .. && rm -rf Python-3.9.7 && rm Python-3.9.7.tgz && \
+    ln -s /usr/local/bin/python3.9 /usr/local/bin/python
 
 RUN python3 -m pip install --upgrade pip -i https://pypi.douban.com/simple/ && pip install pysdf open3d db-sqlite3 -i https://pypi.douban.com/simple/
 
 # install pymesh and paddle
+RUN python3 -m pip install --upgrade pip -i https://pypi.douban.com/simple/ && pip install numpy==1.22.4 -i https://pypi.douban.com/simple/
 COPY ./pymesh.tar.xz /src/pymesh.tar.xz
 
 RUN cd /src && \
     ls /src && \
     tar -xvf pymesh.tar.xz && \
     cd pymesh && \
-    python3 setup.py install
+    python3 -m pip install -r python/requirements.txt && \
+    python3 setup.py install --user && \
+    rm -rf /src
 
 ENV PATH="$PATH:/usr/lib/x86_64-linux-gnu/"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64/:$LD_LIBRARY_PATH"
 
-RUN cd /src && \
-    python3 -m ensurepip --upgrade && \
+RUN python3 -m ensurepip --upgrade && \
     pip3 config set global.index-url https://pypi.doubanio.com/simple/ && \
     # ensure paddle install normally
     ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so.8 /usr/local/cuda/lib64/libcudnn.so && \
     ln -s /usr/local/cuda/lib64/libcublas.so.11 /usr/local/cuda/lib64/libcublas.so && \
-    python3 -m pip install paddlepaddle-gpu==0.0.0.post116 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html && \
-    rm -rf /src
+    python3 -m pip install paddlepaddle-gpu==0.0.0.post116 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html

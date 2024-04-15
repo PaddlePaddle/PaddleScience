@@ -32,14 +32,17 @@ class TopOptNN(ppsci.arch.UNetEx):
         kernel_size (int, optional): Size of kernel of convolution layer. Defaults to 3.
         filters (Tuple[int, ...], optional): Number of filters. Defaults to (16, 32, 64).
         layers (int, optional): Number of encoders or decoders. Defaults to 3.
-        channel_sampler (callable): The sampling function for the initial iteration time (corresponding to the channel number of the input) of SIMP algorithm.
+        channel_sampler (callable, optional): The sampling function for the initial iteration time
+                (corresponding to the channel number of the input) of SIMP algorithm. The default value
+                is None, when it is None, input for the forward method should be sampled and prepared
+                with the shape of [batch, 2, height, width] before passing to forward method.
         weight_norm (bool, optional): Whether use weight normalization layer. Defaults to True.
         batch_norm (bool, optional): Whether add batch normalization layer. Defaults to True.
         activation (Type[nn.Layer], optional): Name of activation function. Defaults to nn.ReLU.
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 2, 1, 3, (16, 32, 64), 2, lambda: 1, Flase, False)
+        >>> model = ppsci.arch.ppsci.arch.TopOptNN("input", "output", 2, 1, 3, (16, 32, 64), 2, lambda: 1, Flase, False)
     """
 
     def __init__(
@@ -51,7 +54,7 @@ class TopOptNN(ppsci.arch.UNetEx):
         kernel_size=3,
         filters=(16, 32, 64),
         layers=2,
-        channel_sampler=lambda: 1,
+        channel_sampler=None,
         weight_norm=False,
         batch_norm=False,
         activation=nn.ReLU,
@@ -124,15 +127,17 @@ class TopOptNN(ppsci.arch.UNetEx):
         )
 
     def forward(self, x):
-        SIMP_initial_iter_time = self.channel_sampler()  # channel k
-        input_channel_k = x[self.input_keys[0]][:, SIMP_initial_iter_time, :, :]
-        input_channel_k_minus_1 = x[self.input_keys[0]][
-            :, SIMP_initial_iter_time - 1, :, :
-        ]
-        x = paddle.stack(
-            (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
-        )
-
+        if self.channel_sampler is not None:
+            SIMP_initial_iter_time = self.channel_sampler()  # channel k
+            input_channel_k = x[self.input_keys[0]][:, SIMP_initial_iter_time, :, :]
+            input_channel_k_minus_1 = x[self.input_keys[0]][
+                :, SIMP_initial_iter_time - 1, :, :
+            ]
+            x = paddle.stack(
+                (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
+            )
+        else:
+            x = x[self.input_keys[0]]
         # encode
         upsampling_size = []
         skip_connection = []

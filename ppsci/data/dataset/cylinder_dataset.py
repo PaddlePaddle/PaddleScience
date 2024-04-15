@@ -44,7 +44,19 @@ class MeshCylinderDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Name of label data.
         data_dir (str): Directory of MeshCylinder data.
         mesh_graph_path (str): Path of mesh graph.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.MeshAirfoilDataset(
+        ...     "input_keys": ("input",),
+        ...     "label_keys": ("output",),
+        ...     "data_dir": "/path/to/MeshAirfoilDataset",
+        ...     "mesh_graph_path": "/path/to/file.su2",
+        ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     use_pgl: bool = True
 

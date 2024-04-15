@@ -226,6 +226,11 @@ class Dataset:
         self.data_stress = data_stress
         self.itrain = itrain
 
+    def _cvt_to_ndarray(self, list_dict):
+        for key in list_dict:
+            list_dict[key] = np.asarray(list_dict[key])
+        return list_dict
+
     def get(self, epochs=1):
         # Slow if using BatchSampler to obtain data
         input_dict_train = {
@@ -243,7 +248,9 @@ class Dataset:
         label_dict_train = {"dummy_loss": []}
         label_dict_val = {"dummy_loss": []}
         for i in range(epochs):
-            shuffled_indices = paddle.randperm(n=self.data_state.x_train.shape[0])
+            shuffled_indices = paddle.randperm(
+                n=self.data_state.x_train.shape[0]
+            ).numpy()
             input_dict_train["state_x"].append(
                 self.data_state.x_train[shuffled_indices[0 : self.itrain]]
             )
@@ -256,9 +263,9 @@ class Dataset:
             input_dict_train["stress_y"].append(
                 self.data_stress.y_train[shuffled_indices[0 : self.itrain]]
             )
-            label_dict_train["dummy_loss"].append(paddle.to_tensor(0.0))
+            label_dict_train["dummy_loss"].append(0.0)
 
-        shuffled_indices = paddle.randperm(n=self.data_state.x_valid.shape[0])
+        shuffled_indices = paddle.randperm(n=self.data_state.x_valid.shape[0]).numpy()
         input_dict_val["state_x"].append(
             self.data_state.x_valid[shuffled_indices[0 : self.itrain]]
         )
@@ -271,7 +278,11 @@ class Dataset:
         input_dict_val["stress_y"].append(
             self.data_stress.y_valid[shuffled_indices[0 : self.itrain]]
         )
-        label_dict_val["dummy_loss"].append(paddle.to_tensor(0.0))
+        label_dict_val["dummy_loss"].append(0.0)
+        input_dict_train = self._cvt_to_ndarray(input_dict_train)
+        label_dict_train = self._cvt_to_ndarray(label_dict_train)
+        input_dict_val = self._cvt_to_ndarray(input_dict_val)
+        label_dict_val = self._cvt_to_ndarray(label_dict_val)
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
 
 
@@ -287,7 +298,7 @@ class Data:
     def get_shuffled_data(self):
         # Need to set the seed, otherwise the loss will not match the precision
         ppsci.utils.misc.set_random_seed(seed=10)
-        shuffled_indices = paddle.randperm(n=self.x.shape[0])
+        shuffled_indices = paddle.randperm(n=self.x.shape[0]).numpy()
         n_train = math.floor(self.train_p * self.x.shape[0])
         n_cross_valid = math.floor(self.cross_valid_p * self.x.shape[0])
         n_test = math.floor(self.test_p * self.x.shape[0])

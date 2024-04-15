@@ -251,10 +251,19 @@ class PhysformerGPT2(base.Arch):
         attn_pdrop (float, optional): The dropout probability used on attention weights. Defaults to 0.0.
         resid_pdrop (float, optional): The dropout probability used on block outputs. Defaults to 0.0.
         initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
+        embedding_model (Optional[base.Arch]): Embedding model, If this parameter is set,
+            the embedding model will map the input data to the embedding space and the
+            output data to the physical space. Defaults to None.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
         >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        >>> data = paddle.to_tensor(paddle.randn([10, 16, 128]))
+        >>> inputs = {"embeds": data}
+        >>> outputs = model(inputs)
+        >>> print(outputs["pred_embeds"].shape)
+        [10, 16, 128]
     """
 
     def __init__(
@@ -269,6 +278,7 @@ class PhysformerGPT2(base.Arch):
         attn_pdrop: float = 0.0,
         resid_pdrop: float = 0.0,
         initializer_range: float = 0.05,
+        embedding_model: Optional[base.Arch] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -296,6 +306,7 @@ class PhysformerGPT2(base.Arch):
         self.linear = nn.Linear(embed_size, embed_size)
 
         self.apply(self._init_weights)
+        self.embedding_model = embedding_model
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -344,7 +355,7 @@ class PhysformerGPT2(base.Arch):
     def generate(self, x, max_length=256):
         if max_length <= 0:
             raise ValueError(
-                "max_length({max_length}) should be a strictly positive integer."
+                f"max_length({max_length}) should be a strictly positive integer."
             )
         outputs = self._generate_time_series(x, max_length)
         return outputs
@@ -367,17 +378,25 @@ class PhysformerGPT2(base.Arch):
         outputs = self.generate(input_embeds)
         return (outputs[:, 1:],)
 
-    def split_to_dict(self, data_tensors, keys):
+    @staticmethod
+    def split_to_dict(data_tensors, keys):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
         x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        if self.embedding_model is not None:
+            x_tensor = self.embedding_model.encoder(x_tensor)
+
         if self.training:
             y = self.forward_tensor(x_tensor)
         else:
             y = self.forward_eval(x_tensor)
+
+        if self.embedding_model is not None:
+            y = (self.embedding_model.decoder(y[0]),)
+
         y = self.split_to_dict(y, self.output_keys)
         if self._output_transform is not None:
             y = self._output_transform(x, y)

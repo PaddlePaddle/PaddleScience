@@ -53,7 +53,8 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
     if coord.shape[1] not in [2, 3]:
         raise ValueError(f"ndim of coord({coord.shape[1]}) should be 2 or 3.")
 
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    if len(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     # discard extension name
     if filename.endswith(".vtu"):
@@ -91,10 +92,10 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
 
     if num_timestamps > 1:
         logger.message(
-            f"Visualization results are saved to {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
+            f"Visualization results are saved to: {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
         )
     else:
-        logger.message(f"Visualization result is saved to {filename}.vtu")
+        logger.message(f"Visualization result is saved to: {filename}.vtu")
 
 
 def save_vtu_from_dict(
@@ -104,7 +105,8 @@ def save_vtu_from_dict(
     value_keys: Tuple[str, ...],
     num_timestamps: int = 1,
 ):
-    """Save dict data to '*.vtu' file.
+    """
+    Save dict data to '*.vtu' file.
 
     Args:
         filename (str): Output filename.
@@ -112,6 +114,21 @@ def save_vtu_from_dict(
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> filename = "path/to/file.vtu"
+        >>> data_dict = {
+        ...     "x": np.array([[1], [2], [3],[4]]),
+        ...     "y": np.array([[2], [3], [4],[4]]),
+        ...     "z": np.array([[3], [4], [5],[4]]),
+        ...     "u": np.array([[4], [5], [6],[4]]),
+        ...     "v": np.array([[5], [6], [7],[4]]),
+        ... }
+        >>> coord_keys = ("x","y","z")
+        >>> value_keys = ("u","v")
+        >>> ppsci.visualize.save_vtu_from_dict(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
     """
     if len(coord_keys) not in [2, 3, 4]:
         raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 2, 3 or 4")
@@ -140,17 +157,33 @@ def save_vtu_to_mesh(
         data_dict (Dict[str, np.ndarray]): Data in dict.
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> filename = "path/to/file.vtu"
+        >>> data_dict = {
+        ...     "x": np.array([[1], [2], [3],[4]]),
+        ...     "y": np.array([[2], [3], [4],[4]]),
+        ...     "z": np.array([[3], [4], [5],[4]]),
+        ...     "u": np.array([[4], [5], [6],[4]]),
+        ...     "v": np.array([[5], [6], [7],[4]]),
+        ... }
+        >>> coord_keys = ("x","y","z")
+        >>> value_keys = ("u","v")
+        >>> ppsci.visualize.save_vtu_to_mesh(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
     """
     npoint = len(next(iter(data_dict.values())))
     coord_ndim = len(coord_keys)
 
     # get the list variable transposed
-    points = np.stack((data_dict[key] for key in coord_keys)).reshape(
+    points = np.stack(tuple(data_dict[key] for key in coord_keys)).reshape(
         coord_ndim, npoint
     )
     mesh = meshio.Mesh(
         points=points.T, cells=[("vertex", np.arange(npoint).reshape(npoint, 1))]
     )
     mesh.point_data = {key: data_dict[key] for key in value_keys}
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    if len(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
     mesh.write(filename)

@@ -26,8 +26,7 @@ class AGDA(LossAggregator):
     r"""
     **A**daptive **G**radient **D**escent **A**lgorithm
 
-    [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](\
-        https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new)
+    [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new)
 
     Args:
         model (nn.Layer): Training model.
@@ -58,7 +57,7 @@ class AGDA(LossAggregator):
         self.Lf_tilde_acc = 0.0
         self.Lu_tilde_acc = 0.0
 
-    def __call__(self, losses, step: int = 0):
+    def __call__(self, losses, step: int = 0) -> "AGDA":
         if len(losses) != 2:
             raise ValueError(
                 f"Number of losses(tasks) for AGDA shoule be 2, but got {len(losses)}"

@@ -54,6 +54,9 @@ class MatDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         file_path: str,
@@ -111,9 +114,11 @@ class MatDataset(io.Dataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
@@ -174,6 +179,9 @@ class IterableMatDataset(io.IterableDataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -231,9 +239,11 @@ class IterableMatDataset(io.IterableDataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):

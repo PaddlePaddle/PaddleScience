@@ -2,7 +2,9 @@
 
 PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习工作流的角度来看，这 12 个模块分别负责构建输入数据、构建神经网络模型、构建损失函数、构建优化器，训练、评估、可视化等功能。从科学计算角度来看，部分模块承担了不同于 CV、NLP 任务的功能，比如用于物理机理驱动的 Equation 模块，定义方程公式和辅助高阶微分计算；用于涉及几何场景采样的 Geometry 模块，定义简单、复杂几何形状并在其内部、边界采样构造数据；Constraint 模块将不同的优化目标视为一种“约束”，使得套件能用一套训练代码统一物理机理驱动、数据驱动、数理融合三种不同的求解流程。
 
-![panorama](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png)
+<!-- --8<-- [start:panorama] -->
+<img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" alt="panorama" width="100%" height="auto">
+<!-- --8<-- [end:panorama] -->
 
 ## 1. 整体工作流
 
@@ -72,11 +74,14 @@ Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes
 
 Geometry 模块负责定义各种常见的几何形状，如 `Interval` 线段几何、`Rectangle` 矩形几何、`Sphere` 球面几何。
 
-### 2.7 [Loss](./api/loss.md)
+### 2.7 [Loss](./api/loss/loss.md)
 
-Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕后，将结果与参考值计算损失值，供后续的梯度优化算法使用；
+Loss 模块包含 [`ppsci.loss.loss`](./api/loss/loss.md) 与 [`ppsci.loss.mtl`](./api/loss/mtl.md) 两个子模块，如下所示。
 
-同时该模块也提供了常见的多任务学习优化功能，包括 PCGrad、AGDA，进一步提升多个 loss 共同优化（如 PINN 方法）的精度。
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.loss.loss](./api/loss/loss.md)| 损失函数相关 |
+| [ppsci.loss.mtl](./api/loss/mtl.md)| 多目标优化相关 |
 
 ### 2.8 Optimizer
 
@@ -105,12 +110,13 @@ Utils 模块内部存放了一些适用于多种场景下的工具类、函数�
 | [ppsci.utils.logger](./api/utils/logger.md)| 日志打印模块 |
 | [ppsci.utils.misc](./api/utils/misc.md)| 存放通用函数 |
 | [ppsci.utils.reader](./api/utils/reader.md)| 文件读取模块 |
+| [ppsci.utils.writer](./api/utils/writer.md)| 文件写入模块 |
 | [ppsci.utils.save_load](./api/utils/save_load.md)| 模型参数保存与加载 |
 | [ppsci.utils.symbolic](./api/utils/symbolic.md)| sympy 符号计算功能相关 |
 
 ### 2.11 [Validate](./api/validate.md)
 
-Validator 模块负责定义各种评估器，用于模型训练完一个 epoch 后自动在指定数据上进行评估（可选，默认不开启训练时评估）并得到评估指标。
+Validator 模块负责定义各种评估器，用于在指定数据上进行评估（可选，默认不开启训练时评估），并得到评估指标。
 
 ### 2.12 [Visualize](./api/visualize.md)
 

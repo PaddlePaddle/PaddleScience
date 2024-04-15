@@ -19,7 +19,13 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import cv2
+try:
+    import cv2
+except ModuleNotFoundError:
+    pass
+
+import importlib
+
 import numpy as np
 import paddle
 from paddle import io
@@ -51,6 +57,9 @@ class RadarDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -62,6 +71,12 @@ class RadarDataset(io.Dataset):
         data_type: str = paddle.get_default_dtype(),
         weight_dict: Optional[Dict[str, float]] = None,
     ):
+        super().__init__()
+        if importlib.util.find_spec("cv2") is None:
+            raise ModuleNotFoundError(
+                "To use RadarDataset, please install 'opencv-python' via: `pip install "
+                "opencv-python` first."
+            )
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.img_width = image_width
@@ -93,7 +108,7 @@ class RadarDataset(io.Dataset):
                 )
             self.case_list.append(case)
 
-    def load(self, index):
+    def _load(self, index):
         data = []
         for img_path in self.case_list[index]:
             img = cv2.imread(img_path, 2)
@@ -103,12 +118,14 @@ class RadarDataset(io.Dataset):
         return data
 
     def __getitem__(self, index):
-        data = self.load(index)[-self.length :].copy()
+        data = self._load(index)[-self.length :].copy()
         mask = np.ones_like(data)
         mask[data < 0] = 0
         data[data < 0] = 0
         data = np.clip(data, 0, 128)
-        vid = np.zeros((self.length, self.img_height, self.img_width, 2))
+        vid = np.zeros(
+            (self.length, self.img_height, self.img_width, 2), dtype=self.data_type
+        )
         vid[..., 0] = data
         vid[..., 1] = mask
 

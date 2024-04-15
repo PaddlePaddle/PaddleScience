@@ -15,12 +15,16 @@
 from __future__ import annotations
 
 import contextlib
+import functools
+import importlib
 import itertools
 import os
 import sys
 from os import path as osp
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
@@ -31,20 +35,26 @@ import paddle
 import paddle.distributed as dist
 import sympy as sp
 import visualdl as vdl
+from omegaconf import DictConfig
 from packaging import version
 from paddle import amp
 from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
+from paddle.framework import core
 from typing_extensions import Literal
 
 import ppsci
 from ppsci.loss import mtl
+from ppsci.utils import ema
 from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
+
+if TYPE_CHECKING:
+    from paddle.static import InputSpec
 
 
 class Solver:
@@ -67,6 +77,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
+        use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
@@ -74,7 +85,7 @@ class Solver:
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
-        amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O1".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
@@ -82,11 +93,12 @@ class Solver:
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
         loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
+        cfg: (Optional[DictConfig]): Running config dict. Defaults to None. NOTE: This will be required in the future.
 
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> opt = ppsci.optimizer.AdamW(1e-3)(model)
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -99,7 +111,7 @@ class Solver:
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
-        ... )
+        ... )  # doctest: +SKIP
         >>> solver = ppsci.solver.Solver(
         ...     model,
         ...     {"EQ": pde_constraint},
@@ -127,6 +139,7 @@ class Solver:
         seed: int = 42,
         use_vdl: bool = False,
         use_wandb: bool = False,
+        use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
@@ -134,14 +147,17 @@ class Solver:
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
         visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: Literal["O1", "O2", "O0"] = "O0",
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
         to_static: bool = False,
         loss_aggregator: Optional[mtl.LossAggregator] = None,
+        *,
+        cfg: Optional[DictConfig] = None,
     ):
+        self.cfg = cfg
         # set model
         self.model = model
         # set constraint
@@ -152,7 +168,28 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        self.lr_scheduler = lr_scheduler
+        if lr_scheduler is not None:
+            logger.warning(
+                "The argument: 'lr_scheduler' now automatically retrieves from "
+                "'optimizer._learning_rate' when 'optimizer' is given, so it is "
+                "recommended to remove it from the Solver's initialization arguments."
+            )
+        self.lr_scheduler = (
+            optimizer._learning_rate
+            if (
+                isinstance(optimizer, optim.Optimizer)
+                and isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
+            )
+            else None
+        )
+        if isinstance(self.optimizer, ppsci.optimizer.OptimizerList):
+            self.lr_scheduler = ppsci.optimizer.lr_scheduler.SchedulerList(
+                tuple(
+                    opt._learning_rate
+                    for opt in self.optimizer
+                    if isinstance(opt._learning_rate, optim.lr.LRScheduler)
+                )
+            )
 
         # set training hyper-parameter
         self.epochs = epochs
@@ -169,7 +206,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize training log recorder for loss, time cost, metric, etc.
+        # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -177,7 +214,7 @@ class Solver:
         }
         self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
-        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        # initialize evaluation log(evaluation loss, metric, etc.) recorder.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -238,7 +275,20 @@ class Solver:
                 "are training model."
             )
 
+        # set moving average model(optional)
+        self.ema_model = None
+        if self.cfg and any(key in self.cfg.TRAIN for key in ["ema", "swa"]):
+            if "ema" in self.cfg.TRAIN:
+                self.avg_freq = self.cfg.TRAIN.ema.avg_freq
+                self.ema_model = ema.ExponentialMovingAverage(
+                    self.model, self.cfg.TRAIN.ema.decay
+                )
+            elif "swa" in self.cfg.TRAIN:
+                self.avg_freq = self.cfg.TRAIN.swa.avg_freq
+                self.ema_model = ema.StochasticWeightAverage(self.model)
+
         # load pretrained model, usually used for transfer learning
+        self.pretrained_model_path = pretrained_model_path
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
@@ -255,7 +305,12 @@ class Solver:
                     "overridden by weights loaded from given 'checkpoint_path'."
                 )
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
+                checkpoint_path,
+                self.model,
+                self.optimizer,
+                self.scaler,
+                self.equation,
+                self.ema_model,
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -270,7 +325,11 @@ class Solver:
             )
 
         # choosing an appropriate training function for different optimizers
-        if isinstance(self.optimizer, optim.LBFGS):
+        if misc.typename(self.optimizer) == "LBFGS":
+            if self.use_amp:
+                raise ValueError(
+                    "Auto Mix Precision is not supported for L-BFGS optimizer."
+                )
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
@@ -312,8 +371,8 @@ class Solver:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
             logger.info(
-                "VisualDL tool is enabled for logging, you can view it by "
-                f"running: 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+                "VisualDL is enabled for logging, you can view it by "
+                f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
             )
 
         # set WandB tool
@@ -329,16 +388,35 @@ class Solver:
                 if is_master:
                     self.wandb_writer = wandb.init(**wandb_config)
 
+        # set TensorBoardX tool
+        self.tbd_writer = None
+        if use_tbd:
+            try:
+                import tensorboardX
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'tensorboardX' with `pip install tensorboardX` first."
+                )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.tbd_writer = tensorboardX.SummaryWriter(
+                        osp.join(output_dir, "tensorboard")
+                    )
+            logger.message(
+                "TensorboardX is enabled for logging, you can view it by "
+                f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
+            )
+
         self.global_step = 0
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
             paddle_version = paddle.__version__
-            logger.warning(
-                f"Detected paddlepaddle version is '{paddle_version}', "
-                "currently it is recommended to use develop version until the "
-                "release of version 2.6."
-            )
+            if version.Version(paddle.__version__) < version.Version("2.6.0"):
+                logger.warning(
+                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    "currently it is recommended to use release 2.6 or develop version."
+                )
         else:
             paddle_version = f"develop({paddle.version.commit[:7]})"
 
@@ -350,8 +428,13 @@ class Solver:
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for computational optimization.")
 
-        # use loss aggregator, use summation if None
-        self.loss_aggregator = loss_aggregator
+        # use loss aggregator, use Sum if None
+        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
+            raise ValueError(
+                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
+                "please set use_amp=False."
+            )
+        self.loss_aggregator = loss_aggregator or mtl.Sum()
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -367,14 +450,28 @@ class Solver:
             ]
         ) -> None:
             for container in container_dict.values():
-                for name, expr in container.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        container.output_expr[name] = ppsci.lambdify(
-                            expr,
-                            self.model,
-                            extra_parameters,
-                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
-                        )
+                exprs = [
+                    expr
+                    for expr in container.output_expr.values()
+                    if isinstance(expr, sp.Basic)
+                ]
+                if len(exprs) > 0:
+                    funcs = ppsci.lambdify(
+                        exprs,
+                        self.model,
+                        extra_parameters=extra_parameters,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual"),  # HACK: Activate it for DEBUG.
+                        fuse_derivative=True,
+                    )
+                    ind = 0
+                    for name in container.output_expr:
+                        if isinstance(container.output_expr[name], sp.Basic):
+                            container.output_expr[name] = funcs[ind]
+                            if self.world_size > 1:
+                                container.output_expr[name] = dist_wrapper(
+                                    container.output_expr[name]
+                                )
+                            ind += 1
 
         if self.constraint:
             convert_expr(self.constraint)
@@ -388,19 +485,26 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
-    def train(self):
+        # set up nvtx flag for nsight analysis
+        self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
+        self.forward_helper.nvtx_flag = self.nvtx_flag
+
+    def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        start_epoch = self.best_metric["epoch"] + 1
 
-        for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
+        if self.nvtx_flag:
+            core.nvprof_start()
+            core.nvprof_enable_record_event()
+
+        for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
-            # log training summation at end of a epoch
-            metric_msg = ", ".join(
-                [self.train_output_info[key].avg_info for key in self.train_output_info]
-            )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
+
+            # update average model if exist
+            if self.ema_model and epoch_id % self.avg_freq == 0:
+                self.ema_model.update()
 
             cur_metric = float("inf")
             # evaluate during training
@@ -426,17 +530,51 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                for metric_dict in metric_dict_group.values():
-                    logger.scaler(
-                        {f"eval/{k}": v for k, v in metric_dict.items()},
+                for metric_name, metric_dict in metric_dict_group.items():
+                    logger.scalar(
+                        {f"eval/{metric_name}/{k}": v for k, v in metric_dict.items()},
                         epoch_id,
                         self.vdl_writer,
                         self.wandb_writer,
+                        self.tbd_writer,
                     )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
+
+                # evaluation for moving average evaluation(almost same procedure)
+                if self.ema_model and epoch_id % self.avg_freq == 0:
+                    self.ema_model.apply_shadow()
+                    logger.info("Evaluating metric of averaging model...")
+                    cur_metric_ema, metric_dict_group_ema = self.eval(epoch_id)
+                    self.ema_model.restore()
+
+                    if cur_metric_ema < self.best_metric["metric"]:
+                        self.best_metric["metric"] = cur_metric_ema
+                        self.best_metric["epoch"] = epoch_id
+                        save_load.save_checkpoint(
+                            self.ema_model,
+                            None,
+                            metric=self.best_metric,
+                            output_dir=self.output_dir,
+                            prefix="best_model_ema",
+                        )
+                    logger.info(
+                        f"[Eval][Epoch {epoch_id}]"
+                        f"[best metric: {self.best_metric['metric']}]"
+                    )
+                    for metric_name, metric_dict in metric_dict_group_ema.items():
+                        logger.scalar(
+                            {
+                                f"eval_ema/{metric_name}/{k}": v
+                                for k, v in metric_dict.items()
+                            },
+                            epoch_id,
+                            self.vdl_writer,
+                            self.wandb_writer,
+                            self.tbd_writer,
+                        )
 
             # update learning rate by epoch
             if self.lr_scheduler is not None and self.lr_scheduler.by_epoch:
@@ -452,6 +590,7 @@ class Solver:
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
+                    ema_model=self.ema_model,
                 )
 
             # save the latest model for convenient resume training
@@ -463,7 +602,21 @@ class Solver:
                 self.output_dir,
                 "latest",
                 self.equation,
+                print_log=(epoch_id == start_epoch),
+                ema_model=self.ema_model,
             )
+
+    def finetune(self, pretrained_model_path: str) -> None:
+        """Finetune model based on given pretrained model path.
+
+        Args:
+            pretrained_model_path (str): Pretrained model path or url.
+        """
+        # load pretrained model
+        save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+
+        # call train program
+        self.train()
 
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
@@ -524,6 +677,19 @@ class Solver:
 
         Returns:
             Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
+            >>> solver = ppsci.solver.Solver(model) # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand([32, 1]),
+            ...               'y': paddle.rand([32, 1])}
+            >>> pred = solver.predict(input_dict) # doctest: +SKIP
+            >>> for k, v in pred.items(): # doctest: +SKIP
+            ...     print(k, v.shape) # doctest: +SKIP
+            u [32, 1]
+            v [32, 1]
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -627,18 +793,80 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self):
-        """Export to inference model."""
-        raise NotImplementedError("model export is not supported yet.")
+    def export(
+        self,
+        input_spec: List["InputSpec"],
+        export_path: str,
+        with_onnx: bool = False,
+        skip_prune_program: bool = False,
+    ):
+        """
+        Convert model to static graph model and export to files.
+
+        Args:
+            input_spec (List[InputSpec]): InputSpec describes the signature information
+                of the model input.
+            export_path (str): The path prefix to save model.
+            with_onnx (bool, optional): Whether to export model into onnx after
+                paddle inference models are exported. Defaults to False.
+            skip_prune_program (bool, optional): Whether prune program, pruning program
+                may cause unexpectable result, e.g. llm-inference. Defaults to False.
+        """
+        jit.enable_to_static(True)
+
+        if self.pretrained_model_path is None:
+            logger.warning(
+                "'pretrained_model_path' is not given, so the weights of exported "
+                "model will be random initialized."
+            )
+
+        # convert model to static graph model
+        static_model = jit.to_static(
+            self.model,
+            input_spec=input_spec,
+            full_graph=True,
+        )
+
+        # save static graph model to disk
+        if len(osp.dirname(export_path)):
+            os.makedirs(osp.dirname(export_path), exist_ok=True)
+        try:
+            jit.save(static_model, export_path, skip_prune_program=skip_prune_program)
+        except Exception as e:
+            raise e
+        logger.message(
+            f"Inference model has been exported to: {export_path}, including "
+            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+        )
+        jit.enable_to_static(False)
+
+        if with_onnx:
+            if not importlib.util.find_spec("paddle2onnx"):
+                raise ModuleNotFoundError(
+                    "Please install paddle2onnx with `pip install paddle2onnx`"
+                    " before exporting onnx model."
+                )
+            import paddle2onnx
+
+            DEFAULT_OPSET_VERSION = 13
+
+            paddle2onnx.export(
+                model_file=export_path + ".pdmodel",
+                params_file=export_path + ".pdiparams",
+                save_file=export_path + ".onnx",
+                opset_version=DEFAULT_OPSET_VERSION,
+                enable_onnx_checker=True,
+            )
+            logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "O1", "O2", "OD"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.
@@ -653,6 +881,7 @@ class Solver:
             )
         return ctx_manager
 
+    @functools.lru_cache()
     def no_grad_context_manager(
         self, enable: bool
     ) -> contextlib.AbstractContextManager:

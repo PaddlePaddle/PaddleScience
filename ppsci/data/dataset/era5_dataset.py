@@ -51,6 +51,9 @@ class ERA5Dataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -163,6 +166,7 @@ class ERA5SampledDataset(io.Dataset):
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
+
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.ERA5SampledDataset(
@@ -170,6 +174,11 @@ class ERA5SampledDataset(io.Dataset):
         ...     "input_keys": ("input",),
         ...     "label_keys": ("output",),
         ... )  # doctest: +SKIP
+        >>> # get the length of the dataset
+        >>> dataset_size = len(dataset)  # doctest: +SKIP
+        >>> # get the first sample of the data
+        >>> first_sample = dataset[0]  # doctest: +SKIP
+        >>> print("First sample:", first_sample)  # doctest: +SKIP
     """
 
     def __init__(

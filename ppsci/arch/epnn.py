@@ -65,11 +65,14 @@ class Epnn(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> ann_node_sizes_state = [1]
-        >>> model = ppsci.arch.Epnn(("x",), ("y",), node_sizes=node_sizes_state,
-                                    activations=("leaky_relu"),
-                                    drop_p=0.0
-                                    )
+        >>> ann_node_sizes_state = [1, 20]
+        >>> model = ppsci.arch.Epnn(
+        ...     ("x",),
+        ...     ("y",),
+        ...     node_sizes=ann_node_sizes_state,
+        ...     activations=("leaky_relu",),
+        ...     drop_p=0.0,
+        ... )
     """
 
     def __init__(
@@ -81,7 +84,9 @@ class Epnn(base.Arch):
         drop_p: float,
     ):
         super().__init__()
-        self.active_func = [act_mod.get_activation(i) for i in activations]
+        self.active_func = [
+            act_mod.get_activation(act_name) for act_name in activations
+        ]
         self.node_sizes = node_sizes
         self.drop_p = drop_p
         self.layers = []

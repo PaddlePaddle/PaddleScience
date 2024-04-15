@@ -6,8 +6,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat --output datasets/tempoGAN/2d_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
@@ -18,8 +18,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat --output datasets/tempoGAN/2d_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
@@ -29,7 +29,6 @@
 | 预训练模型  | 指标 |
 |:--| :--|
 | [tempogan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams) | MSE: 4.21e-5<br>PSNR: 47.19<br>SSIM: 0.9974 |
-
 
 ## 1. 背景简介
 
@@ -291,6 +290,7 @@ examples/tempoGAN/tempoGAN.py:247:258
 ### 3.10 模型评估
 
 #### 3.10.1 训练中评估
+
 训练中仅在特定 `Epoch` 保存特定图片的目标结果和模型输出结果，训练结束后针对最后一个 `Epoch` 的输出结果进行一次评估，以便直观评价模型优化效果。不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估:
 
 ``` py linenums="287"

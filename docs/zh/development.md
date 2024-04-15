@@ -6,7 +6,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
 
 ## 1. 准备工作
 
-1. 将 PaddleScience fork 到**自己的仓库**
+1. 在网页上将 PaddleScience fork 到**自己的仓库**
 2. 克隆**自己仓库**里的 PaddleScience 到本地，并进入该目录
 
     ``` sh
@@ -14,7 +14,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
     cd PaddleScience
     ```
 
-    上方 `clone` 命令中的 `USER_NAME` 字段请填入的自己的用户名。
+    上方 `clone` 命令中的 `USER_NAME` 字段请填入自己的 github 用户名。
 
 3. 安装必要的依赖包
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 PaddleScience 内置了一些常见的模型，如 `MLP` 模型，如果您想使用这些内置的模型，可以直接调用 [`ppsci.arch.*`](./api/arch.md) 下的 API，并填入模型实例化所需的参数，即可快速构建模型。
 
-``` py  title="examples/demo/demo.py"
+``` py title="examples/demo/demo.py"
 # create a MLP model
 model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 ```
@@ -116,7 +116,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:73:138
+        ppsci/arch/mlp.py:86:151
         --8<--
         ```
 
@@ -124,7 +124,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:140:167
+        ppsci/arch/mlp.py:153:180
         --8<--
         ```
 
@@ -602,7 +602,175 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.12 训练
+### 2.12 编写配置文件[重要]
+
+??? info "内容较长，点击展开"
+
+    经过上述步骤的开发，案例代码的主要部分已经完成。
+    当我们想基于这份代码运行一些调优实验，从而得到更好的结果，或更好地对运行参数设置进行管理，
+    则可以利用 PaddleScience 提供的配置管理系统，将实验运行参数从代码中分离出来，写到 `yaml` 格式的配置文件中，从而更好的管理、记录、调优实验。
+
+    以 `viv` 案例代码为例，在运行时我们需要在适当的位置设置方程参数、STL 文件路径、训练轮数、`batch_size`、随机种子、学习率等超参数，如下所示。
+
+    ``` py
+    ...
+    # set dataloader config
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "MatDataset",
+            "file_path": cfg.VIV_DATA_PATH,
+            "input_keys": ("t_f",),
+            "label_keys": ("eta", "f"),
+            "weight_dict": {"eta": 100},
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": True,
+        },
+    }
+    ...
+    ...
+    # set optimizer
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
+    ...
+    ```
+
+    这些参数在实验过程中随时可能作为变量而被手动调整，在调整过程中如何避免频繁修改源代码导致试验记录混乱、保障记录完整可追溯便是一大问题，因此 PaddleScience 提供了基于 hydra + omegaconf 的
+    配置文件管理系统来解决这一问题。
+
+    将已有的代码修改成配置文件控制的方式非常简单，只需要将必要的参数写到 `yaml` 文件中，然后通过 hydra 在程序运行时读取、解析该文件，通过其内容控制实验运行即可，以 `viv` 案例为例，具体包含以下几个步骤。
+
+    1. 则需在代码文件 `viv.py` 所在目录下新建 `conf` 文件夹，并在 `conf` 下新建与 `viv.py` 同名的 `viv.yaml` 文件，如下所示。
+
+        ``` sh hl_lines="3-4"
+        PaddleScience/examples/fsi/
+        ├── viv.py
+        └── conf
+            └── viv.yaml
+        ```
+
+    2. 将 `viv.py` 中必要的超参数按照其语义填写到 `viv.yaml` 的各个层级的配置中，如通用参数 `mode`、`output_dir`、`seed`、方程参数、文件路径等，直接填写在一级层级；而只与模型、训练相关的模型结构参数、训练轮数等，只需分别填写在 `MODEL`、`TRAIN` 层级下即可（`EVAL` 层级同理）。
+    3. 将已有的 `train` 和 `evaluate` 函数修改为接受一个参数 `cfg`（`cfg` 即为读取进来的 `yaml` 文件里的内容，并以字典的形式存储），并将其内部的超参数统一改为通过 `cfg.xxx` 获取而非原先的直接设置为数字或字符串，如下所示。
+
+        ``` py
+        from omegaconf import DictConfig
+
+        def train(cfg: DictConfig):
+            # 训练代码...
+
+        def evaluate(cfg: DictConfig):
+            # 评估代码...
+        ```
+
+    4. 新建一个 `main` 函数（同样接受且只接受一个 `cfg` 参数），它负责根据 `cfg.mode` 来调用 `train` 或 `evaluate` 函数，并 `main` 函数加上装饰器 `@hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")`，如下所示。
+
+        ``` py
+        @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+        def main(cfg: DictConfig):
+            if cfg.mode == "train":
+                train(cfg)
+            elif cfg.mode == "eval":
+                evaluate(cfg)
+            else:
+                raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+        ```
+
+    5. 在主程序的启动入口 `if __name__ == "__main__":` 中启动 `main()` 即可，如下所示。
+
+        ``` py
+        if __name__ == "__main__":
+            main()
+        ```
+
+    全部改造完毕后，`viv.py` 和 `viv.yaml` 如下所示。
+
+    === "examples/fsi/viv.py"
+
+        ``` py linenums="1"
+        --8<--
+        examples/fsi/viv.py
+        --8<--
+        ```
+
+    === "examples/fsi/conf/viv.yaml"
+
+        ``` yaml linenums="1" hl_lines="1 4 19 25 31 34 42 59"
+        hydra: # (1)
+        run:
+            # dynamic output directory according to running time and override name
+            dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+        job:
+            name: ${mode} # name of logfile
+            chdir: false # keep current working direcotry unchaned
+            config:
+            override_dirname:
+                exclude_keys:
+                - TRAIN.checkpoint_path
+                - TRAIN.pretrained_model_path
+                - EVAL.pretrained_model_path
+                - mode
+                - output_dir
+                - log_freq
+        callbacks:
+            init_callback:
+            _target_: ppsci.utils.callbacks.InitCallback # (2)
+        sweep:
+            # output directory for multirun
+            dir: ${hydra.run.dir}
+            subdir: ./
+
+        # general settings (3)
+        mode: train # running mode: train/eval
+        seed: 42
+        output_dir: ${hydra:run.dir}
+        log_freq: 20
+
+        # set data file path (4)
+        VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
+
+        # model settings (5)
+        MODEL:
+            input_keys: ["t_f"]
+            output_keys: ["eta"]
+            num_layers: 5
+            hidden_size: 50
+            activation: "tanh"
+
+        # training settings (6)
+        TRAIN:
+            epochs: 100000
+            iters_per_epoch: 1
+            save_freq: 10000
+            eval_during_train: true
+            eval_freq: 1000
+            batch_size: 100
+            lr_scheduler:
+                epochs: ${TRAIN.epochs}
+                iters_per_epoch: ${TRAIN.iters_per_epoch}
+                learning_rate: 0.001
+                step_size: 20000
+                gamma: 0.9
+            pretrained_model_path: null
+            checkpoint_path: null
+
+        # evaluation settings (7)
+        EVAL:
+            pretrained_model_path: null
+            batch_size: 32
+        ```
+
+        1. `hydra:` 下的配置段用于控制 hydra 运行时的一些行为，如输出目录、回调函数等，用户只需要修改 `dir:` 后的内容，即可控制输出目录，其余的字段一般不需关注。
+        2. `callbacks:` 下的配置段用于控制回调函数，如此处添加了负责程序运行前自动固定随机种子、初始化 logger 并创建输出目录的回调函数 `InitCallback`，一般不需要修改这里。
+        3. `general settings` 下的四个通用设置，包括运行模式 `mode`、随机数种子 `seed`、输出目录 `output_dir` 和日志记录频率 `log_freq`。
+        4. `set XXX file path` 下的字段，用于控制数据集的路径，如 `VIV_DATA_PATH` 等。
+        5. `MODEL` 下的字段，用于控制模型结构，如 `disp_net`、`stress_net` 等。
+        6. `TRAIN:` 下的字段，用于控制训练过程，如 `epochs`、`iters_per_epoch` 等
+        7. `EVAL:` 下的字段，用于控制评估过程，如 `pretrained_model_path`、`eval_with_no_grad` 等
+
+### 2.13 训练
 
 PaddleScience 模型的训练只需调用一行代码。
 
@@ -610,7 +778,7 @@ PaddleScience 模型的训练只需调用一行代码。
 solver.train()
 ```
 
-### 2.13 评估
+### 2.14 评估
 
 PaddleScience 模型的评估只需调用一行代码。
 
@@ -618,7 +786,7 @@ PaddleScience 模型的评估只需调用一行代码。
 solver.eval()
 ```
 
-### 2.14 可视化[可选]
+### 2.15 可视化[可选]
 
 若 `Solver` 实例化时传入了 `visualizer` 参数，则 PaddleScience 模型的可视化只需调用一行代码。
 
@@ -632,13 +800,13 @@ solver.visualize()
 
 ## 3. 编写文档
 
-除了案例代码，PaddleScience 同时存放了对应案例的详细文档，使用 Markdown + [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/) 进行编写和渲染，撰写文档步骤如下。
+除了案例代码，PaddleScience 同时存放了对应案例的详细文档，使用 Markdown + [Mkdocs](https://www.mkdocs.org/) + [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/) 进行编写和渲染，撰写文档步骤如下。
 
 ### 3.1 安装必要依赖包
 
 文档撰写过程中需进行即时渲染，预览文档内容以检查撰写的内容是否有误。因此需要按照如下命令，安装 mkdocs 相关依赖包。
 
-``` shell
+``` sh
 pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
@@ -646,13 +814,19 @@ pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/)、[PyMdown](https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/) 等插件进行编写，其在 Markdown 语法基础上支持了多种扩展性功能，能极大地提升文档的美观程度和阅读体验。建议参考超链接内的文档内容，选择合适的功能辅助文档撰写。
 
-### 3.3 预览文档
+### 3.3 使用 markdownlint 格式化文档[可选]
+
+如果您使用的开发环境为 VSCode，则推荐安装 [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint) 扩展。安装完毕后在编写完的文档内：点击右键-->格式化文档即可。
+
+### 3.4 预览文档
 
 在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
 
-``` shell
+``` sh
 mkdocs serve
+```
 
+``` log
 # ====== 终端打印信息如下 ======
 # INFO     -  Building documentation...
 # INFO     -  Cleaning site directory
@@ -667,7 +841,7 @@ mkdocs serve
 
     若默认端口号 8000 被占用，则可以手动指定服务部署的地址和端口，示例如下。
 
-    ``` shell
+    ``` sh
     # 指定 127.0.0.1 为地址，8687 为端口号
     mkdocs serve -a 127.0.0.1:8687
     ```
@@ -680,7 +854,7 @@ PaddleScience 是一个开源的代码库，由多人共同参与开发，因此
 PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
 让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
 
-因此在 commit 您的代码之前，请务必先执行以下命令安装 `pre-commit`。
+因此在 commit 您的代码之前，请务必先执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
 
 ``` sh
 pip install pre-commit

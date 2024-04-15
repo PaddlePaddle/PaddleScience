@@ -36,13 +36,40 @@ class L2Loss(base.Loss):
     \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
+    when `reduction` is set to "mean"
+
+    $$
+    L = MEAN \left( \Vert \mathbf{x} - \mathbf{y} \Vert_2 \right)
+    $$
+
+    when `reduction` is set to "sum"
+
+    $$
+    L = SUM \left( \Vert \mathbf{x} - \mathbf{y} \Vert_2 \right)
+    $$
+
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.L2Loss()
+        >>> import paddle
+        >>> from ppsci.loss import L2Loss
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = L2Loss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.78884506)
+        >>> loss = L2Loss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               5.57769012)
     """
 
     def __init__(
@@ -60,7 +87,7 @@ class L2Loss(base.Loss):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:
@@ -92,13 +119,42 @@ class PeriodicL2Loss(base.Loss):
     $\mathbf{x_l} \in \mathcal{R}^{N}$ is the first half of batch output,
     $\mathbf{x_r} \in \mathcal{R}^{N}$ is the second half of batch output.
 
+    when `reduction` is set to "mean"
+
+    $$
+    L = MEAN \left( \Vert \mathbf{x_l}-\mathbf{x_r} \Vert_2 \right)
+    $$
+
+    when `reduction` is set to "sum"
+
+    $$
+    L = SUM \left( \Vert \mathbf{x_l}-\mathbf{x_r} \Vert_2 \right)
+    $$
+
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.PeriodicL2Loss()
+        >>> import paddle
+        >>> from ppsci.loss import PeriodicL2Loss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 2.2, 0.9], [1.1, 0.8, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 2.2, 0.9], [1.1, 0.8, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 0.0, 1.0], [-0.2, 0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1, 0.1], [0.1, 0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = PeriodicL2Loss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.67581749)
+
+        >>> loss = PeriodicL2Loss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.67581749)
     """
 
     def __init__(
@@ -125,7 +181,7 @@ class PeriodicL2Loss(base.Loss):
             loss = F.mse_loss(
                 output_dict[key][:n_output], output_dict[key][n_output:], "none"
             )
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:
@@ -158,13 +214,42 @@ class L2RelLoss(base.Loss):
     \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
+    when `reduction` is set to "mean"
+
+    $$
+    L = MEAN \left( \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \mathbf{y} \Vert_2} \right)
+    $$
+
+    when `reduction` is set to "sum"
+
+    $$
+    L = SUM \left( \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \mathbf{y} \Vert_2} \right)
+    $$
+
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.L2RelLoss()
+        >>> import paddle
+        >>> from ppsci.loss import L2RelLoss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = L2RelLoss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.93676996)
+
+        >>> loss = L2RelLoss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               5.87353992)
     """
 
     def __init__(
