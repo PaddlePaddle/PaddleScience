@@ -11,9 +11,19 @@
 === "模型评估命令"
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
-    python viv.py mode=eval EVAL.pretrained_model_path=./viv_pretrained
+    python viv.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python viv.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python viv.py mode=infer
     ```
 
 | 预训练模型  | 指标 |

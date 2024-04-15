@@ -490,7 +490,7 @@ class ComposedNode(nn.Layer):
     def __init__(self, callable_nodes: List[Node]):
         super().__init__()
         assert len(callable_nodes)
-        self.callable_nodes = callable_nodes
+        self.callable_nodes = nn.LayerList(callable_nodes)
 
     def forward(self, data_dict: DATA_DICT) -> paddle.Tensor:
         # call all callable_nodes in order
@@ -615,7 +615,8 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.layout()
     image_path = f"{graph_filename}.png"
     dot_path = f"{graph_filename}.dot"
-    os.makedirs(os.path.dirname(image_path), exist_ok=True)
+    if len(os.path.dirname(image_path)):
+        os.makedirs(os.path.dirname(image_path), exist_ok=True)
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
     logger.message(

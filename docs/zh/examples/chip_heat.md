@@ -1,5 +1,7 @@
 # Chip Heat Simulation
 
+<a href="https://aistudio.baidu.com/projectdetail/7682679" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 === "模型训练命令"
 
     ``` sh
@@ -48,7 +50,7 @@ $$
 $$
 
 <figure markdown>
-  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/domain_chip.PNG){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/chip_domain.PNG){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 内部具有随机热源分布的 2D 芯片模拟区域，边界上可以为任意的边界条件。</figcaption>
 </figure>
 

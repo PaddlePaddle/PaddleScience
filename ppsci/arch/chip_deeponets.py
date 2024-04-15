@@ -60,7 +60,7 @@ class ChipDeepONets(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ChipDeepONet(
+        >>> model = ppsci.arch.ChipDeepONets(
         ...     ('u',),
         ...     ('bc',),
         ...     ('bc_data',),

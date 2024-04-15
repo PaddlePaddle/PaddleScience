@@ -82,6 +82,7 @@ nav:
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
+        - DGMR: zh/examples/dgmr.md
   - API文档:
     - " ":
       - ppsci.arch: zh/api/arch.md
@@ -107,6 +108,7 @@ nav:
         - ppsci.utils.initializer: zh/api/utils/initializer.md
         - ppsci.utils.logger: zh/api/utils/logger.md
         - ppsci.utils.misc: zh/api/utils/misc.md
+        - ppsci.utils.ema: zh/api/utils/ema.md
         - ppsci.utils.reader: zh/api/utils/reader.md
         - ppsci.utils.writer: zh/api/utils/writer.md
         - ppsci.utils.save_load: zh/api/utils/save_load.md
@@ -210,6 +212,7 @@ markdown_extensions:
 extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
+  - javascripts/contributors.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 

@@ -47,7 +47,7 @@ class PeriodicConstraint(base.Constraint):
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         periodic_key (str): name of dimension which periodic constraint applied to.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
@@ -66,7 +66,7 @@ class PeriodicConstraint(base.Constraint):
         periodic_key: str,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Callable]] = None,
