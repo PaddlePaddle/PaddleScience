@@ -159,6 +159,11 @@ class MLP(base.Arch):
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
             input in given channel will be period embeded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
+        fourier (Optional[Dict[str, Union[float, int]]]): Period of each input key,
+            input in given channel will be period embeded if specified, each tuple of
+            periods list is [period, trainable]. Defaults to None.
+        random_weight (Optional[Dict[str, float]]): Mean and std of random weight
+            factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
     Examples:
         >>> import paddle
