@@ -1,12 +1,15 @@
-import examples.earthformer.enso_metric as enso_metric
+from os import path as osp
+
 import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle import nn
 
+import examples.earthformer.enso_metric as enso_metric
 import ppsci
 from ppsci.data.dataset import enso_dataset
+from ppsci.utils import logger
 
 try:
     import xarray as xr
@@ -244,6 +247,11 @@ def inference(cfg: DictConfig):
     target_seq = target_seq[np.newaxis, ...]
 
     pred_data = predictor.predict(in_seq, cfg.INFER.batch_size)
+
+    # save predict data
+    save_path = osp.join(cfg.output_dir, "result_enso_pred.npy")
+    np.save(save_path, pred_data)
+    logger.info(f"Save output to {save_path}")
 
 
 @hydra.main(

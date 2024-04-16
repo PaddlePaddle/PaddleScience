@@ -253,6 +253,7 @@ def export(cfg: DictConfig):
 
 def inference(cfg: DictConfig):
     import predictor
+
     from ppsci.data.dataset import sevir_dataset
 
     predictor = predictor.EarthformerPredictor(cfg)
