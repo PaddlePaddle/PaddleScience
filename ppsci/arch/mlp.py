@@ -159,9 +159,8 @@ class MLP(base.Arch):
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
             input in given channel will be period embeded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
-        fourier (Optional[Dict[str, Union[float, int]]]): Period of each input key,
-            input in given channel will be period embeded if specified, each tuple of
-            periods list is [period, trainable]. Defaults to None.
+        fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
+            e.g. {'dim': 256, 'sclae': 1.0}. Defaults to None.
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
             factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
@@ -305,8 +304,6 @@ class MLP(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
-        if self.periods:
-            x = self.period_emb(x)
 
         if self.periods:
             x = self.period_emb(x)
