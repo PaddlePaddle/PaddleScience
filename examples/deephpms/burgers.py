@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -57,10 +56,6 @@ def boundary_loss_func(output_dict, *args):
 
 
 def train(cfg: DictConfig):
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # initialize burgers boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)
@@ -339,10 +334,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # initialize burgers boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)

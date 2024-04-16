@@ -14,23 +14,15 @@
 
 from __future__ import annotations
 
-from os import path as osp
-
 import hydra
 import paddle
 from omegaconf import DictConfig
 from paddle.nn import functional as F
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.AutoEncoder(**cfg.MODEL)
 
@@ -114,11 +106,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.AutoEncoder(**cfg.MODEL)
 

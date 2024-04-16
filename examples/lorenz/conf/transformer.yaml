@@ -15,6 +15,9 @@ hydra:
           - output_dir
           - log_freq
           - EMBEDDING_MODEL_PATH
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}

@@ -32,11 +32,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # load Data
     data = scipy.io.loadmat(cfg.DATA_PATH)
     # normalize data
@@ -171,11 +166,6 @@ def train(cfg: DictConfig):
                 "label": test_label,
             },
             "batch_size": cfg.TRAIN.batch_size.mse_validator,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},
@@ -249,11 +239,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # load Data
     data = scipy.io.loadmat(cfg.DATA_PATH)
     # normalize data
@@ -343,11 +328,6 @@ def evaluate(cfg: DictConfig):
                 "label": test_label,
             },
             "batch_size": cfg.TRAIN.batch_size.mse_validator,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},

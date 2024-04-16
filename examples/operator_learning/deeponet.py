@@ -3,7 +3,6 @@ Reference: https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivativ
 """
 
 import os
-from os import path as osp
 from typing import Callable
 from typing import Tuple
 
@@ -14,15 +13,9 @@ from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.DeepONet(**cfg.MODEL)
 
@@ -152,11 +145,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.DeepONet(**cfg.MODEL)
 

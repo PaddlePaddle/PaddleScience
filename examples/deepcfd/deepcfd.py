@@ -24,7 +24,6 @@ from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def split_tensors(
@@ -199,11 +198,6 @@ def predict_and_save_plot(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
-
     # initialize datasets
     with open(cfg.DATAX_PATH, "rb") as file:
         x = pickle.load(file)
@@ -279,11 +273,6 @@ def train(cfg: DictConfig):
             "label": {"output": test_y},
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     def metric_expr(
@@ -342,11 +331,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "eval.log"), "info")
-
     # initialize datasets
     with open(cfg.DATAX_PATH, "rb") as file:
         x = pickle.load(file)
@@ -396,11 +380,6 @@ def evaluate(cfg: DictConfig):
             "label": {"output": test_y},
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     def metric_expr(

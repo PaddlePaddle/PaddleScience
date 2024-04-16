@@ -25,11 +25,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -94,7 +89,6 @@ def train(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -199,11 +193,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -231,7 +220,6 @@ def evaluate(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,

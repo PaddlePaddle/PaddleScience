@@ -16,7 +16,6 @@
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
 
-from os import path as osp
 
 import functions as func_module
 import hydra
@@ -34,10 +33,6 @@ from ppsci.utils import logger
 def train(cfg: DictConfig):
     # open FLAG for higher order differential operator
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
@@ -295,10 +290,6 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # open FLAG for higher order differential operator
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)

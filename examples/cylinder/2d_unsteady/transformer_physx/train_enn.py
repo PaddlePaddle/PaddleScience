@@ -18,7 +18,6 @@
 
 # This file is for step1: training a embedding model.
 # This file is based on PaddleScience/ppsci API.
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -26,7 +25,6 @@ import paddle
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def get_mean_std(data: np.ndarray, visc: np.ndarray):
@@ -50,11 +48,6 @@ def get_mean_std(data: np.ndarray, visc: np.ndarray):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     weights = (10.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 10.0 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)
@@ -133,11 +126,6 @@ def train(cfg: DictConfig):
                 key: value for key, value in zip(cfg.MODEL.output_keys, weights)
             },
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
@@ -170,11 +158,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     weights = (10.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 10.0 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)
@@ -237,11 +220,6 @@ def evaluate(cfg: DictConfig):
             "weight_dict": {
                 key: value for key, value in zip(cfg.MODEL.output_keys, weights)
             },
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,

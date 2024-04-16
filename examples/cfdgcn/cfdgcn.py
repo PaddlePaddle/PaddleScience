@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from typing import Dict
 from typing import List
 
@@ -25,7 +24,6 @@ from omegaconf import DictConfig
 from paddle.nn import functional as F
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train_mse_func(
@@ -49,11 +47,6 @@ def eval_rmse_func(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
-
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
@@ -107,11 +100,6 @@ def train(cfg: DictConfig):
             "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -174,7 +162,6 @@ def evaluate(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -207,11 +194,6 @@ def evaluate(cfg: DictConfig):
             "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,

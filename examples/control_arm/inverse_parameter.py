@@ -1,18 +1,10 @@
-from os import path as osp
-
 import hydra
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -67,7 +59,6 @@ def train(cfg: DictConfig):
                 "drop_last": True,
                 "shuffle": True,
             },
-            "num_workers": 1,
             "batch_size": cfg.TRAIN.batch_size.arm_interior,
         },
         ppsci.loss.MSELoss("sum"),
@@ -98,11 +89,6 @@ def train(cfg: DictConfig):
         geom["geo"],
         {
             "dataset": "NamedArrayDataset",
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
             "total_size": cfg.EVAL.total_size.validator,
             "batch_size": cfg.EVAL.batch_size.validator,
         },
@@ -169,11 +155,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -207,11 +188,6 @@ def evaluate(cfg: DictConfig):
         geom["geo"],
         {
             "dataset": "NamedArrayDataset",
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
             "total_size": cfg.EVAL.total_size.validator,
             "batch_size": cfg.EVAL.batch_size.validator,
         },

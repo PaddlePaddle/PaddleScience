@@ -21,6 +21,9 @@ hydra:
           - mode
           - vol_coeff
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}

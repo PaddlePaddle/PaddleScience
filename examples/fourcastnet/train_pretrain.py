@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -21,7 +20,6 @@ from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
 import ppsci
-from ppsci.utils import logger
 
 
 def get_data_stat(cfg: DictConfig):
@@ -38,11 +36,6 @@ def get_data_stat(cfg: DictConfig):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     data_mean, data_std = fourcast_utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -119,11 +112,6 @@ def train(cfg: DictConfig):
             "transforms": transforms,
             "training": False,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -182,11 +170,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     data_mean, data_std = fourcast_utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -213,11 +196,6 @@ def evaluate(cfg: DictConfig):
             "vars_channel": cfg.VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }

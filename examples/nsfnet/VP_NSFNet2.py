@@ -113,11 +113,9 @@ def load_data(path, N_TRAIN, NB_TRAIN, N0_TRAIN):
 
 def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set random seed for reproducibility
     SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
     ITERS_PER_EPOCH = cfg.iters_per_epoch
 
     # set model
@@ -162,11 +160,6 @@ def train(cfg: DictConfig):
         },
         "batch_size": NB_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     train_dataloader_cfg_0 = {
@@ -177,11 +170,6 @@ def train(cfg: DictConfig):
         },
         "batch_size": N0_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     valida_dataloader_cfg = {
@@ -192,11 +180,6 @@ def train(cfg: DictConfig):
         },
         "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     geom = ppsci.geometry.PointCloud(
@@ -300,11 +283,6 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-
-    # set random seed for reproducibility
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
@@ -370,11 +348,6 @@ def evaluate(cfg: DictConfig):
         },
         "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     geom = ppsci.geometry.PointCloud(

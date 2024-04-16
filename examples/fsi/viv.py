@@ -66,11 +66,6 @@ def train(cfg: DictConfig):
             "label_keys": ("eta", "f"),
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     eta_mse_validator = ppsci.validate.SupervisedValidator(
         valid_dataloader_cfg,
@@ -147,11 +142,6 @@ def evaluate(cfg: DictConfig):
             "label_keys": ("eta", "f"),
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     eta_mse_validator = ppsci.validate.SupervisedValidator(
         valid_dataloader_cfg,

@@ -18,7 +18,6 @@
 
 # This file is for step2: training a transformer model, based on frozen pretrained embedding model.
 # This file is based on PaddleScience/ppsci API.
-from os import path as osp
 from typing import Dict
 
 import hydra
@@ -27,7 +26,6 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.arch import base
-from ppsci.utils import logger
 from ppsci.utils import save_load
 
 
@@ -53,11 +51,6 @@ class OutputTransform(object):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
@@ -114,11 +107,6 @@ def train(cfg: DictConfig):
             "stride": 1024,
             "embedding_model": embedding_model,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
@@ -173,11 +161,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
@@ -194,11 +177,6 @@ def evaluate(cfg: DictConfig):
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,

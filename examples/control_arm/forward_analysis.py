@@ -1,19 +1,12 @@
-from os import path as osp
-
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 from paddle import distributed as dist
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
     # set parallel
     enable_parallel = dist.get_world_size() > 1
 
@@ -55,7 +48,6 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -212,11 +204,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)

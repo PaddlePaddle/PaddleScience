@@ -128,11 +128,6 @@ def train(cfg: DictConfig):
             "num_workers": 1,
             "batch_size": cfg.TRAIN.batch_size.pde_constraint,
             "iters_per_epoch": ITERS_PER_EPOCH,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
         },
         loss=ppsci.loss.MSELoss("mean"),
         evenly=True,
@@ -304,11 +299,6 @@ def evaluate(cfg: DictConfig):
         "weight": weight_dict_KL,
     }
     eval_cfg = {
-        "sampler": {
-            "name": "BatchSampler",
-            "shuffle": False,
-            "drop_last": False,
-        },
         "batch_size": 2000,
     }
     eval_cfg["dataset"] = dataset_vel

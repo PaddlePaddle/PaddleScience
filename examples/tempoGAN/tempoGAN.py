@@ -35,10 +35,6 @@ import hdf5storage
 
 
 def train(cfg: DictConfig):
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     gen_funcs = func_module.GenFuncs(
         cfg.WEIGHT_GEN, (cfg.WEIGHT_GEN_LAYER if cfg.USE_SPATIALDISC else None)
     )
@@ -112,11 +108,6 @@ def train(cfg: DictConfig):
                 ),
             },
             "batch_size": cfg.TRAIN.batch_size.sup_constraint,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.FunctionalLoss(gen_funcs.loss_func_gen),
         {
@@ -144,11 +135,6 @@ def train(cfg: DictConfig):
                     ),
                 },
                 "batch_size": int(cfg.TRAIN.batch_size.sup_constraint // 3),
-                "sampler": {
-                    "name": "BatchSampler",
-                    "drop_last": False,
-                    "shuffle": False,
-                },
             },
             ppsci.loss.FunctionalLoss(gen_funcs.loss_func_gen_tempo),
             {
@@ -189,11 +175,6 @@ def train(cfg: DictConfig):
                     ),
                 },
                 "batch_size": cfg.TRAIN.batch_size.sup_constraint,
-                "sampler": {
-                    "name": "BatchSampler",
-                    "drop_last": False,
-                    "shuffle": False,
-                },
             },
             ppsci.loss.FunctionalLoss(disc_funcs.loss_func),
             name="sup_constraint_disc",
@@ -230,11 +211,6 @@ def train(cfg: DictConfig):
                     ),
                 },
                 "batch_size": int(cfg.TRAIN.batch_size.sup_constraint // 3),
-                "sampler": {
-                    "name": "BatchSampler",
-                    "drop_last": False,
-                    "shuffle": False,
-                },
             },
             ppsci.loss.FunctionalLoss(disc_funcs.loss_func_tempo),
             name="sup_constraint_disc_tempo",
@@ -329,10 +305,6 @@ def evaluate(cfg: DictConfig):
 
         os.makedirs(osp.join(cfg.output_dir, "eval_outs"), exist_ok=True)
 
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     gen_funcs = func_module.GenFuncs(cfg.WEIGHT_GEN, None)
 
     # load dataset
@@ -356,11 +328,6 @@ def evaluate(cfg: DictConfig):
                 "density_low": dataset_valid["density_low"],
             },
             "label": {"density_high": dataset_valid["density_high"]},
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": 1,
     }

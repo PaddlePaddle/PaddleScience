@@ -16,7 +16,6 @@
 Reference: https://github.com/zhry10/PhyLSTM.git
 """
 
-from os import path as osp
 
 import functions
 import hydra
@@ -25,15 +24,9 @@ import scipy.io
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
     ag_data = mat["input_tf"]  # ag, ad, av
     u_data = mat["target_X_tf"]
@@ -151,11 +144,6 @@ def train(cfg: DictConfig):
                 "input": input_dict_val,
                 "label": label_dict_val,
             },
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
             "batch_size": 1,
             "num_workers": 0,
         },
@@ -198,11 +186,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
     ag_data = mat["input_tf"]  # ag, ad, av
     u_data = mat["target_X_tf"]
@@ -291,11 +274,6 @@ def evaluate(cfg: DictConfig):
                 "name": "NamedArrayDataset",
                 "input": input_dict_val,
                 "label": label_dict_val,
-            },
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
             "batch_size": 1,
             "num_workers": 0,

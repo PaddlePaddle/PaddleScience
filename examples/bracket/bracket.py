@@ -277,11 +277,6 @@ def train(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
         {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},

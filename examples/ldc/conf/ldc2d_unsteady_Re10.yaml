@@ -13,6 +13,9 @@ hydra:
           - EVAL.pretrained_model_path
           - mode
           - output_dir
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}

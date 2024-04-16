@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -24,12 +23,6 @@ from ppsci.utils import reader
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -180,7 +173,6 @@ def train(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},
@@ -229,12 +221,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -273,7 +259,6 @@ def evaluate(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},
