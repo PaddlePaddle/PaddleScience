@@ -132,14 +132,14 @@ class SEVIRSkillScore:
     def calc_seq_hits_misses_fas(self, pred, target, threshold):
         """
         Args:
-            pred (paddle.Tensor): predict data
-            target (paddle.Tensor): true data
-            threshold:  int
+            pred (paddle.Tensor): Predict data.
+            target (paddle.Tensor): True data.
+            threshold (int):  The threshold to calculate hits, misses and fas.
 
         Returns:
-            hits (paddle.Tensor):
-            misses (paddle.Tensor):
-            fas (paddle.Tensor):
+            hits (paddle.Tensor): Number of hits.
+            misses (paddle.Tensor): Number of misses.
+            fas (paddle.Tensor): Number of false positives.
                 each has shape (seq_len, )
         """
 

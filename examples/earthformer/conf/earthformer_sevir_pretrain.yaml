@@ -50,7 +50,7 @@ DATASET:
 
   shuffle_seed: 1
   rescale_method: "01"
-  downsample_dict: None
+  downsample_dict: null
   verbose: false
   preprocess: true
 
@@ -133,7 +133,7 @@ TRAIN:
   pretrained_model_path: null
   checkpoint_path: null
   start_date: null
-  end_date: [2019, 8, 1]
+  end_date: [2019, 1, 1]
 
 
 # evaluation settings
@@ -142,7 +142,7 @@ EVAL:
   compute_metric_by_batch: false
   eval_with_no_grad: true
   batch_size: 1
-  end_date: [2019, 9, 1]
+  end_date: [2019, 6, 1]
 
   metrics_mode: "0"
   metrics_list: ["csi", "pod", "sucr", "bias"]
@@ -154,6 +154,7 @@ TEST:
   compute_metric_by_batch: true
   eval_with_no_grad: true
   batch_size: 1
+  start_date: [2019, 6, 1]
   end_date: null
 
 INFER:
@@ -180,3 +181,5 @@ INFER:
   plot_stride: 2
   logging_prefix: "Cuboid_SEVIR"
   interval_real_time: 5
+  data_type: "vil"
+  rescale_method: "01"

@@ -85,8 +85,8 @@ def train(cfg: DictConfig):
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
             "split_mode": cfg.DATASET.split_mode,
-            "start_date": cfg.TRAIN.start_date,
-            "end_date": cfg.TRAIN.end_date,
+            "start_date": cfg.TRAIN.end_date,
+            "end_date": cfg.EVAL.end_date,
             "preprocess": cfg.DATASET.preprocess,
             "rescale_method": cfg.DATASET.rescale_method,
             "shuffle": False,
@@ -180,8 +180,8 @@ def evaluate(cfg: DictConfig):
             "in_len": cfg.DATASET.in_len,
             "out_len": cfg.DATASET.out_len,
             "split_mode": cfg.DATASET.split_mode,
-            "start_date": cfg.TRAIN.start_date,
-            "end_date": cfg.TRAIN.end_date,
+            "start_date": cfg.TEST.start_date,
+            "end_date": cfg.TEST.end_date,
             "preprocess": cfg.DATASET.preprocess,
             "rescale_method": cfg.DATASET.rescale_method,
             "shuffle": False,
@@ -252,33 +252,42 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    from deploy.python_infer import pinn_predictor
+    import predictor
+    from ppsci.data.dataset import sevir_dataset
 
-    predictor = pinn_predictor.PINNPredictor(cfg)
+    predictor = predictor.EarthformerPredictor(cfg)
+
+    if cfg.INFER.rescale_method == "sevir":
+        scale_dict = sevir_dataset.PREPROCESS_SCALE_SEVIR
+        offset_dict = sevir_dataset.PREPROCESS_OFFSET_SEVIR
+    elif cfg.INFER.rescale_method == "01":
+        scale_dict = sevir_dataset.PREPROCESS_SCALE_01
+        offset_dict = sevir_dataset.PREPROCESS_OFFSET_01
+    else:
+        raise ValueError(f"Invalid rescale option: {cfg.INFER.rescale_method}.")
 
     # read h5 data
     h5data = h5py.File(cfg.INFER.data_path, "r")
-    data_vil = np.array(h5data["vil"]).transpose([0, 3, 1, 2])
+    data = np.array(h5data[cfg.INFER.data_type]).transpose([0, 3, 1, 2])
 
-    idx = np.random.choice(len(data_vil), None, False)
-    data = data_vil[idx]
+    idx = np.random.choice(len(data), None, False)
+    data = (
+        scale_dict[cfg.INFER.data_type] * data[idx] + offset_dict[cfg.INFER.data_type]
+    )
+
     input_data = data[: cfg.INFER.in_len, ...]
     input_data = input_data.reshape(1, *input_data.shape, 1).astype(np.float32)
     target_data = data[cfg.INFER.in_len : cfg.INFER.in_len + cfg.INFER.out_len, ...]
     target_data = target_data.reshape(1, *target_data.shape, 1).astype(np.float32)
 
-    output_dict = predictor.predict({"input": input_data}, cfg.INFER.batch_size)
-    output_dict = {
-        store_key: output_dict[infer_key]
-        for store_key, infer_key in zip({"output"}, output_dict.keys())
-    }
+    pred_data = predictor.predict(input_data, cfg.INFER.batch_size)
 
     sevir_vis_seq.save_example_vis_results(
         save_dir=cfg.INFER.sevir_vis_save,
         save_prefix=f"data_{idx}",
         in_seq=input_data,
         target_seq=target_data,
-        pred_seq=output_dict["output"],
+        pred_seq=pred_data,
         layout=cfg.INFER.layout,
         plot_stride=cfg.INFER.plot_stride,
         label=cfg.INFER.logging_prefix,

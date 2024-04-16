@@ -1,4 +1,4 @@
-import enso_metric
+import examples.earthformer.enso_metric as enso_metric
 import hydra
 import numpy as np
 import paddle
@@ -212,9 +212,9 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    from deploy.python_infer import pinn_predictor
+    import predictor
 
-    predictor = pinn_predictor.PINNPredictor(cfg)
+    predictor = predictor.EarthformerPredictor(cfg)
 
     train_cmip = xr.open_dataset(cfg.INFER.data_path).transpose(
         "year", "month", "lat", "lon"
@@ -243,11 +243,7 @@ def inference(cfg: DictConfig):
     target_seq = sst_data[idx, cfg.INFER.in_len :, ...]  # ( out_len, lat, lon, 1)
     target_seq = target_seq[np.newaxis, ...]
 
-    output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)
-    output_dict = {
-        store_key: output_dict[infer_key]
-        for store_key, infer_key in zip({"output"}, output_dict.keys())
-    }
+    pred_data = predictor.predict(in_seq, cfg.INFER.batch_size)
 
 
 @hydra.main(
