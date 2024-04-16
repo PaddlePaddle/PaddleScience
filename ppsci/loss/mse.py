@@ -141,8 +141,8 @@ class CausalMSELoss(base.Loss):
             raise ValueError(
                 f"reduction should be 'mean' or 'sum', but got {reduction}"
             )
-        self.n_chunks = n_chunks
         super().__init__(reduction, weight)
+        self.n_chunks = n_chunks
         self.tol = tol
         self.register_buffer(
             "acc_mat", paddle.tril(paddle.ones([n_chunks, n_chunks]), -1)
