@@ -18,6 +18,7 @@ from omegaconf import DictConfig
 
 from deploy.python_infer import base
 
+
 class EarthformerPredictor(base.Predictor):
     """General predictor for Earthformer model.
 
@@ -44,15 +45,15 @@ class EarthformerPredictor(base.Predictor):
             num_cpu_threads=cfg.INFER.num_cpu_threads,
         )
         self.log_freq = cfg.log_freq
-        
+
         # get input names and data handles
         self.input_names = self.predictor.get_input_names()
         self.input_data_handle = self.predictor.get_input_handle(self.input_names[0])
-        
+
         # get output names and data handles
         self.output_names = self.predictor.get_output_names()
         self.output_handle = self.predictor.get_output_handle(self.output_names[0])
-        
+
     def predict(
         self,
         input_data: np.ndarray,
@@ -71,9 +72,7 @@ class EarthformerPredictor(base.Predictor):
                 f"CuboidTransformerPredictor only support batch_size=1, but got {batch_size}"
             )
         # prepare input handle(s)
-        input_handles = {
-            self.input_names[0]: self.input_data_handle
-        }
+        input_handles = {self.input_names[0]: self.input_data_handle}
         # prepare output handle(s)
         output_handles = {self.output_names[0]: self.output_handle}
 
@@ -90,6 +89,5 @@ class EarthformerPredictor(base.Predictor):
 
         # receive batch output data from output handle(s)
         pred = output_handles[self.output_names[0]].copy_to_cpu()
-        
+
         return pred
-    
