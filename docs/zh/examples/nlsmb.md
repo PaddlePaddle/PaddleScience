@@ -1,5 +1,48 @@
 # NLS-MB
 
+<!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
+
+=== "模型训练命令"
+
+    ``` sh
+    # soliton
+    python NLS-MB_optical_soliton.py
+    # rogue wave
+    python NLS-MB_optical_rogue_wave.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # soliton
+    python NLS-MB_optical_soliton.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_soliton_pretrained.pdparams
+    # rogue wave
+    python NLS-MB_optical_rogue_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_rogue_wave_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    # soliton
+    python NLS-MB_optical_soliton.py mode=export
+    # rogue wave
+    python NLS-MB_optical_rogue_wave.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # soliton
+    python NLS-MB_optical_soliton.py mode=infer
+    # rogue wave
+    python NLS-MB_optical_rogue_wave.py mode=infer
+
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [NLS-MB_soliton_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_soliton_pretrained.pdparams) | loss(Residual): 0.00007<br>MSE.Schrodinger_1(Residual): 0.00002<br>MSE.Schrodinger_2(Residual): 0.00002<br>MSE.Maxwell_1(Residual): 0.00001<br>MSE.Maxwell_2(Residual): 0.00001<br>MSE.Bloch(Residual): 0.00001 |
+
 ## 1. 背景简介
 
 非线性局域波动力学，作为非线性科学的重要分支，涵盖了孤子、呼吸子和怪波等基本形式的非线性局域波。激光锁模技术为这些理论预言的非线性局域波提供了实验验证的平台，人们通过此技术观察到了孤子分子和怪波等丰富的非线性现象，进一步推动了非线性局域波的研究。目前，该领域的研究已深入流体力学、非线性光学、玻色-爱因斯坦凝聚(BEC)、等离子体物理等多个物理领域。在光纤领域，非线性动力学的研究基于光纤的光学器件、信息处理、材料设计以及信号传输的原理，对光纤激光器、放大器、波导和通信技术的发展起到了关键作用。光脉冲在光纤中的传播动力学受非线性偏微分方程（如非线性薛定谔方程NLSE）的调控。当色散与非线性效应共存时，这些方程往往难以解析求解。因此，分步傅立叶方法及其改进版本被广泛应用于研究光纤中的非线性效应，其优势在于实现简单且具有较高的相对精度。然而，对于长距离且高度非线性的场景，为满足精度需求，必须大幅减少分步傅立叶方法的步长，这无疑增加了计算复杂性，导致时域中网格点集数量庞大，计算过程耗时较长。PINN比数据驱动的方法在数据少得多的情况下表现出更好的性能，并且计算复杂性（以倍数表示）通常比SFM低两个数量级。
@@ -16,7 +59,7 @@ $$
 \end{cases}
 $$
 
-其中，*x*, *t*分别表示归一化的传播距离和时间，复包络*E*是缓慢变化的电场，*p*是共振介质偏振的量度，$\eta$表示粒子数反转的程度，符号*表示复共轭。$\alpha_1$是群速度色散参数，$\alpha_2$​​是Kerr非线性参数，是测量共振频率的偏移。NLS-MB系统是由Maimistov和Manykin首次提出来的,用来描述极短的脉冲在Kerr非线性介质中的传播.该系统在解决光纤损耗使得其传输距离受限这一问题上,也扮演着重要的作用。在这个方程中，它描述的是自感应透明孤子和NLS孤子的混合状态，称作SIT-NLS孤子，这两种孤子可以共存，并且已经有很多关于其在光纤通信中的研究.
+其中，*x*, *t*分别表示归一化的传播距离和时间，复包络*E*是慢变的电场，*p*是共振介质偏振的量度，$\eta$表示粒子数反转的程度，符号*表示复共轭。$\alpha_1$是群速度色散参数，$\alpha_2$​​是Kerr非线性参数，是测量共振频率的偏移。NLS-MB系统是由Maimistov和Manykin首次提出来的,用来描述极短的脉冲在Kerr非线性介质中的传播.该系统在解决光纤损耗使得其传输距离受限这一问题上,也扮演着重要的作用。在这个方程中，它描述的是自感应透明孤子和NLS孤子的混合状态，称作SIT-NLS孤子，这两种孤子可以共存，并且已经有很多关于其在光纤通信中的研究.
 
 ### 2.1 Optical soliton
 
@@ -46,9 +89,9 @@ $$
 
 本文使用PINN经典的MLP模型进行训练。
 
-``` py linenums="48"
+``` py linenums="94"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:48:49
+examples/NLS-MB/NLS-MB_optical_soliton.py:94:95
 --8<--
 ```
 
@@ -56,9 +99,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:48:49
 
 由于 Optical soliton 使用的是 NLS-MB 方程，因此可以直接使用 PaddleScience 内置的 `NLSMB`。
 
-``` py linenums="51"
+``` py linenums="97"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:51:54
+examples/NLS-MB/NLS-MB_optical_soliton.py:97:100
 --8<--
 ```
 
@@ -67,9 +110,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:51:54
 本文中 Optical soliton 问题作用在以空间(-1.0, 1.0),  时间(-1.0, 1.0) 的时空区域，
 因此可以直接使用 PaddleScience 内置的时空几何 `time_interval` 作为计算域。
 
-``` py linenums="62"
+``` py linenums="108"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:62:68
+examples/NLS-MB/NLS-MB_optical_soliton.py:108:114
 --8<--
 ```
 
@@ -87,9 +130,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:26:44
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="103"
+``` py linenums="150"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:103:110
+examples/NLS-MB/NLS-MB_optical_soliton.py:150:169
 --8<--
 ```
 
@@ -109,9 +152,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:103:110
 
 由于我们边界点和初值点具有解析解,因此我们使用监督约束
 
-``` py linenums="125"
+``` py linenums="171"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:125:130
+examples/NLS-MB/NLS-MB_optical_soliton.py:171:176
 --8<--
 ```
 
@@ -129,9 +172,9 @@ examples/NLS-MB/conf/NLS-MB_soliton.yaml:41:54
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="138"
+``` py linenums="184"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:138:139
+examples/NLS-MB/NLS-MB_optical_soliton.py:184:185
 --8<--
 ```
 
@@ -139,9 +182,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:138:139
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="141"
+``` py linenums="187"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:141:162
+examples/NLS-MB/NLS-MB_optical_soliton.py:187:208
 --8<--
 ```
 
@@ -149,9 +192,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:141:162
 
 在模型训练完毕之后，我们可以在计算域取点进行预测，并手动计算出振幅，并可视化结果。
 
-``` py linenums="209"
+``` py linenums="255"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:209:252
+examples/NLS-MB/NLS-MB_optical_soliton.py:255:269
 --8<--
 ```
 
@@ -161,9 +204,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:209:252
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="164"
+``` py linenums="210"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:164:181
+examples/NLS-MB/NLS-MB_optical_soliton.py:210:227
 --8<--
 ```
 
@@ -171,9 +214,9 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:164:181
 
 在使用 `Adam` 优化器训练完毕之后，我们可以将优化器更换成二阶优化器 `L-BFGS` 继续训练少量轮数（此处我们使用 `Adam` 优化轮数的 10% 即可），从而进一步提高模型精度。
 
-``` py linenums="183"
+``` py linenums="229"
 --8<--
-examples/NLS-MB/NLS-MB_optical_soliton.py:183:207
+examples/NLS-MB/NLS-MB_optical_soliton.py:229:253
 --8<--
 ```
 
@@ -190,6 +233,22 @@ examples/NLS-MB/NLS-MB_optical_soliton.py
 ```
 
 ## 5. 结果展示
+
+### 5.1 optical_soliton
+
+<figure markdown>
+  ![optical_soliton](https://paddle-org.bj.bcebos.com/paddlescience/docs/NLS-MB/pred_optical_soliton.png){ loading=lazy}
+  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（$\eta$）</figcaption>
+</figure>
+
+### 5.2 optical_rogue_wave
+
+<figure markdown>
+  ![optical_rogue_wave](https://paddle-org.bj.bcebos.com/paddlescience/docs/NLS-MB/pred_optical_rogue_wave.png){ loading=lazy}
+  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（$\eta$）</figcaption>
+</figure>
+
+可以看到PINN预测与解析解的结果基本一致。
 
 ## 6. 参考资料
 

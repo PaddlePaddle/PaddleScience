@@ -44,6 +44,52 @@ def analytic_solution(out):
     return Eu_true, Ev_true, pu_true, pv_true, eta_true
 
 
+def plot(
+    t: np.ndarray,
+    x: np.ndarray,
+    E_ref: np.ndarray,
+    E_pred: np.ndarray,
+    p_ref: np.ndarray,
+    p_pred: np.ndarray,
+    eta_ref: np.ndarray,
+    eta_pred: np.ndarray,
+    output_dir: str,
+):
+    fig = plt.figure(figsize=(10, 10))
+    plt.subplot(3, 3, 1)
+    plt.title("E_ref")
+    plt.tricontourf(x, t, E_ref, levels=256, cmap="jet")
+    plt.subplot(3, 3, 2)
+    plt.title("E_pred")
+    plt.tricontourf(x, t, E_pred, levels=256, cmap="jet")
+    plt.subplot(3, 3, 3)
+    plt.title("E_diff")
+    plt.tricontourf(x, t, np.abs(E_ref - E_pred), levels=256, cmap="jet")
+    plt.subplot(3, 3, 4)
+    plt.title("p_ref")
+    plt.tricontourf(x, t, p_ref, levels=256, cmap="jet")
+    plt.subplot(3, 3, 5)
+    plt.title("p_pred")
+    plt.tricontourf(x, t, p_pred, levels=256, cmap="jet")
+    plt.subplot(3, 3, 6)
+    plt.title("p_diff")
+    plt.tricontourf(x, t, np.abs(p_ref - p_pred), levels=256, cmap="jet")
+    plt.subplot(3, 3, 7)
+    plt.title("eta_ref")
+    plt.tricontourf(x, t, eta_ref, levels=256, cmap="jet")
+    plt.subplot(3, 3, 8)
+    plt.title("eta_pred")
+    plt.tricontourf(x, t, eta_pred, levels=256, cmap="jet")
+    plt.subplot(3, 3, 9)
+    plt.title("eta_diff")
+    plt.tricontourf(x, t, np.abs(eta_ref - eta_pred), levels=256, cmap="jet")
+
+    fig_path = osp.join(output_dir, "pred_optical_soliton.png")
+    print(f"Saving figure to {fig_path}")
+    fig.savefig(fig_path, bbox_inches="tight", dpi=400)
+    plt.close()
+
+
 def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
@@ -212,44 +258,15 @@ def train(cfg: DictConfig):
     pred = solver.predict(vis_points, return_numpy=True)
     x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
-    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)
-    p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)
-    eta_ref = eta_true
-    eta_pred = pred["eta"]
+    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
+    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)[:, 0]
+    p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
+    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)[:, 0]
+    eta_ref = eta_true[:, 0]
+    eta_pred = pred["eta"][:, 0]
 
-    plt.figure(figsize=(10, 10))
-    plt.subplot(3, 3, 1)
-    plt.title("E_ref")
-    plt.tricontourf(x, t, E_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 2)
-    plt.title("E_pred")
-    plt.tricontourf(x, t, E_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 3)
-    plt.title("E_diff")
-    plt.tricontourf(x, t, np.abs(E_ref[:, 0] - E_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 4)
-    plt.title("p_ref")
-    plt.tricontourf(x, t, p_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 5)
-    plt.title("p_pred")
-    plt.tricontourf(x, t, p_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 6)
-    plt.title("p_diff")
-    plt.tricontourf(x, t, np.abs(p_ref[:, 0] - p_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 7)
-    plt.title("eta_ref")
-    plt.tricontourf(x, t, eta_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 8)
-    plt.title("eta_pred")
-    plt.tricontourf(x, t, eta_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 9)
-    plt.title("eta_diff")
-    plt.tricontourf(
-        x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
-    )
-    plt.savefig(osp.join(cfg.output_dir, "pred_optical_soliton.png"))
+    # plot
+    plot(t, x, E_ref, E_pred, p_ref, p_pred, eta_ref, eta_pred, cfg.output_dir)
 
 
 def evaluate(cfg: DictConfig):
@@ -317,44 +334,15 @@ def evaluate(cfg: DictConfig):
     pred = solver.predict(vis_points, return_numpy=True)
     x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
-    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)
-    p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)
-    eta_ref = eta_true
-    eta_pred = pred["eta"]
+    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
+    E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)[:, 0]
+    p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
+    p_pred = np.sqrt(pred["pu"] ** 2 + pred["pv"] ** 2)[:, 0]
+    eta_ref = eta_true[:, 0]
+    eta_pred = pred["eta"][:, 0]
 
-    plt.figure(figsize=(10, 10))
-    plt.subplot(3, 3, 1)
-    plt.title("E_ref")
-    plt.tricontourf(x, t, E_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 2)
-    plt.title("E_pred")
-    plt.tricontourf(x, t, E_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 3)
-    plt.title("E_diff")
-    plt.tricontourf(x, t, np.abs(E_ref[:, 0] - E_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 4)
-    plt.title("p_ref")
-    plt.tricontourf(x, t, p_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 5)
-    plt.title("p_pred")
-    plt.tricontourf(x, t, p_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 6)
-    plt.title("p_diff")
-    plt.tricontourf(x, t, np.abs(p_ref[:, 0] - p_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 7)
-    plt.title("eta_ref")
-    plt.tricontourf(x, t, eta_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 8)
-    plt.title("eta_pred")
-    plt.tricontourf(x, t, eta_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 9)
-    plt.title("eta_diff")
-    plt.tricontourf(
-        x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
-    )
-    plt.savefig(osp.join(cfg.output_dir, "pred_optical_soliton.png"))
+    # plot
+    plot(t, x, E_ref, E_pred, p_ref, p_pred, eta_ref, eta_pred, cfg.output_dir)
 
 
 def export(cfg: DictConfig):
@@ -412,44 +400,15 @@ def inference(cfg: DictConfig):
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(input_dict)
     x = input_dict["x"][:, 0]
     t = input_dict["t"][:, 0]
-    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)
-    E_pred = np.sqrt(output_dict["Eu"] ** 2 + output_dict["Ev"] ** 2)
-    p_ref = np.sqrt(pu_true**2 + pv_true**2)
-    p_pred = np.sqrt(output_dict["pu"] ** 2 + output_dict["pv"] ** 2)
-    eta_ref = eta_true
-    eta_pred = output_dict["eta"]
+    E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
+    E_pred = np.sqrt(output_dict["Eu"] ** 2 + output_dict["Ev"] ** 2)[:, 0]
+    p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
+    p_pred = np.sqrt(output_dict["pu"] ** 2 + output_dict["pv"] ** 2)[:, 0]
+    eta_ref = eta_true[:, 0]
+    eta_pred = output_dict["eta"][:, 0]
 
-    plt.figure(figsize=(10, 10))
-    plt.subplot(3, 3, 1)
-    plt.title("E_ref")
-    plt.tricontourf(x, t, E_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 2)
-    plt.title("E_pred")
-    plt.tricontourf(x, t, E_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 3)
-    plt.title("E_diff")
-    plt.tricontourf(x, t, np.abs(E_ref[:, 0] - E_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 4)
-    plt.title("p_ref")
-    plt.tricontourf(x, t, p_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 5)
-    plt.title("p_pred")
-    plt.tricontourf(x, t, p_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 6)
-    plt.title("p_diff")
-    plt.tricontourf(x, t, np.abs(p_ref[:, 0] - p_pred[:, 0]), levels=256, cmap="jet")
-    plt.subplot(3, 3, 7)
-    plt.title("eta_ref")
-    plt.tricontourf(x, t, eta_ref[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 8)
-    plt.title("eta_pred")
-    plt.tricontourf(x, t, eta_pred[:, 0], levels=256, cmap="jet")
-    plt.subplot(3, 3, 9)
-    plt.title("eta_diff")
-    plt.tricontourf(
-        x, t, np.abs(eta_ref[:, 0] - eta_pred[:, 0]), levels=256, cmap="jet"
-    )
-    plt.savefig(osp.join(cfg.output_dir, "pred_optical_rogue_wave.png"))
+    # plot
+    plot(t, x, E_ref, E_pred, p_ref, p_pred, eta_ref, eta_pred, cfg.output_dir)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="NLS-MB_soliton.yaml")
