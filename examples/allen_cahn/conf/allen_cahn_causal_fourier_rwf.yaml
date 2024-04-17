@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_allen_cahn_plain/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_allen_cahn_causal_fourier_rwf/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
@@ -40,6 +40,12 @@ MODEL:
   activation: tanh
   periods:
     t: [2.0, False]
+  fourier:
+    dim: 256
+    scale: 1.0
+  random_weight:
+    mean: 0.5
+    std: 0.1
 
 # training settings
 TRAIN:
@@ -58,6 +64,9 @@ TRAIN:
   batch_size: 4096
   pretrained_model_path: null
   checkpoint_path: null
+  causal:
+    n_chunks: 32
+    tol: 1.0
 
 # evaluation settings
 EVAL:

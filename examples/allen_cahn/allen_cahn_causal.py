@@ -86,7 +86,7 @@ def train(cfg: DictConfig):
             (cfg.TRAIN.batch_size, 2),
         ).astype(dtype)
         return {
-            "t": tx[:, 0:1],
+            "t": np.sort(tx[:, 0:1], axis=0),
             "x": tx[:, 1:2],
         }
 
@@ -102,7 +102,9 @@ def train(cfg: DictConfig):
             },
         },
         output_expr=equation["AllenCahn"].equations,
-        loss=ppsci.loss.MSELoss("mean"),
+        loss=ppsci.loss.CausalMSELoss(
+            cfg.TRAIN.causal.n_chunks, "mean", tol=cfg.TRAIN.causal.tol
+        ),
         name="PDE",
     )
 
@@ -279,7 +281,9 @@ def inference(cfg: DictConfig):
     plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="allen_cahn.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="allen_cahn_causal.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
