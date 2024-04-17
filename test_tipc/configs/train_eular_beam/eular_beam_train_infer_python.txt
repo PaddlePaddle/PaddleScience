@@ -1,5 +1,5 @@
 ===========================train_params===========================
-model_item:euler_beam
+model_name:euler_beam
 bs_item:1
 run_mode:DP
 device_num:N1C1

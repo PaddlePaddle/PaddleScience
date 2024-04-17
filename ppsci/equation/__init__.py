@@ -19,6 +19,7 @@ from ppsci.equation.ide import Volterra
 from ppsci.equation.pde import DETACH_FUNC_NAME
 from ppsci.equation.pde import NLSMB
 from ppsci.equation.pde import PDE
+from ppsci.equation.pde import AllenCahn
 from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import HeatExchanger
 from ppsci.equation.pde import Laplace
@@ -33,6 +34,7 @@ from ppsci.utils import misc
 __all__ = [
     "PDE",
     "DETACH_FUNC_NAME",
+    "AllenCahn",
     "Biharmonic",
     "HeatExchanger",
     "Laplace",
