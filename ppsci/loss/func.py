@@ -19,6 +19,8 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
+import paddle
+
 from ppsci.loss import base
 
 
@@ -34,7 +36,7 @@ class FunctionalLoss(base.Loss):
     $$
 
     Args:
-        loss_expr (Callable): expression of loss calculation.
+        loss_expr (Callable[..., paddle.Tensor]): Function for custom loss computation.
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -63,11 +65,21 @@ class FunctionalLoss(base.Loss):
 
     def __init__(
         self,
-        loss_expr: Callable,
+        loss_expr: Callable[..., paddle.Tensor],
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         super().__init__(None, weight)
         self.loss_expr = loss_expr
 
-    def forward(self, output_dict, label_dict=None, weight_dict=None):
-        return self.loss_expr(output_dict, label_dict, weight_dict)
+    def forward(self, output_dict, label_dict=None, weight_dict=None) -> paddle.Tensor:
+        loss = self.loss_expr(output_dict, label_dict, weight_dict)
+
+        assert isinstance(
+            loss, (paddle.Tensor, paddle.static.Variable, paddle.pir.Value)
+        ), (
+            "Loss computed by custom function should be type of 'paddle.Tensor', "
+            f"'paddle.static.Variable' or 'paddle.pir.Value', but got {type(loss)}."
+            " Please check the return type of custom loss function."
+        )
+
+        return loss
