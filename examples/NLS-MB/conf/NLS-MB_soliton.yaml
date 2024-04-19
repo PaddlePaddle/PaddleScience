@@ -59,7 +59,7 @@ EVAL:
   eval_with_no_grad: true
 
 INFER:
-  pretrained_model_path: null
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_soliton_pretrained.pdparams
   export_path: ./inference/NLS-MB_soliton
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams

@@ -18,16 +18,23 @@
     # docker run --name paddlescience_container --gpus all --network=host -it shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
     ```
 
+    !!! note
+
+        Dockerhub 拉取的镜像**仅**预装了运行 PaddleScience 所需的依赖包，如 pymesh、open3d，**并不包含 PaddleScience**。
+        因此请在镜像拉取和容器构建完成后，参考 [1.4 安装 PaddleScience](#14-paddlescience) 中的步骤，在容器中安装 PaddleScience。
+
 === "通过 Dockerfile 构建镜像"
 
-    如果你对 docker 有一定了解，则可以通过我们提供的 Dockerfile 文件，直接构建出能运行 PaddleScience 的环境。按照下列步骤构建镜像，创建容器并进入容器，以运行 PaddleScience。
+    ``` sh
+    git clone https://github.com/PaddlePaddle/PaddleScience.git
+    cd PaddleScience/docker/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
+    bash run.sh
+    ```
 
-    1. 克隆 PaddleScience 源码：`git clone https://github.com/PaddlePaddle/PaddleScience.git`；
-    2. 下载 PyMesh 预编译文件压缩包 [pymesh.tar.xz](https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz)，并放置在 `PaddleScience/docker/` 目录下；
-    3. 在 `PaddleScience/docker/` 目录下，执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成；
-    4. **在容器内手动执行：`{++ldconfig++}`，刷新动态链接库缓存，否则可能出现 GPU 设置不正确的问题。**
+    如果出现因网络问题导致的 docker 构建时 apt 下载报错，则重复执行 `bash run.sh` 直至构建完成。
 
-    更多关于 Paddle Docker 的安装和使用，请参考 [Docker 安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/fromdocker.html)
+    更多关于 Paddle Docker 的安装和使用，请参考 [Docker 安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/fromdocker.html)。
 
 ### 1.2 python 环境安装[可选]
 
