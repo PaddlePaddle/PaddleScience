@@ -41,7 +41,8 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [NLS-MB_soliton_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_soliton_pretrained.pdparams) | loss(Residual): 0.00007<br>MSE.Schrodinger_1(Residual): 0.00002<br>MSE.Schrodinger_2(Residual): 0.00002<br>MSE.Maxwell_1(Residual): 0.00001<br>MSE.Maxwell_2(Residual): 0.00001<br>MSE.Bloch(Residual): 0.00001 |
+| [NLS-MB_soliton_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_soliton_pretrained.pdparams) | Residual/loss: 0.00000<br>Residual/MSE.Schrodinger_1: 0.00000<br>Residual/MSE.Schrodinger_2: 0.00000<br>Residual/MSE.Maxwell_1: 0.00000<br>Residual/MSE.Maxwell_2: 0.00000<br>Residual/MSE.Bloch: 0.00000 |
+| [NLS-MB_optical_rogue_wave.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/NLS-MB/NLS-MB_optical_rogue_wave.pdparams) | Residual/loss: 0.00001<br>Residual/MSE.Schrodinger_1: 0.00000<br>Residual/MSE.Schrodinger_2: 0.00000<br>Residual/MSE.Maxwell_1: 0.00000<br>Residual/MSE.Maxwell_2: 0.00000<br>Residual/MSE.Bloch: 0.00000 |
 
 ## 1. 背景简介
 
@@ -238,18 +239,18 @@ examples/NLS-MB/NLS-MB_optical_soliton.py
 
 <figure markdown>
   ![optical_soliton](https://paddle-org.bj.bcebos.com/paddlescience/docs/NLS-MB/pred_optical_soliton.png){ loading=lazy}
-  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（$\eta$）</figcaption>
+  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（eta）</figcaption>
 </figure>
 
 ### 5.2 optical_rogue_wave
 
 <figure markdown>
   ![optical_rogue_wave](https://paddle-org.bj.bcebos.com/paddlescience/docs/NLS-MB/pred_optical_rogue_wave.png){ loading=lazy}
-  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（$\eta$）</figcaption>
+  <figcaption>解析解结果与 PINN 预测结果对比，从上到下分别为：慢变电场（E），共振偏量（p）以及粒子数反转程度（eta）</figcaption>
 </figure>
 
 可以看到PINN预测与解析解的结果基本一致。
 
 ## 6. 参考资料
 
-   [1] [S.-Y. Xu, Q. Zhou, and W. Liu, Prediction of Soliton Evolution and Equation Parameters for NLS–MB Equation Based on the phPINN Algorithm, Nonlinear Dyn (2023)](https://doi.org/10.1007/s11071-023-08824-w).
+[1] [S.-Y. Xu, Q. Zhou, and W. Liu, Prediction of Soliton Evolution and Equation Parameters for NLS–MB Equation Based on the phPINN Algorithm, Nonlinear Dyn (2023)](https://doi.org/10.1007/s11071-023-08824-w).
