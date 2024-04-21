@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from os import path as osp
 
 import hydra
@@ -31,6 +32,8 @@ from ppsci.utils import logger
 
 
 def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
+    if not osp.exists(output_dir):
+        os.makedirs(output_dir)
     plt.clf()
     fig = plt.figure(figname, figsize=(15, 12))
     gs = gridspec.GridSpec(2, 3)
@@ -39,7 +42,9 @@ def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
     for i, key in enumerate(data):
         plot_data = griddata(
             griddata_points,
-            data[key].numpy().flatten(),
+            data[key].flatten()
+            if isinstance(data[key], np.ndarray)
+            else data[key].numpy().flatten(),
             griddata_xi,
             method="cubic",
         )
@@ -350,14 +355,107 @@ def evaluate(cfg: DictConfig):
     )
 
 
+def export(cfg: DictConfig):
+    from paddle import nn
+    from paddle.static import InputSpec
+
+    # set models
+    disp_net = ppsci.arch.MLP(**cfg.MODEL)
+
+    # load pretrained model
+    solver = ppsci.solver.Solver(
+        model=disp_net, pretrained_model_path=cfg.INFER.pretrained_model_path
+    )
+
+    class Wrapped_Model(nn.Layer):
+        def __init__(self, model):
+            super().__init__()
+            self.model = model
+
+        def forward(self, x):
+            model_out = self.model(x)
+            outs = self.compute_outs(model_out["u"], x["x"], x["y"])
+            return outs
+
+        def compute_outs(self, w, x, y):
+            D = cfg.E * (cfg.HEIGHT**3) / (12.0 * (1.0 - cfg.NU**2))
+            w_x2 = hessian(w, x)
+            w_y2 = hessian(w, y)
+            w_x_y = jacobian(jacobian(w, x), y)
+            M_x = -(w_x2 + cfg.NU * w_y2) * D
+            M_y = -(cfg.NU * w_x2 + w_y2) * D
+            M_xy = (1 - cfg.NU) * w_x_y * D
+            Q_x = -jacobian((w_x2 + w_y2), x) * D
+            Q_y = -jacobian((w_x2 + w_y2), y) * D
+            return {"Mx": M_x, "Mxy": M_xy, "My": M_y, "Qx": Q_x, "Qy": Q_y, "w": w}
+
+    solver.model = Wrapped_Model(solver.model)
+
+    # export models
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in disp_net.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # generate samples
+    num_x = 201
+    num_y = 301
+    x_grad, y_grad = np.meshgrid(
+        np.linspace(
+            start=0, stop=cfg.LENGTH, num=num_x, endpoint=True, dtype=np.float32
+        ),
+        np.linspace(
+            start=0, stop=cfg.WIDTH, num=num_y, endpoint=True, dtype=np.float32
+        ),
+    )
+    x_faltten = x_grad.reshape(-1, 1)
+    y_faltten = y_grad.reshape(-1, 1)
+
+    output_dict = predictor.predict(
+        {"x": x_faltten, "y": y_faltten}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.INFER.output_keys, output_dict.keys())
+    }
+
+    # plotting
+    griddata_points = np.concatenate([x_faltten, y_faltten], axis=-1)
+    griddata_xi = (x_grad, y_grad)
+    boundary = [0, cfg.LENGTH, 0, cfg.WIDTH]
+    plotting(
+        "eval_Mx_Mxy_My_Qx_Qy_w",
+        "./biharmonic2d_pred",
+        output_dict,
+        griddata_points,
+        griddata_xi,
+        boundary,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="biharmonic2d.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
