@@ -36,7 +36,7 @@ __all__ = [
     "uniform_",
     "normal_",
     "trunc_normal_",
-    "glorot_normal",
+    "glorot_normal_",
     "constant_",
     "ones_",
     "zeros_",
@@ -472,7 +472,7 @@ def conv_init_(module: nn.Layer) -> None:
             uniform_(module.bias, -bound, bound)
 
 
-def glorot_normal(tensor: paddle.Tensor) -> paddle.Tensor:
+def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     """Modify tensor inplace using jax-style glorot_normal.
 
     Args:
@@ -485,11 +485,11 @@ def glorot_normal(tensor: paddle.Tensor) -> paddle.Tensor:
         >>> import paddle
         >>> import ppsci
         >>> param = paddle.empty((128, 256), "float32")
-        >>> param = ppsci.utils.initializer.glorot_normal(param)
+        >>> param = ppsci.utils.initializer.glorot_normal_(param)
     """
     assert (
         tensor.ndim == 2
-    ), f"glorot_normal only support    2D tensor now, but got ndim={tensor.ndim}"
+    ), f"glorot_normal_ only support 2D tensor now, but got ndim={tensor.ndim}"
     fin, fout = tensor.shape
     var = 2.0 / (fin + fout)
     stddev = math.sqrt(var) * 0.87962566103423978
