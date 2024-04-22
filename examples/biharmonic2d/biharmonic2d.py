@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from os import path as osp
 
 import hydra
@@ -32,8 +31,6 @@ from ppsci.utils import logger
 
 
 def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
-    if not osp.exists(output_dir):
-        os.makedirs(output_dir)
     plt.clf()
     fig = plt.figure(figname, figsize=(15, 12))
     gs = gridspec.GridSpec(2, 3)
@@ -42,9 +39,7 @@ def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
     for i, key in enumerate(data):
         plot_data = griddata(
             griddata_points,
-            data[key].flatten()
-            if isinstance(data[key], np.ndarray)
-            else data[key].numpy().flatten(),
+            data[key].flatten(),
             griddata_xi,
             method="cubic",
         )
@@ -348,7 +343,7 @@ def evaluate(cfg: DictConfig):
     plotting(
         "eval_Mx_Mxy_My_Qx_Qy_w",
         cfg.output_dir,
-        outs,
+        {k: v.numpy() for k, v in outs.items()},
         griddata_points,
         griddata_xi,
         boundary,
@@ -434,7 +429,7 @@ def inference(cfg: DictConfig):
     boundary = [0, cfg.LENGTH, 0, cfg.WIDTH]
     plotting(
         "eval_Mx_Mxy_My_Qx_Qy_w",
-        "./biharmonic2d_pred",
+        cfg.output_dir,
         output_dict,
         griddata_points,
         griddata_xi,
