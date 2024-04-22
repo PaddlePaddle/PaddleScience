@@ -68,6 +68,6 @@ We also visualized the predicted wind speed at 10 meters above ground level, wit
 
 ## License
 
-Yinglong1 was released by Shanghai Zhangjiang Institute of Mathematics, Baidu inc.
+YingLong1 was released by Shanghai Zhangjiang Institute of Mathematics, Baidu inc.
 
 The commercial use of these models is forbidden.
