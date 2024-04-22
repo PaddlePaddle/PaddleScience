@@ -237,6 +237,7 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
+                # NOTE: compute metric with entire data
                 metric_dict = metric_func(output_dict, label_dict)
                 if metric_name not in metric_dict_group:
                     metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
@@ -270,7 +271,9 @@ def _eval_by_batch(
         # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
             for var_name, metric_value in metric_dict.items():
+                # NOTE: concat all metric(scalars) into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]
+                # NOTE: compute average metric from metric vector as final metric value
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value
                 metric_str = f"{_validator.name}/{metric_name}.{var_name}"
