@@ -63,6 +63,9 @@ def _eval_by_dataset(
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric on total samples(default process).
 
+    NOTE: This is the default evaluation method as general for most cases, but may not
+    memory-efficiency for large dataset or large output.
+
     Args:
         solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
@@ -159,6 +162,7 @@ def _eval_by_dataset(
 
         metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
+            # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
             metric_dict_group[metric_name] = {
                 k: float(v) for k, v in metric_dict.items()
@@ -188,6 +192,10 @@ def _eval_by_batch(
     solver: "solver.Solver", epoch_id: int, log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric by batch, which is memory-efficient.
+
+    NOTE: This is a evaluation function for large dataset or large output, as is more
+    memory-efficiency than evaluating by dataset, but less general because some metric
+    is not independent among samples, e.g. L2 relative error.
 
     Args:
         solver (solver.Solver): Main Solver.
@@ -237,7 +245,6 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
-                # NOTE: compute metric with entire data
                 metric_dict = metric_func(output_dict, label_dict)
                 if metric_name not in metric_dict_group:
                     metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
@@ -273,7 +280,8 @@ def _eval_by_batch(
             for var_name, metric_value in metric_dict.items():
                 # NOTE: concat all metric(scalars) into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]
-                # NOTE: compute average metric from metric vector as final metric value
+                # NOTE: compute metric via averaging metric vector,
+                # this might be not general for certain evaluation case
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value
                 metric_str = f"{_validator.name}/{metric_name}.{var_name}"
