@@ -76,7 +76,7 @@ class RandomWeightFactorization(nn.Layer):
 
     def _init_weights(self, mean, std):
         with paddle.no_grad():
-            initializer.glorot_normal(self.weight_v)
+            initializer.glorot_normal_(self.weight_v)
 
             nn.initializer.Normal(mean, std)(self.weight_g)
             paddle.assign(paddle.exp(self.weight_g), self.weight_g)
