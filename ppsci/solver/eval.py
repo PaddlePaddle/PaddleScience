@@ -17,6 +17,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -59,7 +60,7 @@ def _get_dataset_length(
 
 
 def _eval_by_dataset(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric on total samples(default process).
 
@@ -68,7 +69,7 @@ def _eval_by_dataset(
 
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
@@ -189,7 +190,7 @@ def _eval_by_dataset(
 
 
 def _eval_by_batch(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric by batch, which is memory-efficient.
 
@@ -199,7 +200,7 @@ def _eval_by_batch(
 
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
@@ -303,13 +304,13 @@ def _eval_by_batch(
 
 
 def eval_func(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluation function.
 
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:

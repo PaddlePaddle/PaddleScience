@@ -619,11 +619,13 @@ class Solver:
         self.train()
 
     @misc.run_on_eval_mode
-    def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
+    def eval(
+        self, epoch_id: Optional[int] = None
+    ) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
 
         Args:
-            epoch_id (int, optional): Epoch id. Defaults to 0.
+            epoch_id (Optional[int]): Epoch id. Defaults to None.
 
         Returns:
             Tuple[float, Dict[str, Dict[str, float]]]: A targe metric value(float) and
@@ -636,23 +638,29 @@ class Solver:
         metric_msg = ", ".join(
             [self.eval_output_info[key].avg_info for key in self.eval_output_info]
         )
-        logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
+        if isinstance(epoch_id, int):
+            logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
+        else:
+            logger.info(f"[Eval][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
         return result
 
     @misc.run_on_eval_mode
-    def visualize(self, epoch_id: int = 0):
+    def visualize(self, epoch_id: Optional[int] = None):
         """Visualization.
 
         Args:
-            epoch_id (int, optional): Epoch id. Defaults to 0.
+            epoch_id (Optional[int]): Epoch id. Defaults to None.
         """
         # set visualize func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
-        logger.info(f"[Visualize][Epoch {epoch_id}] Finish visualization")
+        if isinstance(epoch_id, int):
+            logger.info(f"[Visualize][Epoch {epoch_id}] Finish visualization")
+        else:
+            logger.info("[Visualize] Finish visualization")
 
     @misc.run_on_eval_mode
     def predict(
