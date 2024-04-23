@@ -21,7 +21,7 @@ import pandas as pd
 from omegaconf import DictConfig
 
 from deploy.python_infer import base
-from examples.yinglong.timefeatures import time_features
+from examples.yinglong1.timefeatures import time_features
 from ppsci.utils import logger
 
 
