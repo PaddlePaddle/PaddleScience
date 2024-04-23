@@ -81,6 +81,7 @@
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 光孤子 | [Optical soliton](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
+| 相场方程 | [Allen-Cahn](./zh/examples/allen_cahn.md) | 机理驱动 | MLP | 无监督学习 | - | |
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>

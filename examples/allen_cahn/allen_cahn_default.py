@@ -66,6 +66,7 @@ def train(cfg: DictConfig):
     # set equation
     equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
 
+    # set constraint
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
     t_star = data["t"].flatten().astype(dtype)  # [nt, ]
@@ -79,7 +80,6 @@ def train(cfg: DictConfig):
     x0 = x_star[0]  # float
     x1 = x_star[-1]  # float
 
-    # set constraint
     def gen_input_batch():
         tx = np.random.uniform(
             [t0, x0],
