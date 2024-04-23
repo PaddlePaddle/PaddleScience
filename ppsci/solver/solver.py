@@ -33,6 +33,7 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.distributed as dist
+import prettytable
 import sympy as sp
 import visualdl as vdl
 from omegaconf import DictConfig
@@ -635,13 +636,24 @@ class Solver:
         self.eval_func = ppsci.solver.eval.eval_func
 
         result = self.eval_func(self, epoch_id, self.log_freq)
-        metric_msg = ", ".join(
-            [self.eval_output_info[key].avg_info for key in self.eval_output_info]
+        metric_table = prettytable.PrettyTable(
+            ["Name", "Value"],
+            title=f"Evaluation Metric(s){'' if epoch_id else f' at epoch {epoch_id}'}",
+            align="l",
         )
+
+        loss_msg = []
+        for name, value in self.eval_output_info.items():
+            if name.startswith("loss"):
+                loss_msg.append(f"{name}: {value.avg_fmt}")
+            else:
+                metric_table.add_row([name, value.avg_fmt])
+        loss_msg = ", ".join(loss_msg)
+
         if isinstance(epoch_id, int):
-            logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
+            logger.info(f"[Eval][Epoch {epoch_id}][Avg] {loss_msg}\n{metric_table}")
         else:
-            logger.info(f"[Eval][Avg] {metric_msg}")
+            logger.info(f"[Eval][Avg] {loss_msg}\n{metric_table}")
         self.eval_output_info.clear()
 
         return result

@@ -91,6 +91,12 @@ class AverageMeter:
         return f"{self.name}: {self.avg:.5f}"
 
     @property
+    def avg_fmt(self):
+        if isinstance(self.avg, paddle.Tensor):
+            self.avg = float(self.avg)
+        return f"{self.avg:.5e}"
+
+    @property
     def total(self):
         return f"{self.name}_sum: {self.sum:{self.fmt}}{self.postfix}"
 
