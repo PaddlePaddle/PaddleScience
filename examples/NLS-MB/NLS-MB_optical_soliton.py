@@ -24,7 +24,7 @@ from ppsci.utils import logger
 
 
 def analytic_solution(out):
-    x, t = out["x"], out["t"]
+    t, x = out["t"], out["x"]
     Eu_true = 2 * np.cos(2 * t) / np.cosh(2 * t + 6 * x)
 
     Ev_true = -2 * np.sin(2 * t) / np.cosh(2 * t + 6 * x)
@@ -83,7 +83,6 @@ def plot(
     plt.subplot(3, 3, 9)
     plt.title("eta_diff")
     plt.tricontourf(x, t, np.abs(eta_ref - eta_pred), levels=256, cmap="jet")
-
     fig_path = osp.join(output_dir, "pred_optical_soliton.png")
     print(f"Saving figure to {fig_path}")
     fig.savefig(fig_path, bbox_inches="tight", dpi=400)
@@ -127,14 +126,14 @@ def train(cfg: DictConfig):
     idx_ub = np.random.choice(np.where(ub)[0], 200, replace=False)
     icbc_idx = np.hstack((idx_lb, idx_ic, idx_ub))
     X_u_train = X_star[icbc_idx].astype("float32")
-    X_u_train = {"x": X_u_train[:, 0:1], "t": X_u_train[:, 1:2]}
+    X_u_train = {"t": X_u_train[:, 1:2], "x": X_u_train[:, 0:1]}
 
     Eu_train, Ev_train, pu_train, pv_train, eta_train = analytic_solution(X_u_train)
 
     train_dataloader_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
-            "input": {"x": X_u_train["x"], "t": X_u_train["t"]},
+            "input": {"t": X_u_train["t"], "x": X_u_train["x"]},
             "label": {
                 "Eu": Eu_train,
                 "Ev": Ev_train,
@@ -256,8 +255,8 @@ def train(cfg: DictConfig):
     vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
     pred = solver.predict(vis_points, return_numpy=True)
-    x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
+    x = vis_points["x"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
     E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)[:, 0]
     p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
@@ -332,8 +331,8 @@ def evaluate(cfg: DictConfig):
     vis_points = geom["time_interval"].sample_interior(20000, evenly=True)
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(vis_points)
     pred = solver.predict(vis_points, return_numpy=True)
-    x = vis_points["x"][:, 0]
     t = vis_points["t"][:, 0]
+    x = vis_points["x"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
     E_pred = np.sqrt(pred["Eu"] ** 2 + pred["Ev"] ** 2)[:, 0]
     p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
@@ -395,11 +394,25 @@ def inference(cfg: DictConfig):
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
+    # TODO: Fix this mapping diff in dy2st
+    (
+        output_dict["Eu"],
+        output_dict["Ev"],
+        output_dict["eta"],
+        output_dict["pu"],
+        output_dict["pv"],
+    ) = (
+        output_dict["Eu"],
+        output_dict["Ev"],
+        output_dict["pu"],
+        output_dict["pv"],
+        output_dict["eta"],
+    )
 
     # visualize prediction
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(input_dict)
-    x = input_dict["x"][:, 0]
     t = input_dict["t"][:, 0]
+    x = input_dict["x"][:, 0]
     E_ref = np.sqrt(Eu_true**2 + Ev_true**2)[:, 0]
     E_pred = np.sqrt(output_dict["Eu"] ** 2 + output_dict["Ev"] ** 2)[:, 0]
     p_ref = np.sqrt(pu_true**2 + pv_true**2)[:, 0]
