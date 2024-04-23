@@ -389,7 +389,7 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape), paddle.float32)
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
@@ -422,7 +422,7 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape), paddle.float32)
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
@@ -543,7 +543,7 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.INFER.output_keys, sol.keys())
     }
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
@@ -582,7 +582,7 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.INFER.output_keys, sol.keys())
     }
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
