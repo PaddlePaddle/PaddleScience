@@ -144,10 +144,14 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
     PyMesh 库需要以 setup 的方式进行安装，命令如下：
 
     ``` sh
-    git clone https://github.com/PyMesh/PyMesh.git
-    cd PyMesh
+    wget https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+    tar -zxvf PyMesh.tar.gz
 
-    git submodule update --init --recursive --progress
+    # 也可以使用 git 命令下载，速度可能会比较慢
+    # git clone https://github.com/PyMesh/PyMesh.git
+    # git submodule update --init --recursive --progress
+
+    cd PyMesh
     export PYMESH_PATH=`pwd`
 
     apt-get install \
@@ -160,7 +164,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
         libtbb-dev \
         python3-dev
 
-    python -m pip install -r $PYMESH_PATH/python/requirements.txt
+    python -m pip install --user -r $PYMESH_PATH/python/requirements.txt
     python setup.py build
     python setup.py install --user
 
