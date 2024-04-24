@@ -113,7 +113,7 @@ TRAIN:
   eval_freq: 10
   lr_scheduler:
     epochs: ${TRAIN.epochs}
-    learning_rate: 0.0001
+    learning_rate: 0.0002
     by_epoch: true
   min_lr_ratio: 1.0e-3
   wd: 1.0e-5

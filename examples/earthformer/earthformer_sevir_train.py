@@ -122,6 +122,10 @@ def train(cfg: DictConfig):
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
         {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": cfg.TRAIN.wd,
+        },
+        {
             "params": [
                 p for n, p in model.named_parameters() if n not in decay_parameters
             ],
@@ -138,7 +142,7 @@ def train(cfg: DictConfig):
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+        lr_scheduler, parameters=optimizer_grouped_parameters
     )
 
     # initialize solver
@@ -159,7 +163,22 @@ def train(cfg: DictConfig):
     # train model
     solver.train()
     # evaluate after finished training
-    solver.eval()
+    metric = sevir_metric.eval_rmse_func(
+        out_len=cfg.DATASET.seq_len,
+        layout=cfg.DATASET.layout,
+        metrics_mode=cfg.EVAL.metrics_mode,
+        metrics_list=cfg.EVAL.metrics_list,
+        threshold_list=cfg.EVAL.threshold_list,
+    )
+
+    with solver.no_grad_context_manager(True):
+        for index, (input_, label, _) in enumerate(sup_validator.data_loader):
+            truefield = label["vil"].squeeze(0)
+            prefield = model(input_)["vil"].squeeze(0)
+            metric.sevir_score.update(prefield, truefield)
+
+    metric_dict = metric.sevir_score.compute()
+    print(metric_dict)
 
 
 def evaluate(cfg: DictConfig):
@@ -225,7 +244,22 @@ def evaluate(cfg: DictConfig):
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # evaluate
-    solver.eval()
+    metric = sevir_metric.eval_rmse_func(
+        out_len=cfg.DATASET.seq_len,
+        layout=cfg.DATASET.layout,
+        metrics_mode=cfg.EVAL.metrics_mode,
+        metrics_list=cfg.EVAL.metrics_list,
+        threshold_list=cfg.EVAL.threshold_list,
+    )
+
+    with solver.no_grad_context_manager(True):
+        for index, (input_, label, _) in enumerate(sup_validator.data_loader):
+            truefield = label["vil"].reshape([-1, *label["vil"].shape[2:]])
+            prefield = model(input_)["vil"].reshape([-1, *label["vil"].shape[2:]])
+            metric.sevir_score.update(prefield, truefield)
+
+    metric_dict = metric.sevir_score.compute()
+    print(metric_dict)
 
 
 def export(cfg: DictConfig):

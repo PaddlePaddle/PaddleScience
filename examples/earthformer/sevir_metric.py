@@ -215,7 +215,16 @@ class SEVIRSkillScore:
                 ret["avg"][metrics] = np.mean(score_avg).item()
             else:
                 raise NotImplementedError(f"{self.mode} is invalid.")
-        return ret
+
+        metrics = {}
+        metrics["csi_avg_loss"] = 0
+        for metric in self.metrics_list:
+            for th in self.threshold_list:
+                metrics[f"{metric}_{th}"] = ret[th][metric]
+            metrics[f"{metric}_avg"] = ret["avg"][metric]
+
+        metrics["csi_avg_loss"] = -metrics["csi_avg"]
+        return metrics
 
 
 class eval_rmse_func:
@@ -235,6 +244,14 @@ class eval_rmse_func:
         self.metrics_list = metrics_list
         self.threshold_list = threshold_list
 
+        self.sevir_score = SEVIRSkillScore(
+            layout=self.layout,
+            mode=self.metrics_mode,
+            seq_len=self.out_len,
+            threshold_list=self.threshold_list,
+            metrics_list=self.metrics_list,
+        )
+
     def __call__(
         self,
         output_dict: Dict[str, "paddle.Tensor"],
@@ -250,31 +267,7 @@ class eval_rmse_func:
         mse = F.mse_loss(pred, vil_target, "none")
         mse = mse.mean(axis=tuple(range(1, mse.ndim)))
 
-        sevir_score = SEVIRSkillScore(
-            layout=self.layout,
-            mode=self.metrics_mode,
-            seq_len=self.out_len,
-            threshold_list=self.threshold_list,
-            metrics_list=self.metrics_list,
-        )
-        for i in range(vil_target.shape[0]):
-            sevir_score.update(pred[i, ...], vil_target[i, ...])
-        sevir_valid_score = sevir_score.compute(pred, vil_target)
-
-        metrics = {}
-        metrics["csi_avg_loss"] = 0
-        for metric in self.metrics_list:
-            for th in self.threshold_list:
-                metrics[f"{metric}_{th}"] = paddle.to_tensor(
-                    sevir_valid_score[th][metric]
-                )
-            metrics[f"{metric}_avg"] = paddle.to_tensor(
-                sevir_valid_score["avg"][metric]
-            )
-        metrics["mse"] = mse
-        metrics["mae"] = mae
-        metrics["csi_avg_loss"] = -paddle.to_tensor(metrics["csi_avg"])
-        return metrics
+        return {"mse": mse, "mae": mae}
 
 
 def train_mse_func(

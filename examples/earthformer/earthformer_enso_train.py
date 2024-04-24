@@ -102,6 +102,10 @@ def train(cfg: DictConfig):
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [
         {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": cfg.TRAIN.wd,
+        },
+        {
             "params": [
                 p for n, p in model.named_parameters() if n not in decay_parameters
             ],
@@ -118,7 +122,7 @@ def train(cfg: DictConfig):
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
     )()
     optimizer = paddle.optimizer.AdamW(
-        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+        lr_scheduler, parameters=optimizer_grouped_parameters
     )
 
     # initialize solver
