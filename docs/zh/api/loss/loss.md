@@ -11,6 +11,7 @@
         - L2RelLoss
         - MAELoss
         - MSELoss
+        - CausalMSELoss
         - MSELossWithL2Decay
         - IntegralLoss
         - PeriodicL1Loss
