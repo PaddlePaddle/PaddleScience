@@ -178,7 +178,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
 
     !!! warning "安装注意事项"
 
-        安装过程中可能会出现两个问题，可以按照以下方式解决：
+        如果使用 git 命令下载 PyMesh 项目文件，则安装过程中可能会出现两个问题，可以按照以下方式解决：
 
         1. 由于网络问题，`git submodule update` 过程中可能某些 submodule 会 clone 失败，此时只需
         反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功即可。
