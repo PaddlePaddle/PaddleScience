@@ -140,7 +140,7 @@ def log_eval_info(
         )
     else:
         logger.info(
-            f"[Eval] [Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
+            f"[Eval][Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
             f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
         )
 
