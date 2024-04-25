@@ -7,6 +7,7 @@
         - Arch
         - AMGNet
         - MLP
+        - ModifiedMLP
         - DeepONet
         - DeepPhyLSTM
         - LorenzEmbedding
@@ -23,6 +24,8 @@
         - USCNN
         - NowcastNet
         - HEDeepONets
+        - DGMR
+        - ChipDeepONets
         - AutoEncoder
       show_root_heading: true
       heading_level: 3

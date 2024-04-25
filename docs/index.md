@@ -79,6 +79,8 @@
 | 微分方程 | [梯度增强的物理知识融合 PDE 求解](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/gpinn/poisson_1d.py) | 机理驱动 | gPINN | 无监督学习 | - |  [Paper](https://doi.org/10.1016/j.cma.2022.114823) |
 | 积分方程 | [沃尔泰拉积分方程](./zh/examples/volterra_ide.md) | 机理驱动 | MLP | 无监督学习 | - | [Project](https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py) |
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 光孤子 | [Optical soliton](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
+| 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -115,7 +117,8 @@
 | 受力分析和逆问题 | [3D 汽车控制臂变形](./zh/examples/control_arm.md) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 拓扑优化 | [2D 拓扑优化](./zh/examples/topopt.md) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
 | 热仿真 | [1D 换热器热仿真](./zh/examples/heat_exchanger.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
-| 热仿真 | [2D 热仿真](./zh/examples/heat_pinn.md) | 机理驱动 | PINN | - | [Paper](https://arxiv.org/abs/1711.10561)|
+| 热仿真 | [2D 热仿真](./zh/examples/heat_pinn.md) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
+| 热仿真 | [2D 芯片热仿真](./zh/examples/chip_heat.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | [Paper](https://doi.org/10.1063/5.0194245)|
 
 <br>
 <p align="center"><b>材料科学(AI for Material)</b></p>
@@ -134,6 +137,7 @@
 | 天气预报 | [NowCastNet 气象预报](./zh/examples/nowcastnet.md) | 数据驱动 | NowCastNet | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
 | 天气预报 | [GraphCast 气象预报](https://github.com/PaddlePaddle/PaddleScience/blob/develop/jointContribution/graphcast/README.md) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
+| 天气预报 | [DGMR 气象预报](./zh/examples/dgmr.md) | 数据驱动 | DGMR | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
 
 ## 🚀快速安装
 
@@ -198,7 +202,7 @@
 ./README.md:thanks
 --8<--
 
-- PaddleScience 的部分代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
+- PaddleScience 的部分代码由以下优秀开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
 
     <style>
         .avatar {
@@ -214,32 +218,7 @@
             transform:translateY(-10px);
         }
     </style>
-    <a href="https://github.com/Asthestarsfalll"><img class="avatar" src="https://avatars.githubusercontent.com/Asthestarsfalll" alt="avatar" /></a>
-    <a href="https://github.com/co63oc"><img class="avatar" src="https://avatars.githubusercontent.com/co63oc" alt="avatar" /></a>
-    <a href="https://github.com/MayYouBeProsperous"><img class="avatar" src="https://avatars.githubusercontent.com/MayYouBeProsperous" alt="avatar" /></a>
-    <a href="https://github.com/AndPuQing"><img class="avatar" src="https://avatars.githubusercontent.com/AndPuQing" alt="avatar" /></a>
-    <a href="https://github.com/lknt"><img class="avatar" src="https://avatars.githubusercontent.com/lknt" alt="avatar" /></a>
-    <a href="https://github.com/mrcangye"><img class="avatar" src="https://avatars.githubusercontent.com/mrcangye" alt="avatar" /></a>
-    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
-    <a href="https://github.com/ooooo-create"><img class="avatar" src="https://avatars.githubusercontent.com/ooooo-create" alt="avatar" /></a>
-    <a href="https://github.com/megemini"><img class="avatar" src="https://avatars.githubusercontent.com/megemini" alt="avatar" /></a>
-    <a href="https://github.com/DUCH714"><img class="avatar" src="https://avatars.githubusercontent.com/DUCH714" alt="avatar" /></a>
-    <a href="https://github.com/zlynna"><img class="avatar" src="https://avatars.githubusercontent.com/zlynna" alt="avatar" /></a>
-    <a href="https://github.com/jjyaoao"><img class="avatar" src="https://avatars.githubusercontent.com/jjyaoao" alt="avatar" /></a>
-    <a href="https://github.com/jiamingkong"><img class="avatar" src="https://avatars.githubusercontent.com/jiamingkong" alt="avatar" /></a>
-    <a href="https://github.com/Liyulingyue"><img class="avatar" src="https://avatars.githubusercontent.com/Liyulingyue" alt="avatar" /></a>
-    <a href="https://github.com/DrRyanHuang"><img class="avatar" src="https://avatars.githubusercontent.com/DrRyanHuang" alt="avatar" /></a>
-    <a href="https://github.com/zbt78"><img class="avatar" src="https://avatars.githubusercontent.com/zbt78" alt="avatar" /></a>
-    <a href="https://github.com/Gxinhu"><img class="avatar" src="https://avatars.githubusercontent.com/Gxinhu" alt="avatar" /></a>
-    <a href="https://github.com/XYM-1"><img class="avatar" src="https://avatars.githubusercontent.com/XYM-1" alt="avatar" /></a>
-    <a href="https://github.com/xusuyong"><img class="avatar" src="https://avatars.githubusercontent.com/xusuyong" alt="avatar" /></a>
-    <a href="https://github.com/DrownFish19"><img class="avatar" src="https://avatars.githubusercontent.com/DrownFish19" alt="avatar" /></a>
-    <a href="https://github.com/NKNaN"><img class="avatar" src="https://avatars.githubusercontent.com/NKNaN" alt="avatar" /></a>
-    <a href="https://github.com/ruoyunbai"><img class="avatar" src="https://avatars.githubusercontent.com/ruoyunbai" alt="avatar" /></a>
-    <a href="https://github.com/sanbuphy"><img class="avatar" src="https://avatars.githubusercontent.com/sanbuphy" alt="avatar" /></a>
-    <a href="https://github.com/ccsuzzh"><img class="avatar" src="https://avatars.githubusercontent.com/ccsuzzh" alt="avatar" /></a>
-    <a href="https://github.com/enkilee"><img class="avatar" src="https://avatars.githubusercontent.com/enkilee" alt="avatar" /></a>
-    <a href="https://github.com/GreatV"><img class="avatar" src="https://avatars.githubusercontent.com/GreatV" alt="avatar" /></a>
+    <div id="contributors"></div>
 
 ## 🤝合作单位
 

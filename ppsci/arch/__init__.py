@@ -21,6 +21,7 @@ from ppsci.arch.phycrnet import PhyCRNet
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
+from ppsci.arch.mlp import ModifiedMLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
@@ -37,7 +38,9 @@ from ppsci.arch.epnn import Epnn  # isort:skip
 from ppsci.arch.nowcastnet import NowcastNet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
+from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
+from ppsci.arch.dgmr import DGMR  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.arch.sfnonet import SFNONet  # isort:skip
 from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
@@ -49,6 +52,7 @@ __all__ = [
     "Arch",
     "AMGNet",
     "MLP",
+    "ModifiedMLP",
     "DeepONet",
     "DeepPhyLSTM",
     "LorenzEmbedding",
@@ -66,6 +70,8 @@ __all__ = [
     "NowcastNet",
     "USCNN",
     "HEDeepONets",
+    "ChipDeepONets",
+    "DGMR",
     "AutoEncoder",
     "SFNONet",
     "TFNO1dNet",

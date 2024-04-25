@@ -210,6 +210,14 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()  # doctest: +SKIP
 
+        >>> timer = misc.Timer("cost_of_func", auto_print=False)
+        >>> timer.start()
+        >>> def func():
+        ...     w = sum(range(0, 10))
+        >>> func()
+        >>> timer.end()
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
+        time cost of 'cost_of_func' is 0.00
     """
 
     interval: float  # Time cost for code within Timer context
@@ -220,10 +228,31 @@ class Timer(ContextDecorator):
         self.auto_print = auto_print
 
     def __enter__(self):
+        paddle.device.synchronize()
         self.start_time = time.perf_counter()
         return self
 
     def __exit__(self, type, value, traceback):
+        paddle.device.synchronize()
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+    def start(self, name: str = "Timer"):
+        """Push a new timer context.
+
+        Args:
+            name (str, optional): Name of code block to be clocked. Defaults to "Timer".
+        """
+        paddle.device.synchronize()
+        self.start_time = time.perf_counter()
+
+    def end(self):
+        """
+        End current timer context and print time cost.
+        """
+        paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
@@ -274,6 +303,22 @@ def all_gather(
 
     Returns:
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> import paddle.distributed as dist
+        >>> dist.init_parallel_env()      # doctest: +SKIP
+        >>> if dist.get_rank() == 0:      # doctest: +SKIP
+        ...     data = paddle.to_tensor([[1, 2, 3], [4, 5, 6]])
+        ... else:
+        ...     data = paddle.to_tensor([[7, 8, 9], [10, 11, 12]])
+        >>> result = ppsci.utils.misc.all_gather(data)    # doctest: +SKIP
+        >>> print(result.numpy())     # doctest: +SKIP
+        [[ 1  2  3]
+         [ 4  5  6]
+         [ 7  8  9]
+         [10 11 12]]
     """
     result: List[paddle.Tensor] = []
 
