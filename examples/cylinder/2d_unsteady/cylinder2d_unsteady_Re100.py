@@ -207,7 +207,6 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
@@ -284,7 +283,6 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        geom=geom,
         output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,

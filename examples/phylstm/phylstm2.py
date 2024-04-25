@@ -173,7 +173,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator_pde,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -296,7 +295,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        seed=cfg.seed,
         validator=validator_pde,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,

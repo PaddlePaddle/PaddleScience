@@ -111,7 +111,6 @@ def train(cfg: DictConfig):
         log_freq=cfg.log_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
         equation=equation,
         validator=validator,
         visualizer=visualizer,

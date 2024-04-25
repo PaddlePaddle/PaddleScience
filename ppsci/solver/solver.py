@@ -975,3 +975,51 @@ class Solver:
             smooth_step=smooth_step,
             use_semilogy=use_semilogy,
         )
+
+    # def _parse_params_from_cfg(self, cfg: DictConfig):
+    #     """Parse hyper-parameters from DictConfig."""
+    #     # general paremters
+    #     ## output directory
+    #     self.output_dir = cfg.output_dir
+    #     ## logging frequency
+    #     self.log_freq = cfg.log_freq
+
+    #     # training related paramters
+    #     self.epochs = cfg.TRAIN.epochs
+    #     self.iters_per_epoch = cfg.TRAIN.iters_per_epoch
+    #     ## set update_freq for gradient accumulation
+    #     self.update_freq = cfg.TRAIN.update_freq
+    #     ## set checkpoint saving frequency
+    #     self.save_freq = cfg.TRAIN.save_freq
+    #     self.eval_during_train = cfg.TRAIN.eval_during_train
+    #     self.start_eval_epoch = cfg.TRAIN.start_eval_epoch
+    #     self.eval_freq = cfg.TRAIN.eval_freq
+
+    #     # evaluating related paramters
+    #     self.device = cfg.device
+
+    #     # set automatic mixed precision(AMP) configuration
+    #     self.use_amp = cfg.use_amp
+    #     self.amp_level = cfg.amp_level
+
+    #     # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
+    #     self.compute_metric_by_batch = compute_metric_by_batch
+    #     # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
+    #     self.eval_with_no_grad = eval_with_no_grad
+
+    #     # set moving average model(optional)
+    #     if self.cfg and any(key in self.cfg.TRAIN for key in ["ema", "swa"]):
+    #         if "ema" in self.cfg.TRAIN:
+    #             self.avg_freq = self.cfg.TRAIN.ema.avg_freq
+    #         elif "swa" in self.cfg.TRAIN:
+    #             self.avg_freq = self.cfg.TRAIN.swa.avg_freq
+
+    #     # load pretrained model, usually used for transfer learning
+    #     self.pretrained_model_path = pretrained_model_path
+
+    #     # set up benchmark flag, will print memory stat if enabled
+    #     self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
+
+    #     # set up nvtx flag for nsight analysis
+    #     self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
+    #     self.forward_helper.nvtx_flag = self.nvtx_flag

@@ -165,7 +165,6 @@ def train(cfg: DictConfig):
         log_freq=cfg.log_freq,
         eval_during_train=True,
         eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
         equation=equation,
         validator=validator,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,

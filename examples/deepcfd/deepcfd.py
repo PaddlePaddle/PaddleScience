@@ -311,7 +311,6 @@ def train(cfg: DictConfig):
         epochs=cfg.TRAIN.epochs,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
         validator=validator,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -413,7 +412,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        seed=cfg.seed,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,

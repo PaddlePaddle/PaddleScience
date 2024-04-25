@@ -294,9 +294,7 @@ def train(cfg: DictConfig):
         save_freq=cfg.TRAIN.save_freq,
         eval_freq=cfg.TRAIN.eval_freq,
         eval_during_train=True,
-        seed=cfg.seed,
         equation=equation,
-        geom=geom,
         validator=validator,
         eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
     )

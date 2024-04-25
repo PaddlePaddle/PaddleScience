@@ -184,9 +184,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        seed=cfg.seed,
         equation=equation,
-        geom=geom,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
         eval_freq=cfg.TRAIN.eval_freq,
@@ -256,8 +254,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         output_dir=cfg.output_dir,
-        seed=cfg.seed,
-        geom=geom,
         log_freq=cfg.log_freq,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         visualizer=visualizer,

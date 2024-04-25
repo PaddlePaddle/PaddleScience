@@ -267,7 +267,6 @@ def train(cfg: DictConfig):
         eval_freq=cfg.eval_freq,
         seed=SEED,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
@@ -288,9 +287,6 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
     ppsci.utils.load_pretrain(model, cfg.pretrained_model_path)
 
-    # set the number of residual samples
-    N_TRAIN = cfg.ntrain
-
     data = scipy.io.loadmat(cfg.data_dir)
 
     U_star = data["U_star"].astype("float32")  # N x 2 x T
@@ -299,37 +295,9 @@ def evaluate(cfg: DictConfig):
     X_star = data["X_star"].astype("float32")  # N x 2
 
     N = X_star.shape[0]
-    T = t_star.shape[0]
 
     # rearrange data
-    XX = np.tile(X_star[:, 0:1], (1, T))  # N x T
-    YY = np.tile(X_star[:, 1:2], (1, T))  # N x T
     TT = np.tile(t_star, (1, N)).T  # N x T
-
-    UU = U_star[:, 0, :]  # N x T
-    VV = U_star[:, 1, :]  # N x T
-    PP = P_star  # N x T
-
-    x = XX.flatten()[:, None]  # NT x 1
-    y = YY.flatten()[:, None]  # NT x 1
-    t = TT.flatten()[:, None]  # NT x 1
-
-    u = UU.flatten()[:, None]  # NT x 1
-    v = VV.flatten()[:, None]  # NT x 1
-    p = PP.flatten()[:, None]  # NT x 1
-
-    data1 = np.concatenate([x, y, t, u, v, p], 1)
-    data2 = data1[:, :][data1[:, 2] <= 7]
-    data3 = data2[:, :][data2[:, 0] >= 1]
-    data4 = data3[:, :][data3[:, 0] <= 8]
-    data5 = data4[:, :][data4[:, 1] >= -2]
-    data_domain = data5[:, :][data5[:, 1] <= 2]
-
-    idx = np.random.choice(data_domain.shape[0], N_TRAIN, replace=False)
-
-    x_train = data_domain[idx, 0].reshape(data_domain[idx, 0].shape[0], 1)
-    y_train = data_domain[idx, 1].reshape(data_domain[idx, 1].shape[0], 1)
-    t_train = data_domain[idx, 2].reshape(data_domain[idx, 2].shape[0], 1)
 
     snap = np.array([0])
     x_star = X_star[:, 0:1]
@@ -349,11 +317,6 @@ def evaluate(cfg: DictConfig):
         "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
     }
-
-    geom = ppsci.geometry.PointCloud(
-        {"x": x_train, "y": y_train, "t": t_train}, ("x", "y", "t")
-    )
-
     # set equation constarint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(nu=0.01, rho=1.0, dim=2, time=True),
@@ -377,7 +340,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         equation=equation,
-        geom=geom,
         validator=validator,
     )
 

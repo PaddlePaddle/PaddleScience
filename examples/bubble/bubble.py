@@ -186,7 +186,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.iters_per_epoch,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        geom=geom,
         validator=validator,
     )
     # train model
@@ -341,7 +340,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         output_dir=cfg.output_dir,
-        geom=geom,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )

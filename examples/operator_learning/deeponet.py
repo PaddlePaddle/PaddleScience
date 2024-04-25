@@ -72,7 +72,6 @@ def train(cfg: DictConfig):
         save_freq=cfg.TRAIN.save_freq,
         eval_freq=cfg.TRAIN.eval_freq,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         eval_during_train=cfg.TRAIN.eval_during_train,
         checkpoint_path=cfg.TRAIN.checkpoint_path,

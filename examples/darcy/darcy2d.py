@@ -151,7 +151,6 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
     )
@@ -180,7 +179,6 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
         eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
     )
@@ -274,7 +272,6 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,

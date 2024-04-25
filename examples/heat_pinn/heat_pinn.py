@@ -117,9 +117,7 @@ def train(cfg: DictConfig):
         iters_per_epoch=cfg.TRAIN.iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         equation=equation,
-        geom=geom,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
@@ -215,7 +213,6 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     # begin eval

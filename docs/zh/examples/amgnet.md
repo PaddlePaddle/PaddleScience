@@ -103,17 +103,17 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="61"
+    ``` py linenums="55"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:61:62
+    examples/amgnet/amgnet_airfoil.py:55:56
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="61"
+    ``` py linenums="55"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:61:62
+    examples/amgnet/amgnet_cylinder.py:55:56
     --8<--
     ```
 

@@ -173,7 +173,6 @@ if __name__ == "__main__":
         eval_during_train=True,
         eval_freq=EVAL_FREQ,
         equation=equation,
-        geom=geom,
         validator=validator,
         eval_with_no_grad=True,
     )

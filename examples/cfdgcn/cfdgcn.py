@@ -208,7 +208,6 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
