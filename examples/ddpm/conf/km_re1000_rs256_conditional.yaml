@@ -1,0 +1,63 @@
+mode: train
+train:
+    seed: 1234
+    exp: 'experiments/km256/'
+    doc: 'weights/km256/'
+    timesteps: 1000
+    log_path: ''
+    verbose: 'info'
+    ni: false
+    comment: ''
+    resume_training: false
+data:
+    dataset: "kolmogorov flow"
+    data_dir: "/home/aistudio/data/data264003/kf_2d_re1000_256_40seed.npy"
+    stat_path: "/home/aistudio/work/PaddleScience/examples/ddpm/km256_stats.npz"
+    image_size: 256
+    channels: 3
+    logit_transform: false
+    uniform_dequantization: false
+    gaussian_dequantization: false
+    random_flip: false
+    rescaled: false
+    num_workers: 4
+
+model:
+    type: "conditional"
+    in_channels: 3
+    out_ch: 3
+    ch: 64
+    ch_mult: [1, 1, 1, 2]
+    num_res_blocks: 1
+    attn_resolutions: [16, ]
+    dropout: 0.1
+    var_type: fixedlarge
+    ema_rate: 0.9999
+    ema: True
+    resamp_with_conv: True
+
+diffusion:
+    beta_schedule: linear
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 1000 # Might need to be changed to 500 later to match SDEdit
+
+training:
+    batch_size: 32
+    n_epochs: 300 # 300 epoch for about 12 hours
+    n_iters: 200000
+    snapshot_freq: 20000
+    validation_freq: 2000
+
+sampling:
+    batch_size: 32
+    last_only: True
+
+optim:
+    weight_decay: 0.000
+    optimizer: "Adam"
+    lr: 0.0002
+    beta1: 0.9
+    amsgrad: false
+    eps: 0.00000001
+    grad_clip: 1.0

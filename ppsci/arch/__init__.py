@@ -43,7 +43,7 @@ from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.dgmr import DGMR  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
-
+from ppsci.arch.ddpm import DDPM
 
 __all__ = [
     "Arch",
@@ -72,6 +72,8 @@ __all__ = [
     "AutoEncoder",
     "build_model",
     "CFDGCN",
+    "DDPM",
+    
 ]
 
 
