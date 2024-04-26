@@ -67,7 +67,8 @@ def _register_config_solvers():
     from omegaconf import OmegaConf
 
     # register solver for "${numpy: xxx}" item, e.g. pi: "${numpy: pi}"
-    OmegaConf.register_new_resolver("numpy", lambda x: getattr(np, x))
+    if not OmegaConf.has_resolver("numpy"):
+        OmegaConf.register_new_resolver("numpy", lambda x: getattr(np, x))
 
 
 _register_config_solvers()
