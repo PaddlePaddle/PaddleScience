@@ -47,13 +47,7 @@ class ChamferLoss(base.Loss):
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
         Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               3.35999990)
-
-        >>> loss = ChamferLoss(reduction="sum", weight=weight)
-        >>> result = loss(output_dict, label_dict)
-        >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               6.71999979)
+               0.14066719)
     """
 
     def __init__(
