@@ -17,6 +17,7 @@ from __future__ import annotations
 import os
 import os.path as osp
 from typing import TYPE_CHECKING
+from typing import Optional
 
 import paddle
 
@@ -26,12 +27,12 @@ if TYPE_CHECKING:
     from ppsci import solver
 
 
-def visualize_func(solver: "solver.Solver", epoch_id: int):
+def visualize_func(solver: "solver.Solver", epoch_id: Optional[int]):
     """Visualization program.
 
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
     """
     for _, _visualizer in solver.visualizer.items():
         all_input = misc.Prettydefaultdict(list)
@@ -87,7 +88,9 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
         # save visualization
         with misc.RankZeroOnly(solver.rank) as is_master:
             if is_master:
-                visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
+                visual_dir = osp.join(solver.output_dir, "visual")
+                if epoch_id:
+                    visual_dir = osp.join(visual_dir, f"epoch_{epoch_id}")
                 os.makedirs(visual_dir, exist_ok=True)
                 _visualizer.save(
                     osp.join(visual_dir, _visualizer.prefix),

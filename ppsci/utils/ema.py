@@ -41,7 +41,7 @@ class AveragedModel(nn.Layer):
         self.model = model  # As a quick reference to online model
         self.decay = decay
 
-        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param or bufer
+        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param or buffer
         self.params_backup: Dict[str, paddle.Tensor] = {}  # used for apply and restore
         for name, param_or_buffer in itertools.chain(
             self.model.named_parameters(), self.model.named_buffers()
