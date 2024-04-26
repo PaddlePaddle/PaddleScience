@@ -110,7 +110,7 @@ class CausalMSELoss(base.Loss):
     where $w_i=\exp (-\epsilon \displaystyle\sum_{k=1}^{i-1} \mathcal{L}_r^k), i=2,3, \ldots, M.$
 
     Args:
-        n_chunks (int): Number of time windows split.
+        n_chunks (int): $M$, Number of split time windows.
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
         tol (float, optional): Causal tolerance, i.e. $\epsilon$ in paper. Defaults to 1.0.
