@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ppsci.utils import ema
 from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -44,6 +45,7 @@ __all__ = [
     "initializer",
     "logger",
     "misc",
+    "ema",
     "reader",
     "writer",
     "profiler",

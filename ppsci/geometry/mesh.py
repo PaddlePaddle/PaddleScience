@@ -72,6 +72,22 @@ class Mesh(geometry.Geometry):
 
         Returns:
             Mesh: Instantiated ppsci.geometry.Mesh object.
+
+        Examples:
+            >>> import ppsci
+            >>> import pymesh  # doctest: +SKIP
+            >>> import numpy as np  # doctest: +SKIP
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
+            [[0. 0. 0.]
+             [1. 0. 0.]
+             [1. 1. 0.]
+             [0. 1. 0.]
+             [0. 0. 1.]
+             [1. 0. 1.]
+             [1. 1. 1.]
+             [0. 1. 1.]]
         """
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
@@ -182,6 +198,40 @@ class Mesh(geometry.Geometry):
 
         Returns:
             Mesh: Translated Mesh object.
+
+        Examples:
+            >>> import ppsci
+            >>> import pymesh  # doctest: +SKIP
+            >>> import numpy as np
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
+            [[0. 0. 0.]
+             [1. 0. 0.]
+             [1. 1. 0.]
+             [0. 1. 0.]
+             [0. 0. 1.]
+             [1. 0. 1.]
+             [1. 1. 1.]
+             [0. 1. 1.]]
+            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.  # doctest: +SKIP
+            [[-1.  -0.5  0. ]
+             [ 0.  -0.5  0. ]
+             [ 0.   0.5  0. ]
+             [-1.   0.5  0. ]
+             [-1.  -0.5  1. ]
+             [ 0.  -0.5  1. ]
+             [ 0.   0.5  1. ]
+             [-1.   0.5  1. ]]
+            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates  # doctest: +SKIP
+            [[-0.5  0.   0.5]
+             [ 0.5  0.   0.5]
+             [ 0.5  1.   0.5]
+             [-0.5  1.   0.5]
+             [-0.5  0.   1.5]
+             [ 0.5  0.   1.5]
+             [ 0.5  1.   1.5]
+             [-0.5  1.   1.5]]
         """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
@@ -221,6 +271,32 @@ class Mesh(geometry.Geometry):
 
         Returns:
             Mesh: Scaled Mesh object.
+
+        Examples:
+            >>> import ppsci
+            >>> import pymesh  # doctest: +SKIP
+            >>> import numpy as np
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
+            [[0. 0. 0.]
+             [1. 0. 0.]
+             [1. 1. 0.]
+             [0. 1. 0.]
+             [0. 0. 1.]
+             [1. 0. 1.]
+             [1. 1. 1.]
+             [0. 1. 1.]]
+            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
+            [[-0.25 -0.5  -0.75]
+             [ 1.75 -0.5  -0.75]
+             [ 1.75  1.5  -0.75]
+             [-0.25  1.5  -0.75]
+             [-0.25 -0.5   1.25]
+             [ 1.75 -0.5   1.25]
+             [ 1.75  1.5   1.25]
+             [-0.25  1.5   1.25]]
         """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())

@@ -12,23 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
-
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -135,11 +126,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -205,14 +191,71 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set geometry
+    geom = {
+        "rect": ppsci.geometry.Rectangle(
+            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        )
+    }
+    NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
+    input_dict = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    # save result
+    ppsci.visualize.save_vtu_from_dict(
+        "./laplace2d_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="laplace2d.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

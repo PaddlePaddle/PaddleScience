@@ -123,7 +123,9 @@ class RadarDataset(io.Dataset):
         mask[data < 0] = 0
         data[data < 0] = 0
         data = np.clip(data, 0, 128)
-        vid = np.zeros((self.length, self.img_height, self.img_width, 2))
+        vid = np.zeros(
+            (self.length, self.img_height, self.img_width, 2), dtype=self.data_type
+        )
         vid[..., 0] = data
         vid[..., 1] = mask
 

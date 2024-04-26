@@ -30,7 +30,7 @@ import ppsci
 from ppsci.utils import checker
 
 if not checker.dynamic_import_to_globals("seaborn"):
-    raise ModuleNotFoundError("Please install seaborn through pip first.")
+    raise ModuleNotFoundError("Please install seaborn with `pip install seaborn>=0.13.0`.")  # fmt: skip
 
 import seaborn as sns
 
@@ -275,7 +275,7 @@ def evaluate(cfg: DictConfig):
                     u_analytical[:, int(round(N_x / 2)), nu]
                     - u_pred[:, int(round(N_x / 2)), nu]
                 )
-                metric_dict[f"nu = {data_1d_nu[nu]}"] = np.abs(err).sum()
+                metric_dict[f"nu = {data_1d_nu[nu]:.2g}"] = np.abs(err).sum()
             return metric_dict
 
     # Kullback-Leibler Divergence
@@ -376,7 +376,7 @@ def evaluate(cfg: DictConfig):
         plt.text(
             -0.012,
             ytext[idxP],
-            rf"$\nu = $ {data_1d_nu[nu_index[idxP]]}",
+            rf"$\nu = $ {data_1d_nu[nu_index[idxP]]:.2g}",
             {"color": "k", "fontsize": fontsize - 4},
         )
 

@@ -75,9 +75,10 @@ def load_csv_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(
-            raw_data[fetch_key], paddle.get_default_dtype()
-        ).reshape([-1, 1])
+        data_dict[key] = np.asarray(raw_data[fetch_key])
+        if not np.issubdtype(data_dict[key].dtype, np.integer):
+            data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
+        data_dict[key] = data_dict[key].reshape([-1, 1])
 
     return data_dict
 
@@ -112,9 +113,10 @@ def load_mat_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(
-            raw_data[fetch_key], paddle.get_default_dtype()
-        ).reshape([-1, 1])
+        data_dict[key] = np.asarray(raw_data[fetch_key])
+        if not np.issubdtype(data_dict[key].dtype, np.integer):
+            data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
+        data_dict[key] = data_dict[key].reshape([-1, 1])
 
     return data_dict
 
@@ -149,7 +151,10 @@ def load_npz_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(raw_data[fetch_key], paddle.get_default_dtype())
+        data_dict[key] = np.asarray(raw_data[fetch_key])
+        if data_dict[key].dtype in (np.float16, np.float32, np.float64):
+            data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
+
     return data_dict
 
 
@@ -254,6 +259,8 @@ def load_dat_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(raw_data[fetch_key], paddle.get_default_dtype())
+        data_dict[key] = np.asarray(raw_data[fetch_key])
+        if data_dict[key].dtype in (np.float16, np.float32, np.float64):
+            data_dict[key] = data_dict[key].astype(paddle.get_default_dtype())
 
     return data_dict

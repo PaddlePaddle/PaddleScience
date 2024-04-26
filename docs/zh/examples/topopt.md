@@ -22,6 +22,58 @@
     python topopt.py mode=eval 'EVAL.pretrained_model_path_dict={'Uniform': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams', 'Poisson5': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams', 'Poisson10': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams', 'Poisson30': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams'}'
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Uniform
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson5
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson10
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson30
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Uniform INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson5 INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson10 INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson30 INFER.img_num=3
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [topopt_uniform_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams) | loss(sup_validator): [0.14336, 0.10211, 0.07927, 0.06433, 0.04970, 0.04612, 0.04201, 0.03566, 0.03623, 0.03314, 0.02929, 0.02857, 0.02498, 0.02517, 0.02523, 0.02618]<br>metric.Binary_Acc(sup_validator): [0.9410, 0.9673, 0.9718, 0.9727, 0.9818, 0.9824, 0.9826, 0.9845, 0.9856, 0.9892, 0.9892, 0.9907, 0.9890, 0.9916, 0.9914, 0.9922]<br>metric.IoU(sup_validator): [0.8887, 0.9367, 0.9452, 0.9468, 0.9644, 0.9655, 0.9659, 0.9695, 0.9717, 0.9787, 0.9787, 0.9816, 0.9784, 0.9835, 0.9831, 0.9845] |
