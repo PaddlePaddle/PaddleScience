@@ -36,6 +36,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 光孤子 | [Optical soliton](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
+| 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | - | |
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>

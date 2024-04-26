@@ -55,7 +55,7 @@ class Arch(nn.Layer):
         num = 0
         for name, param in self.named_parameters():
             if hasattr(param, "shape"):
-                num += np.prod(list(param.shape))
+                num += np.prod(list(param.shape), dtype="int")
             else:
                 logger.warning(f"{name} has no attribute 'shape'")
         return num
