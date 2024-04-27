@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import math
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -77,12 +76,7 @@ class RandomWeightFactorization(nn.Layer):
 
     def _init_weights(self, mean, std):
         with paddle.no_grad():
-            # glorot normal
-            fin, fout = self.weight_v.shape
-            var = 2.0 / (fin + fout)
-            stddev = math.sqrt(var) * 0.87962566103423978
-            initializer.trunc_normal_(self.weight_v)
-            paddle.assign(self.weight_v * stddev, self.weight_v)
+            initializer.glorot_normal_(self.weight_v)
 
             nn.initializer.Normal(mean, std)(self.weight_g)
             paddle.assign(paddle.exp(self.weight_g), self.weight_g)
@@ -105,7 +99,7 @@ class PeriodEmbedding(nn.Layer):
             k: self.create_parameter(
                 [],
                 attr=paddle.ParamAttr(trainable=trainable),
-                default_initializer=nn.initializer.Constant(2 * np.pi / eval(p)),
+                default_initializer=nn.initializer.Constant(2 * np.pi / float(p)),
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }

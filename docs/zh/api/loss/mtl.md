@@ -5,6 +5,7 @@
     options:
       members:
         - AGDA
+        - GradNorm
         - LossAggregator
         - PCGrad
         - Relobralo
