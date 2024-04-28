@@ -40,14 +40,17 @@ class ChamferLoss(base.Loss):
     Examples:
         >>> import paddle
         >>> from ppsci.loss import ChamferLoss
-        >>> output_dict = {"s1": paddle.to_tensor([[.1, .2, .3], [.4, .5, .6]])}
-        >>> label_dict  = {"s1": paddle.to_tensor([[.4, .5, .6], [.1, .2, .3]])}
+        >>> _ = paddle.seed(42)
+        >>> batch_point_cloud1 = paddle.rand([2, 100, 3])
+        >>> batch_point_cloud2 = paddle.rand([2, 50, 3])
+        >>> output_dict = {"s1": batch_point_cloud1}
+        >>> label_dict  = {"s1": batch_point_cloud2}
         >>> weight = {"s1": 0.8}
         >>> loss = ChamferLoss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
         Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               0.)
+               0.04415882)
     """
 
     def __init__(
@@ -61,16 +64,16 @@ class ChamferLoss(base.Loss):
         for key in label_dict:
             s1 = output_dict[key]
             s2 = label_dict[key]
-            N1, N2 = s1.shape[0], s2.shape[0]
+            N1, N2 = s1.shape[1], s2.shape[1]
 
-            # [N1, N2, 3]
-            s1_expand = paddle.expand(s1.reshape([N1, 1, 3]), shape=[N1, N2, 3])
-            # [N1, N2, 3]
-            s2_expand = paddle.expand(s2.reshape([1, N2, 3]), shape=[N1, N2, 3])
+            # [B, N1, N2, 3]
+            s1_expand = paddle.expand(s1.reshape([-1, N1, 1, 3]), shape=[-1, N1, N2, 3])
+            # [B, N1, N2, 3]
+            s2_expand = paddle.expand(s2.reshape([-1, 1, N2, 3]), shape=[-1, N1, N2, 3])
 
-            dis = ((s1_expand - s2_expand) ** 2).sum(axis=2)  # [N1, N2]
-            loss_s12 = dis.min(axis=1)  # [N1]
-            loss_s21 = dis.min(axis=0)  # [N2]
+            dis = ((s1_expand - s2_expand) ** 2).sum(axis=3)  # [B, N1, N2]
+            loss_s12 = dis.min(axis=2)  # [B, N1]
+            loss_s21 = dis.min(axis=1)  # [B, N2]
             loss = loss_s12.mean() + loss_s21.mean()
 
             if weight_dict and key in weight_dict:
