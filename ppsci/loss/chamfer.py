@@ -40,14 +40,14 @@ class ChamferLoss(base.Loss):
     Examples:
         >>> import paddle
         >>> from ppsci.loss import ChamferLoss
-        >>> output_dict = {"s1": paddle.randn([1000, 3])}
-        >>> label_dict  = {"s1": paddle.randn([1000, 3])}
+        >>> output_dict = {"s1": paddle.to_tensor([[.1, .2, .3], [.4, .5, .6]])}
+        >>> label_dict  = {"s1": paddle.to_tensor([[.4, .5, .6], [.1, .2, .3]])}
         >>> weight = {"s1": 0.8}
         >>> loss = ChamferLoss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
         Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               0.14066719)
+               0.)
     """
 
     def __init__(
