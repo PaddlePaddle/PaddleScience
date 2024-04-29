@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Callable
 from typing import Dict
+from typing import List
+from typing import Tuple
 
 import hydra
 import model
@@ -22,7 +25,7 @@ from omegaconf import DictConfig
 
 import ppsci
 
-# For the use of the second derivative: paddle.cos, paddle.exp
+# For the use of the second derivative: paddle.cos
 paddle.framework.core.set_prim_eager_enabled(True)
 
 
@@ -31,99 +34,97 @@ def get_grad(outputs: paddle.Tensor, inputs: paddle.Tensor):
     return grad[0]
 
 
-def xpinn_2d(
-    x1: paddle.Tensor,
-    y1: paddle.Tensor,
-    u1: paddle.Tensor,
-    x2: paddle.Tensor,
-    y2: paddle.Tensor,
-    u2: paddle.Tensor,
-    x3: paddle.Tensor,
-    y3: paddle.Tensor,
-    u3: paddle.Tensor,
-    xi1: paddle.Tensor,
-    yi1: paddle.Tensor,
-    u1i1: paddle.Tensor,
-    u2i1: paddle.Tensor,
-    xi2: paddle.Tensor,
-    yi2: paddle.Tensor,
-    u1i2: paddle.Tensor,
-    u3i2: paddle.Tensor,
-    ub: paddle.Tensor,
-    ub_pred: paddle.Tensor,
+def xpinn_loss(
+    training_pres: List[List[paddle.Tensor]] = None,
+    training_exacts: List[paddle.Tensor] = None,
+    training_weight: float = 1,
+    residual_inputs: List[List[paddle.Tensor]] = None,
+    residual_pres: List[paddle.Tensor] = None,
+    residual_weight: float = 1,
+    interface_inputs: List[List[paddle.Tensor]] = None,
+    interface_pres: List[paddle.Tensor] = None,
+    interface_weight: float = 1,
+    interface_neigh_pres: List[List[paddle.Tensor]] = None,
+    interface_neigh_weight: float = 1,
+    residual_func: Callable = lambda x, y: x - y,
 ):
-    u1_x = get_grad(u1, x1)
-    u1_y = get_grad(u1, y1)
-    u1_xx = get_grad(u1_x, x1)
-    u1_yy = get_grad(u1_y, y1)
+    """XPINNs loss function for subdomain
 
-    u2_x = get_grad(u2, x2)
-    u2_y = get_grad(u2, y2)
-    u2_xx = get_grad(u2_x, x2)
-    u2_yy = get_grad(u2_y, y2)
+        `loss = W_u_q * MSE_u_q + W_F_q * MSE_F_q + W_I_q * MSE_avg_q + W_I_F_q * MSE_R`
 
-    u3_x = get_grad(u3, x3)
-    u3_y = get_grad(u3, y3)
-    u3_xx = get_grad(u3_x, x3)
-    u3_yy = get_grad(u3_y, y3)
+        `W_u_q * MSE_u_q` is data mismatch item.
+        `W_F_q * MSE_F_q` is residual item.
+        `W_I_q * MSE_avg_q` is interface item.
+        `W_I_F_q * MSE_R` is interface residual item.
 
-    u1i1_x = get_grad(u1i1, xi1)
-    u1i1_y = get_grad(u1i1, yi1)
-    u1i1_xx = get_grad(u1i1_x, xi1)
-    u1i1_yy = get_grad(u1i1_y, yi1)
+    Args:
+        training_pres (List[List[paddle.Tensor]], optional): the prediction result for training points input. Defaults to None.
+        training_exacts (List[paddle.Tensor], optional): the exact result for training points input. Defaults to None.
+        training_weight (float, optional): the weight of data mismatch item. Defaults to 1.
+        residual_inputs (List[List[paddle.Tensor]], optional): residual points input. Defaults to None.
+        residual_pres (List[paddle.Tensor], optional): the prediction result for residual points input. Defaults to None.
+        residual_weight (float, optional): the weight of residual item. Defaults to 1.
+        interface_inputs (List[List[paddle.Tensor]], optional): the prediction result for interface points input. Defaults to None.
+        interface_pres (List[paddle.Tensor], optional): the prediction result for interface points input. Defaults to None.
+        interface_weight (float, optional): the weight of iinterface item. Defaults to 1.
+        interface_neigh_pres (List[List[paddle.Tensor]], optional): the prediction result of neighbouring subdomain model for interface points input. Defaults to None.
+        interface_neigh_weight (float, optional): the weight of interface residual term. Defaults to 1.
+        residual_func (Callable, optional): residual calculation  function. Defaults to lambda x,y : x - y.
+    """
 
-    u2i1_x = get_grad(u2i1, xi1)
-    u2i1_y = get_grad(u2i1, yi1)
-    u2i1_xx = get_grad(u2i1_x, xi1)
-    u2i1_yy = get_grad(u2i1_y, yi1)
+    def get_second_derivatives(
+        outputs_list: List[List[paddle.Tensor]],
+        inputs_list: List[List[paddle.Tensor]],
+    ) -> Tuple[List[List[paddle.Tensor]], List[List[paddle.Tensor]]]:
+        d1_list = [
+            [get_grad(_out, _in) for _in in _ins]
+            for _out, _ins in zip(outputs_list, inputs_list)
+        ]
+        d2_list = [
+            [get_grad(_d, _in) for _d, _in in zip(d1_, _ins)]
+            for d1_, _ins in zip(d1_list, inputs_list)
+        ]
+        return d2_list
 
-    u1i2_x = get_grad(u1i2, xi2)
-    u1i2_y = get_grad(u1i2, yi2)
-    u1i2_xx = get_grad(u1i2_x, xi2)
-    u1i2_yy = get_grad(u1i2_y, yi2)
-
-    u3i2_x = get_grad(u3i2, xi2)
-    u3i2_y = get_grad(u3i2, yi2)
-    u3i2_xx = get_grad(u3i2_x, xi2)
-    u3i2_yy = get_grad(u3i2_y, yi2)
-
-    uavgi1 = (u1i1 + u2i1) / 2
-    uavgi2 = (u1i2 + u3i2) / 2
-
-    # Residuals
-    f1 = u1_xx + u1_yy - (paddle.exp(x1) + paddle.exp(y1))
-    f2 = u2_xx + u2_yy - (paddle.exp(x2) + paddle.exp(y2))
-    f3 = u3_xx + u3_yy - (paddle.exp(x3) + paddle.exp(y3))
-
-    # Residual continuity conditions on the interfaces
-    fi1 = (u1i1_xx + u1i1_yy - (paddle.exp(xi1) + paddle.exp(yi1))) - (
-        u2i1_xx + u2i1_yy - (paddle.exp(xi1) + paddle.exp(yi1))
-    )
-    fi2 = (u1i2_xx + u1i2_yy - (paddle.exp(xi2) + paddle.exp(yi2))) - (
-        u3i2_xx + u3i2_yy - (paddle.exp(xi2) + paddle.exp(yi2))
+    residual_u_d2_list = get_second_derivatives(residual_pres, residual_inputs)
+    interface_u_d2_list = get_second_derivatives(interface_pres, interface_inputs)
+    interface_neigh_u_d2_list = get_second_derivatives(
+        interface_neigh_pres, interface_inputs
     )
 
-    loss1 = (
-        20 * paddle.mean(paddle.square(ub - ub_pred))
-        + paddle.mean(paddle.square(f1))
-        + 1 * paddle.mean(paddle.square(fi1))
-        + 1 * paddle.mean(paddle.square(fi2))
-        + 20 * paddle.mean(paddle.square(u1i1 - uavgi1))
-        + 20 * paddle.mean(paddle.square(u1i2 - uavgi2))
-    )
+    MSE_u_q = 0
 
-    loss2 = (
-        paddle.mean(paddle.square(f2))
-        + 1 * paddle.mean(paddle.square(fi1))
-        + 20 * paddle.mean(paddle.square(u2i1 - uavgi1))
-    )
+    if training_pres is not None:
+        for _pre, _exact in zip(training_pres, training_exacts):
+            MSE_u_q += training_weight * paddle.mean(paddle.square(_pre - _exact))
 
-    loss3 = (
-        paddle.mean(paddle.square(f3))
-        + 1 * paddle.mean(paddle.square(fi2))
-        + 20 * paddle.mean(paddle.square(u3i2 - uavgi2))
-    )
-    return loss1, loss2, loss3
+    MSE_F_q = 0
+
+    if residual_inputs is not None:
+        for _ins, _d2 in zip(residual_inputs, residual_u_d2_list):
+            MSE_F_q += residual_weight * paddle.mean(
+                paddle.square(residual_func(_d2, _ins))
+            )
+
+    MSE_avg_q = 0
+    MSE_R = 0
+
+    if interface_inputs is not None:
+        for _ins, _pre, _n_pres in zip(
+            interface_inputs, interface_pres, interface_neigh_pres
+        ):
+            pre_list = [_pre] + _n_pres
+            pre_avg = paddle.add_n(pre_list) / len(pre_list)
+            MSE_avg_q += interface_weight * paddle.mean(paddle.square(_pre - pre_avg))
+
+        for _ins, _d2, _n_d2 in zip(
+            interface_inputs, interface_u_d2_list, interface_neigh_u_d2_list
+        ):
+            MSE_R += interface_neigh_weight * paddle.mean(
+                paddle.square(residual_func(_d2, _ins) - residual_func(_n_d2, _ins))
+            )
+
+    return MSE_u_q + MSE_F_q + MSE_avg_q + MSE_R
 
 
 def loss_fun(
@@ -131,26 +132,60 @@ def loss_fun(
     label_dict: Dict[str, paddle.Tensor],
     *args,
 ):
-    loss1, loss2, loss3 = xpinn_2d(
-        output_dict["x_f1"],
-        output_dict["y_f1"],
-        output_dict["u1"],
-        output_dict["x_f2"],
-        output_dict["y_f2"],
-        output_dict["u2"],
-        output_dict["x_f3"],
-        output_dict["y_f3"],
-        output_dict["u3"],
-        output_dict["xi1"],
-        output_dict["yi1"],
-        output_dict["u1i1"],
-        output_dict["u2i1"],
-        output_dict["xi2"],
-        output_dict["yi2"],
-        output_dict["u1i2"],
-        output_dict["u3i2"],
-        label_dict["ub"],
-        output_dict["ub_pred"],
+    def residual_func(output_der: paddle.Tensor, input: paddle.Tensor):
+        return paddle.add_n(output_der) - paddle.add_n(
+            [paddle.exp(_in) for _in in input]
+        )
+
+    # subdomain 1
+    loss1 = xpinn_loss(
+        training_pres=[output_dict["boundary_u"]],
+        training_exacts=[label_dict["boundary_u_exact"]],
+        training_weight=20,
+        residual_inputs=[[output_dict["residual1_x"], output_dict["residual1_y"]]],
+        residual_pres=[output_dict["residual1_u"]],
+        residual_weight=1,
+        interface_inputs=[
+            [output_dict["interface1_x"], output_dict["interface1_y"]],
+            [output_dict["interface2_x"], output_dict["interface2_y"]],
+        ],
+        interface_pres=[
+            output_dict["interface1_u_sub1"],
+            output_dict["interface2_u_sub1"],
+        ],
+        interface_weight=20,
+        interface_neigh_pres=[
+            [output_dict["interface1_u_sub2"]],
+            [output_dict["interface2_u_sub3"]],
+        ],
+        interface_neigh_weight=1,
+        residual_func=residual_func,
+    )
+
+    # subdomain 2
+    loss2 = xpinn_loss(
+        residual_inputs=[[output_dict["residual2_x"], output_dict["residual2_y"]]],
+        residual_pres=[output_dict["residual2_u"]],
+        residual_weight=1,
+        interface_inputs=[[output_dict["interface1_x"], output_dict["interface1_y"]]],
+        interface_pres=[output_dict["interface1_u_sub1"]],
+        interface_weight=20,
+        interface_neigh_pres=[[output_dict["interface1_u_sub2"]]],
+        interface_neigh_weight=1,
+        residual_func=residual_func,
+    )
+
+    # subdomain 3
+    loss3 = xpinn_loss(
+        residual_inputs=[[output_dict["residual3_x"], output_dict["residual3_y"]]],
+        residual_pres=[output_dict["residual3_u"]],
+        residual_weight=1,
+        interface_inputs=[[output_dict["interface2_x"], output_dict["interface2_y"]]],
+        interface_pres=[output_dict["interface2_u_sub1"]],
+        interface_weight=20,
+        interface_neigh_pres=[[output_dict["interface2_u_sub3"]]],
+        interface_neigh_weight=1,
+        residual_func=residual_func,
     )
 
     return loss1 + loss2 + loss3
@@ -161,82 +196,92 @@ def eval_rmse_func(
     label_dict: Dict[str, paddle.Tensor],
     *args,
 ):
-    u_pred = paddle.concat([output_dict["u1"], output_dict["u2"], output_dict["u3"]])
+    u_pred = paddle.concat(
+        [
+            output_dict["residual1_u"],
+            output_dict["residual2_u"],
+            output_dict["residual3_u"],
+        ]
+    )
 
-    # the shape of label_dict["u_exact"] is [22387, 1], and be cut into [18211, 1] `_eval_by_dataset`(ppsci/solver/eval.py).
+    # the shape of label_dict["residual_u_exact"] is [22387, 1], and be cut into [18211, 1] `_eval_by_dataset`(ppsci/solver/eval.py).
     u_exact = paddle.concat(
-        [label_dict["u_exact"], label_dict["u_exact2"], label_dict["u_exact3"]]
+        [
+            label_dict["residual_u_exact"],
+            label_dict["residual2_u_exact"],
+            label_dict["residual3_u_exact"],
+        ]
     )
 
     error_u_total = paddle.linalg.norm(
-        paddle.squeeze(u_exact) - u_pred.flatten(), 2
-    ) / paddle.linalg.norm(paddle.squeeze(u_exact), 2)
+        u_exact.flatten() - u_pred.flatten(), 2
+    ) / paddle.linalg.norm(u_exact.flatten(), 2)
     return {"total": error_u_total}
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     # set training dataset transformation
     def train_dataset_transform_func(
-        in_: Dict[str, np.ndarray],
+        _input: Dict[str, np.ndarray],
         _label: Dict[str, np.ndarray],
-        _weight: Dict[str, np.ndarray],
+        weight_: Dict[str, np.ndarray],
     ):
-        for key in in_:
-            in_[key] = paddle.cast(in_[key], paddle.float64)
-
         # Randomly select the residual points from sub-domains
-        id_x1 = np.random.choice(in_["x_f1"].shape[0], cfg.MODEL.num_f1, replace=False)
-        in_["x_f1"] = in_["x_f1"][id_x1, :]
-        in_["y_f1"] = in_["y_f1"][id_x1, :]
+        id_x1 = np.random.choice(
+            _input["residual1_x"].shape[0],
+            cfg.MODEL.num_residual1_points,
+            replace=False,
+        )
+        _input["residual1_x"] = _input["residual1_x"][id_x1, :]
+        _input["residual1_y"] = _input["residual1_y"][id_x1, :]
 
-        id_x2 = np.random.choice(in_["x_f2"].shape[0], cfg.MODEL.num_f2, replace=False)
-        in_["x_f2"] = in_["x_f2"][id_x2, :]
-        in_["y_f2"] = in_["y_f2"][id_x2, :]
+        id_x2 = np.random.choice(
+            _input["residual2_x"].shape[0],
+            cfg.MODEL.num_residual2_points,
+            replace=False,
+        )
+        _input["residual2_x"] = _input["residual2_x"][id_x2, :]
+        _input["residual2_y"] = _input["residual2_y"][id_x2, :]
 
-        id_x3 = np.random.choice(in_["x_f3"].shape[0], cfg.MODEL.num_f3, replace=False)
-        in_["x_f3"] = in_["x_f3"][id_x3, :]
-        in_["y_f3"] = in_["y_f3"][id_x3, :]
+        id_x3 = np.random.choice(
+            _input["residual3_x"].shape[0],
+            cfg.MODEL.num_residual3_points,
+            replace=False,
+        )
+        _input["residual3_x"] = _input["residual3_x"][id_x3, :]
+        _input["residual3_y"] = _input["residual3_y"][id_x3, :]
 
         # Randomly select boundary points
-        id_x4 = np.random.choice(in_["xb"].shape[0], cfg.MODEL.num_ub, replace=False)
-        in_["xb"] = in_["xb"][id_x4, :]
-        in_["yb"] = in_["yb"][id_x4, :]
-        _label["ub"] = _label["ub"][id_x4, :]
+        id_x4 = np.random.choice(
+            _input["boundary_x"].shape[0], cfg.MODEL.num_boundary_points, replace=False
+        )
+        _input["boundary_x"] = _input["boundary_x"][id_x4, :]
+        _input["boundary_y"] = _input["boundary_y"][id_x4, :]
+        _label["boundary_u_exact"] = _label["boundary_u_exact"][id_x4, :]
 
         # Randomly select the interface points along two interfaces
-        id_xi1 = np.random.choice(in_["xi1"].shape[0], cfg.MODEL.num_i1, replace=False)
-        in_["xi1"] = in_["xi1"][id_xi1, :]
-        in_["yi1"] = in_["yi1"][id_xi1, :]
+        id_xi1 = np.random.choice(
+            _input["interface1_x"].shape[0], cfg.MODEL.num_interface1, replace=False
+        )
+        _input["interface1_x"] = _input["interface1_x"][id_xi1, :]
+        _input["interface1_y"] = _input["interface1_y"][id_xi1, :]
 
-        id_xi2 = np.random.choice(in_["xi2"].shape[0], cfg.MODEL.num_i2, replace=False)
-        in_["xi2"] = in_["xi2"][id_xi2, :]
-        in_["yi2"] = in_["yi2"][id_xi2, :]
+        id_xi2 = np.random.choice(
+            _input["interface2_x"].shape[0], cfg.MODEL.num_interface2, replace=False
+        )
+        _input["interface2_x"] = _input["interface2_x"][id_xi2, :]
+        _input["interface2_y"] = _input["interface2_y"][id_xi2, :]
 
-        return in_, _label, _weight
+        return _input, _label, weight_
 
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_DIR,
-            "input_keys": (
-                "x_f1",
-                "y_f1",
-                "x_f2",
-                "y_f2",
-                "x_f3",
-                "y_f3",
-                "xi1",
-                "yi1",
-                "xi2",
-                "yi2",
-                "xb",
-                "yb",
-            ),
-            "label_keys": ("ub",),
+            "file_path": cfg.TRAIN_DATA_FILE,
+            "input_keys": cfg.TRAIN.input_keys,
+            "label_keys": cfg.TRAIN.label_keys,
+            "alias_dict": cfg.TRAIN.alias_dict,
             "transforms": (
                 {
                     "FunctionalTransform": {
@@ -260,48 +305,19 @@ def train(cfg: DictConfig):
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         ppsci.loss.FunctionalLoss(loss_fun),
-        {"u1": lambda out: out["u1"]},
-        "sup_constraint",
+        {"residual1_u": lambda out: out["residual1_u"]},
+        name="sup_constraint",
     )
     constraint = {sup_constraint.name: sup_constraint}
-
-    # set evaling dataset transformation
-    def eval_dataset_transform_func(
-        in_: Dict[str, np.ndarray],
-        _label: Dict[str, np.ndarray],
-        _weight: Dict[str, np.ndarray],
-    ):
-        for key in in_:
-            in_[key] = paddle.cast(in_[key], paddle.float64)
-        return in_, _label, _weight
 
     # set validator
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_DIR,
-            "input_keys": (
-                "x_f1",
-                "y_f1",
-                "x_f2",
-                "y_f2",
-                "x_f3",
-                "y_f3",
-                "xi1",
-                "yi1",
-                "xi2",
-                "yi2",
-                "xb",
-                "yb",
-            ),
-            "label_keys": ("ub", "u_exact", "u_exact2", "u_exact3"),
-            "transforms": (
-                {
-                    "FunctionalTransform": {
-                        "transform_func": eval_dataset_transform_func,
-                    },
-                },
-            ),
+            "file_path": cfg.TRAIN_DATA_FILE,
+            "input_keys": cfg.TRAIN.input_keys,
+            "label_keys": cfg.EVAL.label_keys,
+            "alias_dict": cfg.EVAL.alias_dict,
         }
     }
 
@@ -309,9 +325,9 @@ def train(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(loss_fun),
         output_expr={
-            "u1": lambda out: out["u1"],
-            "u2": lambda out: out["u2"],
-            "u3": lambda out: out["u3"],
+            "residual1_u": lambda out: out["residual1_u"],
+            "residual2_u": lambda out: out["residual2_u"],
+            "residual3_u": lambda out: out["residual3_u"],
         },
         metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
         name="sup_validator",
@@ -343,33 +359,32 @@ def train(cfg: DictConfig):
 
     # visualize prediction
     with solver.no_grad_context_manager(True):
-        for index, (input_, label, _) in enumerate(sup_validator.data_loader):
-            u_exact = label["u_exact"]
-            output_ = custom_model(input_)
-            u_pred = paddle.concat([output_["u1"], output_["u2"], output_["u3"]])
+        for index, (_input, _label, _) in enumerate(sup_validator.data_loader):
+            u_exact = _label["residual_u_exact"]
+            output_ = custom_model(_input)
+            u_pred = paddle.concat(
+                [output_["residual1_u"], output_["residual2_u"], output_["residual3_u"]]
+            )
 
             plotting.log_image(
-                x1=input_["x_f1"],
-                y1=input_["y_f1"],
-                x2=input_["x_f2"],
-                y2=input_["y_f2"],
-                x3=input_["x_f3"],
-                y3=input_["y_f3"],
-                xi1=input_["xi1"],
-                yi1=input_["yi1"],
-                xi2=input_["xi2"],
-                yi2=input_["yi2"],
-                xb=input_["xb"],
-                yb=input_["yb"],
-                u_pred=u_pred,
-                u_exact=u_exact,
+                residual1_x=_input["residual1_x"],
+                residual1_y=_input["residual1_y"],
+                residual2_x=_input["residual2_x"],
+                residual2_y=_input["residual2_y"],
+                residual3_x=_input["residual3_x"],
+                residual3_y=_input["residual3_y"],
+                interface1_x=_input["interface1_x"],
+                interface1_y=_input["interface1_y"],
+                interface2_x=_input["interface2_x"],
+                interface2_y=_input["interface2_y"],
+                boundary_x=_input["boundary_x"],
+                boundary_y=_input["boundary_y"],
+                residual_u_pred=u_pred,
+                residual_u_exact=u_exact,
             )
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     layer_list = (
         cfg.MODEL.layers1,
         cfg.MODEL.layers2,
@@ -378,43 +393,14 @@ def evaluate(cfg: DictConfig):
 
     custom_model = model.Model(layer_list)
 
-    # set evaling dataset transformation
-    def eval_dataset_transform_func(
-        in_: Dict[str, np.ndarray],
-        _label: Dict[str, np.ndarray],
-        _weight: Dict[str, np.ndarray],
-    ):
-        for key in in_:
-            in_[key] = paddle.cast(in_[key], paddle.float64)
-        return in_, _label, _weight
-
     # set validator
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_DIR,
-            "input_keys": (
-                "x_f1",
-                "y_f1",
-                "x_f2",
-                "y_f2",
-                "x_f3",
-                "y_f3",
-                "xi1",
-                "yi1",
-                "xi2",
-                "yi2",
-                "xb",
-                "yb",
-            ),
-            "label_keys": ("ub", "u_exact", "u_exact2", "u_exact3"),
-            "transforms": (
-                {
-                    "FunctionalTransform": {
-                        "transform_func": eval_dataset_transform_func,
-                    },
-                },
-            ),
+            "file_path": cfg.TRAIN_DATA_FILE,
+            "input_keys": cfg.TRAIN.input_keys,
+            "label_keys": cfg.EVAL.label_keys,
+            "alias_dict": cfg.EVAL.alias_dict,
         }
     }
 
@@ -422,9 +408,9 @@ def evaluate(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(loss_fun),
         output_expr={
-            "u1": lambda out: out["u1"],
-            "u2": lambda out: out["u2"],
-            "u3": lambda out: out["u3"],
+            "residual1_u": lambda out: out["residual1_u"],
+            "residual2_u": lambda out: out["residual2_u"],
+            "residual3_u": lambda out: out["residual3_u"],
         },
         metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
         name="sup_validator",
@@ -445,26 +431,28 @@ def evaluate(cfg: DictConfig):
 
     # visualize prediction
     with solver.no_grad_context_manager(True):
-        for index, (input_, label, _) in enumerate(sup_validator.data_loader):
-            u_exact = label["u_exact"]
-            output_ = custom_model(input_)
-            u_pred = paddle.concat([output_["u1"], output_["u2"], output_["u3"]])
+        for index, (_input, _label, _) in enumerate(sup_validator.data_loader):
+            u_exact = _label["residual_u_exact"]
+            _output = custom_model(_input)
+            u_pred = paddle.concat(
+                [_output["residual1_u"], _output["residual2_u"], _output["residual3_u"]]
+            )
 
             plotting.log_image(
-                x1=input_["x_f1"],
-                y1=input_["y_f1"],
-                x2=input_["x_f2"],
-                y2=input_["y_f2"],
-                x3=input_["x_f3"],
-                y3=input_["y_f3"],
-                xi1=input_["xi1"],
-                yi1=input_["yi1"],
-                xi2=input_["xi2"],
-                yi2=input_["yi2"],
-                xb=input_["xb"],
-                yb=input_["yb"],
-                u_pred=u_pred,
-                u_exact=u_exact,
+                residual1_x=_input["residual1_x"],
+                residual1_y=_input["residual1_y"],
+                residual2_x=_input["residual2_x"],
+                residual2_y=_input["residual2_y"],
+                residual3_x=_input["residual3_x"],
+                residual3_y=_input["residual3_y"],
+                interface1_x=_input["interface1_x"],
+                interface1_y=_input["interface1_y"],
+                interface2_x=_input["interface2_x"],
+                interface2_y=_input["interface2_y"],
+                boundary_x=_input["boundary_x"],
+                boundary_y=_input["boundary_y"],
+                residual_u_pred=u_pred,
+                residual_u_exact=u_exact,
             )
 
 

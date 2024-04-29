@@ -11,7 +11,6 @@ from ppsci.arch import base
 
 
 class Model(base.Arch):
-    # Initialize the class
     def __init__(self, layer_list: Tuple[List[int], List[int], List[int]]):
         super().__init__()
         # Initialize NNs
@@ -26,34 +25,42 @@ class Model(base.Arch):
         )
 
     def forward(self, input: Dict[str, paddle.Tensor]):
-        u1 = self.net_u1(input["x_f1"], input["y_f1"])
-        u2 = self.net_u2(input["x_f2"], input["y_f2"])
-        u3 = self.net_u3(input["x_f3"], input["y_f3"])
-        u1i1 = self.net_u1(input["xi1"], input["yi1"])
-        u2i1 = self.net_u2(input["xi1"], input["yi1"])
-        u1i2 = self.net_u1(input["xi2"], input["yi2"])
-        u3i2 = self.net_u3(input["xi2"], input["yi2"])
-        ub_pred = self.net_u1(input["xb"], input["yb"])
+        residual1_u = self.net_subdomain1(input["residual1_x"], input["residual1_y"])
+        residual2_u = self.net_subdomain2(input["residual2_x"], input["residual2_y"])
+        residual3_u = self.net_subdomain3(input["residual3_x"], input["residual3_y"])
+        interface1_u_sub1 = self.net_subdomain1(
+            input["interface1_x"], input["interface1_y"]
+        )
+        interface1_u_sub2 = self.net_subdomain2(
+            input["interface1_x"], input["interface1_y"]
+        )
+        interface2_u_sub1 = self.net_subdomain1(
+            input["interface2_x"], input["interface2_y"]
+        )
+        interface2_u_sub3 = self.net_subdomain3(
+            input["interface2_x"], input["interface2_y"]
+        )
+        boundary_u = self.net_subdomain1(input["boundary_x"], input["boundary_y"])
 
         return {
-            "x_f1": input["x_f1"],
-            "y_f1": input["y_f1"],
-            "x_f2": input["x_f2"],
-            "y_f2": input["y_f2"],
-            "x_f3": input["x_f3"],
-            "y_f3": input["y_f3"],
-            "xi1": input["xi1"],
-            "yi1": input["yi1"],
-            "xi2": input["xi2"],
-            "yi2": input["yi2"],
-            "u1": u1,
-            "u2": u2,
-            "u3": u3,
-            "u1i1": u1i1,
-            "u2i1": u2i1,
-            "u1i2": u1i2,
-            "u3i2": u3i2,
-            "ub_pred": ub_pred,
+            "residual1_x": input["residual1_x"],
+            "residual1_y": input["residual1_y"],
+            "residual2_x": input["residual2_x"],
+            "residual2_y": input["residual2_y"],
+            "residual3_x": input["residual3_x"],
+            "residual3_y": input["residual3_y"],
+            "interface1_x": input["interface1_x"],
+            "interface1_y": input["interface1_y"],
+            "interface2_x": input["interface2_x"],
+            "interface2_y": input["interface2_y"],
+            "residual1_u": residual1_u,
+            "residual2_u": residual2_u,
+            "residual3_u": residual3_u,
+            "interface1_u_sub1": interface1_u_sub1,
+            "interface1_u_sub2": interface1_u_sub2,
+            "interface2_u_sub1": interface2_u_sub1,
+            "interface2_u_sub3": interface2_u_sub3,
+            "boundary_u": boundary_u,
         }
 
     def initialize_nn(self, layers: List[int], name_prefix: str):
@@ -156,17 +163,17 @@ class Model(base.Arch):
         y = paddle.add(paddle.matmul(h, w), b)
         return y
 
-    def net_u1(self, x: paddle.Tensor, y: paddle.Tensor):
+    def net_subdomain1(self, x: paddle.Tensor, y: paddle.Tensor):
         return self.neural_net_tanh(
             paddle.concat([x, y], 1), self.weights1, self.biases1, self.amplitudes1
         )
 
-    def net_u2(self, x: paddle.Tensor, y: paddle.Tensor):
+    def net_subdomain2(self, x: paddle.Tensor, y: paddle.Tensor):
         return self.neural_net_sin(
             paddle.concat([x, y], 1), self.weights2, self.biases2, self.amplitudes2
         )
 
-    def net_u3(self, x, y):
+    def net_subdomain3(self, x, y):
         return self.neural_net_cos(
             paddle.concat([x, y], 1), self.weights3, self.biases3, self.amplitudes3
         )

@@ -35,44 +35,44 @@ def savefig(filename: str, crop: bool = True):
 
 
 def log_image(
-    x1: paddle.Tensor,
-    x2: paddle.Tensor,
-    x3: paddle.Tensor,
-    y1: paddle.Tensor,
-    y2: paddle.Tensor,
-    y3: paddle.Tensor,
-    xi1: paddle.Tensor,
-    yi1: paddle.Tensor,
-    xi2: paddle.Tensor,
-    yi2: paddle.Tensor,
-    xb: paddle.Tensor,
-    yb: paddle.Tensor,
-    u_pred: paddle.Tensor,
-    u_exact: paddle.Tensor,
+    residual1_x: paddle.Tensor,
+    residual1_y: paddle.Tensor,
+    residual2_x: paddle.Tensor,
+    residual2_y: paddle.Tensor,
+    residual3_x: paddle.Tensor,
+    residual3_y: paddle.Tensor,
+    interface1_x: paddle.Tensor,
+    interface1_y: paddle.Tensor,
+    interface2_x: paddle.Tensor,
+    interface2_y: paddle.Tensor,
+    boundary_x: paddle.Tensor,
+    boundary_y: paddle.Tensor,
+    residual_u_pred: paddle.Tensor,
+    residual_u_exact: paddle.Tensor,
 ):
     save_path = "./result"
     os.makedirs(save_path, exist_ok=True)
 
-    xi1 = xi1.numpy()
-    yi1 = yi1.numpy()
-    xi2 = xi2.numpy()
-    yi2 = yi2.numpy()
-    x_tot = np.concatenate([x1, x2, x3])
-    y_tot = np.concatenate([y1, y2, y3])
+    interface1_x = interface1_x.numpy()
+    interface1_y = interface1_y.numpy()
+    interface2_x = interface2_x.numpy()
+    interface2_y = interface2_y.numpy()
+    x_tot = np.concatenate([residual1_x, residual2_x, residual3_x])
+    y_tot = np.concatenate([residual1_y, residual2_y, residual3_y])
 
-    aa1 = np.array([[np.squeeze(xb[-1]), np.squeeze(yb[-1])]])
+    aa1 = np.array([[np.squeeze(boundary_x[-1]), np.squeeze(boundary_y[-1])]])
     aa2 = np.array(
         [
-            [1.8, np.squeeze(yb[-1])],
+            [1.8, np.squeeze(boundary_y[-1])],
             [+1.8, -1.7],
             [-1.6, -1.7],
             [-1.6, 1.55],
             [1.8, 1.55],
-            [1.8, np.squeeze(yb[-1])],
+            [1.8, np.squeeze(boundary_y[-1])],
         ]
     )
-    x_domain1 = np.squeeze(xb.flatten()[:, None])
-    y_domain1 = np.squeeze(yb.flatten()[:, None])
+    x_domain1 = np.squeeze(boundary_x.flatten()[:, None])
+    y_domain1 = np.squeeze(boundary_y.flatten()[:, None])
     aa3 = np.array([x_domain1, y_domain1]).T
     xx = np.vstack((aa3, aa2, aa1))
     triang_total = tri.Triangulation(x_tot.flatten(), y_tot.flatten())
@@ -80,7 +80,7 @@ def log_image(
     fig, ax = newfig(1.0, 1.1)
     gridspec.GridSpec(1, 1)
     ax = plt.subplot2grid((1, 1), (0, 0))
-    tcf = ax.tricontourf(triang_total, np.squeeze(u_exact), 100, cmap="jet")
+    tcf = ax.tricontourf(triang_total, np.squeeze(residual_u_exact), 100, cmap="jet")
     ax.add_patch(patches.Polygon(xx, closed=True, fill=True, color="w", edgecolor="w"))
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=28)
@@ -90,15 +90,15 @@ def log_image(
     ax.tick_params(axis="x", labelsize=28)
     ax.tick_params(axis="y", labelsize=28)
     plt.plot(
-        xi1,
-        yi1,
+        interface1_x,
+        interface1_y,
         "w-",
         markersize=2,
         label="Interface Pts",
     )
     plt.plot(
-        xi2,
-        yi2,
+        interface2_x,
+        interface2_y,
         "w-",
         markersize=2,
         label="Interface Pts",
@@ -110,7 +110,7 @@ def log_image(
     fig, ax = newfig(1.0, 1.1)
     gridspec.GridSpec(1, 1)
     ax = plt.subplot2grid((1, 1), (0, 0))
-    tcf = ax.tricontourf(triang_total, u_pred.flatten(), 100, cmap="jet")
+    tcf = ax.tricontourf(triang_total, residual_u_pred.flatten(), 100, cmap="jet")
     ax.add_patch(patches.Polygon(xx, closed=True, fill=True, color="w", edgecolor="w"))
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=28)
@@ -120,15 +120,15 @@ def log_image(
     ax.tick_params(axis="x", labelsize=28)
     ax.tick_params(axis="y", labelsize=28)
     plt.plot(
-        xi1,
-        yi1,
+        interface1_x,
+        interface1_y,
         "w-",
         markersize=2,
         label="Interface Pts",
     )
     plt.plot(
-        xi2,
-        yi2,
+        interface2_x,
+        interface2_y,
         "w-",
         markersize=2,
         label="Interface Pts",
@@ -142,7 +142,7 @@ def log_image(
     ax = plt.subplot2grid((1, 1), (0, 0))
     tcf = ax.tricontourf(
         triang_total,
-        paddle.abs(paddle.squeeze(u_exact) - u_pred.flatten()),
+        paddle.abs(residual_u_exact.flatten() - residual_u_pred.flatten()),
         100,
         cmap="jet",
     )
@@ -155,15 +155,15 @@ def log_image(
     ax.tick_params(axis="x", labelsize=28)
     ax.tick_params(axis="y", labelsize=28)
     plt.plot(
-        xi1,
-        yi1,
+        interface1_x,
+        interface1_y,
         "w-",
         markersize=2,
         label="Interface Pts",
     )
     plt.plot(
-        xi2,
-        yi2,
+        interface2_x,
+        interface2_y,
         "w-",
         markersize=2,
         label="Interface Pts",
