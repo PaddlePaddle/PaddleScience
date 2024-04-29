@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
+FROM paddlepaddle/paddle:latest-dev-cuda11.6-cudnn8.4-trt8.4-gcc82
 
 RUN echo "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
 RUN echo "deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
@@ -32,10 +32,10 @@ RUN wget https://mirrors.huaweicloud.com/python/3.9.7/Python-3.9.7.tgz && \
     cd .. && rm -rf Python-3.9.7 && rm Python-3.9.7.tgz && \
     ln -s /usr/local/bin/python3.9 /usr/local/bin/python
 
-RUN python3 -m pip install --upgrade pip -i https://pypi.douban.com/simple/ && pip install pysdf open3d db-sqlite3 -i https://pypi.douban.com/simple/
+RUN python3 -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple && pip install pysdf open3d db-sqlite3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # install pymesh and paddle
-RUN python3 -m pip install --upgrade pip -i https://pypi.douban.com/simple/ && pip install numpy==1.22.4 -i https://pypi.douban.com/simple/
+RUN python3 -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple && pip install "numpy>=1.20.0,<=1.23.1" -i https://pypi.tuna.tsinghua.edu.cn/simple
 COPY ./pymesh.tar.xz /src/pymesh.tar.xz
 
 RUN cd /src && \
@@ -50,8 +50,11 @@ ENV PATH="$PATH:/usr/lib/x86_64-linux-gnu/"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64/:$LD_LIBRARY_PATH"
 
 RUN python3 -m ensurepip --upgrade && \
-    pip3 config set global.index-url https://pypi.doubanio.com/simple/ && \
+    pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
     # ensure paddle install normally
-    ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so.8 /usr/local/cuda/lib64/libcudnn.so && \
-    ln -s /usr/local/cuda/lib64/libcublas.so.11 /usr/local/cuda/lib64/libcublas.so && \
     python3 -m pip install paddlepaddle-gpu==0.0.0.post116 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html
+
+RUN apt-get update
+RUN apt-get install -y -o Acquire::Retries=10 --no-install-recommends openssh-server
+
+RUN echo 'ldconfig' >> /root/.bashrc

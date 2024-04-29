@@ -41,7 +41,7 @@ class AveragedModel(nn.Layer):
         self.model = model  # As a quick reference to online model
         self.decay = decay
 
-        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param or bufer
+        self.params_shadow: Dict[str, paddle.Tensor] = {}  # ema param or buffer
         self.params_backup: Dict[str, paddle.Tensor] = {}  # used for apply and restore
         for name, param_or_buffer in itertools.chain(
             self.model.named_parameters(), self.model.named_buffers()
@@ -154,10 +154,10 @@ class StochasticWeightAverage(AveragedModel):
     All parameters are updated by the formula as below:
 
     $$
-    \mathbf{\theta}_{EMA}^{t+1} = \alpha \mathbf{\theta}_{EMA}^{t} + (1 - \alpha) \mathbf{\theta}^{t}
+    \mathbf{\theta}_{SWA}^{t} = \frac{1}{t-t_0+1}\sum_{i=t_0}^t{\mathbf{\theta}^{i}}
     $$
 
-    Where $\theta_{EMA}^{t}$ is the moving average parameters and $\theta^{t}$ is the online parameters at step $t$.
+    Where $\theta_{SWA}^{t}$ is the average parameters between step $t_0$ and $t$, $\theta^{i}$ is the online parameters at step $i$.
 
     Args:
         model (nn.Layer): The model to be averaged.
@@ -165,6 +165,7 @@ class StochasticWeightAverage(AveragedModel):
 
     def __init__(self, model: nn.Layer):
         super().__init__(model, None)
+        self.n_avg += 1  # Set to 1 for model already initialized
 
     def _update_fn_(self, shadow_param, model_param, step):
         dynamic_decay = step / (step + 1)
