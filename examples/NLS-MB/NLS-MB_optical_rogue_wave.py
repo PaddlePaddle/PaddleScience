@@ -417,20 +417,6 @@ def inference(cfg: DictConfig):
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
-    # TODO: Fix this mapping diff in dy2st
-    (
-        output_dict["Eu"],
-        output_dict["Ev"],
-        output_dict["eta"],
-        output_dict["pu"],
-        output_dict["pv"],
-    ) = (
-        output_dict["Eu"],
-        output_dict["Ev"],
-        output_dict["pu"],
-        output_dict["pv"],
-        output_dict["eta"],
-    )
 
     # visualize prediction
     Eu_true, Ev_true, pu_true, pv_true, eta_true = analytic_solution(input_dict)

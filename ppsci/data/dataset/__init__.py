@@ -25,6 +25,7 @@ from ppsci.data.dataset.csv_dataset import IterableCSVDataset
 from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
 from ppsci.data.dataset.darcyflow_dataset import DarcyFlowDataset
 from ppsci.data.dataset.dgmr_dataset import DGMRDataset
+from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
@@ -35,6 +36,7 @@ from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
+from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
@@ -68,8 +70,13 @@ __all__ = [
     "DGMRDataset",
     "MeshAirfoilDataset",
     "MeshCylinderDataset",
+<<<<<<< HEAD
     "DarcyFlowDataset",
     "SphericalSWEDataset",
+=======
+    "ENSODataset",
+    "SEVIRDataset",
+>>>>>>> 7b6640f556b6b4276306d4078af3b4d2859db9b3
     "build_dataset",
 ]
 
