@@ -60,12 +60,12 @@ class GaussianRandomFieldS2(nn.Layer):
     def __init__(
         self,
         nlat,
-        alpha: float=2.0,
-        tau: float=3.0,
-        sigma: float=None,
-        radius: float=1.0,
-        grid: str="equiangular",
-        dtype: paddle.dtype=paddle.float32,
+        alpha: float = 2.0,
+        tau: float = 3.0,
+        sigma: float = None,
+        radius: float = 1.0,
+        grid: str = "equiangular",
+        dtype: paddle.dtype = paddle.float32,
     ):
 
         super().__init__()

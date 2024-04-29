@@ -72,11 +72,11 @@ class RealSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax: int=None,
-        mmax: int=None,
-        grid: str="lobatto",
-        norm: str="ortho",
-        csphase: bool=True,
+        lmax: int = None,
+        mmax: int = None,
+        grid: str = "lobatto",
+        norm: str = "ortho",
+        csphase: bool = True,
     ):
         super().__init__()
 
@@ -183,11 +183,11 @@ class InverseRealSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax: int=None,
-        mmax: int=None,
-        grid: str="lobatto",
-        norm: str="ortho",
-        csphase: bool=True,
+        lmax: int = None,
+        mmax: int = None,
+        grid: str = "lobatto",
+        norm: str = "ortho",
+        csphase: bool = True,
     ):
 
         super().__init__()
@@ -278,11 +278,11 @@ class RealVectorSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax: int=None,
-        mmax: int=None,
-        grid: str="lobatto",
-        norm: str="ortho",
-        csphase: bool=True,
+        lmax: int = None,
+        mmax: int = None,
+        grid: str = "lobatto",
+        norm: str = "ortho",
+        csphase: bool = True,
     ):
         super().__init__()
 
@@ -426,11 +426,11 @@ class InverseRealVectorSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax: int=None,
-        mmax: int=None,
-        grid: str="lobatto",
-        norm: str="ortho",
-        csphase: bool=True,
+        lmax: int = None,
+        mmax: int = None,
+        grid: str = "lobatto",
+        norm: str = "ortho",
+        csphase: bool = True,
     ):
 
         super().__init__()

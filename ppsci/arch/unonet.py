@@ -44,8 +44,9 @@ class UNONet(base.Arch):
         use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
         mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
             Defaults to None.
-        non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
-        norm (F.module, optional): Normalization layer to use. Defaults to None.
+        non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
+        norm (str, optional): Normalization layer to use. Defaults to None.
+        ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
             Defaults to "soft-gating".
@@ -90,6 +91,7 @@ class UNONet(base.Arch):
         mlp: dict[str, float] = None,
         non_linearity: nn.functional = F.gelu,
         norm: str = None,
+        ada_in_features: Optional[int] = None,
         preactivation: bool = False,
         fno_skip: str = "linear",
         horizontal_skip: str = "linear",
@@ -219,6 +221,7 @@ class UNONet(base.Arch):
                     output_scaling_factor=[self.uno_scalings[i]],
                     non_linearity=non_linearity,
                     norm=norm,
+                    ada_in_features=ada_in_features,
                     preactivation=preactivation,
                     fno_skip=fno_skip,
                     mlp_skip=mlp_skip,
