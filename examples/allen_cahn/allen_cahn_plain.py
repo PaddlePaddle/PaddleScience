@@ -1,5 +1,5 @@
 """
-Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html
+Reference: https://github.com/PredictiveIntelligenceLab/jaxpi/tree/main/examples/allen_cahn
 """
 
 from os import path as osp
@@ -53,6 +53,7 @@ def plot(
     plt.tight_layout()
 
     fig_path = osp.join(output_dir, "ac.png")
+    print(f"Saving figure to {fig_path}")
     fig.savefig(fig_path, bbox_inches="tight", dpi=400)
     plt.close()
 
@@ -101,7 +102,7 @@ def train(cfg: DictConfig):
             },
         },
         output_expr=equation["AllenCahn"].equations,
-        loss=ppsci.loss.MSELoss(),
+        loss=ppsci.loss.MSELoss("mean"),
         name="PDE",
     )
 

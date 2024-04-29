@@ -4,14 +4,37 @@
 
 ### 1.1 从 docker 镜像启动[可选]
 
-如果你对 docker 有一定了解，则可以通过我们提供的 Dockerfile 文件，直接构建出能运行 PaddleScience 的环境。按照下列步骤构建镜像，创建容器并进入容器，以运行 PaddleScience。
+=== "从 DockerHub 拉取镜像"
 
-1. 克隆 PaddleScience 源码：`git clone https://github.com/PaddlePaddle/PaddleScience.git`
-2. 下载 PyMesh 预编译文件压缩包 [pymesh.tar.xz](https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz)，并放置在 `PaddleScience/docker/` 目录下
-3. 在 `PaddleScience/docker/` 目录下，执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可
-4. 在 docker 环境中，执行 `ldconfig`
+    ``` sh
+    # pull image
+    docker pull hydrogensulfate/paddlescience
 
-更多关于 Paddle Docker 的安装和使用，请参考 [Docker 安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/fromdocker.html)
+    # create a container named 'paddlescience' based on pulled image
+    ## docker version < 19.03
+    nvidia-docker run --name paddlescience_container --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
+
+    ## docker version >= 19.03
+    # docker run --name paddlescience_container --gpus all --network=host -it shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
+    ```
+
+    !!! note
+
+        Dockerhub 拉取的镜像**仅**预装了运行 PaddleScience 所需的依赖包，如 pymesh、open3d，**并不包含 PaddleScience**。
+        因此请在镜像拉取和容器构建完成后，参考 [1.4 安装 PaddleScience](#14-paddlescience) 中的步骤，在容器中安装 PaddleScience。
+
+=== "通过 Dockerfile 构建镜像"
+
+    ``` sh
+    git clone https://github.com/PaddlePaddle/PaddleScience.git
+    cd PaddleScience/docker/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
+    bash run.sh
+    ```
+
+    如果出现因网络问题导致的 docker 构建时 apt 下载报错，则重复执行 `bash run.sh` 直至构建完成。
+
+    更多关于 Paddle Docker 的安装和使用，请参考 [Docker 安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/fromdocker.html)。
 
 ### 1.2 python 环境安装[可选]
 
@@ -121,10 +144,14 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
     PyMesh 库需要以 setup 的方式进行安装，命令如下：
 
     ``` sh
-    git clone https://github.com/PyMesh/PyMesh.git
-    cd PyMesh
+    wget https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+    tar -zxvf PyMesh.tar.gz
 
-    git submodule update --init --recursive --progress
+    # 也可以使用 git 命令下载，速度可能会比较慢
+    # git clone https://github.com/PyMesh/PyMesh.git
+    # git submodule update --init --recursive --progress
+
+    cd PyMesh
     export PYMESH_PATH=`pwd`
 
     apt-get install \
@@ -137,7 +164,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
         libtbb-dev \
         python3-dev
 
-    python -m pip install -r $PYMESH_PATH/python/requirements.txt
+    python -m pip install --user -r $PYMESH_PATH/python/requirements.txt
     python setup.py build
     python setup.py install --user
 
@@ -151,7 +178,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
 
     !!! warning "安装注意事项"
 
-        安装过程中可能会出现两个问题，可以按照以下方式解决：
+        如果使用 git 命令下载 PyMesh 项目文件，则安装过程中可能会出现两个问题，可以按照以下方式解决：
 
         1. 由于网络问题，`git submodule update` 过程中可能某些 submodule 会 clone 失败，此时只需
         反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功即可。

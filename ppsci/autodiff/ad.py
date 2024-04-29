@@ -303,12 +303,6 @@ hessian = Hessians()
 def clear():
     """Clear cached Jacobians and Hessians.
 
-    Args:
-        None.
-
-    Returns:
-        None.
-
     Examples:
         >>> import paddle
         >>> import ppsci

@@ -34,7 +34,7 @@ __all__ = ["get_config", "replace_shape_with_inputspec_", "AttrDict"]
 if importlib.util.find_spec("pydantic") is not None:
     from pydantic import BaseModel
     from pydantic import field_validator
-    from pydantic_core.core_schema import FieldValidationInfo
+    from pydantic_core.core_schema import ValidationInfo
 
     __all__.append("SolverConfig")
 
@@ -81,7 +81,7 @@ if importlib.util.find_spec("pydantic") is not None:
             avg_range: Optional[Tuple[int, int]] = None
 
             @field_validator("avg_range")
-            def avg_range_check(cls, v, info: FieldValidationInfo):
+            def avg_range_check(cls, v, info: ValidationInfo):
                 if v[0] > v[1]:
                     raise ValueError(
                         f"'avg_range' should be a valid range, but got {v}."
@@ -145,7 +145,7 @@ if importlib.util.find_spec("pydantic") is not None:
             return v
 
         @field_validator("start_eval_epoch")
-        def start_eval_epoch_check(cls, v, info: FieldValidationInfo):
+        def start_eval_epoch_check(cls, v, info: ValidationInfo):
             if info.data["eval_during_train"]:
                 if v <= 0:
                     raise ValueError(
@@ -155,7 +155,7 @@ if importlib.util.find_spec("pydantic") is not None:
             return v
 
         @field_validator("eval_freq")
-        def eval_freq_check(cls, v, info: FieldValidationInfo):
+        def eval_freq_check(cls, v, info: ValidationInfo):
             if info.data["eval_during_train"]:
                 if v <= 0:
                     raise ValueError(
@@ -165,7 +165,7 @@ if importlib.util.find_spec("pydantic") is not None:
             return v
 
         @field_validator("ema")
-        def ema_check(cls, v, info: FieldValidationInfo):
+        def ema_check(cls, v, info: ValidationInfo):
             if "swa" in info.data and info.data["swa"] is not None:
                 raise ValueError(
                     "The config of 'swa' should not be used when 'ema' is specifed."
@@ -173,7 +173,7 @@ if importlib.util.find_spec("pydantic") is not None:
             return v
 
         @field_validator("swa")
-        def swa_check(cls, v, info: FieldValidationInfo):
+        def swa_check(cls, v, info: ValidationInfo):
             if "ema" in info.data and info.data["ema"] is not None:
                 raise ValueError(
                     "The config of 'ema' should not be used when 'swa' is specifed."
@@ -212,7 +212,7 @@ if importlib.util.find_spec("pydantic") is not None:
 
         # Fine-grained validator(s) below
         @field_validator("engine")
-        def engine_check(cls, v, info: FieldValidationInfo):
+        def engine_check(cls, v, info: ValidationInfo):
             if v == "tensorrt" and info.data["device"] != "gpu":
                 raise ValueError(
                     "'device' should be 'gpu' when 'engine' is 'tensorrt', "
@@ -319,7 +319,7 @@ if importlib.util.find_spec("pydantic") is not None:
             return v
 
         @field_validator("use_wandb")
-        def use_wandb_check(cls, v, info: FieldValidationInfo):
+        def use_wandb_check(cls, v, info: ValidationInfo):
             if not isinstance(info.data["wandb_config"], dict):
                 raise ValueError(
                     "'wandb_config' should be a dict when 'use_wandb' is True, "

@@ -1,8 +1,8 @@
 # Skillful High Resolution Regional Short Term Forecasting with Boundary Smoothing
 
-YingLong, a high-resolution, short-term regional weather forecasting, artificial-intelligence-based model, which is capable of hourly predicting weather fields including wind speed, temperature, and specific humidity at a 3km resolution. YingLong utilizes a parallel structure of global and local blocks to capture multiscale meteorological features and is trained on analysis dataset. Additionally, the necessary information around the regional boundary is introduced to YingLong through the boundary smoothing strategy, which significantly improves the regional forecasting results. By comparing forecast results with those from WRF-ARW, one of the best numerical prediction models, YingLong demonstrates superior forecasting performances in most cases, especially on surface variables.
+YingLong1, a high-resolution, short-term regional weather forecasting, artificial-intelligence-based model, which is capable of hourly predicting weather fields including wind speed, temperature, and specific humidity at a 3km resolution. YingLong1 utilizes a parallel structure of global and local blocks to capture multiscale meteorological features and is trained on analysis dataset. Additionally, the necessary information around the regional boundary is introduced to YingLong1 through the boundary smoothing strategy, which significantly improves the regional forecasting results. By comparing forecast results with those from WRF-ARW, one of the best numerical prediction models, YingLong1 demonstrates superior forecasting performances in most cases, especially on surface variables.
 
-This code is the implementation of YingLong. We select the southeastern region of the United States, which is around the range of 110-130E, 15-35N, with 440 × 408 grid points in Lambert projection.
+This code is the implementation of YingLong1. We select the southeastern region of the United States, which is around the range of 110-130E, 15-35N, with 440 × 408 grid points in Lambert projection.
 
 <div align=center>
     <img src="doc/fig_arch1.jpg" width="70%" height="auto" >
@@ -55,13 +55,19 @@ tar -xvf inference.tar
 
 ### 2. Run the code
 
-The following code runs the Yinglong model, and the model output will be saved in 'output/result.npy'.
+The following code runs the YingLong1 model, and the model output will be saved in 'output/result.npy'.
 
 ``` shell
-# YingLong-12 Layers
+# YingLong1-12 Layers
 python predict_12layers.py mode=infer
-# YingLong-24 Layers
+# YingLong1-24 Layers
 python predict_24layers.py mode=infer
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022. Click [here](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result.gif) to view the prediction results.
+
+## License
+
+YingLong1 was released by Shanghai Zhangjiang Institute of Mathematics, Baidu inc.
+
+The commercial use of these models is forbidden.
