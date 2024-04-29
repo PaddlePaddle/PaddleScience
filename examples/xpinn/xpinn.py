@@ -29,7 +29,7 @@ import ppsci
 paddle.framework.core.set_prim_eager_enabled(True)
 
 
-def get_grad(outputs: paddle.Tensor, inputs: paddle.Tensor):
+def get_grad(outputs: paddle.Tensor, inputs: paddle.Tensor) -> paddle.Tensor:
     grad = paddle.grad(outputs, inputs, retain_graph=True, create_graph=True)
     return grad[0]
 
@@ -47,7 +47,7 @@ def xpinn_loss(
     interface_neigh_pres: List[List[paddle.Tensor]] = None,
     interface_neigh_weight: float = 1,
     residual_func: Callable = lambda x, y: x - y,
-):
+) -> float:
     """XPINNs loss function for subdomain
 
         `loss = W_u_q * MSE_u_q + W_F_q * MSE_F_q + W_I_q * MSE_avg_q + W_I_F_q * MSE_R`
@@ -73,7 +73,7 @@ def xpinn_loss(
     """
 
     def get_second_derivatives(
-        outputs_list: List[List[paddle.Tensor]],
+        outputs_list: List[paddle.Tensor],
         inputs_list: List[List[paddle.Tensor]],
     ) -> Tuple[List[List[paddle.Tensor]], List[List[paddle.Tensor]]]:
         d1_list = [
@@ -131,8 +131,8 @@ def loss_fun(
     output_dict: Dict[str, paddle.Tensor],
     label_dict: Dict[str, paddle.Tensor],
     *args,
-):
-    def residual_func(output_der: paddle.Tensor, input: paddle.Tensor):
+) -> float:
+    def residual_func(output_der: paddle.Tensor, input: paddle.Tensor) -> paddle.Tensor:
         return paddle.add_n(output_der) - paddle.add_n(
             [paddle.exp(_in) for _in in input]
         )
@@ -195,7 +195,7 @@ def eval_rmse_func(
     output_dict: Dict[str, paddle.Tensor],
     label_dict: Dict[str, paddle.Tensor],
     *args,
-):
+) -> Dict[str, paddle.Tensor]:
     u_pred = paddle.concat(
         [
             output_dict["residual1_u"],
@@ -225,7 +225,7 @@ def train(cfg: DictConfig):
         _input: Dict[str, np.ndarray],
         _label: Dict[str, np.ndarray],
         weight_: Dict[str, np.ndarray],
-    ):
+    ) -> Dict[str, np.ndarray]:
         # Randomly select the residual points from sub-domains
         id_x1 = np.random.choice(
             _input["residual1_x"].shape[0],
