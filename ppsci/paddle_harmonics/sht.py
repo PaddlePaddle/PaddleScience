@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 The torch-harmonics Authors. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022 The paddle-harmonics Authors. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,11 +72,11 @@ class RealSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax=None,
-        mmax=None,
-        grid="lobatto",
-        norm="ortho",
-        csphase=True,
+        lmax: int=None,
+        mmax: int=None,
+        grid: str="lobatto",
+        norm: str="ortho",
+        csphase: bool=True,
     ):
         super().__init__()
 
@@ -183,11 +183,11 @@ class InverseRealSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax=None,
-        mmax=None,
-        grid="lobatto",
-        norm="ortho",
-        csphase=True,
+        lmax: int=None,
+        mmax: int=None,
+        grid: str="lobatto",
+        norm: str="ortho",
+        csphase: bool=True,
     ):
 
         super().__init__()
@@ -278,11 +278,11 @@ class RealVectorSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax=None,
-        mmax=None,
-        grid="lobatto",
-        norm="ortho",
-        csphase=True,
+        lmax: int=None,
+        mmax: int=None,
+        grid: str="lobatto",
+        norm: str="ortho",
+        csphase: bool=True,
     ):
         super().__init__()
 
@@ -426,11 +426,11 @@ class InverseRealVectorSHT(nn.Layer):
         self,
         nlat,
         nlon,
-        lmax=None,
-        mmax=None,
-        grid="lobatto",
-        norm="ortho",
-        csphase=True,
+        lmax: int=None,
+        mmax: int=None,
+        grid: str="lobatto",
+        norm: str="ortho",
+        csphase: bool=True,
     ):
 
         super().__init__()

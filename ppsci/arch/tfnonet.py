@@ -1,5 +1,5 @@
-from typing import Tuple
-
+from typing import Optional, Tuple, Union
+from paddle import nn
 import paddle.nn.functional as F
 
 from ppsci.arch import base
@@ -45,7 +45,8 @@ class FNONet(base.Arch):
             * `factorized` : the input is directly contracted with the factors of the decomposition.
         decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
             decomposition. Defaults to dict().
-        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+        domain_padding (Optional[Union[list,float,int]]): Whether to use percentage of padding. Defaults to
+            None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
@@ -56,34 +57,33 @@ class FNONet(base.Arch):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        n_modes,
-        hidden_channels,
-        in_channels=3,
-        out_channels=1,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        use_mlp=False,
-        mlp=None,
-        max_n_modes=None,
-        non_linearity=F.gelu,
-        stabilizer=None,
-        norm=None,
-        ada_in_features=None,
-        preactivation=False,
-        fno_skip="linear",
-        mlp_skip="soft-gating",
-        separable=False,
-        factorization=None,
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
-        SpectralConv=fno_block.FactorizedSpectralConv,
+        n_modes: Tuple[int, ...],
+        hidden_channels: int,
+        in_channels: int = 3,
+        out_channels: int = 1,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        max_n_modes: int = None,
+        non_linearity: nn.functional = F.gelu,
+        stabilizer: str = None,
+        norm: str = None,
+        preactivation: bool = False,
+        fno_skip: str = "linear",
+        mlp_skip: str = "soft-gating",
+        separable: bool = False,
+        factorization: str = None,
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        domain_padding: Optional[Union[list, float, int]] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
+        SpectralConv: nn.Layer = fno_block.FactorizedSpectralConv,
         **kwargs,
     ):
         super().__init__()
@@ -111,7 +111,6 @@ class FNONet(base.Arch):
         self.implementation = implementation
         self.separable = separable
         self.preactivation = preactivation
-        self.ada_in_features = ada_in_features
         self.stabilizer = stabilizer
         if domain_padding is not None and (
             (isinstance(domain_padding, list) and sum(domain_padding) > 0)
@@ -231,7 +230,8 @@ class TFNO1dNet(FNONet):
             * `factorized` : the input is directly contracted with the factors of the decomposition.
         decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
             decomposition. Defaults to dict().
-        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+        domain_padding (Union[list,float,int], optional): Whether to use percentage of padding. Defaults to
+            None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
@@ -242,30 +242,30 @@ class TFNO1dNet(FNONet):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        n_modes_height,
-        hidden_channels,
-        in_channels=3,
-        out_channels=1,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        non_linearity=F.gelu,
-        use_mlp=False,
-        mlp=None,
-        norm=None,
-        skip="soft-gating",
-        separable=False,
-        preactivation=False,
-        factorization="Tucker",
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
-        SpectralConv=fno_block.FactorizedSpectralConv,
+        n_modes_height: Tuple[int, ...],
+        hidden_channels: int,
+        in_channels: int = 3,
+        out_channels: int = 1,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        non_linearity: nn.functional = F.gelu,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        norm: str = None,
+        skip: str = "soft-gating",
+        separable: bool = False,
+        preactivation: bool = False,
+        factorization: str = "Tucker",
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        domain_padding: Optional[Union[list, float, int]] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
+        SpectralConv: nn.Layer = fno_block.FactorizedSpectralConv,
         **kwargs,
     ):
         super().__init__(
@@ -338,7 +338,8 @@ class TFNO2dNet(FNONet):
            * `factorized` : the input is directly contracted with the factors of the decomposition.
        decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
            decomposition. Defaults to dict().
-       domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+       domain_padding (Union[list,float,int], optional): Whether to use percentage of padding. Defaults to
+            None.
        domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
        fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
@@ -349,31 +350,31 @@ class TFNO2dNet(FNONet):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        n_modes_height,
-        n_modes_width,
-        hidden_channels,
-        in_channels=3,
-        out_channels=1,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        non_linearity=F.gelu,
-        use_mlp=False,
-        mlp=None,
-        norm=None,
-        skip="soft-gating",
-        separable=False,
-        preactivation=False,
-        factorization="Tucker",
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
-        SpectralConv=fno_block.FactorizedSpectralConv,
+        n_modes_height: int,
+        n_modes_width: int,
+        hidden_channels: int,
+        in_channels: int = 3,
+        out_channels: int = 1,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        non_linearity: nn.functional = F.gelu,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        norm: str = None,
+        skip: str = "soft-gating",
+        separable: bool = False,
+        preactivation: bool = False,
+        factorization: str = "Tucker",
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        domain_padding: Optional[Union[list, float, int]] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
+        SpectralConv: nn.layer = fno_block.FactorizedSpectralConv,
         **kwargs,
     ):
         super().__init__(
@@ -459,33 +460,33 @@ class TFNO3dNet(FNONet):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        n_modes_height,
-        n_modes_width,
-        n_modes_depth,
-        hidden_channels,
-        in_channels=3,
-        out_channels=1,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        non_linearity=F.gelu,
-        use_mlp=False,
-        mlp=None,
-        norm=None,
-        skip="soft-gating",
-        separable=False,
-        preactivation=False,
-        factorization="Tucker",
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        decomposition_kwargs=dict(),
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
-        SpectralConv=fno_block.FactorizedSpectralConv,
+        n_modes_height: int,
+        n_modes_width: int,
+        n_modes_depth: int,
+        hidden_channels: int,
+        in_channels: int = 3,
+        out_channels: int = 1,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        non_linearity: nn.functional = F.gelu,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        norm: str = None,
+        skip: str = "soft-gating",
+        separable: bool = False,
+        preactivation: bool = False,
+        factorization: str = "Tucker",
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        decomposition_kwargs: dict = None,
+        domain_padding: Optional[Union[list, float, int]] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
+        SpectralConv: nn.layer = fno_block.FactorizedSpectralConv,
         **kwargs,
     ):
         super().__init__(

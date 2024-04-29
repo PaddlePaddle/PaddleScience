@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 import paddle
 import paddle.nn as nn
@@ -24,6 +24,21 @@ class UNONet(base.Arch):
         projection_channels (int, optional): Number of hidden channels of the projection block of the FNO.
             Defaults to 256.
         n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
+        uno_out_channels (list, optional): Number of output channel of each Fourier Layers.
+            Eaxmple: For a Five layer UNO uno_out_channels can be [32,64,64,64,32].c
+        uno_n_modes (list): Number of Fourier Modes to use in integral operation of each Fourier Layers
+            (along each dimension).
+            Example: For a five layer UNO with 2D input the uno_n_modes can be: [[5,5],[5,5],[5,5],[5,5],[5,5]]. Defaults to None.
+        uno_scalings (list): Scaling Factors for each Fourier Layers.
+            Example: For a five layer UNO with 2D input, the uno_scalings can be : [[1.0,1.0],[0.5,0.5],[1,1],[1,1],[2,2]].Defaults to None.
+        horizontal_skips_map (dict, optional): a map {...., b: a, ....} denoting horizontal skip connection
+            from a-th layer to b-th layer. If None default skip connection is applied.
+            Example: For a 5 layer UNO architecture, the skip connections can be horizontal_skips_map ={4:0,3:1}.Defaults to None.
+        incremental_n_modes (tuple[int],optional): Incremental number of modes to use in Fourier domain.
+            * If not None, this allows to incrementally increase the number of modes in Fourier domain
+            during training. Has to verify n <= N for (n, m) in zip(incremental_n_modes, n_modes).
+            * If None, all the n_modes are used.
+            This can be updated dynamically during training.Defaults to None.
         use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
         mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
             Defaults to None.
@@ -58,36 +73,35 @@ class UNONet(base.Arch):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        in_channels,
-        out_channels,
-        hidden_channels,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        uno_out_channels=None,
-        uno_n_modes=None,
-        uno_scalings=None,
-        horizontal_skips_map=None,
-        incremental_n_modes=None,
-        use_mlp=False,
-        mlp=None,
-        non_linearity=F.gelu,
-        norm=None,
-        preactivation=False,
-        fno_skip="linear",
-        horizontal_skip="linear",
-        mlp_skip="soft-gating",
-        separable=False,
-        factorization=None,
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
-        normalizer=None,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: int,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        uno_out_channels: Tuple[int, ...] = None,
+        uno_n_modes: Tuple[Tuple[int, ...], ...] = None,
+        uno_scalings: Tuple[Tuple[int, ...], ...] = None,
+        horizontal_skips_map: dict = None,
+        incremental_n_modes: Tuple[int, ...] = None,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        non_linearity: nn.functional = F.gelu,
+        norm: str = None,
+        preactivation: bool = False,
+        fno_skip: str = "linear",
+        horizontal_skip: str = "linear",
+        mlp_skip: str = "soft-gating",
+        separable: bool = False,
+        factorization: str = None,
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        domain_padding: Optional[Union[list, float, int]] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
         **kwargs,
     ):
         super().__init__()

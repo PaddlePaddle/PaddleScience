@@ -9,7 +9,7 @@ import paddle
 import paddle.nn.functional as F
 from paddle import nn
 
-from ppsci.utils import initializer
+from ppsci.utils import initializer, logger
 
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -27,8 +27,8 @@ class DomainPadding(nn.Layer):
 
     def __init__(
         self,
-        domain_padding,
-        padding_mode="one-sided",
+        domain_padding: Union[float, List[float]],
+        padding_mode: str="one-sided",
         output_scaling_factor: Union[int, List[int]] = 1,
     ):
         super().__init__()
@@ -76,7 +76,7 @@ class DomainPadding(nn.Layer):
         except KeyError:
             padding = [round(p * r) for (p, r) in zip(self.domain_padding, resolution)]
 
-            print(
+            logger.message(
                 f"Padding inputs of resolution = {resolution} with padding = {padding}, {self.padding_mode}"
             )
 
@@ -89,11 +89,8 @@ class DomainPadding(nn.Layer):
             # (so we must reverse the padding list)
             padding = padding[::-1]
 
-            # the F.pad(x, padding) funtion pads the tensor 'x' in reverse order
-            # of the "padding" list i.e. the last axis of tensor 'x' will be
-            # padded by the amount mention at the first position of the
-            # 'padding' vector. The details about F.pad can be found here:
-            # https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # the F.pad(x, padding) funtion pads the tensor 'x' in reverse order of the "padding" list i.e. the last axis of tensor 'x' will be padded by the amount mention at the first position of the 'padding' vector. The details about F.pad can be found here:
+            # https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/functional/pad_cn.html
 
             if self.padding_mode == "symmetric":
                 # Pad both sides
@@ -129,9 +126,7 @@ class DomainPadding(nn.Layer):
             self._padding[f"{resolution}"] = padding
 
             padded = F.pad(x, padding, mode="constant")
-
             output_shape = padded.shape[2:]
-
             output_shape = [
                 round(i * j) for (i, j) in zip(output_scaling_factor, output_shape)
             ]
@@ -222,7 +217,7 @@ def skip_connection(in_features, out_features, n_dim=2, bias=False, type="soft-g
         return nn.Identity()
     else:
         raise ValueError(
-            f"Got skip-connection type = {type}, expected one of {'soft-gating', 'linear', 'id'}."
+            f"Got skip-connection type = {type}, expected one of {'soft-gating', 'linear', 'identity'}."
         )
 
 
@@ -271,13 +266,13 @@ class MLP(nn.Layer):
 
     def __init__(
         self,
-        in_channels,
-        out_channels=None,
-        hidden_channels=None,
-        n_layers=2,
-        n_dim=2,
-        non_linearity=F.gelu,
-        dropout=0.0,
+        in_channels: int,
+        out_channels: int=None,
+        hidden_channels: int=None,
+        n_layers: int=2,
+        n_dim: int=2,
+        non_linearity: nn.functional=F.gelu,
+        dropout: float=0.0,
         **kwargs,
     ):
         super().__init__()
@@ -314,30 +309,6 @@ class MLP(nn.Layer):
             if self.dropout is not None:
                 x = self.dropout[i](x)
         return x
-
-
-def _contract_dense(x, weight, separable=False):
-    order = len(x.shape)
-    # batch-size, in_channels, x, y...
-    x_syms = list(einsum_symbols[:order])
-
-    # in_channels, out_channels, x, y...
-    weight_syms = list(x_syms[1:])  # no batch-size
-
-    # batch-size, out_channels, x, y...
-    if separable:
-        out_syms = [x_syms[0]] + list(weight_syms)
-    else:
-        weight_syms.insert(1, einsum_symbols[order])  # outputs
-        out_syms = list(weight_syms)
-        out_syms[0] = x_syms[0]
-
-    eq = "".join(x_syms) + "," + "".join(weight_syms) + "->" + "".join(out_syms)
-    # For the darcy flow, the only einsum is abcd,becd->aecd, where x and weights are shaped [32,32,8,8]
-    if not isinstance(weight, paddle.Tensor):
-        weight = paddle.to_tensor(weight)
-
-    return paddle.einsum(eq, x, weight)
 
 
 def _contract_dense_trick(x, weight_real, weight_imag, separable=False):
@@ -386,16 +357,12 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
         separable (bool, optional): whether to use the separable implementation of contraction. This
             arg  is only checked when `implementation=reconstructed`. Defaults to False.
 
-    Raises:
-        ValueError: _description_
-
     Returns:
         function : (x, weight) -> x * weight in Fourier space
     """
 
     if implementation == "reconstructed":
         if separable:
-            print("SEPARABLE")
             return _contract_dense_separable
         else:
             return _contract_dense_trick
@@ -403,17 +370,6 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
         if isinstance(weight, paddle.Tensor):
             return _contract_dense_trick
         # TODO: FactorizedTensor not supported yet
-        # elif isinstance(weight, FactorizedTensor):
-        #     if weight.name.lower() == 'complexdense':
-        #         return _contract_dense
-        #     elif weight.name.lower() == 'complextucker':
-        #         return _contract_tucker
-        #     elif weight.name.lower() == 'complextt':
-        #         return _contract_tt
-        #     elif weight.name.lower() == 'complexcp':
-        #         return _contract_cp
-        #     else:
-        #         raise ValueError(f'Got unexpected factorized weight type {weight.name}')
 
     else:
         raise ValueError(
@@ -601,21 +557,21 @@ class FactorizedSpectralConv(nn.Layer):
 
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        n_modes,
-        max_n_modes=None,
-        bias=True,
-        n_layers=1,
-        separable=False,
+        in_channels: int,
+        out_channels: int,
+        n_modes: Tuple[int,...],
+        max_n_modes: int = None,
+        bias: bool = True,
+        n_layers: int = 1,
+        separable: bool = False,
         output_scaling_factor: Optional[Union[Number, List[Number]]] = None,
-        rank=0.5,
-        factorization=None,
-        implementation="reconstructed",
-        fixed_rank_modes=False,
-        joint_factorization=False,
-        init_std="auto",
-        fft_norm="backward",
+        rank: float = 0.5,
+        factorization: str = None,
+        implementation: str = "reconstructed",
+        fixed_rank_modes: bool = False,
+        joint_factorization: bool = False,
+        init_std: str = "auto",
+        fft_norm: str = "backward",
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -634,9 +590,9 @@ class FactorizedSpectralConv(nn.Layer):
         self.n_layers = n_layers
         self.implementation = implementation
 
-        self.output_scaling_factor: Union[
-            None, List[List[float]]
-        ] = validate_scaling_factor(output_scaling_factor, self.order, n_layers)
+        self.output_scaling_factor: Union[None, List[List[float]]] = (
+            validate_scaling_factor(output_scaling_factor, self.order, n_layers)
+        )
 
         if init_std == "auto":
             init_std = (2 / (in_channels + out_channels)) ** 0.5
@@ -730,7 +686,7 @@ class FactorizedSpectralConv(nn.Layer):
             )
 
     def forward(
-        self, x: paddle.Tensor, indices=0, output_shape: Optional[Tuple[int]] = None
+        self, x: paddle.Tensor, indices: int=0, output_shape: Optional[Tuple[int]] = None
     ):
         batchsize, channels, *mode_sizes = x.shape
         fft_size = list(mode_sizes)
@@ -778,13 +734,13 @@ class FactorizedSpectralConv(nn.Layer):
         ]  # The last mode already has redundant half removed
         idx_tuple = slices_x
         if len(idx_tuple) == 4:
-            out_fft[
-                idx_tuple[0], idx_tuple[1], idx_tuple[2], idx_tuple[3]
-            ] = self._contract(
-                x[idx_tuple[0], idx_tuple[1], idx_tuple[2], idx_tuple[3]],
-                w_real,
-                w_imag,
-                separable=self.separable,
+            out_fft[idx_tuple[0], idx_tuple[1], idx_tuple[2], idx_tuple[3]] = (
+                self._contract(
+                    x[idx_tuple[0], idx_tuple[1], idx_tuple[2], idx_tuple[3]],
+                    w_real,
+                    w_imag,
+                    separable=self.separable,
+                )
             )
         elif len(idx_tuple) == 3:
             out_fft[idx_tuple[0], idx_tuple[1], idx_tuple[2]] = self._contract(
@@ -822,7 +778,7 @@ class FactorizedSpectralConv1d(FactorizedSpectralConv):
     """1D Spectral Conv
 
     This is provided for reference only,
-    see :class:`neuralop.layers.SpectraConv` for the preferred, general implementation
+    see :class:`FactorizedSpectralConv` for the preferred, general implementation
     """
 
     def forward(self, x, indices=0):
@@ -862,10 +818,10 @@ class FactorizedSpectralConv1d(FactorizedSpectralConv):
 
 
 class FactorizedSpectralConv2d(FactorizedSpectralConv):
-    """2D Spectral Conv, see :class:`neuralop.layers.SpectraConv` for the general case
+    """2D Spectral Conv.
 
     This is provided for reference only,
-    see :class:`neuralop.layers.SpectraConv` for the preferred, general implementation
+    see :class:`FactorizedSpectralConv` for the preferred, general implementation
     """
 
     def forward(self, x, indices=0):
@@ -892,7 +848,7 @@ class FactorizedSpectralConv2d(FactorizedSpectralConv):
             slice(-self.n_modes[0] // 2, None),  # -half_n_modes[0]:,
             slice(self.n_modes[1]),  # ......      :half_n_modes[1]]
         )
-        print(
+        logger.message(
             f"2D: {x[slices0].shape=}, {self._get_weight(indices)[slices0].shape=}, {self._get_weight(indices).shape=}"
         )
 
@@ -941,10 +897,10 @@ class FactorizedSpectralConv2d(FactorizedSpectralConv):
 
 
 class FactorizedSpectralConv3d(FactorizedSpectralConv):
-    """3D Spectral Conv, see :class:`neuralop.layers.SpectraConv` for the general case
+    """3D Spectral Conv.
 
     This is provided for reference only,
-    see :class:`neuralop.layers.SpectraConv` for the preferred, general implementation
+    see :class:`FactorizedSpectralConv` for the preferred, general implementation
     """
 
     def forward(self, x, indices=0):
@@ -994,13 +950,13 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
         ]
 
         """Upper block -- truncate high frequencies."""
-        out_fft[
-            slices0[0], slices0[1], slices0[2], slices0[3], slices0[4]
-        ] = self._contract(
-            x[slices0[0], slices0[1], slices0[2], slices0[3], slices0[4]],
-            w_real,
-            w_imag,
-            separable=self.separable,
+        out_fft[slices0[0], slices0[1], slices0[2], slices0[3], slices0[4]] = (
+            self._contract(
+                x[slices0[0], slices0[1], slices0[2], slices0[3], slices0[4]],
+                w_real,
+                w_imag,
+                separable=self.separable,
+            )
         )
 
         w_real = self.weight[indices].real[
@@ -1010,13 +966,13 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
             slices2[0], slices2[1], slices2[2], slices2[3], slices2[4]
         ]
         """Low-pass filter for indices 2 & 4, and high-pass filter for index 3."""
-        out_fft[
-            slices1[0], slices1[1], slices1[2], slices1[3], slices1[4]
-        ] = self._contract(
-            x[slices1[0], slices1[1], slices1[2], slices1[3], slices1[4]],
-            w_real,
-            w_imag,
-            separable=self.separable,
+        out_fft[slices1[0], slices1[1], slices1[2], slices1[3], slices1[4]] = (
+            self._contract(
+                x[slices1[0], slices1[1], slices1[2], slices1[3], slices1[4]],
+                w_real,
+                w_imag,
+                separable=self.separable,
+            )
         )
 
         w_real = self.weight[indices].real[
@@ -1026,13 +982,13 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
             slices1[0], slices1[1], slices1[2], slices1[3], slices1[4]
         ]
         """Low-pass filter for indices 3 & 4, and high-pass filter for index 2."""
-        out_fft[
-            slices2[0], slices2[1], slices2[2], slices2[3], slices2[4]
-        ] = self._contract(
-            x[slices2[0], slices2[1], slices2[2], slices2[3], slices2[4]],
-            w_real,
-            w_imag,
-            separable=self.separable,
+        out_fft[slices2[0], slices2[1], slices2[2], slices2[3], slices2[4]] = (
+            self._contract(
+                x[slices2[0], slices2[1], slices2[2], slices2[3], slices2[4]],
+                w_real,
+                w_imag,
+                separable=self.separable,
+            )
         )
 
         w_real = self.weight[indices].real[
@@ -1043,13 +999,13 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
         ]
         """Lower block -- low-cut filter in indices 2 & 3
         and high-cut filter in index 4."""
-        out_fft[
-            slices3[0], slices3[1], slices3[2], slices3[3], slices3[4]
-        ] = self._contract(
-            x[slices3[0], slices3[1], slices3[2], slices3[3], slices3[4]],
-            w_real,
-            w_imag,
-            separable=self.separable,
+        out_fft[slices3[0], slices3[1], slices3[2], slices3[3], slices3[4]] = (
+            self._contract(
+                x[slices3[0], slices3[1], slices3[2], slices3[3], slices3[4]],
+                w_real,
+                w_imag,
+                separable=self.separable,
+            )
         )
 
         if self.output_scaling_factor is not None:
@@ -1069,29 +1025,29 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
 class FNOBlocks(nn.Layer):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        n_modes,
+        in_channels: int,
+        out_channels: int,
+        n_modes: Tuple[int,...],
         output_scaling_factor: Optional[Union[Number, List[Number]]] = None,
-        n_layers=1,
-        max_n_modes=None,
-        use_mlp=False,
-        mlp=None,
-        non_linearity=F.gelu,
-        stabilizer=None,
-        norm=None,
-        ada_in_features=None,
-        preactivation=False,
-        fno_skip="linear",
-        mlp_skip="soft-gating",
-        separable=False,
-        factorization=None,
-        rank=1.0,
-        SpectralConv=FactorizedSpectralConv,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        fft_norm="forward",
+        n_layers: int = 1,
+        max_n_modes: int = None,
+        use_mlp: bool = False,
+        mlp: Optional[dict[float, float]] = None,
+        non_linearity: nn.functional = F.gelu,
+        stabilizer: str = None,
+        norm: str = None,
+        ada_in_features: Optional[int] = None,
+        preactivation: bool = False,
+        fno_skip: str = "linear",
+        mlp_skip: str = "soft-gating",
+        separable: bool = False,
+        factorization: str = None,
+        rank: float = 1.0,
+        SpectralConv: FactorizedSpectralConv = FactorizedSpectralConv,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        fft_norm: str = "forward",
         **kwargs,
     ):
         super().__init__()

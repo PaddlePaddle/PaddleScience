@@ -76,17 +76,6 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
         if isinstance(weight, paddle.Tensor):
             return _contract_dense_trick
         # TODO: FactorizedTensor not supported yet
-        # elif isinstance(weight, FactorizedTensor):
-        #     if weight.name.lower() == 'complexdense':
-        #         return _contract_dense
-        #     elif weight.name.lower() == 'complextucker':
-        #         return _contract_tucker
-        #     elif weight.name.lower() == 'complextt':
-        #         return _contract_tt
-        #     elif weight.name.lower() == 'complexcp':
-        #         return _contract_cp
-        #     else:
-        #         raise ValueError(f'Got unexpected factorized weight type {weight.name}')
 
     else:
         raise ValueError(
@@ -209,7 +198,6 @@ class SphericalConv(nn.Layer):
         implementation (str, optional): If factorization is not None, forward mode to use. Defaults to "reconstructed".
         joint_factorization (bool, optional):  Whether all the Fourier Layers should be parametrized by a
             single tensor. Defaults to False.
-        fixed_rank_modes (bool, optional): Modes to not factorize. Defaults to False.
         init_std (str, optional): The std to use for the init. Defaults to "auto".
         sht_norm (str, optional): The normalization mode of the SHT. Defaults to "ortho".
         sht_grids (str, optional): The grid of the SHT. Defaults to "equiangular".
@@ -219,23 +207,22 @@ class SphericalConv(nn.Layer):
 
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        n_modes,
-        max_n_modes=None,
-        bias=True,
-        n_layers=1,
-        separable=False,
+        in_channels: int,
+        out_channels: int,
+        n_modes: Tuple[int,...],
+        max_n_modes: int = None,
+        bias: bool = True,
+        n_layers: int = 1,
+        separable: bool = False,
         output_scaling_factor: Optional[Union[Number, List[Number]]] = None,
-        rank=0.5,
-        factorization="dense",
-        implementation="reconstructed",
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        init_std="auto",
-        sht_norm="ortho",
-        sht_grids="equiangular",
-        dtype=paddle.float32,
+        rank: float = 0.5,
+        factorization: str = "dense",
+        implementation: str = "reconstructed",
+        joint_factorization: bool = False,
+        init_std: str = "auto",
+        sht_norm: str = "ortho",
+        sht_grids: str = "equiangular",
+        dtype: paddle.dtype = paddle.float32,
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -261,10 +248,10 @@ class SphericalConv(nn.Layer):
         self.n_layers = n_layers
         self.implementation = implementation
 
-        self.output_scaling_factor: Union[
-            None, List[List[float]]
-        ] = fno_block.validate_scaling_factor(
-            output_scaling_factor, self.order, n_layers
+        self.output_scaling_factor: Union[None, List[List[float]]] = (
+            fno_block.validate_scaling_factor(
+                output_scaling_factor, self.order, n_layers
+            )
         )
 
         if init_std == "auto":
@@ -446,33 +433,32 @@ class SFNONet(base.Arch):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        n_modes,
-        hidden_channels,
-        in_channels=3,
-        out_channels=1,
-        lifting_channels=256,
-        projection_channels=256,
-        n_layers=4,
-        use_mlp=False,
-        mlp=None,
-        max_n_modes=None,
-        non_linearity=F.gelu,
-        stabilizer=None,
-        norm=None,
-        ada_in_features=None,
-        preactivation=False,
-        fno_skip="linear",
-        mlp_skip="soft-gating",
-        separable=False,
-        factorization=None,
-        rank=1.0,
-        joint_factorization=False,
-        fixed_rank_modes=False,
-        implementation="factorized",
-        domain_padding=None,
-        domain_padding_mode="one-sided",
-        fft_norm="forward",
-        patching_levels=0,
+        n_modes: Tuple[int, ...],
+        hidden_channels: int,
+        in_channels: int = 3,
+        out_channels: int = 1,
+        lifting_channels: int = 256,
+        projection_channels: int = 256,
+        n_layers: int = 4,
+        use_mlp: bool = False,
+        mlp: dict[str, float] = None,
+        max_n_modes: int = None,
+        non_linearity: nn.functional = F.gelu,
+        stabilizer: str = None,
+        norm: str = None,
+        preactivation: bool = False,
+        fno_skip: str = "linear",
+        mlp_skip: str = "soft-gating",
+        separable: bool = False,
+        factorization: str = None,
+        rank: float = 1.0,
+        joint_factorization: bool = False,
+        fixed_rank_modes: bool = False,
+        implementation: str = "factorized",
+        domain_padding: Optional[list] = None,
+        domain_padding_mode: str = "one-sided",
+        fft_norm: str = "forward",
+        patching_levels: int = 0,
         **kwargs,
     ):
         super().__init__()
@@ -500,7 +486,6 @@ class SFNONet(base.Arch):
         self.implementation = implementation
         self.separable = separable
         self.preactivation = preactivation
-        self.ada_in_features = ada_in_features
         self.stabilizer = stabilizer
         if domain_padding is not None and (
             (isinstance(domain_padding, list) and sum(domain_padding) > 0)

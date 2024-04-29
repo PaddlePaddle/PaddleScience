@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 The torch-harmonics Authors. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022 The paddle-harmonics Authors. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,12 +60,12 @@ class GaussianRandomFieldS2(nn.Layer):
     def __init__(
         self,
         nlat,
-        alpha=2.0,
-        tau=3.0,
-        sigma=None,
-        radius=1.0,
-        grid="equiangular",
-        dtype=paddle.float32,
+        alpha: float=2.0,
+        tau: float=3.0,
+        sigma: float=None,
+        radius: float=1.0,
+        grid: str="equiangular",
+        dtype: paddle.dtype=paddle.float32,
     ):
 
         super().__init__()
