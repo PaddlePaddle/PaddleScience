@@ -130,10 +130,6 @@ def train(cfg: DictConfig):
     model = ppsci.arch.UNONet(
         **cfg.MODEL,
     )
-    # with open('uno_dict_paddle.txt', 'w') as f:
-    #     for key in model.state_dict().keys():
-    #         f.write(key + '\n')
-    # breakpoint()
     # # init optimizer and lr scheduler
     if cfg.TRAIN.lr_scheduler.type == "ReduceOnPlateau":
         lr_scheduler = paddle.optimizer.lr.ReduceOnPlateau(

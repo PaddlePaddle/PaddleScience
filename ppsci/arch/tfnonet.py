@@ -1,6 +1,9 @@
-from typing import Optional, Tuple, Union
-from paddle import nn
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
 import paddle.nn.functional as F
+from paddle import nn
 
 from ppsci.arch import base
 from ppsci.arch import fno_block

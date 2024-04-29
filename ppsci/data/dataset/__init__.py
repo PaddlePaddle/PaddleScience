@@ -35,8 +35,8 @@ from ppsci.data.dataset.mrms_dataset import MRMSSampledDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
-from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
+from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
@@ -70,13 +70,10 @@ __all__ = [
     "DGMRDataset",
     "MeshAirfoilDataset",
     "MeshCylinderDataset",
-<<<<<<< HEAD
     "DarcyFlowDataset",
     "SphericalSWEDataset",
-=======
     "ENSODataset",
     "SEVIRDataset",
->>>>>>> 7b6640f556b6b4276306d4078af3b4d2859db9b3
     "build_dataset",
 ]
 

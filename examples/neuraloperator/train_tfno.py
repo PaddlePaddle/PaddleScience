@@ -130,10 +130,6 @@ def train(cfg: DictConfig):
     model = ppsci.arch.TFNO2dNet(
         **cfg.MODEL,
     )
-    # with open('tfno_paddle_dict.txt','w') as f:
-    #     for key in model.state_dict().keys():
-    #         f.write(key+'\n')
-    # breakpoint()
     # # init optimizer and lr scheduler
     if cfg.TRAIN.lr_scheduler.type == "ReduceOnPlateau":
         lr_scheduler = paddle.optimizer.lr.ReduceOnPlateau(
@@ -312,13 +308,10 @@ def inference(cfg: DictConfig):
 
     from ppsci.data.dataset import darcyflow_dataset
 
-    # predictor = predictor.FNOPredictor(cfg)
-
     data = np.load(cfg.INFER.data_path, allow_pickle=True).item()
 
     input_data = data["x"][0].reshape(-1, 1, *data["x"].shape[1:]).astype("float32")
     label = data["y"][0].astype("float32")
-    # pred_data = predictor.predict(input_data, cfg.INFER.batch_size)
 
     model = ppsci.arch.TFNO2dNet(
         **cfg.MODEL,

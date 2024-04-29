@@ -1,4 +1,6 @@
-from typing import Optional, Tuple, Union
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import paddle
 import paddle.nn as nn
