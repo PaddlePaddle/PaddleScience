@@ -186,18 +186,10 @@ def train(cfg: DictConfig):
         model=model,
         constraint=constraint,
         optimizer=optimizer,
-        epochs=EPOCHS,
-        lr_scheduler=lr_scheduler,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=False,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.eval_freq,
-        seed=SEED,
         equation=equation,
         validator=validator,
         visualizer=None,
-        eval_with_no_grad=False,
-        output_dir=OUTPUT_DIR,
+        cfg=cfg,
     )
 
     # train model
@@ -218,20 +210,13 @@ def train(cfg: DictConfig):
 
     # initialize solver
     solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
+        model,
+        constraint,
         optimizer=optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=False,
-        log_freq=2000,
-        eval_freq=2000,
-        seed=SEED,
         equation=equation,
         validator=validator,
         visualizer=None,
-        eval_with_no_grad=False,
-        output_dir=OUTPUT_DIR,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -292,6 +277,7 @@ def evaluate(cfg: DictConfig):
         model,
         equation=equation,
         validator=validator,
+        cfg=cfg,
     )
 
     # eval model

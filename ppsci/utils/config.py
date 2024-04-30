@@ -32,11 +32,66 @@ from ppsci.utils import misc
 __all__ = ["get_config", "replace_shape_with_inputspec_", "AttrDict"]
 
 if importlib.util.find_spec("pydantic") is not None:
+    from hydra.core.config_store import ConfigStore
+    from omegaconf import OmegaConf
     from pydantic import BaseModel
     from pydantic import field_validator
+    from pydantic import model_validator
     from pydantic_core.core_schema import ValidationInfo
 
     __all__.append("SolverConfig")
+
+    class EMAConfig(BaseModel):
+        use_ema: bool = False
+        decay: float = 0.9
+        avg_freq: int = 1
+
+        @field_validator("decay")
+        def decay_check(cls, v):
+            if v <= 0 or v >= 1:
+                raise ValueError(
+                    f"'decay' should be in (0, 1) when is type of float, but got {v}"
+                )
+            return v
+
+        @field_validator("avg_freq")
+        def avg_freq_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'avg_freq' should be a positive integer when is type of int, "
+                    f"but got {v}"
+                )
+            return v
+
+    class SWAConfig(BaseModel):
+        use_swa: bool = False
+        avg_freq: int = 1
+        avg_range: Optional[Tuple[int, int]] = None
+
+        @field_validator("avg_range")
+        def avg_range_check(cls, v, info: ValidationInfo):
+            if isinstance(v, tuple) and v[0] > v[1]:
+                raise ValueError(f"'avg_range' should be a valid range, but got {v}.")
+            if isinstance(v, tuple) and v[0] < 0:
+                raise ValueError(
+                    "The start epoch of 'avg_range' should be a non-negtive integer"
+                    f" , but got {v[0]}."
+                )
+            if isinstance(v, tuple) and v[1] > info.data["epochs"]:
+                raise ValueError(
+                    "The end epoch of 'avg_range' should not be lager than "
+                    f"'epochs'({info.data['epochs']}), but got {v[1]}."
+                )
+            return v
+
+        @field_validator("avg_freq")
+        def avg_freq_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'avg_freq' should be a positive integer when is type of int, "
+                    f"but got {v}"
+                )
+            return v
 
     class TrainConfig(BaseModel):
         """
@@ -54,58 +109,6 @@ if importlib.util.find_spec("pydantic") is not None:
         pretrained_model_path: Optional[str] = None
         ema: Optional[EMAConfig] = None
         swa: Optional[SWAConfig] = None
-
-        class EMAConfig(BaseModel):
-            decay: float = 0.9
-            avg_freq: int = 1
-
-            @field_validator("decay")
-            def decay_check(cls, v):
-                if v <= 0 or v >= 1:
-                    raise ValueError(
-                        f"'decay' should be in (0, 1) when is type of float, but got {v}"
-                    )
-                return v
-
-            @field_validator("avg_freq")
-            def avg_freq_check(cls, v):
-                if v <= 0:
-                    raise ValueError(
-                        "'avg_freq' should be a positive integer when is type of int, "
-                        f"but got {v}"
-                    )
-                return v
-
-        class SWAConfig(BaseModel):
-            avg_freq: int = 1
-            avg_range: Optional[Tuple[int, int]] = None
-
-            @field_validator("avg_range")
-            def avg_range_check(cls, v, info: ValidationInfo):
-                if v[0] > v[1]:
-                    raise ValueError(
-                        f"'avg_range' should be a valid range, but got {v}."
-                    )
-                if v[0] < 0:
-                    raise ValueError(
-                        "The start epoch of 'avg_range' should be a non-negtive integer"
-                        f" , but got {v[0]}."
-                    )
-                if v[1] > info.data["epochs"]:
-                    raise ValueError(
-                        "The end epoch of 'avg_range' should not be lager than "
-                        f"'epochs'({info.data['epochs']}), but got {v[1]}."
-                    )
-                return v
-
-            @field_validator("avg_freq")
-            def avg_freq_check(cls, v):
-                if v <= 0:
-                    raise ValueError(
-                        "'avg_freq' should be a positive integer when is type of int, "
-                        f"but got {v}"
-                    )
-                return v
 
         # Fine-grained validator(s) below
         @field_validator("epochs")
@@ -164,21 +167,14 @@ if importlib.util.find_spec("pydantic") is not None:
                     )
             return v
 
-        @field_validator("ema")
-        def ema_check(cls, v, info: ValidationInfo):
-            if "swa" in info.data and info.data["swa"] is not None:
+        @model_validator(mode="after")
+        def ema_swa_checker(self):
+            if (self.ema and self.swa) and (self.ema.use_ema and self.swa.use_swa):
                 raise ValueError(
-                    "The config of 'swa' should not be used when 'ema' is specifed."
+                    "Cannot enable both EMA and SWA at the same time, "
+                    "please disable at least one of them."
                 )
-            return v
-
-        @field_validator("swa")
-        def swa_check(cls, v, info: ValidationInfo):
-            if "ema" in info.data and info.data["ema"] is not None:
-                raise ValueError(
-                    "The config of 'ema' should not be used when 'swa' is specifed."
-                )
-            return v
+            return self
 
     class EvalConfig(BaseModel):
         """
@@ -195,7 +191,7 @@ if importlib.util.find_spec("pydantic") is not None:
         """
 
         pretrained_model_path: Optional[str] = None
-        export_path: str
+        export_path: str = "./inference"
         pdmodel_path: Optional[str] = None
         pdpiparams_path: Optional[str] = None
         onnx_path: Optional[str] = None
@@ -284,8 +280,9 @@ if importlib.util.find_spec("pydantic") is not None:
         log_freq: int = 20
         seed: int = 42
         use_vdl: bool = False
-        use_wandb: bool = False
+        use_tbd: bool = False
         wandb_config: Optional[Mapping] = None
+        use_wandb: bool = False
         device: Literal["cpu", "gpu", "xpu"] = "gpu"
         use_amp: bool = False
         amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
@@ -320,12 +317,60 @@ if importlib.util.find_spec("pydantic") is not None:
 
         @field_validator("use_wandb")
         def use_wandb_check(cls, v, info: ValidationInfo):
-            if not isinstance(info.data["wandb_config"], dict):
+            if v and not isinstance(info.data["wandb_config"], dict):
                 raise ValueError(
                     "'wandb_config' should be a dict when 'use_wandb' is True, "
                     f"but got {misc.typename(info.data['wandb_config'])}"
                 )
             return v
+
+    # store SolverConfig as 'ppsci_default' so as to be used as default config in *.yaml
+    """
+    #### xxx.yaml ####
+    defaults:
+      - ppsci_default <-- 'ppsci_default' used here
+      - TRAIN: train_default <-- 'train_default' used here
+        - TRAIN/ema: ema_default <-- 'ema_default' used here
+        - TRAIN/swa: swa_default <-- 'swa_default' used here
+      - EVAL: eval_default <-- 'eval_default' used here
+      - INFER: infer_default <-- 'infer_default' used here
+      - _self_
+    mode: train
+    seed: 42
+    ...
+    ...
+    ##################
+    """
+
+    global_default_cfg = SolverConfig().model_dump()
+    omegaconf_dict_config = OmegaConf.create(global_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(name="ppsci_default", node=omegaconf_dict_config)
+
+    train_default_cfg = TrainConfig().model_dump()
+    train_omegaconf_dict_config = OmegaConf.create(train_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(group="TRAIN", name="train_default", node=train_omegaconf_dict_config)
+
+    ema_default_cfg = EMAConfig().model_dump()
+    ema_omegaconf_dict_config = OmegaConf.create(ema_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(group="TRAIN/ema", name="ema_default", node=ema_omegaconf_dict_config)
+
+    swa_default_cfg = SWAConfig().model_dump()
+    swa_omegaconf_dict_config = OmegaConf.create(swa_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(group="TRAIN/swa", name="swa_default", node=swa_omegaconf_dict_config)
+
+    eval_default_cfg = EvalConfig().model_dump()
+    eval_omegaconf_dict_config = OmegaConf.create(eval_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(group="EVAL", name="eval_default", node=eval_omegaconf_dict_config)
+
+    infer_default_cfg = InferConfig().model_dump()
+    infer_omegaconf_dict_config = OmegaConf.create(infer_default_cfg)
+    cs = ConfigStore.instance()
+    cs.store(group="INFER", name="infer_default", node=infer_omegaconf_dict_config)
 
 
 class AttrDict(dict):

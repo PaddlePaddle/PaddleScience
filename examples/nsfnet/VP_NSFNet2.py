@@ -7,7 +7,6 @@ from omegaconf import DictConfig
 from scipy.interpolate import griddata
 
 import ppsci
-from ppsci.utils import logger
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet2.yaml")
@@ -112,10 +111,7 @@ def load_data(path, N_TRAIN, NB_TRAIN, N0_TRAIN):
 
 
 def train(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-
     # set random seed for reproducibility
-    SEED = cfg.seed
     ITERS_PER_EPOCH = cfg.iters_per_epoch
 
     # set model
@@ -253,23 +249,15 @@ def train(cfg: DictConfig):
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     # initialize solver
     solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
+        model,
+        constraint,
         optimizer=optimizer,
         epochs=EPOCHS,
-        lr_scheduler=lr_scheduler,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.eval_freq,
-        seed=SEED,
         equation=equation,
         validator=validator,
-        visualizer=None,
-        eval_with_no_grad=False,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -341,6 +329,7 @@ def evaluate(cfg: DictConfig):
         model,
         equation=equation,
         validator=validator,
+        cfg=cfg,
     )
 
     # eval

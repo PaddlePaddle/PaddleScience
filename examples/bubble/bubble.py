@@ -179,14 +179,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -339,9 +334,8 @@ def evaluate(cfg: DictConfig):
     # directly evaluate pretrained model(optional)
     solver = ppsci.solver.Solver(
         model_list,
-        output_dir=cfg.output_dir,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
 

@@ -158,13 +158,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_idn,
-        cfg.output_dir,
-        optimizer_idn,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_idn,
         validator=validator_idn,
+        cfg=cfg,
     )
 
     # train model
@@ -237,13 +233,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_pde,
-        cfg.output_dir,
-        optimizer_pde,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_pde,
         validator=validator_pde,
+        cfg=cfg,
     )
 
     # train model
@@ -338,13 +330,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_sol,
-        cfg.output_dir,
-        optimizer_idn,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_idn,
         validator=validator_sol,
+        cfg=cfg,
     )
 
     # train model

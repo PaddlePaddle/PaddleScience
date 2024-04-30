@@ -1,0 +1,89 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_case6/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+log_grad_norm: false
+log_loss: false
+
+mode: train
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+LAMBDA: 0.0625
+EPS: 0.1
+DA: 0.1
+K0: 1.0
+PE: 30.0
+l: 2
+L: 10
+H: 1.0
+T: 250
+DT: 5
+NY: 25
+FDM_C_PATH: ./datasets/case6_fdm_reaction_txyc.csv
+FDM_B_PATH: ./datasets/case6_fdm_reaction_txby.csv
+MODEL:
+  model_c:
+    input_keys:
+    - t
+    - x
+    - 'y'
+    output_keys:
+    - c10
+    num_layers: 4
+    hidden_size: 64
+    output_dim: 10
+    activation: tanh
+  model_b:
+    input_keys:
+    - t
+    - x
+    - 'y'
+    output_keys:
+    - b
+    num_layers: 1
+    hidden_size: 16
+    output_dim: 1
+    activation: tanh
+TRAIN:
+  RUN_LBFGS: false
+  epochs: 3000
+  l_bfgs_epochs: 150
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 500
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.001
+    gamma: 0.1
+    by_epoch: true
+  weight:
+    IC: 1.0e2  # 关键参数
+    BC: 1.0e2  # 关键参数
+    EQ: 1.0e3  # 关键参数
+    AD: 1.0e3  # 关键参数
+  pretrained_model_path: null
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size:
+    metric_c: 8192
+    metric_b: 8192

@@ -182,16 +182,11 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -283,11 +278,10 @@ def evaluate(cfg: DictConfig):
     # directly evaluate pretrained model(optional)
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

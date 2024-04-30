@@ -283,20 +283,12 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     # initialize solver
     solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
-        output_dir=cfg.output_dir,
+        model,
+        constraint,
         optimizer=optimizer,
-        lr_scheduler=lr_scheduler,
-        epochs=cfg.epochs,
-        iters_per_epoch=cfg.TRAIN.lr_scheduler.iters_per_epoch,
-        log_freq=cfg.TRAIN.log_freq,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_freq=cfg.TRAIN.eval_freq,
-        eval_during_train=True,
         equation=equation,
         validator=validator,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -453,7 +445,8 @@ def export(cfg: DictConfig):
 
     # load pretrained model
     solver = ppsci.solver.Solver(
-        model=model, pretrained_model_path=cfg.INFER.pretrained_model_path
+        model=model,
+        cfg=cfg,
     )
 
     # export models

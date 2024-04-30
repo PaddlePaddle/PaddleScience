@@ -98,15 +98,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list_obj,
         constraint_pde,
-        cfg.output_dir,
-        optimizer_list,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_list,
         validator=validator_pde,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
 
     # train model
@@ -171,10 +165,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model_list_obj,
-        output_dir=cfg.output_dir,
         validator=validator_pde,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate
     solver.eval()

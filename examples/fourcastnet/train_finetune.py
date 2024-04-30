@@ -162,16 +162,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
+        optimizer=optimizer,
         validator=validator,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -298,12 +291,9 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction from pretrained_model_path

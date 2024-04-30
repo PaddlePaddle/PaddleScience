@@ -107,14 +107,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
-        cfg.output_dir,
-        optimizer,
-        scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
+        optimizer=optimizer,
         validator=validator_pde,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        cfg=cfg,
     )
 
     # train model

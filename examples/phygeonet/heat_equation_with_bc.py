@@ -87,10 +87,8 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         sup_constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.epochs,
-        iters_per_epoch=iters_per_epoch,
+        optimizer=optimizer,
+        cfg=cfg,
     )
 
     solver.train()
@@ -107,7 +105,7 @@ def evaluate(cfg: DictConfig):
     coords = paddle.to_tensor(data["coords"])
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
+        cfg=cfg,
     )
 
     paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])

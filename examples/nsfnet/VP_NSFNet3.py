@@ -316,19 +316,12 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     # initialize solver
     solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
+        model,
+        constraint,
         optimizer=optimizer,
-        epochs=EPOCHS,
-        lr_scheduler=lr_scheduler,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.eval_freq,
         equation=equation,
         validator=validator,
-        visualizer=None,
-        eval_with_no_grad=False,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -389,6 +382,7 @@ def evaluate(cfg: DictConfig):
         model,
         equation=equation,
         validator=validator,
+        cfg=cfg,
     )
 
     # print the relative error

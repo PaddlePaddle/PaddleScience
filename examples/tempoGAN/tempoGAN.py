@@ -223,40 +223,22 @@ def train(cfg: DictConfig):
     solver_gen = ppsci.solver.Solver(
         model_list,
         constraint_gen,
-        cfg.output_dir,
         optimizer_gen,
-        lr_scheduler_gen,
-        cfg.TRAIN.epochs_gen,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        use_amp=cfg.USE_AMP,
-        amp_level=cfg.TRAIN.amp_level,
+        cfg=cfg,
     )
     if cfg.USE_SPATIALDISC:
         solver_disc = ppsci.solver.Solver(
             model_list,
             constraint_disc,
-            cfg.output_dir,
             optimizer_disc,
-            lr_scheduler_disc,
-            cfg.TRAIN.epochs_disc,
-            cfg.TRAIN.iters_per_epoch,
-            eval_during_train=cfg.TRAIN.eval_during_train,
-            use_amp=cfg.USE_AMP,
-            amp_level=cfg.TRAIN.amp_level,
+            cfg=cfg,
         )
     if cfg.USE_TEMPODISC:
         solver_disc_tempo = ppsci.solver.Solver(
             model_list,
             constraint_disc_tempo,
-            cfg.output_dir,
             optimizer_disc_tempo,
-            lr_scheduler_disc_tempo,
-            cfg.TRAIN.epochs_disc_tempo,
-            cfg.TRAIN.iters_per_epoch,
-            eval_during_train=cfg.TRAIN.eval_during_train,
-            use_amp=cfg.USE_AMP,
-            amp_level=cfg.TRAIN.amp_level,
+            cfg=cfg,
         )
 
     PRED_INTERVAL = 200

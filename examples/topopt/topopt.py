@@ -96,11 +96,9 @@ def train(cfg: DictConfig):
             model,
             constraint,
             OUTPUT_DIR,
-            optimizer,
-            epochs=cfg.TRAIN.epochs,
+            optimizer=optimizer,
             iters_per_epoch=ITERS_PER_EPOCH,
-            eval_during_train=cfg.TRAIN.eval_during_train,
-            seed=cfg.seed,
+            cfg=cfg,
         )
 
         # train model
