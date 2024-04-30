@@ -18,6 +18,7 @@
 
 # This file is for step2: training a transformer model, based on frozen pretrained embedding model.
 # This file is based on PaddleScience/ppsci API.
+from os import path as osp
 from typing import Dict
 
 import hydra
@@ -26,6 +27,7 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.arch import base
+from ppsci.utils import logger
 from ppsci.utils import save_load
 
 
@@ -55,6 +57,9 @@ def train(cfg: DictConfig):
     # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
     # test  time-series: 256     time-steps: 1024
     # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
@@ -147,10 +152,14 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        optimizer=optimizer,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         visualizer=visualizer,
-        cfg=cfg,
     )
     # train model
     solver.train()
@@ -161,6 +170,9 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 

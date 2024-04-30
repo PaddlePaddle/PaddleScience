@@ -140,6 +140,7 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
+        iters_per_epoch=ITERS_PER_EPOCH,
         optimizer=optimizer,
         equation=equation,
         cfg=cfg,

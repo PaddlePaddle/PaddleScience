@@ -223,21 +223,21 @@ def train(cfg: DictConfig):
     solver_gen = ppsci.solver.Solver(
         model_list,
         constraint_gen,
-        optimizer_gen,
+        optimizer=optimizer_gen,
         cfg=cfg,
     )
     if cfg.USE_SPATIALDISC:
         solver_disc = ppsci.solver.Solver(
             model_list,
             constraint_disc,
-            optimizer_disc,
+            optimizer=optimizer_disc,
             cfg=cfg,
         )
     if cfg.USE_TEMPODISC:
         solver_disc_tempo = ppsci.solver.Solver(
             model_list,
             constraint_disc_tempo,
-            optimizer_disc_tempo,
+            optimizer=optimizer_disc_tempo,
             cfg=cfg,
         )
 

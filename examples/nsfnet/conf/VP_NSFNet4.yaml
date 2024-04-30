@@ -29,10 +29,19 @@ hydra:
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
-seed: 1234
+
+mode: train
 output_dir: ${hydra:run.dir}
+seed: 1234
 data_dir: ./data/
-log_freq: 20
+log_freq: 5000
+ntrain: 11333
+nb_train: 2952
+n0_train: 986
+alpha: 100
+beta: 100
+re: 999.35
+
 MODEL:
   input_keys: ["x", "y","z","t"]
   output_keys: ["u", "v", "w","p"]
@@ -40,28 +49,19 @@ MODEL:
   hidden_size: 300
   activation: "tanh"
   weight_norm: True
-mode: train
-ntrain: 11333
-nb_train: 2952
-n0_train: 986
-alpha: 100
-beta: 100
-re: 999.35
-epochs: 15250
 TRAIN:
-  log_freq: 5000
+  epochs: 15250
   eval_freq: 5000
   save_freq: 5000
-  eval_with_no_grad: true
+  iters_per_epoch: 150
   lr_scheduler:
-    epochs: 15250
+    epochs: ${TRAIN.epochs}
     decay_epochs: [250, 4500, 5000, 5500]
-    iters_per_epoch: 150
     values: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
-
 
 INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams

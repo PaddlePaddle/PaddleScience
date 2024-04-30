@@ -18,6 +18,7 @@
 
 # This file is for step1: training a embedding model.
 # This file is based on PaddleScience/ppsci API.
+from os import path as osp
 
 import hydra
 import numpy as np
@@ -25,6 +26,7 @@ import paddle
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 
 
 def get_mean_std(data: np.ndarray):
@@ -38,6 +40,11 @@ def get_mean_std(data: np.ndarray):
 
 
 def train(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
     weights = (1.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 1.0e4 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)
@@ -130,9 +137,12 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        optimizer=optimizer,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
+        eval_during_train=True,
         validator=validator,
-        cfg=cfg,
     )
     # train model
     solver.train()
@@ -141,6 +151,11 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
     weights = (1.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 1.0e4 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)

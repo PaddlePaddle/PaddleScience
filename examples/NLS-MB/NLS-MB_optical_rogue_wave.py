@@ -258,7 +258,6 @@ def train(cfg: DictConfig):
         epochs=EPOCHS,
         equation=equation,
         validator=validator,
-        cfg=cfg,
     )
     # train model
     solver.train()
