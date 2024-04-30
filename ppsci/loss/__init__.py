@@ -51,7 +51,7 @@ def build_loss(cfg):
     """Build loss.
 
     Args:
-        cfg (AttrDict): Loss config.
+        cfg (DictConfig): Loss config.
     Returns:
         Loss: Callable loss object.
     """

@@ -22,7 +22,6 @@ from ppsci.utils import writer
 from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.checker import run_check
 from ppsci.utils.checker import run_check_mesh
-from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
@@ -39,7 +38,6 @@ from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
 
 __all__ = [
-    "AttrDict",
     "AverageMeter",
     "ExpressionSolver",
     "initializer",
