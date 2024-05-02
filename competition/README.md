@@ -5,9 +5,11 @@ Codes of all competitions are stored by submoudule. If you need to obtain it, pl
 
 ## submodule initialization
 
-    # for example IJCAI_2024_CAR
-    cd PaddleScience
-    git submodule update --init --recursive competition/IJCAI_2024_CAR
+``` sh
+# for example IJCAI_2024_CAR
+cd PaddleScience
+git submodule update --init --recursive competition/IJCAI_2024_CAR
+```
 
 ## competition list
 
