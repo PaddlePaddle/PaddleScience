@@ -284,9 +284,6 @@ def inference(cfg: DictConfig):
         cfg.MODEL.output_keys,
     )
 
-    
-
-
 
 @hydra.main(
     version_base=None, config_path="./conf", config_name="ldc2d_steady_Re10.yaml"
