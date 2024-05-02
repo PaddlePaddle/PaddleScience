@@ -352,7 +352,6 @@ def inference(cfg: DictConfig):
     input_dict = geom["time_rect"].sample_initial_interior(
         (NPOINT_IC + NPOINT_BC), evenly=True
     )
-    del input_dict["sdf"]
     input_pde_dict = geom["time_rect"].sample_interior(
         (NPOINT_PDE + NPOINT_BC) * NTIME_PDE, evenly=True
     )
@@ -379,23 +378,23 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    unique_t_values = np.unique(input_dict['t'])
+    unique_t_values = np.unique(input_dict["t"])
     segmented_input_dict = {}
     segmented_output_dict = {}
     for idx, t_value in enumerate(unique_t_values):
         # Find the indices corresponding to the current t value
-        indices = np.where(input_dict['t'] == t_value)[0]
+        indices = np.where(input_dict["t"] == t_value)[0]
         # Extract the corresponding x and y values based on the indices
-        x_values = input_dict['x'][indices]
-        y_values = input_dict['y'][indices]
-        u_values = output_dict['u'][indices]
-        v_values = output_dict['v'][indices]
-        p_values = output_dict['p'][indices]
+        x_values = input_dict["x"][indices]
+        y_values = input_dict["y"][indices]
+        u_values = output_dict["u"][indices]
+        v_values = output_dict["v"][indices]
+        p_values = output_dict["p"][indices]
         # Construct segmented dictionaries
-        segmented_input_dict = {'x': x_values, 'y': y_values}
-        segmented_output_dict = {'u': u_values, 'v': v_values, 'p': p_values}
+        segmented_input_dict = {"x": x_values, "y": y_values}
+        segmented_output_dict = {"u": u_values, "v": v_values, "p": p_values}
         ppsci.visualize.save_vtu_from_dict(
-            "./ldc2d_unsteady_Re10_pred_"+ str(idx) + ".vtu",
+            "./ldc2d_unsteady_Re10_pred_" + str(idx) + ".vtu",
             {**segmented_input_dict, **segmented_output_dict},
             input_dict.keys(),
             cfg.MODEL.output_keys,
@@ -415,7 +414,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
