@@ -256,8 +256,14 @@ class PhysformerGPT2(base.Arch):
             output data to the physical space. Defaults to None.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
         >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        >>> data = paddle.to_tensor(paddle.randn([10, 16, 128]))
+        >>> inputs = {"embeds": data}
+        >>> outputs = model(inputs)
+        >>> print(outputs["pred_embeds"].shape)
+        [10, 16, 128]
     """
 
     def __init__(

@@ -28,10 +28,19 @@ class ModelList(base.Arch):
         model_list (Tuple[base.Arch, ...]): Model(s) nested in tuple.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
         >>> model1 = ppsci.arch.MLP(("x", "y"), ("u", "v"), 10, 128)
         >>> model2 = ppsci.arch.MLP(("x", "y"), ("w", "p"), 5, 128)
         >>> model = ppsci.arch.ModelList((model1, model2))
+        >>> input_dict = {"x": paddle.rand([64, 64, 1]),"y": paddle.rand([64, 64, 1])}
+        >>> output_dict = model(input_dict)
+        >>> for k, v in output_dict.items():
+        ...     print(k, v.shape)
+        u [64, 64, 1]
+        v [64, 64, 1]
+        w [64, 64, 1]
+        p [64, 64, 1]
     """
 
     def __init__(

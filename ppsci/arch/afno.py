@@ -414,6 +414,11 @@ class AFNONet(base.Arch):
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
+        >>> input_data = {"input": paddle.randn([1, 20, 720, 1440])}
+        >>> output_data = model(input_data)
+        >>> for k, v in output_data.items():
+        ...     print(k, v.shape)
+        output [1, 20, 720, 1440]
     """
 
     def __init__(
@@ -577,6 +582,11 @@ class PrecipNet(base.Arch):
         >>> import ppsci
         >>> wind_model = ppsci.arch.AFNONet(("input", ), ("output", ))
         >>> model = ppsci.arch.PrecipNet(("input", ), ("output", ), wind_model)
+        >>> data = paddle.randn([1, 20, 720, 1440])
+        >>> data_dict = {"input": data}
+        >>> output = model.forward(data_dict)
+        >>> print(output['output'].shape)
+        [1, 1, 720, 1440]
     """
 
     def __init__(

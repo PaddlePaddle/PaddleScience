@@ -1,5 +1,7 @@
 # Chip Heat Simulation
 
+<a href="https://aistudio.baidu.com/projectdetail/7682679" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 === "模型训练命令"
 
     ``` sh

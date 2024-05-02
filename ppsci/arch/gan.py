@@ -286,6 +286,21 @@ class Discriminator(base.Arch):
         >>> acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
         >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
         >>> model = ppsci.arch.Discriminator(("in_1","in_2"), output_keys_disc, in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
+        >>> input_data = [paddle.to_tensor(paddle.randn([1, in_channel, 128, 128])),paddle.to_tensor(paddle.randn([1, in_channel, 128, 128]))]
+        >>> input_dict = {"in_1": input_data[0],"in_2": input_data[1]}
+        >>> out_dict = model(input_dict)
+        >>> for k, v in out_dict.items():
+        ...     print(k, v.shape)
+        out_1 [1, 32, 64, 64]
+        out_2 [1, 64, 32, 32]
+        out_3 [1, 128, 16, 16]
+        out_4 [1, 256, 16, 16]
+        out_5 [1, 1]
+        out_6 [1, 32, 64, 64]
+        out_7 [1, 64, 32, 32]
+        out_8 [1, 128, 16, 16]
+        out_9 [1, 256, 16, 16]
+        out_10 [1, 1]
     """
 
     def __init__(
