@@ -74,4 +74,3 @@ INFER:
   max_batch_size: 8192
   num_cpu_threads: 10
   batch_size: 8192
-  
