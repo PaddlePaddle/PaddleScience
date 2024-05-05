@@ -29,7 +29,7 @@
 
     ``` sh
     # ICAR-ENSO模型推理
-    python examples/earthformer/earthformer_enso_train.py mode=infer 
+    python examples/earthformer/earthformer_enso_train.py mode=infer
     # SEVIR模型推理
     python examples/earthformer/earthformer_sevir_train.py mode=infer
     ```
@@ -480,14 +480,14 @@ examples/earthformer/earthformer_sevir_train.py
   <figcaption>SEVIR中vil的预测结果（"prediction"）与真值结果（"target"）</figcaption>
 </figure>
 
-说明： 
+说明：
 
 Hit:TP, Miss:FN, False Alarm：FP
 
 第一行: 输入数据；
 
 第二行: 真值结果；
- 
+
 第三行: 预测结果；
 
 第四行: 设定阈值为`74`情况下，TP、FN、FP三种情况标记
