@@ -116,7 +116,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:86:151
+        ppsci/arch/mlp.py:139:279
         --8<--
         ```
 
@@ -124,7 +124,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:153:180
+        ppsci/arch/mlp.py:298:315
         --8<--
         ```
 
