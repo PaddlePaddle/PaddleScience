@@ -68,7 +68,7 @@ INFER:
   pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams"
   export_path: ./inference/viv
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   input_keys: ${MODEL.input_keys}
   output_keys: ["eta", "f"]
   device: gpu
