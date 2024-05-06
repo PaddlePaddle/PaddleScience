@@ -15,7 +15,6 @@ import ppsci
 from ppsci.loss import mtl
 from ppsci.utils import misc
 
-# paddle.device.set_device("cpu")
 dtype = paddle.get_default_dtype()
 
 
@@ -63,31 +62,6 @@ def plot(
 def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.ModifiedMLP(**cfg.MODEL)
-
-    jaxsd = np.load("allen_cahn_init_weight.npz")
-
-    sd = {}
-    sd["fourier_emb.kernel"] = paddle.to_tensor(jaxsd[".FourierEmbs_0.kernel"][0])
-    sd["linears.0.weight_v"] = paddle.to_tensor(jaxsd[".Dense_0.kernel.1"][0])
-    sd["linears.0.weight_g"] = paddle.to_tensor(jaxsd[".Dense_0.kernel.0"][0])
-    sd["linears.0.bias"] = paddle.to_tensor(jaxsd[".Dense_0.bias"][0])
-
-    sd["linears.1.weight_v"] = paddle.to_tensor(jaxsd[".Dense_1.kernel.1"][0])
-    sd["linears.1.weight_g"] = paddle.to_tensor(jaxsd[".Dense_1.kernel.0"][0])
-    sd["linears.1.bias"] = paddle.to_tensor(jaxsd[".Dense_1.bias"][0])
-
-    sd["linears.2.weight_v"] = paddle.to_tensor(jaxsd[".Dense_2.kernel.1"][0])
-    sd["linears.2.weight_g"] = paddle.to_tensor(jaxsd[".Dense_2.kernel.0"][0])
-    sd["linears.2.bias"] = paddle.to_tensor(jaxsd[".Dense_2.bias"][0])
-
-    sd["linears.3.weight_v"] = paddle.to_tensor(jaxsd[".Dense_3.kernel.1"][0])
-    sd["linears.3.weight_g"] = paddle.to_tensor(jaxsd[".Dense_3.kernel.0"][0])
-    sd["linears.3.bias"] = paddle.to_tensor(jaxsd[".Dense_3.bias"][0])
-
-    sd["last_fc.weight_v"] = paddle.to_tensor(jaxsd[".Dense_4.kernel.1"][0])
-    sd["last_fc.weight_g"] = paddle.to_tensor(jaxsd[".Dense_4.kernel.0"][0])
-    sd["last_fc.bias"] = paddle.to_tensor(jaxsd[".Dense_4.bias"][0])
-    model.set_state_dict(sd)
 
     # set equation
     equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
