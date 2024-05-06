@@ -32,7 +32,7 @@ class EarthformerPredictor(base.Predictor):
     ):
         super().__init__(
             cfg.INFER.pdmodel_path,
-            cfg.INFER.pdpiparams_path,
+            cfg.INFER.pdiparams_path,
             device=cfg.INFER.device,
             engine=cfg.INFER.engine,
             precision=cfg.INFER.precision,
