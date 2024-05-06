@@ -383,7 +383,7 @@ def inference(cfg: DictConfig):
         {**input_dict, **output_dict},
         input_dict.keys(),
         cfg.MODEL.output_keys,
-        cfg.NTIME_ALL
+        cfg.NTIME_ALL,
     )
 
 
