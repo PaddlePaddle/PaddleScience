@@ -176,7 +176,6 @@ def train(cfg: DictConfig):
             model,
             len(constraint),
             cfg.TRAIN.ntk.update_freq,
-            # cfg.TRAIN.ntk.momentum,
         ),
         cfg=cfg,
     )
