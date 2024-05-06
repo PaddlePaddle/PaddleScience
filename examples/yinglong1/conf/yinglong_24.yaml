@@ -5,7 +5,7 @@ hydra:
     dir: ./outputs_yinglong_24
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchaned
     config:
       override_dirname:
         exclude_keys:
