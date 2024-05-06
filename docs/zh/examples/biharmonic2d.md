@@ -14,6 +14,18 @@
     python biharmonic2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/biharmonic2d/biharmonic2d_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python biharmonic2d.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python biharmonic2d.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [biharmonic2d_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/biharmonic2d/biharmonic2d_pretrained.pdparams) | l2_error: 0.02774 |

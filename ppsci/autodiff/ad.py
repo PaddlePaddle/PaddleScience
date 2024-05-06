@@ -303,22 +303,25 @@ hessian = Hessians()
 def clear():
     """Clear cached Jacobians and Hessians.
 
-    Args:
-        None.
+    <<<<<<< HEAD
+        Args:
+            None.
 
-    Returns:
-        None.
+        Returns:
+            None.
 
-    Examples:
-        >>> import paddle
-        >>> import ppsci
-        >>> x = paddle.randn([4, 3])
-        >>> x.stop_gradient = False
-        >>> y = (x * x).sin()
-        >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
-        >>> ppsci.autodiff.clear()
-        >>> print(ppsci.autodiff.hessian.Hs)
-        {}
+    =======
+    >>>>>>> e87bf34a931911d9d1c799308a1c8c5f7d53fe17
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> x = paddle.randn([4, 3])
+            >>> x.stop_gradient = False
+            >>> y = (x * x).sin()
+            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
+            >>> ppsci.autodiff.clear()
+            >>> print(ppsci.autodiff.hessian.Hs)
+            {}
     """
     jacobian._clear()
     hessian._clear()

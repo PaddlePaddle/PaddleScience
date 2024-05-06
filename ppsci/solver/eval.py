@@ -17,6 +17,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -59,13 +60,16 @@ def _get_dataset_length(
 
 
 def _eval_by_dataset(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric on total samples(default process).
 
+    NOTE: This is the default evaluation method as general for most cases, but may not
+    memory-efficiency for large dataset or large output.
+
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
@@ -107,7 +111,7 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             for key, output in output_dict.items():
                 all_output[key].append(
@@ -159,12 +163,13 @@ def _eval_by_dataset(
 
         metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
+            # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
             metric_dict_group[metric_name] = {
                 k: float(v) for k, v in metric_dict.items()
             }
             for var_name, metric_value in metric_dict.items():
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
@@ -185,13 +190,17 @@ def _eval_by_dataset(
 
 
 def _eval_by_batch(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric by batch, which is memory-efficient.
 
+    NOTE: This is a evaluation function for large dataset or large output, as is more
+    memory-efficiency than evaluating by dataset, but less general because some metric
+    is not independent among samples, e.g. L2 relative error.
+
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
@@ -233,7 +242,7 @@ def _eval_by_batch(
                     weight_dict,
                 )
 
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
@@ -270,10 +279,13 @@ def _eval_by_batch(
         # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
             for var_name, metric_value in metric_dict.items():
+                # NOTE: concat all metric(scalars) into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]
+                # NOTE: compute metric via averaging metric vector,
+                # this might be not general for certain evaluation case
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value
-                metric_str = f"{metric_name}.{var_name}({_validator.name})"
+                metric_str = f"{_validator.name}/{metric_name}.{var_name}"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
@@ -292,13 +304,13 @@ def _eval_by_batch(
 
 
 def eval_func(
-    solver: "solver.Solver", epoch_id: int, log_freq: int
+    solver: "solver.Solver", epoch_id: Optional[int], log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluation function.
 
     Args:
         solver (solver.Solver): Main Solver.
-        epoch_id (int): Epoch id.
+        epoch_id (Optional[int]): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:

@@ -389,7 +389,7 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape), paddle.float32)
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
@@ -422,7 +422,167 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape), paddle.float32)
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
-    cmap = plt.cm.get_cmap("jet")
+    cmap = matplotlib.colormaps.get_cmap("jet")
+
+    ax[0].contourf(grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[0].set_title("u prediction")
+    ax[1].contourf(grid_y, grid_z, sol["v"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[1].set_title("v prediction")
+    ax[2].contourf(grid_y, grid_z, sol["w"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[2].set_title("w prediction")
+    ax[3].contourf(grid_y, grid_z, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[3].set_title("p prediction")
+    norm = matplotlib.colors.Normalize(
+        vmin=sol["u"].min(), vmax=sol["u"].max()
+    )  # set maximum and minimum
+    im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.325, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.525, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    plt.savefig(osp.join(cfg.output_dir, "x=0 plane"))
+
+
+def export(cfg: DictConfig):
+    from paddle.static import InputSpec
+
+    # set models
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # load pretrained model
+    solver = ppsci.solver.Solver(
+        model=model, pretrained_model_path=cfg.INFER.pretrained_model_path
+    )
+
+    # export models
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # infer Data
+    test_x = np.load(osp.join(cfg.data_dir, "test43_l.npy")).astype(np.float32)
+    test_v = np.load(osp.join(cfg.data_dir, "test43_vp.npy")).astype(np.float32)
+    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065]).astype(
+        np.float32
+    )
+    t_star = np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1)
+    x_star = np.tile(test_x[:, 0:1], (5, 1)).reshape(-1, 1)
+    y_star = np.tile(test_x[:, 1:2], (5, 1)).reshape(-1, 1)
+    z_star = np.tile(test_x[:, 2:3], (5, 1)).reshape(-1, 1)
+    u_star = test_v[:, 0:1]
+    v_star = test_v[:, 1:2]
+    w_star = test_v[:, 2:3]
+    p_star = test_v[:, 3:4]
+
+    pred = predictor.predict(
+        {
+            "x": x_star,
+            "y": y_star,
+            "z": z_star,
+            "t": t_star,
+        },
+        cfg.INFER.batch_size,
+    )
+
+    pred = {
+        store_key: pred[infer_key]
+        for store_key, infer_key in zip(cfg.INFER.output_keys, pred.keys())
+    }
+
+    u_pred = pred["u"].reshape((5, -1))
+    v_pred = pred["v"].reshape((5, -1))
+    w_pred = pred["w"].reshape((5, -1))
+    p_pred = pred["p"].reshape((5, -1))
+    u_star = u_star.reshape((5, -1))
+    v_star = v_star.reshape((5, -1))
+    w_star = w_star.reshape((5, -1))
+    p_star = p_star.reshape((5, -1))
+
+    # NS equation can figure out pressure drop, need background pressure p_star.mean()
+    p_pred = p_pred - p_pred.mean() + p_star.mean()
+
+    u_error = np.linalg.norm(u_pred - u_star, axis=1) / np.linalg.norm(u_star, axis=1)
+    v_error = np.linalg.norm(v_pred - v_star, axis=1) / np.linalg.norm(v_star, axis=1)
+    w_error = np.linalg.norm(w_pred - w_star, axis=1) / np.linalg.norm(w_star, axis=1)
+    p_error = np.linalg.norm(p_pred - p_star, axis=1) / np.linalg.norm(w_star, axis=1)
+    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
+    plt.plot(t, np.array(u_error))
+    plt.plot(t, np.array(v_error))
+    plt.plot(t, np.array(w_error))
+    plt.plot(t, np.array(p_error))
+    plt.legend(["u_error", "v_error", "w_error", "p_error"])
+    plt.xlabel("t")
+    plt.ylabel("Relative l2 Error")
+    plt.title("Relative l2 Error, on test dataset")
+    plt.savefig(osp.join(cfg.output_dir, "error.jpg"))
+
+    grid_x, grid_y = np.mgrid[
+        x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
+    ].astype(np.float32)
+    x_plot = grid_x.reshape(-1, 1)
+    y_plot = grid_y.reshape(-1, 1)
+    z_plot = (z_star.min() * np.ones(y_plot.shape)).astype(np.float32)
+    t_plot = ((t[-1]) * np.ones(x_plot.shape)).astype(np.float32)
+    sol = predictor.predict(
+        {"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot}, cfg.INFER.batch_size
+    )
+    sol = {
+        store_key: sol[infer_key]
+        for store_key, infer_key in zip(cfg.INFER.output_keys, sol.keys())
+    }
+    fig, ax = plt.subplots(1, 4, figsize=(16, 4))
+    cmap = matplotlib.colormaps.get_cmap("jet")
+
+    ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[0].set_title("u prediction")
+    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[1].set_title("v prediction")
+    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[2].set_title("w prediction")
+    ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
+    ax[3].set_title("p prediction")
+    norm = matplotlib.colors.Normalize(
+        vmin=sol["u"].min(), vmax=sol["u"].max()
+    )  # set maximum and minimum
+    im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.325, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.525, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    plt.savefig(osp.join(cfg.output_dir, "z=0 plane"))
+
+    grid_y, grid_z = np.mgrid[
+        y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
+    ].astype(np.float32)
+    z_plot = grid_z.reshape(-1, 1)
+    y_plot = grid_y.reshape(-1, 1)
+    x_plot = (x_star.min() * np.ones(y_plot.shape)).astype(np.float32)
+    t_plot = ((t[-1]) * np.ones(x_plot.shape)).astype(np.float32)
+    sol = predictor.predict(
+        {"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot}, cfg.INFER.batch_size
+    )
+    sol = {
+        store_key: sol[infer_key]
+        for store_key, infer_key in zip(cfg.INFER.output_keys, sol.keys())
+    }
+    fig, ax = plt.subplots(1, 4, figsize=(16, 4))
+    cmap = matplotlib.colormaps.get_cmap("jet")
 
     ax[0].contourf(grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
@@ -453,9 +613,13 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
         raise ValueError(
-            osp.join("cfg.mode should in ['train', 'eval'], but got", cfg.mode)
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
         )
 
 
