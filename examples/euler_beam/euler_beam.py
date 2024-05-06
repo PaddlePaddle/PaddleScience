@@ -12,27 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
-
 import hydra
-import paddle
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # enable computation for fourth-order differentiation of matmul
-    paddle.framework.core.set_prim_eager_enabled(True)
-    paddle.framework.core._set_prim_all_enabled(True)
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -145,14 +133,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # enable computation for fourth-order differentiation of matmul
-    paddle.framework.core.set_prim_eager_enabled(True)
-    paddle.framework.core._set_prim_all_enabled(True)
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 

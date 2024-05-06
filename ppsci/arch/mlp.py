@@ -14,10 +14,13 @@
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import numpy as np
+import paddle
 import paddle.nn as nn
 
 from ppsci.arch import activation as act_mod
@@ -50,6 +53,89 @@ class WeightNormLinear(nn.Layer):
         return nn.functional.linear(input, weight, self.bias)
 
 
+class RandomWeightFactorization(nn.Layer):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        mean: float = 0.5,
+        std: float = 0.1,
+    ):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight_v = self.create_parameter((in_features, out_features))
+        self.weight_g = self.create_parameter((out_features,))
+        if bias:
+            self.bias = self.create_parameter((out_features,))
+        else:
+            self.bias = None
+
+        self._init_weights(mean, std)
+
+    def _init_weights(self, mean, std):
+        with paddle.no_grad():
+            initializer.glorot_normal_(self.weight_v)
+
+            nn.initializer.Normal(mean, std)(self.weight_g)
+            paddle.assign(paddle.exp(self.weight_g), self.weight_g)
+            paddle.assign(self.weight_v / self.weight_g, self.weight_v)
+            if self.bias is not None:
+                initializer.constant_(self.bias, 0.0)
+
+        self.weight_g.stop_gradient = False
+        self.weight_v.stop_gradient = False
+        self.bias.stop_gradient = False
+
+    def forward(self, input):
+        return nn.functional.linear(input, self.weight_g * self.weight_v, self.bias)
+
+
+class PeriodEmbedding(nn.Layer):
+    def __init__(self, periods: Dict[str, Tuple[float, bool]]):
+        super().__init__()
+        self.freqs_dict = {
+            k: self.create_parameter(
+                [],
+                attr=paddle.ParamAttr(trainable=trainable),
+                default_initializer=nn.initializer.Constant(2 * np.pi / float(p)),
+            )  # mu = 2*pi / period for sin/cos function
+            for k, (p, trainable) in periods.items()
+        }
+        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
+
+    def forward(self, x: Dict[str, paddle.Tensor]):
+        y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
+
+        for k, w in self.freqs_dict.items():
+            y[k] = paddle.concat([paddle.cos(w * x[k]), paddle.sin(w * x[k])], axis=-1)
+
+        return y
+
+
+class FourierEmbedding(nn.Layer):
+    def __init__(self, in_features, out_features, scale):
+        super().__init__()
+        if out_features % 2 != 0:
+            raise ValueError(f"out_features must be even, but got {out_features}.")
+
+        self.kernel = self.create_parameter(
+            [in_features, out_features // 2],
+            default_initializer=nn.initializer.Normal(std=scale),
+        )
+
+    def forward(self, x: paddle.Tensor):
+        y = paddle.concat(
+            [
+                paddle.cos(x @ self.kernel),
+                paddle.sin(x @ self.kernel),
+            ],
+            axis=-1,
+        )
+        return y
+
+
 class MLP(base.Arch):
     """Multi layer perceptron network.
 
@@ -64,6 +150,13 @@ class MLP(base.Arch):
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
+        periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
+            input in given channel will be period embeded if specified, each tuple of
+            periods list is [period, trainable]. Defaults to None.
+        fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
+            e.g. {'dim': 256, 'sclae': 1.0}. Defaults to None.
+        random_weight (Optional[Dict[str, float]]): Mean and std of random weight
+            factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
     Examples:
         >>> import paddle
@@ -94,12 +187,20 @@ class MLP(base.Arch):
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
         output_dim: Optional[int] = None,
+        periods: Optional[Dict[int, Tuple[float, bool]]] = None,
+        fourier: Optional[Dict[str, Union[float, int]]] = None,
+        random_weight: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
         self.acts = []
+        self.periods = periods
+        self.fourier = fourier
+        if periods:
+            self.period_emb = PeriodEmbedding(periods)
+
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -118,12 +219,32 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
-        for i, _size in enumerate(hidden_size):
-            self.linears.append(
-                WeightNormLinear(cur_size, _size)
-                if weight_norm
-                else nn.Linear(cur_size, _size)
+        if input_dim is None and periods:
+            # period embeded channel(s) will be doubled automatically
+            # if input_dim is not specified
+            cur_size += len(periods)
+
+        if fourier:
+            self.fourier_emb = FourierEmbedding(
+                cur_size, fourier["dim"], fourier["scale"]
             )
+            cur_size = fourier["dim"]
+
+        for i, _size in enumerate(hidden_size):
+            if weight_norm:
+                self.linears.append(WeightNormLinear(cur_size, _size))
+            elif random_weight:
+                self.linears.append(
+                    RandomWeightFactorization(
+                        cur_size,
+                        _size,
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
+            else:
+                self.linears.append(nn.Linear(cur_size, _size))
+
             # initialize activation function
             self.acts.append(
                 act_mod.get_activation(activation)
@@ -142,10 +263,18 @@ class MLP(base.Arch):
 
         self.linears = nn.LayerList(self.linears)
         self.acts = nn.LayerList(self.acts)
-        self.last_fc = nn.Linear(
-            cur_size,
-            len(self.output_keys) if output_dim is None else output_dim,
-        )
+        if random_weight:
+            self.last_fc = RandomWeightFactorization(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        else:
+            self.last_fc = nn.Linear(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+            )
 
         self.skip_connection = skip_connection
 
@@ -170,7 +299,14 @@ class MLP(base.Arch):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
+        if self.periods:
+            x = self.period_emb(x)
+
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
+
+        if self.fourier:
+            y = self.fourier_emb(y)
+
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
@@ -300,12 +436,9 @@ class ModifiedMLP(base.Arch):
         u = self.embed_u(x)
         v = self.embed_v(x)
 
-        x = self.linears[0](x)
-        x = self.acts[0](x)
-
         y = x
         skip = None
-        for i, linear in enumerate(self.linears[1:], 1):
+        for i, linear in enumerate(self.linears):
             y = linear(y)
             y = self.acts[i](y)
             y = (1 - y) * u + y * v

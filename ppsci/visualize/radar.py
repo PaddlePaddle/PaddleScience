@@ -38,6 +38,7 @@ class VisualizerRadar(base.Visualizer):
 
     Examples:
         >>> import ppsci
+        >>> import paddle
         >>> frames_tensor = paddle.randn([1, 29, 512, 512, 2])
         >>> visualizer =  ppsci.visualize.VisualizerRadar(
         ...     {"input": frames_tensor},

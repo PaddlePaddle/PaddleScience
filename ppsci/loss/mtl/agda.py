@@ -19,10 +19,10 @@ from typing import List
 import paddle
 from paddle import nn
 
-from ppsci.loss.mtl.base import LossAggregator
+from ppsci.loss.mtl import base
 
 
-class AGDA(LossAggregator):
+class AGDA(base.LossAggregator):
     r"""
     **A**daptive **G**radient **D**escent **A**lgorithm
 
@@ -57,7 +57,7 @@ class AGDA(LossAggregator):
         self.Lf_tilde_acc = 0.0
         self.Lu_tilde_acc = 0.0
 
-    def __call__(self, losses, step: int = 0):
+    def __call__(self, losses, step: int = 0) -> "AGDA":
         if len(losses) != 2:
             raise ValueError(
                 f"Number of losses(tasks) for AGDA shoule be 2, but got {len(losses)}"

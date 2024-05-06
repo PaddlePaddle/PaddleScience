@@ -31,6 +31,7 @@ from ppsci.utils import misc
 if TYPE_CHECKING:
     import visualdl  # isort:skip
     import wandb  # isort:skip
+    import tensorboardX as tbd
 
 _logger: logging.Logger = None
 
@@ -103,7 +104,8 @@ def init_logger(
     # add file_handler, output to log_file(if specified), only for rank 0 device
     if log_file is not None and dist.get_rank() == 0:
         log_file_folder = os.path.dirname(log_file)
-        os.makedirs(log_file_folder, exist_ok=True)
+        if len(log_file_folder):
+            os.makedirs(log_file_folder, exist_ok=True)
         file_formatter = logging.Formatter(
             "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
             datefmt="%Y/%m/%d %H:%M:%S",
@@ -200,6 +202,7 @@ def scalar(
     step: int,
     vdl_writer: Optional["visualdl.LogWriter"] = None,
     wandb_writer: Optional["wandb.run"] = None,
+    tbd_writer: Optional["tbd.SummaryWriter"] = None,
 ):
     """This function will add scalar data to VisualDL or WandB for plotting curve(s).
 
@@ -210,13 +213,21 @@ def scalar(
         wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
-        for name, value in metric_dict.items():
-            vdl_writer.add_scalar(name, value, step)
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                for name, value in metric_dict.items():
+                    vdl_writer.add_scalar(name, value, step)
 
     if wandb_writer is not None:
         with misc.RankZeroOnly() as is_master:
             if is_master:
                 wandb_writer.log({"step": step, **metric_dict})
+
+    if tbd_writer is not None:
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                for name, value in metric_dict.items():
+                    tbd_writer.add_scalar(name, value, global_step=step)
 
 
 def advertise():

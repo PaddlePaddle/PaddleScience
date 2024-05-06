@@ -26,7 +26,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 微分方程 | [拉普拉斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/laplace2d) | 机理驱动 | MLP | 无监督学习 | -        | - |
-| 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |</center>
+| 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
 | 微分方程 | [非线性偏微分方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/pirbn) | 机理驱动 | PIRBN | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [洛伦兹方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/lorenz) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 微分方程 | [若斯叻方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/rossler) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
@@ -34,6 +34,9 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 微分方程 | [梯度增强的物理知识融合 PDE 求解](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/gpinn/poisson_1d.py) | 机理驱动 | gPINN | 无监督学习 | - |  [Paper](https://doi.org/10.1016/j.cma.2022.114823) |
 | 积分方程 | [沃尔泰拉积分方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide) | 机理驱动 | MLP | 无监督学习 | - | [Project](https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py) |
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 光孤子 | [Optical soliton](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
+| 光纤怪波 | [Optical rogue wave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
+| 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | - | |
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -71,6 +74,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
 | 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_exchanger) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
 | 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
+| 热仿真 | [2D 芯片热仿真](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/chip_heat) | 机理驱动 | PI-DeepONet | 无监督学习 | - | [Paper](https://doi.org/10.1063/5.0194245)|
 
 <br>
 <p align="center"><b>材料科学(AI for Material)</b></p>
@@ -89,6 +93,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 天气预报 | [NowCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet) | 数据驱动 | NowCastNet | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
 | 天气预报 | [GraphCast 气象预报](jointContribution/graphcast/README.md) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
+| 天气预报 | [DGMR 气象预报](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/dgmr.md) | 数据驱动 | DGMR | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
@@ -215,9 +220,9 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
     旨在鼓励更多的开发者参与到飞桨科学计算社区的开源建设中，帮助社区修复 bug 或贡献 feature，加入开源、共建飞桨。了解编程基本知识的入门用户即可参与，活动进行中：
     [PaddleScience 快乐开源活动表单](https://github.com/PaddlePaddle/PaddleScience/issues/379)
 
-- 🔥第五期黑客松
+- 🔥第六期黑客松
 
-    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：[【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛](https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_5th/%E3%80%90PaddlePaddle%20Hackathon%205th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md#%E4%BB%BB%E5%8A%A1%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B%E4%B8%8E%E9%AA%8C%E6%94%B6%E6%A0%87%E5%87%86)
+    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：[【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛](https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_6th/%E3%80%90Hackathon%206th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md)
 <!-- --8<-- [end:contribution] -->
 
 <!-- --8<-- [start:collaboration] -->

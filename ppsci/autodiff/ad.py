@@ -136,9 +136,7 @@ class Jacobians:
                 self.Js[key] = _Jacobian(ys, xs)
             return self.Js[key](i, j, retain_graph, create_graph)
         else:
-            xs_require: List["paddle.Tensor"] = [
-                xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js
-            ]
+            xs_require = [xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js]
             grads_require = paddle.grad(
                 ys,
                 xs_require,
@@ -285,6 +283,8 @@ class Hessians:
             >>> x.stop_gradient = False
             >>> y = (x * x).sin()
             >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
+            >>> print(dy_dxx.shape)
+            [4, 1]
         """
         key = (ys, xs, component)
         if key not in self.Hs:
@@ -301,6 +301,18 @@ hessian = Hessians()
 
 
 def clear():
-    """Clear cached Jacobians and Hessians."""
+    """Clear cached Jacobians and Hessians.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> x = paddle.randn([4, 3])
+        >>> x.stop_gradient = False
+        >>> y = (x * x).sin()
+        >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
+        >>> ppsci.autodiff.clear()
+        >>> print(ppsci.autodiff.hessian.Hs)
+        {}
+    """
     jacobian._clear()
     hessian._clear()

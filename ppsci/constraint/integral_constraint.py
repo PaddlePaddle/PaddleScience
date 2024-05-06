@@ -48,7 +48,7 @@ class IntegralConstraint(base.Constraint):
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
@@ -71,7 +71,7 @@ class IntegralConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IgC",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(
@@ -81,7 +81,7 @@ class IntegralConstraint(base.Constraint):
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         weight_dict: Optional[Dict[str, Callable]] = None,
         name: str = "IgC",

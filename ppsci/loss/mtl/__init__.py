@@ -16,14 +16,18 @@ import copy
 
 from ppsci.loss.mtl.agda import AGDA
 from ppsci.loss.mtl.base import LossAggregator
+from ppsci.loss.mtl.grad_norm import GradNorm
 from ppsci.loss.mtl.pcgrad import PCGrad
 from ppsci.loss.mtl.relobralo import Relobralo
+from ppsci.loss.mtl.sum import Sum
 
 __all__ = [
     "AGDA",
+    "GradNorm",
     "LossAggregator",
     "PCGrad",
     "Relobralo",
+    "Sum",
 ]
 
 

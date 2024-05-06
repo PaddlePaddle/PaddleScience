@@ -274,7 +274,7 @@ pip install paddle2onnx
     [Paddle2ONNX] Start to parsing Paddle model...
     [Paddle2ONNX] Use opset_version = 13 for ONNX export.
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
-    [2024/03/02 05:47:51] ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
+    ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
     ```
 
 ### 1.3 模型推理预测
@@ -366,9 +366,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| - | ✅ |
-| GPU | ✅ | ✅ | ✅ | - |
-| XPU | TODO | - | - | - |
+| CPU | ✅ | ✅| / | ✅ |
+| GPU | ✅ | ✅ | ✅ | / |
+| XPU | TODO | / | / | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -410,6 +410,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     3. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
 
         ``` sh
+        # 运行前需设置指定GPU，否则可能无法启动 TensorRT
+        export CUDA_VISIBLE_DEVICES=0
+
         python aneurysm.py mode=infer \
             INFER.device=gpu \
             INFER.engine=tensorrt \
@@ -444,7 +447,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
@@ -556,85 +559,126 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.7 使用 VisualDL 记录实验
+### 1.7 实验过程可视化
 
-[VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+=== "TensorBoardX"
 
-PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+    [TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-1. 安装 VisualDL
+    PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-    ``` sh
-    pip install -U visualdl
-    ```
+    1. 安装 Tensorboard 和 TensorBoardX
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_visualdl=True`，然后再启动案例训练
+        ``` sh
+        pip install tensorboard tensorboardX
+        ```
 
-    ``` py hl_lines="3"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_visualdl=True,
-    )
-    ```
+    2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
 
-3. 可视化记录数据
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_tbd=True,
+        )
+        ```
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 的目录中。`vdl` 所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+    3. 可视化记录数据
 
-    ``` log hl_lines="3"
-    Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
-    device: 0, cuDNN Version: 8.4.
-    ppsci INFO: VisualDL tool enabled for logging, you can view it by running: 'visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080'.
-    ```
+        根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+        ``` log hl_lines="3" hl_lines="2"
+        ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
+        tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
+        ```
 
-    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+        !!! tip
 
-### 1.8 使用 WandB 记录实验
+            也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
 
-[WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
+        在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
+        ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
 
-1. 安装 wandb
+=== "VisualDL"
 
-    ``` sh
-    pip install wandb
-    ```
+    [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-2. 注册 wandb 并在终端登录
+    PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-    ``` sh
-    # 登录 wandb 获取 API key
-    wandb login
-    # 根据 login 提示，输入 API key 并回车确认
-    ```
+    1. 安装 VisualDL
 
-3. 在案例中开启 wandb
+        ``` sh
+        pip install -U visualdl
+        ```
 
-    ``` py hl_lines="3 4 5 6 7 8"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_wandb=True,
-        wandb_config={
-            "project": "PaddleScience",
-            "name": "Laplace2D",
-            "dir": OUTPUT_DIR,
-        },
-        ...
-    )
-    solver.train()
-    ```
+    2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
 
-    如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_vdl=True,
+        )
+        ```
 
-    !!! warning "注意"
+    3. 可视化记录数据
 
-        由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
+        根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-        否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
-        ![wandb_step settings](../images/overview/wandb_step.JPG)
+        ``` log hl_lines="4"
+        Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
+        device: 0, cuDNN Version: 8.4.
+        ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
+        visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
+        ```
+
+        在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+
+        ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+
+=== "WandB"
+
+    [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到用户的私人账户上，防止实验记录丢失。
+
+    PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
+
+    1. 安装 wandb
+
+        ``` sh
+        pip install wandb
+        ```
+
+    2. 注册 wandb 并在终端登录
+
+        ``` sh
+        # 登录 wandb 获取 API key
+        wandb login
+        # 根据 login 提示，输入 API key 并回车确认
+        ```
+
+    3. 在案例中开启 wandb
+
+        ``` py hl_lines="3 4 5 6 7 8"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_wandb=True,
+            wandb_config={
+                "project": "PaddleScience",
+                "name": "Laplace2D",
+                "dir": OUTPUT_DIR,
+            },
+            ...
+        )
+        solver.train()
+        ```
+
+        如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
+
+        !!! warning "注意"
+
+            由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
+
+            否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
+            ![wandb_step settings](../images/overview/wandb_step.JPG)
 
 ## 2. 进阶功能
 
@@ -751,3 +795,49 @@ solver = ppsci.solver.Solver(
     !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
+
+## 3. 使用 Nsight 进行性能分析
+
+Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
+
+PaddleScience 初步支持使用 Nsight 进行性能分析，以 linux 开发环境 + laplace2d 案例为例，按照如下步骤使用 nsight 工具生成性能分析报告并查看分析结果。
+
+1. 安装 nsight-system
+
+    开发机上下载 linux nsight-system 软件：nsight-systems/2023.4.1，并将 nsight 添加到环境变量 `PATH` 中：
+
+    执行：`PATH=/path/to/nsight-systems/2023.4.1/bin:$PATH`，同时在 windows 机器上安装**相同版本**的 nsight-system 软件。
+
+2. 用 nsys 命令运行程序，生成性能分析文件
+
+    ``` sh
+    {==NVTX=1 nsys profile -t cuda,nvtx --stats=true -o==} {++laplace2d++} python laplace2d.py
+    ```
+
+3. 查看分析结果
+
+    程序结束后，在终端内会打印出性能分析数据（如下所示），同时在上述 `-o` 参数指定的相对文件路径生成 `{++laplace2d++}.nsys-rep` 和 `{++laplace2d++}.sqlite` 两个文件。
+
+    在 windows 上使用 NVIDIA Nsight Systems 软件打开 `laplace2d.nsys-rep`，即可在图形化的界面上查看性能分析数据。
+
+    ``` log
+    ...
+    ...
+    Only run 25 steps when 'NVTX' is set in environment for nsight analysis. Exit now ......
+
+    Generating '/tmp/nsys-report-18e4.qdstrm'
+    [1/7] [========================100%] laplace2d.nsys-rep
+    [2/7] [========================100%] laplace2d.sqlite
+    [3/7] Executing 'nvtx_sum' stats report
+
+    Time (%)  Total Time (ns)  Instances    Avg (ns)       Med (ns)      Min (ns)     Max (ns)     StdDev (ns)    Style                  Range
+    --------  ---------------  ---------  -------------  -------------  -----------  -----------  -------------  -------  ------------------------------------
+        15.1      794,212,341         25   31,768,493.6    5,446,410.0    5,328,471  661,841,104  131,265,333.9  PushPop  Loss computation
+        14.5      766,452,142         25   30,658,085.7    4,369,873.0    4,281,927  659,795,434  131,070,475.4  PushPop  Constraint EQ
+        13.0      687,324,359      1,300      528,711.0       32,567.5       21,218  641,625,892   17,794,532.4  PushPop  matmul dygraph
+        12.9      678,475,194          1  678,475,194.0  678,475,194.0  678,475,194  678,475,194            0.0  PushPop  Training iteration 1
+        12.8      673,614,062      1,300      518,164.7       19,802.5       14,499  641,525,121   17,792,027.2  PushPop  matmul compute
+        3.9      203,945,648         25    8,157,825.9    8,029,819.0    7,797,185    9,119,496      359,173.3  PushPop  Loss backward
+        ...
+        ...
+    ```
