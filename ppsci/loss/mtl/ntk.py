@@ -35,37 +35,6 @@ class NTK(base.LossAggregator):
         self.update_freq = update_freq
         self.register_buffer("weight", paddle.ones([num_losses]))
 
-    def compute_diag_ntk(self, params, batch):
-        ics_ntk = paddle.vmap(self.ntk_fn, (None, None, None, 0))(
-            self.u_net, params, self.t0, self.x_star
-        )
-
-        # Consider the effect of causal weights
-        use_causal = False
-        if use_causal:
-            # sort the time step for causal loss
-            sorted_batch = paddle.sort(batch[:, 0])
-            batch = paddle.concat([sorted_batch, batch[:, 1].unsqueeze(1)], axis=1)
-            res_ntk = paddle.vmap(self.ntk_fn, (None, None, 0, 0))(
-                self.r_net, params, batch[:, 0], batch[:, 1]
-            )
-            res_ntk = paddle.reshape(
-                res_ntk, [self.num_chunks, -1]
-            )  # shape: (num_chunks, -1)
-            res_ntk = paddle.mean(
-                res_ntk, axis=1
-            )  # average convergence rate over each chunk
-            _, casual_weights = self.res_and_w(params, batch)
-            res_ntk = res_ntk * casual_weights  # multiply by causal weights
-        else:
-            res_ntk = paddle.vmap(self.ntk_fn, (None, None, 0, 0))(
-                self.r_net, params, batch[:, 0], batch[:, 1]
-            )
-
-        ntk_dict = {"ics": ics_ntk, "res": res_ntk}
-
-        return ntk_dict
-
     def _compute_weight(self, losses):
         ntk_sum = 0
         ntk_value = []
