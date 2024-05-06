@@ -133,7 +133,7 @@ INFER:
   pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
   export_path: ./inference/earthformer/enso
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32

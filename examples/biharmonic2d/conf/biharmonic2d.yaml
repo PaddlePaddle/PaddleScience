@@ -79,7 +79,7 @@ INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/biharmonic2d/biharmonic2d_pretrained.pdparams
   export_path: ./inference/biharmonic2d
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   output_keys: ["Mx", "Mxy", "My", "Qx", "Qy", "w"]
   device: gpu
   engine: native

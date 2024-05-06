@@ -161,7 +161,7 @@ INFER:
   pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
   export_path: ./inference/earthformer/sevir
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32
