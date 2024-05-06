@@ -361,12 +361,19 @@ class ModifiedMLP(base.Arch):
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
         output_dim: Optional[int] = None,
+        periods: Optional[Dict[int, Tuple[float, bool]]] = None,
+        fourier: Optional[Dict[str, Union[float, int]]] = None,
+        random_weight: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
         self.acts = []
+        self.periods = periods
+        self.fourier = fourier
+        if periods:
+            self.period_emb = PeriodEmbedding(periods)
         if isinstance(hidden_size, int):
             if not isinstance(num_layers, int):
                 raise ValueError("num_layers should be an int")
@@ -376,6 +383,17 @@ class ModifiedMLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
+        if input_dim is None and periods:
+            # period embeded channel(s) will be doubled automatically
+            # if input_dim is not specified
+            cur_size += len(periods)
+
+        if fourier:
+            self.fourier_emb = FourierEmbedding(
+                cur_size, fourier["dim"], fourier["scale"]
+            )
+            cur_size = fourier["dim"]
+
         self.embed_u = nn.Sequential(
             (
                 WeightNormLinear(cur_size, hidden_size[0])
@@ -402,11 +420,20 @@ class ModifiedMLP(base.Arch):
         )
 
         for i, _size in enumerate(hidden_size):
-            self.linears.append(
-                WeightNormLinear(cur_size, _size)
-                if weight_norm
-                else nn.Linear(cur_size, _size)
-            )
+            if weight_norm:
+                self.linears.append(WeightNormLinear(cur_size, _size))
+            elif random_weight:
+                self.linears.append(
+                    RandomWeightFactorization(
+                        cur_size,
+                        _size,
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
+            else:
+                self.linears.append(nn.Linear(cur_size, _size))
+
             # initialize activation function
             self.acts.append(
                 act_mod.get_activation(activation)
@@ -457,7 +484,14 @@ class ModifiedMLP(base.Arch):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
+        if self.periods:
+            x = self.period_emb(x)
+
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
+
+        if self.fourier:
+            y = self.fourier_emb(y)
+
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
