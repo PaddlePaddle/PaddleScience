@@ -117,7 +117,7 @@ class CausalMSELoss(base.Loss):
 
     Examples:
         >>> import paddle
-        >>> from ppsci.loss import MSELoss
+        >>> from ppsci.loss import CausalMSELoss
 
         >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9, 1.0], [1.1, -1.3, 0.0]])}
         >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0, -0.1], [-0.2, 2.5, 2.0]])}
