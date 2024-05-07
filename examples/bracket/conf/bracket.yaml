@@ -117,6 +117,6 @@ INFER:
   min_subgraph_size: 10
   gpu_mem: 4000
   gpu_id: 0
-  max_batch_size: 64
+  max_batch_size: 128
   num_cpu_threads: 4
   batch_size: 16
