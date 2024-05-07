@@ -4,7 +4,7 @@ hydra:
     dir: outputs_lorenz_transformer/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -70,7 +70,7 @@ INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams
   export_path: ./inference/lorenz_transformer
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32
