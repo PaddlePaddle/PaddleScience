@@ -4,7 +4,7 @@ hydra:
     dir: output_ldc2d_unsteady_Re10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchanged
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -22,6 +22,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
+log_freq: 20
 
 # set working condition
 NU: 0.01
@@ -56,3 +57,21 @@ EVAL:
   pretrained_model_path: null
   batch_size:
     residual_validator: 8192
+
+# inference settings
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_unsteady_Re10/ldc2d_unsteady_Re10_pretrained.pdparams
+  export_path: ./inference/ldc2d_unsteady_Re10
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 8192
+  num_cpu_threads: 10
+  batch_size: 8192
