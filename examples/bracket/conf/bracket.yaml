@@ -119,4 +119,4 @@ INFER:
   gpu_id: 0
   max_batch_size: 128
   num_cpu_threads: 4
-  batch_size: 16
+  batch_size: 128
