@@ -324,7 +324,7 @@ def inference(cfg: DictConfig):
         "states": dataset.data[: cfg.VIS_DATA_NUMS, :-1],
     }
 
-    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    output_dict = predictor.predict(input_dict)
 
     # mapping data to cfg.INFER.output_keys
     output_keys = ["pred_states"]
