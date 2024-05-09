@@ -238,7 +238,6 @@ def train(cfg: DictConfig):
         eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
         validator=validator,
-        cfg=cfg,
     )
     # train model
     solver.train()

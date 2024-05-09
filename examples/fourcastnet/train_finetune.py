@@ -162,10 +162,15 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        optimizer=optimizer,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
+        eval_during_train=True,
         validator=validator,
-        cfg=cfg,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # train model
     solver.train()
