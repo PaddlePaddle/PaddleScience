@@ -197,6 +197,7 @@ def train(cfg: DictConfig):
         model,
         constraint,
         optimizer=optimizer,
+        iters_per_epoch=int(x.shape[0] / cfg.TRAIN.batch_size),
         equation=equation,
         cfg=cfg,
     )

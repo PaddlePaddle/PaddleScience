@@ -163,6 +163,7 @@ def train(cfg: DictConfig):
         model,
         constraint,
         optimizer=optimizer,
+        iters_per_epoch=ITERS_PER_EPOCH,
         validator=validator,
         cfg=cfg,
     )

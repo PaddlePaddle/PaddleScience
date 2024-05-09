@@ -256,8 +256,12 @@ def train(cfg: DictConfig):
         OUTPUT_DIR,
         optimizer=optimizer_lbfgs,
         epochs=EPOCHS,
+        iters_per_epoch=cfg.TRAIN.lbfgs.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
+        eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
         validator=validator,
+        cfg=cfg,
     )
     # train model
     solver.train()
