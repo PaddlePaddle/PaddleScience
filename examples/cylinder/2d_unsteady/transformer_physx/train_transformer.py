@@ -283,7 +283,7 @@ def export(cfg: DictConfig):
 
     input_spec = [
         {
-            key: InputSpec([None, 255, 128], "float32", name=key)
+            key: InputSpec([None, 16, 128], "float32", name=key)
             for key in model.input_keys
         },
     ]
@@ -292,22 +292,9 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    from deploy.python_infer import base
+    from deploy import python_infer
 
-    predictor = base.Predictor(
-        cfg.INFER.pdmodel_path,
-        cfg.INFER.pdiparams_path,
-        device=cfg.INFER.device,
-        engine=cfg.INFER.engine,
-        precision=cfg.INFER.precision,
-        onnx_path=cfg.INFER.onnx_path,
-        ir_optim=cfg.INFER.ir_optim,
-        min_subgraph_size=cfg.INFER.min_subgraph_size,
-        gpu_mem=cfg.INFER.gpu_mem,
-        gpu_id=cfg.INFER.gpu_id,
-        max_batch_size=cfg.INFER.max_batch_size,
-        num_cpu_threads=cfg.INFER.num_cpu_threads,
-    )
+    predictor = python_infer.GeneralPredictor(cfg)
 
     dataset_cfg = {
         "name": "CylinderDataset",

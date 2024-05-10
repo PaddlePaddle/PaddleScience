@@ -246,14 +246,7 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
-    model_cfg = {
-        **cfg.MODEL,
-        "embedding_model": embedding_model,
-        "input_keys": ["states"],
-        "output_keys": ["pred_states"],
-    }
-    model = ppsci.arch.PhysformerGPT2(**model_cfg)
+    model = ppsci.arch.PhysformerGPT2(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -265,11 +258,10 @@ def export(cfg: DictConfig):
 
     input_spec = [
         {
-            key: InputSpec([None, 255, 3], "float32", name=key)
+            key: InputSpec([None, 16, 128], "float32", name=key)
             for key in model.input_keys
         },
     ]
-
     solver.export(input_spec, cfg.INFER.export_path)
 
 
