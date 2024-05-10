@@ -25,4 +25,5 @@
         - RadarDataset
         - build_dataset
         - DGMRDataset
+        - DarcyFlowDataset
       show_root_heading: true

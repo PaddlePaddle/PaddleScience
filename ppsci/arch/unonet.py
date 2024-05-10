@@ -11,27 +11,25 @@ from ppsci.arch import fno_block
 
 
 class UNONet(base.Arch):
-    """N-Dimensional U-Shaped Neural Operator
+    """N-Dimensional U-Shaped Neural Operator.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-        n_modes (Tuple[int, ...]): number of modes to keep in Fourier Layer, along each dimension
-            The dimensionality of the TFNO is inferred from ``len(n_modes)`
-        hidden_channels (int): Width of the FNO (i.e. number of channels)
-        in_channels (int, optional): Number of input channels. Defaults to 3.
-        out_channels (int, optional): Number of output channels. Defaults to 1.
+        in_channels (int, optional): Number of input channels.
+        out_channels (int, optional): Number of output channels.
+        hidden_channels (int): Width of the FNO (i.e. number of channels).
         lifting_channels (int, optional): Number of hidden channels of the lifting block of the FNO.
             Defaults to 256.
         projection_channels (int, optional): Number of hidden channels of the projection block of the FNO.
             Defaults to 256.
         n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
-        uno_out_channels (list, optional): Number of output channel of each Fourier Layers.
+        uno_out_channels (Tuple[int, ...], optional): Number of output channel of each Fourier Layers.
             Eaxmple: For a Five layer UNO uno_out_channels can be [32,64,64,64,32].c
-        uno_n_modes (list): Number of Fourier Modes to use in integral operation of each Fourier Layers
-            (along each dimension).
+        uno_n_modes (Tuple[Tuple[int, ...], ...]): Number of Fourier Modes to use in integral operation of each
+            Fourier Layers (along each dimension).
             Example: For a five layer UNO with 2D input the uno_n_modes can be: [[5,5],[5,5],[5,5],[5,5],[5,5]]. Defaults to None.
-        uno_scalings (list): Scaling Factors for each Fourier Layers.
+        uno_scalings (Tuple[Tuple[int, ...], ...]): Scaling Factors for each Fourier Layers.
             Example: For a five layer UNO with 2D input, the uno_scalings can be : [[1.0,1.0],[0.5,0.5],[1,1],[1,1],[2,2]].Defaults to None.
         horizontal_skips_map (dict, optional): a map {...., b: a, ....} denoting horizontal skip connection
             from a-th layer to b-th layer. If None default skip connection is applied.
@@ -46,10 +44,13 @@ class UNONet(base.Arch):
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
-        ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.
+        ada_in_features (Optional[int],optional): The input channles of the adaptive normalization.Defaults to
+            None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
-        skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
-            Defaults to "soft-gating".
+        fno_skip (str, optional): Type of skip connection to use for fno_block. Defaults to "linear".
+        horizontal_skip (str, optional): Type of skip connection to use for horizontal skip. Defaults to
+            "linear".
+        mlp_skip (str, optional): Type of skip connection to use for mlp. Defaults to "soft-gating".
         separable (bool, optional): Whether to use a depthwise separable spectral convolution.
             Defaults to  False.
         factorization (str, optional): Tensor factorization of the parameters weight to use.
@@ -65,7 +66,8 @@ class UNONet(base.Arch):
             * `factorized` : the input is directly contracted with the factors of the decomposition.
         decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
             decomposition. Defaults to dict().
-        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+        domain_padding (Optional[Union[list, float, int]], optional): Whether to use percentage of padding.
+            Defaults to None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".

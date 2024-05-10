@@ -15,6 +15,32 @@ from ppsci.utils import initializer
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
+def _contract_dense(x, weight, separable=False, dhconv=True):
+    order = len(x.shape)
+    x_syms = list(einsum_symbols[:order])
+
+    # in_channels, out_channels, x, y...
+    weight_syms = list(x_syms[1:])  # no batch-size
+
+    # batch-size, out_channels, x, y...
+    if separable:
+        out_syms = [x_syms[0]] + list(weight_syms)
+    else:
+        weight_syms.insert(1, einsum_symbols[order])  # outputs
+        out_syms = list(weight_syms)
+        out_syms[0] = x_syms[0]
+
+    if dhconv:
+        weight_syms.pop()
+
+    eq = "".join(x_syms) + "," + "".join(weight_syms) + "->" + "".join(out_syms)
+    # For the darcy flow, the only einsum is abcd,becd->aecd, where x and weights are shaped [32,32,8,8]
+    if not isinstance(weight, paddle.Tensor):
+        weight = paddle.to_tensor(weight)
+
+    return paddle.einsum(eq, x, weight)
+
+
 def _contract_dense_trick(x, weight_real, weight_imag, separable=False, dhconv=True):
     # the same as above function, but do the complex multiplication manually to avoid the einsum bug in paddle
     order = len(x.shape)
@@ -54,7 +80,7 @@ def _contract_dense_separable(x, weight, separable=True):
 
 
 def get_contract_fun(weight, implementation="reconstructed", separable=False):
-    """Generic ND implementation of Fourier Spectral Conv contraction
+    """Generic ND implementation of Fourier Spectral Conv contraction.
 
     Args:
         weight (FactorizedTensor): The factoriz Tensor.
@@ -62,20 +88,18 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
             or contract directly the factors of the factorized weight with the input (factorized).
             {'reconstructed', 'factorized'} Defaults to "reconstructed".
         separable (bool, optional): whether to use the separable implementation of contraction. This arg is
-            only checked when `implementation=reconstructed`.. Defaults to False.
+            only checked when `implementation=reconstructed`. Defaults to False.
 
     """
 
     if implementation == "reconstructed":
         if separable:
-            print("SEPARABLE")
             return _contract_dense_separable
         else:
             return _contract_dense_trick
     elif implementation == "factorized":
         if isinstance(weight, paddle.Tensor):
             return _contract_dense_trick
-        # TODO: FactorizedTensor not supported yet
 
     else:
         raise ValueError(
@@ -157,26 +181,7 @@ Number = Union[int, float]
 
 
 class SphericalConv(nn.Layer):
-    """Spherical Convolution, base class for the SFNO [1]_
-
-    Parameters
-    ----------
-    sht_norm : str, {'ortho'}
-    sht_grids : str or str list, default is "equiangular", {"equiangular", "legendre-gauss"}
-                * If str, the same grid is used for all layers
-                * If list, should have n_layers + 1 values, corresponding to the input and output grid of each layer
-                  e.g. for 1 layer, ["input_grid", "output_grid"]
-
-    See SpectralConv for full list of other parameters
-
-    References
-    ----------
-    .. [1] Spherical Fourier Neural Operators: Learning Stable Dynamics on the Sphere,
-           Boris Bonev, Thorsten Kurth, Christian Hundt, Jaideep Pathak, Maximilian Baust, Karthik Kashinath, Anima Anandkumar,
-           ICML 2023.
-    """
-
-    """Spherical Convolution, base class for the SFNO [1].
+    """ Spherical Convolution, base class for the SFNO [1].
         .. [1] Spherical Fourier Neural Operators: Learning Stable Dynamics on the Sphere,
            Boris Bonev, Thorsten Kurth, Christian Hundt, Jaideep Pathak, Maximilian Baust, Karthik Kashinath, Anima Anandkumar,
            ICML 2023.
@@ -184,7 +189,7 @@ class SphericalConv(nn.Layer):
     Args:
         in_channels (int): Number of input channels.
         out_channels (int): Number of output channels.
-        n_modes (int): Number of modes to use for contraction in Fourier domain during
+        n_modes (Tuple[int, ...]): Number of modes to use for contraction in Fourier domain during
             training.
         max_n_modes (int, optional): The maximum number of modes to use for contraction in Fourier domain during
             training. Defaults to None.
@@ -248,10 +253,10 @@ class SphericalConv(nn.Layer):
         self.n_layers = n_layers
         self.implementation = implementation
 
-        self.output_scaling_factor: Union[
-            None, List[List[float]]
-        ] = fno_block.validate_scaling_factor(
-            output_scaling_factor, self.order, n_layers
+        self.output_scaling_factor: Union[None, List[List[float]]] = (
+            fno_block.validate_scaling_factor(
+                output_scaling_factor, self.order, n_layers
+            )
         )
 
         if init_std == "auto":
@@ -384,13 +389,13 @@ class SphericalConv(nn.Layer):
 
 
 class SFNONet(base.Arch):
-    """N-Dimensional Tensorized Fourier Neural Operator
+    """N-Dimensional Tensorized Fourier Neural Operator.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         n_modes (Tuple[int, ...]): number of modes to keep in Fourier Layer, along each dimension
-            The dimensionality of the TFNO is inferred from ``len(n_modes)`
+            The dimensionality of the SFNO is inferred from ``len(n_modes)`
         hidden_channels (int): Width of the FNO (i.e. number of channels)
         in_channels (int, optional): Number of input channels. Defaults to 3.
         out_channels (int, optional): Number of output channels. Defaults to 1.
@@ -423,7 +428,7 @@ class SFNONet(base.Arch):
             * `factorized` : the input is directly contracted with the factors of the decomposition.
         decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
             decomposition. Defaults to dict().
-        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+        domain_padding (Optional[list], optional): Whether to use percentage of padding. Defaults to None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
@@ -553,7 +558,7 @@ class SFNONet(base.Arch):
         )
 
     def forward(self, x):
-        """TFNO's forward pass"""
+        """SFNO's forward pass"""
         x = self.concat_to_tensor(x, self.input_keys)
 
         x = self.lifting(x)

@@ -10,7 +10,7 @@ from ppsci.arch import fno_block
 
 
 class FNONet(base.Arch):
-    """N-Dimensional Tensorized Fourier Neural Operator
+    """N-Dimensional Tensorized Fourier Neural Operator.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
@@ -55,6 +55,8 @@ class FNONet(base.Arch):
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
         patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
+        SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+            Defaults to fno_block.FactorizedSpectralConv.
     """
 
     def __init__(
@@ -197,15 +199,14 @@ class FNONet(base.Arch):
 
 
 class TFNO1dNet(FNONet):
-    """1D Fourier Neural Operator
+    """1D Fourier Neural Operator.
 
     Args:
-        number of Fourier modes to keep along the height
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         n_modes_height (Tuple[int, ...]): Number of Fourier modes to keep along the height, along each
             dimension.
-        hidden_channels (int): Width of the FNO (i.e. number of channels)
+        hidden_channels (int): Width of the FNO (i.e. number of channels).
         in_channels (int, optional): Number of input channels. Defaults to 3.
         out_channels (int, optional): Number of output channels. Defaults to 1.
         lifting_channels (int, optional): Number of hidden channels of the lifting block of the FNO.
@@ -216,7 +217,7 @@ class TFNO1dNet(FNONet):
         use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
         mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
             Defaults to None.
-        non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
+        non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (F.module, optional): Normalization layer to use. Defaults to None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
@@ -236,12 +237,14 @@ class TFNO1dNet(FNONet):
             * `factorized` : the input is directly contracted with the factors of the decomposition.
         decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
             decomposition. Defaults to dict().
-        domain_padding (Union[list,float,int], optional): Whether to use percentage of padding. Defaults to
-            None.
+        domain_padding (Optional[Union[list, float, int]], optional): Whether to use percentage of padding.
+            Defaults to None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
         patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
+        SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+            Defaults to fno_block.FactorizedSpectralConv.
     """
 
     def __init__(
@@ -350,6 +353,8 @@ class TFNO2dNet(FNONet):
            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
        fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
        patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
+       SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+            Defaults to fno_block.FactorizedSpectralConv.
     """
 
     def __init__(
@@ -416,7 +421,7 @@ class TFNO2dNet(FNONet):
 
 
 class TFNO3dNet(FNONet):
-    """3D Fourier Neural Operator
+    """3D Fourier Neural Operator.
 
     Args:
        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
@@ -460,6 +465,8 @@ class TFNO3dNet(FNONet):
            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
        fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
        patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
+       SpectralConv (nn.layer, optional): Spectral convolution layer to use. Defaults to fno_block.
+        FactorizedSpectralConv.
     """
 
     def __init__(
