@@ -269,6 +269,7 @@ def export(cfg: DictConfig):
             for key in model.input_keys
         },
     ]
+
     solver.export(input_spec, cfg.INFER.export_path)
 
 
