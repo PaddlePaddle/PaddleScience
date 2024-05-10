@@ -263,7 +263,6 @@ def evaluate(cfg: DictConfig):
 
 
 def export(cfg: DictConfig):
-
     # set model
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     model_cfg = {
