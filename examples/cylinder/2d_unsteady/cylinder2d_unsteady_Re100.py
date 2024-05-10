@@ -330,9 +330,9 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    from deploy import python_infer
+    from deploy.python_infer import pinn_predictor
 
-    predictor = python_infer.GeneralPredictor(cfg)
+    predictor = pinn_predictor.PINNPredictor(cfg)
     # set time-geometry
     geom = {
         "time_rect_eval": ppsci.geometry.PointCloud(
