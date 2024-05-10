@@ -47,24 +47,16 @@ class UnitGaussianNormalizer:
                 mean = self.mean[:, sample_idx]
 
         # x is in shape of batch*n or T*batch*n
-        # x = (x.view(self.sample_shape) * std) + mean
-        # x = x.view(-1, *self.sample_shape)
         x *= std
         x += mean
 
         return x
 
 
-def count_params(model):
-    return sum(
-        [p.numel() * 2 if p.is_complex() else p.numel() for p in model.parameters()]
-    )
-
-
 def get_grid_positional_encoding(
     input_tensor, grid_boundaries=[[0, 1], [0, 1]], channel_dim=1
 ):
-    """Appends grid positional encoding to an input tensor, concatenating as additional dimensions along the channels
+    """Appends grid positional encoding to an input tensor, concatenating as additional dimensions along the channels.
 
     Args:
         input_tensor (paddle.Tensor): The input tensor.
@@ -85,8 +77,6 @@ def get_grid_positional_encoding(
     grid_x, grid_y = paddle.meshgrid(xt, yt, indexing="ij")
 
     if len(shape) == 2:
-        # grid_x = grid_x.repeat(1, 1).unsqueeze(channel_dim)
-        # paddle doesn't have repeat api, use tile instead
         grid_x = grid_x.unsqueeze(channel_dim)
         grid_y = grid_y.unsqueeze(channel_dim)
     else:
@@ -123,18 +113,14 @@ class PositionalEmbedding2D:
         """grid generates 2D grid needed for pos encoding
         and caches the grid associated with MRU resolution
 
-        Parameters
-        ----------
-        spatial_dims : torch.size
-             sizes of spatial resolution
-        dtype : str
-            dtype to encode data
+        Args:
+            spatial_dims (tuple[int,...]): Sizes of spatial resolution.
+            dtype (str): Dtype to encode data.
 
-        Returns
-        -------
-        torch.tensor
-            output grids to concatenate
+        Returns:
+            paddle.Tensor: Output grids to concatenate
         """
+
         # handle case of multiple train resolutions
         if self._grid is None or self._res != spatial_dims:
             grid_x, grid_y = regular_grid(
@@ -166,6 +152,10 @@ class DarcyFlowDataset(io.Dataset):
     50 samples at resolution 32x32.
 
     Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("input",).
+        label_keys (Tuple[str, ...]): Output keys, such as ("output",).
+        data_dir (str): The directory to load data from.
+        weight_dict (Optional[Dict[str, float]], optional): Define the weight of each constraint variable. Defaults to None.
         test_resolutions (List[int,...]): The resolutions to test dataset. Default is [16, 32].
         grid_boundaries (List[int,...]): The boundaries of the grid. Default is [[0,1],[0,1]].
         positional_encoding (bool): Whether to use positional encoding. Default is True
@@ -306,37 +296,3 @@ class DarcyFlowDataset(io.Dataset):
         weight_item = self.weight_dict
 
         return input_item, label_item, weight_item
-
-
-if __name__ == "__main__":
-    dataset = DarcyFlowDataset(
-        input_keys=("x",),
-        label_keys=("y",),
-        data_dir="./datasets/darcyflow/",
-        weight_dict=None,
-        test_resolutions=[16, 32],
-        train_resolution=16,
-        grid_boundaries=[[0, 1], [0, 1]],
-        positional_encoding=True,
-        encode_input=False,
-        encode_output=False,
-        encoding="channel-wise",
-        channel_dim=1,
-        training="train",
-    )
-
-    train_loader = paddle.io.DataLoader(
-        dataset, batch_size=16, shuffle=False, num_workers=0, drop_last=False
-    )
-
-    for batch_index, (data, target, _) in enumerate(train_loader):
-        # 这里data是一个形状为[batch_size, channels, height, width]的tensor
-        # target是一个包含batch_size个元素的一维tensor，每个元素是对应data中图像的标签
-
-        # 在这里进行训练或验证等操作
-        print(f"Batch {batch_index}:")
-        print(data["x"].shape)
-        # print(data['x'])
-        print(target["y"].shape)
-        # print(data['x'])
-        breakpoint()

@@ -4,7 +4,6 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
-import paddle
 from paddle import io
 
 
@@ -12,12 +11,18 @@ class SphericalSWEDataset(io.Dataset):
     """Loads a Spherical Shallow Water equations dataset
 
     Training contains 200 samples in resolution 32x64.
-    Testing contains 50 samples at resolution 32x64 and
-    50 samples at resolution 64x128.
+    Testing contains 50 samples at resolution 32x64 and 50 samples at resolution 64x128.
 
     Args:
-        test_resolutions (List[str,...]): The resolutions to test dataset. Default is ["34x64","64x128"].
-        training (str): Wether to use training or test dataset. Default is 'train'.
+        input_keys (Tuple[str, ...]): Input keys, such as ("input",).
+        label_keys (Tuple[str, ...]): Output keys, such as ("output",).
+        data_dir (str): The directory to load data from.
+        weight_dict (Optional[Dict[str, float]], optional): Define the weight of each constraint variable.
+            Defaults to None.
+        test_resolutions (Tuple[str, ...], optional): The resolutions to test dataset. Defaults to ["34x64", "64x128"].
+        train_resolution (str, optional): The resolutions to train dataset. Defaults to "34x64".
+        training (str, optional): Wether to use training or test dataset. Defaults to "train".
+
     """
 
     def __init__(
@@ -97,30 +102,3 @@ class SphericalSWEDataset(io.Dataset):
         weight_item = self.weight_dict
 
         return input_item, label_item, weight_item
-
-
-if __name__ == "__main__":
-    dataset = SphericalSWEDataset(
-        input_keys=("x",),
-        label_keys=("y",),
-        data_dir="./datasets/SWE/",
-        weight_dict=None,
-        test_resolutions=["32x64", "64x128"],
-        train_resolution="32x64",
-        training="test_64x128",
-    )
-
-    train_loader = paddle.io.DataLoader(
-        dataset, batch_size=10, shuffle=False, num_workers=0, drop_last=False
-    )
-
-    for batch_index, (data, target, _) in enumerate(train_loader):
-        # 这里data是一个形状为[batch_size, channels, height, width]的tensor
-        # target是一个包含batch_size个元素的一维tensor，每个元素是对应data中图像的标签
-
-        # 在这里进行训练或验证等操作
-        print(f"Batch {batch_index}:")
-        print(data["x"].shape)
-        # print(data['x'])
-        print(target["y"].shape)
-        # print(data['x'])
