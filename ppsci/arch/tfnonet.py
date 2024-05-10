@@ -55,7 +55,7 @@ class FNONet(base.Arch):
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
         patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
-        SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+        SpectralConv (nn.layer, optional): Spectral convolution layer to use.
             Defaults to fno_block.FactorizedSpectralConv.
     """
 
@@ -243,7 +243,7 @@ class TFNO1dNet(FNONet):
             How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
         fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
         patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
-        SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+        SpectralConv (nn.layer, optional): Spectral convolution layer to use.
             Defaults to fno_block.FactorizedSpectralConv.
     """
 
@@ -353,7 +353,7 @@ class TFNO2dNet(FNONet):
            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
        fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
        patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
-       SpectralConv (nn.layer, optional): Spectral convolution layer to use. 
+       SpectralConv (nn.layer, optional): Spectral convolution layer to use.
             Defaults to fno_block.FactorizedSpectralConv.
     """
 

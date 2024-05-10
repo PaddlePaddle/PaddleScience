@@ -181,7 +181,7 @@ Number = Union[int, float]
 
 
 class SphericalConv(nn.Layer):
-    """ Spherical Convolution, base class for the SFNO [1].
+    """Spherical Convolution, base class for the SFNO [1].
         .. [1] Spherical Fourier Neural Operators: Learning Stable Dynamics on the Sphere,
            Boris Bonev, Thorsten Kurth, Christian Hundt, Jaideep Pathak, Maximilian Baust, Karthik Kashinath, Anima Anandkumar,
            ICML 2023.
@@ -253,10 +253,10 @@ class SphericalConv(nn.Layer):
         self.n_layers = n_layers
         self.implementation = implementation
 
-        self.output_scaling_factor: Union[None, List[List[float]]] = (
-            fno_block.validate_scaling_factor(
-                output_scaling_factor, self.order, n_layers
-            )
+        self.output_scaling_factor: Union[
+            None, List[List[float]]
+        ] = fno_block.validate_scaling_factor(
+            output_scaling_factor, self.order, n_layers
         )
 
         if init_std == "auto":
