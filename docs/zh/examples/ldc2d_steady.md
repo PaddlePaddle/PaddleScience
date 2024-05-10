@@ -14,6 +14,18 @@
     python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python ldc2d_steady_Re10.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python ldc2d_steady_Re10.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [ldc2d_steady_Re10_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams) | loss(Residual): 365.36164<br>MSE.momentum_x(Residual): 0.01435<br>MSE.continuity(Residual): 0.04072<br>MSE.momentum_y(Residual): 0.02471 |
