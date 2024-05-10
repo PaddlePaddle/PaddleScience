@@ -26,6 +26,15 @@
     python examples/earthformer/earthformer_sevir_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_sevir.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    # ICAR-ENSO 模型推理
+    python examples/earthformer/earthformer_enso_train.py mode=export
+    # SEVIR 模型推理
+    python examples/earthformer/earthformer_sevir_train.py mode=export
+    ```
+
 === "模型推理命令"
 
     ``` sh
