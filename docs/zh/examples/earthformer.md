@@ -1,6 +1,5 @@
 # EarthFormer
 
-
 开始训练、评估前，请先下载
 
 [ICAR-ENSO数据集](https://nbviewer.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb#download)
@@ -66,7 +65,7 @@ Earthformer 的网络模型使用了基于 Cuboid Attention 的分层 Transforme
 模型的总体结构如图所示：
 
 <figure markdown>
-  ![Earthformer-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer_arch.png){ loading=lazy style="margin:0 auto"}
+  ![Earthformer-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer_arch.png){ loading=lazy style="margin:0 auto;height:150%;width:150%"}
   <figcaption>EarthFormer 网络模型</figcaption>
 </figure>
 
@@ -77,14 +76,14 @@ EarthFormer 原代码中训练了 ICAR-ENSO 数据集中海面温度 (sst) 和 S
 模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $[x_{i}]_{i=1}^{T}$ 表示长度为 $T$ 时空序列的输入气象数据，$[y_{i}]_{i=1}^{K}$ 表示预测未来 $K$ 步的气象数据，$[y_{i_True}]_{i=1}^{K}$ 表示未来 $K$ 步的真实数据，如海面温度数据和云总降水量数据。最后网络模型预测的输出和真值计算 mse 损失函数。
 
 <figure markdown>
-  ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-pretrain.png){ loading=lazy style="margin:0 auto;height:40%;width:40%"}
+  ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-pretrain.png){ loading=lazy style="margin:0 auto;height:70%;width:70%"}
   <figcaption>earthformer模型预训练</figcaption>
 </figure>
 
 在推理阶段，给定长度序列为 $T$ 的数据，得到长度序列为 $K$ 的预测结果。
 
 <figure markdown>
-  ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-infer.png){ loading=lazy style="margin:0 auto;height:40%;width:40%"}
+  ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-infer.png){ loading=lazy style="margin:0 auto;height:60%;width:60%"}
   <figcaption>earthformer模型推理</figcaption>
 </figure>
 
@@ -100,7 +99,7 @@ EarthFormer 原代码中训练了 ICAR-ENSO 数据集中海面温度 (sst) 和 S
 
 **训练数据：**
 
-每个数据样本第一维度 (year) 表征数据所对应起始年份，对于 CMIP 数据共 291 年，其中 1-2265 为 CMIP6 中 15 个模式提供的 151 年的历史模拟数据 (总共：151年 *15 个模式=2265) ；2266-4645 为 CMIP5 中 17 个模式提供的 140 年的历史模拟数据 (总共：140 年 *17 个模式=2380)。对于历史观测同化数据为美国提供的 SODA 数据。
+每个数据样本第一维度 (year) 表征数据所对应起始年份，对于 CMIP 数据共 291 年，其中 1-2265 为 CMIP6 中 15 个模式提供的 151 年的历史模拟数据 (总共：151年 *15 个模式=2265) ；2266-4645 为 CMIP5 中 17 个模式提供的 140 年的历史模拟数据 (总共：140 年*17 个模式=2380)。对于历史观测同化数据为美国提供的 SODA 数据。
 
 **训练数据标签**
 
@@ -116,7 +115,6 @@ CMIP(SODA)_train.nc 对应的标签数据当前时刻 Nino3.4 SST 异常指数�
 
 EarthFFormer 模型对于 ICAR-ENSO 数据集的训练中，只对其中海面温度 (SST) 进行训练和预测。训练海温异常观测的 12 步 (一年) ，预测海温异常最多 14 步。
 
-
 ### 3.2 模型预训练
 
 #### 3.2.1 约束构建
@@ -127,7 +125,7 @@ EarthFFormer 模型对于 ICAR-ENSO 数据集的训练中，只对其中海面�
 
 ``` py linenums="35" title="examples/earthformer/earthformer_enso_train.py"
 --8<--
-examples/earthformer/earthformer_enso_train.py.py:35:56
+examples/earthformer/earthformer_enso_train.py:35:56
 --8<--
 ```
 
@@ -166,7 +164,6 @@ examples/earthformer/conf/earthformer_enso_pretrain.yaml:46:105
 ```
 
 其中，`input_keys` 和 `output_keys` 分别代表网络模型输入、输出变量的名称。
-
 
 #### 3.2.3 学习率与优化器构建
 
@@ -285,7 +282,7 @@ The Storm Event ImagRy(SEVIR) 数据集是由麻省理工林肯实验室和亚�
 
 SEVIR数据集的结构包括两部分：目录 (Catalog) 和数据文件 (Data File)。目录是一个 CSV 文件，其中包含描述事件元数据的行。数据文件是一组 HDF5 文件，包含特定传感器类型的事件。这些文件中的数据以 4D 张量形式存储，形状为 N x L x W x T，其中 N 是文件中的事件数，LxW 是图像大小，T 是图像序列中的时间步数。
 <figure markdown>
-  ![SEVIR](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/sevir.png){ loading=lazy style="margin:0 auto;height:40%;width:40%"}
+  ![SEVIR](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/sevir.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
   <figcaption>SEVIR 传感器类型说明</figcaption>
 </figure>
 
@@ -301,7 +298,7 @@ EarthFormer 采用 SEVIR 中的 NEXRAD 垂直液态水含量 (VIL) 作为降水�
 
 ``` py linenums="27" title="examples/earthformer/earthformer_sevir_train.py"
 --8<--
-examples/earthformer/earthformer_sevir_train.py.py:27:59
+examples/earthformer/earthformer_sevir_train.py:27:59
 --8<--
 ```
 
@@ -482,10 +479,10 @@ examples/earthformer/earthformer_sevir_train.py
 
 ## 6. 结果展示
 
-下图展示了云总降水量模型按照1小时间隔的预测结果和真值结果。
+下图展示了云总降水量模型按照65分钟的输入数据，得到60分钟间隔的预测结果和真值结果。
 
 <figure markdown>
-  ![SEVIR-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/sevir-predict.png){ loading=lazy style="margin:0 auto;height:60%;width:60%"}
+  ![SEVIR-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/sevir-predict.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
   <figcaption>SEVIR中vil的预测结果（"prediction"）与真值结果（"target"）</figcaption>
 </figure>
 
