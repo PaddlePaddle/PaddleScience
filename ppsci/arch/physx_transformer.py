@@ -28,6 +28,7 @@ from paddle.nn.initializer import Constant
 from paddle.nn.initializer import Normal
 
 from ppsci.arch import base
+from ppsci.arch.embedding_koopman import CylinderEmbedding
 
 zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
@@ -387,7 +388,10 @@ class PhysformerGPT2(base.Arch):
             x = self._input_transform(x)
         x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
         if self.embedding_model is not None:
-            x_tensor = self.embedding_model.encoder(x_tensor)
+            if isinstance(self.embedding_model, CylinderEmbedding):
+                x_tensor = self.embedding_model.encoder(x_tensor, x["visc"])
+            else:
+                x_tensor = self.embedding_model.encoder(x_tensor)
 
         if self.training:
             y = self.forward_tensor(x_tensor)
