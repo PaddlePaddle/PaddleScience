@@ -514,12 +514,75 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
+    # wrap to a model_list
+    model = ppsci.arch.ModelList((disp_net, stress_net))
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    ref_xyzu = ppsci.utils.reader.load_csv_file(
+        cfg.DEFORMATION_X_PATH,
+        ("x", "y", "z", "u"),
+        {
+            "x": "X Location (m)",
+            "y": "Y Location (m)",
+            "z": "Z Location (m)",
+            "u": "Directional Deformation (m)",
+        },
+        "\t",
+    )
+    input_dict = {
+        "x": ref_xyzu["x"],
+        "y": ref_xyzu["y"],
+        "z": ref_xyzu["z"],
+    }
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_keys = cfg.MODEL.disp_net.output_keys + cfg.MODEL.stress_net.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./bracket_pred",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="bracket.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
