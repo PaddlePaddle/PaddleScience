@@ -422,15 +422,19 @@ def export(cfg: DictConfig):
     model_psi.register_output_transform(transform_out)
     model_list = ppsci.arch.ModelList((model_psi, model_p, model_phil))
 
-     # initialize solver
+    # initialize solver
     solver = ppsci.solver.Solver(
         model_list,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
     # export model
     from paddle.static import InputSpec
+
     input_spec = [
-        {key: InputSpec([None, 1], "float32", name=key) for key in model_list.input_keys},
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in model_list.input_keys
+        },
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
