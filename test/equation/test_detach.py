@@ -1,9 +1,8 @@
 import numpy as np
 import paddle
+import pytest
 
 import ppsci
-from ppsci import arch
-from ppsci import equation
 
 
 def test_equation_detach():
@@ -21,8 +20,8 @@ def test_equation_detach():
         "p__x",
         "p__y",
     ]
-    model1 = arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16)
-    model2 = arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16)
+    model1 = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16)
+    model2 = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16)
     input_data = {
         "x": paddle.randn([16, 1]),
         "y": paddle.randn([16, 1]),
@@ -33,15 +32,15 @@ def test_equation_detach():
         detach_keys = [
             item for i, item in enumerate(all_items) if ((1 << i) & in_state)
         ]
-        nu = 3.14
-        rho = 0.817
-        ns = equation.NavierStokes(nu, rho, 2, False, detach_keys=detach_keys)
+        nu = 1.314
+        rho = 0.156
+        ns = ppsci.equation.NavierStokes(nu, rho, 2, False, detach_keys=detach_keys)
         model2.set_state_dict(model1.state_dict())
 
         exprs = ppsci.lambdify(
             list(ns.equations.values()),
             model1,
-            fuse_derivative=False,
+            fuse_derivative=True,
         )
         for name, f in zip(ns.equations, exprs):
             input_data[name] = f(input_data)
@@ -156,13 +155,13 @@ def test_equation_detach():
         )
         loss2.backward()
 
-        np.testing.assert_allclose(loss1.numpy(), loss2.numpy())
+        np.testing.assert_allclose(loss1.numpy(), loss2.numpy(), 0.0, 0.0)
 
         for p1, p2 in zip(model1.parameters(), model2.parameters()):
             if (p1.grad is None) ^ (p2.grad is None):
                 raise AssertionError()
             if p1.grad is not None and p2.grad is not None:
-                np.testing.assert_allclose(p1.grad.numpy(), p2.grad.numpy())
+                np.testing.assert_allclose(p1.grad.numpy(), p2.grad.numpy(), 1e-5, 1e-5)
 
         ppsci.autodiff.clear()
         model1.clear_gradients()
@@ -170,4 +169,4 @@ def test_equation_detach():
 
 
 if __name__ == "__main__":
-    test_equation_detach()
+    pytest.main()

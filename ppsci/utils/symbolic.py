@@ -123,7 +123,10 @@ def _cvt_to_key(expr: sp.Basic) -> str:
     if isinstance(expr, (sp.Symbol, sp.core.function.UndefinedFunction, sp.Function)):
         # use name of custom function(e.g. "f") instead of itself(e.g. "f(x, y)")
         # for simplicity.
-        return str(expr.func)
+        if hasattr(expr, "name"):
+            return expr.name
+        else:
+            return str(expr)
     elif isinstance(expr, sp.Derivative):
         # convert "Derivative(u(x,y),(x,2),(y,2))" to "u__x__x__y__y"
         expr_str = expr.args[0].name
@@ -928,7 +931,7 @@ def lambdify(
             logger.debug(
                 f"Fused {len(candidate_pos)} derivatives nodes: "
                 f"{[callable_nodes_group[i][j].expr for i, j in candidate_pos]} into"
-                f" fuse node sequence: {fused_node_seq} at position: ([{gid0}][{nid0}])"
+                f" {len(fused_node_seq)} fuse node sequence: {fused_node_seq} at position: ([{gid0}][{nid0}])"
             )
 
             # mark merged node
