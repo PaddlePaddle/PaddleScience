@@ -117,17 +117,15 @@ def _cvt_to_key(expr: sp.Basic) -> str:
     Returns:
         str: Converted string key.
     """
-    if isinstance(expr, sp.Function) and expr.name == equation.DETACH_FUNC_NAME:
+    if isinstance(expr, sp.Function) and str(expr.func) == equation.DETACH_FUNC_NAME:
         return f"{_cvt_to_key(expr.args[0])}_{equation.DETACH_FUNC_NAME}"
 
     if isinstance(expr, (sp.Symbol, sp.core.function.UndefinedFunction, sp.Function)):
-        if hasattr(expr, "name"):
-            # use name of custom function instead of itself.
-            return expr.name
-        else:
-            return str(expr)
+        # use name of custom function(e.g. "f") instead of itself(e.g. "f(x, y)")
+        # for simplicity.
+        return str(expr.func)
     elif isinstance(expr, sp.Derivative):
-        # convert Derivative(u(x,y),(x,2),(y,2)) to "u__x__x__y__y"
+        # convert "Derivative(u(x,y),(x,2),(y,2))" to "u__x__x__y__y"
         expr_str = expr.args[0].name
         for symbol, order in expr.args[1:]:
             expr_str += f"__{symbol}" * order
@@ -817,13 +815,13 @@ def lambdify(
                 else:
                     callable_nodes.append(OperatorNode(node))
             elif isinstance(node, sp.Function):
-                if node.name == equation.DETACH_FUNC_NAME:
+                if str(node.func) == equation.DETACH_FUNC_NAME:
                     callable_nodes.append(DetachNode(node))
                     logger.debug(f"Detected detach node {node}")
                 else:
                     match_index = None
                     for j, model in enumerate(models):
-                        if str(node.func.name) in model.output_keys:
+                        if str(node.func) in model.output_keys:
                             callable_nodes.append(
                                 LayerNode(
                                     node,
@@ -833,13 +831,13 @@ def lambdify(
                             if match_index is not None:
                                 raise ValueError(
                                     f"Name of function: '{node}' should be unique along given"
-                                    f" models, but got same output_key: '{node.func.name}' "
+                                    f" models, but got same output_key: '{str(node.func)}' "
                                     f"in given models[{match_index}] and models[{j}]."
                                 )
                             match_index = j
                     # NOTE: Skip 'sdf' function, which should be already generated in
                     # given data_dict
-                    if match_index is None and node.name != "sdf":
+                    if match_index is None and str(node.func) != "sdf":
                         raise ValueError(
                             f"Node {node} can not match any model in given model(s)."
                         )
