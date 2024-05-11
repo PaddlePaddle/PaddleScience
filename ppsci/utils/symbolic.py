@@ -157,7 +157,7 @@ class Node(nn.Layer):
         return f"{self.__class__.__name__}(expr: {self.expr})"
 
 
-class DetachNode(nn.Layer):
+class DetachNode(Node):
     """Class for detach operation in converted expression tree.
 
     Args:
@@ -165,9 +165,7 @@ class DetachNode(nn.Layer):
     """
 
     def __init__(self, expr: sp.Basic):
-        super().__init__()
-        self.expr = expr
-        self.key = _cvt_to_key(self.expr)
+        super().__init__(expr)
         self.child = _cvt_to_key(self.expr.args[0])
 
     def forward(self, data_dict: DATA_DICT):
