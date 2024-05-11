@@ -40,6 +40,7 @@ from ppsci.utils import logger
 
 __all__ = [
     "lambdify",
+    "_cvt_to_key",
 ]
 
 
@@ -116,6 +117,9 @@ def _cvt_to_key(expr: sp.Basic) -> str:
     Returns:
         str: Converted string key.
     """
+    if isinstance(expr, sp.Function) and expr.name == equation.DETACH_FUNC_NAME:
+        return f"{_cvt_to_key(expr.args[0])}_{equation.DETACH_FUNC_NAME}"
+
     if isinstance(expr, (sp.Symbol, sp.core.function.UndefinedFunction, sp.Function)):
         if hasattr(expr, "name"):
             # use name of custom function instead of itself.
@@ -815,6 +819,7 @@ def lambdify(
             elif isinstance(node, sp.Function):
                 if node.name == equation.DETACH_FUNC_NAME:
                     callable_nodes.append(DetachNode(node))
+                    logger.debug(f"Detected detach node {node}")
                 else:
                     match_index = None
                     for j, model in enumerate(models):

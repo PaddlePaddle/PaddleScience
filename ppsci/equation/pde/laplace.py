@@ -51,3 +51,5 @@ class Laplace(base.PDE):
             laplace += u.diff(invar, 2)
 
         self.add_equation("laplace", laplace)
+
+        self._apply_detach()
