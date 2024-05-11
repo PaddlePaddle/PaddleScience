@@ -4,6 +4,8 @@
 ./README.md:status
 --8<--
 
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，欢迎报名参赛。
+
 <style>
     .container {
         display: flex;
