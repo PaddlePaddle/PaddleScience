@@ -414,9 +414,12 @@ def export(cfg: DictConfig):
     model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
     model_gen.register_input_transform(gen_funcs.transform_in)
 
+    # define model_list
+    model_list = ppsci.arch.ModelList((model_gen,))
+
     # load pretrained model
     solver = ppsci.solver.Solver(
-        model=model_gen, pretrained_model_path=cfg.INFER.pretrained_model_path
+        model=model_list, pretrained_model_path=cfg.INFER.pretrained_model_path
     )
 
     # export models
