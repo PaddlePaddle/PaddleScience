@@ -85,7 +85,6 @@ nav:
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
-        - RegAE: zh/examples/RegAE.md
         - EarthFormer: zh/examples/earthformer.md
   - API文档:
     - ppsci:
