@@ -13,6 +13,8 @@
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，欢迎报名参赛。
+
 <!-- --8<-- [start:description] -->
 ## 👀简介
 
