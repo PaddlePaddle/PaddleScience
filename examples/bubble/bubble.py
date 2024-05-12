@@ -485,7 +485,7 @@ def inference(cfg: DictConfig):
         "phil": output_dict["phil"],
     }
     ppsci.visualize.save_vtu_from_dict(
-        "./bubble_pred.vtu",
+        "./visual/bubble_pred.vtu",
         {
             "t": input_dict["t"],
             "x": input_dict["x"],
