@@ -542,9 +542,9 @@ def inference(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # visualize prediction
-    t = np.linspace(cfg.T, cfg.T, 1)
-    x = np.linspace(0.0, cfg.Lx, cfg.Nd)
-    y = np.linspace(0.0, cfg.Ly, cfg.Nd)
+    t = np.linspace(cfg.T, cfg.T, 1, dtype=np.float32)
+    x = np.linspace(0.0, cfg.Lx, cfg.Nd, dtype=np.float32)
+    y = np.linspace(0.0, cfg.Ly, cfg.Nd, dtype=np.float32)
     _, x_grid, y_grid = np.meshgrid(t, x, y)
 
     x_test = misc.cartesian_product(t, x, y)
