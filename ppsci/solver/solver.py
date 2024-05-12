@@ -1037,5 +1037,5 @@ class Solver:
             self.pretrained_model_path = cfg.TRAIN.pretrained_model_path
         elif cfg.mode == "eval":
             self.pretrained_model_path = cfg.EVAL.pretrained_model_path
-        elif cfg.mode == "infer":
+        elif cfg.mode in ["export", "infer"]:
             self.pretrained_model_path = cfg.INFER.pretrained_model_path
