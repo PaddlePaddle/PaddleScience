@@ -21,8 +21,6 @@ from typing import Tuple
 
 from typing_extensions import Literal
 
-from ppsci.utils import misc
-
 __all__ = []
 
 if importlib.util.find_spec("pydantic") is not None:
@@ -314,7 +312,7 @@ if importlib.util.find_spec("pydantic") is not None:
             if v and not isinstance(info.data["wandb_config"], dict):
                 raise ValueError(
                     "'wandb_config' should be a dict when 'use_wandb' is True, "
-                    f"but got {misc.typename(info.data['wandb_config'])}"
+                    f"but got {info.data['wandb_config'].__class__.__name__}"
                 )
             return v
 

@@ -1,25 +1,17 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import os
 
 import hydra
 import paddle
 import pytest
-from omegaconf import DictConfig
+import yaml
 
+# 假设你的回调类在这个路径下
+from ppsci.utils.callbacks import InitCallback
+
+# 设置 Paddle 的 seed
 paddle.seed(1024)
 
-
+# 测试函数不需要装饰器
 @pytest.mark.parametrize(
     "epochs,mode,seed",
     [
@@ -28,42 +20,35 @@ paddle.seed(1024)
         (10, "eval", -1),
     ],
 )
-def test_invalid_epochs(
-    epochs,
-    mode,
-    seed,
-):
-    @hydra.main(version_base=None, config_path="./", config_name="test_config.yaml")
-    def main(cfg: DictConfig):
-        pass
-
-    # sys.exit will be called when validation error in pydantic, so there we use
-    # SystemExit instead of other type of errors.
-    with pytest.raises(SystemExit):
-        cfg_dict = dict(
-            {
-                "TRAIN": {
-                    "epochs": epochs,
-                },
-                "mode": mode,
-                "seed": seed,
-                "hydra": {
-                    "callbacks": {
-                        "init_callback": {
-                            "_target_": "ppsci.utils.callbacks.InitCallback"
-                        }
-                    }
-                },
+def test_invalid_epochs(tmpdir, epochs, mode, seed):
+    cfg_dict = {
+        "hydra": {
+            "callbacks": {
+                "init_callback": {"_target_": "ppsci.utils.callbacks.InitCallback"}
             }
-        )
-        # print(cfg_dict)
-        import yaml
+        },
+        "mode": mode,
+        "seed": seed,
+        "TRAIN": {
+            "epochs": epochs,
+        },
+    }
+    # 创建一个临时的配置文件
+    dir_ = os.path.dirname(__file__)
+    config_abs_path = os.path.join(dir_, "test_config.yaml")
+    with open(config_abs_path, "w") as f:
+        f.write(yaml.dump(cfg_dict))
 
-        with open("test_config.yaml", "w") as f:
-            yaml.dump(dict(cfg_dict), f)
+    # 使用 hydra 的 compose API 来创建配置，而不是使用 main
+    with hydra.initialize(config_path="./", version_base=None):
+        cfg = hydra.compose(config_name="test_config.yaml")
+        # 手动触发回调
+        with pytest.raises(SystemExit) as exec_info:
+            InitCallback().on_job_start(config=cfg)
+        assert exec_info.value.code == 2
+        # 你现在可以根据需要对 cfg 进行断言或进一步处理
 
-        main()
 
-
+# 这部分通常不需要，除非你想直接从脚本运行测试
 if __name__ == "__main__":
     pytest.main()
