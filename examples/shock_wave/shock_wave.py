@@ -552,9 +552,6 @@ def inference(cfg: DictConfig):
         x_test,
         cfg.MODEL.input_keys,
     )
-    x_test_dict = {
-        x_key: x_test_dict[x_key].astype(np.float32) for x_key in x_test_dict
-    }
     output_dict = predictor.predict(
         x_test_dict,
         cfg.INFER.batch_size,
