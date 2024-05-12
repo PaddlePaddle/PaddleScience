@@ -334,32 +334,74 @@ if importlib.util.find_spec("pydantic") is not None:
     ##################
     """
 
+    cs = ConfigStore.instance()
+
     global_default_cfg = SolverConfig().model_dump()
     omegaconf_dict_config = OmegaConf.create(global_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(name="ppsci_default", node=omegaconf_dict_config)
 
     train_default_cfg = TrainConfig().model_dump()
     train_omegaconf_dict_config = OmegaConf.create(train_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(group="TRAIN", name="train_default", node=train_omegaconf_dict_config)
 
     ema_default_cfg = EMAConfig().model_dump()
     ema_omegaconf_dict_config = OmegaConf.create(ema_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(group="TRAIN/ema", name="ema_default", node=ema_omegaconf_dict_config)
 
     swa_default_cfg = SWAConfig().model_dump()
     swa_omegaconf_dict_config = OmegaConf.create(swa_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(group="TRAIN/swa", name="swa_default", node=swa_omegaconf_dict_config)
 
     eval_default_cfg = EvalConfig().model_dump()
     eval_omegaconf_dict_config = OmegaConf.create(eval_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(group="EVAL", name="eval_default", node=eval_omegaconf_dict_config)
 
     infer_default_cfg = InferConfig().model_dump()
     infer_omegaconf_dict_config = OmegaConf.create(infer_default_cfg)
-    cs = ConfigStore.instance()
     cs.store(group="INFER", name="infer_default", node=infer_omegaconf_dict_config)
+
+    exclude_keys_default = [
+        "mode",
+        "output_dir",
+        "log_freq",
+        "seed",
+        "use_vdl",
+        "use_tbd",
+        "wandb_config",
+        "use_wandb",
+        "device",
+        "use_amp",
+        "amp_level",
+        "to_static",
+        "prim",
+        "log_level",
+        "TRAIN.save_freq",
+        "TRAIN.eval_during_train",
+        "TRAIN.start_eval_epoch",
+        "TRAIN.eval_freq",
+        "TRAIN.checkpoint_path",
+        "TRAIN.pretrained_model_path",
+        "EVAL.pretrained_model_path",
+        "EVAL.eval_with_no_grad",
+        "EVAL.compute_metric_by_batch",
+        "INFER.pretrained_model_path",
+        "INFER.export_path",
+        "INFER.pdmodel_path",
+        "INFER.pdiparams_path",
+        "INFER.onnx_path",
+        "INFER.device",
+        "INFER.engine",
+        "INFER.precision",
+        "INFER.ir_optim",
+        "INFER.min_subgraph_size",
+        "INFER.gpu_mem",
+        "INFER.gpu_id",
+        "INFER.max_batch_size",
+        "INFER.num_cpu_threads",
+        "INFER.batch_size",
+    ]
+    cs.store(
+        group="hydra/job/config/override_dirname/exclude_keys",
+        name="exclude_keys_default",
+        node=exclude_keys_default,
+    )
