@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ppsci.utils import config  # isort:skip  # noqa: F401
 from ppsci.utils import ema
 from ppsci.utils import initializer
 from ppsci.utils import logger
