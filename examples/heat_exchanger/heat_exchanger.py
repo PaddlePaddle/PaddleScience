@@ -745,10 +745,16 @@ def inference(cfg: DictConfig):
     qm_min = np.min((input_dict["qm_h"][0], input_dict["qm_c"][0]))
     eta = (
         input_dict["qm_h"][0]
-        * (output_dict["T_h"][:: cfg.NPOINT] - output_dict["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
+        * (
+            output_dict["T_h"][:: cfg.NPOINT]
+            - output_dict["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT]
+        )
         / (
             qm_min
-            * (output_dict["T_h"][:: cfg.NPOINT] - output_dict["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
+            * (
+                output_dict["T_h"][:: cfg.NPOINT]
+                - output_dict["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT]
+            )
         )
     )
     x = list(range(1, cfg.NTIME + 1))
