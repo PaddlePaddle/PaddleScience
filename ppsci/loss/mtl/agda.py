@@ -19,10 +19,10 @@ from typing import List
 import paddle
 from paddle import nn
 
-from ppsci.loss.mtl.base import LossAggregator
+from ppsci.loss.mtl import base
 
 
-class AGDA(LossAggregator):
+class AGDA(base.LossAggregator):
     r"""
     **A**daptive **G**radient **D**escent **A**lgorithm
 

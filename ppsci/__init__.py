@@ -59,3 +59,16 @@ __all__ = [
     "run_check_mesh",
     "lambdify",
 ]
+
+
+# NOTE: Register custom solvers for parsing values from omegaconf more flexible
+def _register_config_solvers():
+    import numpy as np
+    from omegaconf import OmegaConf
+
+    # register solver for "${numpy: xxx}" item, e.g. pi: "${numpy: pi}"
+    if not OmegaConf.has_resolver("numpy"):
+        OmegaConf.register_new_resolver("numpy", lambda x: getattr(np, x))
+
+
+_register_config_solvers()

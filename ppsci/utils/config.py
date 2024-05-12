@@ -185,7 +185,7 @@ if importlib.util.find_spec("pydantic") is not None:
         pretrained_model_path: Optional[str] = None
         export_path: str = "./inference"
         pdmodel_path: Optional[str] = None
-        pdpiparams_path: Optional[str] = None
+        pdiparams_path: Optional[str] = None
         onnx_path: Optional[str] = None
         device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu"
         engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"

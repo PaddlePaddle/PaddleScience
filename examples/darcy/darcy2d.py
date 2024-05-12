@@ -103,7 +103,7 @@ def train(cfg: DictConfig):
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
     )
     visualizer = {
-        "visualize_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p_ux_uy": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],
@@ -227,7 +227,7 @@ def evaluate(cfg: DictConfig):
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
     )
     visualizer = {
-        "visualize_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p_ux_uy": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],

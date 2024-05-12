@@ -14,7 +14,7 @@ hydra:
     dir: ./outputs_yinglong_24
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -44,7 +44,7 @@ INFER:
   pretrained_model_path: null
   export_path: ./inference/yinglong_24
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
   device: gpu
   engine: native

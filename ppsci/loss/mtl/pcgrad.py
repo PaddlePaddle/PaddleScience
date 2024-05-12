@@ -20,10 +20,10 @@ import numpy as np
 import paddle
 from paddle import nn
 
-from ppsci.loss.mtl.base import LossAggregator
+from ppsci.loss.mtl import base
 
 
-class PCGrad(LossAggregator):
+class PCGrad(base.LossAggregator):
     r"""
     **P**rojecting **C**onflicting Gradients
 

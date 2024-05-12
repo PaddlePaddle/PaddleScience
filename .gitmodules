@@ -1,0 +1,3 @@
+[submodule "competition/IJCAI_2024_CAR"]
+	path = competition/IJCAI_2024_CAR
+	url = https://atomgit.com/paddlenumberone/ijcai_car.git
