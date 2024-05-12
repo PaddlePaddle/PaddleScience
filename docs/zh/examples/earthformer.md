@@ -341,7 +341,7 @@ examples/earthformer/conf/earthformer_sevir_pretrain.yaml:58:117
 
 #### 4.2.3 学习率与优化器构建
 
-本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 1e-3。优化器使用 `AdamW`，并将参数进行分组，使用不同的 `weight_decay`,用 PaddleScience 代码表示如下：
+本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 `1e-3`。优化器使用 `AdamW`，并将参数进行分组，使用不同的 `weight_decay`,用 PaddleScience 代码表示如下：
 
 ``` py linenums="121" title="examples/earthformer/earthformer_sevir_train.py"
 --8<--
