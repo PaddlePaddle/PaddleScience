@@ -89,6 +89,28 @@ class PDE:
         return expr
 
     def _apply_detach(self):
+        """
+        Wrap detached sub_expr into detach(sub_expr) to prevent gradient
+        back-propagation, only for those items speicified in self.detach_keys.
+
+        NOTE: This function is expected to be called after self.equations is ready in PDE.__init__.
+
+        Examples:
+            >>> import ppsci
+            >>> ns = ppsci.equation.NavierStokes(1.0, 1.0, 2, False)
+            >>> print(ns)
+            NavierStokes
+                continuity: Derivative(u(x, y), x) + Derivative(v(x, y), y)
+                momentum_x: u(x, y)*Derivative(u(x, y), x) + v(x, y)*Derivative(u(x, y), y) + 1.0*Derivative(p(x, y), x) - 1.0*Derivative(u(x, y), (x, 2)) - 1.0*Derivative(u(x, y), (y, 2))
+                momentum_y: u(x, y)*Derivative(v(x, y), x) + v(x, y)*Derivative(v(x, y), y) + 1.0*Derivative(p(x, y), y) - 1.0*Derivative(v(x, y), (x, 2)) - 1.0*Derivative(v(x, y), (y, 2))
+            >>> detach_keys = ("u", "v__y")
+            >>> ns = ppsci.equation.NavierStokes(1.0, 1.0, 2, False, detach_keys=detach_keys)
+            >>> print(ns)
+            NavierStokes
+                continuity: detach(Derivative(v(x, y), y)) + Derivative(u(x, y), x)
+                momentum_x: detach(u(x, y))*Derivative(u(x, y), x) + v(x, y)*Derivative(u(x, y), y) + 1.0*Derivative(p(x, y), x) - 1.0*Derivative(u(x, y), (x, 2)) - 1.0*Derivative(u(x, y), (y, 2))
+                momentum_y: detach(u(x, y))*Derivative(v(x, y), x) + detach(Derivative(v(x, y), y))*v(x, y) + 1.0*Derivative(p(x, y), y) - 1.0*Derivative(v(x, y), (x, 2)) - 1.0*Derivative(v(x, y), (y, 2))
+        """
         if self.detach_keys is None:
             return
 
@@ -145,7 +167,8 @@ class PDE:
             >>> equation = sympy.diff(u, x) + sympy.diff(u, y)
             >>> pde.add_equation('linear_pde', equation)
             >>> print(pde)
-            PDE, linear_pde: 2*x + 2*y
+            PDE
+                linear_pde: 2*x + 2*y
         """
         self.equations.update({name: equation})
 
@@ -216,7 +239,7 @@ class PDE:
         return self.learnable_parameters.set_state_dict(state_dict)
 
     def __str__(self):
-        return ", ".join(
+        return "\n".join(
             [self.__class__.__name__]
-            + [f"{name}: {eq}" for name, eq in self.equations.items()]
+            + [f"    {name}: {eq}" for name, eq in self.equations.items()]
         )
