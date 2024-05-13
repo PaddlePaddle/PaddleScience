@@ -395,7 +395,7 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
         loc="upper left",
     )
     plt.title(case_name)
-    plt.savefig(os.path.join(fig_save_path, "/error.jpg"))
+    plt.savefig(os.path.join(fig_save_path, "error.jpg"))
 
     _, ax = plt.subplots(3, 4, figsize=(18, 12))
     ax[0, 0].contourf(ten_true[25, 0])
