@@ -373,65 +373,8 @@ def train(cfg: DictConfig):
     # visualize prediction after finished training
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
-    pred = solver.predict(visu_input)
-    x = visu_input["x"][: cfg.NPOINT]
-    # plot temperature of heat boundary
-    plt.figure()
-    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_h$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_h.png")
-    # plot temperature of cold boundary
-    plt.figure()
-    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_c$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_c.png")
-    # plot temperature of wall
-    plt.figure()
-    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_w$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_w.png")
-    # plot the heat exchanger efficiency as a function of time.
-    plt.figure()
-    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
-    eta = (
-        visu_input["qm_h"][0]
-        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        / (
-            qm_min
-            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        )
-    ).numpy()
-    x = list(range(1, cfg.NTIME + 1))
-    plt.plot(x, eta)
-    plt.xlabel("time")
-    plt.ylabel(r"$\eta$")
-    plt.grid()
-    plt.savefig("eta.png")
-    error = np.square(eta[-1] - cfg.eta_true)
-    logger.info(
-        f"The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency is {error}"
-    )
+    pred = solver.predict(visu_input, return_numpy=True)
+    plot(visu_input, pred, cfg)
 
 
 def evaluate(cfg: DictConfig):
@@ -593,14 +536,69 @@ def evaluate(cfg: DictConfig):
     # visualize prediction after finished training
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
-    pred = solver.predict(visu_input)
+    pred = solver.predict(visu_input, return_numpy=True)
+    plot(visu_input, pred, cfg)
+
+
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.HEDeepONets(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set time-geometry
+    timestamps = np.linspace(0.0, 2, cfg.NTIME + 1, endpoint=True)
+    geom = {
+        "time_rect": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(0.0, 1, timestamps=timestamps),
+            ppsci.geometry.Interval(0, cfg.DL),
+        )
+    }
+    input_dict = geom["time_rect"].sample_interior(cfg.NPOINT * cfg.NTIME, evenly=True)
+    test_h = np.random.rand(1).reshape([-1, 1]).astype("float32")
+    test_c = np.random.rand(1).reshape([-1, 1]).astype("float32")
+    # rearrange train data and eval data
+    input_dict["qm_h"] = np.tile(test_h, (cfg.NPOINT * cfg.NTIME, 1))
+    input_dict["qm_c"] = np.tile(test_c, (cfg.NPOINT * cfg.NTIME, 1))
+    input_dict["qm_c"] = np.full_like(input_dict["qm_c"], cfg.qm_h)
+    input_dict["qm_h"] = np.full_like(input_dict["qm_c"], cfg.qm_c)
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.INFER.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+    plot(input_dict, output_dict, cfg)
+
+
+def plot(visu_input, pred, cfg: DictConfig):
     x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
+    y = np.full_like(pred["T_h"][: cfg.NPOINT], cfg.T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -609,10 +607,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
+    y = np.full_like(pred["T_c"][: cfg.NPOINT], cfg.T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -621,10 +619,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
+    y = np.full_like(pred["T_w"][: cfg.NPOINT], cfg.T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -641,7 +639,7 @@ def evaluate(cfg: DictConfig):
             qm_min
             * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
         )
-    ).numpy()
+    )
     x = list(range(1, cfg.NTIME + 1))
     plt.plot(x, eta)
     plt.xlabel("time")
@@ -660,8 +658,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
