@@ -14,12 +14,10 @@
 
 
 from os import path as osp
-from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
-import paddle
 from omegaconf import DictConfig
 
 import ppsci
@@ -375,7 +373,7 @@ def train(cfg: DictConfig):
     # visualize prediction after finished training
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
-    pred = solver.predict(visu_input)
+    pred = solver.predict(visu_input, return_numpy=True)
     plot(visu_input, pred, cfg)
 
 
@@ -538,7 +536,7 @@ def evaluate(cfg: DictConfig):
     # visualize prediction after finished training
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
-    pred = solver.predict(visu_input)
+    pred = solver.predict(visu_input, return_numpy=True)
     plot(visu_input, pred, cfg)
 
 
@@ -590,24 +588,17 @@ def inference(cfg: DictConfig):
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
-    for key, value in output_dict.items():
-        if isinstance(value, np.ndarray):
-            output_dict[key] = paddle.to_tensor(value)
     plot(input_dict, output_dict, cfg)
 
 
-def plot(
-    visu_input: Dict[str, paddle.Tensor],
-    pred: Dict[str, paddle.Tensor],
-    cfg: DictConfig,
-):
+def plot(visu_input, pred, cfg: DictConfig):
     x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
+    y = np.full_like(pred["T_h"][: cfg.NPOINT], cfg.T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -616,10 +607,10 @@ def plot(
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
+    y = np.full_like(pred["T_c"][: cfg.NPOINT], cfg.T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -628,10 +619,10 @@ def plot(
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
+    y = np.full_like(pred["T_w"][: cfg.NPOINT], cfg.T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -648,7 +639,7 @@ def plot(
             qm_min
             * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
         )
-    ).numpy()
+    )
     x = list(range(1, cfg.NTIME + 1))
     plt.plot(x, eta)
     plt.xlabel("time")
