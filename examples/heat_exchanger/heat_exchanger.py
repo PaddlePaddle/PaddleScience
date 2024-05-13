@@ -15,11 +15,14 @@
 
 from os import path as osp
 
+from typing import Dict
+
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 from omegaconf import DictConfig
 
+import paddle
 import ppsci
 from ppsci.utils import logger
 
@@ -374,64 +377,7 @@ def train(cfg: DictConfig):
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
     pred = solver.predict(visu_input)
-    x = visu_input["x"][: cfg.NPOINT]
-    # plot temperature of heat boundary
-    plt.figure()
-    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_h$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_h.png")
-    # plot temperature of cold boundary
-    plt.figure()
-    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_c$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_c.png")
-    # plot temperature of wall
-    plt.figure()
-    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_w$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_w.png")
-    # plot the heat exchanger efficiency as a function of time.
-    plt.figure()
-    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
-    eta = (
-        visu_input["qm_h"][0]
-        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        / (
-            qm_min
-            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        )
-    ).numpy()
-    x = list(range(1, cfg.NTIME + 1))
-    plt.plot(x, eta)
-    plt.xlabel("time")
-    plt.ylabel(r"$\eta$")
-    plt.grid()
-    plt.savefig("eta.png")
-    error = np.square(eta[-1] - cfg.eta_true)
-    logger.info(
-        f"The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency is {error}"
-    )
+    plot(visu_input, pred, cfg)
 
 
 def evaluate(cfg: DictConfig):
@@ -594,64 +540,7 @@ def evaluate(cfg: DictConfig):
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
     pred = solver.predict(visu_input)
-    x = visu_input["x"][: cfg.NPOINT]
-    # plot temperature of heat boundary
-    plt.figure()
-    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_h$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_h.png")
-    # plot temperature of cold boundary
-    plt.figure()
-    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_c$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_c.png")
-    # plot temperature of wall
-    plt.figure()
-    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
-    plt.plot(x, y, label="t = 0.0 s")
-    for i in range(10):
-        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
-        plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
-    plt.xlabel("A")
-    plt.ylabel(r"$T_w$")
-    plt.legend()
-    plt.grid()
-    plt.savefig("T_w.png")
-    # plot the heat exchanger efficiency as a function of time.
-    plt.figure()
-    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
-    eta = (
-        visu_input["qm_h"][0]
-        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        / (
-            qm_min
-            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
-        )
-    ).numpy()
-    x = list(range(1, cfg.NTIME + 1))
-    plt.plot(x, eta)
-    plt.xlabel("time")
-    plt.ylabel(r"$\eta$")
-    plt.grid()
-    plt.savefig("eta.png")
-    error = np.square(eta[-1] - cfg.eta_true)
-    logger.info(
-        f"The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency is {error}"
-    )
+    plot(visu_input, pred, cfg)
 
 
 def export(cfg: DictConfig):
@@ -702,14 +591,20 @@ def inference(cfg: DictConfig):
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
+    for key, value in output_dict.items():
+        if isinstance(value, np.ndarray):
+            output_dict[key] = paddle.to_tensor(value)
+    plot(input_dict, output_dict, cfg)
 
-    x = input_dict["x"][: cfg.NPOINT]
+
+def plot(visu_input: Dict[str, paddle.Tensor], pred: Dict[str, paddle.Tensor], cfg: DictConfig):
+    x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = np.full_like(output_dict["T_h"][: cfg.NPOINT], cfg.T_hin)
+    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = output_dict["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
+        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -718,10 +613,10 @@ def inference(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = np.full_like(output_dict["T_c"][: cfg.NPOINT], cfg.T_cin)
+    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = output_dict["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
+        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -730,10 +625,10 @@ def inference(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = np.full_like(output_dict["T_w"][: cfg.NPOINT], cfg.T_win)
+    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = output_dict["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)]
+        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -742,21 +637,21 @@ def inference(cfg: DictConfig):
     plt.savefig("T_w.png")
     # plot the heat exchanger efficiency as a function of time.
     plt.figure()
-    qm_min = np.min((input_dict["qm_h"][0], input_dict["qm_c"][0]))
+    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
-        input_dict["qm_h"][0]
+        visu_input["qm_h"][0]
         * (
-            output_dict["T_h"][:: cfg.NPOINT]
-            - output_dict["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT]
+            pred["T_h"][:: cfg.NPOINT]
+            - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT]
         )
         / (
             qm_min
             * (
-                output_dict["T_h"][:: cfg.NPOINT]
-                - output_dict["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT]
+                pred["T_h"][:: cfg.NPOINT]
+                - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT]
             )
         )
-    )
+    ).numpy()
     x = list(range(1, cfg.NTIME + 1))
     plt.plot(x, eta)
     plt.xlabel("time")
