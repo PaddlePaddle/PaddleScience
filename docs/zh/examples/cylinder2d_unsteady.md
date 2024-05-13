@@ -26,7 +26,7 @@
     python cylinder2d_unsteady_Re100.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrained.pdparams
     ```
 
-    === "模型导出命令"
+=== "模型导出命令"
 
     ``` sh
     python cylinder2d_unsteady_Re100.py mode=export
