@@ -14,15 +14,14 @@
 
 
 from os import path as osp
-
 from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
+import paddle
 from omegaconf import DictConfig
 
-import paddle
 import ppsci
 from ppsci.utils import logger
 
@@ -597,7 +596,11 @@ def inference(cfg: DictConfig):
     plot(input_dict, output_dict, cfg)
 
 
-def plot(visu_input: Dict[str, paddle.Tensor], pred: Dict[str, paddle.Tensor], cfg: DictConfig):
+def plot(
+    visu_input: Dict[str, paddle.Tensor],
+    pred: Dict[str, paddle.Tensor],
+    cfg: DictConfig,
+):
     x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
@@ -640,16 +643,10 @@ def plot(visu_input: Dict[str, paddle.Tensor], pred: Dict[str, paddle.Tensor], c
     qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
         visu_input["qm_h"][0]
-        * (
-            pred["T_h"][:: cfg.NPOINT]
-            - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT]
-        )
+        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
         / (
             qm_min
-            * (
-                pred["T_h"][:: cfg.NPOINT]
-                - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT]
-            )
+            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
         )
     ).numpy()
     x = list(range(1, cfg.NTIME + 1))
