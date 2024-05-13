@@ -147,7 +147,7 @@ class PhyCRNet(base.Arch):
         )
 
         # ConvLSTM
-        self.ConvLSTM = paddle.nn.LayerList(
+        self.convlstm = paddle.nn.LayerList(
             [
                 ConvLSTMCell(
                     input_channels=self.input_channels[i],
@@ -194,16 +194,16 @@ class PhyCRNet(base.Arch):
                 x = encoder(x)
 
             # convlstm
-            for i, LSTM in enumerate(self.ConvLSTM):
+            for i, lstm in enumerate(self.convlstm, self.num_encoder):
                 if step == 0:
-                    (h, c) = LSTM.init_hidden_tensor(
+                    (h, c) = lstm.init_hidden_tensor(
                         prev_state=self.initial_state[i - self.num_encoder]
                     )
                     internal_state.append((h, c))
 
                 # one-step forward
                 (h, c) = internal_state[i - self.num_encoder]
-                x, new_c = LSTM(x, h, c)
+                x, new_c = lstm(x, h, c)
                 internal_state[i - self.num_encoder] = (x, new_c)
 
             # output
