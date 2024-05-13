@@ -127,11 +127,12 @@ class NowcastNet(base.Arch):
         # Generative Network
         evo_feature = self.gen_enc(paddle.concat(x=[input_frames, evo_result], axis=1))
         noise = paddle.randn(shape=[batch, self.ngf, height // 32, width // 32])
+        noise = self.proj(noise)
+        ngf = noise.shape[1]
         noise_feature = (
-            self.proj(noise)
-            .reshape((batch, -1, 4, 4, 8, 8))
+            noise.reshape((batch, -1, 4, 4, 8, 8))
             .transpose(perm=[0, 1, 4, 5, 2, 3])
-            .reshape((batch, -1, height // 8, width // 8))
+            .reshape((batch, ngf // 16, height // 8, width // 8))
         )
         feature = paddle.concat(x=[evo_feature, noise_feature], axis=1)
         gen_result = self.gen_dec(feature, evo_result)
