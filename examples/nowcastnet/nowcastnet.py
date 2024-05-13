@@ -82,14 +82,56 @@ def evaluate(cfg: DictConfig):
             solver.visualize(batch_id)
 
 
+def export(cfg: DictConfig):
+    from paddle.static import InputSpec
+
+    # set models
+    if cfg.CASE_TYPE == "large":
+        model_cfg = cfg.MODEL.large
+    elif cfg.CASE_TYPE == "normal":
+        model_cfg = cfg.MODEL.normal
+    else:
+        raise ValueError(
+            f"cfg.CASE_TYPE should in ['normal', 'large'], but got '{cfg.mode}'"
+        )
+    model = ppsci.arch.NowcastNet(**model_cfg)
+
+    # load pretrained model
+    solver = ppsci.solver.Solver(
+        model=model, pretrained_model_path=cfg.INFER.pretrained_model_path
+    )
+    # export models
+    input_spec = [
+        {
+            key: InputSpec(
+                [None, 29, model_cfg.image_width, model_cfg.image_height, 2],
+                "float32",
+                name=key,
+            )
+            for key in model_cfg.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    pass
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="nowcastnet.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
