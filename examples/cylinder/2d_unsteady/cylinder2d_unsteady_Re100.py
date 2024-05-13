@@ -311,6 +311,59 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    # set time-geometry
+    geom = {
+        "time_rect_eval": ppsci.geometry.PointCloud(
+            reader.load_csv_file(
+                cfg.DOMAIN_EVAL_PATH,
+                ("t", "x", "y"),
+            ),
+            ("t", "x", "y"),
+        ),
+    }
+    NPOINT_EVAL = (
+        cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET
+    ) * cfg.NUM_TIMESTAMPS
+    input_dict = geom["time_rect_eval"].sample_interior(NPOINT_EVAL, evenly=True)
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./cylinder2d_unsteady_Re100_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+        cfg.NUM_TIMESTAMPS,
+    )
+
+
 @hydra.main(
     version_base=None,
     config_path="./conf",
@@ -321,8 +374,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
