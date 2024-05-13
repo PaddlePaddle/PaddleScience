@@ -418,5 +418,5 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
     ax[1, 3].contourf(ten_pred[99, 0])
     ax[2, 3].contourf(ten_true[99, 0] - ten_pred[99, 0])
     plt.title(case_name)
-    plt.savefig(os.path.join(fig_save_path, "/Burgers.jpg"))
+    plt.savefig(os.path.join(fig_save_path, "Burgers.jpg"))
     plt.close()
