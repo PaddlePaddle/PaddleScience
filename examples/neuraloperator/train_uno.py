@@ -5,6 +5,7 @@ import paddle
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
@@ -22,7 +23,7 @@ def train(cfg: DictConfig):
             "encode_output": cfg.DATASET.encode_output,
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
-            "training": "train",
+            "data_split": "train",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -65,7 +66,7 @@ def train(cfg: DictConfig):
             "encode_output": cfg.DATASET.encode_output,
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
-            "training": "test_16x16",
+            "data_split": "test_16x16",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -89,7 +90,7 @@ def train(cfg: DictConfig):
             "encode_output": cfg.DATASET.encode_output,
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
-            "training": "test_32x32",
+            "data_split": "test_32x32",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -192,7 +193,7 @@ def evaluate(cfg: DictConfig):
             "encode_output": cfg.DATASET.encode_output,
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
-            "training": "test_16x16",
+            "data_split": "test_16x16",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -216,7 +217,7 @@ def evaluate(cfg: DictConfig):
             "encode_output": cfg.DATASET.encode_output,
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
-            "training": "test_32x32",
+            "data_split": "test_32x32",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -344,7 +345,7 @@ def inference(cfg: DictConfig):
     plt.xticks([], [])
     plt.yticks([], [])
     plt.savefig(cfg.output_dir)
-    print("save success")
+    logger.message("save success")
     plt.close(fig)
 
 

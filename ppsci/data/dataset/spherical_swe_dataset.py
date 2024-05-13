@@ -21,7 +21,8 @@ class SphericalSWEDataset(io.Dataset):
             Defaults to None.
         test_resolutions (Tuple[str, ...], optional): The resolutions to test dataset. Defaults to ["34x64", "64x128"].
         train_resolution (str, optional): The resolutions to train dataset. Defaults to "34x64".
-        training (str, optional): Wether to use training or test dataset. Defaults to "train".
+        data_split (str, optional): Specify the dataset split, either 'train' , 'test_32x64',or 'test_64x128'.
+            Defaults to "train".
 
     """
 
@@ -33,7 +34,7 @@ class SphericalSWEDataset(io.Dataset):
         weight_dict: Optional[Dict[str, float]] = None,
         test_resolutions: Tuple[str, ...] = ["34x64", "64x128"],
         train_resolution: str = "34x64",
-        training: str = "train",
+        data_split: str = "train",
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -46,7 +47,7 @@ class SphericalSWEDataset(io.Dataset):
 
         self.test_resolutions = test_resolutions
         self.train_resolution = train_resolution
-        self.training = training
+        self.data_split = data_split
 
         # train path
         path_train = (
@@ -78,19 +79,19 @@ class SphericalSWEDataset(io.Dataset):
         return x, y
 
     def __len__(self):
-        if self.training == "train":
+        if self.data_split == "train":
             return self.x_train.shape[0]
-        elif self.training == "test_32x64":
+        elif self.data_split == "test_32x64":
             return self.x_test_1.shape[0]
         else:
             return self.x_test_2.shape[0]
 
     def __getitem__(self, index):
-        if self.training == "train":
+        if self.data_split == "train":
             x = self.x_train[index]
             y = self.y_train[index]
 
-        elif self.training == "test_32x64":
+        elif self.data_split == "test_32x64":
             x = self.x_test_1[index]
             y = self.y_test_1[index]
         else:

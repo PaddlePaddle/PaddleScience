@@ -5,6 +5,7 @@ import paddle
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
@@ -17,7 +18,7 @@ def train(cfg: DictConfig):
             "label_keys": cfg.DATASET.label_keys,
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
-            "training": "train",
+            "data_split": "train",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -50,7 +51,7 @@ def train(cfg: DictConfig):
             "label_keys": cfg.DATASET.label_keys,
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
-            "training": "test_32x64",
+            "data_split": "test_32x64",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -69,7 +70,7 @@ def train(cfg: DictConfig):
             "label_keys": cfg.DATASET.label_keys,
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
-            "training": "test_64x128",
+            "data_split": "test_64x128",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -161,7 +162,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": cfg.DATASET.label_keys,
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
-            "training": "test_32x64",
+            "data_split": "test_32x64",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -180,7 +181,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": cfg.DATASET.label_keys,
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
-            "training": "test_64x128",
+            "data_split": "test_64x128",
         },
         "sampler": {
             "name": "BatchSampler",
@@ -291,7 +292,7 @@ def inference(cfg: DictConfig):
     plt.xticks([], [])
     plt.yticks([], [])
     plt.savefig(cfg.output_dir)
-    print("save success")
+    logger.message("save success")
     plt.close(fig)
 
 

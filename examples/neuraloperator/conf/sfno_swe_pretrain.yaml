@@ -104,7 +104,7 @@ INFER:
   pretrained_model_path: ./outputs_sfno_pretrain/checkpoints/best_model.pdparams
   export_path: ./inference/uno/uno_darcyflow
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32

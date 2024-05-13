@@ -164,7 +164,7 @@ class DarcyFlowDataset(io.Dataset):
         encoding (str): The type of encoding. Default is 'channel-wise'.
         channel_dim (int): The location of unsqueeze. Default is 1.
             where to put the channel dimension, defaults size is batch, channel, height, width
-        training (str): Wether to use training or test dataset. Default is 'train'.
+        data_split (str): Wether to use training or test dataset. Default is 'train'.
     """
 
     def __init__(
@@ -181,7 +181,7 @@ class DarcyFlowDataset(io.Dataset):
         encode_output: bool = True,
         encoding: str = "channel-wise",
         channel_dim: int = 1,
-        training: str = "train",
+        data_split: str = "train",
     ):
         super().__init__()
         for res in test_resolutions:
@@ -206,7 +206,7 @@ class DarcyFlowDataset(io.Dataset):
         self.encode_output = encode_output
         self.encoding = encoding
         self.channel_dim = channel_dim
-        self.training = training
+        self.data_split = data_split
 
         # train path
         path_train = (
@@ -269,19 +269,19 @@ class DarcyFlowDataset(io.Dataset):
         return input_encoder
 
     def __len__(self):
-        if self.training == "train":
+        if self.data_split == "train":
             return self.x_train.shape[0]
-        elif self.training == "test_16x16":
+        elif self.data_split == "test_16x16":
             return self.x_test_1.shape[0]
         else:
             return self.x_test_2.shape[0]
 
     def __getitem__(self, index):
-        if self.training == "train":
+        if self.data_split == "train":
             x = self.x_train[index]
             y = self.y_train[index]
 
-        elif self.training == "test_16x16":
+        elif self.data_split == "test_16x16":
             x = self.x_test_1[index]
             y = self.y_test_1[index]
         else:
