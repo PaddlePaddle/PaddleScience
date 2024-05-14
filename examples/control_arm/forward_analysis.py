@@ -281,6 +281,81 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    from paddle.static import InputSpec
+
+    # set model
+    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
+    # wrap to a model_list
+    model_list = ppsci.arch.ModelList((disp_net, stress_net))
+
+    # load pretrained model
+    solver = ppsci.solver.Solver(
+        model=model_list, pretrained_model_path=cfg.INFER.pretrained_model_path
+    )
+
+    # export models
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.disp_net.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+    from ppsci.visualize import vtu
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set geometry
+    control_arm = ppsci.geometry.Mesh(cfg.GEOM_PATH)
+    # geometry bool operation
+    geo = control_arm
+    geom = {"geo": geo}
+    # set bounds
+    BOUNDS_X, BOUNDS_Y, BOUNDS_Z = control_arm.bounds
+
+    # set visualizer(optional)
+    # add inferencer data
+    samples = geom["geo"].sample_interior(
+        cfg.TRAIN.batch_size.visualizer_vtu,
+        criteria=lambda x, y, z: (
+            (BOUNDS_X[0] < x)
+            & (x < BOUNDS_X[1])
+            & (BOUNDS_Y[0] < y)
+            & (y < BOUNDS_Y[1])
+            & (BOUNDS_Z[0] < z)
+            & (z < BOUNDS_Z[1])
+        ),
+    )
+    pred_input_dict = {
+        k: v for k, v in samples.items() if k in cfg.MODEL.disp_net.input_keys
+    }
+
+    output_dict = predictor.predict(pred_input_dict, cfg.INFER.batch_size)
+
+    # mapping data to output_keys
+    output_keys = cfg.MODEL.disp_net.output_keys + cfg.MODEL.stress_net.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(output_keys, output_dict.keys())
+    }
+    output_dict.update(pred_input_dict)
+
+    vtu.save_vtu_from_dict(
+        osp.join(cfg.output_dir, "vis"),
+        output_dict,
+        cfg.MODEL.disp_net.input_keys,
+        output_keys,
+        1,
+    )
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="forward_analysis.yaml"
 )
@@ -289,8 +364,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
