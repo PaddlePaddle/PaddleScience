@@ -149,7 +149,6 @@ def inference(cfg: DictConfig):
     test_data_loader = paddle.io.DataLoader(
         ppsci.data.dataset.RadarDataset(**dataset_param),
         batch_size=cfg.INFER.batch_size,
-        shuffle=False,
         num_workers=cfg.CPU_WORKER,
         drop_last=True,
     )
