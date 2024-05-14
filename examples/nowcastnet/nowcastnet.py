@@ -115,7 +115,67 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    pass
+    import os.path as osp
+
+    import numpy as np
+
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    if cfg.CASE_TYPE == "large":
+        dataset_path = cfg.LARGE_DATASET_PATH
+        model_cfg = cfg.MODEL.large
+        output_dir = osp.join(cfg.output_dir, "large")
+    elif cfg.CASE_TYPE == "normal":
+        dataset_path = cfg.NORMAL_DATASET_PATH
+        model_cfg = cfg.MODEL.normal
+        output_dir = osp.join(cfg.output_dir, "normal")
+    else:
+        raise ValueError(
+            f"cfg.CASE_TYPE should in ['normal', 'large'], but got '{cfg.mode}'"
+        )
+
+    input_keys = ("radar_frames",)
+    dataset_param = {
+        "input_keys": input_keys,
+        "label_keys": (),
+        "image_width": model_cfg.image_width,
+        "image_height": model_cfg.image_height,
+        "total_length": model_cfg.total_length,
+        "dataset_path": dataset_path,
+        "data_type": np.float32(),
+    }
+    test_data_loader = paddle.io.DataLoader(
+        ppsci.data.dataset.RadarDataset(**dataset_param),
+        batch_size=cfg.INFER.batch_size,
+        shuffle=False,
+        num_workers=cfg.CPU_WORKER,
+        drop_last=True,
+    )
+    for batch_id, test_ims in enumerate(test_data_loader):
+        if batch_id > cfg.NUM_SAVE_SAMPLES:
+            break
+        test_ims = {"input": test_ims[0][input_keys[0]].numpy()}
+        output_dict = predictor.predict(test_ims, cfg.INFER.batch_size)
+        # mapping data to model_cfg.output_keys
+        output_dict = {
+            store_key: output_dict[infer_key]
+            for store_key, infer_key in zip(model_cfg.output_keys, output_dict.keys())
+        }
+
+        visualizer = ppsci.visualize.VisualizerRadar(
+            test_ims,
+            {
+                "output": lambda out: out["output"],
+            },
+            prefix="v_nowcastnet",
+            case_type=cfg.CASE_TYPE,
+            total_length=model_cfg.total_length,
+        )
+        test_ims.update(output_dict)
+        visualizer.save(osp.join(output_dir, f"epoch_{batch_id}"), test_ims)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="nowcastnet.yaml")

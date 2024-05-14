@@ -462,7 +462,7 @@ class Noise_Projector(paddle.nn.Layer):
     def __init__(self, input_length):
         super().__init__()
         self.input_length = input_length
-        self.conv_first = spectral_norm(
+        self.conv_first = paddle.nn.utils.spectral_norm(
             paddle.nn.Conv2D(
                 in_channels=self.input_length,
                 out_channels=self.input_length * 2,
@@ -487,7 +487,7 @@ class Noise_Projector(paddle.nn.Layer):
 class ProjBlock(paddle.nn.Layer):
     def __init__(self, in_channel, out_channel):
         super().__init__()
-        self.one_conv = spectral_norm(
+        self.one_conv = paddle.nn.utils.spectral_norm(
             paddle.nn.Conv2D(
                 in_channels=in_channel,
                 out_channels=out_channel - in_channel,
@@ -496,7 +496,7 @@ class ProjBlock(paddle.nn.Layer):
             )
         )
         self.double_conv = paddle.nn.Sequential(
-            spectral_norm(
+            paddle.nn.utils.spectral_norm(
                 paddle.nn.Conv2D(
                     in_channels=in_channel,
                     out_channels=out_channel,
@@ -505,7 +505,7 @@ class ProjBlock(paddle.nn.Layer):
                 )
             ),
             paddle.nn.ReLU(),
-            spectral_norm(
+            paddle.nn.utils.spectral_norm(
                 paddle.nn.Conv2D(
                     in_channels=out_channel,
                     out_channels=out_channel,
