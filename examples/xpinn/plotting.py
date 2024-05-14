@@ -188,7 +188,7 @@ pgf_with_latex = {  # setup matplotlib to use latex for output
     "figure.figsize": figsize(1.0),  # default fig size of 0.9 textwidth
     "pgf.preamble": "\n".join(
         [
-            r"\usepackage[utf8x]{inputenc}",  # use utf8 fonts because your computer can handle it :)
+            r"\usepackage[utf8x]{inputenc}",  # use utf8 fonts because your computer can handle it.
             r"\usepackage[T1]{fontenc}",  # plots will be generated using this preamble
         ]
     ),
