@@ -74,18 +74,18 @@ class Model(base.Arch):
         for l in range(0, num_layers - 1):
             weight = self.create_parameter(
                 shape=[layers[l], layers[l + 1]],
-                dtype="float64",
+                dtype="float32",
                 default_initializer=self.w_init((layers[l], layers[l + 1])),
             )
             bias = self.create_parameter(
                 shape=[1, layers[l + 1]],
-                dtype="float64",
+                dtype="float32",
                 is_bias=True,
                 default_initializer=nn.initializer.Constant(0.0),
             )
             amplitude = self.create_parameter(
                 shape=[1],
-                dtype="float64",
+                dtype="float32",
                 is_bias=True,
                 default_initializer=nn.initializer.Constant(0.05),
             )
