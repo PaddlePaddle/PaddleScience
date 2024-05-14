@@ -145,7 +145,6 @@ def inference(cfg: DictConfig):
         "image_height": model_cfg.image_height,
         "total_length": model_cfg.total_length,
         "dataset_path": dataset_path,
-        "data_type": np.float32(),
     }
     test_data_loader = paddle.io.DataLoader(
         ppsci.data.dataset.RadarDataset(**dataset_param),
