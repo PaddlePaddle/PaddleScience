@@ -210,8 +210,8 @@ class SEVIRDataset(io.Dataset):
         output_type (np.dtype, optional): The type of generated tensors. Defaults to np.float32.
         preprocess (bool, optional): If True, self.preprocess_data_dict(data_dict) is called before each sample generated. Defaults to True.
         rescale_method (str, optional): The method of rescale. Defaults to "01".
-        downsample_dict (Dict[str, Sequence[int]], optional): downsample_dict.keys() == data_types. downsample_dict[key] is a Sequence of
-            (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions. Defaults to None.
+        downsample_dict (Dict[str, Sequence[int]], optional): downsample_dict.keys() == data_types.
+            downsample_dict[key] is a Sequence of (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions. Defaults to None.
         verbose (bool, optional): Verbose when opening raw data files. Defaults to False.
         training (str, optional): Training pathse. Defaults to "train".
     """
