@@ -104,10 +104,10 @@ class InitialEncoder(paddle.nn.Layer):
         """x --> [K x Conv2D] --> PatchMerge
 
         Args:
-            x : (B, T, H, W, C)
+            x: (B, T, H, W, C)
 
         Returns:
-            out : (B, T, H_new, W_new, C_out)
+            out: (B, T, H_new, W_new, C_out)
         """
 
         B, T, H, W, C = x.shape
@@ -178,10 +178,10 @@ class FinalDecoder(paddle.nn.Layer):
         """x --> Upsample --> [K x Conv2D]
 
         Args:
-            x : (B, T, H, W, C)
+            x: (B, T, H, W, C)
 
         Returns:
-            out : (B, T, H_new, W_new, C)
+            out: (B, T, H_new, W_new, C)
         """
 
         x = self.upsample(x)
@@ -286,10 +286,10 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
         """x --> [K x Conv2D] --> PatchMerge --> ... --> [K x Conv2D] --> PatchMerge
 
         Args:
-            x : (B, T, H, W, C)
+            x: (B, T, H, W, C)
 
         Returns:
-            out : (B, T, H_new, W_new, C_out)
+            out: (B, T, H_new, W_new, C_out)
         """
 
         for i, (conv_block, patch_merge) in enumerate(
@@ -400,10 +400,10 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
         """x --> Upsample --> [K x Conv2D] --> ... --> Upsample --> [K x Conv2D]
 
         Args:
-            x : Shape (B, T, H, W, C)
+            x: Shape (B, T, H, W, C)
 
         Returns:
-            out : Shape (B, T, H_new, W_new, C)
+            out: Shape (B, T, H_new, W_new, C)
         """
         for i, (conv_block, upsample) in enumerate(
             zip(self.conv_block_list, self.upsample_list)
@@ -912,13 +912,14 @@ class CuboidTransformer(base.Arch):
             raise NotImplementedError
         return initial_z
 
-    def forward(self, x, verbose=False):
+    def forward(self, x: "paddle.Tensor", verbose: bool = False) -> "paddle.Tensor":
         """
         Args:
-            x : Shape (B, T, H, W, C)
-            verbos : if True, print intermediate shapes
+            x (paddle.Tensor): Tensor with shape (B, T, H, W, C).
+            verbose (bool): if True, print intermediate shapes.
+
         Returns:
-            out : The output Shape (B, T_out, H, W, C_out)
+            out (paddle.Tensor): The output Shape (B, T_out, H, W, C_out)
         """
 
         x = self.concat_to_tensor(x, self.input_keys)

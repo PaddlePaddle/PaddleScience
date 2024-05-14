@@ -4,7 +4,7 @@ hydra:
     dir: outputs_cylinder2d_unsteady_transformer_physx_transformer/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -28,6 +28,7 @@ TRAIN_BLOCK_SIZE: 16
 VALID_BLOCK_SIZE: 256
 TRAIN_FILE_PATH: ./datasets/cylinder_training.hdf5
 VALID_FILE_PATH: ./datasets/cylinder_valid.hdf5
+log_freq: 20
 
 # set working condition
 EMBEDDING_MODEL_PATH: ./outputs_cylinder2d_unsteady_transformer_physx_enn/checkpoints/latest
@@ -37,7 +38,7 @@ VIS_DATA_NUMS: 1
 MODEL:
   input_keys: ["embeds"]
   output_keys: ["pred_embeds"]
-  num_layers: 4
+  num_layers: 6
   num_ctx: 16
   embed_size: 128
   num_heads: 4
@@ -63,3 +64,20 @@ TRAIN:
 EVAL:
   batch_size: 16
   pretrained_model_path: null
+
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams
+  export_path: ./inference/cylinder_transformer
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: false
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 64
+  num_cpu_threads: 4
+  batch_size: 16
