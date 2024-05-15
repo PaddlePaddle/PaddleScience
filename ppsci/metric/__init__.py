@@ -43,7 +43,7 @@ def build_metric(cfg):
     """Build metric.
 
     Args:
-        cfg (List[AttrDict]): List of metric config.
+        cfg (List[DictConfig]): List of metric config.
 
     Returns:
         Dict[str, Metric]: Dict of callable metric object.
