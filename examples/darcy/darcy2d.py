@@ -309,7 +309,7 @@ def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     input_spec = [
-        {key: InputSpec([None], "float32", name=key) for key in model.input_keys},
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
     ]
 
     solver.export(input_spec, cfg.INFER.export_path)
