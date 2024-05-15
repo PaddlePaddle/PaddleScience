@@ -31,9 +31,10 @@ VALIDATION_ERROR_EXIT_CODE = 2  # for invalid argument detected in config file
 
 class InitCallback(Callback):
     """Callback class for:
-    1. Parse config dict from given yaml file and check its validity, complete missing items by its' default values.
+    1. Parse config dict from given yaml file and check its validity.
     2. Fixing random seed to 'config.seed'.
     3. Initialize logger while creating output directory(if not exist).
+    4. Enable prim mode if specified.
 
     NOTE: This callback is mainly for reducing unnecessary duplicate code in each
     examples code when runing with hydra.
@@ -60,8 +61,6 @@ class InitCallback(Callback):
     """
 
     def on_job_start(self, config: DictConfig, **kwargs: Any) -> None:
-        # check given cfg using pre-defined pydantic schema in 'SolverConfig', error(s) will be raised
-        # if any checking failed at this step
         if importlib.util.find_spec("pydantic") is not None:
             from pydantic import ValidationError
         else:
@@ -76,8 +75,6 @@ class InitCallback(Callback):
         # error(s) will be printed and exit program if any checking failed at this step
         try:
             _model_pydantic = config_module.SolverConfig(**dict(config))
-            # complete missing items with default values pre-defined in pydantic schema in
-            # 'SolverConfig'
             full_cfg = DictConfig(_model_pydantic.model_dump())
         except ValidationError as e:
             print(e)
@@ -100,7 +97,7 @@ class InitCallback(Callback):
 
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):
-            # Mostly for dy2st running, will be removed in the future
+            # Mostly for compiler running with dy2st.
             from paddle.framework import core
 
             core.set_prim_eager_enabled(True)

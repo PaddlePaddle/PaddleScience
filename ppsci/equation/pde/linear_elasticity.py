@@ -179,5 +179,3 @@ class LinearElasticity(base.PDE):
         self.add_equation("traction_y", traction_y)
         if self.dim == 3:
             self.add_equation("traction_z", traction_z)
-
-        self._apply_detach()

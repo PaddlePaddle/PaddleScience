@@ -147,5 +147,3 @@ class NavierStokes(base.PDE):
         self.add_equation("momentum_y", momentum_y)
         if self.dim == 3:
             self.add_equation("momentum_z", momentum_z)
-
-        self._apply_detach()

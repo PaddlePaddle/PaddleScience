@@ -157,7 +157,7 @@ def _download(url, path, md5sum=None):
                     if chunk:
                         f.write(chunk)
         shutil.move(tmp_fullname, fullname)
-        logger.message(f"Finish downloading pretrained model and saved to {fullname}")
+        logger.message(f"Finished downloading pretrained model and saved to {fullname}")
 
     return fullname
 

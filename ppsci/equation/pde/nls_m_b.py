@@ -97,5 +97,3 @@ class NLSMB(base.PDE):
         self.add_equation("Maxwell_1", Maxwell_1)
         self.add_equation("Maxwell_2", Maxwell_2)
         self.add_equation("Bloch", Bloch)
-
-        self._apply_detach()

@@ -55,5 +55,3 @@ class NormalDotVec(base.PDE):
             normal_dot_vec += normal * vec
 
         self.add_equation("normal_dot_vec", normal_dot_vec)
-
-        self._apply_detach()
