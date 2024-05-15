@@ -81,7 +81,7 @@ def build_model(cfg):
     """Build model
 
     Args:
-        cfg (AttrDict): Arch config.
+        cfg (DictConfig): Arch config.
 
     Returns:
         nn.Layer: Model.
