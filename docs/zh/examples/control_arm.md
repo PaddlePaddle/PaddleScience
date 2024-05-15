@@ -46,6 +46,42 @@
         python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
         ```
 
+=== "模型导出命令"
+
+    === "正问题：受力分析求解"
+
+        ``` sh
+        python forward_analysis.py mode=export
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        python inverse_parameter.py mode=export
+        ```
+
+=== "模型推理命令"
+
+    === "正问题：受力分析求解"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python forward_analysis.py mode=infer
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python inverse_parameter.py mode=infer
+        ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [inverse_x_axis_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams) | loss(geo_eval): 0.02505<br>L2Rel.lambda_(geo_eval): 0.06025<br>L2Rel.mu(geo_eval): 0.07949 |

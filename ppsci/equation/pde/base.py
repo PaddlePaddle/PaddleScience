@@ -22,7 +22,7 @@ from typing import Tuple
 from typing import Union
 
 import paddle
-import sympy
+import sympy as sp
 from paddle import nn
 
 DETACH_FUNC_NAME = "detach"
@@ -33,7 +33,7 @@ class PDE:
 
     def __init__(self):
         super().__init__()
-        self.equations = {}
+        self.equations: Dict[str, Union[Callable, sp.Basic]] = {}
         # for PDE which has learnable parameter(s)
         self.learnable_parameters = nn.ParameterList()
 
@@ -42,7 +42,7 @@ class PDE:
     @staticmethod
     def create_symbols(
         symbol_str: str,
-    ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
+    ) -> Union[sp.Symbol, Tuple[sp.Symbol, ...]]:
         """create symbolic variables.
 
         Args:
@@ -61,11 +61,9 @@ class PDE:
             >>> print(symbols_xyz)
             (x, y, z)
         """
-        return sympy.symbols(symbol_str)
+        return sp.symbols(symbol_str)
 
-    def create_function(
-        self, name: str, invars: Tuple[sympy.Symbol, ...]
-    ) -> sympy.Function:
+    def create_function(self, name: str, invars: Tuple[sp.Symbol, ...]) -> sp.Function:
         """Create named function depending on given invars.
 
         Args:
@@ -86,13 +84,72 @@ class PDE:
             >>> print(f)
             f(x, y, z)
         """
-        expr = sympy.Function(name)(*invars)
+        expr = sp.Function(name)(*invars)
 
-        # wrap `expression(...)` to `detach(expression(...))`
-        # if name of expression is in given detach_keys
-        if self.detach_keys and name in self.detach_keys:
-            expr = sympy.Function(DETACH_FUNC_NAME)(expr)
         return expr
+
+    def _apply_detach(self):
+        """
+        Wrap detached sub_expr into detach(sub_expr) to prevent gradient
+        back-propagation, only for those items speicified in self.detach_keys.
+
+        NOTE: This function is expected to be called after self.equations is ready in PDE.__init__.
+
+        Examples:
+            >>> import ppsci
+            >>> ns = ppsci.equation.NavierStokes(1.0, 1.0, 2, False)
+            >>> print(ns)
+            NavierStokes
+                continuity: Derivative(u(x, y), x) + Derivative(v(x, y), y)
+                momentum_x: u(x, y)*Derivative(u(x, y), x) + v(x, y)*Derivative(u(x, y), y) + 1.0*Derivative(p(x, y), x) - 1.0*Derivative(u(x, y), (x, 2)) - 1.0*Derivative(u(x, y), (y, 2))
+                momentum_y: u(x, y)*Derivative(v(x, y), x) + v(x, y)*Derivative(v(x, y), y) + 1.0*Derivative(p(x, y), y) - 1.0*Derivative(v(x, y), (x, 2)) - 1.0*Derivative(v(x, y), (y, 2))
+            >>> detach_keys = ("u", "v__y")
+            >>> ns = ppsci.equation.NavierStokes(1.0, 1.0, 2, False, detach_keys=detach_keys)
+            >>> print(ns)
+            NavierStokes
+                continuity: detach(Derivative(v(x, y), y)) + Derivative(u(x, y), x)
+                momentum_x: detach(u(x, y))*Derivative(u(x, y), x) + v(x, y)*Derivative(u(x, y), y) + 1.0*Derivative(p(x, y), x) - 1.0*Derivative(u(x, y), (x, 2)) - 1.0*Derivative(u(x, y), (y, 2))
+                momentum_y: detach(u(x, y))*Derivative(v(x, y), x) + detach(Derivative(v(x, y), y))*v(x, y) + 1.0*Derivative(p(x, y), y) - 1.0*Derivative(v(x, y), (x, 2)) - 1.0*Derivative(v(x, y), (y, 2))
+        """
+        if self.detach_keys is None:
+            return
+
+        from copy import deepcopy
+
+        from sympy.core.traversal import postorder_traversal
+
+        from ppsci.utils.symbolic import _cvt_to_key
+
+        for name, expr in self.equations.items():
+            if not isinstance(expr, sp.Basic):
+                continue
+            # only process sympy expression
+            expr_ = deepcopy(expr)
+            for item in postorder_traversal(expr):
+                if _cvt_to_key(item) in self.detach_keys:
+                    # inplace all related sub_expr into detach(sub_expr)
+                    expr_ = expr_.replace(item, sp.Function(DETACH_FUNC_NAME)(item))
+
+                    # remove all detach wrapper for more-than-once wrapped items to prevent duplicated wrapping
+                    expr_ = expr_.replace(
+                        sp.Function(DETACH_FUNC_NAME)(
+                            sp.Function(DETACH_FUNC_NAME)(item)
+                        ),
+                        sp.Function(DETACH_FUNC_NAME)(item),
+                    )
+
+                    # remove unccessary detach wrapping for the first arg of Derivative
+                    for item_ in list(postorder_traversal(expr_)):
+                        if isinstance(item_, sp.Derivative):
+                            if item_.args[0].name == DETACH_FUNC_NAME:
+                                expr_ = expr_.replace(
+                                    item_,
+                                    sp.Derivative(
+                                        item_.args[0].args[0], *item_.args[1:]
+                                    ),
+                                )
+
+            self.equations[name] = expr_
 
     def add_equation(self, name: str, equation: Callable):
         """Add an equation.
@@ -110,7 +167,8 @@ class PDE:
             >>> equation = sympy.diff(u, x) + sympy.diff(u, y)
             >>> pde.add_equation('linear_pde', equation)
             >>> print(pde)
-            PDE, linear_pde: 2*x + 2*y
+            PDE
+                linear_pde: 2*x + 2*y
         """
         self.equations.update({name: equation})
 
@@ -181,7 +239,7 @@ class PDE:
         return self.learnable_parameters.set_state_dict(state_dict)
 
     def __str__(self):
-        return ", ".join(
+        return "\n".join(
             [self.__class__.__name__]
-            + [f"{name}: {eq}" for name, eq in self.equations.items()]
+            + [f"    {name}: {eq}" for name, eq in self.equations.items()]
         )
