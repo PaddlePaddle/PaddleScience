@@ -2,9 +2,10 @@
 
 开始训练、评估前，请先下载
 
-[ICAR-ENSO数据集](https://nbviewer.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb#download)
+[ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)
 
-[SEVIR数据集](https://tianchi.aliyun.com/dataset/98942)
+[SEVIR数据集](https://nbviewer.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb#download
+)
 
 === "模型训练命令"
 
@@ -77,14 +78,14 @@ EarthFormer 原代码中训练了 ICAR-ENSO 数据集中海面温度 (sst) 和 S
 
 <figure markdown>
   ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-pretrain.png){ loading=lazy style="margin:0 auto;height:70%;width:70%"}
-  <figcaption>earthformer模型预训练</figcaption>
+  <figcaption>earthformer 模型预训练</figcaption>
 </figure>
 
 在推理阶段，给定长度序列为 $T$ 的数据，得到长度序列为 $K$ 的预测结果。
 
 <figure markdown>
   ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-infer.png){ loading=lazy style="margin:0 auto;height:60%;width:60%"}
-  <figcaption>earthformer模型推理</figcaption>
+  <figcaption>earthformer 模型推理</figcaption>
 </figure>
 
 ## 3. 海面温度模型实现
@@ -95,7 +96,7 @@ EarthFormer 原代码中训练了 ICAR-ENSO 数据集中海面温度 (sst) 和 S
 
 数据集采用了 [EarthFormer](https://github.com/amazon-science/earth-forecasting-transformer/tree/main) 处理好的 ICAR-ENSO 数据集。
 
-本数据集由气候与应用前沿研究院 ICAR 提供。数据包括 CMIP5/6 模式的历史模拟数据和美国 SODA 模式重建的近100多年历史观测同化数据。每个样本包含以下气象及时空变量：海表温度异常 (SST) ，热含量异常 (T300)，纬向风异常 (Ua)，经向风异常 (Va)，数据维度为 (year,month,lat,lon)。训练数据提供对应月份的 Nino3.4 index 标签数据。测试用的初始场数据为国际多个海洋资料同化结果提供的随机抽取的 n 段 12 个时间序列，数据格式采用NPY格式保存。
+本数据集由气候与应用前沿研究院 ICAR 提供。数据包括 CMIP5/6 模式的历史模拟数据和美国 SODA 模式重建的近100多年历史观测同化数据。每个样本包含以下气象及时空变量：海表温度异常 (SST) ，热含量异常 (T300)，纬向风异常 (Ua)，经向风异常 (Va)，数据维度为 (year,month,lat,lon)。训练数据提供对应月份的 Nino3.4 index 标签数据。测试用的初始场数据为国际多个海洋资料同化结果提供的随机抽取的 n 段 12 个时间序列，数据格式采用 NPY 格式保存。
 
 **训练数据：**
 
@@ -141,9 +142,9 @@ examples/earthformer/earthformer_enso_train.py:58:64
 
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader_cfg`；
 
-第二个参数是损失函数的定义，这里使用自定义的损失函数   `mse_loss`；
+第二个参数是损失函数的定义，这里使用自定义的损失函数 `mse_loss`；
 
-第三个参数是约束条件的名字，方便后续对其索引。此处命名为 "Sup"。
+第三个参数是约束条件的名字，方便后续对其索引。此处命名为 `Sup`。
 
 #### 3.2.2 模型构建
 
@@ -167,7 +168,7 @@ examples/earthformer/conf/earthformer_enso_pretrain.yaml:46:105
 
 #### 3.2.3 学习率与优化器构建
 
-本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 2e-4。优化器使用 `AdamW`，并将参数进行分组，使用不同的
+本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 `2e-4`。优化器使用 `AdamW`，并将参数进行分组，使用不同的
 `weight_decay`,用 PaddleScience 代码表示如下：
 
 ``` py linenums="101" title="examples/earthformer/earthformer_enso_train.py"
@@ -186,7 +187,7 @@ examples/earthformer/earthformer_enso_train.py:68:95
 --8<--
 ```
 
-`SupervisedValidator` 评估器与 `SupervisedConstraint` 比较相似，不同的是评估器需要设置评价指标 `metric`，在这里使用了自定义的评价指标分别是 `MAE`、`MSE`、`RMSE`、`corr_nino3.4_epoch`和 `corr_nino3.4_weighted_epoch`。
+`SupervisedValidator` 评估器与 `SupervisedConstraint` 比较相似，不同的是评估器需要设置评价指标 `metric`，在这里使用了自定义的评价指标分别是 `MAE`、`MSE`、`RMSE`、`corr_nino3.4_epoch` 和 `corr_nino3.4_weighted_epoch`。
 
 #### 3.2.5 模型训练与评估
 
@@ -314,9 +315,9 @@ examples/earthformer/earthformer_sevir_train.py:61:67
 
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader_cfg`；
 
-第二个参数是损失函数的定义，这里使用自定义的损失函数   `mse_loss`；
+第二个参数是损失函数的定义，这里使用自定义的损失函数 `mse_loss`；
 
-第三个参数是约束条件的名字，方便后续对其索引。此处命名为 "Sup"。
+第三个参数是约束条件的名字，方便后续对其索引。此处命名为 `Sup`。
 
 ### 4.2.2 模型构建
 
@@ -340,7 +341,7 @@ examples/earthformer/conf/earthformer_sevir_pretrain.yaml:58:117
 
 #### 4.2.3 学习率与优化器构建
 
-本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 1e-3。优化器使用 `AdamW`，并将参数进行分组，使用不同的 `weight_decay`,用 PaddleScience 代码表示如下：
+本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 `1e-3`。优化器使用 `AdamW`，并将参数进行分组，使用不同的 `weight_decay`,用 PaddleScience 代码表示如下：
 
 ``` py linenums="121" title="examples/earthformer/earthformer_sevir_train.py"
 --8<--
@@ -445,6 +446,9 @@ examples/earthformer/earthformer_sevir_train.py:279:285
 创建预测器:
 
 ``` py linenums="293" title="examples/earthformer/earthformer_sevir_train.py"
+--8<--
+examples/earthformer/earthformer_sevir_train.py:293:294
+--8<--
 ```
 
 准备预测数据并进行对应模式的数据预处理：
@@ -483,7 +487,7 @@ examples/earthformer/earthformer_sevir_train.py
 
 <figure markdown>
   ![SEVIR-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/sevir-predict.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
-  <figcaption>SEVIR中vil的预测结果（"prediction"）与真值结果（"target"）</figcaption>
+  <figcaption>SEVIR 中 vil 的预测结果（"prediction"）与真值结果（"target"）</figcaption>
 </figure>
 
 说明：

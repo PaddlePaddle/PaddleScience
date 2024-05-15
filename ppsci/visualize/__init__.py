@@ -55,7 +55,7 @@ def build_visualizer(cfg):
     """Build visualizer(s).
 
     Args:
-        cfg (List[AttrDict]): Visualizer(s) config list.
+        cfg (List[DictConfig]): Visualizer(s) config list.
         geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
         equation_dict (Dct[str, Equation]): Equation(s) in dict.
 
