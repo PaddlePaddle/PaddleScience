@@ -409,14 +409,72 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
+    model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
+    model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
+    # wrap to a model_list
+    model_list = ppsci.arch.ModelList((model_re, model_im, model_eps))
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model_list,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in model_list.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    valid_dict = ppsci.utils.reader.load_mat_file(
+        cfg.DATASET_PATH_VALID, ("x_val", "y_val", "bound")
+    )
+    input_dict = {"x": valid_dict["x_val"], "y": valid_dict["y_val"]}
+
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.INFER.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./hpinns_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.INFER.output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="hpinns.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
