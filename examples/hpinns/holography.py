@@ -414,6 +414,16 @@ def export(cfg: DictConfig):
     model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
     model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
+
+    # register transform
+    model_re.register_input_transform(func_module.transform_in)
+    model_im.register_input_transform(func_module.transform_in)
+    model_eps.register_input_transform(func_module.transform_in)
+
+    model_re.register_output_transform(func_module.transform_out_real_part)
+    model_im.register_output_transform(func_module.transform_out_imaginary_part)
+    model_eps.register_output_transform(func_module.transform_out_epsilon)
+
     # wrap to a model_list
     model_list = ppsci.arch.ModelList((model_re, model_im, model_eps))
 
@@ -427,10 +437,7 @@ def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     input_spec = [
-        {
-            key: InputSpec([None, 1], "float32", name=key)
-            for key in model_list.input_keys
-        },
+        {key: InputSpec([None, 1], "float32", name=key) for key in ["x", "y"]},
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
