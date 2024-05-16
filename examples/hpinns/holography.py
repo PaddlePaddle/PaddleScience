@@ -460,12 +460,19 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.INFER.output_keys, output_dict.keys())
     }
 
-    ppsci.visualize.save_vtu_from_dict(
-        "./hpinns_pred.vtu",
-        {**input_dict, **output_dict},
-        input_dict.keys(),
-        cfg.INFER.output_keys,
+    # plotting E and eps
+    N = ((func_module.l_BOX[1] - func_module.l_BOX[0]) / 0.05).astype(int)
+    input_eval = np.stack((input_dict["x"], input_dict["y"]), axis=-1).reshape(
+        N[0], N[1], 2
     )
+    e_re = output_dict["e_re"].reshape(N[0], N[1])
+    e_im = output_dict["e_im"].reshape(N[0], N[1])
+    eps = output_dict["eps"].reshape(N[0], N[1])
+    v_visual = e_re**2 + e_im**2
+    field_visual = np.stack((v_visual, eps), axis=-1)
+    plot_module.field_name = ["Fig7_E", "Fig7_eps"]
+    plot_module.FIGNAME = "hpinns_pred"
+    plot_module.plot_field_holo(input_eval, field_visual)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="hpinns.yaml")
