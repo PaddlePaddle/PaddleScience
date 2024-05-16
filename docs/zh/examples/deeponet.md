@@ -26,6 +26,18 @@
     python deeponet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python deeponet.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python deeponet.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [deeponet_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams) | loss(G_eval): 0.00003<br>L2Rel.G(G_eval): 0.01799 |
