@@ -45,7 +45,6 @@
     ```
 
 
-
 | 预训练模型  | 指标 |
 |:--| :--|
 | [hpinns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/hPINNs/hpinns_pretrained.pdparams) | loss(opt_sup): 0.05352<br>MSE.eval_metric(opt_sup): 0.00002<br>loss(val_sup): 0.02205<br>MSE.eval_metric(val_sup): 0.00001 |
