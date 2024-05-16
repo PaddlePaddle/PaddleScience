@@ -462,7 +462,7 @@ def inference(cfg: DictConfig):
 
     # plotting E and eps
     N = ((func_module.l_BOX[1] - func_module.l_BOX[0]) / 0.05).astype(int)
-    input_valid = np.stack((input_dict["x"], input_dict["y"]), axis=-1).reshape(
+    input_eval = np.stack((input_dict["x"], input_dict["y"]), axis=-1).reshape(
         N[0], N[1], 2
     )
     e_re = output_dict["e_re"].reshape(N[0], N[1])
@@ -472,7 +472,7 @@ def inference(cfg: DictConfig):
     field_visual = np.stack((v_visual, eps), axis=-1)
     plot_module.field_name = ["Fig7_E", "Fig7_eps"]
     plot_module.FIGNAME = "hpinns_pred"
-    plot_module.plot_field_holo(input_valid, field_visual)
+    plot_module.plot_field_holo(input_eval, field_visual)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="hpinns.yaml")

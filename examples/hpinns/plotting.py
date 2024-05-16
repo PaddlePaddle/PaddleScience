@@ -123,8 +123,8 @@ def plot_field_holo(
     Args:
         coord_visual (np.ndarray): The coord of epsilon and |E|**2.
         field_visual (np.ndarray): The filed of epsilon and |E|**2.
-        coord_lambda (Optional[np.ndarray], optional): The coord of lambda.
-        field_lambda (Optional[np.ndarray], optional): The filed of lambda.
+        coord_lambda (Optional[np.ndarray], optional): The coord of lambda. Defaults to None.
+        field_lambda (Optional[np.ndarray], optional): The filed of lambda. Defaults to None.
     """
     fmin, fmax = np.array([0, 1.0]), np.array([0.6, 12])
     cmin, cmax = coord_visual.min(axis=(0, 1)), coord_visual.max(axis=(0, 1))
