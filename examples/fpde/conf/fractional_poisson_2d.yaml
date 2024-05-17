@@ -35,7 +35,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-log_freq: 20
+log_freq: 100
 
 ALPHA: 1.8
 NPOINT_INTERIOR: 100
@@ -54,7 +54,7 @@ MODEL:
 TRAIN:
   epochs: 20000
   iters_per_epoch: 1
-  save_freq: 20
+  save_freq: 100
   eval_during_train: true
   eval_freq: 1000
   learning_rate: 0.001
