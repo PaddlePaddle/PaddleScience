@@ -682,121 +682,7 @@ solver.eval()
 
 ## 2. 进阶功能
 
-### 2.1 分布式训练
-
-#### 2.1.1 数据并行
-
-接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
-
-1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
-
-    ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="22"
-    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
-
-    pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["NavierStokes"].equations,
-        {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-        geom=interior_geom,
-        dataloader_cfg={
-            "dataset": "NamedArrayDataset",
-            "num_workers": 1,
-            "batch_size": BATCH_SIZE,
-            "iters_per_epoch": ITERS_PER_EPOCH,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-        },
-        loss=ppsci.loss.MSELoss("mean"),
-        evenly=True,
-        name="EQ",
-    )
-    ITERS_PER_EPOCH = len(pde_constraint.data_loader) # re-assign to ITERS_PER_EPOCH
-
-    # wrap constraints together
-    constraint = {pde_constraint.name: pde_constraint}
-
-    EPOCHS = 3000 if not args.epochs else args.epochs
-    ```
-
-2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例
-
-    ``` sh
-    # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    export CUDA_VISIBLE_DEVICES=0,1,2,3
-    python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
-    ```
-
-<!-- #### 1.1.2 模型并行
-
-TODO -->
-
-### 2.2 自动混合精度训练
-
-接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
-
-实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
-
-``` py hl_lines="5 6"
-# initialize solver
-solver = ppsci.solver.Solver(
-    ...,
-    ...,
-    use_amp=True,
-    amp_level="O1", # or amp_level="O2"
-)
-```
-
-### 2.3 梯度累加
-
-接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
-
-实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
-
-``` py hl_lines="5"
-# initialize solver
-solver = ppsci.solver.Solver(
-    ...,
-    ...,
-    update_freq=2, # or 4, 8
-)
-```
-
-### 2.4 多任务学习
-
-在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
-
-1. 实例化一个多任务学习方法的对象
-
-    ``` py hl_lines="3"
-    from ppsci.loss import mtl
-    model = ...
-    num_losses = 2 # number of losses to be optimized
-    loss_aggregator = mtl.Relobralo(num_losses)
-    ```
-
-2. 将该对象作为 `Solver` 的实例化参数之一传入
-
-    ``` py hl_lines="4"
-    solver = ppsci.solver.Solver(
-        ...,
-        ...,
-        loss_aggregator=loss_aggregator,
-    )
-    ```
-
-3. 启动训练，训练过程中 `loss_aggregator` 会自动对获取到的多个损失项应用对应的多任务学习方法进行优化
-
-    ``` py
-    solver.train()
-    ```
-
-    !!! info "影响说明"
-
-        个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
-
-### 2.5 贝叶斯超参搜索
+### 2.1 贝叶斯超参搜索
 
 hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/en/stable/index.html) 超参数调优工具一起使用。在 yaml 文件中设置好需要调整的参数和最大实验次数后，可以调用 Tree-structured Parzen Estimator(TPE) 算法进行自动化调参工具，效率高于网格调参法。
 
@@ -865,7 +751,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
         1. 调优的参数需要与 yaml 文件中配置的参数名一致，如 `MODEL.num_layers`、`TRAIN.lr_scheduler.learning_rate`。
         2. 调优的参数范围根据不同语义进行指定，比如模型层数必须为整数，可以使用 `choice(...)` 设置有限范围，而学习率一般为浮点数，可以使用 `interval(...)` 设置其上下界。
 
-3. 修改 viv.py，使得被 `@hydra.main` 装饰的 `main` 函数返回实验指标结果（高亮部分所示）。
+3. 修改 viv.py，使得被 `@hydra.main` 装饰的 `main` 函数返回实验指标结果（高亮部分所示）
 
     ``` py title="viv.py" hl_lines="13 14 20 21"
     def train(cfg: DictConfig):
@@ -893,7 +779,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
             evaluate(cfg)
     ```
 
-4. 运行以下命令，开始自动调参
+4. 运行以下命令，开始自动化调优
 
     ``` sh
     python viv.py --multirun
@@ -910,6 +796,120 @@ best_value: 0.02460772916674614
 ```
 
 更多详细信息以及多目标自动调优方法，可参考：[Optuna Sweeper plugin](https://hydra.cc/docs/plugins/optuna_sweeper/) 和 [Optuna](https://optuna.readthedocs.io/en/stable/)。
+
+### 2.2 分布式训练
+
+#### 2.2.1 数据并行
+
+接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
+
+1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
+
+    ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="22"
+    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
+
+    pde_constraint = ppsci.constraint.InteriorConstraint(
+        equation["NavierStokes"].equations,
+        {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
+        geom=interior_geom,
+        dataloader_cfg={
+            "dataset": "NamedArrayDataset",
+            "num_workers": 1,
+            "batch_size": BATCH_SIZE,
+            "iters_per_epoch": ITERS_PER_EPOCH,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+        },
+        loss=ppsci.loss.MSELoss("mean"),
+        evenly=True,
+        name="EQ",
+    )
+    ITERS_PER_EPOCH = len(pde_constraint.data_loader) # re-assign to ITERS_PER_EPOCH
+
+    # wrap constraints together
+    constraint = {pde_constraint.name: pde_constraint}
+
+    EPOCHS = 3000 if not args.epochs else args.epochs
+    ```
+
+2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例
+
+    ``` sh
+    # 指定 0,1,2,3 张卡启动分布式数据并行训练
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+    python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
+    ```
+
+<!-- #### 2.2.2 模型并行
+
+TODO -->
+
+### 2.3 自动混合精度训练
+
+接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
+
+实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
+
+``` py hl_lines="5 6"
+# initialize solver
+solver = ppsci.solver.Solver(
+    ...,
+    ...,
+    use_amp=True,
+    amp_level="O1", # or amp_level="O2"
+)
+```
+
+### 2.4 梯度累加
+
+接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
+
+实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
+
+``` py hl_lines="5"
+# initialize solver
+solver = ppsci.solver.Solver(
+    ...,
+    ...,
+    update_freq=2, # or 4, 8
+)
+```
+
+### 2.5 多任务学习
+
+在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
+
+1. 实例化一个多任务学习方法的对象
+
+    ``` py hl_lines="3"
+    from ppsci.loss import mtl
+    model = ...
+    num_losses = 2 # number of losses to be optimized
+    loss_aggregator = mtl.Relobralo(num_losses)
+    ```
+
+2. 将该对象作为 `Solver` 的实例化参数之一传入
+
+    ``` py hl_lines="4"
+    solver = ppsci.solver.Solver(
+        ...,
+        ...,
+        loss_aggregator=loss_aggregator,
+    )
+    ```
+
+3. 启动训练，训练过程中 `loss_aggregator` 会自动对获取到的多个损失项应用对应的多任务学习方法进行优化
+
+    ``` py
+    solver.train()
+    ```
+
+    !!! info "影响说明"
+
+        个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
 
 ## 3. 使用 Nsight 进行性能分析
 

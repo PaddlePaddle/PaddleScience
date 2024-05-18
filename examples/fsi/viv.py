@@ -168,8 +168,7 @@ def evaluate(cfg: DictConfig):
     )
 
     # evaluate
-    l2_err_eval, _ = solver.eval()
-    return l2_err_eval
+    solver.eval()
     # visualize prediction
     solver.visualize()
 
@@ -245,7 +244,7 @@ def inference(cfg: DictConfig):
 @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
-        return train(cfg)
+        train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
     elif cfg.mode == "export":
