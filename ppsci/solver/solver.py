@@ -441,7 +441,7 @@ class Solver:
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for computational optimization.")
+        logger.message(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use Sum if None
         if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:

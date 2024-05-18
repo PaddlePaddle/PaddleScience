@@ -796,6 +796,121 @@ solver = ppsci.solver.Solver(
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
 
+### 2.5 贝叶斯超参搜索
+
+hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/en/stable/index.html) 超参数调优工具一起使用。在 yaml 文件中设置好需要调整的参数和最大实验次数后，可以调用 Tree-structured Parzen Estimator(TPE) 算法进行自动化调参工具，效率高于网格调参法。
+
+下面以 viv 案例为例，介绍如何在 PaddleScience 中使用该方法。
+
+1. 安装 1.1.0 以上版本的 `hydra-core` 以及 `hydra-optuna` 插件
+
+    ``` sh
+    pip install 'hydra-core>=1.1.0' hydra-optuna-sweeper
+    ```
+
+2. 修改 `viv.yaml` 文件，在 `defaults:` 和 `hydra:` 字段下分别添加如下配置（高亮部分所示）
+
+    ``` yaml title="title" hl_lines="8 26-34"
+    defaults:
+      - ppsci_default
+      - TRAIN: train_default
+      - TRAIN/ema: ema_default
+      - TRAIN/swa: swa_default
+      - EVAL: eval_default
+      - INFER: infer_default
+      - override hydra/sweeper: optuna # (1)
+      - _self_
+
+    hydra:
+      run:
+        # dynamic output directory according to running time and override name
+        dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+      job:
+        name: ${mode} # name of logfile
+        chdir: false # keep current working directory unchanged
+      callbacks:
+        init_callback:
+          _target_: ppsci.utils.callbacks.InitCallback
+      sweep:
+        # output directory for multirun
+        dir: ${hydra.run.dir}
+        subdir: ./
+
+      sweeper: # (2)
+        direction: minimize # (3)
+        study_name: viv_optuna # (4)
+        n_trials: 20 # (5)
+        n_jobs: 1 # (6)
+        params: # (7)
+          MODEL.num_layers: choice(2, 3, 4, 5, 6, 7) # (8)
+          TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005) # (9)
+    ```
+
+    1. 指定了使用 `optuna` 进行超参数优化。
+    2. `sweeper:`：这一行指定了 Hydra 使用的 sweeper 插件，用于进行参数扫描。在这个例子中，它将使用 Optuna 进行超参数优化。
+    3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
+    4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
+    5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
+    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
+    8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
+    9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
+
+    如上所示，在 `hydra.sweeper` 节点下添加了 `optuna` 插件的配置，并在 `params` 节点下指定了要调优的参数及其范围：
+    1. 模型层数 `MODEL.num_layers`，在 [2, 3, 4, 5, 6, 7] 共 6 种层数间进行调优。
+    2. 学习率 `TRAIN.lr_scheduler.learning_rate`，在 0.0001 ~ 0.005 之间进行调优。
+
+    !!! info "注意"
+
+        1. 调优的参数需要与 yaml 文件中配置的参数名一致，如 `MODEL.num_layers`、`TRAIN.lr_scheduler.learning_rate`。
+        2. 调优的参数范围根据不同语义进行指定，比如模型层数必须为整数，可以使用 `choice(...)` 设置有限范围，而学习率一般为浮点数，可以使用 `interval(...)` 设置其上下界。
+
+3. 修改 viv.py，使得被 `@hydra.main` 装饰的 `main` 函数返回实验指标结果（高亮部分所示）。
+
+    ``` py title="viv.py" hl_lines="13 14 20 21"
+    def train(cfg: DictConfig):
+        ...
+        # initialize solver
+        solver = ppsci.solver.Solver(
+            model,
+            equation=equation,
+            validator=validator,
+            visualizer=visualizer,
+            cfg=cfg,
+        )
+
+        # evaluate
+        l2_err_eval, _ = solver.eval()
+        return l2_err_eval
+
+    ...
+
+    @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+    def main(cfg: DictConfig):
+        if cfg.mode == "train":
+            return train(cfg)
+        elif cfg.mode == "eval":
+            evaluate(cfg)
+    ```
+
+4. 运行以下命令，开始自动调参
+
+    ``` sh
+    python viv.py --multirun
+    ```
+
+在 20 次调优实验运行完毕后，在模型保存目录下，会生成 `optimization_results.yaml` 文件，其中包含了最佳的调优结果，如下所示：
+
+``` yaml
+name: optuna
+best_params:
+  MODEL.num_layers: 7
+  TRAIN.lr_scheduler.learning_rate: 0.003982453338298202
+best_value: 0.02460772916674614
+```
+
+更多详细信息以及多目标自动调优方法，可参考：[Optuna Sweeper plugin](https://hydra.cc/docs/plugins/optuna_sweeper/) 和 [Optuna](https://optuna.readthedocs.io/en/stable/)。
+
 ## 3. 使用 Nsight 进行性能分析
 
 Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
