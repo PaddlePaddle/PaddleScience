@@ -70,3 +70,5 @@ class Biharmonic(base.PDE):
                 biharmonic += u.diff(invar_i, 2).diff(invar_j, 2)
 
         self.add_equation("biharmonic", biharmonic)
+
+        self._apply_detach()

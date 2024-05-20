@@ -33,7 +33,7 @@ def build_validator(cfg, equation_dict, geom_dict):
     """Build validator(s).
 
     Args:
-        cfg (List[AttrDict]): Validator(s) config list.
+        cfg (List[DictConfig]): Validator(s) config list.
         geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
         equation_dict (Dct[str, Equation]): Equation(s) in dict.
 

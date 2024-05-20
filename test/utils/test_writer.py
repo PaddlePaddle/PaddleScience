@@ -21,13 +21,11 @@ from ppsci.utils import writer
 
 def test_save_csv_file():
     keys = ["x1", "y1", "z1"]
-    alias_dict = (
-        {
-            "x": "x1",
-            "y": "y1",
-            "z": "z1",
-        },
-    )
+    alias_dict = {
+        "x": "x1",
+        "y": "y1",
+        "z": "z1",
+    }
     data_dict = {
         keys[0]: np.random.randint(0, 255, (10, 1)),
         keys[1]: np.random.rand(10, 1),

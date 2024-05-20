@@ -85,10 +85,13 @@ def test_multi_model_and_sdf():
     tmp2_eval = ep_eval * tmp1_eval * k_eval
     out_var_reference = tmp1_eval + tmp2_eval
 
-    assert np.allclose(out_var_tensor.numpy(), out_var_reference.numpy())
+    np.testing.assert_allclose(
+        out_var_tensor.numpy(), out_var_reference.numpy(), 1e-6, 0.0
+    )
 
 
 def test_complicated_symbolic():
+    paddle.seed(2023)
     x_ten = paddle.randn([32, 1])
     x_ten.stop_gradient = False
     y_ten = paddle.randn([32, 1])
@@ -136,13 +139,13 @@ def test_complicated_symbolic():
         eqs_expected = ppsci.lambdify(
             targets,
             model_f,
-            fuse_derivative=True,
+            fuse_derivative=False,
         )
 
         for i in range(len(targets)):
             output_fuse = eqs_fuse[i](input_data)
             output_expected = eqs_expected[i](input_data)
-            assert np.allclose(output_fuse.numpy(), output_expected.numpy())
+            np.testing.assert_allclose(output_fuse.numpy(), output_expected.numpy())
         ppsci.autodiff.clear()
 
 
