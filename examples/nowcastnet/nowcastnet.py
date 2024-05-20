@@ -117,8 +117,6 @@ def export(cfg: DictConfig):
 def inference(cfg: DictConfig):
     import os.path as osp
 
-    import numpy as np
-
     from deploy.python_infer import pinn_predictor
 
     # set model predictor
