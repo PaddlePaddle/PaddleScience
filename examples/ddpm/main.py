@@ -69,7 +69,7 @@ def evaluate(cfg):
         print("Using conditional model")
         model = ppsci.arch.DDPM(config=config)
     else:
-        print("Using unconditional model")
+        # 原始代码中没有unconditional的model，所以这里直接raise NotImplemente
         raise NotImplementedError("not supported")
     ppsci.utils.load_pretrain(model, config.model.ckpt_path)
     functions.eval_input(model, config)
