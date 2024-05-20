@@ -39,7 +39,7 @@ def build_lr_scheduler(cfg, epochs, iters_per_epoch):
     """Build learning rate scheduler.
 
     Args:
-        cfg (AttrDict): Learning rate scheduler config.
+        cfg (DictConfig): Learning rate scheduler config.
         epochs (int): Total epochs.
         iters_per_epoch (int): Number of iterations of one epoch.
 
@@ -57,7 +57,7 @@ def build_optimizer(cfg, model_list, epochs, iters_per_epoch):
     """Build optimizer and learning rate scheduler
 
     Args:
-        cfg (AttrDict): Learning rate scheduler config.
+        cfg (DictConfig): Learning rate scheduler config.
         model_list (Tuple[nn.Layer, ...]): Tuple of model(s).
         epochs (int): Total epochs.
         iters_per_epoch (int): Number of iterations of one epoch.
