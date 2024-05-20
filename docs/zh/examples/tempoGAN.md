@@ -26,6 +26,22 @@
     python tempoGAN.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python tempoGAN.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
+    python tempoGAN.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [tempogan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams) | MSE: 4.21e-5<br>PSNR: 47.19<br>SSIM: 0.9974 |

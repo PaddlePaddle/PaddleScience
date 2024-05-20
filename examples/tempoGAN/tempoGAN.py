@@ -406,14 +406,77 @@ def evaluate(cfg: DictConfig):
     )
 
 
+def export(cfg: DictConfig):
+    from paddle.static import InputSpec
+
+    # set models
+    gen_funcs = func_module.GenFuncs(cfg.WEIGHT_GEN, None)
+    model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
+    model_gen.register_input_transform(gen_funcs.transform_in)
+
+    # define model_list
+    model_list = ppsci.arch.ModelList((model_gen,))
+
+    # load pretrained model
+    solver = ppsci.solver.Solver(
+        model=model_list, pretrained_model_path=cfg.INFER.pretrained_model_path
+    )
+
+    # export models
+    input_spec = [
+        {"density_low": InputSpec([None, 1, 128, 128], "float32", name="density_low")},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path, skip_prune_program=True)
+
+
+def inference(cfg: DictConfig):
+    from matplotlib import image as Img
+
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # load dataset
+    dataset_infer = {
+        "density_low": hdf5storage.loadmat(cfg.DATASET_PATH_VALID)["density_low"]
+    }
+
+    output_dict = predictor.predict(dataset_infer, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output = [output_dict[key] for key in output_dict]
+
+    def scale(data):
+        smax = np.max(data)
+        smin = np.min(data)
+        return (data - smin) / (smax - smin)
+
+    for i, img in enumerate(output[0]):
+        img = scale(np.squeeze(img))
+        Img.imsave(
+            osp.join(cfg.output_dir, f"out_{i}.png"),
+            img,
+            vmin=0.0,
+            vmax=1.0,
+            cmap="gray",
+        )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="tempogan.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
