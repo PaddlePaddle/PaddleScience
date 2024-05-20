@@ -54,7 +54,7 @@ def build_equation(cfg):
     """Build equation(s)
 
     Args:
-        cfg (List[AttrDict]): Equation(s) config list.
+        cfg (List[DictConfig]): Equation(s) config list.
 
     Returns:
         Dict[str, Equation]: Equation(s) in dict.
