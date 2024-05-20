@@ -77,10 +77,6 @@ class DomainPadding(nn.Layer):
         except KeyError:
             padding = [round(p * r) for (p, r) in zip(self.domain_padding, resolution)]
 
-            logger.message(
-                f"Padding inputs of resolution = {resolution} with padding = {padding}, {self.padding_mode}"
-            )
-
             output_pad = padding
             output_pad = [
                 round(i * j) for (i, j) in zip(output_scaling_factor, output_pad)
@@ -575,7 +571,6 @@ class FactorizedSpectralConv(nn.Layer):
             factorization and used for the forward pass
             * `factorized` : the input is directly contracted with the factors of
             the decomposition. Defaults to "reconstructed".
-        fixed_rank_modes (bool, optional): Modes to not factorize. Defaults to False.
         joint_factorization (bool, optional): Whether all the Fourier Layers should be parametrized by a
             single tensor. Defaults to False.
         init_std (str, optional): The std to use for the init. Defaults to "auto".
@@ -596,7 +591,6 @@ class FactorizedSpectralConv(nn.Layer):
         rank: float = 0.5,
         factorization: str = None,
         implementation: str = "reconstructed",
-        fixed_rank_modes: bool = False,
         joint_factorization: bool = False,
         init_std: str = "auto",
         fft_norm: str = "backward",
@@ -626,11 +620,6 @@ class FactorizedSpectralConv(nn.Layer):
             init_std = (2 / (in_channels + out_channels)) ** 0.5
         else:
             init_std = init_std
-        if isinstance(fixed_rank_modes, bool):
-            if fixed_rank_modes:
-                fixed_rank_modes = [0]
-            else:
-                fixed_rank_modes = None
         self.fft_norm = fft_norm
         if factorization is None:
             factorization = "Dense"
@@ -1076,7 +1065,6 @@ class FNOBlocks(nn.Layer):
         rank: float = 1.0,
         SpectralConv: FactorizedSpectralConv = FactorizedSpectralConv,
         joint_factorization: bool = False,
-        fixed_rank_modes: bool = False,
         implementation: str = "factorized",
         fft_norm: str = "forward",
         **kwargs,
@@ -1095,7 +1083,6 @@ class FNOBlocks(nn.Layer):
         self.non_linearity = non_linearity
         self.rank = rank
         self.factorization = factorization
-        self.fixed_rank_modes = fixed_rank_modes
         self.fno_skip = fno_skip
         self.mlp_skip = mlp_skip
         self.use_mlp = use_mlp
@@ -1114,7 +1101,6 @@ class FNOBlocks(nn.Layer):
             output_scaling_factor=output_scaling_factor,
             max_n_modes=max_n_modes,
             rank=rank,
-            fixed_rank_modes=fixed_rank_modes,
             implementation=implementation,
             separable=separable,
             factorization=factorization,

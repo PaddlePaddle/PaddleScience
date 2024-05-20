@@ -283,7 +283,7 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    model = ppsci.arch.TFNO2dNet(
+    model = ppsci.arch.UNONet(
         **cfg.MODEL,
     )
 
@@ -306,24 +306,16 @@ def export(cfg: DictConfig):
 
 def inference(cfg: DictConfig):
     import matplotlib.pyplot as plt
+    import predictor
 
-    from ppsci.data.dataset import darcyflow_dataset
+    predictor = predictor.FNOPredictor(cfg)
 
     data = np.load(cfg.INFER.data_path, allow_pickle=True).item()
 
     input_data = data["x"][0].reshape(-1, 1, *data["x"].shape[1:]).astype("float32")
     label = data["y"][0].astype("float32")
 
-    model = ppsci.arch.UNONet(
-        **cfg.MODEL,
-    )
-    model.set_state_dict(paddle.load(cfg.INFER.pretrained_model_path))
-    model.eval()
-    transform_x = darcyflow_dataset.PositionalEmbedding2D(cfg.INFER.grid_boundaries)
-    input_data_x = paddle.to_tensor(input_data)
-
-    input_data_x = transform_x(input_data_x).unsqueeze(0)
-    pred_data = model({"x": input_data_x})["y"].detach().cpu().numpy()
+    pred_data = predictor.predict(input_data, cfg.INFER.batch_size)
 
     fig = plt.figure(figsize=(7, 7))
 
@@ -334,7 +326,7 @@ def inference(cfg: DictConfig):
     plt.yticks([], [])
 
     ax = fig.add_subplot(1, 3, 2)
-    ax.imshow(label.squeeze())
+    ax.imshow(label)
     ax.set_title("Ground-truth y")
     plt.xticks([], [])
     plt.yticks([], [])
@@ -344,7 +336,7 @@ def inference(cfg: DictConfig):
     ax.set_title("Model prediction")
     plt.xticks([], [])
     plt.yticks([], [])
-    plt.savefig(cfg.output_dir)
+    plt.savefig(cfg.output_dir + "123.png")
     logger.message("save success")
     plt.close(fig)
 

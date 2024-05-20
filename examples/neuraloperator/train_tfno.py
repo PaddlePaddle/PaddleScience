@@ -286,7 +286,7 @@ def export(cfg: DictConfig):
     model = ppsci.arch.TFNO2dNet(
         **cfg.MODEL,
     )
-
+    model.eval()
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -304,26 +304,19 @@ def export(cfg: DictConfig):
     solver.export(input_spec, cfg.INFER.export_path)
 
 
+# 使用静态图推理出错
 def inference(cfg: DictConfig):
     import matplotlib.pyplot as plt
+    import predictor
 
-    from ppsci.data.dataset import darcyflow_dataset
+    predictor = predictor.FNOPredictor(cfg)
 
     data = np.load(cfg.INFER.data_path, allow_pickle=True).item()
 
     input_data = data["x"][0].reshape(-1, 1, *data["x"].shape[1:]).astype("float32")
     label = data["y"][0].astype("float32")
 
-    model = ppsci.arch.TFNO2dNet(
-        **cfg.MODEL,
-    )
-    model.set_state_dict(paddle.load(cfg.INFER.pretrained_model_path))
-    model.eval()
-    transform_x = darcyflow_dataset.PositionalEmbedding2D(cfg.INFER.grid_boundaries)
-    input_data_x = paddle.to_tensor(input_data)
-
-    input_data_x = transform_x(input_data_x).unsqueeze(0)
-    pred_data = model({"x": input_data_x})["y"].detach().cpu().numpy()
+    pred_data = predictor.predict(input_data, cfg.INFER.batch_size)
 
     fig = plt.figure(figsize=(7, 7))
 

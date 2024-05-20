@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 The paddle-harmonics Authors. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022 The torch-harmonics Authors. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,40 +44,34 @@ from ppsci.paddle_harmonics.quadrature import lobatto_weights
 
 
 class RealSHT(nn.Layer):
-    """Defines a module for computing the forward (real-valued) SHT.
-        Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
-        The SHT is applied to the last two dimensions of the input
+    r"""
+    Defines a module for computing the forward (real-valued) SHT.
+    Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
+    The SHT is applied to the last two dimensions of the input
 
-        [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
-        [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
-
-
-    Args:
-        nlat (int): input grid resolution in the latitudinal direction.
-        nlon (int): input grid resolution in the longitudinal direction
-        lmax (int, optional): The maximum degree for the spherical harmonic
-            expansion. Defaults to None.
-        mmax (int, optional): The maximum order for the spherical harmonic
-            expansion. Defaults to None.
-        grid (str, optional): grid in the latitude direction (for now only
-            tensor product grids are supported). Defaults to "lobatto".
-        norm (str, optional): The normalization convention for the
-            associated Legendre functions. Defaults to "ortho".
-        csphase (bool, optional): whether to include the Condon-Shortley
-            phase factor. Defaults to True.
-
+    [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
+    [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
     """
 
     def __init__(
         self,
         nlat,
         nlon,
-        lmax: int = None,
-        mmax: int = None,
-        grid: str = "lobatto",
-        norm: str = "ortho",
-        csphase: bool = True,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
+        r"""
+        Initializes the SHT Layer, precomputing the necessary quadrature weights
+
+        Parameters:
+        nlat: input grid resolution in the latitudinal direction
+        nlon: input grid resolution in the longitudinal direction
+        grid: grid in the latitude direction (for now only tensor product grids are supported)
+        """
+
         super().__init__()
 
         self.nlat = nlat
@@ -85,8 +79,6 @@ class RealSHT(nn.Layer):
         self.grid = grid
         self.norm = norm
         self.csphase = csphase
-
-        # TODO: include assertions regarding the dimensions
 
         # compute quadrature points
         if self.grid == "legendre-gauss":
@@ -114,12 +106,12 @@ class RealSHT(nn.Layer):
             self.mmax, self.lmax, tq, norm=self.norm, csphase=self.csphase
         )
         pct = paddle.to_tensor(pct)
-        weights = paddle.einsum("mlk,k->mlk", pct, weights)
-
-        # remember quadrature weights
-        self.register_buffer("weights", weights, persistable=False)
+        self.weights = paddle.einsum("mlk,k->mlk", pct, weights)
 
     def extra_repr(self):
+        r"""
+        Pretty print module
+        """
         return f"nlat={self.nlat}, nlon={self.nlon},\n lmax={self.lmax}, mmax={self.mmax},\n grid={self.grid}, csphase={self.csphase}"
 
     def forward(self, x: paddle.Tensor):
@@ -155,39 +147,25 @@ class RealSHT(nn.Layer):
 
 
 class InverseRealSHT(nn.Layer):
-    """Defines a module for computing the inverse (real-valued) SHT.
-        Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
-        nlat, nlon: Output dimensions
-        lmax, mmax: Input dimensions (spherical coefficients). For convenience, these are inferred from the output dimensions
+    r"""
+    Defines a module for computing the inverse (real-valued) SHT.
+    Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
+    nlat, nlon: Output dimensions
+    lmax, mmax: Input dimensions (spherical coefficients). For convenience, these are inferred from the output dimensions
 
-        [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
-        [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
-
-    Args:
-        nlat (int): input grid resolution in the latitudinal direction.
-        nlon (int): input grid resolution in the longitudinal direction
-        lmax (int, optional): The maximum degree for the spherical harmonic
-            expansion. Defaults to None.
-        mmax (int, optional): The maximum order for the spherical harmonic
-            expansion. Defaults to None.
-        grid (str, optional): grid in the latitude direction (for now only
-            tensor product grids are supported). Defaults to "lobatto".
-        norm (str, optional): The normalization convention for the
-            associated Legendre functions. Defaults to "ortho".
-        csphase (bool, optional): whether to include the Condon-Shortley
-            phase factor. Defaults to True.
-
+    [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
+    [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
     """
 
     def __init__(
         self,
         nlat,
         nlon,
-        lmax: int = None,
-        mmax: int = None,
-        grid: str = "lobatto",
-        norm: str = "ortho",
-        csphase: bool = True,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()
@@ -220,10 +198,7 @@ class InverseRealSHT(nn.Layer):
         pct = _precompute_legpoly(
             self.mmax, self.lmax, t, norm=self.norm, inverse=True, csphase=self.csphase
         )
-        pct = paddle.to_tensor(pct)
-
-        # register buffer
-        self.register_buffer("pct", pct, persistable=False)
+        self.pct = paddle.to_tensor(pct)
 
     def extra_repr(self):
         r"""
@@ -251,39 +226,34 @@ class InverseRealSHT(nn.Layer):
 
 
 class RealVectorSHT(nn.Layer):
-    """Defines a module for computing the forward (real) vector SHT.
-        Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
-        The SHT is applied to the last three dimensions of the input.
+    r"""
+    Defines a module for computing the forward (real) vector SHT.
+    Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
+    The SHT is applied to the last three dimensions of the input.
 
-        [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
-        [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
-
-    Args:
-        nlat (int): input grid resolution in the latitudinal direction.
-        nlon (int): input grid resolution in the longitudinal direction
-        lmax (int, optional): The maximum degree for the spherical harmonic
-            expansion. Defaults to None.
-        mmax (int, optional): The maximum order for the spherical harmonic
-            expansion. Defaults to None.
-        grid (str, optional): grid in the latitude direction (for now only
-            tensor product grids are supported). Defaults to "lobatto".
-        norm (str, optional): The normalization convention for the
-            associated Legendre functions. Defaults to "ortho".
-        csphase (bool, optional): whether to include the Condon-Shortley
-            phase factor. Defaults to True.
-
+    [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
+    [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
     """
 
     def __init__(
         self,
         nlat,
         nlon,
-        lmax: int = None,
-        mmax: int = None,
-        grid: str = "lobatto",
-        norm: str = "ortho",
-        csphase: bool = True,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
+        r"""
+        Initializes the vector SHT Layer, precomputing the necessary quadrature weights
+
+        Parameters:
+        nlat: input grid resolution in the latitudinal direction
+        nlon: input grid resolution in the longitudinal direction
+        grid: type of grid the data lives on
+        """
+
         super().__init__()
 
         self.nlat = nlat
@@ -326,8 +296,7 @@ class RealVectorSHT(nn.Layer):
         # since the second component is imaginary, we need to take complex conjugation into account
         weights[1] = -1 * weights[1]
 
-        # remember quadrature weights
-        self.register_buffer("weights", weights, persistable=False)
+        self.weights = weights
 
     def extra_repr(self):
         r"""
@@ -400,37 +369,23 @@ class RealVectorSHT(nn.Layer):
 
 
 class InverseRealVectorSHT(nn.Layer):
-    """Defines a module for computing the inverse (real-valued) vector SHT.
-        Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
+    r"""
+    Defines a module for computing the inverse (real-valued) vector SHT.
+    Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
 
-        [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
-        [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
-
-    Args:
-        nlat (int): input grid resolution in the latitudinal direction.
-        nlon (int): input grid resolution in the longitudinal direction
-        lmax (int, optional): The maximum degree for the spherical harmonic
-            expansion. Defaults to None.
-        mmax (int, optional): The maximum order for the spherical harmonic
-            expansion. Defaults to None.
-        grid (str, optional): grid in the latitude direction (for now only
-            tensor product grids are supported). Defaults to "lobatto".
-        norm (str, optional): The normalization convention for the
-            associated Legendre functions. Defaults to "ortho".
-        csphase (bool, optional): whether to include the Condon-Shortley
-            phase factor. Defaults to True.
-
+    [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
+    [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
     """
 
     def __init__(
         self,
         nlat,
         nlon,
-        lmax: int = None,
-        mmax: int = None,
-        grid: str = "lobatto",
-        norm: str = "ortho",
-        csphase: bool = True,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()
@@ -463,10 +418,7 @@ class InverseRealVectorSHT(nn.Layer):
         dpct = _precompute_dlegpoly(
             self.mmax, self.lmax, t, norm=self.norm, inverse=True, csphase=self.csphase
         )
-        dpct = paddle.to_tensor(dpct)
-
-        # register weights
-        self.register_buffer("dpct", dpct, persistable=False)
+        self.dpct = paddle.to_tensor(dpct)
 
     def extra_repr(self):
         r"""

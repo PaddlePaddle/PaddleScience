@@ -102,7 +102,7 @@ EVAL:
 
 INFER:
   pretrained_model_path: ./outputs_sfno_pretrain/checkpoints/best_model.pdparams
-  export_path: ./inference/uno/uno_darcyflow
+  export_path: ./inference/sfno/sfno_darcyflow
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu

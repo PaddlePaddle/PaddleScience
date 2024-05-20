@@ -258,20 +258,15 @@ def export(cfg: DictConfig):
 
 def inference(cfg: DictConfig):
     import matplotlib.pyplot as plt
+    import predictor
+
+    predictor = predictor.SFNOPredictor(cfg)
 
     data = np.load(cfg.INFER.data_path, allow_pickle=True).item()
     input_data = data["x"][0].reshape(1, *data["x"].shape[1:]).astype("float32")
     label = data["y"][0][0, ...].astype("float32")
 
-    model = ppsci.arch.SFNONet(
-        **cfg.MODEL,
-    )
-
-    model.set_state_dict(paddle.load(cfg.INFER.pretrained_model_path))
-    model.eval()
-    input_data_x = paddle.to_tensor(input_data)
-
-    pred_data = model({"x": input_data_x})["y"].detach().cpu().numpy()
+    pred_data = predictor.predict(input_data, cfg.INFER.batch_size)
 
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(1, 3, 1)

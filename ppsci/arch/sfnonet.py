@@ -421,7 +421,6 @@ class SFNONet(base.Arch):
         rank (float, optional): Rank of the tensor factorization of the Fourier weights. Defaults to 1.0.
         joint_factorization (bool, optional): Whether all the Fourier Layers should be parametrized by a
             single tensor (vs one per layer). Defaults to False.
-        fixed_rank_modes (bool, optional): Modes to not factorize. Defaults to False.
         implementation (str, optional): {'factorized', 'reconstructed'}, optional. Defaults to "factorized".
             If factorization is not None, forward mode to use::
             * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
@@ -460,7 +459,6 @@ class SFNONet(base.Arch):
         factorization: str = None,
         rank: float = 1.0,
         joint_factorization: bool = False,
-        fixed_rank_modes: bool = False,
         implementation: str = "factorized",
         domain_padding: Optional[list] = None,
         domain_padding_mode: str = "one-sided",
@@ -486,7 +484,6 @@ class SFNONet(base.Arch):
         self.non_linearity = non_linearity
         self.rank = rank
         self.factorization = factorization
-        self.fixed_rank_modes = fixed_rank_modes
         self.fno_skip = (fno_skip,)
         self.mlp_skip = (mlp_skip,)
         self.fft_norm = fft_norm
@@ -525,7 +522,6 @@ class SFNONet(base.Arch):
             rank=rank,
             SpectralConv=SphericalConv,
             joint_factorization=joint_factorization,
-            fixed_rank_modes=fixed_rank_modes,
             implementation=implementation,
             fft_norm=fft_norm,
         )
