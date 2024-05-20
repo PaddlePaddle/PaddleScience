@@ -9,7 +9,7 @@ data:
     num_workers: 0
     data_dir: "/home/aistudio/data/data264003/kf_2d_re1000_256_40seed.npy"
     sample_data_dir: "/home/aistudio/data/data264003/kmflow_sampled_data_irregnew.npz"
-    stat_path: "/home/aistudio/work/PaddleScience/examples/ddpm/km256_stats.npz"
+    stat_path: "/home/aistudio/data/data264003/km256_stats.npz"
     data_kw: 'u3232'
     smoothing: True
     smoothing_scale: 7
@@ -27,7 +27,7 @@ model:
     ema_rate: 0.9999
     ema: True
     resamp_with_conv: True
-    ckpt_path: "/home/aistudio/work/PaddleScience/examples/ddpm/conditional_ckpt_new.pdparams"
+    ckpt_path: "/home/aistudio/data/data264003/latest.pdparams"
 
 diffusion:
     beta_schedule: linear

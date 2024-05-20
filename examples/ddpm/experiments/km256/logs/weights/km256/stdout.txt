@@ -1,5 +1,0 @@
-INFO - main.py - 2024-04-25 15:31:32,756 - Using device: gpu
-INFO - main.py - 2024-04-25 15:31:32,756 - Writing log file to experiments/km256/logs/weights/km256/
-INFO - main.py - 2024-04-25 15:31:32,756 - Exp instance id = 123194
-INFO - main.py - 2024-04-25 15:31:32,757 - Exp comment = 
-INFO - main.py - 2024-04-25 15:31:41,256 - step: 1, loss: 302494.09375, data time: 0.7313060760498047
