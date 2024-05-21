@@ -101,7 +101,6 @@ def build_dataloader(_dataset, cfg):
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
-
     collate_fn = None
     if isinstance(batch_transforms_cfg, (list, tuple)):
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
@@ -160,6 +159,9 @@ def build_dataloader(_dataset, cfg):
                 "Auto collation is disabled and set num_workers to "
                 f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
             )
+
+        if cfg["dataset"]["name"] == "GridMeshAtmosphericDataset":
+            collate_fn = batch_transform.default_collate_fn
 
         dataloader_ = io.DataLoader(
             dataset=_dataset,

@@ -19,6 +19,7 @@ from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
 from ppsci.data.dataset.array_dataset import ChipHeatDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
+from ppsci.data.dataset.atmospheric_dataset import GridMeshAtmosphericDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.csv_dataset import IterableCSVDataset
 from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
@@ -49,6 +50,7 @@ __all__ = [
     "IterableCSVDataset",
     "ERA5Dataset",
     "ERA5SampledDataset",
+    "GridMeshAtmosphericDataset",
     "IterableMatDataset",
     "MatDataset",
     "MRMSDataset",
