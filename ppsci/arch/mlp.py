@@ -466,8 +466,8 @@ class ModifiedMLP(base.Arch):
         return y
 
 
-class PiraNetBlock(nn.Layer):
-    r"""Basic block of PiraNet.
+class PirateNetBlock(nn.Layer):
+    r"""Basic block of PirateNet.
 
     $$
     \begin{align*}
@@ -548,8 +548,8 @@ class PiraNetBlock(nn.Layer):
         return out
 
 
-class PiraNet(base.Arch):
-    r"""PiraNet.
+class PirateNet(base.Arch):
+    r"""PirateNet.
 
     [PIRATENETS: PHYSICS-INFORMED DEEP LEARNING WITHRESIDUAL ADAPTIVE NETWORKS](https://arxiv.org/pdf/2402.00326.pdf)
 
@@ -564,7 +564,7 @@ class PiraNet(base.Arch):
         \mathbf{g}^{(l)} &= \sigma\left(\mathbf{W}_2^{(l)} \mathbf{z}_1^{(l)}+\mathbf{b}_2^{(l)}\right) \\
         \mathbf{z}_2^{(l)} &= \mathbf{g}^{(l)} \odot \mathbf{U}+\left(1-\mathbf{g}^{(l)}\right) \odot \mathbf{V} \\
         \mathbf{h}^{(l)} &= \sigma\left(\mathbf{W}_3^{(l)} \mathbf{z}_2^{(l)}+\mathbf{b}_3^{(l)}\right) \\
-        \mathbf{x}^{(l+1)} &= \text{PiraBlock}^{(l)}\left(\mathbf{x}^{(l)}\right), l=1...L-1\\
+        \mathbf{x}^{(l+1)} &= \text{PirateBlock}^{(l)}\left(\mathbf{x}^{(l)}\right), l=1...L-1\\
         \mathbf{u}_\theta &= \mathbf{W}^{(L+1)} \mathbf{x}^{(L)}
     \end{align*}
     $$
@@ -572,7 +572,7 @@ class PiraNet(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
         output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
-        num_blocks (int): Number of PiraBlocks.
+        num_blocks (int): Number of PirateBlocks.
         hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
             An integer for all layers, or list of integer specify each layer's size.
         activation (str, optional): Name of activation function. Defaults to "tanh".
@@ -590,7 +590,7 @@ class PiraNet(base.Arch):
     Examples:
         >>> import paddle
         >>> import ppsci
-        >>> model = ppsci.arch.PiraNet(
+        >>> model = ppsci.arch.PirateNet(
         ...     input_keys=("x", "y"),
         ...     output_keys=("u", "v"),
         ...     num_blocks=3,
@@ -676,7 +676,7 @@ class PiraNet(base.Arch):
 
         for i, _size in enumerate(hidden_size):
             self.blocks.append(
-                PiraNetBlock(
+                PirateNetBlock(
                     cur_size,
                     activation=activation,
                     random_weight=random_weight,

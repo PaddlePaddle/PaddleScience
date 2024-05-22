@@ -61,7 +61,7 @@ def plot(
 
 def train(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PiraNet(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     # set equation
     equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
@@ -186,7 +186,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PiraNet(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
@@ -216,7 +216,6 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        log_freq=cfg.log_freq,
         validator=validator,
         cfg=cfg,
     )
@@ -235,7 +234,7 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PiraNet(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(model, cfg=cfg)
@@ -271,7 +270,7 @@ def inference(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./conf", config_name="allen_cahn_piranet.yaml"
+    version_base=None, config_path="./conf", config_name="allen_cahn_piratenet.yaml"
 )
 def main(cfg: DictConfig):
     if cfg.mode == "train":
