@@ -8,6 +8,7 @@
         - AMGNet
         - MLP
         - ModifiedMLP
+        - PiraNet
         - DeepONet
         - DeepPhyLSTM
         - LorenzEmbedding
