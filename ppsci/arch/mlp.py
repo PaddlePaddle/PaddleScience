@@ -154,7 +154,7 @@ class MLP(base.Arch):
             input in given channel will be period embeded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
-            e.g. {'dim': 256, 'sclae': 1.0}. Defaults to None.
+            e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
             factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
@@ -167,13 +167,13 @@ class MLP(base.Arch):
         ...     num_layers=5,
         ...     hidden_size=128
         ... )
-        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
-        ...               "y": paddle.rand([64, 64, 1])}
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [64, 64, 1]
+        [64, 1]
         >>> print(output_dict["v"].shape)
-        [64, 64, 1]
+        [64, 1]
     """
 
     def __init__(
@@ -341,13 +341,13 @@ class ModifiedMLP(base.Arch):
         ...     num_layers=5,
         ...     hidden_size=128
         ... )
-        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
-        ...               "y": paddle.rand([64, 64, 1])}
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [64, 64, 1]
+        [64, 1]
         >>> print(output_dict["v"].shape)
-        [64, 64, 1]
+        [64, 1]
     """
 
     def __init__(
@@ -485,18 +485,22 @@ class PiraNetBlock(nn.Layer):
     $$
 
     Args:
-        embed_dim (int): _description_
-        activation (str, optional): _description_. Defaults to "tanh".
-        random_weight (bool, optional): _description_. Defaults to True.
+        embed_dim (int): Embedding dimension.
+        activation (str, optional): Name of activation function. Defaults to "tanh".
+        random_weight (Optional[Dict[str, float]]): Mean and std of random weight
+            factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
     """
 
     def __init__(
-        self, embed_dim: int, activation: str = "tanh", random_weight: bool = True
+        self,
+        embed_dim: int,
+        activation: str = "tanh",
+        random_weight: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
         self.linear1 = (
             nn.Linear(embed_dim, embed_dim)
-            if not random_weight
+            if random_weight is None
             else RandomWeightFactorization(
                 embed_dim,
                 embed_dim,
@@ -506,7 +510,7 @@ class PiraNetBlock(nn.Layer):
         )
         self.linear2 = (
             nn.Linear(embed_dim, embed_dim)
-            if not random_weight
+            if random_weight is None
             else RandomWeightFactorization(
                 embed_dim,
                 embed_dim,
@@ -516,7 +520,7 @@ class PiraNetBlock(nn.Layer):
         )
         self.linear3 = (
             nn.Linear(embed_dim, embed_dim)
-            if not random_weight
+            if random_weight is None
             else RandomWeightFactorization(
                 embed_dim,
                 embed_dim,
@@ -579,7 +583,7 @@ class PiraNet(base.Arch):
             input in given channel will be period embeded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
-            e.g. {'dim': 256, 'sclae': 1.0}. Defaults to None.
+            e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
             factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
@@ -590,15 +594,16 @@ class PiraNet(base.Arch):
         ...     input_keys=("x", "y"),
         ...     output_keys=("u", "v"),
         ...     num_blocks=3,
-        ...     hidden_size=256
+        ...     hidden_size=256,
+        ...     fourier={'dim': 256, 'scale': 1.0},
         ... )
-        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
-        ...               "y": paddle.rand([64, 64, 1])}
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [64, 64, 1]
+        [64, 1]
         >>> print(output_dict["v"].shape)
-        [64, 64, 1]
+        [64, 1]
     """
 
     def __init__(
@@ -702,7 +707,6 @@ class PiraNet(base.Arch):
             y = block(y, u, v)
 
         y = self.last_fc(y)
-
         return y
 
     def forward(self, x):
