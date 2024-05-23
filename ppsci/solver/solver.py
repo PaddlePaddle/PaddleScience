@@ -380,7 +380,7 @@ class Solver:
         if self.use_vdl:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -415,7 +415,7 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(output_dir, "tensorboard")
+                        osp.join(self.output_dir, "tensorboard")
                     )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "

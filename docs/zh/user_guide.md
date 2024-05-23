@@ -112,7 +112,7 @@ TRAIN:
 ``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
-....
+...
 [HYDRA]        #1 : seed=42 TRAIN.epochs=20
 ...
 [HYDRA]        #2 : seed=1024 TRAIN.epochs=10
@@ -696,7 +696,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
 
 2. 修改 `viv.yaml` 文件，在 `defaults:` 和 `hydra:` 字段下分别添加如下配置（高亮部分所示）
 
-    ``` yaml title="title" hl_lines="8 26-34"
+    ``` yaml title="viv.yaml" hl_lines="8 26-34"
     defaults:
       - ppsci_default
       - TRAIN: train_default
