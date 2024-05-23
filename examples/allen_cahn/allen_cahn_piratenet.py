@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.loss import mtl
 from ppsci.utils import misc
 
 dtype = paddle.get_default_dtype()
@@ -60,11 +61,12 @@ def plot(
 
 def train(cfg: DictConfig):
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     # set equation
     equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
 
+    # set constraint
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
     t_star = data["t"].flatten().astype(dtype)  # [nt, ]
@@ -78,7 +80,6 @@ def train(cfg: DictConfig):
     x0 = x_star[0]  # float
     x1 = x_star[-1]  # float
 
-    # set constraint
     def gen_input_batch():
         tx = np.random.uniform(
             [t0, x0],
@@ -86,7 +87,7 @@ def train(cfg: DictConfig):
             (cfg.TRAIN.batch_size, 2),
         ).astype(dtype)
         return {
-            "t": tx[:, 0:1],
+            "t": np.sort(tx[:, 0:1], axis=0),
             "x": tx[:, 1:2],
         }
 
@@ -102,7 +103,9 @@ def train(cfg: DictConfig):
             },
         },
         output_expr=equation["AllenCahn"].equations,
-        loss=ppsci.loss.MSELoss("mean"),
+        loss=ppsci.loss.CausalMSELoss(
+            cfg.TRAIN.causal.n_chunks, "mean", tol=cfg.TRAIN.causal.tol
+        ),
         name="PDE",
     )
 
@@ -156,22 +159,15 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=True,
-        eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
         validator=validator,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        use_tbd=True,
+        loss_aggregator=mtl.GradNorm(
+            model,
+            len(constraint),
+            cfg.TRAIN.grad_norm.update_freq,
+            cfg.TRAIN.grad_norm.momentum,
+        ),
         cfg=cfg,
     )
     # train model
@@ -190,7 +186,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
@@ -220,11 +216,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
 
     # evaluate after finished training
@@ -241,13 +234,10 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL)
+    model = ppsci.arch.PirateNet(**cfg.MODEL)
 
     # initialize solver
-    solver = ppsci.solver.Solver(
-        model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
-    )
+    solver = ppsci.solver.Solver(model, cfg=cfg)
     # export model
     from paddle.static import InputSpec
 
@@ -279,7 +269,9 @@ def inference(cfg: DictConfig):
     plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="allen_cahn.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="allen_cahn_piratenet.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
