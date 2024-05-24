@@ -36,6 +36,7 @@ import paddle.distributed as dist
 import sympy as sp
 import visualdl as vdl
 from omegaconf import DictConfig
+from omegaconf import OmegaConf
 from packaging import version
 from paddle import amp
 from paddle import jit
@@ -508,6 +509,11 @@ class Solver:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.use_tbd and isinstance(self.cfg, DictConfig):
+            self.tbd_writer.add_text(
+                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+            )
 
         if self.nvtx_flag:
             core.nvprof_start()
