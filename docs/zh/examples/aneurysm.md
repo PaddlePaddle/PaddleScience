@@ -8,7 +8,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py
@@ -20,7 +20,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
@@ -38,7 +38,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=infer
@@ -109,7 +109,7 @@ examples/aneurysm/aneurysm.py:17:23
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
 
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
 
 # unzip it
 tar -xvf aneurysm_dataset.tar

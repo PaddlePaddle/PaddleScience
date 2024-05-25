@@ -12,7 +12,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --output ./data/cylinder_nektar_wake.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
 
     python VP_NSFNet2.py    mode=eval  data_dir=./data/cylinder_nektar_wake.mat  pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet2.pdparams
 
@@ -30,7 +30,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --output ./data/cylinder_nektar_wake.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
     python VP_NSFNet2.py data_dir=./data/cylinder_nektar_wake.mat
 
     # VP_NSFNet3

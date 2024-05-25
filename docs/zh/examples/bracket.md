@@ -8,7 +8,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
     # unzip it
     tar -xvf bracket_dataset.tar
     python bracket.py
@@ -20,7 +20,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
     # unzip it
     tar -xvf bracket_dataset.tar
     python bracket.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
@@ -38,7 +38,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
     # unzip it
     tar -xvf bracket_dataset.tar
     python bracket.py mode=infer
@@ -126,7 +126,7 @@ examples/bracket/bracket.py:32:37
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
 
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
 
 # unzip it
 tar -xvf bracket_dataset.tar

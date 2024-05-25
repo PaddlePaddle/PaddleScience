@@ -9,7 +9,7 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
 
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --create-dirs -o ./data/burgers_1501x2x128x128.mat
 
     python main.py DATA_PATH=./data/burgers_1501x2x128x128.mat
     ```
@@ -20,7 +20,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --create-dirs -o ./data/burgers_1501x2x128x128.mat
 
     python main.py mode=eval DATA_PATH=./data/burgers_1501x2x128x128.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams
     ```

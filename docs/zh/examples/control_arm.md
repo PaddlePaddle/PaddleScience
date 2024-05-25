@@ -10,7 +10,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py
         ```
 
@@ -20,7 +20,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
         ```
 
@@ -32,7 +32,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
         ```
 
@@ -42,7 +42,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
         ```
 
@@ -68,7 +68,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py mode=infer
         ```
 
@@ -78,7 +78,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py mode=infer
         ```
 
