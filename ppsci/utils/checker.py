@@ -128,11 +128,12 @@ def run_check_mesh() -> None:
     # test demo code below.
     if importlib.util.find_spec("open3d") is None:
         raise ModuleNotFoundError(
-            "Please install open3d first via "
-            "pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple"
+            "Please install open3d first with: " "`pip install open3d`"
         )
     if importlib.util.find_spec("pysdf") is None:
-        raise ModuleNotFoundError("Please install pysdf first via " "pip install pysdf")
+        raise ModuleNotFoundError(
+            "Please install pysdf first with: `pip install pysdf`"
+        )
     if importlib.util.find_spec("pymesh") is None:
         raise ModuleNotFoundError(
             "Please install pymesh first as "
