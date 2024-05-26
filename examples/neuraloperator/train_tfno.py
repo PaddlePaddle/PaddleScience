@@ -131,7 +131,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.TFNO2dNet(
         **cfg.MODEL,
     )
-    # # init optimizer and lr scheduler
+    # init optimizer and lr scheduler
     if cfg.TRAIN.lr_scheduler.type == "ReduceOnPlateau":
         lr_scheduler = paddle.optimizer.lr.ReduceOnPlateau(
             learning_rate=cfg.TRAIN.lr_scheduler.learning_rate,
@@ -304,7 +304,6 @@ def export(cfg: DictConfig):
     solver.export(input_spec, cfg.INFER.export_path)
 
 
-# 使用静态图推理出错
 def inference(cfg: DictConfig):
     import matplotlib.pyplot as plt
     import predictor

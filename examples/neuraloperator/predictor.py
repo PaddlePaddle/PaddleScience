@@ -152,7 +152,7 @@ class SFNOPredictor(base.Predictor):
         """
         if batch_size != 1:
             raise ValueError(
-                f"FNOPredictor only support batch_size=1, but got {batch_size}"
+                f"SFNOPredictor only support batch_size=1, but got {batch_size}"
             )
         # prepare input handle(s)
         input_handles = {self.input_names[0]: self.input_data_handle}
