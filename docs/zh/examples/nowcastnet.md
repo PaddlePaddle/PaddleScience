@@ -16,6 +16,18 @@
     python nowcastnet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nowcastnet/nowcastnet_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python nowcastnet.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python nowcastnet.py mode=infer
+    ```
+
 ## 1. 背景简介
 
 近年来，深度学习方法已被应用于天气预报，尤其是雷达观测的降水预报。这些方法利用大量雷达复合观测数据来训练神经网络模型，以端到端的方式进行训练，无需明确参考降水过程的物理定律。

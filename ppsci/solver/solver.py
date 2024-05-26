@@ -380,7 +380,7 @@ class Solver:
         if self.use_vdl:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -415,7 +415,7 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(output_dir, "tensorboard")
+                        osp.join(self.output_dir, "tensorboard")
                     )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
@@ -441,7 +441,7 @@ class Solver:
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for computational optimization.")
+        logger.message(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use Sum if None
         if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:

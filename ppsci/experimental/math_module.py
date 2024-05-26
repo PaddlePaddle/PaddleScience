@@ -186,7 +186,7 @@ def gaussian_integrate(
 
         return points, h, n_per_dim
 
-    def _evaluate_integrand(fn, points, weights=None, fn_args=None) -> paddle.Tenosr:
+    def _evaluate_integrand(fn, points, weights=None, fn_args=None) -> paddle.Tensor:
         """Evaluate the integrand function at the passed points.
 
         Args:
@@ -196,7 +196,7 @@ def gaussian_integrate(
             fn_args (list or tuple, optional): Any arguments required by the function. Defaults to None.
 
         Returns:
-            paddle.Tenosr: Integral result.
+            paddle.Tensor: Integral result.
         """
         if fn_args is None:
             fn_args = ()
