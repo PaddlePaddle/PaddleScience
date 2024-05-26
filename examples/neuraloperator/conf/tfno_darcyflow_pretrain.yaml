@@ -96,7 +96,7 @@ TRAIN:
     scheduler_T_max: 500
   wd: 1.0e-4
   batch_size: 16
-  pretrained_model_path: ./pretrainmodel/tfno_pretrain.pdparams
+  pretrained_model_path: null
   checkpoint_path: null
 
 

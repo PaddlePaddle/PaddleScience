@@ -1,4 +1,5 @@
 import itertools
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -1052,7 +1053,7 @@ class FNOBlocks(nn.Layer):
         n_layers: int = 1,
         max_n_modes: int = None,
         use_mlp: bool = False,
-        mlp: Optional[dict[float, float]] = None,
+        mlp: Optional[Dict[str, float]] = None,
         non_linearity: nn.functional = F.gelu,
         stabilizer: str = None,
         norm: str = None,

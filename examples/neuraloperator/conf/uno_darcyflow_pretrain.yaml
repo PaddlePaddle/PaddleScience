@@ -101,7 +101,7 @@ TRAIN:
   wd: 1.0e-4
   batch_size: 16
   # /home/aistudio/darcy_flow_small.pdparams
-  pretrained_model_path: ./pretrainmodel/uno_pretrain.pdparams
+  pretrained_model_path: null
   checkpoint_path: null
 
 

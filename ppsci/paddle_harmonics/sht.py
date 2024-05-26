@@ -44,13 +44,24 @@ from ppsci.paddle_harmonics.quadrature import lobatto_weights
 
 
 class RealSHT(nn.Layer):
-    r"""
+    """
     Defines a module for computing the forward (real-valued) SHT.
     Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
     The SHT is applied to the last two dimensions of the input
 
     [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
     [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
+
+    Initializes the SHT Layer, precomputing the necessary quadrature weights.
+    Args:
+        nlat (int): Input grid resolution in the latitudinal direction.
+        nlon (int): Input grid resolution in the longitudinal direction.
+        lmax (int, optional): The max input grid resolution in the latitudinal direction. Defaults to None.
+        mmax (int, optional): The max input grid resolution in the longitudinal direction. Defaults to None.
+        grid (str, optional): Grid in the latitude direction (for now only tensor product grids are supported).
+            Defaults to "lobatto".
+        norm (str, optional): The type of normalization to use. Defaults to "ortho".
+        csphase (bool, optional): Whether to apply the complex-conjugate symmetry phase factor. Defaults to True.
     """
 
     def __init__(
@@ -63,15 +74,6 @@ class RealSHT(nn.Layer):
         norm="ortho",
         csphase=True,
     ):
-        r"""
-        Initializes the SHT Layer, precomputing the necessary quadrature weights
-
-        Parameters:
-        nlat: input grid resolution in the latitudinal direction
-        nlon: input grid resolution in the longitudinal direction
-        grid: grid in the latitude direction (for now only tensor product grids are supported)
-        """
-
         super().__init__()
 
         self.nlat = nlat
@@ -109,9 +111,6 @@ class RealSHT(nn.Layer):
         self.weights = paddle.einsum("mlk,k->mlk", pct, weights)
 
     def extra_repr(self):
-        r"""
-        Pretty print module
-        """
         return f"nlat={self.nlat}, nlon={self.nlon},\n lmax={self.lmax}, mmax={self.mmax},\n grid={self.grid}, csphase={self.csphase}"
 
     def forward(self, x: paddle.Tensor):
@@ -147,7 +146,7 @@ class RealSHT(nn.Layer):
 
 
 class InverseRealSHT(nn.Layer):
-    r"""
+    """
     Defines a module for computing the inverse (real-valued) SHT.
     Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
     nlat, nlon: Output dimensions
@@ -201,9 +200,6 @@ class InverseRealSHT(nn.Layer):
         self.pct = paddle.to_tensor(pct)
 
     def extra_repr(self):
-        r"""
-        Pretty print module
-        """
         return f"nlat={self.nlat}, nlon={self.nlon},\n lmax={self.lmax}, mmax={self.mmax},\n grid={self.grid}, csphase={self.csphase}"
 
     def forward(self, x: paddle.Tensor):
@@ -226,13 +222,16 @@ class InverseRealSHT(nn.Layer):
 
 
 class RealVectorSHT(nn.Layer):
-    r"""
+    """
     Defines a module for computing the forward (real) vector SHT.
     Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
     The SHT is applied to the last three dimensions of the input.
 
     [1] Schaeffer, N. Efficient spherical harmonic transforms aimed at pseudospectral numerical simulations, G3: Geochemistry, Geophysics, Geosystems.
     [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
+
+    Initializes the vector SHT Layer, precomputing the necessary quadrature weights.
+
     """
 
     def __init__(
@@ -245,15 +244,6 @@ class RealVectorSHT(nn.Layer):
         norm="ortho",
         csphase=True,
     ):
-        r"""
-        Initializes the vector SHT Layer, precomputing the necessary quadrature weights
-
-        Parameters:
-        nlat: input grid resolution in the latitudinal direction
-        nlon: input grid resolution in the longitudinal direction
-        grid: type of grid the data lives on
-        """
-
         super().__init__()
 
         self.nlat = nlat
@@ -299,9 +289,6 @@ class RealVectorSHT(nn.Layer):
         self.weights = weights
 
     def extra_repr(self):
-        r"""
-        Pretty print module
-        """
         return f"nlat={self.nlat}, nlon={self.nlon},\n lmax={self.lmax}, mmax={self.mmax},\n grid={self.grid}, csphase={self.csphase}"
 
     def forward(self, x: paddle.Tensor):
@@ -369,7 +356,7 @@ class RealVectorSHT(nn.Layer):
 
 
 class InverseRealVectorSHT(nn.Layer):
-    r"""
+    """
     Defines a module for computing the inverse (real-valued) vector SHT.
     Precomputes Legendre Gauss nodes, weights and associated Legendre polynomials on these nodes.
 
@@ -421,9 +408,6 @@ class InverseRealVectorSHT(nn.Layer):
         self.dpct = paddle.to_tensor(dpct)
 
     def extra_repr(self):
-        r"""
-        Pretty print module
-        """
         return f"nlat={self.nlat}, nlon={self.nlon},\n lmax={self.lmax}, mmax={self.mmax},\n grid={self.grid}, csphase={self.csphase}"
 
     def forward(self, x: paddle.Tensor):

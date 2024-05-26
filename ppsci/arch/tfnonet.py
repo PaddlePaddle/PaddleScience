@@ -1,3 +1,4 @@
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -26,7 +27,7 @@ class FNONet(base.Arch):
             Defaults to 256.
         n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
         use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
-        mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
+        mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
@@ -46,8 +47,6 @@ class FNONet(base.Arch):
             If factorization is not None, forward mode to use::
             * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
             * `factorized` : the input is directly contracted with the factors of the decomposition.
-        decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
-            decomposition. Defaults to dict().
         domain_padding (Optional[Union[list,float,int]]): Whether to use percentage of padding. Defaults to
             None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
@@ -70,7 +69,7 @@ class FNONet(base.Arch):
         projection_channels: int = 256,
         n_layers: int = 4,
         use_mlp: bool = False,
-        mlp: dict[str, float] = None,
+        mlp: Optional[Dict[str, float]] = None,
         max_n_modes: int = None,
         non_linearity: nn.functional = F.gelu,
         stabilizer: str = None,
@@ -230,8 +229,6 @@ class TFNO1dNet(FNONet):
             If factorization is not None, forward mode to use::
             * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
             * `factorized` : the input is directly contracted with the factors of the decomposition.
-        decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
-            decomposition. Defaults to dict().
         domain_padding (Optional[Union[list, float, int]], optional): Whether to use percentage of padding.
             Defaults to None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
@@ -255,7 +252,7 @@ class TFNO1dNet(FNONet):
         n_layers: int = 4,
         non_linearity: nn.functional = F.gelu,
         use_mlp: bool = False,
-        mlp: dict[str, float] = None,
+        mlp: Optional[Dict[str, float]] = None,
         norm: str = None,
         skip: str = "soft-gating",
         separable: bool = False,
@@ -318,7 +315,7 @@ class TFNO2dNet(FNONet):
            Defaults to 256.
        n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
        use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
-       mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
+       mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
            Defaults to None.
        non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
        norm (F.module, optional): Normalization layer to use. Defaults to None.
@@ -337,8 +334,6 @@ class TFNO2dNet(FNONet):
            If factorization is not None, forward mode to use::
            * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
            * `factorized` : the input is directly contracted with the factors of the decomposition.
-       decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
-           decomposition. Defaults to dict().
        domain_padding (Union[list,float,int], optional): Whether to use percentage of padding. Defaults to
             None.
        domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
@@ -363,7 +358,7 @@ class TFNO2dNet(FNONet):
         n_layers: int = 4,
         non_linearity: nn.functional = F.gelu,
         use_mlp: bool = False,
-        mlp: dict[str, float] = None,
+        mlp: Optional[Dict[str, float]] = None,
         norm: str = None,
         skip: str = "soft-gating",
         separable: bool = False,
@@ -428,7 +423,7 @@ class TFNO3dNet(FNONet):
            Defaults to 256.
        n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
        use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
-       mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
+       mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
            Defaults to None.
        non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
        norm (F.module, optional): Normalization layer to use. Defaults to None.
@@ -447,8 +442,6 @@ class TFNO3dNet(FNONet):
            If factorization is not None, forward mode to use::
            * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
            * `factorized` : the input is directly contracted with the factors of the decomposition.
-       decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
-           decomposition. Defaults to dict().
        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
        domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
@@ -473,7 +466,7 @@ class TFNO3dNet(FNONet):
         n_layers: int = 4,
         non_linearity: nn.functional = F.gelu,
         use_mlp: bool = False,
-        mlp: dict[str, float] = None,
+        mlp: Optional[Dict[str, float]] = None,
         norm: str = None,
         skip: str = "soft-gating",
         separable: bool = False,
@@ -482,7 +475,6 @@ class TFNO3dNet(FNONet):
         rank: float = 1.0,
         joint_factorization: bool = False,
         implementation: str = "factorized",
-        decomposition_kwargs: dict = None,
         domain_padding: Optional[Union[list, float, int]] = None,
         domain_padding_mode: str = "one-sided",
         fft_norm: str = "forward",
@@ -511,7 +503,6 @@ class TFNO3dNet(FNONet):
             rank=rank,
             joint_factorization=joint_factorization,
             implementation=implementation,
-            decomposition_kwargs=decomposition_kwargs,
             domain_padding=domain_padding,
             domain_padding_mode=domain_padding_mode,
             fft_norm=fft_norm,

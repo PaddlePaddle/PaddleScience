@@ -262,7 +262,7 @@ def evaluate(cfg: DictConfig):
         sup_validator_32.name: sup_validator_32,
     }
 
-    model = ppsci.arch.TFNO2dNet(
+    model = ppsci.arch.UNONet(
         **cfg.MODEL,
     )
 
@@ -336,7 +336,7 @@ def inference(cfg: DictConfig):
     ax.set_title("Model prediction")
     plt.xticks([], [])
     plt.yticks([], [])
-    plt.savefig(cfg.output_dir + "123.png")
+    plt.savefig(cfg.output_dir)
     logger.message("save success")
     plt.close(fig)
 

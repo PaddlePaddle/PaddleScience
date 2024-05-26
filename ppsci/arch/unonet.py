@@ -1,3 +1,4 @@
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -31,7 +32,7 @@ class UNONet(base.Arch):
             Example: For a five layer UNO with 2D input the uno_n_modes can be: [[5,5],[5,5],[5,5],[5,5],[5,5]]. Defaults to None.
         uno_scalings (Tuple[Tuple[int, ...], ...]): Scaling Factors for each Fourier Layers.
             Example: For a five layer UNO with 2D input, the uno_scalings can be : [[1.0,1.0],[0.5,0.5],[1,1],[1,1],[2,2]].Defaults to None.
-        horizontal_skips_map (dict, optional): a map {...., b: a, ....} denoting horizontal skip connection
+        horizontal_skips_map (Dict, optional): a map {...., b: a, ....} denoting horizontal skip connection
             from a-th layer to b-th layer. If None default skip connection is applied.
             Example: For a 5 layer UNO architecture, the skip connections can be horizontal_skips_map ={4:0,3:1}.Defaults to None.
         incremental_n_modes (tuple[int],optional): Incremental number of modes to use in Fourier domain.
@@ -40,7 +41,7 @@ class UNONet(base.Arch):
             * If None, all the n_modes are used.
             This can be updated dynamically during training.Defaults to None.
         use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
-        mlp (dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
+        mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
@@ -63,8 +64,6 @@ class UNONet(base.Arch):
             If factorization is not None, forward mode to use::
             * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
             * `factorized` : the input is directly contracted with the factors of the decomposition.
-        decomposition_kwargs (dict, optional): Optionaly additional parameters to pass to the tensor
-            decomposition. Defaults to dict().
         domain_padding (Optional[Union[list, float, int]], optional): Whether to use percentage of padding.
             Defaults to None.
         domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
@@ -86,10 +85,10 @@ class UNONet(base.Arch):
         uno_out_channels: Tuple[int, ...] = None,
         uno_n_modes: Tuple[Tuple[int, ...], ...] = None,
         uno_scalings: Tuple[Tuple[int, ...], ...] = None,
-        horizontal_skips_map: dict = None,
+        horizontal_skips_map: Dict = None,
         incremental_n_modes: Tuple[int, ...] = None,
         use_mlp: bool = False,
-        mlp: dict[str, float] = None,
+        mlp: Optional[Dict[str, float]] = None,
         non_linearity: nn.functional = F.gelu,
         norm: str = None,
         ada_in_features: Optional[int] = None,
