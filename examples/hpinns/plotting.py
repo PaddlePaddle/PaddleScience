@@ -20,6 +20,7 @@ import os
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 
 import functions as func_module
 import matplotlib.pyplot as plt
@@ -114,16 +115,16 @@ def prepare_data(solver: ppsci.solver.Solver, expr_dict: Dict[str, Callable]):
 def plot_field_holo(
     coord_visual: np.ndarray,
     field_visual: np.ndarray,
-    coord_lambda: np.ndarray,
-    field_lambda: np.ndarray,
+    coord_lambda: Optional[np.ndarray] = None,
+    field_lambda: Optional[np.ndarray] = None,
 ):
     """Plot fields of of holography example.
 
     Args:
         coord_visual (np.ndarray): The coord of epsilon and |E|**2.
         field_visual (np.ndarray): The filed of epsilon and |E|**2.
-        coord_lambda (np.ndarray): The coord of lambda.
-        field_lambda (np.ndarray): The filed of lambda.
+        coord_lambda (Optional[np.ndarray], optional): The coord of lambda. Defaults to None.
+        field_lambda (Optional[np.ndarray], optional): The filed of lambda. Defaults to None.
     """
     fmin, fmax = np.array([0, 1.0]), np.array([0.6, 12])
     cmin, cmax = coord_visual.min(axis=(0, 1)), coord_visual.max(axis=(0, 1))
@@ -168,7 +169,7 @@ def plot_field_holo(
             cb = plt.colorbar()
             plt.axis((emin[0], emax[0], emin[1], emax[1]))
             plt.clim(vmin=fmin[fi], vmax=fmax[fi])
-        else:
+        elif coord_lambda is not None and field_lambda is not None:
             # Fig_6C_lambda_
             plt.figure(fi * 100 + 101, figsize=(8, 6))
             plt.clf()

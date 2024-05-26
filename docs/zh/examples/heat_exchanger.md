@@ -12,6 +12,18 @@
     python heat_exchanger.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python heat_exchanger.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python heat_exchanger.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [heat_exchanger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams) | The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency: 0.02087<br>MSE.heat_boundary(interior_mse): 0.52005<br>MSE.cold_boundary(interior_mse): 0.16590<br>MSE.wall(interior_mse): 0.01203 |

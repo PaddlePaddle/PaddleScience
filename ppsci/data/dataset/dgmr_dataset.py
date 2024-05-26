@@ -14,19 +14,15 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Tuple
 
 import numpy as np
-import paddle
 from numpy.random import default_rng
-
-try:
-    import datasets
-except ModuleNotFoundError:
-    pass
+from paddle import io
 
 
-class DGMRDataset(paddle.io.Dataset):
+class DGMRDataset(io.Dataset):
     """
     Dataset class for DGMR (Deep Generative Model for Radar) model.
     This open-sourced UK dataset has been mirrored to HuggingFace Datasets https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km.
@@ -59,6 +55,13 @@ class DGMRDataset(paddle.io.Dataset):
         self.label_keys = label_keys
         self.num_input_frames = num_input_frames
         self.num_target_frames = num_target_frames
+        if not importlib.util.find_spec("datasets"):
+            raise ModuleNotFoundError(
+                "Please install datasets with `pip install datasets`"
+                " before exporting onnx model."
+            )
+        import datasets
+
         self.reader = datasets.load_dataset(
             dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
         )

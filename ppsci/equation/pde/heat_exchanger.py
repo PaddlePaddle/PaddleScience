@@ -90,3 +90,5 @@ class HeatExchanger(base.PDE):
         self.add_equation("heat_boundary", heat_boundary)
         self.add_equation("cold_boundary", cold_boundary)
         self.add_equation("wall", wall)
+
+        self._apply_detach()

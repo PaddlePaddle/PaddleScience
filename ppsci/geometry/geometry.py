@@ -25,6 +25,7 @@ from typing import Tuple
 
 import numpy as np
 import paddle
+from typing_extensions import Literal
 
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -129,8 +130,8 @@ class Geometry:
     def sample_interior(
         self,
         n: int,
-        random: str = "pseudo",
-        criteria: Optional[Callable] = None,
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ) -> Dict[str, np.ndarray]:
@@ -138,8 +139,13 @@ class Geometry:
 
         Args:
             n (int): Number of points.
-            random (str): Random method. Defaults to "pseudo".
-            criteria (Optional[Callable]): Criteria function. Defaults to None.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
+                pseudo: Pseudo random.
+                Halton: Halton sequence.
+                LHS: Latin Hypercube Sampling.
+            criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
+                coords from differnet dimension and return a boolean array with shape [n,].
+                Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
 
@@ -226,16 +232,21 @@ class Geometry:
     def sample_boundary(
         self,
         n: int,
-        random: str = "pseudo",
-        criteria: Optional[Callable] = None,
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
         evenly: bool = False,
     ) -> Dict[str, np.ndarray]:
         """Compute the random points in the geometry and return those meet criteria.
 
         Args:
             n (int): Number of points.
-            random (str): Random method. Defaults to "pseudo".
-            criteria (Optional[Callable]): Criteria function. Defaults to None.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
+                pseudo: Pseudo random.
+                Halton: Halton sequence.
+                LHS: Latin Hypercube Sampling.
+            criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
+                coords from differnet dimension and return a boolean array with shape [n,].
+                Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
 
         Returns:
@@ -305,7 +316,7 @@ class Geometry:
             if len(points) > 0:
                 _nsuc += 1
 
-            if _ntry >= 1000 and _nsuc == 0:
+            if _ntry >= 10000 and _nsuc == 0:
                 raise ValueError(
                     "Sample boundary points failed, "
                     "please check correctness of geometry and given criteria."
@@ -332,12 +343,17 @@ class Geometry:
         return {**x_dict, **normal_dict}
 
     @abc.abstractmethod
-    def random_points(self, n: int, random: str = "pseudo") -> np.ndarray:
+    def random_points(
+        self, n: int, random: Literal["pseudo", "Halton", "LHS"] = "pseudo"
+    ) -> np.ndarray:
         """Compute the random points in the geometry.
 
         Args:
             n (int): Number of points.
-            random (str): Random method. Defaults to "pseudo".
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
+                pseudo: Pseudo random.
+                Halton: Halton sequence.
+                LHS: Latin Hypercube Sampling.
 
         Returns:
             np.ndarray: Random points in the geometry. The shape is [N, D].
@@ -379,12 +395,17 @@ class Geometry:
         return self.random_boundary_points(n)
 
     @abc.abstractmethod
-    def random_boundary_points(self, n: int, random: str = "pseudo") -> np.ndarray:
+    def random_boundary_points(
+        self, n: int, random: Literal["pseudo", "Halton", "LHS"] = "pseudo"
+    ) -> np.ndarray:
         """Compute the random points on the boundary.
 
         Args:
             n (int): Number of points.
-            random (str): Random method. Defaults to "pseudo".
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
+                pseudo: Pseudo random.
+                Halton: Halton sequence.
+                LHS: Latin Hypercube Sampling.
 
         Returns:
             np.ndarray: Random points on the boundary. The shape is [N, D].

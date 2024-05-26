@@ -35,7 +35,7 @@ def build_mtl_aggregator(cfg):
     """Build loss aggregator with multi-task learning method.
 
     Args:
-        cfg (AttrDict): Aggregator config.
+        cfg (DictConfig): Aggregator config.
     Returns:
         Loss: Callable loss aggregator object.
     """
