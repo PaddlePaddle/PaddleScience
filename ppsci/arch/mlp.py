@@ -154,7 +154,7 @@ class MLP(base.Arch):
             input in given channel will be period embeded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
-            e.g. {'dim': 256, 'sclae': 1.0}. Defaults to None.
+            e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
             factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
 
@@ -167,13 +167,13 @@ class MLP(base.Arch):
         ...     num_layers=5,
         ...     hidden_size=128
         ... )
-        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
-        ...               "y": paddle.rand([64, 64, 1])}
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [64, 64, 1]
+        [64, 1]
         >>> print(output_dict["v"].shape)
-        [64, 64, 1]
+        [64, 1]
     """
 
     def __init__(
@@ -341,13 +341,13 @@ class ModifiedMLP(base.Arch):
         ...     num_layers=5,
         ...     hidden_size=128
         ... )
-        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
-        ...               "y": paddle.rand([64, 64, 1])}
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [64, 64, 1]
+        [64, 1]
         >>> print(output_dict["v"].shape)
-        [64, 64, 1]
+        [64, 1]
     """
 
     def __init__(
@@ -458,6 +458,269 @@ class ModifiedMLP(base.Arch):
             x = self._input_transform(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        y = self.forward_tensor(y)
+        y = self.split_to_dict(y, self.output_keys, axis=-1)
+
+        if self._output_transform is not None:
+            y = self._output_transform(x, y)
+        return y
+
+
+class PirateNetBlock(nn.Layer):
+    r"""Basic block of PirateNet.
+
+    $$
+    \begin{align*}
+        \Phi(\mathbf{x})=\left[\begin{array}{l}
+        \cos (\mathbf{B} \mathbf{x}) \\
+        \sin (\mathbf{B} \mathbf{x})
+        \end{array}\right] \\
+        \mathbf{f}^{(l)} & =\sigma\left(\mathbf{W}_1^{(l)} \mathbf{x}^{(l)}+\mathbf{b}_1^{(l)}\right) \\
+        \mathbf{z}_1^{(l)} & =\mathbf{f}^{(l)} \odot \mathbf{U}+\left(1-\mathbf{f}^{(l)}\right) \odot \mathbf{V} \\
+        \mathbf{g}^{(l)} & =\sigma\left(\mathbf{W}_2^{(l)} \mathbf{z}_1^{(l)}+\mathbf{b}_2^{(l)}\right) \\
+        \mathbf{z}_2^{(l)} & =\mathbf{g}^{(l)} \odot \mathbf{U}+\left(1-\mathbf{g}^{(l)}\right) \odot \mathbf{V} \\
+        \mathbf{h}^{(l)} & =\sigma\left(\mathbf{W}_3^{(l)} \mathbf{z}_2^{(l)}+\mathbf{b}_3^{(l)}\right) \\
+        \mathbf{x}^{(l+1)} & =\alpha^{(l)} \cdot \mathbf{h}^{(l)}+\left(1-\alpha^{(l)}\right) \cdot \mathbf{x}^{(l)}
+    \end{align*}
+    $$
+
+    Args:
+        embed_dim (int): Embedding dimension.
+        activation (str, optional): Name of activation function. Defaults to "tanh".
+        random_weight (Optional[Dict[str, float]]): Mean and std of random weight
+            factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
+    """
+
+    def __init__(
+        self,
+        embed_dim: int,
+        activation: str = "tanh",
+        random_weight: Optional[Dict[str, float]] = None,
+    ):
+        super().__init__()
+        self.linear1 = (
+            nn.Linear(embed_dim, embed_dim)
+            if random_weight is None
+            else RandomWeightFactorization(
+                embed_dim,
+                embed_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.linear2 = (
+            nn.Linear(embed_dim, embed_dim)
+            if random_weight is None
+            else RandomWeightFactorization(
+                embed_dim,
+                embed_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.linear3 = (
+            nn.Linear(embed_dim, embed_dim)
+            if random_weight is None
+            else RandomWeightFactorization(
+                embed_dim,
+                embed_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.alpha = self.create_parameter(
+            [
+                1,
+            ],
+            default_initializer=nn.initializer.Constant(0),
+        )
+        self.act1 = act_mod.get_activation(activation)
+        self.act2 = act_mod.get_activation(activation)
+        self.act3 = act_mod.get_activation(activation)
+
+    def forward(self, x, u, v):
+        f = self.act1(self.linear1(x))
+        z1 = f * u + (1 - f) * v
+        g = self.act2(self.linear2(z1))
+        z2 = g * u + (1 - g) * v
+        h = self.act3(self.linear3(z2))
+        out = self.alpha * h + (1 - self.alpha) * x
+        return out
+
+
+class PirateNet(base.Arch):
+    r"""PirateNet.
+
+    [PIRATENETS: PHYSICS-INFORMED DEEP LEARNING WITHRESIDUAL ADAPTIVE NETWORKS](https://arxiv.org/pdf/2402.00326.pdf)
+
+    $$
+    \begin{align*}
+        \Phi(\mathbf{x}) &= \left[\begin{array}{l}
+        \cos (\mathbf{B} \mathbf{x}) \\
+        \sin (\mathbf{B} \mathbf{x})
+        \end{array}\right] \\
+        \mathbf{f}^{(l)} &= \sigma\left(\mathbf{W}_1^{(l)} \mathbf{x}^{(l)}+\mathbf{b}_1^{(l)}\right) \\
+        \mathbf{z}_1^{(l)} &= \mathbf{f}^{(l)} \odot \mathbf{U}+\left(1-\mathbf{f}^{(l)}\right) \odot \mathbf{V} \\
+        \mathbf{g}^{(l)} &= \sigma\left(\mathbf{W}_2^{(l)} \mathbf{z}_1^{(l)}+\mathbf{b}_2^{(l)}\right) \\
+        \mathbf{z}_2^{(l)} &= \mathbf{g}^{(l)} \odot \mathbf{U}+\left(1-\mathbf{g}^{(l)}\right) \odot \mathbf{V} \\
+        \mathbf{h}^{(l)} &= \sigma\left(\mathbf{W}_3^{(l)} \mathbf{z}_2^{(l)}+\mathbf{b}_3^{(l)}\right) \\
+        \mathbf{x}^{(l+1)} &= \text{PirateBlock}^{(l)}\left(\mathbf{x}^{(l)}\right), l=1...L-1\\
+        \mathbf{u}_\theta &= \mathbf{W}^{(L+1)} \mathbf{x}^{(L)}
+    \end{align*}
+    $$
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
+        num_blocks (int): Number of PirateBlocks.
+        hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
+            An integer for all layers, or list of integer specify each layer's size.
+        activation (str, optional): Name of activation function. Defaults to "tanh".
+        weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
+        input_dim (Optional[int]): Number of input's dimension. Defaults to None.
+        output_dim (Optional[int]): Number of output's dimension. Defaults to None.
+        periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
+            input in given channel will be period embeded if specified, each tuple of
+            periods list is [period, trainable]. Defaults to None.
+        fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
+            e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
+        random_weight (Optional[Dict[str, float]]): Mean and std of random weight
+            factorization layer, e.g. {"mean": 0.5, "std: 0.1"}. Defaults to None.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> model = ppsci.arch.PirateNet(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     num_blocks=3,
+        ...     hidden_size=256,
+        ...     fourier={'dim': 256, 'scale': 1.0},
+        ... )
+        >>> input_dict = {"x": paddle.rand([64, 1]),
+        ...               "y": paddle.rand([64, 1])}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [64, 1]
+        >>> print(output_dict["v"].shape)
+        [64, 1]
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        num_blocks: int,
+        hidden_size: int,
+        activation: str = "tanh",
+        weight_norm: bool = False,
+        input_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
+        periods: Optional[Dict[int, Tuple[float, bool]]] = None,
+        fourier: Optional[Dict[str, Union[float, int]]] = None,
+        random_weight: Optional[Dict[str, float]] = None,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        self.blocks = []
+        self.periods = periods
+        self.fourier = fourier
+        if periods:
+            self.period_emb = PeriodEmbedding(periods)
+
+        if isinstance(hidden_size, int):
+            if not isinstance(num_blocks, int):
+                raise ValueError("num_blocks should be an int")
+            hidden_size = [hidden_size] * num_blocks
+        else:
+            raise ValueError(f"hidden_size should be int, but got {type(hidden_size)}")
+
+        # initialize FC layer(s)
+        cur_size = len(self.input_keys) if input_dim is None else input_dim
+        if input_dim is None and periods:
+            # period embeded channel(s) will be doubled automatically
+            # if input_dim is not specified
+            cur_size += len(periods)
+
+        if fourier:
+            self.fourier_emb = FourierEmbedding(
+                cur_size, fourier["dim"], fourier["scale"]
+            )
+            cur_size = fourier["dim"]
+
+        self.embed_u = nn.Sequential(
+            (
+                WeightNormLinear(cur_size, hidden_size[0])
+                if weight_norm
+                else nn.Linear(cur_size, hidden_size[0])
+            ),
+            (
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(hidden_size[0])
+            ),
+        )
+        self.embed_v = nn.Sequential(
+            (
+                WeightNormLinear(cur_size, hidden_size[0])
+                if weight_norm
+                else nn.Linear(cur_size, hidden_size[0])
+            ),
+            (
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(hidden_size[0])
+            ),
+        )
+
+        for i, _size in enumerate(hidden_size):
+            self.blocks.append(
+                PirateNetBlock(
+                    cur_size,
+                    activation=activation,
+                    random_weight=random_weight,
+                )
+            )
+            cur_size = _size
+
+        self.blocks = nn.LayerList(self.blocks)
+        if random_weight:
+            self.last_fc = RandomWeightFactorization(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        else:
+            self.last_fc = nn.Linear(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+            )
+
+    def forward_tensor(self, x):
+        u = self.embed_u(x)
+        v = self.embed_v(x)
+
+        y = x
+        for i, block in enumerate(self.blocks):
+            y = block(y, u, v)
+
+        y = self.last_fc(y)
+        return y
+
+    def forward(self, x):
+        if self._input_transform is not None:
+            x = self._input_transform(x)
+
+        if self.periods:
+            x = self.period_emb(x)
+
+        y = self.concat_to_tensor(x, self.input_keys, axis=-1)
+
+        if self.fourier:
+            y = self.fourier_emb(y)
+
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 

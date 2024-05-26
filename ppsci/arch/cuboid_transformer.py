@@ -532,7 +532,7 @@ class CuboidTransformer(base.Arch):
             ("d", "d", "d"),
         ],
         enc_shift_size: Tuple[Tuple[int, ...], ...] = [(0, 0, 0), (0, 0, 0)],
-        enc_use_inter_ffn: str = True,
+        enc_use_inter_ffn: bool = True,
         dec_depth: Tuple[int, ...] = [2, 2],
         dec_cross_start: int = 0,
         dec_self_attn_patterns: str = None,
