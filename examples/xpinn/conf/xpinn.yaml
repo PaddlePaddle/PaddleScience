@@ -41,7 +41,7 @@ MODEL:
   layers3: [2, 25, 25, 25, 1]
 
 # set training data file
-TRAIN_DATA_FILE: "./data/XPINN_2D_PoissonEqn.mat"
+DATA_FILE: "./data/XPINN_2D_PoissonEqn.mat"
 
 # training settings
 TRAIN:
@@ -86,7 +86,6 @@ TRAIN:
   eval_during_train: true
   eval_freq: 50
   learning_rate: 0.0008
-  batch_size: 4
   pretrained_model_path: null
   checkpoint_path: null
 
@@ -121,4 +120,3 @@ EVAL:
   batch_size: 1
   pretrained_model_path: null
   eval_with_no_grad: false
-

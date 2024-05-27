@@ -30,12 +30,7 @@ import ppsci
 paddle.framework.core.set_prim_eager_enabled(True)
 
 
-def get_grad(outputs: paddle.Tensor, inputs: paddle.Tensor) -> paddle.Tensor:
-    grad = paddle.grad(outputs, inputs, retain_graph=True, create_graph=True)
-    return grad[0]
-
-
-def xpinn_loss(
+def _xpinn_loss(
     training_pres: List[List[paddle.Tensor]] = None,
     training_exacts: List[paddle.Tensor] = None,
     training_weight: float = 1,
@@ -73,23 +68,27 @@ def xpinn_loss(
         residual_func (Callable, optional): residual calculation  function. Defaults to lambda x,y : x - y.
     """
 
-    def get_second_derivatives(
+    def _get_grad(outputs: paddle.Tensor, inputs: paddle.Tensor) -> paddle.Tensor:
+        grad = paddle.grad(outputs, inputs, retain_graph=True, create_graph=True)
+        return grad[0]
+
+    def _get_second_derivatives(
         outputs_list: List[paddle.Tensor],
         inputs_list: List[List[paddle.Tensor]],
     ) -> Tuple[List[List[paddle.Tensor]], List[List[paddle.Tensor]]]:
         d1_list = [
-            [get_grad(_out, _in) for _in in _ins]
+            [_get_grad(_out, _in) for _in in _ins]
             for _out, _ins in zip(outputs_list, inputs_list)
         ]
         d2_list = [
-            [get_grad(_d, _in) for _d, _in in zip(d1_, _ins)]
-            for d1_, _ins in zip(d1_list, inputs_list)
+            [_get_grad(_d1, _in) for _d1, _in in zip(d1s_, _ins)]
+            for d1s_, _ins in zip(d1_list, inputs_list)
         ]
         return d2_list
 
-    residual_u_d2_list = get_second_derivatives(residual_pres, residual_inputs)
-    interface_u_d2_list = get_second_derivatives(interface_pres, interface_inputs)
-    interface_neigh_u_d2_list = get_second_derivatives(
+    residual_u_d2_list = _get_second_derivatives(residual_pres, residual_inputs)
+    interface_u_d2_list = _get_second_derivatives(interface_pres, interface_inputs)
+    interface_neigh_u_d2_list = _get_second_derivatives(
         interface_neigh_pres, interface_inputs
     )
 
@@ -139,7 +138,7 @@ def loss_fun(
         )
 
     # subdomain 1
-    loss1 = xpinn_loss(
+    loss1 = _xpinn_loss(
         training_pres=[output_dict["boundary_u"]],
         training_exacts=[label_dict["boundary_u_exact"]],
         training_weight=20,
@@ -164,7 +163,7 @@ def loss_fun(
     )
 
     # subdomain 2
-    loss2 = xpinn_loss(
+    loss2 = _xpinn_loss(
         residual_inputs=[[output_dict["residual2_x"], output_dict["residual2_y"]]],
         residual_pres=[output_dict["residual2_u"]],
         residual_weight=1,
@@ -177,7 +176,7 @@ def loss_fun(
     )
 
     # subdomain 3
-    loss3 = xpinn_loss(
+    loss3 = _xpinn_loss(
         residual_inputs=[[output_dict["residual3_x"], output_dict["residual3_y"]]],
         residual_pres=[output_dict["residual3_u"]],
         residual_weight=1,
@@ -214,10 +213,10 @@ def eval_rmse_func(
         ]
     )
 
-    error_u_total = paddle.linalg.norm(
+    error_total = paddle.linalg.norm(
         u_exact.flatten() - u_pred.flatten(), 2
     ) / paddle.linalg.norm(u_exact.flatten(), 2)
-    return {"total": error_u_total}
+    return {"l2_error": error_total}
 
 
 def train(cfg: DictConfig):
@@ -398,7 +397,7 @@ def evaluate(cfg: DictConfig):
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_FILE,
+            "file_path": cfg.DATA_FILE,
             "input_keys": cfg.TRAIN.input_keys,
             "label_keys": cfg.EVAL.label_keys,
             "alias_dict": cfg.EVAL.alias_dict,
