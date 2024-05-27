@@ -267,7 +267,7 @@ class ENSODataset(io.Dataset):
         super(ENSODataset, self).__init__()
         if importlib.util.find_spec("xarray") is None:
             raise ModuleNotFoundError(
-                "To use RadarDataset, please install 'xarray' via: `pip install "
+                "To use RadarDataset, please install 'xarray' with: `pip install "
                 "xarray` first."
             )
         self.input_keys = input_keys

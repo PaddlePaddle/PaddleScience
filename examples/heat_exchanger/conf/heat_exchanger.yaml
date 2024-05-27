@@ -58,7 +58,7 @@ MODEL:
   trunk_hidden_size: 128
   branch_activation: "swish"
   trunk_activation: "swish"
-  use_bias: True
+  use_bias: true
 
 # training settings
 TRAIN:
