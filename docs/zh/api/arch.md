@@ -29,5 +29,10 @@
         - ChipDeepONets
         - AutoEncoder
         - CuboidTransformer
+        - SFNONet
+        - UNONet
+        - TFNO1dNet
+        - TFNO2dNet
+        - TFNO3dNet
       show_root_heading: true
       heading_level: 3
