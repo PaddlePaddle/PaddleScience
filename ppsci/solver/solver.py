@@ -34,7 +34,6 @@ import numpy as np
 import paddle
 import paddle.distributed as dist
 import sympy as sp
-import visualdl as vdl
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 from packaging import version
@@ -379,6 +378,12 @@ class Solver:
         if not cfg:
             self.use_vdl = use_vdl
         if self.use_vdl:
+            try:
+                import visualdl as vdl
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'visualdl' with `pip install visualdl` first."
+                )
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
