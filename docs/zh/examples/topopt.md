@@ -8,7 +8,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py
     ```
 
@@ -18,7 +18,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py mode=eval 'EVAL.pretrained_model_path_dict={'Uniform': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams', 'Poisson5': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams', 'Poisson10': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams', 'Poisson30': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams'}'
     ```
 
@@ -46,7 +46,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py mode=infer INFER.pretrained_model_name=Uniform INFER.img_num=3
     ```
 
@@ -54,7 +54,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py mode=infer INFER.pretrained_model_name=Poisson5 INFER.img_num=3
     ```
 
@@ -62,7 +62,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py mode=infer INFER.pretrained_model_name=Poisson10 INFER.img_num=3
     ```
 
@@ -70,7 +70,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --create-dirs -o ./datasets/top_dataset.h5
     python topopt.py mode=infer INFER.pretrained_model_name=Poisson30 INFER.img_num=3
     ```
 

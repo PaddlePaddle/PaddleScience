@@ -39,7 +39,7 @@ MODEL:
   hidden_size: 256
   activation: tanh
   periods:
-    x: [2.0, False]
+    x: [2.0, false]
   fourier:
     dim: 256
     scale: 2.0

@@ -240,7 +240,7 @@ class Mesh(geometry.Geometry):
             raise ImportError(
                 "Could not import open3d and pymesh python package. "
                 "Please install open3d with `pip install open3d` and "
-                "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
+                "pymesh as https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#__tabbed_4_1"
             )
         import open3d  # isort:skip
         import pymesh  # isort:skip
