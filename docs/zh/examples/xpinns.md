@@ -2,9 +2,16 @@
 
 === "模型训练命令"
 
-``` sh
-python xpinns.py
-```
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
+
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --output ./data/XPINN_2D_PoissonEqn.mat
+
+    python xpinn.py
+
+    ```
 
 ## 1. 背景简介
 
@@ -34,11 +41,11 @@ $$ \Delta u = f(x, y),  x,y \in \Omega \subset R^2$$
   <figcaption>二维泊松方程的三个子区域</figcaption>
 </figure>
 
-计算域的边界表达式如下，
+计算域的边界表达式如下。
 
 $$ \gamma =1.5+0.14 sin(4θ)+0.12 cos(6θ)+0.09 cos(5θ), θ \in [0,2π) $$
 
-红色区域和黄色区域的界面的表达式如下，
+红色区域和黄色区域的界面的表达式如下。
 
 $$ \gamma_1 =0.5+0.18 sin(3θ)+0.08 cos(2θ)+0.2 cos(5θ), θ \in [0,2π)$$
 
@@ -47,7 +54,7 @@ $$ \gamma_2 =0.34+0.04 sin(5θ)+0.18 cos(3θ)+0.1 cos(6θ), θ \in [0,2π) $$
 执行以下命令，下载并解压数据集。
 
 ``` sh
-待生成下载链接后补充下载代码
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
 ```
 
 ### 3.3 模型构建
