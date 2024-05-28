@@ -126,7 +126,7 @@ examples/xpinn/xpinn.py:337:338
 
 在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="100"
+``` py linenums="324"
 --8<--
 examples/xpinn/xpinn.py:324:335
 --8<--
