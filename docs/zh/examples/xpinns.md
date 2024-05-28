@@ -8,16 +8,11 @@ python xpinns.py
 
 ## 1. 背景简介
 
-求解偏微分方程（PDE）是一类基础的物理问题，随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。XPINNs（Extended Physics-Informed Neural Networks）是一种适用于物理信息神经网络（PINNs）的广义时空域分解方法，以求解任意复杂几何域上的非线性偏微分方程。
+求解偏微分方程（PDE）是一类基础的物理问题，随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。[XPINNs（Extended Physics-Informed Neural Networks）](https://doi.org/10.4208/cicp.OA-2020-0164)是一种适用于物理信息神经网络（PINNs）的广义时空域分解方法，以求解任意复杂几何域上的非线性偏微分方程。
 
 XPINNs 通过广义时空区域分解，有效地提高了模型的并行能力，并且支持高度不规则的、凸/非凸的时空域分解，界面条件是简单的。XPINNs 可扩展到任意类型的偏微分方程，而不论方程是何种物理性质。
 
 精确求解高维复杂的方程已经成为科学计算的最大挑战之一，XPINNs 的优点使其成为模拟复杂方程的适用方法。
-
-<figure markdown>
-  ![](https://ai-studio-static-online.cdn.bcebos.com/d30ac172809343c5ac9d2b44d3657efd8e30949fd8f44174bf6221e14c31f6bf)
-  <figcaption>XPINN子网络</figcaption>
-</figure>
 
 ## 2. 问题定义
 
@@ -65,6 +60,13 @@ examples/xpinn/xpinn.py:301:302
 --8<--
 ```
 
+模型训练时，我们将使用 XPINN 方法分别计算每个子区域的模型损失。
+
+<figure markdown>
+  ![](https://ai-studio-static-online.cdn.bcebos.com/d30ac172809343c5ac9d2b44d3657efd8e30949fd8f44174bf6221e14c31f6bf)
+  <figcaption>XPINN子网络的训练过程</figcaption>
+</figure>
+
 ### 3.4 约束构建
 
 在本案例中，我们使用监督数据集对模型进行训练，因此需要构建监督约束。
@@ -77,7 +79,7 @@ examples/xpinn/conf/xpinn.yaml:43:44
 --8<--
 ```
 
-接着定义训练损失函数的计算过程，调用 xpinn 方法计算损失，如下所示。
+接着定义训练损失函数的计算过程，调用 XPINN 方法计算损失，如下所示。
 
 ``` py linenums="130"
 --8<--
