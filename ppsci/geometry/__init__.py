@@ -54,7 +54,7 @@ def build_geometry(cfg):
     """Build geometry(ies)
 
     Args:
-        cfg (List[AttrDict]): Geometry config list.
+        cfg (List[DictConfig]): Geometry config list.
 
     Returns:
         Dict[str, Geometry]: Geometry(ies) in dict.

@@ -74,7 +74,7 @@ class RadarDataset(io.Dataset):
         super().__init__()
         if importlib.util.find_spec("cv2") is None:
             raise ModuleNotFoundError(
-                "To use RadarDataset, please install 'opencv-python' via: `pip install "
+                "To use RadarDataset, please install 'opencv-python' with: `pip install "
                 "opencv-python` first."
             )
         self.input_keys = input_keys

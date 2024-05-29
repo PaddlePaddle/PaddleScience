@@ -25,27 +25,23 @@ def train(cfg: DictConfig):
     # set equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": {
-            "name": "MatDataset",
-            "file_path": cfg.VIV_DATA_PATH,
-            "input_keys": ("t_f",),
-            "label_keys": ("eta", "f"),
-            "weight_dict": {"eta": 100},
-        },
-        "batch_size": cfg.TRAIN.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": True,
-        },
-        # "num_workers": 0,
-    }
-
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg,
+        {
+            "dataset": {
+                "name": "MatDataset",
+                "file_path": cfg.VIV_DATA_PATH,
+                "input_keys": ("t_f",),
+                "label_keys": ("eta", "f"),
+                "weight_dict": {"eta": 100},
+            },
+            "batch_size": cfg.TRAIN.batch_size,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": True,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         name="Sup",
@@ -58,28 +54,22 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set validator
-    valid_dataloader_cfg = {
-        "dataset": {
-            "name": "MatDataset",
-            "file_path": cfg.VIV_DATA_PATH,
-            "input_keys": ("t_f",),
-            "label_keys": ("eta", "f"),
+    eta_l2_validator = ppsci.validate.SupervisedValidator(
+        {
+            "dataset": {
+                "name": "MatDataset",
+                "file_path": cfg.VIV_DATA_PATH,
+                "input_keys": ("t_f",),
+                "label_keys": ("eta", "f"),
+            },
+            "batch_size": cfg.EVAL.batch_size,
         },
-        "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
-    }
-    eta_mse_validator = ppsci.validate.SupervisedValidator(
-        valid_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
-        metric={"MSE": ppsci.metric.MSE()},
-        name="eta_mse",
+        metric={"MSE": ppsci.metric.L2Rel()},
+        name="eta_l2",
     )
-    validator = {eta_mse_validator.name: eta_mse_validator}
+    validator = {eta_l2_validator.name: eta_l2_validator}
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
@@ -106,21 +96,11 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        use_tbd=cfg.use_tbd,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     # train model
@@ -139,28 +119,22 @@ def evaluate(cfg: DictConfig):
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
     # set validator
-    valid_dataloader_cfg = {
-        "dataset": {
-            "name": "MatDataset",
-            "file_path": cfg.VIV_DATA_PATH,
-            "input_keys": ("t_f",),
-            "label_keys": ("eta", "f"),
+    eta_l2_validator = ppsci.validate.SupervisedValidator(
+        {
+            "dataset": {
+                "name": "MatDataset",
+                "file_path": cfg.VIV_DATA_PATH,
+                "input_keys": ("t_f",),
+                "label_keys": ("eta", "f"),
+            },
+            "batch_size": cfg.EVAL.batch_size,
         },
-        "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
-    }
-    eta_mse_validator = ppsci.validate.SupervisedValidator(
-        valid_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
-        metric={"MSE": ppsci.metric.MSE()},
-        name="eta_mse",
+        metric={"MSE": ppsci.metric.L2Rel()},
+        name="eta_l2",
     )
-    validator = {eta_mse_validator.name: eta_mse_validator}
+    validator = {eta_l2_validator.name: eta_l2_validator}
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
@@ -187,11 +161,10 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
 
     # evaluate
@@ -212,7 +185,7 @@ def export(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         equation=equation,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
+        cfg=cfg,
     )
     # Convert equation to func
     f_func = ppsci.lambdify(

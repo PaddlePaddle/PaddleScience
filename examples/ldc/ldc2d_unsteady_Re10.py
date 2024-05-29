@@ -308,6 +308,85 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set timestamps(including initial t0)
+    timestamps = np.linspace(0.0, 1.5, cfg.NTIME_ALL, endpoint=True)
+    # set time-geometry
+    geom = {
+        "time_rect": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(0.0, 1.5, timestamps=timestamps),
+            ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05)),
+        )
+    }
+    # manually collate input data for inference
+    NPOINT_PDE = 99**2
+    NPOINT_TOP = 101
+    NPOINT_DOWN = 101
+    NPOINT_LEFT = 99
+    NPOINT_RIGHT = 99
+    NPOINT_IC = 99**2
+    NTIME_PDE = cfg.NTIME_ALL - 1
+    NPOINT_BC = NPOINT_TOP + NPOINT_DOWN + NPOINT_LEFT + NPOINT_RIGHT
+    input_dict = geom["time_rect"].sample_initial_interior(
+        (NPOINT_IC + NPOINT_BC), evenly=True
+    )
+    input_pde_dict = geom["time_rect"].sample_interior(
+        (NPOINT_PDE + NPOINT_BC) * NTIME_PDE, evenly=True
+    )
+    # (interior+boundary) x all timestamps
+    for t in range(NTIME_PDE):
+        for key in geom["time_rect"].dim_keys:
+            input_dict[key] = np.concatenate(
+                (
+                    input_dict[key],
+                    input_pde_dict[key][
+                        t
+                        * (NPOINT_PDE + NPOINT_BC) : (t + 1)
+                        * (NPOINT_PDE + NPOINT_BC)
+                    ],
+                )
+            )
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./ldc2d_unsteady_Re10_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+        cfg.NTIME_ALL,
+    )
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="ldc2d_unsteady_Re10.yaml"
 )
@@ -316,8 +395,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

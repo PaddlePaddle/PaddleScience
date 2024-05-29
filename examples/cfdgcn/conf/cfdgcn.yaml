@@ -4,7 +4,7 @@ hydra:
     dir: outputs_cfdgcn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -39,7 +39,7 @@ MODEL:
   output_keys: ["pred"]
   config_file: "coarse.cfg"
   coarse_mesh: "./meshes/mesh_NACA0012_xcoarse.su2"
-  freeze_mesh: False
+  freeze_mesh: false
   num_convs: 6
   num_end_convs: 3
   hidden_channel: 512

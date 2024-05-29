@@ -42,7 +42,7 @@ def build_constraint(cfg, equation_dict, geom_dict):
     """Build constraint(s).
 
     Args:
-        cfg (List[AttrDict]): Constraint config list.
+        cfg (List[DictConfig]): Constraint config list.
         equation_dict (Dct[str, Equation]): Equation(s) in dict.
         geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
 

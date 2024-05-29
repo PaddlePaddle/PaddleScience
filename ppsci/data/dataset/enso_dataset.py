@@ -15,19 +15,13 @@
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 from typing import Dict
 from typing import Optional
 from typing import Tuple
 
 import numpy as np
 from paddle import io
-
-try:
-    from pathlib import Path
-
-    import xarray as xr
-except ModuleNotFoundError:
-    pass
 
 NINO_WINDOW_T = 3  # Nino index is the sliding average over sst, window size is 3
 CMIP6_SST_MAX = 10.198975563049316
@@ -146,6 +140,7 @@ def read_raw_data(ds_dir, out_dir=None):
         out_dir (str): the path of output. Defaults to None.
 
     """
+    import xarray as xr
 
     train_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_train.nc").transpose(
         "year", "month", "lat", "lon"
@@ -272,13 +267,8 @@ class ENSODataset(io.Dataset):
         super(ENSODataset, self).__init__()
         if importlib.util.find_spec("xarray") is None:
             raise ModuleNotFoundError(
-                "To use RadarDataset, please install 'xarray' via: `pip install "
+                "To use RadarDataset, please install 'xarray' with: `pip install "
                 "xarray` first."
-            )
-        if importlib.util.find_spec("pathlib") is None:
-            raise ModuleNotFoundError(
-                "To use RadarDataset, please install 'pathlib' via: `pip install "
-                "pathlib` first."
             )
         self.input_keys = input_keys
         self.label_keys = label_keys

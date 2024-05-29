@@ -4,13 +4,15 @@ hydra:
     dir: outputs_control_arm/inverse/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
           - TRAIN.checkpoint_path
           - TRAIN.pretrained_model_path
           - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
+          - INFER.export_path
           - mode
           - output_dir
           - log_freq
@@ -99,3 +101,20 @@ EVAL:
   batch_size:
     validator: 1024
     visualizer_vtu: 100000
+
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
+  export_path: ./inference/inverse_parameter
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 128
+  num_cpu_threads: 4
+  batch_size: 64

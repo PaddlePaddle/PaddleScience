@@ -518,6 +518,112 @@ def evaluate(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, f"shock_wave(Ma_{cfg.MA:.3f}).png"))
 
 
+def export(cfg: DictConfig):
+    from paddle.static import InputSpec
+
+    # set models
+    model = ppsci.arch.MLP(**cfg.MODEL)
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+
+    # export models
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    # set model predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # visualize prediction
+    t = np.linspace(cfg.T, cfg.T, 1, dtype=np.float32)
+    x = np.linspace(0.0, cfg.Lx, cfg.Nd, dtype=np.float32)
+    y = np.linspace(0.0, cfg.Ly, cfg.Nd, dtype=np.float32)
+    _, x_grid, y_grid = np.meshgrid(t, x, y)
+
+    x_test = misc.cartesian_product(t, x, y)
+    x_test_dict = misc.convert_to_dict(
+        x_test,
+        cfg.MODEL.input_keys,
+    )
+    output_dict = predictor.predict(
+        x_test_dict,
+        cfg.INFER.batch_size,
+    )
+
+    # mapping data to cfg.MODEL.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    u, v, p, rho = (
+        output_dict["u"],
+        output_dict["v"],
+        output_dict["p"],
+        output_dict["rho"],
+    )
+
+    zero_mask = (
+        (x_test[:, 1] - cfg.rx) ** 2 + (x_test[:, 2] - cfg.ry) ** 2
+    ) < cfg.rd**2
+    u[zero_mask] = 0
+    v[zero_mask] = 0
+    p[zero_mask] = 0
+    rho[zero_mask] = 0
+
+    u = u.reshape(cfg.Nd, cfg.Nd)
+    v = v.reshape(cfg.Nd, cfg.Nd)
+    p = p.reshape(cfg.Nd, cfg.Nd)
+    rho = rho.reshape(cfg.Nd, cfg.Nd)
+
+    fig, ax = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(15, 15))
+
+    plt.subplot(2, 2, 1)
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], u * 241.315, 60)
+    plt.title("U m/s")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    axe = plt.gca()
+    axe.set_aspect(1)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], v * 241.315, 60)
+    plt.title("V m/s")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    axe = plt.gca()
+    axe.set_aspect(1)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], p * 33775, 60)
+    plt.title("P Pa")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    axe = plt.gca()
+    axe.set_aspect(1)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], rho * 0.58, 60)
+    plt.title("Rho kg/m^3")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    axe = plt.gca()
+    axe.set_aspect(1)
+    plt.colorbar()
+
+    plt.savefig(osp.join(cfg.output_dir, f"shock_wave(Ma_{cfg.MA:.3f}).png"))
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="shock_wave_Ma2.0.yaml"
 )
@@ -526,8 +632,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

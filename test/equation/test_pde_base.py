@@ -129,7 +129,7 @@ class Test_PDE:
 
         pde.add_equation("simple", simple_equation)
 
-        assert str(pde).startswith("PDE, simple: ")
+        assert str(pde).startswith("PDE\n    simple: ")
 
 
 if __name__ == "__main__":

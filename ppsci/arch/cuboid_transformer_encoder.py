@@ -460,10 +460,10 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
 
     We adopt two mechanisms for decomposing the input tensor into cuboids:
 
-    1) local:
+    (1) local:
         We group the tensors within a local window, e.g., X[t:(t+b_t), h:(h+b_h), w:(w+b_w)]. We can also apply the
         shifted window strategy proposed in "[ICCV2021] Swin Transformer: Hierarchical Vision Transformer using Shifted Windows".
-    2) dilated:
+    (2) dilated:
         Inspired by the success of dilated convolution "[ICLR2016] Multi-Scale Context Aggregation by Dilated Convolutions",
          we split the tensor with dilation factors that are tied to the size of the cuboid. For example, for a cuboid that has width `b_w`,
          we sample the elements starting from 0 as 0, w / b_w, 2 * w / b_w, ..., (b_w - 1) * w / b_w.

@@ -1,0 +1,119 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_sfno_pretrain
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval/export/infer
+seed: 666
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set train and evaluate data path
+FILE_PATH: ./datasets/SWE/
+
+# dataset setting
+DATASET:
+  label_keys: ["y"]
+  train_resolution: "32x64"
+  test_resolutions: ["32x64","64x128"]
+
+
+# model settings
+MODEL:
+  input_keys: ["x"]
+  output_keys: ["y"]
+  in_channels: 3
+  out_channels: 3
+  n_modes: [32, 32]
+  hidden_channels: 32
+  projection_channels: 64
+  n_layers: 4
+
+  use_mlp: false
+  mlp:
+    expansion: 0.5
+    dropout: 0.0
+  norm: 'group_norm'
+  fno_skip: "linear"
+  mlp_skip: "soft-gating"
+  separable: false
+  preactivation: false
+  factorization: null
+  rank: 1.0
+  joint_factorization: false
+  fixed_rank_modes: null
+  implementation: "factorized"
+  domain_padding: null #0.078125
+  domain_padding_mode: "one-sided" #symmetric
+  fft_norm: 'forward'
+  patching_levels: 0
+
+
+# training settings
+TRAIN:
+  epochs: 300
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 5e-3
+    by_epoch: True
+    type: "StepDecay"
+    step_size: 60
+    gamma: 0.5
+    # ReduceOnPlateau only
+    scheduler_patience: 5
+
+    # CosineAnnealingLR
+    scheduler_T_max: 30
+  wd: 1e-4
+  batch_size: 4
+  pretrained_model_path: null
+  checkpoint_path: null
+
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: ./outputs_sfno_pretrain/checkpoints/best_model.pdparams
+  compute_metric_by_batch: false
+  eval_with_no_grad: true
+  batch_size: 10
+
+INFER:
+  pretrained_model_path: ./outputs_sfno_pretrain/checkpoints/best_model.pdparams
+  export_path: ./inference/sfno/sfno_darcyflow
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 16
+  num_cpu_threads: 4
+  batch_size: 1
+  data_path: ./datasets/SWE/test_SWE_32x64.npy

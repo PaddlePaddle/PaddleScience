@@ -532,7 +532,7 @@ class CuboidTransformer(base.Arch):
             ("d", "d", "d"),
         ],
         enc_shift_size: Tuple[Tuple[int, ...], ...] = [(0, 0, 0), (0, 0, 0)],
-        enc_use_inter_ffn: str = True,
+        enc_use_inter_ffn: bool = True,
         dec_depth: Tuple[int, ...] = [2, 2],
         dec_cross_start: int = 0,
         dec_self_attn_patterns: str = None,
@@ -912,13 +912,14 @@ class CuboidTransformer(base.Arch):
             raise NotImplementedError
         return initial_z
 
-    def forward(self, x, verbose=False):
+    def forward(self, x: "paddle.Tensor", verbose: bool = False) -> "paddle.Tensor":
         """
         Args:
-            x: Shape (B, T, H, W, C)
-            verbose: if True, print intermediate shapes
+            x (paddle.Tensor): Tensor with shape (B, T, H, W, C).
+            verbose (bool): if True, print intermediate shapes.
+
         Returns:
-            out: The output Shape (B, T_out, H, W, C_out)
+            out (paddle.Tensor): The output Shape (B, T_out, H, W, C_out)
         """
 
         x = self.concat_to_tensor(x, self.input_keys)

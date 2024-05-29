@@ -4,7 +4,7 @@ hydra:
     dir: outputs_allen_cahn_plain/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -39,7 +39,7 @@ MODEL:
   hidden_size: 256
   activation: tanh
   periods:
-    x: [2.0, False]
+    x: [2.0, false]
 
 # training settings
 TRAIN:
@@ -70,7 +70,7 @@ INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_plain_pretrained.pdparams
   export_path: ./inference/allen_cahn
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
   device: gpu
   engine: native

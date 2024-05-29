@@ -1,21 +1,19 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
     dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - INFER.pretrained_model_path
-          - INFER.export_path
-          - mode
-          - output_dir
-          - log_freq
+    chdir: false # keep current working directory unchanged
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
@@ -28,8 +26,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-log_freq: 20
-use_tbd: false
+log_freq: 100
 
 VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
 
@@ -68,7 +65,7 @@ INFER:
   pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams"
   export_path: ./inference/viv
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   input_keys: ${MODEL.input_keys}
   output_keys: ["eta", "f"]
   device: gpu

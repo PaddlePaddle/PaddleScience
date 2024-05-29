@@ -100,7 +100,7 @@ def load_pretrain(
     """
     if path.startswith("http"):
         # download from path(url) and get its' physical path
-        eqn_path = path.replace(".pdparams", ".pdeq", 1)
+        eqn_path = path.replace(".pdparams", ".pdeqn", 1)
         path = download.get_weights_path_from_url(path)
 
         # automatically download additional equation weights if avaiable
