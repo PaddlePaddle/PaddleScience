@@ -278,7 +278,7 @@ def train(cfg: DictConfig):
     train_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_FILE,
+            "file_path": cfg.DATA_FILE,
             "input_keys": cfg.TRAIN.input_keys,
             "label_keys": cfg.TRAIN.label_keys,
             "alias_dict": cfg.TRAIN.alias_dict,
@@ -314,7 +314,7 @@ def train(cfg: DictConfig):
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": cfg.TRAIN_DATA_FILE,
+            "file_path": cfg.DATA_FILE,
             "input_keys": cfg.TRAIN.input_keys,
             "label_keys": cfg.EVAL.label_keys,
             "alias_dict": cfg.EVAL.alias_dict,
