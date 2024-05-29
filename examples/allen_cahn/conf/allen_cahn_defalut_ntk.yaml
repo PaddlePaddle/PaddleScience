@@ -43,9 +43,9 @@ MODEL:
     x: [2.0, False]
   fourier:
     dim: 256
-    scale: 1.0
+    scale: 2.0
   random_weight:
-    mean: 0.5
+    mean: 1.0
     std: 0.1
 
 # training settings
@@ -60,7 +60,7 @@ TRAIN:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     learning_rate: 1.0e-3
     gamma: 0.9
-    decay_steps: 2000
+    decay_steps: 5000
     by_epoch: false
   batch_size: 4096
   pretrained_model_path: null
