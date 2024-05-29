@@ -12,12 +12,175 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 import xarray
 from paddle import io
 
 import ppsci.data.dataset.atmospheric_utils as atmospheric_utils
+
+# https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5
+PRESSURE_LEVELS_ERA5_37 = (
+    1,
+    2,
+    3,
+    5,
+    7,
+    10,
+    20,
+    30,
+    50,
+    70,
+    100,
+    125,
+    150,
+    175,
+    200,
+    225,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    775,
+    800,
+    825,
+    850,
+    875,
+    900,
+    925,
+    950,
+    975,
+    1000,
+)
+
+# https://www.ecmwf.int/en/forecasts/datasets/set-i
+PRESSURE_LEVELS_HRES_25 = (
+    1,
+    2,
+    3,
+    5,
+    7,
+    10,
+    20,
+    30,
+    50,
+    70,
+    100,
+    150,
+    200,
+    250,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    850,
+    900,
+    925,
+    950,
+    1000,
+)
+
+# https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020MS002203
+PRESSURE_LEVELS_WEATHERBENCH_13 = (
+    50,
+    100,
+    150,
+    200,
+    250,
+    300,
+    400,
+    500,
+    600,
+    700,
+    850,
+    925,
+    1000,
+)
+
+PRESSURE_LEVELS = {
+    13: PRESSURE_LEVELS_WEATHERBENCH_13,
+    25: PRESSURE_LEVELS_HRES_25,
+    37: PRESSURE_LEVELS_ERA5_37,
+}
+
+
+TARGET_SURFACE_VARS = (
+    "2m_temperature",
+    "mean_sea_level_pressure",
+    "10m_v_component_of_wind",
+    "10m_u_component_of_wind",
+    "total_precipitation_6hr",
+)
+TARGET_SURFACE_NO_PRECIP_VARS = (
+    "2m_temperature",
+    "mean_sea_level_pressure",
+    "10m_v_component_of_wind",
+    "10m_u_component_of_wind",
+)
+TARGET_ATMOSPHERIC_VARS = (
+    "temperature",
+    "geopotential",
+    "u_component_of_wind",
+    "v_component_of_wind",
+    "vertical_velocity",
+    "specific_humidity",
+)
+TARGET_ATMOSPHERIC_NO_W_VARS = (
+    "temperature",
+    "geopotential",
+    "u_component_of_wind",
+    "v_component_of_wind",
+    "specific_humidity",
+)
+EXTERNAL_FORCING_VARS = ("toa_incident_solar_radiation",)
+GENERATED_FORCING_VARS = (
+    "year_progress_sin",
+    "year_progress_cos",
+    "day_progress_sin",
+    "day_progress_cos",
+)
+FORCING_VARS = EXTERNAL_FORCING_VARS + GENERATED_FORCING_VARS
+STATIC_VARS = (
+    "geopotential_at_surface",
+    "land_sea_mask",
+)
+
+TASK_input_variables = (
+    TARGET_SURFACE_VARS + TARGET_ATMOSPHERIC_VARS + FORCING_VARS + STATIC_VARS
+)
+TASK_target_variables = TARGET_SURFACE_VARS + TARGET_ATMOSPHERIC_VARS
+TASK_forcing_variables = FORCING_VARS
+TASK_pressure_levels = PRESSURE_LEVELS_ERA5_37
+TASK_input_duration = ("12h",)
+
+TASK_13_input_variables = (
+    TARGET_SURFACE_VARS + TARGET_ATMOSPHERIC_VARS + FORCING_VARS + STATIC_VARS
+)
+TASK_13_target_variables = TARGET_SURFACE_VARS + TARGET_ATMOSPHERIC_VARS
+TASK_13_forcing_variables = FORCING_VARS
+TASK_13_pressure_levels = PRESSURE_LEVELS_WEATHERBENCH_13
+TASK_13_input_duration = ("12h",)
+
+
+TASK_13_PRECIP_OUT_input_variables = (
+    TARGET_SURFACE_NO_PRECIP_VARS + TARGET_ATMOSPHERIC_VARS + FORCING_VARS + STATIC_VARS
+)
+TASK_13_PRECIP_OUT_target_variables = TARGET_SURFACE_VARS + TARGET_ATMOSPHERIC_VARS
+TASK_13_PRECIP_OUT_forcing_variables = FORCING_VARS
+TASK_13_PRECIP_OUT_pressure_levels = PRESSURE_LEVELS_WEATHERBENCH_13
+TASK_13_PRECIP_OUT_input_duration = ("12h",)
 
 _SEC_PER_HOUR = 3600
 _HOUR_PER_DAY = 24
@@ -230,47 +393,43 @@ class GridMeshAtmosphericDataset(io.Dataset):
     Args:
         input_keys (Tuple[str, ...]): Name of input data.
         label_keys (Tuple[str, ...]): Name of label data.
+        config: Configuration of graph.
 
     Examples:
-        >>>
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.GridMeshAtmosphericDataset(
+        ...     "input_keys": ("input",),
+        ...     "label_keys": ("output",),
+        ...     "config": config,
+        ... )  # doctest: +SKIP
 
     """
 
     def __init__(
         self,
-        input_keys,
-        label_keys,
-        input_variables,
-        forcing_variables,
-        target_variables,
-        level_variables,
-        config,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        config: Dict[str, int | float | str],
     ):
         super().__init__()
         self.input_keys = input_keys
         self.label_keys = label_keys
-        # if config.type == "graphcast":
-        #     self.input_variables = args.TASK_input_variables
-        #     self.forcing_variables = args.TASK_forcing_variables
-        #     self.target_variables = args.TASK_target_variables
-        #     self.level_variables = args.PRESSURE_LEVELS[37]
-        # elif config.type == "graphcast_small":
-        #     self.input_variables = args.TASK_13_input_variables
-        #     self.forcing_variables = args.TASK_13_forcing_variables
-        #     self.target_variables = args.TASK_13_target_variables
-        #     self.level_variables = args.PRESSURE_LEVELS[13]
-        # elif config.type == "graphcast_operational":
-        #     self.input_variables = args.TASK_13_PRECIP_OUT_input_variables
-        #     self.forcing_variables = args.TASK_13_PRECIP_OUT_forcing_variables
-        #     self.target_variables = args.TASK_13_PRECIP_OUT_target_variables
-        #     self.level_variables = args.PRESSURE_LEVELS[13]
+        if config.type == "graphcast":
+            self.input_variables = TASK_input_variables
+            self.forcing_variables = TASK_forcing_variables
+            self.target_variables = TASK_target_variables
+            self.level_variables = PRESSURE_LEVELS[37]
+        elif config.type == "graphcast_small":
+            self.input_variables = TASK_13_input_variables
+            self.forcing_variables = TASK_13_forcing_variables
+            self.target_variables = TASK_13_target_variables
+            self.level_variables = PRESSURE_LEVELS[13]
+        elif config.type == "graphcast_operational":
+            self.input_variables = TASK_13_PRECIP_OUT_input_variables
+            self.forcing_variables = TASK_13_PRECIP_OUT_forcing_variables
+            self.target_variables = TASK_13_PRECIP_OUT_target_variables
+            self.level_variables = PRESSURE_LEVELS[13]
 
-        self.input_variables = input_variables
-        self.forcing_variables = forcing_variables
-        self.target_variables = target_variables
-        self.level_variables = level_variables
-
-        # 数据
         nc_dataset = xarray.open_dataset(config.data_path)
 
         longitude_offsets = nc_dataset.coords["lon"].data

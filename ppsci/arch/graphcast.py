@@ -110,7 +110,7 @@ class GraphCastGNN(nn.Layer):
             dst_idx = graph.mesh2grid_dst_index
             dst_node_num = self.config.grid_node_num
 
-        # 更新edge特征
+        # update edge features
         edge_feats_concat = paddle.concat(
             [
                 edge_feats,
@@ -122,7 +122,8 @@ class GraphCastGNN(nn.Layer):
         edge_feats_out = self.edge_layer(edge_feats_concat)
 
         _, batch_dim, _ = edge_feats_out.shape
-        # 更新node特征
+
+        # update node features
         edge_feats_scatter = paddle.zeros([dst_node_num, batch_dim, self.edge_out_dim])
         node_feats_concat = paddle.concat(
             [
