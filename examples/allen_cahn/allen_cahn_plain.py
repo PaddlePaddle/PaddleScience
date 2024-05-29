@@ -63,7 +63,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
-    equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
+    equation = {"AllenCahn": ppsci.equation.AllenCahn(eps=0.01)}
 
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
