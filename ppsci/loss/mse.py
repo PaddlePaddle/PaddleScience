@@ -77,8 +77,10 @@ class MSELoss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, paddle.Tensor]:
+        losses = {}
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict and key in weight_dict:
@@ -96,7 +98,8 @@ class MSELoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses
 
 

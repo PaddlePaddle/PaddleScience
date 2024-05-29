@@ -111,7 +111,7 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(sum(validator_loss.values()))
 
             for key, output in output_dict.items():
                 all_output[key].append(

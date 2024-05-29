@@ -66,7 +66,7 @@ class ExpressionSolver(nn.Layer):
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-    ) -> Tuple["paddle.Tensor", ...]:
+    ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for training, including model forward and equation
         forward.
 
@@ -82,7 +82,7 @@ class ExpressionSolver(nn.Layer):
             Tuple[paddle.Tensor, ...]: Tuple of losses for each constraint.
         """
         output_dicts = []
-        constraint_losses = []
+        constraint_losses = {}
 
         for i, cst_name in enumerate(constraint):
             cst_obj = constraint[cst_name]
@@ -114,7 +114,7 @@ class ExpressionSolver(nn.Layer):
                 label_dicts[i],
                 weight_dicts[i],
             )
-            constraint_losses.append(constraint_loss)
+            constraint_losses.update(constraint_loss)
 
             if self.nvtx_flag:  # only for nsight analysis
                 core.nvprof_nvtx_pop()
