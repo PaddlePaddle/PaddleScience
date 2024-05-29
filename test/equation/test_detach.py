@@ -4,6 +4,9 @@ import pytest
 
 import ppsci
 
+paddle.seed(42)
+np.random.seed(42)
+
 
 def test_equation_detach():
     # use N-S equation for test

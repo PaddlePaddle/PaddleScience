@@ -5,8 +5,9 @@
     options:
       members:
         - PDE
-        - FractionalPoisson
+        - AllenCahn
         - Biharmonic
+        - FractionalPoisson
         - HeatExchanger
         - Laplace
         - LinearElasticity
