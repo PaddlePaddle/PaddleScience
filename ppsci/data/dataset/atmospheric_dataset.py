@@ -17,10 +17,14 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
-import xarray
 from paddle import io
 
 import ppsci.data.dataset.atmospheric_utils as atmospheric_utils
+
+try:
+    import xarray
+except ModuleNotFoundError:
+    pass
 
 # https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5
 PRESSURE_LEVELS_ERA5_37 = (
