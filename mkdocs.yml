@@ -48,6 +48,7 @@ nav:
         - Rossler_transform_physx: zh/examples/rossler.md
         - Volterra_IDE: zh/examples/volterra_ide.md
         - NLSMB: zh/examples/nlsmb.md
+        - XPINN: zh/examples/xpinns.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md

@@ -16,6 +16,5 @@ seaborn
 sympy
 tqdm
 typing-extensions
-visualdl
 vtk
 wget

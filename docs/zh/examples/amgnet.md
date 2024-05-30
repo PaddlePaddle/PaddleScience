@@ -10,7 +10,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
         python amgnet_airfoil.py
@@ -21,7 +21,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
         python amgnet_cylinder.py
@@ -35,7 +35,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
         python amgnet_airfoil.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
@@ -46,7 +46,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
         python amgnet_cylinder.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams

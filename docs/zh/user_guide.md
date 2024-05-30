@@ -344,7 +344,7 @@ pip install paddle2onnx
 # linux
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
 # unzip it
 tar -xvf aneurysm_dataset.tar
 python aneurysm.py mode=infer

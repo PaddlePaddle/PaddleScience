@@ -409,46 +409,46 @@ class TFNO3dNet(FNONet):
     """3D Fourier Neural Operator.
 
     Args:
-       input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-       output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-       n_modes_height (int): Number of Fourier modes to keep along the height.
-       n_modes_width (int): Number of modes to keep in Fourier Layer, along the width.
-       n_modes_depth (int): Number of Fourier modes to keep along the depth.
-       hidden_channels (int): Width of the FNO (i.e. number of channels).
-       in_channels (int, optional): Number of input channels. Defaults to 3.
-       out_channels (int, optional): Number of output channels. Defaults to 1.
-       lifting_channels (int, optional): Number of hidden channels of the lifting block of the FNO.
-           Defaults to 256.
-       projection_channels (int, optional): Number of hidden channels of the projection block of the FNO.
-           Defaults to 256.
-       n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
-       use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
-       mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
-           Defaults to None.
-       non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
-       norm (F.module, optional): Normalization layer to use. Defaults to None.
-       preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
-       skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
-           Defaults to "soft-gating".
-       separable (bool, optional): Whether to use a depthwise separable spectral convolution.
-           Defaults to  False.
-       factorization (str, optional): Tensor factorization of the parameters weight to use.
-           * If None, a dense tensor parametrizes the Spectral convolutions.
-           * Otherwise, the specified tensor factorization is used. Defaults to "Tucker".
-       rank (float, optional): Rank of the tensor factorization of the Fourier weights. Defaults to 1.0.
-       joint_factorization (bool, optional): Whether all the Fourier Layers should be parametrized by a
-           single tensor (vs one per layer). Defaults to False.
-       implementation (str, optional): {'factorized', 'reconstructed'}, optional. Defaults to "factorized".
-           If factorization is not None, forward mode to use::
-           * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
-           * `factorized` : the input is directly contracted with the factors of the decomposition.
-       domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
-       domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
-           How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
-       fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
-       patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
-       SpectralConv (nn.layer, optional): Spectral convolution layer to use. Defaults to fno_block.
-        FactorizedSpectralConv.
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
+        n_modes_height (int): Number of Fourier modes to keep along the height.
+        n_modes_width (int): Number of modes to keep in Fourier Layer, along the width.
+        n_modes_depth (int): Number of Fourier modes to keep along the depth.
+        hidden_channels (int): Width of the FNO (i.e. number of channels).
+        in_channels (int, optional): Number of input channels. Defaults to 3.
+        out_channels (int, optional): Number of output channels. Defaults to 1.
+        lifting_channels (int, optional): Number of hidden channels of the lifting block of the FNO.
+            Defaults to 256.
+        projection_channels (int, optional): Number of hidden channels of the projection block of the FNO.
+            Defaults to 256.
+        n_layers (int, optional): Number of Fourier Layers. Defaults to 4.
+        use_mlp (bool, optional): Whether to use an MLP layer after each FNO block. Defaults to False.
+        mlp (Dict[str, float], optional): Parameters of the MLP. {'expansion': float, 'dropout': float}.
+            Defaults to None.
+        non_linearity (nn.Layer, optional): Non-Linearity module to use. Defaults to F.gelu.
+        norm (F.module, optional): Normalization layer to use. Defaults to None.
+        preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
+        skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
+            Defaults to "soft-gating".
+        separable (bool, optional): Whether to use a depthwise separable spectral convolution.
+            Defaults to  False.
+        factorization (str, optional): Tensor factorization of the parameters weight to use.
+            * If None, a dense tensor parametrizes the Spectral convolutions.
+            * Otherwise, the specified tensor factorization is used. Defaults to "Tucker".
+        rank (float, optional): Rank of the tensor factorization of the Fourier weights. Defaults to 1.0.
+        joint_factorization (bool, optional): Whether all the Fourier Layers should be parametrized by a
+            single tensor (vs one per layer). Defaults to False.
+        implementation (str, optional): {'factorized', 'reconstructed'}, optional. Defaults to "factorized".
+            If factorization is not None, forward mode to use::
+            * `reconstructed` : the full weight tensor is reconstructed from the factorization and used for the forward pass.
+            * `factorized` : the input is directly contracted with the factors of the decomposition.
+        domain_padding (str, optional): Whether to use percentage of padding. Defaults to None.
+        domain_padding_mode (str, optional): {'symmetric', 'one-sided'}, optional
+            How to perform domain padding, by default 'one-sided'. Defaults to "one-sided".
+        fft_norm (str, optional): The normalization mode for the FFT. Defaults to "forward".
+        patching_levels (int, optional): Number of patching levels to use. Defaults to 0.
+        SpectralConv (nn.layer, optional): Spectral convolution layer to use. Defaults to fno_block.
+            FactorizedSpectralConv.
     """
 
     def __init__(

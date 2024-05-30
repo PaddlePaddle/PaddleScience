@@ -8,7 +8,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py
@@ -20,7 +20,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
@@ -38,7 +38,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
     # unzip it
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=infer
@@ -109,7 +109,7 @@ examples/aneurysm/aneurysm.py:17:23
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
 
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
 
 # unzip it
 tar -xvf aneurysm_dataset.tar
@@ -119,7 +119,7 @@ tar -xvf aneurysm_dataset.tar
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#142)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 

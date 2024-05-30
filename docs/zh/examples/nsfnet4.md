@@ -10,7 +10,7 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
     # unzip ./data/NSF4_data.zip
     python VP_NSFNet4.py    mode=eval  data_dir=./data/  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
     ```
@@ -23,7 +23,7 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
     # unzip ./data/NSF4_data.zip
     python VP_NSFNet4.py data_dir=./data/
 
@@ -43,7 +43,7 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
     # unzip ./data/NSF4_data.zip
     python VP_NSFNet4.py mode=infer
     ```

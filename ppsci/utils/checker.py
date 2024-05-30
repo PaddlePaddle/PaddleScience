@@ -128,18 +128,16 @@ def run_check_mesh() -> None:
     # test demo code below.
     if importlib.util.find_spec("open3d") is None:
         raise ModuleNotFoundError(
-            "Please install open3d first as "
-            "https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip"
+            "Please install open3d first with: " "`pip install open3d`"
         )
     if importlib.util.find_spec("pysdf") is None:
         raise ModuleNotFoundError(
-            "Please install pysdf first as "
-            "https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip"
+            "Please install pysdf first with: `pip install pysdf`"
         )
     if importlib.util.find_spec("pymesh") is None:
         raise ModuleNotFoundError(
             "Please install pymesh first as "
-            "https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip"
+            "https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#__tabbed_4_4"
         )
 
     import numpy as np
