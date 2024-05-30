@@ -5,13 +5,24 @@
     ``` sh
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
-
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --output ./data/XPINN_2D_PoissonEqn.mat
-
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --create-dirs -o ./data/XPINN_2D_PoissonEqn.mat
     python xpinn.py
-
     ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --create-dirs -o ./data/XPINN_2D_PoissonEqn.mat
+    python xpinn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/XPINN/xpinn_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [xpinn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/XPINN/xpinn_pretrained.pdparams) | L2Rel.l2_error: 0.04226 |
 
 ## 1. 背景简介
 
@@ -57,7 +68,7 @@ $$ \gamma_2 =0.34+0.04 sin(5θ)+0.18 cos(3θ)+0.1 cos(6θ), θ \in [0,2π) $$
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
 ```
 
-### 3.3 模型构建
+### 3.2 模型构建
 
 在本问题中，我们使用神经网络 `MLP` 作为模型，在模型代码中定义三个 `MLP` ，分别作为三个子区域的模型。
 
@@ -74,15 +85,15 @@ examples/xpinn/xpinn.py:301:302
   <figcaption>XPINN子网络的训练过程</figcaption>
 </figure>
 
-### 3.4 约束构建
+### 3.3 约束构建
 
 在本案例中，我们使用监督数据集对模型进行训练，因此需要构建监督约束。
 
 在定义约束之前，我们需要指定数据集的路径等相关配置，将这些信息存放到对应的 YAML 文件中，如下所示。
 
-``` yaml linenums="43"
+``` yaml linenums="44"
 --8<--
-examples/xpinn/conf/xpinn.yaml:43:44
+examples/xpinn/conf/xpinn.yaml:44:45
 --8<--
 ```
 
@@ -102,17 +113,17 @@ examples/xpinn/xpinn.py:304:311
 --8<--
 ```
 
-### 3.5 超参数设定
+### 3.4 超参数设定
 
 设置训练轮数等参数，如下所示。
 
-``` yaml linenums="83"
+``` yaml linenums="84"
 --8<--
-examples/xpinn/conf/xpinn.yaml:83:88
+examples/xpinn/conf/xpinn.yaml:84:89
 --8<--
 ```
 
-### 3.6 优化器构建
+### 3.5 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
@@ -122,7 +133,7 @@ examples/xpinn/xpinn.py:337:338
 --8<--
 ```
 
-### 3.7 评估器构建
+### 3.6 评估器构建
 
 在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
@@ -132,7 +143,7 @@ examples/xpinn/xpinn.py:324:335
 --8<--
 ```
 
-评估指标为预测结果和真实结果的 RMSE 值，这里需自定义指标计算函数，如下所示。
+评估指标为预测结果和真实结果的 L2 相对误差值，这里需自定义指标计算函数，如下所示。
 
 ``` py linenums="194"
 --8<--
@@ -140,29 +151,29 @@ examples/xpinn/xpinn.py:194:219
 --8<--
 ```
 
-### 3.8 模型训练
+### 3.7 模型训练评估
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
 ``` py linenums="340"
 --8<--
-examples/xpinn/xpinn.py:340:357
+examples/xpinn/xpinn.py:340:350
 --8<--
 ```
 
-### 3.9 结果可视化
+### 3.8 结果可视化
 
 训练完毕之后程序会对测试集中的数据进行预测，并以图片的形式对结果进行可视化，如下所示。
 
-``` py linenums="360"
+``` py linenums="352"
 --8<--
-examples/xpinn/xpinn.py:360:384
+examples/xpinn/xpinn.py:352:376
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="cfdgcn.py"
+``` py linenums="1" title="xpinn.py"
 --8<--
 examples/xpinn/xpinn.py
 --8<--
@@ -181,4 +192,4 @@ examples/xpinn/xpinn.py
 
 ## 6. 参考文献
 
-* [A.D.Jagtap, G.E.Karniadakis, Extended Physics-Informed Neural Networks (XPINNs): A Generalized Space-Time Domain Decomposition Based Deep Learning Framework for Nonlinear Partial Differential Equations, Commun. Comput. Phys., Vol.28, No.5, 2002-2041, 2020.](https://doi.org/10.4208/cicp.OA-2020-0164)
+- [Extended Physics-Informed Neural Networks (XPINNs): A Generalized Space-Time Domain Decomposition Based Deep Learning Framework for Nonlinear Partial Differential Equations](https://doi.org/10.4208/cicp.OA-2020-0164)
