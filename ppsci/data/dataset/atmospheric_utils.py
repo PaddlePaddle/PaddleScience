@@ -20,8 +20,12 @@ from typing import Tuple
 import numpy as np
 import paddle
 import scipy
-import trimesh
-import xarray
+
+try:
+    import trimesh
+    import xarray
+except ModuleNotFoundError:
+    pass
 
 
 def stacked_to_dataset(
