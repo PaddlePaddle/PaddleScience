@@ -36,7 +36,7 @@ class AllenCahn(base.PDE):
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.AllenCahn(0.01**2)
+        >>> pde = ppsci.equation.AllenCahn(eps=0.01)
     """
 
     def __init__(
