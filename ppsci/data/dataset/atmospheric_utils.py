@@ -30,9 +30,9 @@ except ModuleNotFoundError:
 
 def stacked_to_dataset(
     stacked_array: xarray.Variable,
-    template_dataset: xarray.Dataset,
+    template_dataset: "xarray.Dataset",
     preserved_dims: typing.Tuple[str, ...] = ("batch", "lat", "lon"),
-) -> xarray.Dataset:
+) -> "xarray.Dataset":
     """The inverse of dataset_to_stacked.
 
     Requires a template dataset to demonstrate the variables/shapes/coordinates
@@ -993,8 +993,8 @@ class GraphGridMesh(object):
     def grid_node_outputs_to_prediction(
         self,
         grid_node_outputs: np.ndarray,
-        targets_template: xarray.Dataset,
-    ) -> xarray.Dataset:
+        targets_template: "xarray.Dataset",
+    ) -> "xarray.Dataset":
         """[num_grid_nodes, batch, num_outputs] -> xarray."""
         # numpy array with shape [lat_lon_node, batch, channels]
         # to xarray `DataArray` (batch, lat, lon, channels)

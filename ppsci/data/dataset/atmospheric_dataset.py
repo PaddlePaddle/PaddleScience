@@ -268,7 +268,7 @@ def add_var_into_nc_dataset(
 
 
 def extract_input_target_times(
-    dataset: xarray.Dataset,
+    dataset: "xarray.Dataset",
     input_duration,
     target_lead_times,
 ):
@@ -353,7 +353,7 @@ def variable_to_stacked(
 
 
 def dataset_to_stacked(
-    dataset: xarray.Dataset,
+    dataset: "xarray.Dataset",
     sizes=None,
     preserved_dims=("batch", "lat", "lon"),
 ) -> xarray.DataArray:
