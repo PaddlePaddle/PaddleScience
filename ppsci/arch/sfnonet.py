@@ -412,7 +412,7 @@ class SFNONet(base.Arch):
         norm (str, optional): Normalization layer to use. Defaults to None.
         ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
-        skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
+        fno_skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
             Defaults to "soft-gating".
         separable (bool, optional): Whether to use a depthwise separable spectral convolution.
             Defaults to  False.

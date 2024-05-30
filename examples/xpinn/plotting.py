@@ -81,7 +81,9 @@ def log_image(
     gridspec.GridSpec(1, 1)
     ax = plt.subplot2grid((1, 1), (0, 0))
     tcf = ax.tricontourf(triang_total, np.squeeze(residual_u_exact), 100, cmap="jet")
-    ax.add_patch(patches.Polygon(xx, closed=True, fill=True, color="w", edgecolor="w"))
+    ax.add_patch(
+        patches.Polygon(xx, closed=True, fill=True, facecolor="w", edgecolor="w")
+    )
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=28)
     ax.set_xlabel("$x$", fontsize=32)
@@ -111,7 +113,9 @@ def log_image(
     gridspec.GridSpec(1, 1)
     ax = plt.subplot2grid((1, 1), (0, 0))
     tcf = ax.tricontourf(triang_total, residual_u_pred.flatten(), 100, cmap="jet")
-    ax.add_patch(patches.Polygon(xx, closed=True, fill=True, color="w", edgecolor="w"))
+    ax.add_patch(
+        patches.Polygon(xx, closed=True, fill=True, facecolor="w", edgecolor="w")
+    )
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=28)
     ax.set_xlabel("$x$", fontsize=32)
@@ -146,7 +150,9 @@ def log_image(
         100,
         cmap="jet",
     )
-    ax.add_patch(patches.Polygon(xx, closed=True, fill=True, color="w", edgecolor="w"))
+    ax.add_patch(
+        patches.Polygon(xx, closed=True, fill=True, facecolor="w", edgecolor="w")
+    )
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=28)
     ax.set_xlabel("$x$", fontsize=32)
@@ -173,13 +179,13 @@ def log_image(
     plt.show()
 
 
-pgf_with_latex = {  # setup matplotlib to use latex for output
+PGF_WITH_LATEX = {  # setup matplotlib to use latex for output
     "pgf.texsystem": "pdflatex",  # change this if using xetex or latex
     "text.usetex": True,  # use LaTeX to write all text
-    "font.family": "serif",
-    "font.serif": [],  # blank entries should cause plots to inherit fonts from the document
-    "font.sans-serif": [],
-    "font.monospace": [],
+    # "font.family": "serif",
+    # "font.serif": [],  # blank entries should cause plots to inherit fonts from the document
+    # "font.sans-serif": [],
+    # "font.monospace": [],
     "axes.labelsize": 10,  # LaTeX default is 10pt font.
     "font.size": 10,
     "legend.fontsize": 8,  # Make the legend/label fonts a little smaller
@@ -193,4 +199,4 @@ pgf_with_latex = {  # setup matplotlib to use latex for output
         ]
     ),
 }
-mpl.rcParams.update(pgf_with_latex)
+mpl.rcParams.update(PGF_WITH_LATEX)

@@ -191,7 +191,7 @@ def loss_fun(
     return loss1 + loss2 + loss3
 
 
-def eval_rmse_func(
+def eval_l2_rel_func(
     output_dict: Dict[str, paddle.Tensor],
     label_dict: Dict[str, paddle.Tensor],
     *args,
@@ -329,7 +329,7 @@ def train(cfg: DictConfig):
             "residual2_u": lambda out: out["residual2_u"],
             "residual3_u": lambda out: out["residual3_u"],
         },
-        metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
+        metric={"L2Rel": ppsci.metric.FunctionalMetric(eval_l2_rel_func)},
         name="sup_validator",
     )
     validator = {sup_validator.name: sup_validator}
@@ -341,17 +341,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         custom_model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     solver.train()
@@ -412,7 +404,7 @@ def evaluate(cfg: DictConfig):
             "residual2_u": lambda out: out["residual2_u"],
             "residual3_u": lambda out: out["residual3_u"],
         },
-        metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
+        metric={"L2Rel": ppsci.metric.FunctionalMetric(eval_l2_rel_func)},
         name="sup_validator",
     )
     validator = {sup_validator.name: sup_validator}
@@ -420,11 +412,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         custom_model,
-        output_dir=cfg.output_dir,
-        eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     solver.eval()
