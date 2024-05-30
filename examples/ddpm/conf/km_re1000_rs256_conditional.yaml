@@ -35,6 +35,7 @@ model:
     ema_rate: 0.9999
     ema: True
     resamp_with_conv: True
+    ckpt_path: '/home/aistudio/data/data264003/init_ckpt.pdparams'
 
 diffusion:
     beta_schedule: linear
@@ -44,7 +45,7 @@ diffusion:
 
 training:
     batch_size: 1
-    n_epochs: 100 # 300 epoch for about 12 hours
+    n_epochs: 20 # 300 epoch for about 12 hours
     n_iters: 200000
     snapshot_freq: 20000
     validation_freq: 2000

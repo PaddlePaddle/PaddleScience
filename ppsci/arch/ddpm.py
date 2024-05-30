@@ -374,6 +374,7 @@ class DDPM(base.Arch):
         temb = nonlinearity(temb)
         temb = self.temb.dense[1](temb)
         x = self.conv_in(x)
+        print("x is:", x)
         if dx is not None:
             cond_emb = self.emb_conv(dx)
         else:
@@ -409,3 +410,67 @@ class DDPM(base.Arch):
             result_dict = self._output_transform(outputs)
             return result_dict
         return h
+
+    # def forward(self, x, t=None, dx=None):
+    #     if self._input_transform is not None:
+    #         x, t, dx, e = self._input_transform(x, self.config)
+    #     assert x.shape[2] == x.shape[3] == self.resolution
+    #     temb = get_timestep_embedding(t, self.ch)
+    #     print('ori temb is:', temb)
+    #     temb = self.temb.dense[0](temb)
+    #     print(f'temb after dense[0] is:', temb)
+    #     temb = nonlinearity(temb)
+    #     print(f'temb after nonlinearity is:', temb)
+    #     temb = self.temb.dense[1](temb)
+    #     print('temb is:', temb)
+    #     print('initial x is', x)
+    #     x = self.conv_in(x)
+    #     print('x is:', x)
+    #     if dx is not None:
+    #         cond_emb = self.emb_conv(dx)
+    #     else:
+    #         cond_emb = paddle.zeros_like(x=x)
+    #     x = paddle.concat(x=(x, cond_emb), axis=1)
+    #     print('cat x 1 is:', x)
+    #     hs = [self.combine_conv(x)]
+    #     print('hs is', hs)
+    #     for i_level in range(self.num_resolutions):
+    #         for i_block in range(self.num_res_blocks):
+    #             h = self.down[i_level].block[i_block](hs[-1], temb)
+    #             print('down block h is:', h)
+
+    #             if len(self.down[i_level].attn) > 0:
+    #                 h = self.down[i_level].attn[i_block](h)
+    #             hs.append(h)
+    #         if i_level != self.num_resolutions - 1:
+    #             hs.append(self.down[i_level].downsample(hs[-1]))
+    #     h = hs[-1]
+    #     print('h is:', h)
+    #     h = self.mid.block_1(h, temb)
+    #     print(f'h after block_1 is:', h)
+    #     h = self.mid.attn_1(h)
+    #     print(f'h after attn_1 is:', h)
+    #     h = self.mid.block_2(h, temb)
+
+    #     print(f'h after block_2 is:', h)
+    #     for i_level in reversed(range(self.num_resolutions)):
+    #         for i_block in range(self.num_res_blocks + 1):
+    #             h = self.up[i_level].block[i_block](
+    #                 paddle.concat(x=[h, hs.pop()], axis=1), temb
+    #             )
+    #             if len(self.up[i_level].attn) > 0:
+    #                 h = self.up[i_level].attn[i_block](h)
+    #             print(f'h after up block[{i_block}] is:', h)
+    #         if i_level != 0:
+    #             h = self.up[i_level].upsample(h)
+    #             print(f'upsampled h is:', h)
+    #     h = self.norm_out(h)
+    #     print(f'norm_out h is:', h)
+    #     h = nonlinearity(h)
+    #     print(f'nonlinearity h is:', h)
+    #     h = self.conv_out(h)
+    #     if self._output_transform is not None:
+    #         outputs = (h, e)
+    #         result_dict = self._output_transform(outputs)
+    #         return result_dict
+    #     return h
