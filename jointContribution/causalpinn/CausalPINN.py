@@ -80,7 +80,7 @@ class modified_MLP_II(paddle.nn.Layer):
         t = inputs[:,2:3]
         x = inputs[:,0:1]
         y = inputs[:,1:2]
-        inputs=paddle.concat([paddle.ones_like((t),dtype='float32'), t @ self.k_t.T,                                                      
+        inputs=paddle.concat([paddle.ones_like((t)), t @ self.k_t.T,                                                      
                                     paddle.cos(x@self.k_x.T * self.w_x), paddle.cos(y@self.k_y.T * self.w_y),               
                                     paddle.sin(x@self.k_x.T * self.w_x), paddle.sin(y@self.k_y.T * self.w_y),               
                                     paddle.cos(x@self.k_xx.T * self.w_x) * paddle.cos(y@self.k_yy.T * self.w_y),            
