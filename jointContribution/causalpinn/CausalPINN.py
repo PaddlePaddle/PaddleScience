@@ -73,15 +73,14 @@ class modified_MLP_II(paddle.nn.Layer):
                    range(0, len(layers) - 2)])
         self.F = paddle.nn.Linear(in_features=layers[-2], out_features=layers[-1])
         self.activation = activation
-        self.k_t = paddle.pow(paddle.to_tensor(10), paddle.arange(0, self.M_t + 1)).astype('float32')
+        self.k_t = paddle.pow(paddle.to_tensor(10), paddle.arange(0, self.M_t + 1)).astype('float32')[:,None]
 
 
     def forward(self, inputs):
         t = inputs[:,2:3]
         x = inputs[:,0:1]
         y = inputs[:,1:2]
-        k_t = paddle.pow(paddle.to_tensor(10), paddle.arange(0, self.M_t + 1)).astype('float32')[:,None]
-        inputs=paddle.concat([paddle.ones_like((t),dtype='float32'), t @ k_t.T,                                                      
+        inputs=paddle.concat([paddle.ones_like((t),dtype='float32'), t @ self.k_t.T,                                                      
                                     paddle.cos(x@self.k_x.T * self.w_x), paddle.cos(y@self.k_y.T * self.w_y),               
                                     paddle.sin(x@self.k_x.T * self.w_x), paddle.sin(y@self.k_y.T * self.w_y),               
                                     paddle.cos(x@self.k_xx.T * self.w_x) * paddle.cos(y@self.k_yy.T * self.w_y),            
