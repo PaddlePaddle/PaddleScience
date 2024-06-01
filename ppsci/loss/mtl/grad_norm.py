@@ -50,7 +50,7 @@ class GradNorm(base.LossAggregator):
         >>> import paddle
         >>> from ppsci.loss import mtl
         >>> model = paddle.nn.Linear(3, 4)
-        >>> loss_aggregator = mtl.GradNorm(num_losses=2)
+        >>> loss_aggregator = mtl.GradNorm(model, num_losses=2)
         >>> for i in range(5):
         ...     x1 = paddle.randn([8, 3])
         ...     x2 = paddle.randn([8, 3])
@@ -114,7 +114,7 @@ class GradNorm(base.LossAggregator):
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:
-            weight = self._compute_weight(losses)
+            weight = self._compute_weight(list(losses.values()))
             for i in range(self.num_losses):
                 self.weight[i].set_value(
                     self.momentum * self.weight[i] + (1 - self.momentum) * weight[i]

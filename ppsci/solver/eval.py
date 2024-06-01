@@ -77,6 +77,7 @@ def _eval_by_dataset(
             computed during evaluation.
     """
     target_metric: float = float("inf")
+    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
     for _, _validator in solver.validator.items():
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
@@ -161,7 +162,6 @@ def _eval_by_dataset(
             if len(all_label[key]) > num_samples:
                 all_label[key] = all_label[key][:num_samples]
 
-        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
@@ -208,11 +208,11 @@ def _eval_by_batch(
             computed during evaluation.
     """
     target_metric: float = float("inf")
+    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
     for _, _validator in solver.validator.items():
         num_samples = _get_dataset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
-        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):

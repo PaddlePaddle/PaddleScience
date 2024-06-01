@@ -115,10 +115,9 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
 
-                for i, _constraint in enumerate(solver.constraint.values()):
-                    loss_dict[_constraint.name] = (
-                        float(constraint_losses[i]) / solver.update_freq
-                    )
+                loss_dict = {
+                    key: float(loss) for key, loss in constraint_losses.items()
+                }
                 loss_dict["loss"] = float(total_loss)
 
                 if solver.nvtx_flag:  # only for nsight analysis
@@ -250,12 +249,13 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
                         weight_dicts,
                     )
 
+                    # accumulate all losses
                     total_loss = solver.loss_aggregator(
                         constraint_losses, solver.global_step
                     )
-                    # accumulate all losses
-                    for i, _constraint in enumerate(solver.constraint.values()):
-                        loss_dict[_constraint.name] = float(constraint_losses[i])
+                    loss_dict = {
+                        key: float(loss) for key, loss in constraint_losses.items()
+                    }
                     loss_dict["loss"] = float(total_loss)
 
                 # backward

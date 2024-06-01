@@ -48,6 +48,6 @@ class Sum(LossAggregator):
             if i == 0:
                 total_loss = losses[key]
             else:
-                total_loss += losses[i]
+                total_loss += losses[key]
 
         return total_loss

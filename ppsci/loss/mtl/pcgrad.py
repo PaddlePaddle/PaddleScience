@@ -46,7 +46,7 @@ class PCGrad(base.LossAggregator):
         ...     y2 = model(x2)
         ...     loss1 = paddle.sum(y1)
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
-        ...     loss_aggregator([loss1, loss2]).backward()
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
 
     def __init__(self, model: nn.Layer) -> None:
