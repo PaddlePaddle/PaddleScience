@@ -71,15 +71,18 @@ class FunctionalLoss(base.Loss):
         super().__init__(None, weight)
         self.loss_expr = loss_expr
 
-    def forward(self, output_dict, label_dict=None, weight_dict=None) -> paddle.Tensor:
-        loss = self.loss_expr(output_dict, label_dict, weight_dict)
+    def forward(
+        self, output_dict, label_dict=None, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = self.loss_expr(output_dict, label_dict, weight_dict)
 
-        assert isinstance(
-            loss, (paddle.Tensor, paddle.static.Variable, paddle.pir.Value)
-        ), (
-            "Loss computed by custom function should be type of 'paddle.Tensor', "
-            f"'paddle.static.Variable' or 'paddle.pir.Value', but got {type(loss)}."
-            " Please check the return type of custom loss function."
-        )
+        for key in losses:
+            assert isinstance(
+                losses[key], (paddle.Tensor, paddle.static.Variable, paddle.pir.Value)
+            ), (
+                "Loss computed by custom function should be type of 'paddle.Tensor', "
+                f"'paddle.static.Variable' or 'paddle.pir.Value', but got {type(losses[key])}."
+                " Please check the return type of custom loss function."
+            )
 
-        return loss
+        return losses

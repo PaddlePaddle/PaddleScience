@@ -77,8 +77,11 @@ class MSELoss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict and key in weight_dict:
@@ -96,7 +99,8 @@ class MSELoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses
 
 
@@ -148,8 +152,11 @@ class CausalMSELoss(base.Loss):
             "acc_mat", paddle.tril(paddle.ones([n_chunks, n_chunks]), -1)
         )
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict and key in weight_dict:
@@ -175,7 +182,8 @@ class CausalMSELoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses
 
 
@@ -241,13 +249,16 @@ class MSELossWithL2Decay(MSELoss):
         super().__init__(reduction, weight)
         self.regularization_dict = regularization_dict
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
         losses = super().forward(output_dict, label_dict, weight_dict)
 
         if self.regularization_dict is not None:
             for reg_key, reg_weight in self.regularization_dict.items():
                 loss = output_dict[reg_key].pow(2).sum()
-                losses += loss * reg_weight
+                losses[reg_key] += loss * reg_weight
+
         return losses
 
 
@@ -302,8 +313,11 @@ class PeriodicMSELoss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             n_output = len(output_dict[key])
             if n_output % 2 > 0:
@@ -330,5 +344,6 @@ class PeriodicMSELoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses

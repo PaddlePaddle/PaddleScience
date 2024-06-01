@@ -87,8 +87,9 @@ class LatitudeWeightedACC(base.Metric):
         return self.scale * paddle.expm1(x)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
+    def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
+
         for key in label_dict:
             output = (
                 self.scale_expm1(output_dict[key]) if self.unlog else output_dict[key]
@@ -117,4 +118,5 @@ class LatitudeWeightedACC(base.Metric):
                     metric_dict[key] = rmse.mean(axis=1)
                 else:
                     metric_dict[key] = rmse.mean()
+
         return metric_dict

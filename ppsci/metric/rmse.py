@@ -61,7 +61,7 @@ class RMSE(base.Metric):
         super().__init__(keep_batch)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
+    def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
         for key in label_dict:
             rmse = F.mse_loss(output_dict[key], label_dict[key], "mean") ** 0.5
@@ -132,7 +132,7 @@ class LatitudeWeightedRMSE(base.Metric):
         return self.scale * paddle.expm1(x)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
+    def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
         for key in label_dict:
             output = (
