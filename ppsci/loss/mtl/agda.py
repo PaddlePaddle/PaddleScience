@@ -73,9 +73,9 @@ class AGDA(base.LossAggregator):
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
         grads_list = []  # num_params x num_losses
-        for loss in self.losses:
+        for key in self.losses:
             # backward with current loss
-            loss.backward()
+            self.losses[key].backward()
             grads_list.append(
                 paddle.concat(
                     [

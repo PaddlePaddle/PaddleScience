@@ -97,6 +97,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     label_dicts,
                     weight_dicts,
                 )
+                assert "loss" not in constraint_losses, (
+                    "Key 'loss' is not allowed in loss_dict for it is an preserved key"
+                    " representing total loss, please use other name instead."
+                )
 
                 if solver.nvtx_flag:  # only for nsight analysis
                     core.nvprof_nvtx_pop()  # Loss computation

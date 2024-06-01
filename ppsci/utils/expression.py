@@ -66,7 +66,7 @@ class ExpressionSolver(nn.Layer):
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-    ) -> Tuple["paddle.Tensor", ...]:
+    ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for training, including model forward and equation
         forward.
 
@@ -79,10 +79,9 @@ class ExpressionSolver(nn.Layer):
             weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
 
         Returns:
-            Tuple[paddle.Tensor, ...]: Tuple of losses for each constraint.
+            Dict[str, "paddle.Tensor"]: Losses dict of all constraint(s).
         """
-        output_dicts = []
-        constraint_losses = []
+        constraints_losses: Dict[str, "paddle.Tensor"] = {}
 
         for i, cst_name in enumerate(constraint):
             cst_obj = constraint[cst_name]
@@ -103,23 +102,25 @@ class ExpressionSolver(nn.Layer):
             if "area" in input_dicts[i]:
                 output_dict["area"] = input_dicts[i]["area"]
 
-            output_dicts.append(output_dict)
-
             # clear differentiation cache
             clear()
 
             # compute loss for each constraint according to its' own output, label and weight
-            constraint_loss = cst_obj.loss(
-                output_dicts[i],
+            losses: Dict[str, "paddle.Tensor"] = cst_obj.loss(
+                output_dict,
                 label_dicts[i],
                 weight_dicts[i],
             )
-            constraint_losses.append(constraint_loss)
+            for key in losses:
+                if key in constraints_losses:
+                    constraints_losses[key] += losses[key]
+                else:
+                    constraints_losses[key] = losses[key]
 
             if self.nvtx_flag:  # only for nsight analysis
                 core.nvprof_nvtx_pop()
 
-        return constraint_losses
+        return constraints_losses
 
     @jit.to_static
     def eval_forward(
@@ -130,7 +131,7 @@ class ExpressionSolver(nn.Layer):
         validator: "validate.Validator",
         label_dict: Dict[str, "paddle.Tensor"],
         weight_dict: Dict[str, "paddle.Tensor"],
-    ) -> Tuple[Dict[str, "paddle.Tensor"], "paddle.Tensor"]:
+    ) -> Tuple[Dict[str, "paddle.Tensor"], Dict[str, "paddle.Tensor"]]:
         """Forward computation for evaluation, including model forward and equation
         forward.
 
@@ -163,12 +164,12 @@ class ExpressionSolver(nn.Layer):
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_loss = validator.loss(
+        validator_losses = validator.loss(
             output_dict,
             label_dict,
             weight_dict,
         )
-        return output_dict, validator_loss
+        return output_dict, validator_losses
 
     def visu_forward(
         self,

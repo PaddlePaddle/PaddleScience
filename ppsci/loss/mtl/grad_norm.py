@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import List
 
 import paddle
@@ -44,6 +45,20 @@ class GradNorm(base.LossAggregator):
         num_losses (int, optional): Number of losses. Defaults to 1.
         update_freq (int, optional): Weight updating frequency. Defaults to 1000.
         momentum (float, optional): Momentum $m$ for moving weight. Defaults to 0.9.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.loss import mtl
+        >>> model = paddle.nn.Linear(3, 4)
+        >>> loss_aggregator = mtl.GradNorm(num_losses=2)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
 
     def __init__(
@@ -80,7 +95,9 @@ class GradNorm(base.LossAggregator):
 
         return weight
 
-    def __call__(self, losses: List["paddle.Tensor"], step: int = 0) -> "paddle.Tensor":
+    def __call__(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> "paddle.Tensor":
         assert len(losses) == self.num_losses, (
             f"Length of given losses({len(losses)}) should be equal to "
             f"num_losses({self.num_losses})."
@@ -88,9 +105,12 @@ class GradNorm(base.LossAggregator):
         self.step = step
 
         # compute current loss with moving weights
-        loss = self.weight[0] * losses[0]
-        for i in range(1, len(losses)):
-            loss += self.weight[i] * losses[i]
+        loss = 0.0
+        for i, key in enumerate(losses):
+            if i == 0:
+                loss = self.weight[i] * losses[key]
+            else:
+                loss += self.weight[i] * losses[key]
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:
