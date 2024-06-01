@@ -115,9 +115,11 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
 
-                loss_dict = {
-                    key: float(loss) for key, loss in constraint_losses.items()
-                }
+                for i, _constraint in enumerate(solver.constraint.values()):
+                    loss_dict[_constraint.name] = 0.0
+                    for key in _constraint.output_keys:
+                        loss_dict[_constraint.name] += float(constraint_losses[key])
+
                 loss_dict["loss"] = float(total_loss)
 
                 if solver.nvtx_flag:  # only for nsight analysis

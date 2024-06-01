@@ -144,7 +144,7 @@ class ExpressionSolver(nn.Layer):
             weight_dict (Dict[str, paddle.Tensor]): Weight dict.
 
         Returns:
-            Tuple[Dict[str, paddle.Tensor], paddle.Tensor]: Result dict and loss for
+            Tuple[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]]: Result dict and loss for
                 given validator.
         """
         # model forward
