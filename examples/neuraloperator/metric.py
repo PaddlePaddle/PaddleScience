@@ -178,7 +178,7 @@ class LpLoss_train(LpLoss):
     ):
         x = output_dict["y"]
         y = label_dict["y"]
-        return self.rel(x, y)
+        return {"y": self.rel(x, y)}
 
 
 class H1Loss(object):
@@ -404,4 +404,4 @@ class H1Loss_train(H1Loss):
         x = output_dict["y"]
         y = label_dict["y"]
 
-        return self.rel(x, y, h=h)
+        return {"y": self.rel(x, y, h=h)}

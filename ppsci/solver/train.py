@@ -78,15 +78,13 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
 
-        loss_dict = misc.Prettydefaultdict(float)
-        loss_dict["loss"] = 0.0
         # forward for every constraint, including model and equation expression
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                 if solver.nvtx_flag:  # only for nsight analysis
                     core.nvprof_nvtx_push("Loss computation")
 
-                constraint_losses = solver.forward_helper.train_forward(
+                losses_all, losses_constraint = solver.forward_helper.train_forward(
                     tuple(
                         _constraint.output_expr
                         for _constraint in solver.constraint.values()
@@ -97,7 +95,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     label_dicts,
                     weight_dicts,
                 )
-                assert "loss" not in constraint_losses, (
+                assert "loss" not in losses_all, (
                     "Key 'loss' is not allowed in loss_dict for it is an preserved key"
                     " representing total loss, please use other name instead."
                 )
@@ -109,17 +107,11 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 if solver.nvtx_flag:  # only for nsight analysis
                     core.nvprof_nvtx_push("Loss aggregator")
 
-                total_loss = solver.loss_aggregator(
-                    constraint_losses, solver.global_step
-                )
+                total_loss = solver.loss_aggregator(losses_all, solver.global_step)
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
 
-                for i, _constraint in enumerate(solver.constraint.values()):
-                    loss_dict[_constraint.name] = 0.0
-                    for key in _constraint.output_keys:
-                        loss_dict[_constraint.name] += float(constraint_losses[key])
-
+                loss_dict = losses_constraint
                 loss_dict["loss"] = float(total_loss)
 
                 if solver.nvtx_flag:  # only for nsight analysis
@@ -239,7 +231,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
                 with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                     # forward for every constraint, including model and equation expression
-                    constraint_losses = solver.forward_helper.train_forward(
+                    losses_all, losses_constraint = solver.forward_helper.train_forward(
                         tuple(
                             _constraint.output_expr
                             for _constraint in solver.constraint.values()
@@ -252,12 +244,8 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
                     )
 
                     # accumulate all losses
-                    total_loss = solver.loss_aggregator(
-                        constraint_losses, solver.global_step
-                    )
-                    loss_dict = {
-                        key: float(loss) for key, loss in constraint_losses.items()
-                    }
+                    total_loss = solver.loss_aggregator(losses_all, solver.global_step)
+                    loss_dict = losses_constraint
                     loss_dict["loss"] = float(total_loss)
 
                 # backward

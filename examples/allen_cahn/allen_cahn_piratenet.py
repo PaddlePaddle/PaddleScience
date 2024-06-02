@@ -65,6 +65,7 @@ def train(cfg: DictConfig):
 
     # set equation
     equation = {"AllenCahn": ppsci.equation.AllenCahn(eps=0.01)}
+    ppsci.utils.logger.info(equation["AllenCahn"])
 
     # set constraint
     data = sio.loadmat(cfg.DATA_PATH)

@@ -31,7 +31,7 @@ from ppsci.utils import save_load
 
 def pde_loss_func(output_dict, *args):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
-    return losses
+    return {"pde": losses}
 
 
 def pde_l2_rel_func(output_dict, *args):
@@ -59,7 +59,7 @@ def boundary_loss_func(output_dict, *args):
     losses += F.mse_loss(du_x_lb, du_x_ub, "sum")
     losses += F.mse_loss(du_xx_lb, du_xx_ub, "sum")
     losses += F.mse_loss(du_xxx_lb, du_xxx_ub, "sum")
-    return losses
+    return {"boundary": losses}
 
 
 def train(cfg: DictConfig):

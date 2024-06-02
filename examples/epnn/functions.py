@@ -128,7 +128,7 @@ def train_loss_func(output_dict, *args) -> paddle.Tensor:
     loss_log["state_elasto"].append(float(loss_elasto))
     loss_log["state_plastic"].append(float(loss_plastic))
     loss_log["stress"].append(float(loss_stress))
-    return loss
+    return {"train_loss": loss}
 
 
 def eval_loss_func(output_dict, *args) -> paddle.Tensor:
@@ -150,7 +150,7 @@ def eval_loss_func(output_dict, *args) -> paddle.Tensor:
     logger.message(
         f"error(total): {float(error)}, error(error_elasto): {float(error_elasto)}, error(error_plastic): {float(error_plastic)}, error(error_stress): {float(error_stress)}"
     )
-    return error
+    return {"eval_loss": error}
 
 
 def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:

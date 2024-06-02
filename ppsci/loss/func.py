@@ -76,6 +76,12 @@ class FunctionalLoss(base.Loss):
     ) -> Dict[str, "paddle.Tensor"]:
         losses = self.loss_expr(output_dict, label_dict, weight_dict)
 
+        assert isinstance(losses, dict), (
+            "Loss computed by custom function should be type of 'dict', "
+            f"but got {type(losses)}."
+            " Please check the return type of custom loss function."
+        )
+
         for key in losses:
             assert isinstance(
                 losses[key], (paddle.Tensor, paddle.static.Variable, paddle.pir.Value)

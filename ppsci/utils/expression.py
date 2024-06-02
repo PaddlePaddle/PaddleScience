@@ -66,7 +66,7 @@ class ExpressionSolver(nn.Layer):
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-    ) -> Dict[str, "paddle.Tensor"]:
+    ) -> Tuple[Dict[str, "paddle.Tensor"], Dict[str, float]]:
         """Forward computation for training, including model forward and equation
         forward.
 
@@ -79,9 +79,12 @@ class ExpressionSolver(nn.Layer):
             weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
 
         Returns:
-            Dict[str, "paddle.Tensor"]: Losses dict of all constraint(s).
+            Tuple[Dict[str, "paddle.Tensor"], Dict[str, float]]:
+                all_losses: A loss dictionary containing the output terms of all constraints,
+                constraint_losses: The loss values of all constraints.
         """
-        constraints_losses: Dict[str, "paddle.Tensor"] = {}
+        losses_all: Dict[str, "paddle.Tensor"] = {}
+        losses_constraint: Dict[str, float] = {}
 
         for i, cst_name in enumerate(constraint):
             cst_obj = constraint[cst_name]
@@ -111,16 +114,18 @@ class ExpressionSolver(nn.Layer):
                 label_dicts[i],
                 weight_dicts[i],
             )
+            losses_constraint[cst_name] = 0.0
             for key in losses:
-                if key in constraints_losses:
-                    constraints_losses[key] += losses[key]
+                losses_constraint[cst_name] += losses[key].item()
+                if key in losses_all:
+                    losses_all[key] += losses[key]
                 else:
-                    constraints_losses[key] = losses[key]
+                    losses_all[key] = losses[key]
 
             if self.nvtx_flag:  # only for nsight analysis
                 core.nvprof_nvtx_pop()
 
-        return constraints_losses
+        return losses_all, losses_constraint
 
     @jit.to_static
     def eval_forward(
