@@ -14,6 +14,7 @@
 
 from typing import Dict
 from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -413,7 +414,7 @@ class GridMeshAtmosphericDataset(io.Dataset):
         self,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        config: Dict[str, int | float | str],
+        config: Dict[str, Union[int, float, str]],
     ):
         super().__init__()
         self.input_keys = input_keys
