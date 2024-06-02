@@ -322,10 +322,10 @@ def _process_target_lead_times_and_get_duration(target_lead_times):
 
 
 def variable_to_stacked(
-    variable: xarray.Variable,
+    variable: "xarray.Variable",
     sizes,
     preserved_dims=("batch", "lat", "lon"),
-) -> xarray.Variable:
+) -> "xarray.Variable":
     """Converts an xarray.Variable to preserved_dims + ("channels",).
 
     Any dimensions other than those included in preserved_dims get stacked into a
@@ -356,7 +356,7 @@ def dataset_to_stacked(
     dataset: "xarray.Dataset",
     sizes=None,
     preserved_dims=("batch", "lat", "lon"),
-) -> xarray.DataArray:
+) -> "xarray.DataArray":
     """Converts an xarray.Dataset to a single stacked array.
 
     This takes each consistuent data_var, converts it into BHWC layout

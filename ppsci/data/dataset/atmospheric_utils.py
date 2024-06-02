@@ -29,7 +29,7 @@ except ModuleNotFoundError:
 
 
 def stacked_to_dataset(
-    stacked_array: xarray.Variable,
+    stacked_array: "xarray.Variable",
     template_dataset: "xarray.Dataset",
     preserved_dims: typing.Tuple[str, ...] = ("batch", "lat", "lon"),
 ) -> "xarray.Dataset":
@@ -228,7 +228,7 @@ def get_graph_spatial_features(
     return node_features, edge_features
 
 
-def lat_lon_to_leading_axes(grid_xarray: xarray.DataArray) -> xarray.DataArray:
+def lat_lon_to_leading_axes(grid_xarray: "xarray.DataArray") -> "xarray.DataArray":
     """Reorders xarray so lat/lon axes come first."""
     # leading + ["lat", "lon"] + trailing
     # to
@@ -236,7 +236,7 @@ def lat_lon_to_leading_axes(grid_xarray: xarray.DataArray) -> xarray.DataArray:
     return grid_xarray.transpose("lat", "lon", ...)
 
 
-def restore_leading_axes(grid_xarray: xarray.DataArray) -> xarray.DataArray:
+def restore_leading_axes(grid_xarray: "xarray.DataArray") -> "xarray.DataArray":
     """Reorders xarray so batch/time/level axes come first (if present)."""
 
     # ["lat", "lon"] + [(batch,) (time,) (level,)] + trailing
