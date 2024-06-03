@@ -23,6 +23,7 @@ from typing import Union
 
 import numpy as np
 import paddle
+from typing_extensions import Literal
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
@@ -351,7 +352,7 @@ class Mesh(geometry.Geometry):
 
     def _approximate_area(
         self,
-        random: str = "pseudo",
+        random: Literal["pseudo"] = "pseudo",
         criteria: Optional[Callable] = None,
         n_appr: int = 10000,
     ) -> float:
@@ -444,7 +445,12 @@ class Mesh(geometry.Geometry):
         return points, normal, areas
 
     def sample_boundary(
-        self, n, random="pseudo", criteria=None, evenly=False, inflation_dist=None
+        self,
+        n: int,
+        random: Literal["pseudo"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
+        evenly: bool = False,
+        inflation_dist: Union[float, Tuple[float, ...]] = None,
     ) -> Dict[str, np.ndarray]:
         # TODO(sensen): support for time-dependent points(repeat data in time)
         if inflation_dist is not None:
@@ -561,10 +567,10 @@ class Mesh(geometry.Geometry):
 
     def sample_interior(
         self,
-        n,
-        random="pseudo",
-        criteria=None,
-        evenly=False,
+        n: int,
+        random: Literal["pseudo"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
+        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria."""

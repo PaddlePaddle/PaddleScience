@@ -15,8 +15,13 @@
 from deploy.python_infer.base import Predictor
 from deploy.python_infer.pinn_predictor import PINNPredictor
 
+
 # alias as PINNPredictor can be used in most cases
-GeneralPredictor = PINNPredictor
+class GeneralPredictor(PINNPredictor):
+    """Use PINNPredictor as GeneralPredictor."""
+
+    pass
+
 
 __all__ = [
     "Predictor",
