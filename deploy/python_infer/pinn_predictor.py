@@ -30,6 +30,57 @@ class PINNPredictor(base.Predictor):
 
     Args:
         cfg (DictConfig): Running configuration.
+
+    Examples:
+        >>> import numpy as np
+        >>> import paddle
+        >>> from omegaconf import DictConfig
+        >>> from paddle.static import InputSpec
+        >>> import ppsci
+        >>> from deploy.python_infer import pinn_predictor
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16)
+        >>> static_model = paddle.jit.to_static(
+        ...     model,
+        ...     input_spec=[
+        ...         {
+        ...             key: InputSpec([None, 1], "float32", name=key)
+        ...             for key in model.input_keys
+        ...         },
+        ...     ],
+        ... )
+        >>> paddle.jit.save(static_model, "./inference")
+        >>> cfg = DictConfig(
+        ...     {
+        ...         "log_freq": 10,
+        ...         "INFER": {
+        ...             "pdmodel_path": "./inference.pdmodel",
+        ...             "pdiparams_path": "./inference.pdiparams",
+        ...             "device": "cpu",
+        ...             "engine": "native",
+        ...             "precision": "fp32",
+        ...             "onnx_path": None,
+        ...             "ir_optim": True,
+        ...             "min_subgraph_size": 15,
+        ...             "gpu_mem": 500,
+        ...             "gpu_id": 0,
+        ...             "max_batch_size": 10,
+        ...             "num_cpu_threads": 10,
+        ...         }
+        ...     }
+        ... )
+        >>> predictor = pinn_predictor.PINNPredictor(cfg) # doctest: +SKIP
+        >>> pred = predictor.predict(
+        ...     {
+        ...         "x": np.random.randn(4, 1).astype("float32"),
+        ...         "y": np.random.randn(4, 1).astype("float32"),
+        ...     },
+        ...     batch_size=2,
+        ... ) # doctest: +SKIP
+        >>> for k, v in pred.items(): # doctest: +SKIP
+        ...     print(k, v.shape) # doctest: +SKIP
+        save_infer_model/scale_0.tmp_0 (4, 1)
+        save_infer_model/scale_1.tmp_0 (4, 1)
+        save_infer_model/scale_2.tmp_0 (4, 1)
     """
 
     def __init__(
