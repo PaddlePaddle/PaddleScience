@@ -50,7 +50,7 @@ class FunctionalLoss(base.Loss):
         ...         if weight_dict:
         ...             loss *=  weight_dict[key]
         ...         losses += loss
-        ...     return losses
+        ...     return {"mse_loss": losses}
         >>> loss = FunctionalLoss(mse_sum_loss)
         >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
         ...             'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
@@ -59,8 +59,8 @@ class FunctionalLoss(base.Loss):
         >>> weight_dict = {'u': 0.8, 'v': 0.2}
         >>> result = loss(output_dict, label_dict, weight_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               17.89600182)
+        {'mse_loss': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               17.89600182)}
     """
 
     def __init__(
