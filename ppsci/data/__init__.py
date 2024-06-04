@@ -160,7 +160,10 @@ def build_dataloader(_dataset, cfg):
                 f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
             )
 
-        if cfg["dataset"]["name"] == "GridMeshAtmosphericDataset":
+        if (
+            "name" in cfg["dataset"]
+            and cfg["dataset"]["name"] == "GridMeshAtmosphericDataset"
+        ):
             collate_fn = batch_transform.default_collate_fn
 
         dataloader_ = io.DataLoader(
