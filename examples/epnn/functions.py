@@ -216,8 +216,8 @@ def loss_func(output_dict, criterion) -> paddle.Tensor:
     )
     target_stress = output_dict["stress_y"]
     loss_stress = criterion({"input": input_stress}, {"input": target_stress})
-    loss = loss_elasto + loss_plastic + loss_stress
-    return loss, loss_elasto, loss_plastic, loss_stress
+    loss = loss_elasto["input"] + loss_plastic["input"] + loss_stress["input"]
+    return loss, loss_elasto["input"], loss_plastic["input"], loss_stress["input"]
 
 
 class Dataset:

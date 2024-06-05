@@ -261,7 +261,7 @@ class MSELossWithL2Decay(MSELoss):
         if self.regularization_dict is not None:
             for reg_key, reg_weight in self.regularization_dict.items():
                 loss = output_dict[reg_key].pow(2).sum()
-                losses[reg_key] += loss * reg_weight
+                losses[reg_key] = loss * reg_weight
 
         return losses
 
