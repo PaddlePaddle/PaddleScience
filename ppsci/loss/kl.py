@@ -36,10 +36,16 @@ class KLLoss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict=None, weight_dict=None):
+    def forward(
+        self, output_dict, label_dict=None, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         mu, log_sigma = output_dict["mu"], output_dict["log_sigma"]
 
         base = paddle.exp(2.0 * log_sigma) + paddle.pow(mu, 2) - 1.0 - 2.0 * log_sigma
         loss = 0.5 * paddle.sum(base) / mu.shape[0]
+
+        losses["kl_loss"] = loss
 
         return loss

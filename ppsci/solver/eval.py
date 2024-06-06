@@ -77,6 +77,7 @@ def _eval_by_dataset(
             computed during evaluation.
     """
     target_metric: float = float("inf")
+    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
     for _, _validator in solver.validator.items():
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
@@ -111,7 +112,9 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(
+                sum(list(validator_loss.values()))
+            )
 
             for key, output in output_dict.items():
                 all_output[key].append(
@@ -161,7 +164,6 @@ def _eval_by_dataset(
             if len(all_label[key]) > num_samples:
                 all_label[key] = all_label[key][:num_samples]
 
-        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
@@ -208,6 +210,7 @@ def _eval_by_batch(
             computed during evaluation.
     """
     target_metric: float = float("inf")
+    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
     for _, _validator in solver.validator.items():
         num_samples = _get_dataset_length(_validator.data_loader)
 
@@ -242,7 +245,9 @@ def _eval_by_batch(
                     weight_dict,
                 )
 
-            loss_dict[f"{_validator.name}/loss"] = float(validator_loss)
+            loss_dict[f"{_validator.name}/loss"] = float(
+                sum(list(validator_loss.values()))
+            )
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():

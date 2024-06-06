@@ -56,7 +56,10 @@ def train(cfg: DictConfig):
         base = paddle.exp(2.0 * log_sigma) + paddle.pow(mu, 2) - 1.0 - 2.0 * log_sigma
         KLLoss = 0.5 * paddle.sum(base) / mu.shape[0]
 
-        return F.mse_loss(output_dict["decoder_z"], label_dict["p_train"]) + KLLoss
+        return {
+            "decode_loss": F.mse_loss(output_dict["decoder_z"], label_dict["p_train"])
+            + KLLoss
+        }
 
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(

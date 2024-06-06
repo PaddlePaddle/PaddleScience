@@ -33,7 +33,7 @@ def train_mse_func(
     label_dict: Dict[str, "pgl.Graph"],
     *args,
 ) -> paddle.Tensor:
-    return F.mse_loss(output_dict["pred"], label_dict["label"].y)
+    return {"pred": F.mse_loss(output_dict["pred"], label_dict["label"].y)}
 
 
 def eval_rmse_func(

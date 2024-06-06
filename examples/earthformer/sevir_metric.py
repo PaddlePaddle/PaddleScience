@@ -278,4 +278,4 @@ def train_mse_func(
     pred = output_dict["vil"]
     vil_target = label_dict["vil"]
     target = vil_target.reshape([-1, *vil_target.shape[2:]])
-    return F.mse_loss(pred, target)
+    return {"vil": F.mse_loss(pred, target)}

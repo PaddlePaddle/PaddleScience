@@ -188,7 +188,7 @@ def loss_fun(
         residual_func=residual_func,
     )
 
-    return loss1 + loss2 + loss3
+    return {"residuals": loss1 + loss2 + loss3}
 
 
 def eval_l2_rel_func(
