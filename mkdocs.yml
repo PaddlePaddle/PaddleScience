@@ -86,7 +86,7 @@ nav:
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
   - API文档:
-    - " ":
+    - ppsci:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
       - ppsci.constraint: zh/api/constraint.md
