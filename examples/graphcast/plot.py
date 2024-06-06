@@ -159,4 +159,4 @@ def log_images(
     if "level" in pred[variable_name].coords:
         fig_title += f" at {level} hPa"
 
-    plot_data(data, fig_title, plot_size, robust, file)
+    plot_data(data, fig_title, plot_size, robust, file=file)

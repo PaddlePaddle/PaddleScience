@@ -46,6 +46,7 @@ def eval(cfg: DictConfig):
         "num_workers": 1,
     }
 
+    # set validator
     error_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
         loss=None,
@@ -97,6 +98,7 @@ def eval(cfg: DictConfig):
 
     validator = {error_validator.name: error_validator}
 
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
@@ -107,16 +109,16 @@ def eval(cfg: DictConfig):
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
+    # evaluate model
     solver.eval()
 
+    # visualize prediction
     with solver.no_grad_context_manager(True):
         for index, (input_, label_, _) in enumerate(error_validator.data_loader):
             output_ = model(input_)
             graph = output_["pred"]
             pred = dataset.denormalize(graph.grid_node_feat.numpy())
             pred = graph.grid_node_outputs_to_prediction(pred, dataset.targets_template)
-
-            print(label_["label"])
 
             target = graph.grid_node_outputs_to_prediction(
                 label_["label"][0].numpy(), dataset.targets_template
