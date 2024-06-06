@@ -78,6 +78,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
 
+        loss_dict = misc.Prettydefaultdict(float)
+        loss_dict["loss"] = 0.0
         # forward for every constraint, including model and equation expression
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
@@ -111,7 +113,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
 
-                loss_dict = losses_constraint
+                loss_dict.update(losses_constraint)
                 loss_dict["loss"] = float(total_loss)
 
                 if solver.nvtx_flag:  # only for nsight analysis

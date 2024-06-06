@@ -114,6 +114,9 @@ class ExpressionSolver(nn.Layer):
                 label_dicts[i],
                 weight_dicts[i],
             )
+            # update losses into 'losses_all' and 'losses_constraint'
+            # 'losses_all': Will be send to loss aggregator for further computing final loss(scalar)
+            # 'losses_constraint': Will be used in logging
             losses_constraint[cst_name] = 0.0
             for key in losses:
                 losses_constraint[cst_name] += losses[key].item()
