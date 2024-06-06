@@ -85,7 +85,7 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
-  - API文档:
+  - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
