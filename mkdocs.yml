@@ -82,8 +82,6 @@ nav:
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
-        - DGMR: zh/examples/dgmr.md
-        - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
   - API 文档:
     - ppsci:
