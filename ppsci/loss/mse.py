@@ -228,7 +228,7 @@ class MSELossWithL2Decay(MSELoss):
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
         {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               12.20599937), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               7.91999960), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
                0.18800001)}
 
         >>> regularization_dict = {'v': 1.0}
@@ -237,7 +237,7 @@ class MSELossWithL2Decay(MSELoss):
         >>> print(result)
         {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
                17.14400101), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               4.71199989)}
+               3.95999980)}
     """
 
     def __init__(
