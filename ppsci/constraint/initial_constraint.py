@@ -97,9 +97,6 @@ class InitialConstraint(base.Constraint):
         self.output_expr = {
             k: v for k, v in output_expr.items() if k in self.output_keys
         }
-        # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom.geometry, geometry.Mesh):
-            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)

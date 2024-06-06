@@ -46,7 +46,7 @@ class PCGrad(base.LossAggregator):
         ...     y2 = model(x2)
         ...     loss1 = paddle.sum(y1)
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
-        ...     loss_aggregator([loss1, loss2]).backward()
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
 
     def __init__(self, model: nn.Layer) -> None:
@@ -54,7 +54,11 @@ class PCGrad(base.LossAggregator):
         self._zero = paddle.zeros([])
 
     def backward(self) -> None:
-        np.random.shuffle(self.losses)
+        # shuffle order of losses
+        keys = list(self.losses.keys())
+        np.random.shuffle(keys)
+        self.losses = {key: self.losses[key] for key in keys}
+
         grads_list = self._compute_grads()
         with paddle.no_grad():
             refined_grads = self._refine_grads(grads_list)
@@ -63,9 +67,9 @@ class PCGrad(base.LossAggregator):
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
         grads_list = []  # num_params x num_losses
-        for loss in self.losses:
+        for key in self.losses:
             # backward with current loss
-            loss.backward()
+            self.losses[key].backward()
             grads_list.append(
                 paddle.concat(
                     [

@@ -83,7 +83,9 @@ def train_mse_func(
     label_dict: Dict[str, "paddle.Tensor"],
     *args,
 ) -> paddle.Tensor:
-    return F.mse_loss(output_dict["sst_target"], label_dict["sst_target"])
+    return {
+        "sst_target": F.mse_loss(output_dict["sst_target"], label_dict["sst_target"])
+    }
 
 
 def eval_rmse_func(
