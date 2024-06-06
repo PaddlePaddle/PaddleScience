@@ -106,9 +106,13 @@ gkratio = paddle.to_tensor(
 
 
 def val_loss_criterion(x, y):
-    return 100.0 * (
-        paddle.linalg.norm(x=x["input"] - y["input"]) / paddle.linalg.norm(x=y["input"])
-    )
+    return {
+        "input": 100.0
+        * (
+            paddle.linalg.norm(x=x["input"] - y["input"])
+            / paddle.linalg.norm(x=y["input"])
+        )
+    }
 
 
 def train_loss_func(output_dict, *args) -> paddle.Tensor:
