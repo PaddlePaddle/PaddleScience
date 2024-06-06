@@ -21,7 +21,7 @@ import pandas as pd
 from omegaconf import DictConfig
 
 from deploy.python_infer import base
-from examples.yinglong.timefeatures import time_features
+from examples.yinglong1.timefeatures import time_features
 from ppsci.utils import logger
 
 
@@ -38,7 +38,7 @@ class YingLongPredictor(base.Predictor):
     ):
         super().__init__(
             cfg.INFER.pdmodel_path,
-            cfg.INFER.pdpiparams_path,
+            cfg.INFER.pdiparams_path,
             device=cfg.INFER.device,
             engine=cfg.INFER.engine,
             precision=cfg.INFER.precision,

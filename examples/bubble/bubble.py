@@ -403,14 +403,118 @@ def evaluate(cfg: DictConfig):
     )
 
 
+def export(cfg: DictConfig):
+    # set model
+    model_psi = ppsci.arch.MLP(**cfg.MODEL.psi_net)
+    model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
+    model_phil = ppsci.arch.MLP(**cfg.MODEL.phil_net)
+
+    # transform
+    def transform_out(in_, out):
+        psi_y = out["psi"]
+        y = in_["y"]
+        x = in_["x"]
+        u = jacobian(psi_y, y, create_graph=False)
+        v = -jacobian(psi_y, x, create_graph=False)
+        return {"u": u, "v": v}
+
+    # register transform
+    model_psi.register_output_transform(transform_out)
+    model_list = ppsci.arch.ModelList((model_psi, model_p, model_phil))
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model_list,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in model_list.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    # load Data
+    data = scipy.io.loadmat(cfg.DATA_PATH)
+    # normalize data
+    p_max = data["p"].max(axis=0)
+    p_min = data["p"].min(axis=0)
+    u_max = data["u"].max(axis=0)
+    u_min = data["u"].min(axis=0)
+    v_max = data["v"].max(axis=0)
+    v_min = data["v"].min(axis=0)
+
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    # set time-geometry
+    timestamps = np.linspace(0, 126, 127, endpoint=True)
+    geom = {
+        "time_rect_visu": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(1, 126, timestamps=timestamps),
+            ppsci.geometry.Rectangle((0, 0), (15, 5)),
+        ),
+    }
+    NTIME_ALL = len(timestamps)
+    NPOINT_PDE, NTIME_PDE = 300 * 100, NTIME_ALL - 1
+    input_dict = geom["time_rect_visu"].sample_interior(
+        NPOINT_PDE * NTIME_PDE, evenly=True
+    )
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    # inverse normalization
+    p_pred = output_dict["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
+    u_pred = output_dict["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
+    v_pred = output_dict["v"].reshape([NTIME_PDE, NPOINT_PDE]).T
+    pred = {
+        "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]),
+        "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]),
+        "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
+        "phil": output_dict["phil"],
+    }
+    ppsci.visualize.save_vtu_from_dict(
+        "./visual/bubble_pred.vtu",
+        {
+            "t": input_dict["t"],
+            "x": input_dict["x"],
+            "y": input_dict["y"],
+            "u": pred["u"],
+            "v": pred["v"],
+            "p": pred["p"],
+            "phil": pred["phil"],
+        },
+        ("t", "x", "y"),
+        ("u", "v", "p", "phil"),
+        NTIME_PDE,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="bubble.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

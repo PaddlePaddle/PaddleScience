@@ -45,7 +45,7 @@ class InteriorConstraint(base.Constraint):
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+        random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
@@ -71,7 +71,7 @@ class InteriorConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(
@@ -81,7 +81,7 @@ class InteriorConstraint(base.Constraint):
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        random: Literal["pseudo", "LHS"] = "pseudo",
+        random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
@@ -94,9 +94,6 @@ class InteriorConstraint(base.Constraint):
         self.output_expr = {
             k: v for k, v in output_expr.items() if k in self.output_keys
         }
-        # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom, geometry.Mesh):
-            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)

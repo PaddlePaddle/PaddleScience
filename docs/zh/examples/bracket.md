@@ -8,7 +8,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
     # unzip it
     tar -xvf bracket_dataset.tar
     python bracket.py
@@ -20,10 +20,28 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
     # unzip it
     tar -xvf bracket_dataset.tar
     python bracket.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python bracket.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
+    # unzip it
+    tar -xvf bracket_dataset.tar
+    python bracket.py mode=infer
     ```
 
 | 预训练模型  | 指标 |
@@ -108,7 +126,7 @@ examples/bracket/bracket.py:32:37
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
 
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar -o bracket_dataset.tar
 
 # unzip it
 tar -xvf bracket_dataset.tar
@@ -118,7 +136,7 @@ tar -xvf bracket_dataset.tar
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[1.4.3 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#142)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 

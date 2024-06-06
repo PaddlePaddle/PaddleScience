@@ -36,7 +36,7 @@ class Predictor:
 
     Args:
         pdmodel_path (Optional[str]): Path to the PaddlePaddle model file. Defaults to None.
-        pdpiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
+        pdiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
         device (Literal["gpu", "cpu", "npu", "xpu"], optional): Device to use for inference. Defaults to "cpu".
         engine (Literal["native", "tensorrt", "onnx", "mkldnn"], optional): Inference engine to use. Defaults to "native".
         precision (Literal["fp32", "fp16", "int8"], optional): Precision to use for inference. Defaults to "fp32".
@@ -51,7 +51,7 @@ class Predictor:
     def __init__(
         self,
         pdmodel_path: Optional[str] = None,
-        pdpiparams_path: Optional[str] = None,
+        pdiparams_path: Optional[str] = None,
         *,
         device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu",
         engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
@@ -65,7 +65,7 @@ class Predictor:
         num_cpu_threads: int = 10,
     ):
         self.pdmodel_path = pdmodel_path
-        self.pdpiparams_path = pdpiparams_path
+        self.pdiparams_path = pdiparams_path
 
         self._check_device(device)
         self.device = device
@@ -104,13 +104,13 @@ class Predictor:
                 f"Given 'pdmodel_path': {self.pdmodel_path} does not exist. "
                 "Please check if it is correct."
             )
-        if not osp.exists(self.pdpiparams_path):
+        if not osp.exists(self.pdiparams_path):
             raise FileNotFoundError(
-                f"Given 'pdpiparams_path': {self.pdpiparams_path} does not exist. "
+                f"Given 'pdiparams_path': {self.pdiparams_path} does not exist. "
                 "Please check if it is correct."
             )
 
-        config = paddle_inference.Config(self.pdmodel_path, self.pdpiparams_path)
+        config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
         if self.device == "gpu":
             config.enable_use_gpu(self.gpu_mem, self.gpu_id)
             if self.engine == "tensorrt":

@@ -1,21 +1,11 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import os
 
 import hydra
 import paddle
 import pytest
-from omegaconf import DictConfig
+import yaml
+
+from ppsci.utils.callbacks import InitCallback
 
 paddle.seed(1024)
 
@@ -28,42 +18,33 @@ paddle.seed(1024)
         (10, "eval", -1),
     ],
 )
-def test_invalid_epochs(
-    epochs,
-    mode,
-    seed,
-):
-    @hydra.main(version_base=None, config_path="./", config_name="test_config.yaml")
-    def main(cfg: DictConfig):
-        pass
-
-    # sys.exit will be called when validation error in pydantic, so there we use
-    # SystemExit instead of other type of errors.
-    with pytest.raises(SystemExit):
-        cfg_dict = dict(
-            {
-                "TRAIN": {
-                    "epochs": epochs,
-                },
-                "mode": mode,
-                "seed": seed,
-                "hydra": {
-                    "callbacks": {
-                        "init_callback": {
-                            "_target_": "ppsci.utils.callbacks.InitCallback"
-                        }
-                    }
-                },
+def test_invalid_epochs(tmpdir, epochs, mode, seed):
+    cfg_dict = {
+        "hydra": {
+            "callbacks": {
+                "init_callback": {"_target_": "ppsci.utils.callbacks.InitCallback"}
             }
-        )
-        # print(cfg_dict)
-        import yaml
+        },
+        "mode": mode,
+        "seed": seed,
+        "TRAIN": {
+            "epochs": epochs,
+        },
+    }
 
-        with open("test_config.yaml", "w") as f:
-            yaml.dump(dict(cfg_dict), f)
+    dir_ = os.path.dirname(__file__)
+    config_abs_path = os.path.join(dir_, "test_config.yaml")
+    with open(config_abs_path, "w") as f:
+        f.write(yaml.dump(cfg_dict))
 
-        main()
+    with hydra.initialize(config_path="./", version_base=None):
+        cfg = hydra.compose(config_name="test_config.yaml")
+
+        with pytest.raises(SystemExit) as exec_info:
+            InitCallback().on_job_start(config=cfg)
+        assert exec_info.value.code == 2
 
 
+# 这部分通常不需要，除非你想直接从脚本运行测试
 if __name__ == "__main__":
     pytest.main()

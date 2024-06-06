@@ -4,7 +4,7 @@ hydra:
     dir: outputs_nsfnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -23,13 +23,14 @@ hydra:
 seed: 1234
 output_dir: ${hydra:run.dir}
 data_dir: ./data/
+log_freq: 20
 MODEL:
   input_keys: ["x", "y","z","t"]
   output_keys: ["u", "v", "w","p"]
   num_layers: 10
   hidden_size: 300
   activation: "tanh"
-  weight_norm: True
+  weight_norm: true
 mode: train
 ntrain: 11333
 nb_train: 2952
@@ -52,3 +53,21 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
 
+
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
+  export_path: ./inference/VP_NSFNet4
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  output_keys: ['p', 'u', 'v', 'w']
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 64
+  num_cpu_threads: 4
+  batch_size: 16

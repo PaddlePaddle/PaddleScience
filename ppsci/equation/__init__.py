@@ -17,7 +17,9 @@ import copy
 from ppsci.equation.fpde import FractionalPoisson
 from ppsci.equation.ide import Volterra
 from ppsci.equation.pde import DETACH_FUNC_NAME
+from ppsci.equation.pde import NLSMB
 from ppsci.equation.pde import PDE
+from ppsci.equation.pde import AllenCahn
 from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import HeatExchanger
 from ppsci.equation.pde import Laplace
@@ -32,6 +34,7 @@ from ppsci.utils import misc
 __all__ = [
     "PDE",
     "DETACH_FUNC_NAME",
+    "AllenCahn",
     "Biharmonic",
     "HeatExchanger",
     "Laplace",
@@ -41,6 +44,7 @@ __all__ = [
     "Poisson",
     "Vibration",
     "Volterra",
+    "NLSMB",
     "FractionalPoisson",
     "build_equation",
 ]
@@ -50,7 +54,7 @@ def build_equation(cfg):
     """Build equation(s)
 
     Args:
-        cfg (List[AttrDict]): Equation(s) config list.
+        cfg (List[DictConfig]): Equation(s) config list.
 
     Returns:
         Dict[str, Equation]: Equation(s) in dict.

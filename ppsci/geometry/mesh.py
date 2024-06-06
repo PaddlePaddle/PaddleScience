@@ -23,6 +23,7 @@ from typing import Union
 
 import numpy as np
 import paddle
+from typing_extensions import Literal
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
@@ -75,11 +76,11 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
-            >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)
-            >>> print(mesh.vertices)
+            >>> import pymesh  # doctest: +SKIP
+            >>> import numpy as np  # doctest: +SKIP
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -201,11 +202,11 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
+            >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh(box)
-            >>> print(mesh.vertices)
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -214,7 +215,7 @@ class Mesh(geometry.Geometry):
              [1. 0. 1.]
              [1. 1. 1.]
              [0. 1. 1.]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.
+            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.  # doctest: +SKIP
             [[-1.  -0.5  0. ]
              [ 0.  -0.5  0. ]
              [ 0.   0.5  0. ]
@@ -223,7 +224,7 @@ class Mesh(geometry.Geometry):
              [ 0.  -0.5  1. ]
              [ 0.   0.5  1. ]
              [-1.   0.5  1. ]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates
+            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates  # doctest: +SKIP
             [[-0.5  0.   0.5]
              [ 0.5  0.   0.5]
              [ 0.5  1.   0.5]
@@ -240,7 +241,7 @@ class Mesh(geometry.Geometry):
             raise ImportError(
                 "Could not import open3d and pymesh python package. "
                 "Please install open3d with `pip install open3d` and "
-                "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
+                "pymesh as https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#__tabbed_4_1"
             )
         import open3d  # isort:skip
         import pymesh  # isort:skip
@@ -274,11 +275,11 @@ class Mesh(geometry.Geometry):
 
         Examples:
             >>> import ppsci
-            >>> import pymesh
+            >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
-            >>> mesh = ppsci.geometry.Mesh(box)
-            >>> print(mesh.vertices)
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[0. 0. 0.]
              [1. 0. 0.]
              [1. 1. 0.]
@@ -287,8 +288,8 @@ class Mesh(geometry.Geometry):
              [1. 0. 1.]
              [1. 1. 1.]
              [0. 1. 1.]]
-            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))
-            >>> print(mesh.vertices)
+            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))  # doctest: +SKIP
+            >>> print(mesh.vertices)  # doctest: +SKIP
             [[-0.25 -0.5  -0.75]
              [ 1.75 -0.5  -0.75]
              [ 1.75  1.5  -0.75]
@@ -351,7 +352,7 @@ class Mesh(geometry.Geometry):
 
     def _approximate_area(
         self,
-        random: str = "pseudo",
+        random: Literal["pseudo"] = "pseudo",
         criteria: Optional[Callable] = None,
         n_appr: int = 10000,
     ) -> float:
@@ -444,7 +445,12 @@ class Mesh(geometry.Geometry):
         return points, normal, areas
 
     def sample_boundary(
-        self, n, random="pseudo", criteria=None, evenly=False, inflation_dist=None
+        self,
+        n: int,
+        random: Literal["pseudo"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
+        evenly: bool = False,
+        inflation_dist: Union[float, Tuple[float, ...]] = None,
     ) -> Dict[str, np.ndarray]:
         # TODO(sensen): support for time-dependent points(repeat data in time)
         if inflation_dist is not None:
@@ -561,10 +567,10 @@ class Mesh(geometry.Geometry):
 
     def sample_interior(
         self,
-        n,
-        random="pseudo",
-        criteria=None,
-        evenly=False,
+        n: int,
+        random: Literal["pseudo"] = "pseudo",
+        criteria: Optional[Callable[..., np.ndarray]] = None,
+        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria."""

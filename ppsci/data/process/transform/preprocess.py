@@ -32,18 +32,20 @@ class Translate:
     Examples:
         >>> import ppsci
         >>> import numpy as np
-        >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
-        >>> input_data = np.array([[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]])
-        >>> input_dict = {"x": input_data[:,:,0], "y": input_data[:,:,1]}
+
+        >>> input_dict = {"x": np.array([5.0, 10.0]), "y": np.array([20.0, 40.0])}
         >>> label_dict = {"x": np.array([1.0, 2.0]), "y": np.array([3.0, 4.0])}
         >>> weight_dict = {"x": np.array([10.0, 20.0]), "y": np.array([30.0, 40.0])}
+
+        >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
         >>> translated_input_dict, translated_label_dict, translated_weight_dict = translate(input_dict, label_dict, weight_dict)
+
         >>> print(translated_input_dict)
-        {"x": array([[2., 3.], [4., 5.]]), "y": array([[0., 1.], [2., 3.]])}
+        {'x': array([ 6., 11.]), 'y': array([19., 39.])}
         >>> print(translated_label_dict)
-        {"x": array([2., 3.]), "y": array([3., 4.])}
+        {'x': array([1., 2.]), 'y': array([3., 4.])}
         >>> print(translated_weight_dict)
-        {"x": array([10., 20.]), "y": array([30., 40.])}
+        {'x': array([10., 20.]), 'y': array([30., 40.])}
     """
 
     def __init__(self, offset: Dict[str, float]):
@@ -293,23 +295,24 @@ class FunctionalTransform:
         >>> # The function will perform some transformations on the data in data_dict, convert all labels in label_dict to uppercase,
         >>> # and modify the weights in weight_dict by dividing each weight by 10.
         >>> # Finally, it returns the transformed data, labels, and weights as a tuple.
+        >>> import ppsci
         >>> def transform_func(data_dict, label_dict, weight_dict):
         ...     for key in data_dict:
         ...         data_dict[key] = data_dict[key] * 2
         ...     for key in label_dict:
-        ...         label_dict[key] = label_dict[key].upper()
+        ...         label_dict[key] = label_dict[key] + 1.0
         ...     for key in weight_dict:
         ...         weight_dict[key] = weight_dict[key] / 10
         ...     return data_dict, label_dict, weight_dict
         >>> transform = ppsci.data.transform.FunctionalTransform(transform_func)
         >>> # Define some sample data, labels, and weights
         >>> data = {'feature1': np.array([1, 2, 3]), 'feature2': np.array([4, 5, 6])}
-        >>> label = {'class': 'class1', 'instance': 'instance1'}
+        >>> label = {'class': 0.0, 'instance': 0.1}
         >>> weight = {'weight1': 0.5, 'weight2': 0.5}
         >>> # Apply the transform function to the data, labels, and weights using the FunctionalTransform instance
         >>> transformed_data = transform(data, label, weight)
         >>> print(transformed_data)
-        ({'feature1': [2, 4, 6], 'feature2': [8, 10, 12]}, {'class': 'CLASS1', 'instance': 'INSTANCE1'}, {'weight1': 0.5, 'weight2': 0.5})
+        ({'feature1': array([2, 4, 6]), 'feature2': array([ 8, 10, 12])}, {'class': 1.0, 'instance': 1.1}, {'weight1': 0.05, 'weight2': 0.05})
     """
 
     def __init__(

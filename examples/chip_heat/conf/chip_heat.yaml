@@ -4,7 +4,7 @@ hydra:
     dir: outputs_chip_heat/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchanged
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -39,7 +39,7 @@ NBC: 500 # number of BC
 # gaussian random field settings
 GRF:
   alpha: 4.0
-  flag_normalize: True
+  flag_normalize: true
 
 # model settings
 MODEL:
@@ -61,7 +61,7 @@ MODEL:
   branch_activation: "swish"
   BC_activation: "swish"
   trunk_activation: "swish"
-  use_bias: True
+  use_bias: true
 
 # training settings
 TRAIN:

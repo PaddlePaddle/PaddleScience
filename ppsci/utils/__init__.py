@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# NOTE: Put config module import at the top level for register default config(s) in
+# ConfigStore at the begining of ppsci
+from ppsci.utils import config  # isort:skip  # noqa: F401
+from ppsci.utils import ema
 from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -21,7 +25,6 @@ from ppsci.utils import writer
 from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.checker import run_check
 from ppsci.utils.checker import run_check_mesh
-from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
@@ -38,12 +41,12 @@ from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
 
 __all__ = [
-    "AttrDict",
     "AverageMeter",
     "ExpressionSolver",
     "initializer",
     "logger",
     "misc",
+    "ema",
     "reader",
     "writer",
     "profiler",

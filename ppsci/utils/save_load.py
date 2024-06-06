@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from paddle import optimizer
 
     from ppsci import equation
+    from ppsci.utils import ema
 
 
 __all__ = [
@@ -98,7 +99,24 @@ def load_pretrain(
         ...     path="path/to/pretrain_model") # doctest: +SKIP
     """
     if path.startswith("http"):
+        # download from path(url) and get its' physical path
+        eqn_path = path.replace(".pdparams", ".pdeqn", 1)
         path = download.get_weights_path_from_url(path)
+
+        # automatically download additional equation weights if avaiable
+        def is_url_accessible(url: str):
+            try:
+                import requests
+
+                response = requests.head(url, timeout=5)
+                return response.status_code == requests.codes.ok
+            except requests.RequestException:
+                return False
+            except Exception:
+                return False
+
+        if is_url_accessible(eqn_path):
+            download.get_weights_path_from_url(eqn_path)
 
     # remove ".pdparams" in suffix of path for convenient
     if path.endswith(".pdparams"):
@@ -112,6 +130,7 @@ def load_checkpoint(
     optimizer: optimizer.Optimizer,
     grad_scaler: Optional[amp.GradScaler] = None,
     equation: Optional[Dict[str, equation.PDE]] = None,
+    ema_model: Optional[ema.AveragedModel] = None,
 ) -> Dict[str, Any]:
     """Load from checkpoint.
 
@@ -121,6 +140,7 @@ def load_checkpoint(
         optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
+        ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -165,26 +185,31 @@ def load_checkpoint(
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
+    if ema_model:
+        avg_param_dict = paddle.load(f"{path}_ema.pdparams")
+        ema_model.set_state_dict(avg_param_dict)
+
     logger.message(f"Finish loading checkpoint from {path}")
     return metric_dict
 
 
 def save_checkpoint(
     model: nn.Layer,
-    optimizer: optimizer.Optimizer,
+    optimizer: Optional[optimizer.Optimizer],
     metric: Dict[str, float],
     grad_scaler: Optional[amp.GradScaler] = None,
     output_dir: Optional[str] = None,
     prefix: str = "model",
     equation: Optional[Dict[str, equation.PDE]] = None,
     print_log: bool = True,
+    ema_model: Optional[ema.AveragedModel] = None,
 ):
     """
     Save checkpoint, including model params, optimizer params, metric information.
 
     Args:
         model (nn.Layer): Model with parameters.
-        optimizer (optimizer.Optimizer): Optimizer for model.
+        optimizer (Optional[optimizer.Optimizer]): Optimizer for model.
         metric (Dict[str, float]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         output_dir (Optional[str]): Directory for checkpoint storage.
@@ -193,6 +218,7 @@ def save_checkpoint(
         print_log (bool, optional): Whether print saving log information, mainly for
             keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
             Defaults to True.
+        ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -214,7 +240,8 @@ def save_checkpoint(
     os.makedirs(ckpt_dir, exist_ok=True)
 
     paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
-    paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
+    if optimizer:
+        paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
     paddle.save(metric, f"{ckpt_path}.pdstates")
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
@@ -227,6 +254,9 @@ def save_checkpoint(
                 {key: eq.state_dict() for key, eq in equation.items()},
                 f"{ckpt_path}.pdeqn",
             )
+
+    if ema_model:
+        paddle.save(ema_model.state_dict(), f"{ckpt_path}_ema.pdparams")
 
     if print_log:
         log_str = f"Finish saving checkpoint to: {ckpt_path}"

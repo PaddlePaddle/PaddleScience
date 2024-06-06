@@ -112,7 +112,7 @@ TRAIN:
 ``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
-....
+...
 [HYDRA]        #1 : seed=42 TRAIN.epochs=20
 ...
 [HYDRA]        #2 : seed=1024 TRAIN.epochs=10
@@ -344,7 +344,7 @@ pip install paddle2onnx
 # linux
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
 # unzip it
 tar -xvf aneurysm_dataset.tar
 python aneurysm.py mode=infer
@@ -366,9 +366,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| - | ✅ |
-| GPU | ✅ | ✅ | ✅ | - |
-| XPU | TODO | - | - | - |
+| CPU | ✅ | ✅| / | ✅ |
+| GPU | ✅ | ✅ | ✅ | / |
+| XPU | TODO | / | / | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -447,7 +447,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
@@ -561,130 +561,245 @@ solver.eval()
 
 ### 1.7 实验过程可视化
 
-#### 1.7.1 TensorBoardX
+=== "TensorBoardX"
 
-[TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+    [TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+    PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-1. 安装 Tensorboard 和 TensorBoardX
+    1. 安装 Tensorboard 和 TensorBoardX
 
-    ``` sh
-    pip install tensorboard tensorboardX
-    ```
+        ``` sh
+        pip install tensorboard tensorboardX
+        ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
+    2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
 
-    ``` py hl_lines="3"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_tbd=True,
-    )
-    ```
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_tbd=True,
+        )
+        ```
 
-3. 可视化记录数据
+    3. 可视化记录数据
 
-    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+        根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="3" hl_lines="2"
-    ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
-    tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
-    ```
+        ``` log hl_lines="3" hl_lines="2"
+        ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
+        tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
+        ```
 
-    !!! tip
+        !!! tip
 
-        也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
+            也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
 
-    在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+        在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-    ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
+        ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
 
-#### 1.7.2 VisualDL
+=== "VisualDL"
 
-[VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+    [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
-PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+    PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
 
-1. 安装 VisualDL
+    1. 安装 VisualDL
 
-    ``` sh
-    pip install -U visualdl
-    ```
+        ``` sh
+        pip install -U visualdl
+        ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
+    2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
 
-    ``` py hl_lines="3"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_vdl=True,
-    )
-    ```
+        ``` py hl_lines="3"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_vdl=True,
+        )
+        ```
 
-3. 可视化记录数据
+    3. 可视化记录数据
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+        根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="4"
-    Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
-    device: 0, cuDNN Version: 8.4.
-    ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
-    visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
-    ```
+        ``` log hl_lines="4"
+        Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
+        device: 0, cuDNN Version: 8.4.
+        ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
+        visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
+        ```
 
-    在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+        在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+        ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
 
-#### 1.7.3 WandB
+=== "WandB"
 
-[WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
+    [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到用户的私人账户上，防止实验记录丢失。
 
-PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
+    PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
 
-1. 安装 wandb
+    1. 安装 wandb
 
-    ``` sh
-    pip install wandb
-    ```
+        ``` sh
+        pip install wandb
+        ```
 
-2. 注册 wandb 并在终端登录
+    2. 注册 wandb 并在终端登录
 
-    ``` sh
-    # 登录 wandb 获取 API key
-    wandb login
-    # 根据 login 提示，输入 API key 并回车确认
-    ```
+        ``` sh
+        # 登录 wandb 获取 API key
+        wandb login
+        # 根据 login 提示，输入 API key 并回车确认
+        ```
 
-3. 在案例中开启 wandb
+    3. 在案例中开启 wandb
 
-    ``` py hl_lines="3 4 5 6 7 8"
-    solver = ppsci.solver.Solver(
-        ...,
-        use_wandb=True,
-        wandb_config={
-            "project": "PaddleScience",
-            "name": "Laplace2D",
-            "dir": OUTPUT_DIR,
-        },
-        ...
-    )
-    solver.train()
-    ```
+        ``` py hl_lines="3 4 5 6 7 8"
+        solver = ppsci.solver.Solver(
+            ...,
+            use_wandb=True,
+            wandb_config={
+                "project": "PaddleScience",
+                "name": "Laplace2D",
+                "dir": OUTPUT_DIR,
+            },
+            ...
+        )
+        solver.train()
+        ```
 
-    如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
+        如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
 
-    !!! warning "注意"
+        !!! warning "注意"
 
-        由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
+            由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
 
-        否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
-        ![wandb_step settings](../images/overview/wandb_step.JPG)
+            否则默认单位为 wandb 自带的 `Step` (S大写) 字段，会导致显示步数比实际步数多几倍。
+            ![wandb_step settings](../images/overview/wandb_step.JPG)
 
 ## 2. 进阶功能
 
-### 2.1 分布式训练
+### 2.1 贝叶斯超参搜索
 
-#### 2.1.1 数据并行
+hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/en/stable/index.html) 超参数调优工具一起使用。在 yaml 文件中设置好需要调整的参数和最大实验次数后，可以调用 Tree-structured Parzen Estimator(TPE) 算法进行自动化调参工具，效率高于网格调参法。
+
+下面以 viv 案例为例，介绍如何在 PaddleScience 中使用该方法。
+
+1. 安装 1.1.0 以上版本的 `hydra-core` 以及 `hydra-optuna` 插件
+
+    ``` sh
+    pip install 'hydra-core>=1.1.0' hydra-optuna-sweeper
+    ```
+
+2. 修改 `viv.yaml` 文件，在 `defaults:` 和 `hydra:` 字段下分别添加如下配置（高亮部分所示）
+
+    ``` yaml title="viv.yaml" hl_lines="8 26-34"
+    defaults:
+      - ppsci_default
+      - TRAIN: train_default
+      - TRAIN/ema: ema_default
+      - TRAIN/swa: swa_default
+      - EVAL: eval_default
+      - INFER: infer_default
+      - override hydra/sweeper: optuna # (1)
+      - _self_
+
+    hydra:
+      run:
+        # dynamic output directory according to running time and override name
+        dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+      job:
+        name: ${mode} # name of logfile
+        chdir: false # keep current working directory unchanged
+      callbacks:
+        init_callback:
+          _target_: ppsci.utils.callbacks.InitCallback
+      sweep:
+        # output directory for multirun
+        dir: ${hydra.run.dir}
+        subdir: ./
+
+      sweeper: # (2)
+        direction: minimize # (3)
+        study_name: viv_optuna # (4)
+        n_trials: 20 # (5)
+        n_jobs: 1 # (6)
+        params: # (7)
+          MODEL.num_layers: choice(2, 3, 4, 5, 6, 7) # (8)
+          TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005) # (9)
+    ```
+
+    1. 指定了使用 `optuna` 进行超参数优化。
+    2. `sweeper:`：这一行指定了 Hydra 使用的 sweeper 插件，用于进行参数扫描。在这个例子中，它将使用 Optuna 进行超参数优化。
+    3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
+    4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
+    5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
+    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
+    8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
+    9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
+
+    如上所示，在 `hydra.sweeper` 节点下添加了 `optuna` 插件的配置，并在 `params` 节点下指定了要调优的参数及其范围：
+    1. 模型层数 `MODEL.num_layers`，在 [2, 3, 4, 5, 6, 7] 共 6 种层数间进行调优。
+    2. 学习率 `TRAIN.lr_scheduler.learning_rate`，在 0.0001 ~ 0.005 之间进行调优。
+
+    !!! info "注意"
+
+        1. 调优的参数需要与 yaml 文件中配置的参数名一致，如 `MODEL.num_layers`、`TRAIN.lr_scheduler.learning_rate`。
+        2. 调优的参数范围根据不同语义进行指定，比如模型层数必须为整数，可以使用 `choice(...)` 设置有限范围，而学习率一般为浮点数，可以使用 `interval(...)` 设置其上下界。
+
+3. 修改 viv.py，使得被 `@hydra.main` 装饰的 `main` 函数返回实验指标结果（高亮部分所示）
+
+    ``` py title="viv.py" hl_lines="13 14 20 21"
+    def train(cfg: DictConfig):
+        ...
+        # initialize solver
+        solver = ppsci.solver.Solver(
+            model,
+            equation=equation,
+            validator=validator,
+            visualizer=visualizer,
+            cfg=cfg,
+        )
+
+        # evaluate
+        l2_err_eval, _ = solver.eval()
+        return l2_err_eval
+
+    ...
+
+    @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+    def main(cfg: DictConfig):
+        if cfg.mode == "train":
+            return train(cfg)
+        elif cfg.mode == "eval":
+            evaluate(cfg)
+    ```
+
+4. 运行以下命令，开始自动化调优
+
+    ``` sh
+    python viv.py --multirun
+    ```
+
+在 20 次调优实验运行完毕后，在模型保存目录下，会生成 `optimization_results.yaml` 文件，其中包含了最佳的调优结果，如下所示：
+
+``` yaml
+name: optuna
+best_params:
+  MODEL.num_layers: 7
+  TRAIN.lr_scheduler.learning_rate: 0.003982453338298202
+best_value: 0.02460772916674614
+```
+
+更多详细信息以及多目标自动调优方法，可参考：[Optuna Sweeper plugin](https://hydra.cc/docs/plugins/optuna_sweeper/) 和 [Optuna](https://optuna.readthedocs.io/en/stable/)。
+
+### 2.2 分布式训练
+
+#### 2.2.1 数据并行
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
@@ -728,11 +843,11 @@ PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval
     python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
     ```
 
-<!-- #### 1.1.2 模型并行
+<!-- #### 2.2.2 模型并行
 
 TODO -->
 
-### 2.2 自动混合精度训练
+### 2.3 自动混合精度训练
 
 接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
 
@@ -748,7 +863,7 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.3 梯度累加
+### 2.4 梯度累加
 
 接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
 
@@ -763,7 +878,7 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.4 多任务学习
+### 2.5 多任务学习
 
 在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 
@@ -795,3 +910,49 @@ solver = ppsci.solver.Solver(
     !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
+
+## 3. 使用 Nsight 进行性能分析
+
+Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
+
+PaddleScience 初步支持使用 Nsight 进行性能分析，以 linux 开发环境 + laplace2d 案例为例，按照如下步骤使用 nsight 工具生成性能分析报告并查看分析结果。
+
+1. 安装 nsight-system
+
+    开发机上下载 linux nsight-system 软件：nsight-systems/2023.4.1，并将 nsight 添加到环境变量 `PATH` 中：
+
+    执行：`PATH=/path/to/nsight-systems/2023.4.1/bin:$PATH`，同时在 windows 机器上安装**相同版本**的 nsight-system 软件。
+
+2. 用 nsys 命令运行程序，生成性能分析文件
+
+    ``` sh
+    {==NVTX=1 nsys profile -t cuda,nvtx --stats=true -o==} {++laplace2d++} python laplace2d.py
+    ```
+
+3. 查看分析结果
+
+    程序结束后，在终端内会打印出性能分析数据（如下所示），同时在上述 `-o` 参数指定的相对文件路径生成 `{++laplace2d++}.nsys-rep` 和 `{++laplace2d++}.sqlite` 两个文件。
+
+    在 windows 上使用 NVIDIA Nsight Systems 软件打开 `laplace2d.nsys-rep`，即可在图形化的界面上查看性能分析数据。
+
+    ``` log
+    ...
+    ...
+    Only run 25 steps when 'NVTX' is set in environment for nsight analysis. Exit now ......
+
+    Generating '/tmp/nsys-report-18e4.qdstrm'
+    [1/7] [========================100%] laplace2d.nsys-rep
+    [2/7] [========================100%] laplace2d.sqlite
+    [3/7] Executing 'nvtx_sum' stats report
+
+    Time (%)  Total Time (ns)  Instances    Avg (ns)       Med (ns)      Min (ns)     Max (ns)     StdDev (ns)    Style                  Range
+    --------  ---------------  ---------  -------------  -------------  -----------  -----------  -------------  -------  ------------------------------------
+        15.1      794,212,341         25   31,768,493.6    5,446,410.0    5,328,471  661,841,104  131,265,333.9  PushPop  Loss computation
+        14.5      766,452,142         25   30,658,085.7    4,369,873.0    4,281,927  659,795,434  131,070,475.4  PushPop  Constraint EQ
+        13.0      687,324,359      1,300      528,711.0       32,567.5       21,218  641,625,892   17,794,532.4  PushPop  matmul dygraph
+        12.9      678,475,194          1  678,475,194.0  678,475,194.0  678,475,194  678,475,194            0.0  PushPop  Training iteration 1
+        12.8      673,614,062      1,300      518,164.7       19,802.5       14,499  641,525,121   17,792,027.2  PushPop  matmul compute
+        3.9      203,945,648         25    8,157,825.9    8,029,819.0    7,797,185    9,119,496      359,173.3  PushPop  Loss backward
+        ...
+        ...
+    ```

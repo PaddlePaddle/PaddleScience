@@ -4,7 +4,7 @@ hydra:
     dir: outputs_euler_beam/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -16,6 +16,9 @@ hydra:
           - mode
           - output_dir
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -63,7 +66,7 @@ INFER:
   pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams"
   export_path: ./inference/euler_beam
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32

@@ -4,13 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 description = "A library for scientific machine learning"
 readme = "README.md"
-license = {text = "Apache-2.0"}
-authors = [
-    { name = "PaddlePaddle" },
-]
+license = { text = "Apache-2.0" }
+authors = [{ name = "PaddlePaddle" }]
 requires-python = ">=3.8"
 keywords = [
     "Machine learning",
@@ -32,28 +30,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
-dependencies = [
-    "colorlog",
-    "h5py",
-    "hydra-core",
-    "imageio",
-    "matplotlib",
-    "meshio==5.3.4",
-    "numpy>=1.20.0,<=1.23.1",
-    "pydantic>=2.5.0",
-    "pyevtk",
-    "pyvista==0.37.0",
-    "pyyaml",
-    "scikit-optimize",
-    "scipy",
-    "seaborn",
-    "sympy",
-    "tqdm",
-    "typing-extensions",
-    "visualdl",
-    "vtk",
-    "wget",
-]
 
 [project.urls]
 Homepage = "https://github.com/PaddlePaddle/PaddleScience"
@@ -63,15 +39,28 @@ Documentation = "https://paddlescience-docs.readthedocs.io/zh/latest/"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "tools*"]
+exclude = [
+    "docs*",
+    "examples*",
+    "jointContribution*",
+    "test_tipc*",
+    "test*",
+    "tools*",
+]
 
 [tool.ruff]
 line-length = 88
 ignore = ["E501", "E741"]
-extend-exclude = ["./ppsci/geometry/inflation.py", "./ppsci/autodiff/__init__.py"]
+extend-exclude = [
+    "./ppsci/geometry/inflation.py",
+    "./ppsci/autodiff/__init__.py",
+]
 
 [tool.setuptools_scm]
 version_file = "ppsci/_version.py"
 tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
 fallback_version = "0.0.0"
 version_scheme = "post-release"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }

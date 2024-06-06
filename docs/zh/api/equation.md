@@ -5,8 +5,9 @@
     options:
       members:
         - PDE
-        - FractionalPoisson
+        - AllenCahn
         - Biharmonic
+        - FractionalPoisson
         - HeatExchanger
         - Laplace
         - LinearElasticity
@@ -15,5 +16,6 @@
         - Poisson
         - Vibration
         - Volterra
+        - NLSMB
       show_root_heading: true
       heading_level: 3

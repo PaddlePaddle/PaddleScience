@@ -2,10 +2,10 @@ hydra:
   run:
     # dynamic output directory according to running time and override name
     # dir: outputs_yinglong/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
-    dir: ./outputs_yinglong_12
+    dir: ./outputs_yinglong_24
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -33,9 +33,9 @@ log_freq: 20
 # inference settings
 INFER:
   pretrained_model_path: null
-  export_path: ./inference/yinglong_12
+  export_path: ./inference/yinglong_24
   pdmodel_path: ${INFER.export_path}.pdmodel
-  pdpiparams_path: ${INFER.export_path}.pdiparams
+  pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
   device: gpu
   engine: native
@@ -47,9 +47,9 @@ INFER:
   max_batch_size: 1
   num_cpu_threads: 10
   batch_size: 1
-  mean_path: ./hrrr_example_24vars/stat/mean_crop.npy
-  std_path: ./hrrr_example_24vars/stat/std_crop.npy
-  input_file: ./hrrr_example_24vars/valid/2022/01/01.h5
+  mean_path: ./hrrr_example_69vars/stat/mean_crop.npy
+  std_path: ./hrrr_example_69vars/stat/std_crop.npy
+  input_file: ./hrrr_example_69vars/valid/2022/01/01.h5
   init_time: 2022/01/01/00
-  nwp_file: ./hrrr_example_24vars/nwp_convert/2022/01/01/00.h5
+  nwp_file: ./hrrr_example_69vars/nwp_convert/2022/01/01/00.h5
   num_timestamps: 22

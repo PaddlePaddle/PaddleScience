@@ -4,7 +4,7 @@ hydra:
     dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchanged
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -58,7 +58,7 @@ MODEL:
   trunk_hidden_size: 128
   branch_activation: "swish"
   trunk_activation: "swish"
-  use_bias: True
+  use_bias: true
 
 # training settings
 TRAIN:
@@ -90,3 +90,22 @@ EVAL:
 qm_h: 1
 qm_c: 1
 eta_true: 0.5
+
+# inference settings
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams
+  export_path: ./inference/ldc2d_steady_Re10
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1000
+  num_cpu_threads: 10
+  batch_size: 1000
+  input_keys: ['qm_h','qm_c',"x",'t']

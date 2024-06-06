@@ -38,7 +38,7 @@ MODEL:
 TRAIN:
   epochs: 2
   iters_per_epoch: 625
-  eval_during_train: False
+  eval_during_train: false
   save_freq: 200
   eval_freq: 200
   learning_rate: 0.0001
@@ -47,5 +47,5 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
-  eval_with_no_grad: True
+  eval_with_no_grad: true
   batch_size: 128

@@ -19,6 +19,8 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
+import paddle
+
 from ppsci.loss import base
 
 
@@ -34,7 +36,7 @@ class FunctionalLoss(base.Loss):
     $$
 
     Args:
-        loss_expr (Callable): expression of loss calculation.
+        loss_expr (Callable[..., paddle.Tensor]): Function for custom loss computation.
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -48,7 +50,7 @@ class FunctionalLoss(base.Loss):
         ...         if weight_dict:
         ...             loss *=  weight_dict[key]
         ...         losses += loss
-        ...     return losses
+        ...     return {"mse_loss": losses}
         >>> loss = FunctionalLoss(mse_sum_loss)
         >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
         ...             'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
@@ -57,17 +59,36 @@ class FunctionalLoss(base.Loss):
         >>> weight_dict = {'u': 0.8, 'v': 0.2}
         >>> result = loss(output_dict, label_dict, weight_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               17.89600182)
+        {'mse_loss': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               17.89600182)}
     """
 
     def __init__(
         self,
-        loss_expr: Callable,
+        loss_expr: Callable[..., paddle.Tensor],
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         super().__init__(None, weight)
         self.loss_expr = loss_expr
 
-    def forward(self, output_dict, label_dict=None, weight_dict=None):
-        return self.loss_expr(output_dict, label_dict, weight_dict)
+    def forward(
+        self, output_dict, label_dict=None, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = self.loss_expr(output_dict, label_dict, weight_dict)
+
+        assert isinstance(losses, dict), (
+            "Loss computed by custom function should be type of 'dict', "
+            f"but got {type(losses)}."
+            " Please check the return type of custom loss function."
+        )
+
+        for key in losses:
+            assert isinstance(
+                losses[key], (paddle.Tensor, paddle.static.Variable, paddle.pir.Value)
+            ), (
+                "Loss computed by custom function should be type of 'paddle.Tensor', "
+                f"'paddle.static.Variable' or 'paddle.pir.Value', but got {type(losses[key])}."
+                " Please check the return type of custom loss function."
+            )
+
+        return losses

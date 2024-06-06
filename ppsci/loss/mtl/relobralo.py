@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Dict
 
 import paddle
 from paddle import nn
@@ -47,7 +47,7 @@ class Relobralo(nn.Layer):
         ...     y2 = model(x2)
         ...     loss1 = paddle.sum(y1)
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
-        ...     loss_aggregator([loss1, loss2]).backward()
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
 
     def __init__(
@@ -69,28 +69,30 @@ class Relobralo(nn.Layer):
         self.register_buffer("losses_prev", paddle.zeros([self.num_losses]))
         self.register_buffer("lmbda", paddle.ones([self.num_losses]))
 
-    def _softmax(self, vec: paddle.Tensor) -> paddle.Tensor:
+    def _softmax(self, vec: "paddle.Tensor") -> "paddle.Tensor":
         max_item = vec.max()
         result = paddle.exp(vec - max_item) / paddle.exp(vec - max_item).sum()
         return result
 
     def _compute_bal(
-        self, losses_vec1: paddle.Tensor, losses_vec2: paddle.Tensor
-    ) -> paddle.Tensor:
+        self, losses_vec1: "paddle.Tensor", losses_vec2: "paddle.Tensor"
+    ) -> "paddle.Tensor":
         return self.num_losses * (
             self._softmax(losses_vec1 / (self.tau * losses_vec2 + self.eps))
         )
 
-    def __call__(self, losses: List[paddle.Tensor], step: int = 0) -> "Relobralo":
-        self.step = step
+    def __call__(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> "paddle.Tensor":
         assert len(losses) == self.num_losses, (
             f"Length of given losses({len(losses)}) should be equal to "
             f"num_losses({self.num_losses})."
         )
-        losses_stacked = paddle.stack(losses)  # [num_losses, ]
+        self.step = step
+        losses_stacked = paddle.stack(list(losses.values()))  # [num_losses, ]
 
         if self.step == 0:
-            self.loss = losses_stacked.sum()
+            loss = losses_stacked.sum()
             with paddle.no_grad():
                 paddle.assign(losses_stacked.detach(), self.losses_init)
         else:
@@ -110,12 +112,10 @@ class Relobralo(nn.Layer):
                 )
 
             # 3. compute reweighted total loss with lambda
-            self.loss = (losses_stacked * self.lmbda).sum()
+            loss = (losses_stacked * self.lmbda).sum()
 
         # update losses_prev at the end of each step
         with paddle.no_grad():
             paddle.assign(losses_stacked.detach(), self.losses_prev)
-        return self
 
-    def backward(self) -> None:
-        self.loss.backward()
+        return loss

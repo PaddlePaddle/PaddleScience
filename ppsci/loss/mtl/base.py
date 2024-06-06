@@ -14,10 +14,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Dict
+from typing import Union
+
 from paddle import nn
 
+if TYPE_CHECKING:
+    import paddle
 
-class LossAggregator:
+
+class LossAggregator(nn.Layer):
     """Base class of loss aggregator mainly for multitask learning.
 
     Args:
@@ -25,6 +32,7 @@ class LossAggregator:
     """
 
     def __init__(self, model: nn.Layer) -> None:
+        super().__init__()
         self.model = model
         self.step = 0
         self.param_num = 0
@@ -32,7 +40,9 @@ class LossAggregator:
             if not param.stop_gradient:
                 self.param_num += 1
 
-    def __call__(self, losses, step: int = 0):
+    def forward(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> Union["paddle.Tensor", "LossAggregator"]:
         self.losses = losses
         self.loss_num = len(losses)
         self.step = step

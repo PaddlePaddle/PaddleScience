@@ -116,7 +116,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:86:151
+        ppsci/arch/mlp.py:139:279
         --8<--
         ```
 
@@ -124,7 +124,7 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
         ``` py
         --8<--
-        ppsci/arch/mlp.py:153:180
+        ppsci/arch/mlp.py:298:315
         --8<--
         ```
 
@@ -697,78 +697,150 @@ solver = ppsci.solver.Solver(
 
     === "examples/fsi/conf/viv.yaml"
 
-        ``` yaml linenums="1" hl_lines="1 4 19 25 31 34 42 59"
-        hydra: # (1)
-        run:
+        ``` yaml linenums="1"
+        defaults: # (1)
+          - ppsci_default # (2)
+          - TRAIN: train_default # (3)
+          - TRAIN/ema: ema_default # (4)
+          - TRAIN/swa: swa_default # (5)
+          - EVAL: eval_default # (6)
+          - INFER: infer_default # (7)
+          - _self_ # (8)
+
+        hydra:
+          run:
             # dynamic output directory according to running time and override name
-            dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
-        job:
+            dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} # (9)
+          job:
             name: ${mode} # name of logfile
-            chdir: false # keep current working direcotry unchaned
-            config:
-            override_dirname:
-                exclude_keys:
-                - TRAIN.checkpoint_path
-                - TRAIN.pretrained_model_path
-                - EVAL.pretrained_model_path
-                - mode
-                - output_dir
-                - log_freq
-        callbacks:
-            init_callback:
-            _target_: ppsci.utils.callbacks.InitCallback # (2)
-        sweep:
+            chdir: false # keep current working directory unchanged
+          callbacks:
+            init_callback: # (10)
+              _target_: ppsci.utils.callbacks.InitCallback # (11)
+          sweep:
             # output directory for multirun
             dir: ${hydra.run.dir}
             subdir: ./
 
-        # general settings (3)
-        mode: train # running mode: train/eval
-        seed: 42
-        output_dir: ${hydra:run.dir}
-        log_freq: 20
+        # general settings
+        mode: train # running mode: train/eval # (12)
+        seed: 42 # (13)
+        output_dir: ${hydra:run.dir} # (14)
+        log_freq: 20 # (15)
+        use_tbd: false # (16)
 
-        # set data file path (4)
-        VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
+        VIV_DATA_PATH: "./VIV_Training_Neta100.mat" # (17)
 
-        # model settings (5)
-        MODEL:
-            input_keys: ["t_f"]
-            output_keys: ["eta"]
-            num_layers: 5
-            hidden_size: 50
-            activation: "tanh"
+        # model settings
+        MODEL: # (18)
+          input_keys: ["t_f"] # (19)
+          output_keys: ["eta"] # (20)
+          num_layers: 5 # (21)
+          hidden_size: 50 # (22)
+          activation: "tanh" # (23)
 
-        # training settings (6)
-        TRAIN:
-            epochs: 100000
-            iters_per_epoch: 1
-            save_freq: 10000
-            eval_during_train: true
-            eval_freq: 1000
-            batch_size: 100
-            lr_scheduler:
-                epochs: ${TRAIN.epochs}
-                iters_per_epoch: ${TRAIN.iters_per_epoch}
-                learning_rate: 0.001
-                step_size: 20000
-                gamma: 0.9
-            pretrained_model_path: null
-            checkpoint_path: null
+        # training settings
+        TRAIN: # (24)
+          epochs: 100000 # (25)
+          iters_per_epoch: 1 # (26)
+          save_freq: 10000 # (27)
+          eval_during_train: true # (28)
+          eval_freq: 1000 # (29)
+          batch_size: 100 # (30)
+          lr_scheduler: # (31)
+            epochs: ${TRAIN.epochs} # (32)
+            iters_per_epoch: ${TRAIN.iters_per_epoch} # (33)
+            learning_rate: 0.001 # (34)
+            step_size: 20000 # (35)
+            gamma: 0.9 # (36)
+          pretrained_model_path: null # (37)
+          checkpoint_path: null # (38)
 
-        # evaluation settings (7)
-        EVAL:
-            pretrained_model_path: null
-            batch_size: 32
+        # evaluation settings
+        EVAL: # (39)
+          pretrained_model_path: null # (40)
+          batch_size: 32 # (41)
+
+        # inference settings
+        INFER: # (42)
+          pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams" # (43)
+          export_path: ./inference/viv # (44)
+          pdmodel_path: ${INFER.export_path}.pdmodel # (45)
+          pdiparams_path: ${INFER.export_path}.pdiparams # (46)
+          input_keys: ${MODEL.input_keys} # (47)
+          output_keys: ["eta", "f"] # (48)
+          device: gpu # (49)
+          engine: native # (50)
+          precision: fp32 # (51)
+          onnx_path: ${INFER.export_path}.onnx # (52)
+          ir_optim: true # (53)
+          min_subgraph_size: 10 # (54)
+          gpu_mem: 4000 # (55)
+          gpu_id: 0 # (56)
+          max_batch_size: 64 # (57)
+          num_cpu_threads: 4 # (58)
+          batch_size: 16 # (59)
         ```
 
-        1. `hydra:` 下的配置段用于控制 hydra 运行时的一些行为，如输出目录、回调函数等，用户只需要修改 `dir:` 后的内容，即可控制输出目录，其余的字段一般不需关注。
-        2. `callbacks:` 下的配置段用于控制回调函数，如此处添加了负责程序运行前自动固定随机种子、初始化 logger 并创建输出目录的回调函数 `InitCallback`，一般不需要修改这里。
-        3. `general settings` 下的四个通用设置，包括运行模式 `mode`、随机数种子 `seed`、输出目录 `output_dir` 和日志记录频率 `log_freq`。
-        4. `set XXX file path` 下的字段，用于控制数据集的路径，如 `VIV_DATA_PATH` 等。
-        5. `MODEL` 下的字段，用于控制模型结构，如 `disp_net`、`stress_net` 等。
-        6. `TRAIN:` 下的字段，用于控制训练过程，如 `epochs`、`iters_per_epoch` 等
-        7. `EVAL:` 下的字段，用于控制评估过程，如 `pretrained_model_path`、`eval_with_no_grad` 等
+        1. `defaults:` - 定义一系列默认配置项的开头。
+        2. `- ppsci_default` - 使用名为`ppsci_default`的默认配置。
+        3. `- TRAIN: train_default` - 在`TRAIN`命名空间下应用`train_default`默认配置。
+        4. `- TRAIN/ema: ema_default` - 在`TRAIN`的`ema`子命名空间下应用`ema_default`配置。
+        5. `- TRAIN/swa: swa_default` - 在`TRAIN`的`swa`子命名空间下应用`swa_default`配置。
+        6. `- EVAL: eval_default` - 在`EVAL`命名空间下应用`eval_default`默认配置。
+        7. `- INFER: infer_default` - 在`INFER`命名空间下应用`infer_default`默认配置。
+        8. `- _self_` - 表示当前文件本身的配置将被包含，用于覆盖或添加默认设置。
+        9. `dir: outputs_VIV/...` - 设置动态输出目录，基于当前时间以及覆盖名称。
+        10. `init_callback:` - 定义初始化回调的设置。
+        11. `_target_: ppsci.utils.callbacks.InitCallback` - 指定初始化回调的具体实现类或函数。
+        12. `mode: train` - 设置当前运行模式为训练模式。
+        13. `seed: 42` - 设置全局随机种子为42，以确保实验可重复性。
+        14. `output_dir: ${hydra:run.dir}` - 设置输出目录，与Hydra配置的运行目录相同。
+        15. `log_freq: 20` - 设置日志记录频率，每20次进行记录。
+        16. `use_tbd: false` - 关闭 tensorboard 功能。
+        17. `VIV_DATA_PATH: "./VIV_Training_Neta100.mat"` - 指定VIV的数据文件路径（可以其它数据集或超参值）。
+        18. `MODEL:` - 开始定义模型相关设置。
+        19. `input_keys: ["t_f"]` - 设置模型的输入键为`t_f`。
+        20. `output_keys: ["eta"]` - 设置模型的输出键为`eta`。
+        21. `num_layers: 5` - 设置模型层数为5。
+        22. `hidden_size: 50` - 设置模型隐藏层的大小为50。
+        23. `activation: "tanh"` - 使用双曲正切函数作为激活函数。
+        24. `TRAIN:` - 开始定义训练相关设置。
+        25. `epochs: 100000` - 设置训练的总轮数为100000轮。
+        26. `iters_per_epoch: 1` - 每个轮次包含1次迭代。
+        27. `save_freq: 10000` - 每10000次迭代保存一次模型或检查点。
+        28. `eval_during_train: true` - 在训练过程中启用评估。
+        29. `eval_freq: 1000` - 每1000次迭代进行一次评估。
+        30. `batch_size: 100` - 设置训练批次大小为100。
+        31. `lr_scheduler:` - 开始定义学习率调度器的设置。
+        32. `epochs: ${TRAIN.epochs}` - 学习率调度器使用的轮数与训练的轮数相同。
+        33. `iters_per_epoch: ${TRAIN.iters_per_epoch}` - 学习率调度器使用的每个轮次的迭代数与训练的相同。
+        34. `learning_rate: 0.001` - 设置初始学习率为0.001。
+        35. `step_size: 20000` - 每20000步调整学习率。
+        36. `gamma: 0.9` - 学习率调整的比率为0.9。
+        37. `pretrained_model_path: null` - 初始预训练模型路径，可以是实际路径或 url，默认为空表示不使用预训练模型。
+        38. `checkpoint_path: null` - 检查点路径，用于指定模型加载的检查点，默认为空表示不加载检查点。
+        39. `EVAL:` - 开始定义评估相关设置。
+        40. `pretrained_model_path: null` - 评估时使用的预训练模型路径，默认为空表示不使用预训练模型。
+        41. `batch_size: 32` - 评估时的批次
+        42. `INFER:` - 开始定义推理（推断）相关的设置。
+        43. `pretrained_model_path: "https://..."` - 指定预训练模型的路径，可以是实际路径或 url，用于推理。
+        44. `export_path: ./inference/viv` - 设置模型导出路径，即推理所需的模型文件保存位置。
+        45. `pdmodel_path: ${INFER.export_path}.pdmodel` - 指定Paddle模型的结构文件路径。
+        46. `pdiparams_path: ${INFER.export_path}.pdiparams` - 指定Paddle模型的参数文件路径。
+        47. `input_keys: ${MODEL.input_keys}` - 推理时使用的输入键与模型定义时相同。
+        48. `output_keys: ["eta", "f"]` - 设置推理时的输出键，包括"eta"和"f"。
+        49. `device: gpu` - 指定推理使用的设备为GPU。
+        50. `engine: native` - 设置推理引擎为原生（可能是指使用特定库或框架的默认引擎）。
+        51. `precision: fp32` - 设置推理的精度为32位浮点数。
+        52. `onnx_path: ${INFER.export_path}.onnx` - 如果支持，指定ONNX模型文件的路径。
+        53. `ir_optim: true` - 启用中间表示（Intermediate Representation）的优化。
+        54. `min_subgraph_size: 10` - 设置子图优化的最小大小，用于提升推理性能。
+        55. `gpu_mem: 4000` - 指定推理时GPU可使用的内存量（单位可能是MB）。
+        56. `gpu_id: 0` - 指定使用哪个GPU进行推理，这里是第一个GPU。
+        57. `max_batch_size: 64` - 设置推理时支持的最大批次大小。
+        58. `num_cpu_threads: 4` - 指定用于推理的CPU线程数量。
+        59. `batch_size: 16` - 设置推理时的实际批次大小为16。
 
 ### 2.13 训练
 

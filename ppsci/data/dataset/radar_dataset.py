@@ -74,7 +74,7 @@ class RadarDataset(io.Dataset):
         super().__init__()
         if importlib.util.find_spec("cv2") is None:
             raise ModuleNotFoundError(
-                "To use RadarDataset, please install 'opencv-python' via: `pip install "
+                "To use RadarDataset, please install 'opencv-python' with: `pip install "
                 "opencv-python` first."
             )
         self.input_keys = input_keys
@@ -123,7 +123,9 @@ class RadarDataset(io.Dataset):
         mask[data < 0] = 0
         data[data < 0] = 0
         data = np.clip(data, 0, 128)
-        vid = np.zeros((self.length, self.img_height, self.img_width, 2))
+        vid = np.zeros(
+            (self.length, self.img_height, self.img_width, 2), dtype=self.data_type
+        )
         vid[..., 0] = data
         vid[..., 1] = mask
 

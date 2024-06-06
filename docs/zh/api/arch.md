@@ -8,6 +8,7 @@
         - AMGNet
         - MLP
         - ModifiedMLP
+        - PirateNet
         - DeepONet
         - DeepPhyLSTM
         - LorenzEmbedding
@@ -24,7 +25,14 @@
         - USCNN
         - NowcastNet
         - HEDeepONets
+        - DGMR
         - ChipDeepONets
         - AutoEncoder
+        - CuboidTransformer
+        - SFNONet
+        - UNONet
+        - TFNO1dNet
+        - TFNO2dNet
+        - TFNO3dNet
       show_root_heading: true
       heading_level: 3

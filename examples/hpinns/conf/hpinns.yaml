@@ -4,7 +4,7 @@ hydra:
     dir: outputs_hpinns/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchanged
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
@@ -25,6 +25,7 @@ seed: 42
 output_dir: ${hydra:run.dir}
 DATASET_PATH: ./datasets/hpinns_holo_train.mat
 DATASET_PATH_VALID: ./datasets/hpinns_holo_valid.mat
+log_freq: 20
 
 # set working condition
 TRAIN_MODE: aug_lag  # "soft", "penalty", "aug_lag"
@@ -65,3 +66,22 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+
+# inference settings
+INFER:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/hPINNs/hpinns_pretrained.pdparams"
+  export_path: ./inference/hpinns
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  output_keys: ["e_re", "e_im", "eps"]
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 8000
+  gpu_id: 0
+  batch_size: 128
+  max_batch_size: 128
+  num_cpu_threads: 4

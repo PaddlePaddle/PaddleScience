@@ -11,14 +11,24 @@
 === "模型评估命令"
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
-    python viv.py mode=eval EVAL.pretrained_model_path=./viv_pretrained
+    python viv.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python viv.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python viv.py mode=infer
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [viv_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdparams)<br>[viv_pretrained.pdeqn](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdeqn) | 'eta': 1.1416150300647132e-06<br>'f': 4.635014192899689e-06 |
+| [viv_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdparams)<br>[viv_pretrained.pdeqn](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdeqn) | eta_l2/MSE.eta: 0.00875<br/>eta_l2/MSE.f: 0.00921 |
 
 ## 1. 背景简介
 
@@ -92,25 +102,17 @@ examples/fsi/viv.py:25:26
 
 本文采用监督学习的方式，对模型输出 $\eta$ 和基于 $\eta$ 计算出的升力 $f$，这两个物理量进行约束。
 
-在定义约束之前，需要给监督约束指定文件路径等数据读取配置。
-
-``` py linenums="28"
---8<--
-examples/fsi/viv.py:28:44
---8<--
-```
-
 #### 3.4.1 监督约束
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="46"
+``` py linenums="28"
 --8<--
-examples/fsi/viv.py:46:52
+examples/fsi/viv.py:28:48
 --8<--
 ```
 
-`SupervisedConstraint` 的第一个参数是监督约束的读取配置，此处填入在 [3.4 方程构建](#34) 章节中实例化好的 `train_dataloader_cfg`；
+`SupervisedConstraint` 的第一个参数是监督约束的读取配置，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `train_dataloader_cfg`；
 
 第二个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项求和取平均；
 
@@ -120,9 +122,9 @@ examples/fsi/viv.py:46:52
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="53"
+``` py linenums="49"
 --8<--
-examples/fsi/viv.py:53:54
+examples/fsi/viv.py:49:50
 --8<--
 ```
 
@@ -132,7 +134,7 @@ examples/fsi/viv.py:53:54
 
 ``` yaml linenums="42"
 --8<--
-examples/fsi/conf/viv.yaml:42:57
+examples/fsi/conf/viv.yaml:42:49
 --8<--
 ```
 
@@ -140,9 +142,9 @@ examples/fsi/conf/viv.yaml:42:57
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
 
-``` py linenums="56"
+``` py linenums="52"
 --8<--
-examples/fsi/viv.py:56:58
+examples/fsi/viv.py:52:54
 --8<--
 ```
 
@@ -154,15 +156,15 @@ examples/fsi/viv.py:56:58
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="60"
+``` py linenums="56"
 --8<--
-examples/fsi/viv.py:60:82
+examples/fsi/viv.py:56:72
 --8<--
 ```
 
 评价指标 `metric` 选择 `ppsci.metric.MSE` 即可；
 
-其余配置与 [监督约束构建](#341) 的设置类似。
+其余配置与 [3.4.1 监督约束构建](#341) 的设置类似。
 
 ### 3.8 可视化器构建
 
@@ -170,9 +172,9 @@ examples/fsi/viv.py:60:82
 
 本文需要可视化的数据是 $t-\eta$ 和 $t-f$ 两组关系图，假设每个时刻 $t$ 的坐标是 $t_i$，则对应网络输出为 $\eta_i$，升力为 $f_i$，因此我们只需要将评估过程中产生的所有 $(t_i, \eta_i, f_i)$ 保存成图片即可。代码如下：
 
-``` py linenums="84"
+``` py linenums="74"
 --8<--
-examples/fsi/viv.py:84:103
+examples/fsi/viv.py:74:93
 --8<--
 ```
 
@@ -180,9 +182,9 @@ examples/fsi/viv.py:84:103
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="105"
+``` py linenums="95"
 --8<--
-examples/fsi/viv.py:105:123
+examples/fsi/viv.py:95:111
 --8<--
 ```
 

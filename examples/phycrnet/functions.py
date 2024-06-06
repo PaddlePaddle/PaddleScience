@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+import os
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -150,11 +151,11 @@ def train_loss_func(result_dict, *args) -> paddle.Tensor:
     Returns:
         paddle.Tensor: Loss value.
     """
-    return result_dict["loss"]
+    return {"residual": result_dict["loss"]}
 
 
 def val_loss_func(result_dict, *args) -> paddle.Tensor:
-    return result_dict["loss"]
+    return {"residual": result_dict["loss"]}
 
 
 def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:
@@ -337,7 +338,8 @@ class Dataset:
 
 
 def output_graph(model, input_dataset, fig_save_path, case_name):
-    output_dataset = model(input_dataset)
+    with paddle.no_grad():
+        output_dataset = model(input_dataset)
     output = output_dataset["outputs"]
     input = input_dataset["input"][0]
     output = paddle.concat(tuple(output), axis=0)
@@ -378,7 +380,7 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
     M[0, :] = 0
 
     M = paddle.to_tensor(M)
-    aRMSE = paddle.sqrt(M.T @ error)
+    aRMSE = paddle.sqrt(M.T @ error).numpy()
     t = np.linspace(0, 4, N)
     plt.plot(t, aRMSE, color="r")
     plt.yscale("log")
@@ -393,7 +395,7 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
         loc="upper left",
     )
     plt.title(case_name)
-    plt.savefig(fig_save_path + "/error.jpg")
+    plt.savefig(os.path.join(fig_save_path, "error.jpg"))
 
     _, ax = plt.subplots(3, 4, figsize=(18, 12))
     ax[0, 0].contourf(ten_true[25, 0])
@@ -416,5 +418,5 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
     ax[1, 3].contourf(ten_pred[99, 0])
     ax[2, 3].contourf(ten_true[99, 0] - ten_pred[99, 0])
     plt.title(case_name)
-    plt.savefig(fig_save_path + "/Burgers.jpg")
+    plt.savefig(os.path.join(fig_save_path, "Burgers.jpg"))
     plt.close()

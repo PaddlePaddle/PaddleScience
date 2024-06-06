@@ -4,13 +4,15 @@ hydra:
     dir: outputs_tempoGAN/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
     config:
       override_dirname:
         exclude_keys:
           - TRAIN.checkpoint_path
           - TRAIN.pretrained_model_path
           - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
+          - INFER.export_path
           - mode
           - output_dir
           - log_freq
@@ -45,7 +47,7 @@ MODEL:
     out_channels_tuple: [[2, 8, 8], [128, 128, 128], [32, 8, 8], [2, 1, 1]]
     kernel_sizes_tuple: [[[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]]]
     strides_tuple: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
-    use_bns_tuple: [[true, true, true], [true, true, true], [true, true, true], [False, False, False]]
+    use_bns_tuple: [[true, true, true], [true, true, true], [true, true, true], [false, false, false]]
     acts_tuple: [['relu', null, null], ['relu', null, null], ['relu', null, null], ['relu', null, null]]
   disc_net:
     input_keys:  ['input_disc_from_target', 'input_disc_from_gen']  # 'NCHW'
@@ -92,3 +94,20 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   save_outs: true
+
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams
+  export_path: ./inference/tempoGAN
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 16
+  num_cpu_threads: 4
+  batch_size: 1

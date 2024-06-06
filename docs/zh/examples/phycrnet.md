@@ -9,7 +9,7 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
 
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --create-dirs -o ./data/burgers_1501x2x128x128.mat
 
     python main.py DATA_PATH=./data/burgers_1501x2x128x128.mat
     ```
@@ -20,7 +20,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --create-dirs -o ./data/burgers_1501x2x128x128.mat
 
     python main.py mode=eval DATA_PATH=./data/burgers_1501x2x128x128.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams
     ```
@@ -54,6 +54,7 @@ $$u_t+u\cdot \nabla u -\nu u =0$$
 ## 3. 问题求解
 
 ### 3.1 模型构建
+
 在这一部分中，我们介绍 PhyCRNet 的架构，包括编码器-解码器模块、残差连接、自回归（AR）过程和基于过滤的微分。网络架构如图所示。编码器(黄色Encoder，包含3个卷积层)，用于从输入状态变量 $u(t=i)，i = 0,1,2,..,T-1$ 学习低维潜在特征，其中 $T$ 表示总时间步。我们应用 ReLU 作为卷积层的激活函数。然后，我们将ConvLSTM层的输出(Encoder得到的低分辨率)，潜在特征的时间传播器(绿色部分)，其中，输出的LSTM的记忆单元 $C_i$ 和LSTM的隐藏变量单元 $h_i$ 会作为下一个时间步的输入。这样做的好处是对低维变量的基本动态进行建模,能够准确地捕获时间依赖性，同时有助于减轻记忆负担。 使用 LSTM 的另一个优势来自输出状态的双曲正切函数，它可以保持平滑的梯度曲线，并将值控制在 -1 和 1 之间。在建立低分辨率LSTM卷积循环方案后，我们基于上采样操作Decoder(蓝色部分)直接将低分辨率潜在空间重建为高分辨率量。特别注明，应用了子像素卷积层（即像素shuffle），因为与反卷积相比，它具有更好的效率和重建精度，且伪像更少。 最后，我们添加另一个卷积层，用于将有界潜变量空间输出，缩放回原始的物理空间。该Decoder后面没有激活函数。 此外，值得一提的是，鉴于输入变量数量有限及其对超分辨率的缺陷，我们在 PhyCRNet 中没有考虑 batch normalization。 作为替代，我们使用 batch normalization 来训练网络，以实现训练加速和更好的收敛性。受到动力学中，Forward Eular Scheme 的启发，我们在输入状态变量 $u_i$ 和输出变量 $u_{i+1}$ 之间附加全局残差连接。具体网络结构如下图所示：
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/phycrnet/PhyCRnet.png)
@@ -94,6 +95,7 @@ examples/phycrnet/conf/burgers_equations.yaml:34:42
 
 ### 3.2 数据载入
 我们使用RK4或者谱方法生成的数据（初值为使用正态分布生成），需要从.mat文件中将其读入，：
+
 ``` py linenums="54"
 --8<--
 examples/phycrnet/main.py:54:72
@@ -139,17 +141,21 @@ $$
 $$
 
 这一步需要通过设置外界函数来进行，因此在训练过程中，我们使用`function.transform_out`来进行训练
+
 ``` py linenums="47"
 --8<--
 examples/phycrnet/main.py:47:51
 --8<--
 ```
+
 而在评估过程中，我们使用`function.tranform_output_val`来进行评估，并生成累计均方根误差。
+
 ``` py linenums="142"
 --8<--
 examples/phycrnet/main.py:142:142
 --8<--
 ```
+
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
 ``` py linenums="117"
