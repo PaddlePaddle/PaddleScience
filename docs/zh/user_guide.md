@@ -112,7 +112,7 @@ TRAIN:
 ``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
-....
+...
 [HYDRA]        #1 : seed=42 TRAIN.epochs=20
 ...
 [HYDRA]        #2 : seed=1024 TRAIN.epochs=10
@@ -344,7 +344,7 @@ pip install paddle2onnx
 # linux
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar -o aneurysm_dataset.tar
 # unzip it
 tar -xvf aneurysm_dataset.tar
 python aneurysm.py mode=infer
@@ -682,9 +682,124 @@ solver.eval()
 
 ## 2. 进阶功能
 
-### 2.1 分布式训练
+### 2.1 贝叶斯超参搜索
 
-#### 2.1.1 数据并行
+hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/en/stable/index.html) 超参数调优工具一起使用。在 yaml 文件中设置好需要调整的参数和最大实验次数后，可以调用 Tree-structured Parzen Estimator(TPE) 算法进行自动化调参工具，效率高于网格调参法。
+
+下面以 viv 案例为例，介绍如何在 PaddleScience 中使用该方法。
+
+1. 安装 1.1.0 以上版本的 `hydra-core` 以及 `hydra-optuna` 插件
+
+    ``` sh
+    pip install 'hydra-core>=1.1.0' hydra-optuna-sweeper
+    ```
+
+2. 修改 `viv.yaml` 文件，在 `defaults:` 和 `hydra:` 字段下分别添加如下配置（高亮部分所示）
+
+    ``` yaml title="viv.yaml" hl_lines="8 26-34"
+    defaults:
+      - ppsci_default
+      - TRAIN: train_default
+      - TRAIN/ema: ema_default
+      - TRAIN/swa: swa_default
+      - EVAL: eval_default
+      - INFER: infer_default
+      - override hydra/sweeper: optuna # (1)
+      - _self_
+
+    hydra:
+      run:
+        # dynamic output directory according to running time and override name
+        dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+      job:
+        name: ${mode} # name of logfile
+        chdir: false # keep current working directory unchanged
+      callbacks:
+        init_callback:
+          _target_: ppsci.utils.callbacks.InitCallback
+      sweep:
+        # output directory for multirun
+        dir: ${hydra.run.dir}
+        subdir: ./
+
+      sweeper: # (2)
+        direction: minimize # (3)
+        study_name: viv_optuna # (4)
+        n_trials: 20 # (5)
+        n_jobs: 1 # (6)
+        params: # (7)
+          MODEL.num_layers: choice(2, 3, 4, 5, 6, 7) # (8)
+          TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005) # (9)
+    ```
+
+    1. 指定了使用 `optuna` 进行超参数优化。
+    2. `sweeper:`：这一行指定了 Hydra 使用的 sweeper 插件，用于进行参数扫描。在这个例子中，它将使用 Optuna 进行超参数优化。
+    3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
+    4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
+    5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
+    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
+    8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
+    9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
+
+    如上所示，在 `hydra.sweeper` 节点下添加了 `optuna` 插件的配置，并在 `params` 节点下指定了要调优的参数及其范围：
+    1. 模型层数 `MODEL.num_layers`，在 [2, 3, 4, 5, 6, 7] 共 6 种层数间进行调优。
+    2. 学习率 `TRAIN.lr_scheduler.learning_rate`，在 0.0001 ~ 0.005 之间进行调优。
+
+    !!! info "注意"
+
+        1. 调优的参数需要与 yaml 文件中配置的参数名一致，如 `MODEL.num_layers`、`TRAIN.lr_scheduler.learning_rate`。
+        2. 调优的参数范围根据不同语义进行指定，比如模型层数必须为整数，可以使用 `choice(...)` 设置有限范围，而学习率一般为浮点数，可以使用 `interval(...)` 设置其上下界。
+
+3. 修改 viv.py，使得被 `@hydra.main` 装饰的 `main` 函数返回实验指标结果（高亮部分所示）
+
+    ``` py title="viv.py" hl_lines="13 14 20 21"
+    def train(cfg: DictConfig):
+        ...
+        # initialize solver
+        solver = ppsci.solver.Solver(
+            model,
+            equation=equation,
+            validator=validator,
+            visualizer=visualizer,
+            cfg=cfg,
+        )
+
+        # evaluate
+        l2_err_eval, _ = solver.eval()
+        return l2_err_eval
+
+    ...
+
+    @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+    def main(cfg: DictConfig):
+        if cfg.mode == "train":
+            return train(cfg)
+        elif cfg.mode == "eval":
+            evaluate(cfg)
+    ```
+
+4. 运行以下命令，开始自动化调优
+
+    ``` sh
+    python viv.py --multirun
+    ```
+
+在 20 次调优实验运行完毕后，在模型保存目录下，会生成 `optimization_results.yaml` 文件，其中包含了最佳的调优结果，如下所示：
+
+``` yaml
+name: optuna
+best_params:
+  MODEL.num_layers: 7
+  TRAIN.lr_scheduler.learning_rate: 0.003982453338298202
+best_value: 0.02460772916674614
+```
+
+更多详细信息以及多目标自动调优方法，可参考：[Optuna Sweeper plugin](https://hydra.cc/docs/plugins/optuna_sweeper/) 和 [Optuna](https://optuna.readthedocs.io/en/stable/)。
+
+### 2.2 分布式训练
+
+#### 2.2.1 数据并行
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
@@ -728,11 +843,11 @@ solver.eval()
     python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
     ```
 
-<!-- #### 1.1.2 模型并行
+<!-- #### 2.2.2 模型并行
 
 TODO -->
 
-### 2.2 自动混合精度训练
+### 2.3 自动混合精度训练
 
 接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
 
@@ -748,7 +863,7 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.3 梯度累加
+### 2.4 梯度累加
 
 接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
 
@@ -763,7 +878,7 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.4 多任务学习
+### 2.5 多任务学习
 
 在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 

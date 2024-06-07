@@ -10,10 +10,22 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar --output mrms.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar -o mrms.tar
     mkdir ./datasets
     tar -xvf mrms.tar -C ./datasets/
     python nowcastnet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nowcastnet/nowcastnet_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python nowcastnet.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python nowcastnet.py mode=infer
     ```
 
 ## 1. 背景简介

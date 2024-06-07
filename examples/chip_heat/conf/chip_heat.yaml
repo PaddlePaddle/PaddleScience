@@ -48,7 +48,7 @@ NBC: 500 # number of BC
 # gaussian random field settings
 GRF:
   alpha: 4.0
-  flag_normalize: True
+  flag_normalize: true
 
 # model settings
 MODEL:
@@ -70,7 +70,7 @@ MODEL:
   branch_activation: "swish"
   BC_activation: "swish"
   trunk_activation: "swish"
-  use_bias: True
+  use_bias: true
 
 # training settings
 TRAIN:

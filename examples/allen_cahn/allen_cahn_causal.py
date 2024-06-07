@@ -63,7 +63,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
-    equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
+    equation = {"AllenCahn": ppsci.equation.AllenCahn(eps=0.01)}
 
     data = sio.loadmat(cfg.DATA_PATH)
     u_ref = data["usol"].astype(dtype)  # (nt, nx)
@@ -255,12 +255,12 @@ def inference(cfg: DictConfig):
 
     input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
     output_dict = {
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
     u_pred = output_dict["u"].reshape([len(t_star), len(x_star)])
-    # mapping data to cfg.INFER.output_keys
 
     plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
 

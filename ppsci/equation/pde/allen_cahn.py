@@ -36,7 +36,7 @@ class AllenCahn(base.PDE):
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.AllenCahn(0.01**2)
+        >>> pde = ppsci.equation.AllenCahn(eps=0.01)
     """
 
     def __init__(
@@ -60,6 +60,6 @@ class AllenCahn(base.PDE):
             u__t, u__x = jacobian(u, [t, x])
             u__x__x = jacobian(u__x, x)
 
-            return u__t - self.eps * u__x__x + 5 * u * u * u - 5 * u
+            return u__t - (self.eps**2) * u__x__x + 5 * u * u * u - 5 * u
 
         self.add_equation("allen_cahn", allen_cahn)

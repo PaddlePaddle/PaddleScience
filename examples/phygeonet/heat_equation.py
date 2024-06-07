@@ -42,7 +42,9 @@ def train(cfg: DictConfig):
             "iters_per_epoch": iters_per_epoch,
             "num_workers": 0,
         },
-        ppsci.loss.FunctionalLoss(lambda out, label, weight: out["residual"]),
+        ppsci.loss.FunctionalLoss(
+            lambda out, label, weight: {"residual": out["residual"]}
+        ),
         name="residual",
     )
     sup_constraint = {sup_constraint_res.name: sup_constraint_res}

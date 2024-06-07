@@ -60,7 +60,7 @@ MODEL:
     out_channels_tuple: [[2, 8, 8], [128, 128, 128], [32, 8, 8], [2, 1, 1]]
     kernel_sizes_tuple: [[[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]]]
     strides_tuple: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
-    use_bns_tuple: [[true, true, true], [true, true, true], [true, true, true], [False, False, False]]
+    use_bns_tuple: [[true, true, true], [true, true, true], [true, true, true], [false, false, false]]
     acts_tuple: [['relu', null, null], ['relu', null, null], ['relu', null, null], ['relu', null, null]]
   disc_net:
     input_keys:  ['input_disc_from_target', 'input_disc_from_gen']  # 'NCHW'

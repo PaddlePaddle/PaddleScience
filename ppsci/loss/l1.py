@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -22,6 +23,10 @@ import paddle.nn.functional as F
 from typing_extensions import Literal
 
 from ppsci.loss import base
+
+if TYPE_CHECKING:
+
+    import paddle
 
 
 class L1Loss(base.Loss):
@@ -62,14 +67,16 @@ class L1Loss(base.Loss):
         >>> loss = L1Loss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               3.35999990)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               3.), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.35999998)}
 
         >>> loss = L1Loss(reduction="sum", weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               6.71999979)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               6.), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.71999997)}
     """
 
     def __init__(
@@ -83,8 +90,11 @@ class L1Loss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             loss = F.l1_loss(output_dict[key], label_dict[key], "none")
             if weight_dict and key in weight_dict:
@@ -105,7 +115,8 @@ class L1Loss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses
 
 
@@ -147,14 +158,16 @@ class PeriodicL1Loss(base.Loss):
         >>> loss = PeriodicL1Loss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               4.19999981)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               3.35999990), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.83999997)}
 
         >>> loss = PeriodicL1Loss(reduction="sum", weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               4.19999981)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               3.35999990), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.83999997)}
     """
 
     def __init__(
@@ -168,8 +181,11 @@ class PeriodicL1Loss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             n_output = len(output_dict[key])
             if n_output % 2 > 0:
@@ -198,5 +214,6 @@ class PeriodicL1Loss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses

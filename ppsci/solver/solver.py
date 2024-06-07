@@ -34,8 +34,8 @@ import numpy as np
 import paddle
 import paddle.distributed as dist
 import sympy as sp
-import visualdl as vdl
 from omegaconf import DictConfig
+from omegaconf import OmegaConf
 from packaging import version
 from paddle import amp
 from paddle import jit
@@ -378,9 +378,15 @@ class Solver:
         if not cfg:
             self.use_vdl = use_vdl
         if self.use_vdl:
+            try:
+                import visualdl as vdl
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'visualdl' with `pip install visualdl` first."
+                )
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -415,7 +421,7 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(output_dir, "tensorboard")
+                        osp.join(self.output_dir, "tensorboard")
                     )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
@@ -441,7 +447,7 @@ class Solver:
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for computational optimization.")
+        logger.message(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use Sum if None
         if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
@@ -508,6 +514,11 @@ class Solver:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.use_tbd and isinstance(self.cfg, DictConfig):
+            self.tbd_writer.add_text(
+                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+            )
 
         if self.nvtx_flag:
             core.nvprof_start()
