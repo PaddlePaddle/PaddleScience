@@ -2,16 +2,30 @@
 
 === "模型评估命令"
     ``` sh
-    # 待补充下载链接
-    # <https://aistudio.baidu.com/datasetdetail/252766>
+
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/params.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/template_graph.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/stats.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/graphcast-jax2paddle.csv -P ./data/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/jax_graphcast_small_output.npy -P ./data/
+
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip -o dataset.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip -o dataset-step12.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/template_graph.zip -o template_graph.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/stats.zip -o stats.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/graphcast-jax2paddle.csv --create-dirs -o ./data/graphcast-jax2paddle.csv
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/jax_graphcast_small_output.npy --create-dirs -o ./data/jax_graphcast_small_output.npy
 
     unzip -q dataset.zip -d data/
     unzip -q dataset-step12.zip -d data/
     unzip -q params.zip -d data/
     unzip -q stats.zip -d data/
     unzip -q template_graph.zip -d data/
-    cp graphcast-jax2paddle.csv data/
-    cp jax_graphcast_small_output.npy data/
+
+    python graphcast.py
     ```
 
 ## 1. 背景简介
@@ -41,17 +55,17 @@ GraphCast 的核心架构采用基于图神经网络（GNN）的“编码‑处�
 
 由于经纬度网格密度是不均匀的，GraphCast 内部不使用经纬度网格，而是使用了“multi-mesh”表示。“multi-mesh”是通过将正二十面体进行 6 次迭代细化来构建的，如下图所示，每次迭代将多面体上的三角面分成 4 个更小的面。
 
-模型运行在图 $\mathcal{G(V^\mathrm{G}, V^\mathrm{M}, E^\mathrm{M}, E^\mathrm{G2M}, E^\mathrm{M2G})}$ 上。
+GraphCast 模型运行在图 $\mathcal{G(V^\mathrm{G}, V^\mathrm{M}, E^\mathrm{M}, E^\mathrm{G2M}, E^\mathrm{M2G})}$ 上。
 
-$\mathcal{V^\mathrm{G}}$ 是网格点的集合，每个网格节点代表对应经纬度点的大气垂直切片，节点 $v_𝑖^\mathrm{G}$ 上的特征用 $\mathbf{v}_𝑖^\mathrm{G,features}$ 表示。
+$\mathcal{V^\mathrm{G}}$ 是网格点的集合，每个网格节点代表对应经纬度点的大气垂直切片，节点 $v_𝑖^\mathrm{G}$ 的特征用 $\mathbf{v}_𝑖^\mathrm{G,features}$ 表示。
 
-$V^\mathrm{M}$ 是 mesh 节点的集合，mesh 节点是通过将正二十面体迭代划分生成的，节点 $v_𝑖^\mathrm{M}$ 上的特征用 $\mathbf{v}_𝑖^\mathrm{M,features}$ 表示。
+$V^\mathrm{M}$ 是 mesh 节点的集合，mesh 节点是通过将正二十面体迭代划分生成的，节点 $v_𝑖^\mathrm{M}$ 的特征用 $\mathbf{v}_𝑖^\mathrm{M,features}$ 表示。
 
-$\mathcal{E^\mathrm{M}}$ 是一个无向边集合，每条边连接一个发送mesh节点和接收mesh节点，用 $e^\mathrm{M}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{M,features}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r}$ 表示。
+$\mathcal{E^\mathrm{M}}$ 是一个无向边集合，其中的每条边连接一个发送mesh节点和接收mesh节点，用 $e^\mathrm{M}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{M,features}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r}$ 表示。
 
-$\mathcal{E^\mathrm{G2M}}$ 是一个无向边集合，每条边连接一个发送网格节点和一个接收 mesh 节点，用 $e^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^M_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{G2M,features}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r}$ 表示。
+$\mathcal{E^\mathrm{G2M}}$ 是一个无向边集合，其中的每条边连接一个发送网格节点和一个接收 mesh 节点，用 $e^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^M_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{G2M,features}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r}$ 表示。
 
-$\mathcal{E^\mathrm{M2G}}$ 是一个无向边集合，每条边连接一个发送mesh节点和一个接收网格节点，用 $e^\mathrm{M2G}_{v^M_s \rightarrow v^G_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{M2G,features}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r}$ 表示。
+$\mathcal{E^\mathrm{M2G}}$ 是一个无向边集合，其中的每条边连接一个发送mesh节点和一个接收网格节点，用 $e^\mathrm{M2G}_{v^M_s \rightarrow v^G_r}$ 表示，对应的特征用 $\mathbf{e}^\mathrm{M2G,features}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r}$ 表示。
 
 ### 2.2 编码器
 
@@ -67,19 +81,19 @@ $$
 \end{aligned}
 $$
 
-之后通过一个 Grid2Mesh GNN 层，将信息从网格节点传递到 mesh 节点。$\mathcal{E^\mathrm{G2M}}$ 中的每个边都通过关联的节点更新信息。
+之后通过一个 Grid2Mesh GNN 层，将信息从网格节点传递到 mesh 节点。$\mathcal{E^\mathrm{G2M}}$ 中的边通过关联的节点更新信息。
 
 $$
 \mathbf{e}^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r} {'} = \mathbf{MLP}^\mathrm{Grid2Mesh}_\mathcal{E^\mathrm{G2M}}([\mathbf{e}^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r}, \mathbf{v}_r^\mathrm{G}, \mathbf{v}_s^\mathrm{M}])
 $$
 
-每个 mesh 节点通过其关联的边更新信息。
+mesh 节点通过其关联的边更新信息。
 
 $$
 \mathbf{v}^\mathrm{M}_i {'} = \mathbf{MLP}^\mathrm{Grid2Mesh}_\mathcal{V^\mathrm{M}}([\mathbf{v}^\mathrm{M}_i, \sum_{\mathbf{e}^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r} : v^\mathrm{M}_r=v^\mathrm{M}_i} \mathbf{e}^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r} {'}])
 $$
 
-同样每个网格节点也进行信息更新。
+同样网格节点也进行信息更新。
 
 $$
 \mathbf{v}^\mathrm{G}_i {'} = \mathbf{MLP}^\mathrm{Grid2Mesh}_\mathcal{V^\mathrm{G}}(\mathbf{v}^\mathrm{G}_i)
@@ -97,13 +111,13 @@ $$
 
 ### 2.3 处理器
 
-处理器包含一个Multi-mesh GNN 层，$\mathcal{E^\mathrm{M}}$ 中的每个边都通过关联的节点的更新信息。
+处理器包含一个Multi-mesh GNN 层，$\mathcal{E^\mathrm{M}}$ 中的边通过关联的节点更新信息。
 
 $$
 \mathbf{e}^\mathrm{M}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r} {'} = \mathbf{MLP}^\mathrm{Mesh}_\mathcal{E^\mathrm{M}}([\mathbf{e}^\mathrm{M}_{v^\mathrm{M}_s \rightarrow v^\mathrm{M}_r}, \mathbf{v}^\mathrm{M}_s, \mathbf{v}^\mathrm{M}_r])
 $$
 
-每个 mesh 节点通过其关联的边更新信息。
+mesh 节点通过其关联的边更新信息。
 
 $$
 \mathbf{v}^\mathrm{M}_i {'} = \mathbf{MLP}^\mathrm{Mesh}_\mathcal{V^\mathrm{M}}([\mathbf{v}^\mathrm{M}_i, \sum_{\mathbf{e}^\mathrm{G2M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r} : v^\mathrm{M}_r=v^\mathrm{M}_i} \mathbf{e}^\mathrm{M}_{v^\mathrm{G}_s \rightarrow v^\mathrm{M}_r} {'}])
@@ -120,21 +134,21 @@ $$
 
 ### 2.4 解码器
 
-解码器的作用是将信息取回网格中，并进行预测。解码器包含一个Mesh2Grid GNN 层。
+解码器的作用是将 mesh 内的信息取回网格中，并进行预测。解码器包含一个Mesh2Grid GNN 层。
 
-$\mathcal{E^\mathrm{M2G}}$ 中的每个边都通过关联的节点的更新信息。
+$\mathcal{E^\mathrm{M2G}}$ 中的边通过关联的节点的更新信息。
 
 $$
 \mathbf{e}^\mathrm{M2G}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r} {'} = \mathbf{MLP}^\mathrm{Mesh2Grid}_\mathcal{E^\mathrm{M2G}}([\mathbf{e}^\mathrm{M2G}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r},\mathbf{v}^\mathrm{M}_s, \mathbf{v}^\mathrm{M}_r])
 $$
 
-每个网格节点通过其关联的边更新信息。
+网格节点通过其关联的边更新信息。
 
 $$
 \mathbf{v}^\mathrm{G}_i {'} = \mathbf{MLP}^\mathrm{Mesh2Grid}_\mathcal{V^\mathrm{G}}([\mathbf{v}^\mathrm{G}_i, \sum_{\mathbf{e}^\mathrm{G2M}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r} : v^\mathrm{G}_r=v^\mathrm{G}_i} \mathbf{e}^\mathrm{M2G}_{v^\mathrm{M}_s \rightarrow v^\mathrm{G}_r} {'}])
 $$
 
-通过残差连接对每个网格进行更新。
+通过残差连接对网格节点进行更新。
 
 $$
 \mathbf{v}^\mathrm{G}_i \leftarrow \mathbf{v}^\mathrm{G}_i + \mathbf{v}^\mathrm{G}_i {'}
@@ -156,9 +170,9 @@ $$ \hat{X}^{t+1} = GraphCast(X^{t}, X^{t-1}) = X^{t} + \hat{Y}^{t} $$
 
 ### 3.1 数据集介绍
 
-数据集采用了 ECMWF 的 ERA5 数据集。该数据集的分辨率大小为 0.25 度，每个变量的数据尺寸为 $720 \times 1440$，其中单个数据点代表的实际距离为 30km 左右。
+数据集采用了 ECMWF 的 ERA5 数据集 的 [2020年再分析存档子集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip)，数据时间段为1979-2018 年，时间间隔为6小时（对应每天的00z、06z、12z和18z），水平分辨率为0.25°，包含 37 个垂直大气压力层。
 
-模型预测总共227个目标变量，其中包括5个地面变量，以及在37个压力层中的每个层次的6个大气变量。
+模型预测总共227个目标变量，其中包括5个地面变量，以及在13个压力层中的每个层次的6个大气变量。
 
 ### 3.2 加载预训练模型
 
@@ -166,7 +180,7 @@ $$ \hat{X}^{t+1} = GraphCast(X^{t}, X^{t-1}) = X^{t} + \hat{Y}^{t} $$
 
 ``` py linenums="68"
 --8<--
-examples/graphcast/conf/graphcast_small.yaml:68:69
+examples/graphcast/conf/graphcast_small.yaml:68:68
 --8<--
 ```
 
@@ -198,7 +212,7 @@ examples/graphcast/graphcast.py:58:74
 --8<--
 ```
 
-我们还需要定义 metric 指标。
+接着我们还需要定义 metric 指标。
 
 ``` py linenums="76"
 --8<--
