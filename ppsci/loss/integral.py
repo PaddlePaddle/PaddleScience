@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -22,6 +23,9 @@ import paddle.nn.functional as F
 from typing_extensions import Literal
 
 from ppsci.loss import base
+
+if TYPE_CHECKING:
+    import paddle
 
 
 class IntegralLoss(base.Loss):
@@ -56,14 +60,16 @@ class IntegralLoss(base.Loss):
         >>> loss = IntegralLoss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               1.40911996)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.40780795), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.00131200)}
 
         >>> loss = IntegralLoss(reduction="sum", weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               2.81823993)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.81561589), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.00262400)}
     """
 
     def __init__(
@@ -77,8 +83,11 @@ class IntegralLoss(base.Loss):
             )
         super().__init__(reduction, weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             loss = F.mse_loss(
                 (output_dict[key] * output_dict["area"]).sum(axis=1),
@@ -98,5 +107,6 @@ class IntegralLoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses

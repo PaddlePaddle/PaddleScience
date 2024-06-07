@@ -28,6 +28,8 @@ class AGDA(base.LossAggregator):
 
     [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new)
 
+    NOTE: This loss aggregator is only suitable for two-task learning and the first task loss must be PDE loss.
+
     Args:
         model (nn.Layer): Training model.
         M (int, optional): Smoothing period. Defaults to 100.
@@ -43,9 +45,9 @@ class AGDA(base.LossAggregator):
         ...     x2 = paddle.randn([8, 3])
         ...     y1 = model(x1)
         ...     y2 = model(x2)
-        ...     loss1 = paddle.sum(y1)
-        ...     loss2 = paddle.sum((y2 - 2) ** 2)
-        ...     loss_aggregator([loss1, loss2]).backward()
+        ...     pde_loss = paddle.sum(y1)
+        ...     bc_loss = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator({'pde_loss': pde_loss, 'bc_loss': bc_loss}).backward()
     """
 
     def __init__(self, model: nn.Layer, M: int = 100, gamma: float = 0.999) -> None:
@@ -73,9 +75,9 @@ class AGDA(base.LossAggregator):
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
         grads_list = []  # num_params x num_losses
-        for loss in self.losses:
+        for key in self.losses:
             # backward with current loss
-            loss.backward()
+            self.losses[key].backward()
             grads_list.append(
                 paddle.concat(
                     [
@@ -93,11 +95,12 @@ class AGDA(base.LossAggregator):
 
     def _refine_grads(self, grads_list: List[paddle.Tensor]) -> List[paddle.Tensor]:
         # compute moving average of L^smooth_i(n) - eq.(16)
+        losses_seq = list(self.losses.values())
         self.Lf_smooth = (
-            self.gamma * self.Lf_smooth + (1 - self.gamma) * self.losses[0].item()
+            self.gamma * self.Lf_smooth + (1 - self.gamma) * losses_seq[0].item()
         )
         self.Lu_smooth = (
-            self.gamma * self.Lu_smooth + (1 - self.gamma) * self.losses[1].item()
+            self.gamma * self.Lu_smooth + (1 - self.gamma) * losses_seq[1].item()
         )
 
         # compute L^smooth_i(kM) - eq.(17)

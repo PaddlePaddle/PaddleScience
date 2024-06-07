@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Sequence
+from typing import Dict
 
 if TYPE_CHECKING:
     import paddle
@@ -36,15 +36,18 @@ class Sum(LossAggregator):
         self.step = 0
 
     def __call__(
-        self, losses: Sequence["paddle.Tensor"], step: int = 0
-    ) -> paddle.Tensor:
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> "paddle.Tensor":
         assert (
             len(losses) > 0
         ), f"Number of given losses({len(losses)}) can not be empty."
         self.step = step
 
-        loss = losses[0]
-        for i in range(1, len(losses)):
-            loss += losses[i]
+        total_loss = 0.0
+        for i, key in enumerate(losses):
+            if i == 0:
+                total_loss = losses[key]
+            else:
+                total_loss += losses[key]
 
-        return loss
+        return total_loss

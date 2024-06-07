@@ -31,7 +31,7 @@ from ppsci.utils import save_load
 
 def pde_loss_func(output_dict, *args):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["dw_t"], "sum")
-    return losses
+    return {"pde": losses}
 
 
 def pde_l2_rel_func(output_dict, *args):

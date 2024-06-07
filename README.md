@@ -27,6 +27,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/laplace2d) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
 | 微分方程 | [非线性偏微分方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/pirbn) | 机理驱动 | PIRBN | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
@@ -38,7 +39,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 光孤子 | [Optical soliton](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
-| 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
+| 域分解 | [XPINN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/xpinns) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>

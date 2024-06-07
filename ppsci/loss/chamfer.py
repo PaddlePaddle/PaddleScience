@@ -49,8 +49,8 @@ class ChamferLoss(base.Loss):
         >>> loss = ChamferLoss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-               0.04415882)
+        {'s1': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.04415882)}
     """
 
     def __init__(
@@ -59,8 +59,11 @@ class ChamferLoss(base.Loss):
     ):
         super().__init__("mean", weight)
 
-    def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
+    def forward(
+        self, output_dict, label_dict, weight_dict=None
+    ) -> Dict[str, "paddle.Tensor"]:
+        losses = {}
+
         for key in label_dict:
             s1 = output_dict[key]
             s2 = label_dict[key]
@@ -84,5 +87,6 @@ class ChamferLoss(base.Loss):
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
 
-            losses += loss
+            losses[key] = loss
+
         return losses
