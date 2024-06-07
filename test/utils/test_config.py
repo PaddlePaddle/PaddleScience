@@ -5,13 +5,11 @@ import paddle
 import pytest
 import yaml
 
-# 假设你的回调类在这个路径下
 from ppsci.utils.callbacks import InitCallback
 
-# 设置 Paddle 的 seed
 paddle.seed(1024)
 
-# 测试函数不需要装饰器
+
 @pytest.mark.parametrize(
     "epochs,mode,seed",
     [
@@ -46,6 +44,5 @@ def test_invalid_epochs(tmpdir, epochs, mode, seed):
         assert exec_info.value.code == 2
 
 
-# 这部分通常不需要，除非你想直接从脚本运行测试
 if __name__ == "__main__":
     pytest.main()
