@@ -186,7 +186,6 @@ def train(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {"name": "BatchSampler"},
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
@@ -272,7 +271,6 @@ def evaluate(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {"name": "BatchSampler"},
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(

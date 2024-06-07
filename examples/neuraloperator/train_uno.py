@@ -68,11 +68,6 @@ def train(cfg: DictConfig):
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_16x16",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -91,11 +86,6 @@ def train(cfg: DictConfig):
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_32x32",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
@@ -195,11 +185,6 @@ def evaluate(cfg: DictConfig):
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_16x16",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -218,11 +203,6 @@ def evaluate(cfg: DictConfig):
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_32x32",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,

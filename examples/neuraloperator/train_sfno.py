@@ -53,11 +53,6 @@ def train(cfg: DictConfig):
             "test_resolutions": cfg.DATASET.test_resolutions,
             "data_split": "test_32x64",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -71,11 +66,6 @@ def train(cfg: DictConfig):
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
             "data_split": "test_64x128",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
@@ -164,11 +154,6 @@ def evaluate(cfg: DictConfig):
             "test_resolutions": cfg.DATASET.test_resolutions,
             "data_split": "test_32x64",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -182,11 +167,6 @@ def evaluate(cfg: DictConfig):
             "train_resolution": cfg.DATASET.train_resolution,
             "test_resolutions": cfg.DATASET.test_resolutions,
             "data_split": "test_64x128",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
