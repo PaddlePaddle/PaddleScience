@@ -61,7 +61,7 @@ class LRBase:
         by_epoch: bool,
         verbose: bool = False,
     ) -> None:
-        """Initialize and record the necessary parameters"""
+        """Initialize and record the necessary parameters."""
         super().__init__()
         if warmup_epoch >= epochs:
             msg = (
@@ -212,6 +212,8 @@ class ExponentialDecay(LRBase):
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
         learning_rate (float): learning rate.
+        gamma (float): The decay rate.
+        decay_steps (int): The number of steps to decay.
         warmup_epoch (int): number of warmup epochs.
         warmup_start_lr (float): start learning rate within warmup.
         last_epoch (int): last epoch.

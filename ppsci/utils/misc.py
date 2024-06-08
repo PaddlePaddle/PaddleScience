@@ -69,7 +69,7 @@ class AverageMeter:
         self.reset()
 
     def reset(self):
-        """Reset"""
+        """Reset."""
         self.val = 0
         self.avg = 0
         self.sum = 0
@@ -77,7 +77,7 @@ class AverageMeter:
         self.history = []
 
     def update(self, val, n=1):
-        """Update"""
+        """Update."""
         self.val = val
         self.sum += val * n
         self.count += n
@@ -249,9 +249,7 @@ class Timer(ContextDecorator):
         self.start_time = time.perf_counter()
 
     def end(self):
-        """
-        End current timer context and print time cost.
-        """
+        """End current timer context and print time cost."""
         paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time

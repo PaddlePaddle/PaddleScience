@@ -58,7 +58,6 @@ def prepare_inputs_targets(
         samples_gap (int): stride of seq sampling.
 
     """
-
     if pred_shift < pred_length:
         raise ValueError("pred_shift should be small than pred_length")
     input_span = input_gap * (input_length - 1) + 1
@@ -85,7 +84,6 @@ def fold(data, size=36, stride=12):
     Returns:
         outdata (np.array): (N_, *).N/size is the number/width of sliding blocks
     """
-
     if size % stride != 0:
         raise ValueError("size modulo stride should be zero")
     times = size // stride
@@ -109,7 +107,6 @@ def data_transform(data, num_years_per_model):
         num_years_per_model (int): The number of years associated with each model.151/140.
 
     """
-
     length = data.shape[0]
     assert length % num_years_per_model == 0
     num_models = length // num_years_per_model
@@ -138,7 +135,6 @@ def read_raw_data(ds_dir, out_dir=None):
     Args:
         ds_dir (str): the path of the dataset.
         out_dir (str): the path of output. Defaults to None.
-
     """
     import xarray as xr
 

@@ -56,7 +56,6 @@ def legpoly(mmax, lmax, x, norm="ortho", inverse=False, csphase=True):
         https://apps.dtic.mil/sti/citations/ADA123406
     [3] Schrama, E.; Orbit integration based upon interpolated gravitational gradients
     """
-
     # compute the tensor P^m_n:
     nmax = max(mmax, lmax)
     vdm = np.zeros((nmax, nmax, len(x)), dtype=np.float64)
@@ -120,7 +119,6 @@ def _precompute_legpoly(mmax, lmax, t, norm="ortho", inverse=False, csphase=True
         https://apps.dtic.mil/sti/citations/ADA123406
     [3] Schrama, E.; Orbit integration based upon interpolated gravitational gradients
     """
-
     return legpoly(mmax, lmax, np.cos(t), norm=norm, inverse=inverse, csphase=csphase)
 
 
@@ -134,7 +132,6 @@ def _precompute_dlegpoly(mmax, lmax, t, norm="ortho", inverse=False, csphase=Tru
     computation follows
     [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
     """
-
     pct = _precompute_legpoly(
         mmax + 1, lmax + 1, t, norm=norm, inverse=inverse, csphase=False
     )

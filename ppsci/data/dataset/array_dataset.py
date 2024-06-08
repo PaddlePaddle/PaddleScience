@@ -23,6 +23,8 @@ import paddle
 from paddle import io
 from paddle import vision
 
+from ppsci.utils import logger
+
 
 class NamedArrayDataset(io.Dataset):
     """Class for Named Array Dataset.
@@ -60,6 +62,12 @@ class NamedArrayDataset(io.Dataset):
         self.weight = {} if weight is None else weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))
+        for key in input:
+            if key in self.label and len(input[key]) != len(self.label[key]):
+                logger.warning(
+                    f"The length of input {key}({len(input[key])}) is not equal to "
+                    f"the length of label {key}({len(self.label[key])})."
+                )
 
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}

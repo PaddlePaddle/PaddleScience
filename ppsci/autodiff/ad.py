@@ -59,8 +59,8 @@ class _Jacobian:
         retain_graph: Optional[bool] = None,
         create_graph: bool = True,
     ) -> "paddle.Tensor":
-        """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,
-        J[i].
+        """
+        Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e. J[i].
         """
         if not 0 <= i < self.dim_y:
             raise ValueError(f"i({i}) should in range [0, {self.dim_y}).")

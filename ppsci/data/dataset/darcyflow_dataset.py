@@ -120,7 +120,6 @@ class PositionalEmbedding2D:
         Returns:
             paddle.Tensor: Output grids to concatenate
         """
-
         # handle case of multiple train resolutions
         if self._grid is None or self._res != spatial_dims:
             grid_x, grid_y = regular_grid(
