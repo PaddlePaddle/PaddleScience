@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import Optional
 from typing import Tuple
 
-from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 
@@ -47,19 +46,18 @@ class AllenCahn(base.PDE):
         super().__init__()
         self.detach_keys = detach_keys
         self.eps = eps
-        # t, x = self.create_symbols("t x")
-        # invars = (t, x, )
-        # u = self.create_function("u", invars)
-
-        # allen_cahn = u.diff(t) + 5 * u**3 - 5 * u - 0.0001 * u.diff(x, 2)
+        t, x = self.create_symbols("t x")
+        invars = (t, x)
+        u = self.create_function("u", invars)
+        allen_cahn = u.diff(t) + 5 * u**3 - 5 * u - 0.0001 * u.diff(x, 2)
 
         # TODO: Pow(u,3) seems cause slightly larger L2 error than multiply(u*u*u)
-        def allen_cahn(out):
-            t, x = out["t"], out["x"]
-            u = out["u"]
-            u__t, u__x = jacobian(u, [t, x])
-            u__x__x = jacobian(u__x, x)
+        # def allen_cahn(out):
+        #     t, x = out["t"], out["x"]
+        #     u = out["u"]
+        #     u__t, u__x = jacobian(u, [t, x])
+        #     u__x__x = jacobian(u__x, x)
 
-            return u__t - (self.eps**2) * u__x__x + 5 * u * u * u - 5 * u
+        #     return u__t - (self.eps**2) * u__x__x + 5 * u * u * u - 5 * u
 
         self.add_equation("allen_cahn", allen_cahn)
