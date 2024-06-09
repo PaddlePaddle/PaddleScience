@@ -38,6 +38,7 @@ DOWNLOAD_RETRY_LIMIT = 3
 def is_url(path):
     """
     Whether path is URL.
+
     Args:
         path (str): URL string or not.
     """

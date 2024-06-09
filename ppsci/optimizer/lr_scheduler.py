@@ -144,6 +144,8 @@ class Linear(LRBase):
         learning_rate (float): learning rate.
         end_lr (float, optional): The minimum final learning rate. Defaults to 0.0.
         power (float, optional): Power of polynomial. Defaults to 1.0.
+        cycle (bool, optional): Whether the learning rate rises again. If True, then the learning rate will rise when it decrease
+            to ``end_lr`` .  If False, the learning rate is monotone decreasing. Defaults to False.
         warmup_epoch (int): number of warmup epochs.
         warmup_start_lr (float): start learning rate within warmup.
         last_epoch (int): last epoch.
@@ -266,7 +268,7 @@ class ExponentialDecay(LRBase):
 
 
 class Cosine(LRBase):
-    r"""Cosine learning rate decay.
+    """Cosine learning rate decay.
 
     lr = 0.05 * (math.cos(epoch * (math.pi / epochs)) + 1)
 
@@ -739,6 +741,7 @@ class OneCycleLR(LRBase):
 
 class SchedulerList:
     """SchedulerList which wrap more than one scheduler.
+
     Args:
         scheduler_list (Tuple[lr.LRScheduler, ...]): Schedulers listed in a tuple.
 
