@@ -18,6 +18,7 @@ This module is adapted from [https://github.com/lululxvi/deepxde](https://github
 
 from __future__ import annotations
 
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -164,7 +165,17 @@ class Jacobians:
 
 
 # Use high-order differentiation with singleton pattern for convenient
-jacobian = Jacobians()
+jacobian: Callable[
+    [
+        "paddle.Tensor",
+        Union["paddle.Tensor", List["paddle.Tensor"]],
+        int,
+        Optional[int],
+        Optional[bool],
+        bool,
+    ],
+    Union["paddle.Tensor", List["paddle.Tensor"]],
+] = Jacobians()
 
 
 class _Hessian:
@@ -297,7 +308,19 @@ class Hessians:
 
 
 # Use high-order differentiation with singleton pattern for convenient
-hessian = Hessians()
+hessian: Callable[
+    [
+        "paddle.Tensor",
+        "paddle.Tensor",
+        Optional[int],
+        int,
+        int,
+        Optional["paddle.Tensor"],
+        Optional[bool],
+        bool,
+    ],
+    "paddle.Tensor",
+] = Hessians()
 
 
 def clear():

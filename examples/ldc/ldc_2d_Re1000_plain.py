@@ -5,6 +5,7 @@ Reference: https://github.com/PredictiveIntelligenceLab/jaxpi/tree/main/examples
 from __future__ import annotations
 
 import copy
+import os
 from os import path as osp
 
 import hydra
@@ -21,16 +22,15 @@ dtype = paddle.get_default_dtype()
 
 
 def plot(U_pred: np.ndarray, output_dir: str):
-    fig = plt.figure()
-    plt.pcolor(U_pred.T, cmap="jet")
-    import os
-
     os.makedirs(output_dir, exist_ok=True)
     fig_path = osp.join(output_dir, "ac.png")
-    print(f"Saving figure to {fig_path}")
+
+    fig = plt.figure()
+    plt.pcolor(U_pred.T, cmap="jet")
     plt.colorbar()
     fig.savefig(fig_path, bbox_inches="tight", dpi=400)
     plt.close()
+    ppsci.utils.logger.info(f"Saving figure to {fig_path}")
 
 
 def train(cfg: DictConfig):
