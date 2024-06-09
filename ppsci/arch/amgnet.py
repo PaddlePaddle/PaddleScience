@@ -264,7 +264,7 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm
 
 def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_layer):
     """
-    come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive
+    Come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive
     structure aware pooling for learning hierarchical graph representations. AAAI(2020)
     """
 

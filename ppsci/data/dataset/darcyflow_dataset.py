@@ -110,7 +110,7 @@ class PositionalEmbedding2D:
         self._res = None
 
     def grid(self, spatial_dims, dtype):
-        """grid generates 2D grid needed for pos encoding
+        """Grid generates 2D grid needed for pos encoding
         and caches the grid associated with MRU resolution
 
         Args:

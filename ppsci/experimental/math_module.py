@@ -225,7 +225,7 @@ def gaussian_integrate(
         return result
 
     def _weights(N, dim):
-        """return the weights, broadcast across the dimensions, generated from the polynomial of choice.
+        """Return the weights, broadcast across the dimensions, generated from the polynomial of choice.
 
         Args:
             N (int): number of nodes.

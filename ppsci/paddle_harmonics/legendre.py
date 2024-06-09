@@ -37,7 +37,7 @@ import numpy as np
 
 def clm(l, m):
     """
-    defines the normalization factor to orthonormalize the Spherical Harmonics
+    Defines the normalization factor to orthonormalize the Spherical Harmonics
     """
     return np.sqrt((2 * l + 1) / 4 / np.pi) * np.sqrt(
         np.math.factorial(l - m) / np.math.factorial(l + m)

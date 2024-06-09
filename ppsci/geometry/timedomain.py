@@ -673,7 +673,7 @@ class TimeXGeometry(geometry.Geometry):
     def periodic_point(
         self, x: Dict[str, np.ndarray], component: int
     ) -> Dict[str, np.ndarray]:
-        """process given point coordinates to satisfy the periodic boundary conditions of the geometry.
+        """Process given point coordinates to satisfy the periodic boundary conditions of the geometry.
 
         Args:
             x (Dict[str, np.ndarray]): Contains the coordinates and timestamps of the points. It represents the coordinates of the point to be processed.

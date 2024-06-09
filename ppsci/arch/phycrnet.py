@@ -355,7 +355,7 @@ class ConvLSTMCell(nn.Layer):
 
 
 class encoder_block(nn.Layer):
-    """encoder with CNN"""
+    """Encoder with CNN"""
 
     def __init__(
         self,

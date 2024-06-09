@@ -73,7 +73,7 @@ def prepare_inputs_targets(
 
 
 def fold(data, size=36, stride=12):
-    """inverse of unfold/sliding window operation
+    """Inverse of unfold/sliding window operation
     only applicable to the case where the size of the sliding windows is n*stride
 
     Args:
@@ -130,7 +130,7 @@ def data_transform(data, num_years_per_model):
 
 
 def read_raw_data(ds_dir, out_dir=None):
-    """read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
+    """Read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
 
     Args:
         ds_dir (str): the path of the dataset.
@@ -208,7 +208,7 @@ def read_raw_data(ds_dir, out_dir=None):
 
 
 def cat_over_last_dim(data):
-    """treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
+    """Treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
     e.g., cmip6sst.shape = (178, 38, 24, 48, 15), converted_cmip6sst.shape = (2670, 38, 24, 48)
     e.g., cmip5sst.shape = (165, 38, 24, 48, 15), converted_cmip6sst.shape = (2475, 38, 24, 48)
 
