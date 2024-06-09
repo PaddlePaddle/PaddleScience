@@ -46,7 +46,7 @@ class GradNorm(base.LossAggregator):
         num_losses (int, optional): Number of losses. Defaults to 1.
         update_freq (int, optional): Weight updating frequency. Defaults to 1000.
         momentum (float, optional): Momentum $m$ for moving weight. Defaults to 0.9.
-        init_weights (List[float]): Initial weights list, Defaults to None.
+        init_weights (List[float]): Initial weights list. Defaults to None.
 
     Examples:
         >>> import paddle

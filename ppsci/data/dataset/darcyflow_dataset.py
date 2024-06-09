@@ -162,7 +162,7 @@ class DarcyFlowDataset(io.Dataset):
         encode_output (bool): Whether to encode the output. Default is True
         encoding (str): The type of encoding. Default is 'channel-wise'.
         channel_dim (int): The location of unsqueeze. Default is 1.
-            where to put the channel dimension, defaults size is batch, channel, height, width
+            where to put the channel dimension. Defaults size is batch, channel, height, width
         data_split (str): Wether to use training or test dataset. Default is 'train'.
     """
 
