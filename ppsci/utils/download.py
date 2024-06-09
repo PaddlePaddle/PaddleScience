@@ -50,7 +50,7 @@ def get_weights_path_from_url(url, md5sum=None):
     download it from url.
 
     Args:
-        url (str): download url
+        url (str): Download url
         md5sum (str): md5 sum of download package
 
     Returns:
@@ -74,8 +74,8 @@ def get_path_from_url(url, root_dir, md5sum=None, check_exist=True, decompress=T
     from url and decompress it, return the path.
 
     Args:
-        url (str): download url
-        root_dir (str): root dir for downloading, it should be
+        url (str): Download url
+        root_dir (str): Root dir for downloading, it should be
                         WEIGHTS_HOME or DATASET_HOME
         md5sum (str): md5 sum of download package
 
@@ -110,8 +110,8 @@ def _download(url, path, md5sum=None):
     """
     Download from url, save to path.
 
-    url (str): download url
-    path (str): download to given path
+    url (str): Download url
+    path (str): Download to given path
     """
     if not osp.exists(path):
         os.makedirs(path)

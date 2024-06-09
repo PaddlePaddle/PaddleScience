@@ -106,8 +106,8 @@ class Jacobians:
         Args:
             ys (paddle.Tensor): Output tensor.
             xs (Union[paddle.Tensor, List[paddle.Tensor]]): Input tensor(s).
-            i (int, optional): i-th output variable. Defaults to 0.
-            j (Optional[int]): j-th input variable. Defaults to None.
+            i (int, optional): I-th output variable. Defaults to 0.
+            j (Optional[int]): J-th input variable. Defaults to None.
             retain_graph (Optional[bool]): Whether to retain the forward graph which
                 is used to calculate the gradient. When it is True, the graph would
                 be retained, in which way users can calculate backward twice for the
@@ -270,8 +270,8 @@ class Hessians:
             component (Optional[int]): If `y` has the shape (batch_size, dim_y > 1), then `y[:, component]`
                 is used to compute the Hessian. Do not use if `y` has the shape (batch_size,
                 1). Defaults to None.
-            i (int, optional): i-th input variable. Defaults to 0.
-            j (int, optional): j-th input variable. Defaults to 0.
+            i (int, optional): I-th input variable. Defaults to 0.
+            j (int, optional): J-th input variable. Defaults to 0.
             grad_y (Optional[paddle.Tensor]): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
                 duplicate computation. Defaults to None.
             retain_graph (Optional[bool]): Whether to retain the forward graph which

@@ -51,11 +51,11 @@ def prepare_inputs_targets(
 
     Args:
         len_time (int): The total number of time steps in the dataset.
-        input_gap (int): time gaps between two consecutive input frames.
-        input_length (int): the number of input frames.
-        pred_shift (int): the lead_time of the last target to be predicted.
-        pred_length (int): the number of frames to be predicted.
-        samples_gap (int): stride of seq sampling.
+        input_gap (int): Time gaps between two consecutive input frames.
+        input_length (int): The number of input frames.
+        pred_shift (int): The lead_time of the last target to be predicted.
+        pred_length (int): The number of frames to be predicted.
+        samples_gap (int): Stride of seq sampling.
 
     """
     if pred_shift < pred_length:
@@ -133,8 +133,8 @@ def read_raw_data(ds_dir, out_dir=None):
     """Read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
 
     Args:
-        ds_dir (str): the path of the dataset.
-        out_dir (str): the path of output. Defaults to None.
+        ds_dir (str): The path of the dataset.
+        out_dir (str): The path of output. Defaults to None.
     """
     import xarray as xr
 

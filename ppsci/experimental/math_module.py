@@ -87,7 +87,7 @@ def expand_func_values_and_squeeze_integral(f: Callable):
     consistency, we squeeze the result in the 1d case so it does not have any trailing dimensions.
 
     Args:
-        f (Callable): the wrapped function.
+        f (Callable): The wrapped function.
     """
 
     @functools.wraps(f)
@@ -228,8 +228,8 @@ def gaussian_integrate(
         """Return the weights, broadcast across the dimensions, generated from the polynomial of choice.
 
         Args:
-            N (int): number of nodes.
-            dim (int): number of dimensions.
+            N (int): Number of nodes.
+            dim (int): Number of dimensions.
 
         Returns:
             paddle.Tensor: Integration weights.

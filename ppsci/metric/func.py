@@ -28,7 +28,7 @@ class FunctionalMetric(base.Metric):
     r"""Functional metric class, which allows to use custom metric computing function from given metric_expr for complex computation cases.
 
     Args:
-        metric_expr (Callable): expression of metric calculation.
+        metric_expr (Callable): Expression of metric calculation.
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:

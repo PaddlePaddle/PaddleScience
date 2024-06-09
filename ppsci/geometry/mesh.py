@@ -452,7 +452,7 @@ class Mesh(geometry.Geometry):
         evenly: bool = False,
         inflation_dist: Union[float, Tuple[float, ...]] = None,
     ) -> Dict[str, np.ndarray]:
-        # TODO(sensen): support for time-dependent points(repeat data in time)
+        # TODO(sensen): Support for time-dependent points(repeat data in time)
         if inflation_dist is not None:
             if not isinstance(n, (tuple, list)):
                 n = [n]
@@ -575,7 +575,7 @@ class Mesh(geometry.Geometry):
     ):
         """Sample random points in the geometry and return those meet criteria."""
         if evenly:
-            # TODO(sensen): implement uniform sample for mesh interior.
+            # TODO(sensen): Implement uniform sample for mesh interior.
             raise NotImplementedError(
                 "uniformly sample for interior in mesh is not support yet, "
                 "you may need to set evenly=False in config dict of constraint"
