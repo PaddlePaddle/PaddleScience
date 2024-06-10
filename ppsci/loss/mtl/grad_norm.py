@@ -21,7 +21,8 @@ import paddle
 from paddle import nn
 
 from ppsci.loss.mtl import base
-from ppsci.utils import logger
+
+# from ppsci.utils import logger
 
 
 class GradNorm(base.LossAggregator):
@@ -133,6 +134,6 @@ class GradNorm(base.LossAggregator):
                 self.weight[i].set_value(
                     self.momentum * self.weight[i] + (1 - self.momentum) * weight[i]
                 )
-            logger.message(f"weight at step {self.step}: {self.weight.numpy()}")
+            # logger.message(f"weight at step {self.step}: {self.weight.numpy()}")
 
         return loss

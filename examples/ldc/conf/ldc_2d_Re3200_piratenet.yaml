@@ -33,7 +33,7 @@ use_tbd: false
 # working conditions
 Re: [100, 400, 1000, 1600, 3200]
 epochs: [10, 20, 50, 50, 500]
-EVAL_DATA_PATH: ./data/ldc_Re1000.mat
+EVAL_DATA_PATH: ./data/ldc_Re3200.mat
 
 # model settings
 MODEL:

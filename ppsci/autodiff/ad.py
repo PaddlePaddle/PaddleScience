@@ -106,8 +106,8 @@ class Jacobians:
         Args:
             ys (paddle.Tensor): Output tensor.
             xs (Union[paddle.Tensor, List[paddle.Tensor]]): Input tensor(s).
-            i (int, optional): I-th output variable. Defaults to 0.
-            j (Optional[int]): J-th input variable. Defaults to None.
+            i (int, optional): i-th output variable. Defaults to 0.
+            j (Optional[int]): j-th input variable. Defaults to None.
             retain_graph (Optional[bool]): Whether to retain the forward graph which
                 is used to calculate the gradient. When it is True, the graph would
                 be retained, in which way users can calculate backward twice for the

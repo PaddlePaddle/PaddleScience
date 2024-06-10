@@ -28,7 +28,7 @@ from ppsci.utils import misc
 
 
 class FractionalPoisson(PDE):
-    """TODO: refine this docstring.
+    """(TODO)Docstring of this class will be refined in the future.
 
     Args:
         alpha (float): Alpha.

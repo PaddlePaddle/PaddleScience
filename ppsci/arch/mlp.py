@@ -507,6 +507,7 @@ class ModifiedMLP(base.Arch):
         return y
 
     def forward(self, x):
+        x_identity = x
         if self._input_transform is not None:
             x = self._input_transform(x)
 
@@ -522,7 +523,7 @@ class ModifiedMLP(base.Arch):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(x, y)
+            y = self._output_transform(x_identity, y)
         return y
 
 

@@ -64,7 +64,7 @@ TRAIN:
     decay_steps: 10000
     by_epoch: false
   batch_size:
-    pde: 2048
+    pde: 8192
     bc: 256
   pretrained_model_path: null
   checkpoint_path: null
@@ -80,8 +80,8 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: null
-  export_path: ./inference/ldc_2d_re3200
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re1000_sota_pretrained.pdparams
+  export_path: ./inference/ldc_2d_re1000
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx

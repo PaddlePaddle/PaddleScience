@@ -28,10 +28,13 @@ def plot(U_pred: np.ndarray, output_dir: str):
 
     fig = plt.figure()
     plt.pcolor(U_pred.T, cmap="jet")
+    plt.xlabel("x")
+    plt.ylabel("y")
     plt.colorbar()
-    fig.savefig(fig_path, bbox_inches="tight", dpi=400)
-    plt.close()
+    plt.title(r"Prediction of $U=\sqrt{{u^2+v^2}}$")
+    fig.savefig(fig_path, bbox_inches="tight")
     ppsci.utils.logger.info(f"Saving figure to {fig_path}")
+    plt.close()
 
 
 def train(cfg: DictConfig):
@@ -73,13 +76,12 @@ def train(cfg: DictConfig):
         return points
 
     def train_curriculum(cfg, idx):
-        cfg = copy.deepcopy(cfg)
-        Re = cfg.Re[idx]
-        cfg.output_dir = osp.join(cfg.output_dir, f"Re_{int(Re)}")
-        cfg.TRAIN.epochs = cfg.epochs[idx]
-        cfg.TRAIN.lr_scheduler.epochs = cfg.epochs[idx]
+        cfg_t = copy.deepcopy(cfg)
+        Re = cfg_t.Re[idx]
+        cfg_t.output_dir = osp.join(cfg_t.output_dir, f"Re_{int(Re)}")
+        cfg_t.TRAIN.epochs = cfg_t.epochs[idx]
         ppsci.utils.logger.message(
-            f"Training curriculum {idx + 1}/{len(cfg.epochs)} Re={Re:.5g} epochs={cfg.epochs[idx]}"
+            f"Training curriculum {idx + 1}/{len(cfg_t.epochs)} Re={Re:.5g} epochs={cfg_t.epochs[idx]}"
         )
 
         # set equation
@@ -87,7 +89,7 @@ def train(cfg: DictConfig):
             "NavierStokes": ppsci.equation.NavierStokes(1 / Re, 1, dim=2, time=False)
         }
 
-        # set constraint
+        # load data
         data = sio.loadmat(f"./data/ldc_Re{Re}.mat")
         u_ref = data["u"].astype(dtype)
         v_ref = data["v"].astype(dtype)
@@ -104,15 +106,15 @@ def train(cfg: DictConfig):
             tx = np.random.uniform(
                 [x0, y0],
                 [x1, y1],
-                (cfg.TRAIN.batch_size.pde, 2),
+                (cfg_t.TRAIN.batch_size.pde, 2),
             ).astype(dtype)
             return {"x": tx[:, 0:1], "y": tx[:, 1:2]}
 
         def gen_label_batch(input_batch):
             return {
-                "continuity": np.zeros([cfg.TRAIN.batch_size.pde, 1], dtype),
-                "momentum_x": np.zeros([cfg.TRAIN.batch_size.pde, 1], dtype),
-                "momentum_y": np.zeros([cfg.TRAIN.batch_size.pde, 1], dtype),
+                "continuity": np.zeros([cfg_t.TRAIN.batch_size.pde, 1], dtype),
+                "momentum_x": np.zeros([cfg_t.TRAIN.batch_size.pde, 1], dtype),
+                "momentum_y": np.zeros([cfg_t.TRAIN.batch_size.pde, 1], dtype),
             }
 
         pde_constraint = ppsci.constraint.SupervisedConstraint(
@@ -130,13 +132,13 @@ def train(cfg: DictConfig):
 
         # set boundary conditions
         x_bc = sample_points_on_square_boundary(
-            cfg.TRAIN.batch_size.bc, eps=0.01
+            cfg_t.TRAIN.batch_size.bc, eps=0.01
         ).astype(
             dtype
         )  # avoid singularity a right corner for u velocity
-        v_bc = np.zeros((cfg.TRAIN.batch_size.bc * 4, 1), dtype)
+        v_bc = np.zeros((cfg_t.TRAIN.batch_size.bc * 4, 1), dtype)
         u_bc = copy.deepcopy(v_bc)
-        u_bc[: cfg.TRAIN.batch_size.bc] = 1.0
+        u_bc[: cfg_t.TRAIN.batch_size.bc] = 1.0
         bc = ppsci.constraint.SupervisedConstraint(
             {
                 "dataset": {
@@ -169,7 +171,7 @@ def train(cfg: DictConfig):
                     "input": eval_data,
                     "label": eval_label,
                 },
-                "batch_size": cfg.EVAL.batch_size,
+                "batch_size": cfg_t.EVAL.batch_size,
             },
             ppsci.loss.MSELoss("mean"),
             {"U": lambda out: (out["u"] ** 2 + out["v"] ** 2).sqrt()},
@@ -186,7 +188,7 @@ def train(cfg: DictConfig):
             equation=equation,
             validator=validator,
             loss_aggregator=grad_norm,
-            cfg=cfg,
+            cfg=cfg_t,
         )
         # train model
         solver.train()
@@ -194,12 +196,12 @@ def train(cfg: DictConfig):
         solver.eval()
         # visualize prediction after finished training
         pred_dict = solver.predict(
-            eval_data, batch_size=cfg.EVAL.batch_size, return_numpy=True
+            eval_data, batch_size=cfg_t.EVAL.batch_size, return_numpy=True
         )
         U_pred = np.sqrt(pred_dict["u"] ** 2 + pred_dict["v"] ** 2).reshape(
             [len(x_star), len(y_star)]
         )
-        plot(U_pred, cfg.output_dir)
+        plot(U_pred, cfg_t.output_dir)
 
     for idx in range(len(cfg.Re)):
         train_curriculum(cfg, idx)
@@ -277,12 +279,12 @@ def inference(cfg: DictConfig):
 
     predictor = pinn_predictor.PINNPredictor(cfg)
     data = sio.loadmat(cfg.EVAL_DATA_PATH)
-    t_star = data["t"].flatten().astype(dtype)  # [nt, ]
+    data = dict(data)
     x_star = data["x"].flatten().astype(dtype)  # [nx, ]
     y_star = data["y"].flatten().astype(dtype)  # [ny, ]
-    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
+    xy_star = misc.cartesian_product(x_star, y_star).astype(dtype)
+    input_dict = {"x": xy_star[:, 0:1], "y": xy_star[:, 1:2]}
 
-    input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     # mapping data to cfg.INFER.output_keys
     output_dict = {
