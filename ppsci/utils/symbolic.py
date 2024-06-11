@@ -691,8 +691,8 @@ def lambdify(
 
     Args:
         expr (Union[sp.Basic, List[sp.Basic]]): Sympy expression(s) to be converted.
-            Will return callable functions in list if multiple expressions are given.
-            else will return one single callable function.
+            Will return callable functions in list if multiple expressions are given,
+            else return one single callable function.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for
             computing forward result in `LayerNode`.
         extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters.

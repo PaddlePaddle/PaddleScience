@@ -513,6 +513,8 @@ class Solver:
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        self.max_steps = self.epochs * self.iters_per_epoch
+
         start_epoch = self.best_metric["epoch"] + 1
 
         if self.use_tbd and isinstance(self.cfg, DictConfig):
