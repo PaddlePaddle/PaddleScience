@@ -178,16 +178,18 @@
             <br><span class="text-large">全量支持</span></br>
         </div>
     </a>
-    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
+    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
         <div class="card card-modulus">
             DeepMD
             <br><span class="text-large">适配中</span></br>
         </div>
     </a>
-    <div class="card card-deepmd">
-        Modulus
-        <br><span class="text-large">适配中</span></br>
-    </div>
+    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
+        <div class="card card-deepmd">
+            Modulus
+            <br><span class="text-large">适配中</span></br>
+        </div>
+    </a>
 </div>
 
 --8<--
