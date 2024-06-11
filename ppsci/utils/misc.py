@@ -202,7 +202,7 @@ class Timer(ContextDecorator):
         >>> from ppsci.utils import misc
         >>> with misc.Timer("test1", auto_print=False) as timer:
         ...     w = sum(range(0, 10))
-        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")  # doctest: +SKIP
         time cost of 'sum(range(0, 10))' is 0.00
 
         >>> @misc.Timer("test2", auto_print=True)
@@ -216,7 +216,7 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()
         >>> timer.end()
-        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")  # doctest: +SKIP
         time cost of 'cost_of_func' is 0.00
     """
 
