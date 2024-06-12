@@ -51,14 +51,13 @@ def prepare_inputs_targets(
 
     Args:
         len_time (int): The total number of time steps in the dataset.
-        input_gap (int): time gaps between two consecutive input frames.
-        input_length (int): the number of input frames.
-        pred_shift (int): the lead_time of the last target to be predicted.
-        pred_length (int): the number of frames to be predicted.
-        samples_gap (int): stride of seq sampling.
+        input_gap (int): Time gaps between two consecutive input frames.
+        input_length (int): The number of input frames.
+        pred_shift (int): The lead_time of the last target to be predicted.
+        pred_length (int): The number of frames to be predicted.
+        samples_gap (int): Stride of seq sampling.
 
     """
-
     if pred_shift < pred_length:
         raise ValueError("pred_shift should be small than pred_length")
     input_span = input_gap * (input_length - 1) + 1
@@ -74,7 +73,7 @@ def prepare_inputs_targets(
 
 
 def fold(data, size=36, stride=12):
-    """inverse of unfold/sliding window operation
+    """Inverse of unfold/sliding window operation
     only applicable to the case where the size of the sliding windows is n*stride
 
     Args:
@@ -85,7 +84,6 @@ def fold(data, size=36, stride=12):
     Returns:
         outdata (np.array): (N_, *).N/size is the number/width of sliding blocks
     """
-
     if size % stride != 0:
         raise ValueError("size modulo stride should be zero")
     times = size // stride
@@ -109,7 +107,6 @@ def data_transform(data, num_years_per_model):
         num_years_per_model (int): The number of years associated with each model.151/140.
 
     """
-
     length = data.shape[0]
     assert length % num_years_per_model == 0
     num_models = length // num_years_per_model
@@ -133,12 +130,11 @@ def data_transform(data, num_years_per_model):
 
 
 def read_raw_data(ds_dir, out_dir=None):
-    """read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
+    """Read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
 
     Args:
-        ds_dir (str): the path of the dataset.
-        out_dir (str): the path of output. Defaults to None.
-
+        ds_dir (str): The path of the dataset.
+        out_dir (str): The path of output. Defaults to None.
     """
     import xarray as xr
 
@@ -212,7 +208,7 @@ def read_raw_data(ds_dir, out_dir=None):
 
 
 def cat_over_last_dim(data):
-    """treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
+    """Treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
     e.g., cmip6sst.shape = (178, 38, 24, 48, 15), converted_cmip6sst.shape = (2670, 38, 24, 48)
     e.g., cmip5sst.shape = (165, 38, 24, 48, 15), converted_cmip6sst.shape = (2475, 38, 24, 48)
 

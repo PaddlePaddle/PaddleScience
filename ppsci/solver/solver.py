@@ -272,7 +272,7 @@ class Solver:
         self.world_size = dist.get_world_size()
         # initialize distributed environment
         if self.world_size > 1:
-            # TODO(sensen): support different kind of DistributedStrategy
+            # TODO(sensen): Support different kind of DistributedStrategy
             fleet.init(is_collective=True)
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
@@ -445,7 +445,7 @@ class Solver:
 
         self.forward_helper = expression.ExpressionSolver()
 
-        # whether enable static for forward pass, defaults to False
+        # whether enable static for forward pass. Defaults to False
         jit.enable_to_static(to_static)
         logger.message(f"Set to_static={to_static} for computational optimization.")
 

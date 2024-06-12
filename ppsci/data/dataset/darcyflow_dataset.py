@@ -110,7 +110,7 @@ class PositionalEmbedding2D:
         self._res = None
 
     def grid(self, spatial_dims, dtype):
-        """grid generates 2D grid needed for pos encoding
+        """Grid generates 2D grid needed for pos encoding
         and caches the grid associated with MRU resolution
 
         Args:
@@ -120,7 +120,6 @@ class PositionalEmbedding2D:
         Returns:
             paddle.Tensor: Output grids to concatenate
         """
-
         # handle case of multiple train resolutions
         if self._grid is None or self._res != spatial_dims:
             grid_x, grid_y = regular_grid(
@@ -163,7 +162,7 @@ class DarcyFlowDataset(io.Dataset):
         encode_output (bool): Whether to encode the output. Default is True
         encoding (str): The type of encoding. Default is 'channel-wise'.
         channel_dim (int): The location of unsqueeze. Default is 1.
-            where to put the channel dimension, defaults size is batch, channel, height, width
+            where to put the channel dimension. Defaults size is batch, channel, height, width
         data_split (str): Wether to use training or test dataset. Default is 'train'.
     """
 

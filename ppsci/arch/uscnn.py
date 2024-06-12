@@ -28,16 +28,16 @@ class USCNN(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("coords").
         output_keys (Tuple[str, ...]):Name of output keys, such as ("outputV").
-        hidden_size (Union[int, Tuple[int, ...]]): the hidden channel for convolutional layers
-        h (float): the spatial step
+        hidden_size (Union[int, Tuple[int, ...]]): The hidden channel for convolutional layers
+        h (float): The spatial step
         nx (int):  the number of grids along x-axis
-        ny (int): the number of grids along y-axis
+        ny (int): The number of grids along y-axis
         nvar_in (int, optional):  input channel. Defaults to 1.
-        nvar_out (int, optional): output channel. Defaults to 1.
-        pad_singleside (int, optional): pad for hard boundary constraint. Defaults to 1.
-        k (int, optional): kernel_size. Defaults to 5.
-        s (int, optional): stride. Defaults to 1.
-        p (int, optional): padding. Defaults to 2.
+        nvar_out (int, optional): Output channel. Defaults to 1.
+        pad_singleside (int, optional): Pad for hard boundary constraint. Defaults to 1.
+        k (int, optional): Kernel_size. Defaults to 5.
+        s (int, optional): Stride. Defaults to 1.
+        p (int, optional): Padding. Defaults to 2.
 
     Examples:
         >>> import ppsci
