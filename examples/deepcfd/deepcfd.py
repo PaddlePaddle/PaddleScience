@@ -243,7 +243,7 @@ def train(cfg: DictConfig):
         loss_v = (output[:, 1:2, :, :] - y[:, 1:2, :, :]) ** 2
         loss_p = (output[:, 2:3, :, :] - y[:, 2:3, :, :]).abs()
         loss = (loss_u + loss_v + loss_p) / CHANNELS_WEIGHTS
-        return loss.sum()
+        return {"output": loss.sum()}
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         {

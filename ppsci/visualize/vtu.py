@@ -105,8 +105,7 @@ def save_vtu_from_dict(
     value_keys: Tuple[str, ...],
     num_timestamps: int = 1,
 ):
-    """
-    Save dict data to '*.vtu' file.
+    """Save dict data to '*.vtu' file.
 
     Args:
         filename (str): Output filename.

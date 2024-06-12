@@ -40,13 +40,13 @@ class LRBase:
     """Base class for custom learning rates.
 
     Args:
-        epochs (int): total epoch(s).
-        iters_per_epoch (int): number of iterations within an epoch.
-        learning_rate (float): learning rate.
-        warmup_epoch (int): number of warmup epochs.
-        warmup_start_lr (float): start learning rate within warmup.
-        last_epoch (int): last epoch.
-        by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
+        warmup_epoch (int): Number of warmup epochs.
+        warmup_start_lr (float): Start learning rate within warmup.
+        last_epoch (int): Last epoch.
+        by_epoch (bool): Learning rate decays by epoch when by_epoch is True, else by iter.
         verbose (bool): If True, prints a message to stdout for each update. Defaults to False.
     """
 
@@ -61,7 +61,7 @@ class LRBase:
         by_epoch: bool,
         verbose: bool = False,
     ) -> None:
-        """Initialize and record the necessary parameters"""
+        """Initialize and record the necessary parameters."""
         super().__init__()
         if warmup_epoch >= epochs:
             msg = (
@@ -100,7 +100,7 @@ class LRBase:
         """Add an Linear Warmup before learning_rate.
 
         Args:
-            learning_rate (Union[float, lr.LRScheduler]): original learning rate without
+            learning_rate (Union[float, lr.LRScheduler]): Original learning rate without
                 warmup.
 
         Returns:
@@ -139,15 +139,17 @@ class Linear(LRBase):
     """Linear learning rate decay.
 
     Args:
-        epochs (int): total epoch(s).
-        iters_per_epoch (int): number of iterations within an epoch.
-        learning_rate (float): learning rate.
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
         end_lr (float, optional): The minimum final learning rate. Defaults to 0.0.
         power (float, optional): Power of polynomial. Defaults to 1.0.
-        warmup_epoch (int): number of warmup epochs.
-        warmup_start_lr (float): start learning rate within warmup.
-        last_epoch (int): last epoch.
-        by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
+        cycle (bool, optional): Whether the learning rate rises again. If True, then the learning rate will rise when it decrease
+            to ``end_lr`` .  If False, the learning rate is monotone decreasing. Defaults to False.
+        warmup_epoch (int): Number of warmup epochs.
+        warmup_start_lr (float): Start learning rate within warmup.
+        last_epoch (int): Last epoch.
+        by_epoch (bool): Learning rate decays by epoch when by_epoch is True, else by iter.
 
     Examples:
         >>> import ppsci
@@ -209,13 +211,15 @@ class ExponentialDecay(LRBase):
     """ExponentialDecay learning rate decay.
 
     Args:
-        epochs (int): total epoch(s).
-        iters_per_epoch (int): number of iterations within an epoch.
-        learning_rate (float): learning rate.
-        warmup_epoch (int): number of warmup epochs.
-        warmup_start_lr (float): start learning rate within warmup.
-        last_epoch (int): last epoch.
-        by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
+        gamma (float): The decay rate.
+        decay_steps (int): The number of steps to decay.
+        warmup_epoch (int): Number of warmup epochs.
+        warmup_start_lr (float): Start learning rate within warmup.
+        last_epoch (int): Last epoch.
+        by_epoch (bool): Learning rate decays by epoch when by_epoch is True, else by iter.
 
     Examples:
         >>> import ppsci
@@ -264,19 +268,19 @@ class ExponentialDecay(LRBase):
 
 
 class Cosine(LRBase):
-    r"""Cosine learning rate decay.
+    """Cosine learning rate decay.
 
     lr = 0.05 * (math.cos(epoch * (math.pi / epochs)) + 1)
 
     Args:
-        epochs (int): total epoch(s).
-        iters_per_epoch (int): number of iterations within an epoch.
-        learning_rate (float): learning rate.
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
         eta_min (float, optional): Minimum learning rate. Defaults to 0.0.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
-        last_epoch (int, optional): last epoch. Defaults to -1.
-        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True,
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True,
             else by iter. Defaults to False.
 
     Examples:
@@ -332,16 +336,16 @@ class Step(LRBase):
     """Step learning rate decay.
 
     Args:
-        epochs (int): total epoch(s).
-        iters_per_epoch (int): number of iterations within an epoch.
-        learning_rate (float): learning rate.
-        step_size (int): the interval to update.
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
+        step_size (int): The interval to update.
         gamma (float, optional): The Ratio that the learning rate will be reduced.
             ``new_lr = origin_lr * gamma``. It should be less than 1.0. Default: 0.1.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
-        last_epoch (int, optional): last epoch. Defaults to -1.
-        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True,
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True,
             else by iter. Defaults to False.
 
     Examples:
@@ -394,16 +398,16 @@ class Piecewise(LRBase):
     """Piecewise learning rate decay
 
     Args:
-        epochs (int): total epoch(s)
-        iters_per_epoch (int): number of iterations within an epoch
+        epochs (int): Total epoch(s)
+        iters_per_epoch (int): Number of iterations within an epoch
         decay_epochs (Tuple[int, ...]): A list of steps numbers. The type of element in the
             list is python int.
         values (Tuple[float, ...]): Tuple of learning rate values that will be picked during
             different epoch boundaries.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
-        last_epoch (int, optional): last epoch. Defaults to -1.
-        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True,
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True,
             else by iter. Defaults to False.
 
     Examples:
@@ -456,16 +460,16 @@ class MultiStepDecay(LRBase):
     """MultiStepDecay learning rate decay
 
     Args:
-        epochs (int): total epoch(s)
-        iters_per_epoch (int): number of iterations within an epoch
-        learning_rate (float): learning rate
+        epochs (int): Total epoch(s)
+        iters_per_epoch (int): Number of iterations within an epoch
+        learning_rate (float): Learning rate
         milestones (Tuple[int, ...]): Tuple of each boundaries. should be increasing.
         gamma (float, optional): The Ratio that the learning rate will be reduced.
             `new_lr = origin_lr * gamma`. It should be less than 1.0. Defaults to 0.1.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
-        last_epoch (int, optional): last epoch. Defaults to -1.
-        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True,
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True,
             else by iter. Defaults to False.
 
     Examples:
@@ -673,7 +677,7 @@ class OneCycleLR(LRBase):
         anneal_strategy (str, optional): Strategy of adjusting learning rate. "cos" for cosine annealing, "linear" for linear annealing. Defaults to "cos".
         three_phase (bool, optional): Whether to use three phase. Defaults to False.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
         last_epoch (int, optional): Last epoch. Defaults to -1.
         by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
 
@@ -737,6 +741,7 @@ class OneCycleLR(LRBase):
 
 class SchedulerList:
     """SchedulerList which wrap more than one scheduler.
+
     Args:
         scheduler_list (Tuple[lr.LRScheduler, ...]): Schedulers listed in a tuple.
 

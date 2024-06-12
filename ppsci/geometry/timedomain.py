@@ -208,7 +208,7 @@ class TimeXGeometry(geometry.Geometry):
         Args:
             n (int): The total number of random points to generate.
             random (str): Specifies the way to generate random points, default is "pseudo" , which means that a pseudo-random number generator is used.
-            criteria (Optional[Callable]): A method that filters on the generated random points, defualt is None.
+            criteria (Optional[Callable]): A method that filters on the generated random points. Defaults to None.
 
         Returns:
             np.ndarray: A set of random spatial-temporal points.
@@ -673,7 +673,7 @@ class TimeXGeometry(geometry.Geometry):
     def periodic_point(
         self, x: Dict[str, np.ndarray], component: int
     ) -> Dict[str, np.ndarray]:
-        """process given point coordinates to satisfy the periodic boundary conditions of the geometry.
+        """Process given point coordinates to satisfy the periodic boundary conditions of the geometry.
 
         Args:
             x (Dict[str, np.ndarray]): Contains the coordinates and timestamps of the points. It represents the coordinates of the point to be processed.

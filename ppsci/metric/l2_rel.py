@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import Dict
+
 import numpy as np
 import paddle
 
@@ -64,7 +66,7 @@ class L2Rel(base.Metric):
         super().__init__(keep_batch)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
+    def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
         for key in label_dict:
             rel_l2 = paddle.norm(label_dict[key] - output_dict[key], p=2) / paddle.norm(
@@ -123,7 +125,7 @@ class MeanL2Rel(base.Metric):
         super().__init__(keep_batch)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
+    def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
         for key in label_dict:
             rel_l2 = paddle.norm(

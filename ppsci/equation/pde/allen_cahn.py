@@ -36,7 +36,7 @@ class AllenCahn(base.PDE):
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.AllenCahn(0.01**2)
+        >>> pde = ppsci.equation.AllenCahn(eps=0.01)
     """
 
     def __init__(
@@ -50,7 +50,6 @@ class AllenCahn(base.PDE):
         # t, x = self.create_symbols("t x")
         # invars = (t, x, )
         # u = self.create_function("u", invars)
-
         # allen_cahn = u.diff(t) + 5 * u**3 - 5 * u - 0.0001 * u.diff(x, 2)
 
         # TODO: Pow(u,3) seems cause slightly larger L2 error than multiply(u*u*u)
@@ -60,6 +59,6 @@ class AllenCahn(base.PDE):
             u__t, u__x = jacobian(u, [t, x])
             u__x__x = jacobian(u__x, x)
 
-            return u__t - self.eps * u__x__x + 5 * u * u * u - 5 * u
+            return u__t - (self.eps**2) * u__x__x + 5 * u * u * u - 5 * u
 
         self.add_equation("allen_cahn", allen_cahn)

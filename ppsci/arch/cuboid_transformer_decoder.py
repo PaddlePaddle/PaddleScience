@@ -13,7 +13,7 @@ from ppsci.utils import initializer
 
 
 class PosEmbed(paddle.nn.Layer):
-    """pose embeding
+    """Pose embeding
 
     Args:
         embed_dim (int): The dimension of embeding.

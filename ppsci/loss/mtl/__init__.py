@@ -17,6 +17,7 @@ import copy
 from ppsci.loss.mtl.agda import AGDA
 from ppsci.loss.mtl.base import LossAggregator
 from ppsci.loss.mtl.grad_norm import GradNorm
+from ppsci.loss.mtl.ntk import NTK
 from ppsci.loss.mtl.pcgrad import PCGrad
 from ppsci.loss.mtl.relobralo import Relobralo
 from ppsci.loss.mtl.sum import Sum
@@ -28,6 +29,7 @@ __all__ = [
     "PCGrad",
     "Relobralo",
     "Sum",
+    "NTK",
 ]
 
 
@@ -35,7 +37,8 @@ def build_mtl_aggregator(cfg):
     """Build loss aggregator with multi-task learning method.
 
     Args:
-        cfg (AttrDict): Aggregator config.
+        cfg (DictConfig): Aggregator config.
+
     Returns:
         Loss: Callable loss aggregator object.
     """

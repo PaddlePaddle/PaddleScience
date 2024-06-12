@@ -87,7 +87,7 @@ def expand_func_values_and_squeeze_integral(f: Callable):
     consistency, we squeeze the result in the 1d case so it does not have any trailing dimensions.
 
     Args:
-        f (Callable): the wrapped function.
+        f (Callable): The wrapped function.
     """
 
     @functools.wraps(f)
@@ -186,7 +186,7 @@ def gaussian_integrate(
 
         return points, h, n_per_dim
 
-    def _evaluate_integrand(fn, points, weights=None, fn_args=None) -> paddle.Tenosr:
+    def _evaluate_integrand(fn, points, weights=None, fn_args=None) -> paddle.Tensor:
         """Evaluate the integrand function at the passed points.
 
         Args:
@@ -196,7 +196,7 @@ def gaussian_integrate(
             fn_args (list or tuple, optional): Any arguments required by the function. Defaults to None.
 
         Returns:
-            paddle.Tenosr: Integral result.
+            paddle.Tensor: Integral result.
         """
         if fn_args is None:
             fn_args = ()
@@ -225,11 +225,11 @@ def gaussian_integrate(
         return result
 
     def _weights(N, dim):
-        """return the weights, broadcast across the dimensions, generated from the polynomial of choice.
+        """Return the weights, broadcast across the dimensions, generated from the polynomial of choice.
 
         Args:
-            N (int): number of nodes.
-            dim (int): number of dimensions.
+            N (int): Number of nodes.
+            dim (int): Number of dimensions.
 
         Returns:
             paddle.Tensor: Integration weights.

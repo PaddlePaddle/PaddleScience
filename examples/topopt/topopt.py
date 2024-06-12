@@ -270,7 +270,7 @@ def loss_wrapper(cfg: DictConfig):
             nn.functional.log_loss(label_pred, label_true, epsilon=1.0e-7)
         )
         vol_loss = paddle.square(paddle.mean(label_true - label_pred))
-        return conf_loss + cfg.vol_coeff * vol_loss
+        return {"output": conf_loss + cfg.vol_coeff * vol_loss}
 
     return loss_expr
 

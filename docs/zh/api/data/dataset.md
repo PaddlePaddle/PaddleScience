@@ -25,4 +25,6 @@
         - RadarDataset
         - build_dataset
         - DGMRDataset
+        - DarcyFlowDataset
+        - SphericalSWEDataset
       show_root_heading: true

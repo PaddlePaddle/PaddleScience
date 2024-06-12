@@ -72,6 +72,7 @@
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 相场方程 | [Allen-Cahn](./zh/examples/allen_cahn.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](./zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](./zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
 | 微分方程 | [非线性偏微分方程](./zh/examples/pirbn.md) | 机理驱动 | PIRBN | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
@@ -83,7 +84,7 @@
 | 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 光孤子 | [Optical soliton](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
-| 相场方程 | [Allen-Cahn](./zh/examples/allen_cahn.md) | 机理驱动 | MLP | 无监督学习 | - | |
+| 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -177,16 +178,18 @@
             <br><span class="text-large">全量支持</span></br>
         </div>
     </a>
-    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
+    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
         <div class="card card-modulus">
             DeepMD
             <br><span class="text-large">适配中</span></br>
         </div>
     </a>
-    <div class="card card-deepmd">
-        Modulus
-        <br><span class="text-large">适配中</span></br>
-    </div>
+    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
+        <div class="card card-deepmd">
+            Modulus
+            <br><span class="text-large">适配中</span></br>
+        </div>
+    </a>
 </div>
 
 --8<--

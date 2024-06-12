@@ -262,14 +262,94 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
+    model_cfg = {
+        **cfg.MODEL,
+        "embedding_model": embedding_model,
+        "input_keys": ["states"],
+        "output_keys": ["pred_states"],
+    }
+    model = ppsci.arch.PhysformerGPT2(**model_cfg)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            "states": InputSpec([1, 255, 3, 64, 128], "float32", name="states"),
+            "visc": InputSpec([1, 1], "float32", name="visc"),
+        },
+    ]
+
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy import python_infer
+
+    predictor = python_infer.GeneralPredictor(cfg)
+
+    dataset_cfg = {
+        "name": "CylinderDataset",
+        "file_path": cfg.VALID_FILE_PATH,
+        "input_keys": cfg.MODEL.input_keys,
+        "label_keys": cfg.MODEL.output_keys,
+        "block_size": cfg.VALID_BLOCK_SIZE,
+        "stride": 1024,
+    }
+
+    dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
+
+    input_dict = {
+        "states": dataset.data[: cfg.VIS_DATA_NUMS, :-1],
+        "visc": dataset.visc[: cfg.VIS_DATA_NUMS],
+    }
+
+    output_dict = predictor.predict(input_dict)
+
+    # mapping data to cfg.INFER.output_keys
+    output_keys = ["pred_states"]
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(output_keys, output_dict.keys())
+    }
+    for i in range(cfg.VIS_DATA_NUMS):
+        ppsci.visualize.plot.save_plot_from_2d_dict(
+            f"./cylinder_transformer_pred_{i}",
+            {
+                "pred_ux": output_dict["pred_states"][i][:, 0],
+                "pred_uy": output_dict["pred_states"][i][:, 1],
+                "pred_p": output_dict["pred_states"][i][:, 2],
+            },
+            ("pred_ux", "pred_uy", "pred_p"),
+            10,
+            20,
+            np.linspace(-2, 14, 9),
+            np.linspace(-4, 4, 5),
+        )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="transformer.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

@@ -14,16 +14,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Callable
+from typing import Dict
 
 from ppsci.metric import base
+
+if TYPE_CHECKING:
+    import paddle
 
 
 class FunctionalMetric(base.Metric):
     r"""Functional metric class, which allows to use custom metric computing function from given metric_expr for complex computation cases.
 
     Args:
-        metric_expr (Callable): expression of metric calculation.
+        metric_expr (Callable): Expression of metric calculation.
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
@@ -54,5 +59,5 @@ class FunctionalMetric(base.Metric):
         super().__init__(keep_batch)
         self.metric_expr = metric_expr
 
-    def forward(self, output_dict, label_dict=None):
+    def forward(self, output_dict, label_dict=None) -> Dict[str, "paddle.Tensor"]:
         return self.metric_expr(output_dict, label_dict)

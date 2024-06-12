@@ -10,7 +10,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py
         ```
 
@@ -20,7 +20,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
         ```
 
@@ -32,7 +32,7 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
         ```
 
@@ -42,8 +42,44 @@
         # linux
         wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
-        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
+        ```
+
+=== "模型导出命令"
+
+    === "正问题：受力分析求解"
+
+        ``` sh
+        python forward_analysis.py mode=export
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        python inverse_parameter.py mode=export
+        ```
+
+=== "模型推理命令"
+
+    === "正问题：受力分析求解"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
+        python forward_analysis.py mode=infer
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
+        python inverse_parameter.py mode=infer
         ```
 
 | 预训练模型  | 指标 |
@@ -143,7 +179,7 @@ examples/control_arm/forward_analysis.py:36:41
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[1.4.3 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#142)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `ppsci.geometry.Mesh` 即可读取、解析几何文件，得到计算域，并获取几何结构边界：
 
@@ -348,7 +384,7 @@ examples/control_arm/inverse_parameter.py:35:40
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[1.4.3 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#142)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `ppsci.geometry.Mesh` 即可读取、解析几何文件，得到计算域，并获取几何结构边界：
 

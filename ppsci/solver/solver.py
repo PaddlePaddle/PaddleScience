@@ -34,8 +34,8 @@ import numpy as np
 import paddle
 import paddle.distributed as dist
 import sympy as sp
-import visualdl as vdl
 from omegaconf import DictConfig
+from omegaconf import OmegaConf
 from packaging import version
 from paddle import amp
 from paddle import jit
@@ -158,12 +158,18 @@ class Solver:
         cfg: Optional[DictConfig] = None,
     ):
         self.cfg = cfg
+        if isinstance(cfg, DictConfig):
+            # (Recommended)Params can be passed within cfg
+            # rather than passed to 'Solver.__init__' one-by-one.
+            self._parse_params_from_cfg(cfg)
+
         # set model
         self.model = model
         # set constraint
         self.constraint = constraint
         # set output directory
-        self.output_dir = output_dir
+        if not cfg:
+            self.output_dir = output_dir
 
         # set optimizer
         self.optimizer = optimizer
@@ -192,19 +198,20 @@ class Solver:
             )
 
         # set training hyper-parameter
-        self.epochs = epochs
-        self.iters_per_epoch = iters_per_epoch
-        # set update_freq for gradient accumulation
-        self.update_freq = update_freq
-        # set checkpoint saving frequency
-        self.save_freq = save_freq
-        # set logging frequency
-        self.log_freq = log_freq
+        if not cfg:
+            self.epochs = epochs
+            self.iters_per_epoch = iters_per_epoch
+            # set update_freq for gradient accumulation
+            self.update_freq = update_freq
+            # set checkpoint saving frequency
+            self.save_freq = save_freq
+            # set logging frequency
+            self.log_freq = log_freq
 
-        # set evaluation hyper-parameter
-        self.eval_during_train = eval_during_train
-        self.start_eval_epoch = start_eval_epoch
-        self.eval_freq = eval_freq
+            # set evaluation hyper-parameter
+            self.eval_during_train = eval_during_train
+            self.start_eval_epoch = start_eval_epoch
+            self.eval_freq = eval_freq
 
         # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
@@ -221,20 +228,16 @@ class Solver:
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
 
-        # fix seed for reproducibility
-        self.seed = seed
-
         # set running device
-        if device != "cpu" and paddle.device.get_device() == "cpu":
+        if not cfg:
+            self.device = device
+        if self.device != "cpu" and paddle.device.get_device() == "cpu":
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
-            device = "cpu"
-        self.device = paddle.set_device(device)
+            self.device = "cpu"
+        self.device = paddle.set_device(self.device)
 
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
-
-        # set geometry for generating data
-        self.geom = {} if geom is None else geom
 
         # set validator
         self.validator = validator
@@ -243,30 +246,33 @@ class Solver:
         self.visualizer = visualizer
 
         # set automatic mixed precision(AMP) configuration
-        self.use_amp = use_amp
-        self.amp_level = amp_level
+        if not cfg:
+            self.use_amp = use_amp
+            self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
         # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
-        self.compute_metric_by_batch = compute_metric_by_batch
+        if not cfg:
+            self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
             for metric in itertools.chain(
                 *[_v.metric.values() for _v in self.validator.values()]
             ):
-                if metric.keep_batch ^ compute_metric_by_batch:
+                if metric.keep_batch ^ self.compute_metric_by_batch:
                     raise ValueError(
                         f"{misc.typename(metric)}.keep_batch should be "
-                        f"{compute_metric_by_batch} when compute_metric_by_batch="
-                        f"{compute_metric_by_batch}."
+                        f"{self.compute_metric_by_batch} when compute_metric_by_batch="
+                        f"{self.compute_metric_by_batch}."
                     )
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
-        self.eval_with_no_grad = eval_with_no_grad
+        if not cfg:
+            self.eval_with_no_grad = eval_with_no_grad
 
         self.rank = dist.get_rank()
         self.world_size = dist.get_world_size()
         # initialize distributed environment
         if self.world_size > 1:
-            # TODO(sensen): support different kind of DistributedStrategy
+            # TODO(sensen): Support different kind of DistributedStrategy
             fleet.init(is_collective=True)
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
@@ -278,19 +284,20 @@ class Solver:
         # set moving average model(optional)
         self.ema_model = None
         if self.cfg and any(key in self.cfg.TRAIN for key in ["ema", "swa"]):
-            if "ema" in self.cfg.TRAIN:
-                self.avg_freq = self.cfg.TRAIN.ema.avg_freq
+            if "ema" in self.cfg.TRAIN and cfg.TRAIN.ema.get("use_ema", False):
                 self.ema_model = ema.ExponentialMovingAverage(
                     self.model, self.cfg.TRAIN.ema.decay
                 )
-            elif "swa" in self.cfg.TRAIN:
-                self.avg_freq = self.cfg.TRAIN.swa.avg_freq
+            elif "swa" in self.cfg.TRAIN and cfg.TRAIN.swa.get("use_swa", False):
                 self.ema_model = ema.StochasticWeightAverage(self.model)
 
         # load pretrained model, usually used for transfer learning
-        self.pretrained_model_path = pretrained_model_path
-        if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+        if not cfg:
+            self.pretrained_model_path = pretrained_model_path
+        if self.pretrained_model_path is not None:
+            save_load.load_pretrain(
+                self.model, self.pretrained_model_path, self.equation
+            )
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -298,14 +305,16 @@ class Solver:
             "epoch": 0,
         }
         # load model checkpoint, usually used for resume training
-        if checkpoint_path is not None:
-            if pretrained_model_path is not None:
+        if not cfg:
+            self.checkpoint_path = checkpoint_path
+        if self.checkpoint_path is not None:
+            if self.pretrained_model_path is not None:
                 logger.warning(
                     "Detected 'pretrained_model_path' is given, weights in which might be"
                     "overridden by weights loaded from given 'checkpoint_path'."
                 )
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path,
+                self.checkpoint_path,
                 self.model,
                 self.optimizer,
                 self.scaler,
@@ -366,10 +375,18 @@ class Solver:
 
         # set VisualDL tool
         self.vdl_writer = None
-        if use_vdl:
+        if not cfg:
+            self.use_vdl = use_vdl
+        if self.use_vdl:
+            try:
+                import visualdl as vdl
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'visualdl' with `pip install visualdl` first."
+                )
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -377,7 +394,9 @@ class Solver:
 
         # set WandB tool
         self.wandb_writer = None
-        if use_wandb:
+        if not cfg:
+            self.use_wandb = use_wandb
+        if self.use_wandb:
             try:
                 import wandb
             except ModuleNotFoundError:
@@ -390,7 +409,9 @@ class Solver:
 
         # set TensorBoardX tool
         self.tbd_writer = None
-        if use_tbd:
+        if not cfg:
+            self.use_tbd = use_tbd
+        if self.use_tbd:
             try:
                 import tensorboardX
             except ModuleNotFoundError:
@@ -400,7 +421,7 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(output_dir, "tensorboard")
+                        osp.join(self.output_dir, "tensorboard")
                     )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
@@ -424,9 +445,9 @@ class Solver:
 
         self.forward_helper = expression.ExpressionSolver()
 
-        # whether enable static for forward pass, defaults to False
+        # whether enable static for forward pass. Defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for computational optimization.")
+        logger.message(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use Sum if None
         if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
@@ -492,7 +513,14 @@ class Solver:
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        self.max_steps = self.epochs * self.iters_per_epoch
+
         start_epoch = self.best_metric["epoch"] + 1
+
+        if self.use_tbd and isinstance(self.cfg, DictConfig):
+            self.tbd_writer.add_text(
+                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+            )
 
         if self.nvtx_flag:
             core.nvprof_start()
@@ -984,3 +1012,43 @@ class Solver:
             smooth_step=smooth_step,
             use_semilogy=use_semilogy,
         )
+
+    def _parse_params_from_cfg(self, cfg: DictConfig):
+        """
+        Parse hyper-parameters from DictConfig.
+        """
+        self.output_dir = cfg.output_dir
+        self.log_freq = cfg.log_freq
+        self.use_tbd = cfg.use_tbd
+        self.use_vdl = cfg.use_vdl
+        self.wandb_config = cfg.wandb_config
+        self.use_wandb = cfg.use_wandb
+        self.device = cfg.device
+        self.to_static = cfg.to_static
+
+        self.use_amp = cfg.use_amp
+        self.amp_level = cfg.amp_level
+
+        self.epochs = cfg.TRAIN.epochs
+        self.iters_per_epoch = cfg.TRAIN.iters_per_epoch
+        self.update_freq = cfg.TRAIN.update_freq
+        self.save_freq = cfg.TRAIN.save_freq
+        self.eval_during_train = cfg.TRAIN.eval_during_train
+        self.start_eval_epoch = cfg.TRAIN.start_eval_epoch
+        self.eval_freq = cfg.TRAIN.eval_freq
+        self.checkpoint_path = cfg.TRAIN.checkpoint_path
+
+        if "ema" in cfg.TRAIN and cfg.TRAIN.ema.get("use_ema", False):
+            self.avg_freq = cfg.TRAIN.ema.avg_freq
+        elif "swa" in cfg.TRAIN and cfg.TRAIN.swa.get("use_swa", False):
+            self.avg_freq = cfg.TRAIN.swa.avg_freq
+
+        self.compute_metric_by_batch = cfg.EVAL.compute_metric_by_batch
+        self.eval_with_no_grad = cfg.EVAL.eval_with_no_grad
+
+        if cfg.mode == "train":
+            self.pretrained_model_path = cfg.TRAIN.pretrained_model_path
+        elif cfg.mode == "eval":
+            self.pretrained_model_path = cfg.EVAL.pretrained_model_path
+        elif cfg.mode in ["export", "infer"]:
+            self.pretrained_model_path = cfg.INFER.pretrained_model_path

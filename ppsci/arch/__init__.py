@@ -22,6 +22,7 @@ from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
+from ppsci.arch.mlp import PirateNet  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
@@ -42,6 +43,9 @@ from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.dgmr import DGMR  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.sfnonet import SFNONet  # isort:skip
+from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
+from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
@@ -51,6 +55,7 @@ __all__ = [
     "AMGNet",
     "MLP",
     "ModifiedMLP",
+    "PirateNet",
     "DeepONet",
     "DeepPhyLSTM",
     "LorenzEmbedding",
@@ -72,6 +77,11 @@ __all__ = [
     "ChipDeepONets",
     "DGMR",
     "AutoEncoder",
+    "SFNONet",
+    "TFNO1dNet",
+    "TFNO2dNet",
+    "TFNO3dNet",
+    "UNONet",
     "build_model",
     "CFDGCN",
 ]
@@ -81,7 +91,7 @@ def build_model(cfg):
     """Build model
 
     Args:
-        cfg (AttrDict): Arch config.
+        cfg (DictConfig): Arch config.
 
     Returns:
         nn.Layer: Model.

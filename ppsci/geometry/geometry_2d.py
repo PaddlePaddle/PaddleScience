@@ -607,6 +607,7 @@ class Polygon(geometry.Geometry):
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
         """Compute signed distance field.
+
         Args:
             points (np.ndarray): The coordinate points used to calculate the SDF value,
                 the shape is [N, 2]

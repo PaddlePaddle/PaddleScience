@@ -11,3 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from deploy.python_infer.base import Predictor
+from deploy.python_infer.pinn_predictor import PINNPredictor
+
+
+# alias as PINNPredictor can be used in most cases
+class GeneralPredictor(PINNPredictor):
+    """Use PINNPredictor as GeneralPredictor."""
+
+    pass
+
+
+__all__ = [
+    "Predictor",
+    "PINNPredictor",
+    "GeneralPredictor",
+]

@@ -49,3 +49,5 @@ class Poisson(base.PDE):
             poisson += p.diff(invar, 2)
 
         self.add_equation("poisson", poisson)
+
+        self._apply_detach()

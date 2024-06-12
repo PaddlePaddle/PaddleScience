@@ -9,12 +9,12 @@ pydantic>=2.5.0
 pyevtk
 pyvista==0.37.0
 pyyaml
+scikit-learn<1.5.0
 scikit-optimize
 scipy
 seaborn
 sympy
 tqdm
 typing-extensions
-visualdl
 vtk
 wget

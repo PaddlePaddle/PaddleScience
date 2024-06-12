@@ -1,0 +1,123 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_xpinn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 134
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# model settings
+MODEL:
+  num_boundary_points: 200 # Boundary points from subdomain 1
+  num_residual1_points: 5000 # Residual points in three subdomain 1
+  num_residual2_points: 1800 # Residual points in three subdomain 2
+  num_residual3_points: 1200 # Residual points in three subdomain 3
+  num_interface1: 100 # Interface points along the two interfaces
+  num_interface2: 100
+  layers1: [2, 30, 30, 1]
+  layers2: [2, 20, 20, 20, 20, 1]
+  layers3: [2, 25, 25, 25, 1]
+
+# set training data file
+DATA_FILE: "./data/XPINN_2D_PoissonEqn.mat"
+
+# training settings
+TRAIN:
+  input_keys:
+    [
+      "residual1_x",
+      "residual1_y",
+      "residual2_x",
+      "residual2_y",
+      "residual3_x",
+      "residual3_y",
+      "interface1_x",
+      "interface1_y",
+      "interface2_x",
+      "interface2_y",
+      "boundary_x",
+      "boundary_y",
+    ]
+  label_keys: ["boundary_u_exact"]
+  alias_dict:
+    {
+      "residual1_x": "x_f1",
+      "residual1_y": "y_f1",
+      "residual2_x": "x_f2",
+      "residual2_y": "y_f2",
+      "residual3_x": "x_f3",
+      "residual3_y": "y_f3",
+      "interface1_x": "xi1",
+      "interface1_y": "yi1",
+      "interface2_x": "xi2",
+      "interface2_y": "yi2",
+      "boundary_x": "xb",
+      "boundary_y": "yb",
+      "boundary_u_exact": "ub",
+      "residual_u_exact": "u_exact",
+      "residual2_u_exact": "u_exact2",
+      "residual3_u_exact": "u_exact3",
+    }
+  epochs: 501
+  iters_per_epoch: 1
+  save_freq: 50
+  eval_during_train: true
+  eval_freq: 50
+  learning_rate: 0.0008
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  label_keys:
+    [
+      "boundary_u_exact",
+      "residual_u_exact",
+      "residual2_u_exact",
+      "residual3_u_exact",
+    ]
+  alias_dict:
+    {
+      "residual1_x": "x_f1",
+      "residual1_y": "y_f1",
+      "residual2_x": "x_f2",
+      "residual2_y": "y_f2",
+      "residual3_x": "x_f3",
+      "residual3_y": "y_f3",
+      "interface1_x": "xi1",
+      "interface1_y": "yi1",
+      "interface2_x": "xi2",
+      "interface2_y": "yi2",
+      "boundary_x": "xb",
+      "boundary_y": "yb",
+      "boundary_u_exact": "ub",
+      "residual_u_exact": "u_exact",
+      "residual2_u_exact": "u_exact2",
+      "residual3_u_exact": "u_exact3",
+    }
+  batch_size: 1
+  pretrained_model_path: null
+  eval_with_no_grad: false

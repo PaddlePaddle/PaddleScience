@@ -9,8 +9,8 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 -P ./datasets/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --output ./datasets/cylinder_training.hdf5
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --output ./datasets/cylinder_valid.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --create-dirs -o ./datasets/cylinder_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --create-dirs -o ./datasets/cylinder_valid.hdf5
     python train_enn.py
     python train_transformer.py
     ```
@@ -22,10 +22,33 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 -P ./datasets/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --output ./datasets/cylinder_training.hdf5
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --output ./datasets/cylinder_valid.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --create-dirs -o ./datasets/cylinder_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --create-dirs -o ./datasets/cylinder_valid.hdf5
     python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
     python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
+    ```
+    === "模型导出命令"
+
+    ``` sh
+    python train_transformer.py mode=export EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python train_transformer.py mode=export EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --create-dirs -o ./datasets/cylinder_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --create-dirs -o ./datasets/cylinder_valid.hdf5
+    python train_transformer.py mode=infer
     ```
 
 | 模型 | MSE |

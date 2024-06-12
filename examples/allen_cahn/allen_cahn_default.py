@@ -64,7 +64,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
-    equation = {"AllenCahn": ppsci.equation.AllenCahn(0.01**2)}
+    equation = {"AllenCahn": ppsci.equation.AllenCahn(eps=0.01)}
 
     # set constraint
     data = sio.loadmat(cfg.DATA_PATH)
@@ -159,19 +159,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=True,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
         validator=validator,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         loss_aggregator=mtl.GradNorm(
             model,
             len(constraint),
@@ -226,11 +216,9 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
 
     # evaluate after finished training
@@ -250,10 +238,7 @@ def export(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # initialize solver
-    solver = ppsci.solver.Solver(
-        model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
-    )
+    solver = ppsci.solver.Solver(model, cfg=cfg)
     # export model
     from paddle.static import InputSpec
 
@@ -275,12 +260,12 @@ def inference(cfg: DictConfig):
 
     input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
     output_dict = {
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
     u_pred = output_dict["u"].reshape([len(t_star), len(x_star)])
-    # mapping data to cfg.INFER.output_keys
 
     plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
 

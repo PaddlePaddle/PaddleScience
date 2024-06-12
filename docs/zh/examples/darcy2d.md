@@ -14,6 +14,18 @@
     python darcy2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/darcy2d/darcy2d_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python darcy2d.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python darcy2d.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [darcy2d_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/darcy2d/darcy2d_pretrained.pdparams) | loss(Residual): 0.36500<br>MSE.poisson(Residual): 0.00006 |
