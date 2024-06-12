@@ -12,6 +12,18 @@
     python heat_pinn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/heat_pinn/heat_pinn_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python heat_pinn.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python heat_pinn.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [heat_pinn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/heat_pinn/heat_pinn_pretrained.pdparams) | norm MSE loss between the FDM and PINN is 1.30174e-03 |
