@@ -8,7 +8,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ \
+        wget -nc -P ./data/ \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat \
@@ -25,7 +25,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
         python ldc_2d_Re3200_sota.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re1000_sota_pretrained.pdparams
@@ -41,7 +41,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
         python ldc_2d_Re3200_sota.py mode=infer
@@ -60,7 +60,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ \
+        wget -nc -P ./data/ \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat \
             https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat \
@@ -79,7 +79,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
         python ldc_2d_Re3200_piratenet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re3200_piratenet_pretrained.pdparams
@@ -95,7 +95,7 @@
 
         ``` sh
         # linux
-        wget -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
         python ldc_2d_Re3200_piratenet.py mode=infer

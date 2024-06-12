@@ -82,7 +82,7 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: null
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re3200_piratenet_pretrained.pdparams
   export_path: ./inference/ldc_2d_re3200
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
