@@ -25,6 +25,7 @@ from ppsci.equation.pde import base
 
 class LinearElasticity(base.PDE):
     r"""Linear elasticity equations.
+
     Use either (E, nu) or (lambda_, mu) to define the material properties.
 
     $$
