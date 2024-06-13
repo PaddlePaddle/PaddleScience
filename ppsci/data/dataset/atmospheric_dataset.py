@@ -202,7 +202,7 @@ def get_year_progress(seconds_since_epoch: np.ndarray) -> np.ndarray:
     Args:
         seconds_since_epoch: Times in seconds since the "epoch" (the point at which UNIX time starts).
     Returns:
-        Year progress normalized to be in the [0, 1) interval for each time point.
+        Year progress normalized to be in the `[0, 1)` interval for each time point.
     """
     # Start with the pure integer division, and then float at the very end.
     # We will try to keep as much precision as possible.
