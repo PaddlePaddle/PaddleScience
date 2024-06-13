@@ -72,7 +72,7 @@ NeuralOperator 引入了傅里叶神经算子 (Fourier neural operator)，这是
 模型的总体结构如图所示：
 
 <figure markdown>
-  ![NeuralOperator-arch](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/299b9244-fbb6-4bdd-ab9b-a017034b2ef9){ loading=lazy style="margin:0 auto"}
+  ![NeuralOperator-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/NeuralOperator-arch.png){ loading=lazy style="margin:0 auto"}
   <figcaption>NeuralOperator 网络模型</figcaption>
 </figure>
 
@@ -83,14 +83,14 @@ NeuralOperator 论文中使用 TFNO 和 UNO 模型训练 Darcy-Flow  数据集�
 模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $X_[w,h]$ 表示大小为 $w*h$ 的二维偏微分数据，$Y_[w,h]$ 表示预测的大小为 $w*h$ 的二维偏微分方程数值解，$Y_{true[w,h]}$ 表示真实二维偏微分方程数值解。最后网络模型预测的输出和真值计算 LpLoss 或者 H1 损失函数。
 
 <figure markdown>
-  ![FNO-pretraining](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/ae66f124-04cb-4b5d-b45a-c916cc4f22b7){ loading=lazy style="margin:0 auto;height:70%;width:70%"}
+  ![FNO-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/FNO-pretraining.png){ loading=lazy style="margin:0 auto;height:70%;width:70%"}
   <figcaption>FNO 模型预训练</figcaption>
 </figure>
 
 在推理阶段，给定大小为 $w*h$ 的二维偏微分数据，预测得到大小为 $w*h$ 的二维偏微分方程数值解。
 
 <figure markdown>
-  ![FNO-infer](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/21b67b89-d87a-4dda-a354-91606f73296a){ loading=lazy style="margin:0 auto;height:60%;width:60%"}
+  ![FNO-infer](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/FNO-infer.png){ loading=lazy style="margin:0 auto;height:60%;width:60%"}
   <figcaption>FNO 模型推理</figcaption>
 </figure>
 
@@ -622,20 +622,20 @@ examples/neuraloperator/train_sfno.py:269:291
 k(x) 的黑色区域就是可以渗透的地方，白色为不可渗透的区域。右侧是目标结果，颜色越亮，压力越大。
 
 <figure markdown>
-  ![TFNO-predict](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/d0c07ef6-cad3-4db2-8e03-fbd62458f740){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
+  ![TFNO-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/TFNO-predict.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
   <figcaption>TFNO 的预测结果（"Model prediction"）与真值结果（"Ground-truth y"）</figcaption>
 </figure>
 
 下图展示了 UNO 对 Darcy-flow 数据的预测结果和真值结果。
 
 <figure markdown>
-  ![UNO-predict](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/8088aaf5-3479-4dde-b498-6ce123c10b4f){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
+  ![UNO-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/UNO-predict.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
   <figcaption>UNO 的预测结果（"Model prediction"）与真值结果（"Ground-truth y"）</figcaption>
 </figure>
 
 下图展示了 SFNO 对 SWE 数据的预测结果和真值结果。
 
 <figure markdown>
-  ![SFNO-predict](https://github.com/PaddlePaddle/PaddleScience/assets/71805205/a80b004a-009f-43e4-bb0f-919e1d9de4e5){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
+  ![SFNO-predict](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/SFNO-predict.png){ loading=lazy style="margin:0 auto;height:100%;width:100%"}
   <figcaption>SFNO的预测结果（"Model prediction"）与真值结果（"Ground-truth y"）</figcaption>
 </figure>
