@@ -69,7 +69,7 @@ class AverageMeter:
         self.reset()
 
     def reset(self):
-        """Reset"""
+        """Reset."""
         self.val = 0
         self.avg = 0
         self.sum = 0
@@ -77,7 +77,7 @@ class AverageMeter:
         self.history = []
 
     def update(self, val, n=1):
-        """Update"""
+        """Update."""
         self.val = val
         self.sum += val * n
         self.count += n
@@ -202,7 +202,7 @@ class Timer(ContextDecorator):
         >>> from ppsci.utils import misc
         >>> with misc.Timer("test1", auto_print=False) as timer:
         ...     w = sum(range(0, 10))
-        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")  # doctest: +SKIP
         time cost of 'sum(range(0, 10))' is 0.00
 
         >>> @misc.Timer("test2", auto_print=True)
@@ -216,7 +216,7 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()
         >>> timer.end()
-        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")  # doctest: +SKIP
         time cost of 'cost_of_func' is 0.00
     """
 
@@ -249,9 +249,7 @@ class Timer(ContextDecorator):
         self.start_time = time.perf_counter()
 
     def end(self):
-        """
-        End current timer context and print time cost.
-        """
+        """End current timer context and print time cost."""
         paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time

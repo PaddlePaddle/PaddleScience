@@ -106,9 +106,13 @@ gkratio = paddle.to_tensor(
 
 
 def val_loss_criterion(x, y):
-    return 100.0 * (
-        paddle.linalg.norm(x=x["input"] - y["input"]) / paddle.linalg.norm(x=y["input"])
-    )
+    return {
+        "input": 100.0
+        * (
+            paddle.linalg.norm(x=x["input"] - y["input"])
+            / paddle.linalg.norm(x=y["input"])
+        )
+    }
 
 
 def train_loss_func(output_dict, *args) -> paddle.Tensor:
@@ -128,7 +132,7 @@ def train_loss_func(output_dict, *args) -> paddle.Tensor:
     loss_log["state_elasto"].append(float(loss_elasto))
     loss_log["state_plastic"].append(float(loss_plastic))
     loss_log["stress"].append(float(loss_stress))
-    return loss
+    return {"train_loss": loss}
 
 
 def eval_loss_func(output_dict, *args) -> paddle.Tensor:
@@ -150,7 +154,7 @@ def eval_loss_func(output_dict, *args) -> paddle.Tensor:
     logger.message(
         f"error(total): {float(error)}, error(error_elasto): {float(error_elasto)}, error(error_plastic): {float(error_plastic)}, error(error_stress): {float(error_stress)}"
     )
-    return error
+    return {"eval_loss": error}
 
 
 def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:
@@ -216,8 +220,8 @@ def loss_func(output_dict, criterion) -> paddle.Tensor:
     )
     target_stress = output_dict["stress_y"]
     loss_stress = criterion({"input": input_stress}, {"input": target_stress})
-    loss = loss_elasto + loss_plastic + loss_stress
-    return loss, loss_elasto, loss_plastic, loss_stress
+    loss = loss_elasto["input"] + loss_plastic["input"] + loss_stress["input"]
+    return loss, loss_elasto["input"], loss_plastic["input"], loss_stress["input"]
 
 
 class Dataset:

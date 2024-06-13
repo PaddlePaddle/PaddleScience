@@ -45,7 +45,7 @@ class PeriodicConstraint(base.Constraint):
             label, which will be a reference value to participate in the loss calculation.
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        periodic_key (str): name of dimension which periodic constraint applied to.
+        periodic_key (str): Name of dimension which periodic constraint applied to.
         loss (loss.Loss): Loss functor.
         random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
@@ -77,9 +77,6 @@ class PeriodicConstraint(base.Constraint):
         self.output_expr = {
             k: v for k, v in output_expr.items() if k in self.output_keys
         }
-        # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom, geometry.Mesh):
-            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)

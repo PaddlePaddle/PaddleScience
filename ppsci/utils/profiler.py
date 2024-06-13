@@ -87,15 +87,15 @@ class ProfilerOptions:
         return self._options[name]
 
 
-def add_profiler_step(options_str=None):
+def add_profiler_step(options_str: str = None):
     """
     Enable the operator-level timing using PaddlePaddle"s profiler.
     The profiler uses a independent variable to count the profiler steps.
     One call of this function is treated as a profiler step.
 
     Args:
-      profiler_options - a string to initialize the ProfilerOptions.
-                         Default is None, and the profiler is disabled.
+        options_stra (str, optional): string to initialize the ProfilerOptions.
+            Default is None, and the profiler is disabled.
     """
     if options_str is None:
         return

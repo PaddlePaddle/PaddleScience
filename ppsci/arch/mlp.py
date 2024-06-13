@@ -398,7 +398,16 @@ class ModifiedMLP(base.Arch):
             (
                 WeightNormLinear(cur_size, hidden_size[0])
                 if weight_norm
-                else nn.Linear(cur_size, hidden_size[0])
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
             ),
             (
                 act_mod.get_activation(activation)
@@ -410,7 +419,16 @@ class ModifiedMLP(base.Arch):
             (
                 WeightNormLinear(cur_size, hidden_size[0])
                 if weight_norm
-                else nn.Linear(cur_size, hidden_size[0])
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
             ),
             (
                 act_mod.get_activation(activation)
@@ -452,10 +470,18 @@ class ModifiedMLP(base.Arch):
 
         self.linears = nn.LayerList(self.linears)
         self.acts = nn.LayerList(self.acts)
-        self.last_fc = nn.Linear(
-            cur_size,
-            len(self.output_keys) if output_dim is None else output_dim,
-        )
+        if random_weight:
+            self.last_fc = RandomWeightFactorization(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        else:
+            self.last_fc = nn.Linear(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+            )
 
         self.skip_connection = skip_connection
 
@@ -468,7 +494,7 @@ class ModifiedMLP(base.Arch):
         for i, linear in enumerate(self.linears):
             y = linear(y)
             y = self.acts[i](y)
-            y = (1 - y) * u + y * v
+            y = y * u + (1 - y) * v
             if self.skip_connection and i % 2 == 0:
                 if skip is not None:
                     skip = y
@@ -481,6 +507,7 @@ class ModifiedMLP(base.Arch):
         return y
 
     def forward(self, x):
+        x_identity = x
         if self._input_transform is not None:
             x = self._input_transform(x)
 
@@ -496,7 +523,7 @@ class ModifiedMLP(base.Arch):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(x, y)
+            y = self._output_transform(x_identity, y)
         return y
 
 
@@ -687,7 +714,16 @@ class PirateNet(base.Arch):
             (
                 WeightNormLinear(cur_size, hidden_size[0])
                 if weight_norm
-                else nn.Linear(cur_size, hidden_size[0])
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
             ),
             (
                 act_mod.get_activation(activation)
@@ -699,7 +735,16 @@ class PirateNet(base.Arch):
             (
                 WeightNormLinear(cur_size, hidden_size[0])
                 if weight_norm
-                else nn.Linear(cur_size, hidden_size[0])
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
             ),
             (
                 act_mod.get_activation(activation)

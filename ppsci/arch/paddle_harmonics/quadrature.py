@@ -40,7 +40,6 @@ def legendre_gauss_weights(n, a=-1.0, b=1.0):
     Helper routine which returns the Legendre-Gauss nodes and weights
     on the interval [a, b]
     """
-
     xlg, wlg = np.polynomial.legendre.leggauss(n)
     xlg = (b - a) * 0.5 * xlg + (b + a) * 0.5
     wlg = wlg * (b - a) * 0.5
@@ -53,7 +52,6 @@ def lobatto_weights(n, a=-1.0, b=1.0, tol=1e-16, maxiter=100):
     Helper routine which returns the Legendre-Gauss-Lobatto nodes and weights
     on the interval [a, b]
     """
-
     wlg = np.zeros((n,))
     tlg = np.zeros((n,))
     tmp = np.zeros((n,))
@@ -99,7 +97,6 @@ def clenshaw_curtiss_weights(n, a=-1.0, b=1.0):
 
     [1] Joerg Waldvogel, Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules; BIT Numerical Mathematics, Vol. 43, No. 1, pp. 001–018.
     """
-
     assert n > 1
 
     tcc = np.cos(np.linspace(np.pi, 0, n))
@@ -137,7 +134,6 @@ def fejer2_weights(n, a=-1.0, b=1.0):
 
     [1] Joerg Waldvogel, Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules; BIT Numerical Mathematics, Vol. 43, No. 1, pp. 001–018.
     """
-
     assert n > 2
 
     tcc = np.cos(np.linspace(np.pi, 0, n))

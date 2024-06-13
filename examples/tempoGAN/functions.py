@@ -323,7 +323,7 @@ class GenFuncs:
                 )
             losses += loss_layer * self.weight_gen_layer[0]
 
-        return losses
+        return {"output_gen": losses}
 
     def loss_func_gen_tempo(self, output_dict: Dict, *args) -> paddle.Tensor:
         """Calculate loss of generator when use temporal discriminator.
@@ -342,7 +342,7 @@ class GenFuncs:
             out_disc_tempo_from_gen, label_t_ones, reduction="mean"
         )
         losses = loss_gen_t * self.weight_gen[2]
-        return losses
+        return {"out_disc_tempo_from_gen": losses}
 
 
 class DiscFuncs:

@@ -181,14 +181,14 @@ class SEVIRDataset(io.Dataset):
         stride (int, optional): Useful when sample_mode == 'sequent'
             stride must not be smaller than out_len to prevent data leakage in testing. Defaults to 12.
         batch_size (int, optional): The batch size. Defaults to 1.
-        layout (str, optional): consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'
+        layout (str, optional): Consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'
             The layout of sampled data. Raw data layout is 'NHWT'.
             valid layout: 'NHWT', 'NTHW', 'NTCHW', 'TNHW', 'TNCHW'. Defaults to "NHWT".
         in_len (int, optional): The length of input data. Defaults to 13.
         out_len (int, optional): The length of output data. Defaults to 12.
         num_shard (int, optional): Split the whole dataset into num_shard parts for distributed training. Defaults to 1.
         rank (int, optional): Rank of the current process within num_shard. Defaults to 0.
-        split_mode (str, optional): if 'ceil', all `num_shard` dataloaders have the same length = ceil(total_len / num_shard).
+        split_mode (str, optional): If 'ceil', all `num_shard` dataloaders have the same length = ceil(total_len / num_shard).
             Different dataloaders may have some duplicated data batches, if the total size of datasets is not divided by num_shard.
             if 'floor', all `num_shard` dataloaders have the same length = floor(total_len / num_shard).
             The last several data batches may be wasted, if the total size of datasets is not divided by num_shard.
@@ -201,7 +201,7 @@ class SEVIRDataset(io.Dataset):
         datetime_filter (function, optional): Mask function applied to time_utc column of catalog (return true to keep the row).
             Pass function of the form   lambda t : COND(t)
             Example:  lambda t: np.logical_and(t.dt.hour>=13,t.dt.hour<=21)  # Generate only day-time events. Defaults to None.
-        catalog_filter (function, optional): function or None or 'default'
+        catalog_filter (function, optional): Function or None or 'default'
             Mask function applied to entire catalog dataframe (return true to keep row).
             Pass function of the form lambda catalog:  COND(catalog)
             Example:  lambda c:  [s[0]=='S' for s in c.id]   # Generate only the 'S' events
@@ -210,7 +210,7 @@ class SEVIRDataset(io.Dataset):
         output_type (np.dtype, optional): The type of generated tensors. Defaults to np.float32.
         preprocess (bool, optional): If True, self.preprocess_data_dict(data_dict) is called before each sample generated. Defaults to True.
         rescale_method (str, optional): The method of rescale. Defaults to "01".
-        downsample_dict (Dict[str, Sequence[int]], optional): downsample_dict.keys() == data_types.
+        downsample_dict (Dict[str, Sequence[int]], optional): Downsample_dict.keys() == data_types.
             downsample_dict[key] is a Sequence of (t_factor, h_factor, w_factor),representing the downsampling factors of all dimensions. Defaults to None.
         verbose (bool, optional): Verbose when opening raw data files. Defaults to False.
         training (str, optional): Training pathse. Defaults to "train".
@@ -548,14 +548,14 @@ class SEVIRDataset(io.Dataset):
         return np.reshape(n, out_size).astype(np.int16)[np.newaxis, :]
 
     def _load_event_batch(self, event_idx, event_batch_size):
-        """
-        Loads a selected batch of events (not batch of sequences) into memory.
+        """Loads a selected batch of events (not batch of sequences) into memory.
 
         Args:
             idx (int): The index of the event in the batch.
-            event_batch_size (int): event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
+            event_batch_size (int): Event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
+
         Returns:
-            event_batch (List[np.array,...]): list of event batches.
+            event_batch (List[np.array,...]): List of event batches.
                 event_batch[i] is the event batch of the i-th data type.
                 Each event_batch[i] is a np.ndarray with shape = (event_batch_size, height, width, raw_seq_len)
         """
@@ -592,6 +592,7 @@ class SEVIRDataset(io.Dataset):
     @staticmethod
     def preprocess_data_dict(data_dict, data_types=None, layout="NHWT", rescale="01"):
         """The preprocess of data dict.
+
         Args:
             data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): The dict of data.
             data_types (Sequence[str]) : The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
@@ -599,6 +600,7 @@ class SEVIRDataset(io.Dataset):
             rescale (str):
                 'sevir': use the offsets and scale factors in original implementation.
                 '01': scale all values to range 0 to 1, currently only supports 'vil'.
+
         Returns:
             data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]) : preprocessed data.
         """

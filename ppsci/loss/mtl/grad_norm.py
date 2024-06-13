@@ -14,12 +14,15 @@
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import List
 
 import paddle
 from paddle import nn
 
 from ppsci.loss.mtl import base
+
+# from ppsci.utils import logger
 
 
 class GradNorm(base.LossAggregator):
@@ -44,7 +47,23 @@ class GradNorm(base.LossAggregator):
         num_losses (int, optional): Number of losses. Defaults to 1.
         update_freq (int, optional): Weight updating frequency. Defaults to 1000.
         momentum (float, optional): Momentum $m$ for moving weight. Defaults to 0.9.
+        init_weights (List[float]): Initial weights list. Defaults to None.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.loss import mtl
+        >>> model = paddle.nn.Linear(3, 4)
+        >>> loss_aggregator = mtl.GradNorm(model, num_losses=2)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
+    weight: paddle.Tensor
 
     def __init__(
         self,
@@ -52,13 +71,24 @@ class GradNorm(base.LossAggregator):
         num_losses: int = 1,
         update_freq: int = 1000,
         momentum: float = 0.9,
+        init_weights: List[float] = None,
     ) -> None:
         super().__init__(model)
         self.step = 0
         self.num_losses = num_losses
         self.update_freq = update_freq
         self.momentum = momentum
-        self.register_buffer("weight", paddle.ones([num_losses]))
+        if init_weights is not None and num_losses != len(init_weights):
+            raise ValueError(
+                f"Length of init_weights({len(init_weights)}) should be equal to "
+                f"num_losses({num_losses})."
+            )
+        self.register_buffer(
+            "weight",
+            paddle.to_tensor(init_weights, dtype="float32")
+            if init_weights is not None
+            else paddle.ones([num_losses]),
+        )
 
     def _compute_weight(self, losses: List["paddle.Tensor"]) -> List["paddle.Tensor"]:
         grad_norms = []
@@ -80,7 +110,9 @@ class GradNorm(base.LossAggregator):
 
         return weight
 
-    def __call__(self, losses: List["paddle.Tensor"], step: int = 0) -> "paddle.Tensor":
+    def __call__(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> "paddle.Tensor":
         assert len(losses) == self.num_losses, (
             f"Length of given losses({len(losses)}) should be equal to "
             f"num_losses({self.num_losses})."
@@ -88,16 +120,20 @@ class GradNorm(base.LossAggregator):
         self.step = step
 
         # compute current loss with moving weights
-        loss = self.weight[0] * losses[0]
-        for i in range(1, len(losses)):
-            loss += self.weight[i] * losses[i]
+        loss = 0.0
+        for i, key in enumerate(losses):
+            if i == 0:
+                loss = self.weight[i] * losses[key]
+            else:
+                loss += self.weight[i] * losses[key]
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:
-            weight = self._compute_weight(losses)
+            weight = self._compute_weight(list(losses.values()))
             for i in range(self.num_losses):
                 self.weight[i].set_value(
                     self.momentum * self.weight[i] + (1 - self.momentum) * weight[i]
                 )
+            # logger.message(f"weight at step {self.step}: {self.weight.numpy()}")
 
         return loss

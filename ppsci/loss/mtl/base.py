@@ -14,7 +14,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Dict
+from typing import Union
+
 from paddle import nn
+
+if TYPE_CHECKING:
+    import paddle
 
 
 class LossAggregator(nn.Layer):
@@ -33,7 +40,9 @@ class LossAggregator(nn.Layer):
             if not param.stop_gradient:
                 self.param_num += 1
 
-    def forward(self, losses, step: int = 0) -> "LossAggregator":
+    def forward(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> Union["paddle.Tensor", "LossAggregator"]:
         self.losses = losses
         self.loss_num = len(losses)
         self.step = step

@@ -151,11 +151,11 @@ def train_loss_func(result_dict, *args) -> paddle.Tensor:
     Returns:
         paddle.Tensor: Loss value.
     """
-    return result_dict["loss"]
+    return {"residual": result_dict["loss"]}
 
 
 def val_loss_func(result_dict, *args) -> paddle.Tensor:
-    return result_dict["loss"]
+    return {"residual": result_dict["loss"]}
 
 
 def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:

@@ -85,10 +85,10 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
 
     Args:
         weight (FactorizedTensor): The factoriz Tensor.
-        implementation (str, optional): whether to reconstruct the weight and do a forward pass (reconstructed)
+        implementation (str, optional): Whether to reconstruct the weight and do a forward pass (reconstructed)
             or contract directly the factors of the factorized weight with the input (factorized).
             {'reconstructed', 'factorized'} Defaults to "reconstructed".
-        separable (bool, optional): whether to use the separable implementation of contraction. This arg is
+        separable (bool, optional): Whether to use the separable implementation of contraction. This arg is
             only checked when `implementation=reconstructed`. Defaults to False.
 
     """
@@ -395,7 +395,7 @@ class SFNONet(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-        n_modes (Tuple[int, ...]): number of modes to keep in Fourier Layer, along each dimension
+        n_modes (Tuple[int, ...]): Number of modes to keep in Fourier Layer, along each dimension
             The dimensionality of the SFNO is inferred from ``len(n_modes)`
         hidden_channels (int): Width of the FNO (i.e. number of channels)
         in_channels (int, optional): Number of input channels. Defaults to 3.
