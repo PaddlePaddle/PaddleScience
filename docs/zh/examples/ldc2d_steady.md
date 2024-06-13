@@ -1,3 +1,13 @@
+---
+tags:
+  - 方程符号化定义
+  - 几何形状定义
+  - Navier-Stokes方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+---
+
 # 2D-LDC(2D Lid Driven Cavity Flow)
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>

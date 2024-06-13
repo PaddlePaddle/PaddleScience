@@ -1,3 +1,12 @@
+---
+tags:
+  - 方程符号化定义
+  - Euler–Bernoulli方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+---
+
 # Euler Beam
 
 === "模型训练命令"

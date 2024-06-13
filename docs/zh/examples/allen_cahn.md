@@ -1,3 +1,12 @@
+---
+tags:
+  - 方程符号化定义
+  - Allen-Cahn方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+---
+
 # Allen-Cahn
 
 <a href="https://aistudio.baidu.com/projectdetail/7927786" class="md-button md-button--primary" style>AI Studio快速体验</a>

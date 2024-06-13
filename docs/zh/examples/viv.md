@@ -1,3 +1,12 @@
+---
+tags:
+  - 方程符号化定义
+  - Vibration方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+---
+
 # VIV(vortex induced vibration)
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>

@@ -1,3 +1,13 @@
+---
+tags:
+  - 方程符号化定义
+  - NLSMB方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+  - 复数
+---
+
 # NLS-MB
 
 <!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->

@@ -1,3 +1,10 @@
+---
+tags:
+  - 方程符号化定义
+  - 几何形状定义
+  - HeatExchanger方程
+---
+
 # Heat_Exchanger
 
 === "模型训练命令"
