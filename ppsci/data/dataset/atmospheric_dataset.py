@@ -200,10 +200,9 @@ YEAR_PROGRESS = "year_progress"
 def get_year_progress(seconds_since_epoch: np.ndarray) -> np.ndarray:
     """Computes year progress for times in seconds.
     Args:
-      seconds_since_epoch: Times in seconds since the "epoch" (the point at which
-        UNIX time starts).
+        seconds_since_epoch: Times in seconds since the "epoch" (the point at which UNIX time starts).
     Returns:
-      Year progress normalized to be in the [0, 1) interval for each time point.
+        Year progress normalized to be in the [0, 1) interval for each time point.
     """
     # Start with the pure integer division, and then float at the very end.
     # We will try to keep as much precision as possible.
@@ -223,12 +222,10 @@ def get_day_progress(
 ) -> np.ndarray:
     """Computes day progress for times in seconds at each longitude.
     Args:
-      seconds_since_epoch: 1D array of times in seconds since the 'epoch' (the
-        point at which UNIX time starts).
-      longitude: 1D array of longitudes at which day progress is computed.
+        seconds_since_epoch: 1D array of times in seconds since the 'epoch' (the point at which UNIX time starts).
+        longitude: 1D array of longitudes at which day progress is computed.
     Returns:
-      2D array of day progress values normalized to be in the [0, 1) inverval
-        for each time point at each longitude.
+        2D array of day progress values normalized to be in the [0, 1) inverval for each time point at each longitude.
     """
     # [0.0, 1.0) Interval.
     day_progress_greenwich = np.mod(seconds_since_epoch, SEC_PER_DAY) / SEC_PER_DAY
@@ -329,21 +326,15 @@ def variable_to_stacked(
 ) -> "xarray.Variable":
     """Converts an xarray.Variable to preserved_dims + ("channels",).
 
-    Any dimensions other than those included in preserved_dims get stacked into a
-    final "channels" dimension. If any of the preserved_dims are missing then they
-    are added, with the data broadcast/tiled to match the sizes specified in
-    `sizes`.
+    Any dimensions other than those included in preserved_dims get stacked into a final "channels" dimension. If any of the preserved_dims are missing then they are added, with the data broadcast/tiled to match the sizes specified in `sizes`.
 
     Args:
-      variable: An xarray.Variable.
-      sizes: Mapping including sizes for any dimensions which are not present in
-        `variable` but are needed for the output. This may be needed for example
-        for a static variable with only ("lat", "lon") dims, or if you want to
-        encode just the latitude coordinates (a variable with dims ("lat",)).
-      preserved_dims: dimensions of variable to not be folded in channels.
+        variable: An xarray.Variable.
+        sizes: Mapping including sizes for any dimensions which are not present in `variable` but are needed for the output. This may be needed for example for a static variable with only ("lat", "lon") dims, or if you want to encode just the latitude coordinates (a variable with dims ("lat",)).
+        preserved_dims: dimensions of variable to not be folded in channels.
 
     Returns:
-      An xarray.Variable with dimensions preserved_dims + ("channels",).
+        An xarray.Variable with dimensions preserved_dims + ("channels",).
     """
     stack_to_channels_dims = [d for d in variable.dims if d not in preserved_dims]
     if stack_to_channels_dims:
@@ -364,16 +355,12 @@ def dataset_to_stacked(
     using `variable_to_stacked`, then concats them all along the channels axis.
 
     Args:
-      dataset: An xarray.Dataset.
-      sizes: Mapping including sizes for any dimensions which are not present in
-        the `dataset` but are needed for the output. See variable_to_stacked.
-      preserved_dims: dimensions from the dataset that should not be folded in
-        the predictions channels.
+        dataset: An xarray.Dataset.
+        sizes: Mapping including sizes for any dimensions which are not present in the `dataset` but are needed for the output. See variable_to_stacked.
+        preserved_dims: dimensions from the dataset that should not be folded in the predictions channels.
 
     Returns:
-      An xarray.DataArray with dimensions preserved_dims + ("channels",).
-      Existing coordinates for preserved_dims axes will be preserved, however
-      there will be no coordinates for "channels".
+        An xarray.DataArray with dimensions preserved_dims + ("channels",). Existing coordinates for preserved_dims axes will be preserved, however there will be no coordinates for "channels".
     """
     data_vars = [
         variable_to_stacked(
