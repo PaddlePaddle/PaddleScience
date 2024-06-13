@@ -40,18 +40,12 @@ def stacked_to_dataset(
     All variables must have preserved_dims dimensions.
 
     Args:
-      stacked_array: Data in BHWC layout, encoded the same as dataset_to_stacked
-        would if it was asked to encode `template_dataset`.
-      template_dataset: A template Dataset (or other mapping of DataArrays)
-        demonstrating the shape of output required (variables, shapes,
-        coordinates etc).
-      preserved_dims: dimensions from the target_template that were not folded in
-        the predictions channels. The preserved_dims need to be a subset of the
-        dims of all the variables of template_dataset.
+        stacked_array: Data in BHWC layout, encoded the same as dataset_to_stacked would if it was asked to encode `template_dataset`.
+        template_dataset: A template Dataset (or other mapping of DataArrays) demonstrating the shape of output required (variables, shapes, coordinates etc).
+        preserved_dims: dimensions from the target_template that were not folded in the predictions channels. The preserved_dims need to be a subset of the dims of all the variables of template_dataset.
 
     Returns:
-      An xarray.Dataset (or other mapping of DataArrays) with the same shape and
-      type as template_dataset.
+        An xarray.Dataset (or other mapping of DataArrays) with the same shape and type as template_dataset.
     """
     unstack_from_channels_sizes = {}
     var_names = sorted(template_dataset.keys())
@@ -121,34 +115,25 @@ def get_graph_spatial_features(
     """Computes spatial features for the nodes.
 
     Args:
-      node_lat: Latitudes in the [-90, 90] interval of shape [num_nodes]
-      node_lon: Longitudes in the [0, 360] interval of shape [num_nodes]
-      senders: Sender indices of shape [num_edges]
-      receivers: Receiver indices of shape [num_edges]
-      add_node_positions: Add unit norm absolute positions.
-      add_node_latitude: Add a feature for latitude (cos(90 - lat))
-          Note even if this is set to False, the model may be able to infer the
-          longitude from relative features, unless
-          `relative_latitude_local_coordinates` is also True, or if there is any
-          bias on the relative edge sizes for different longitudes.
-      add_node_longitude: Add features for longitude (cos(lon), sin(lon)).
-          Note even if this is set to False, the model may be able to infer the
-          longitude from relative features, unless
-          `relative_longitude_local_coordinates` is also True, or if there is any
-          bias on the relative edge sizes for different longitudes.
-      add_relative_positions: Whether to relative positions in R3 to the edges.
-      relative_longitude_local_coordinates: If True, relative positions are
-          computed in a local space where the receiver is at 0 longitude.
-      relative_latitude_local_coordinates: If True, relative positions are
-          computed in a local space where the receiver is at 0 latitude.
-      sine_cosine_encoding: If True, we will transform the node/edge features
-          with sine and cosine functions, similar to NERF.
-      encoding_num_freqs: frequency parameter
-      encoding_multiplicative_factor: used for calculating the frequency.
+        node_lat: Latitudes in the [-90, 90] interval of shape [num_nodes]
+        node_lon: Longitudes in the [0, 360] interval of shape [num_nodes]
+        senders: Sender indices of shape [num_edges]
+        receivers: Receiver indices of shape [num_edges]
+        add_node_positions: Add unit norm absolute positions.
+        add_node_latitude: Add a feature for latitude (cos(90 - lat))
+            Note even if this is set to False, the model may be able to infer the longitude from relative features, unless `relative_latitude_local_coordinates` is also True, or if there is any bias on the relative edge sizes for different longitudes.
+        add_node_longitude: Add features for longitude (cos(lon), sin(lon)).
+            Note even if this is set to False, the model may be able to infer the longitude from relative features, unless `relative_longitude_local_coordinates` is also True, or if there is any bias on the relative edge sizes for different longitudes.
+        add_relative_positions: Whether to relative positions in R3 to the edges.
+        relative_longitude_local_coordinates: If True, relative positions are computed in a local space where the receiver is at 0 longitude.
+        relative_latitude_local_coordinates: If True, relative positions are computed in a local space where the receiver is at 0 latitude.
+        sine_cosine_encoding: If True, we will transform the node/edge features with sine and cosine functions, similar to NERF.
+        encoding_num_freqs: frequency parameter
+        encoding_multiplicative_factor: used for calculating the frequency.
 
     Returns:
-      Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
-      with node and edge features.
+        Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
+        with node and edge features.
 
     """
 
@@ -304,17 +289,15 @@ def get_relative_position_in_receiver_local_coordinates(
     that local coordinate system after the rotation in R^3.
 
     Args:
-      node_phi: [num_nodes] with polar angles.
-      node_theta: [num_nodes] with azimuthal angles.
-      senders: [num_edges] with indices.
-      receivers: [num_edges] with indices.
-      latitude_local_coordinates: Whether to rotate edges such that in the
-          positions are computed such that the receiver is always at latitude 0.
-      longitude_local_coordinates: Whether to rotate edges such that in the
-          positions are computed such that the receiver is always at longitude 0.
+        node_phi: [num_nodes] with polar angles.
+        node_theta: [num_nodes] with azimuthal angles.
+        senders: [num_edges] with indices.
+        receivers: [num_edges] with indices.
+        latitude_local_coordinates: Whether to rotate edges such that in the positions are computed such that the receiver is always at latitude 0.
+        longitude_local_coordinates: Whether to rotate edges such that in the positions are computed such that the receiver is always at longitude 0.
 
     Returns:
-      Array of relative positions in R3 [num_edges, 3]
+        Array of relative positions in R3 [num_edges, 3]
     """
 
     node_pos = np.stack(spherical_to_cartesian(node_phi, node_theta), axis=-1)
@@ -382,33 +365,26 @@ def get_rotation_matrices_to_local_coordinates(
     before the rotation, continues to point towards the pole after the rotation.
 
     Args:
-      reference_phi: [leading_axis] Polar angles of the reference.
-      reference_theta: [leading_axis] Azimuthal angles of the reference.
-      rotate_latitude: Whether to produce a rotation matrix that would rotate
-          R^3 vectors to zero latitude.
-      rotate_longitude: Whether to produce a rotation matrix that would rotate
-          R^3 vectors to zero longitude.
+        reference_phi: [leading_axis] Polar angles of the reference.
+        reference_theta: [leading_axis] Azimuthal angles of the reference.
+        rotate_latitude: Whether to produce a rotation matrix that would rotate R^3 vectors to zero latitude.
+        rotate_longitude: Whether to produce a rotation matrix that would rotate R^3 vectors to zero longitude.
 
     Returns:
-      Matrices of shape [leading_axis] such that when applied to the reference
-          position with `rotate_with_matrices(rotation_matrices, reference_pos)`
+        Matrices of shape [leading_axis] such that when applied to the reference
+            position with `rotate_with_matrices(rotation_matrices, reference_pos)`
 
-          * phi goes to 0. if "rotate_longitude" is True.
+            * phi goes to 0. if "rotate_longitude" is True.
 
-          * theta goes to np.pi / 2 if "rotate_latitude" is True.
+            * theta goes to np.pi / 2 if "rotate_latitude" is True.
 
-          The rotation consists of:
-          * rotate_latitude = False, rotate_longitude = True:
-              Latitude preserving rotation.
-          * rotate_latitude = True, rotate_longitude = True:
-              Latitude preserving rotation, followed by longitude preserving
-              rotation.
-          * rotate_latitude = True, rotate_longitude = False:
-              Latitude preserving rotation, followed by longitude preserving
-              rotation, and the inverse of the latitude preserving rotation. Note
-              this is computationally different from rotating the longitude only
-              and is. We do it like this, so the polar geodesic curve, continues
-              to be aligned with one of the axis after the rotation.
+            The rotation consists of:
+            * rotate_latitude = False, rotate_longitude = True:
+                  Latitude preserving rotation.
+            * rotate_latitude = True, rotate_longitude = True:
+                  Latitude preserving rotation, followed by longitude preserving rotation.
+            * rotate_latitude = True, rotate_longitude = False:
+                  Latitude preserving rotation, followed by longitude preserving rotation, and the inverse of the latitude preserving rotation. Note this is computationally different from rotating the longitude only and is. We do it like this, so the polar geodesic curve, continues to be aligned with one of the axis after the rotation.
 
     """
 
@@ -475,41 +451,24 @@ def get_bipartite_graph_spatial_features(
     This is necessary to enable combination with typed Graph.
 
     Args:
-      senders_node_lat: Latitudes in the [-90, 90] interval of shape
-        [num_sender_nodes]
-      senders_node_lon: Longitudes in the [0, 360] interval of shape
-        [num_sender_nodes]
-      senders: Sender indices of shape [num_edges], indices in [0,
-        num_sender_nodes)
-      receivers_node_lat: Latitudes in the [-90, 90] interval of shape
-        [num_receiver_nodes]
-      receivers_node_lon: Longitudes in the [0, 360] interval of shape
-        [num_receiver_nodes]
-      receivers: Receiver indices of shape [num_edges], indices in [0,
-        num_receiver_nodes)
-      add_node_positions: Add unit norm absolute positions.
-      add_node_latitude: Add a feature for latitude (cos(90 - lat)) Note even if
-        this is set to False, the model may be able to infer the longitude from
-        relative features, unless `relative_latitude_local_coordinates` is also
-        True, or if there is any bias on the relative edge sizes for different
-        longitudes.
-      add_node_longitude: Add features for longitude (cos(lon), sin(lon)). Note
-        even if this is set to False, the model may be able to infer the longitude
-        from relative features, unless `relative_longitude_local_coordinates` is
-        also True, or if there is any bias on the relative edge sizes for
-        different longitudes.
-      add_relative_positions: Whether to relative positions in R3 to the edges.
-      edge_normalization_factor: Allows explicitly controlling edge normalization.
-        If None, defaults to max edge length. This supports using pre-trained
-        model weights with a different graph structure to what it was trained on.
-      relative_longitude_local_coordinates: If True, relative positions are
-        computed in a local space where the receiver is at 0 longitude.
-      relative_latitude_local_coordinates: If True, relative positions are
-        computed in a local space where the receiver is at 0 latitude.
+        senders_node_lat: Latitudes in the [-90, 90] interval of shape [num_sender_nodes]
+        senders_node_lon: Longitudes in the [0, 360] interval of shape [num_sender_nodes]
+        senders: Sender indices of shape [num_edges], indices in [0, num_sender_nodes)
+        receivers_node_lat: Latitudes in the [-90, 90] interval of shape [num_receiver_nodes]
+        receivers_node_lon: Longitudes in the [0, 360] interval of shape [num_receiver_nodes]
+        receivers: Receiver indices of shape [num_edges], indices in [0, num_receiver_nodes)
+        add_node_positions: Add unit norm absolute positions.
+        add_node_latitude: Add a feature for latitude (cos(90 - lat)).
+            Note even ifthis is set to False, the model may be able to infer the longitude from relative features, unless `relative_latitude_local_coordinates` is also True, or if there is any bias on the relative edge sizes for different longitudes.
+        add_node_longitude: Add features for longitude (cos(lon), sin(lon)).
+            Note even if this is set to False, the model may be able to infer the longitude from relative features, unless `relative_longitude_local_coordinates` is also True, or if there is any bias on the relative edge sizes for different longitudes.
+        add_relative_positions: Whether to relative positions in R3 to the edges.
+        edge_normalization_factor: Allows explicitly controlling edge normalization. If None, defaults to max edge length. This supports using pre-trained model weights with a different graph structure to what it was trained on.
+        relative_longitude_local_coordinates: If True, relative positions are computed in a local space where the receiver is at 0 longitude.
+        relative_latitude_local_coordinates: If True, relative positions are computed in a local space where the receiver is at 0 latitude.
 
     Returns:
-      Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
-      with node and edge features.
+          Arrays of shape: [num_nodes, num_features] and [num_edges, num_features]. with node and edge features.
 
     """
 
@@ -623,19 +582,17 @@ def get_bipartite_relative_position_in_receiver_local_coordinates(
     that local coordinate system after the rotation in R^3.
 
     Args:
-      senders_node_phi: [num_sender_nodes] with polar angles.
-      senders_node_theta: [num_sender_nodes] with azimuthal angles.
-      senders: [num_edges] with indices into sender nodes.
-      receivers_node_phi: [num_sender_nodes] with polar angles.
-      receivers_node_theta: [num_sender_nodes] with azimuthal angles.
-      receivers: [num_edges] with indices into receiver nodes.
-      latitude_local_coordinates: Whether to rotate edges such that in the
-        positions are computed such that the receiver is always at latitude 0.
-      longitude_local_coordinates: Whether to rotate edges such that in the
-        positions are computed such that the receiver is always at longitude 0.
+        senders_node_phi: [num_sender_nodes] with polar angles.
+        senders_node_theta: [num_sender_nodes] with azimuthal angles.
+        senders: [num_edges] with indices into sender nodes.
+        receivers_node_phi: [num_sender_nodes] with polar angles.
+        receivers_node_theta: [num_sender_nodes] with azimuthal angles.
+        receivers: [num_edges] with indices into receiver nodes.
+        latitude_local_coordinates: Whether to rotate edges such that in the positions are computed such that the receiver is always at latitude 0.
+        longitude_local_coordinates: Whether to rotate edges such that in the positions are computed such that the receiver is always at longitude 0.
 
     Returns:
-      Array of relative positions in R3 [num_edges, 3]
+        Array of relative positions in R3 [num_edges, 3]
     """
 
     senders_node_pos = np.stack(
@@ -717,7 +674,7 @@ class GraphGridMesh(object):
         grid2mesh_edge_feat=None,
         mesh2grid_edge_feat=None,
     ):
-        """_summary_
+        """GraphGridMesh
 
         Args:
             config (_type_): _description_
@@ -1167,8 +1124,7 @@ def faces_to_edges(faces: np.ndarray):
     situation, the edges returned by the method are always bidirectional.
 
     Args:
-        faces: Integer array of shape [num_faces, 3]. Contains node indices
-            adjacent to each face.
+        faces: Integer array of shape [num_faces, 3]. Contains node indices adjacent to each face.
     Returns:
         Tuple with sender/receiver indices, each of shape [num_edges=num_faces*3].
 
@@ -1213,18 +1169,16 @@ def radius_query_indices(
     """Returns mesh-grid edge indices for radius query.
 
     Args:
-      grid_latitude: Latitude values for the grid [num_lat_points]
-      grid_longitude: Longitude values for the grid [num_lon_points]
-      mesh: Mesh object.
-      radius: Radius of connectivity in R3. for a sphere of unit radius.
+        grid_latitude: Latitude values for the grid [num_lat_points]
+        grid_longitude: Longitude values for the grid [num_lon_points]
+        mesh: Mesh object.
+        radius: Radius of connectivity in R3. for a sphere of unit radius.
 
     Returns:
-      tuple with `grid_indices` and `mesh_indices` indicating edges between the
-      grid and the mesh such that the distances in a straight line (not geodesic)
-      are smaller than or equal to `radius`.
-      * grid_indices: Indices of shape [num_edges], that index into a
+        tuple with `grid_indices` and `mesh_indices` indicating edges between the grid and the mesh such that the distances in a straight line (not geodesic) are smaller than or equal to `radius`.
+        grid_indices: Indices of shape [num_edges], that index into a
         [num_lat_points, num_lon_points] grid, after flattening the leading axes.
-      * mesh_indices: Indices of shape [num_edges], that index into mesh.vertices.
+        mesh_indices: Indices of shape [num_edges], that index into mesh.vertices.
     """
 
     # [num_grid_points=num_lat_points * num_lon_points, 3]
@@ -1260,17 +1214,14 @@ def in_mesh_triangle_indices(
     """Returns mesh-grid edge indices for grid points contained in mesh triangles.
 
     Args:
-      grid_latitude: Latitude values for the grid [num_lat_points]
-      grid_longitude: Longitude values for the grid [num_lon_points]
-      mesh: Mesh object.
+        grid_latitude: Latitude values for the grid [num_lat_points]
+        grid_longitude: Longitude values for the grid [num_lon_points]
+        mesh: Mesh object.
 
     Returns:
-      tuple with `grid_indices` and `mesh_indices` indicating edges between the
-      grid and the mesh vertices of the triangle that contain each grid point.
-      The number of edges is always num_lat_points * num_lon_points * 3
-      * grid_indices: Indices of shape [num_edges], that index into a
-        [num_lat_points, num_lon_points] grid, after flattening the leading axes.
-      * mesh_indices: Indices of shape [num_edges], that index into mesh.vertices.
+        tuple with `grid_indices` and `mesh_indices` indicating edges between the grid and the mesh vertices of the triangle that contain each grid point. The number of edges is always num_lat_points * num_lon_points * 3
+        grid_indices: Indices of shape [num_edges], that index into a [num_lat_points, num_lon_points] grid, after flattening the leading axes.
+        mesh_indices: Indices of shape [num_edges], that index into mesh.vertices.
     """
 
     # [num_grid_points=num_lat_points * num_lon_points, 3]
