@@ -10,7 +10,7 @@ tags:
 
 # 2D-Biharmonic
 
-<!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
+<a href="https://aistudio.baidu.com/projectdetail/8041410" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
 
