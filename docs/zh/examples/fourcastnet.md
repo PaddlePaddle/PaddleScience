@@ -1,3 +1,12 @@
+---
+tags:
+  - 数据处理
+  - FNO求解方法
+  - 复数
+  - 傅里叶变换
+  - 线性代数
+---
+
 # FourCastNet
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6213922?contributionType=1&sUid=455441&shared=1&ts=1684585396793" class="md-button md-button--primary" style>AI Studio快速体验</a>
