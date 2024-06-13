@@ -1,5 +1,22 @@
 # neuraloperator
 
+开始训练、评估前，请先下载
+
+**darcy-flow数据集**
+
+[测试集：16x16分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy)
+
+[测试集：32x32分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy)
+
+[训练集：16x16分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy)
+
+**SEVIR数据集**
+
+[测试集：32x64分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy)
+
+[测试集：64x128分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy)
+
+[训练集：32x64分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy)
 
 === "模型训练命令"
 
@@ -35,21 +52,20 @@
     ```
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
-| [tfno 模型]() | 0.13113 | 0.08514 | 0.30353 | 0.12408
+| [tfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams) | 0.13113 | 0.08514 | 0.30353 | 0.12408
 
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
-| [uno 模型]() | 0.18360 | 0.11040 | 0.74840 | 0.60193
+| [uno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams) | 0.18360 | 0.11040 | 0.74840 | 0.60193
 
 | 模型 | 32x64_l2 | 64x128_l2 |
 | :-- | :-- | :-- |
-| [sfno 模型]() | 1.01075 | 2.33481 |
+| [sfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams) | 1.01075 | 2.33481 |
 
 ## 1. 背景简介
-许多科学和工程问题涉及反复求解复杂的偏微分方程 (PDE) 系统，以获取某些参数的不同值。例如分子动力学、微力学和湍流流动。通常这样的系统需要精细的离散化才能捕捉所模拟的现象。因此，传统数值求解器速度慢，有时效率低下。机器学习方法可能通过提供快速的求解器来革新科学领域，这些求解器可以近似或增强传统求解器。然而，经典神经网络在有限维空间之间进行映射，因此只能学习与特定离散化相关的解决方案。这通常是实际应用中的一个限制，因此需要开发与网格无关的神经网络。最近，一项新的工作提出了用神经网络学习无网格、无限维算子。神经算子通过产生一组用于不同离散化、且与网格无关的参数，来弥补有限维算子方法中网格依赖性的问题。  neuraloperator 通过直接在傅里叶空间 (Fourier space) 中参数化 (parameterize) 积分核 (integral kernel) 来制定一个新的神经算子，从而实现了富有表现力和高效的架构。论文对 Burgers 方程、Darcy 流和 Navier-Stokes 方程进行了实验。傅里叶神经算子是第一个基于机器学习的方法，成功地用零样本超分辨率模拟湍流。与传统 PDE 求解器相比，它快达三个数量级。
+许多科学和工程问题涉及反复求解复杂的偏微分方程 (PDE) 系统，以获取某些参数的不同值。例如分子动力学、微力学和湍流流动。通常这样的系统需要精细的离散化才能捕捉所模拟的现象。因此，传统数值求解器速度慢，有时效率低下。机器学习方法可能通过提供快速的求解器来革新科学领域，这些求解器可以近似或增强传统求解器。然而，经典神经网络在有限维空间之间进行映射，因此只能学习与特定离散化相关的解决方案。这通常是实际应用中的一个限制，因此需要开发与网格无关的神经网络。最近，一项新的工作提出了用神经网络学习无网格、无限维算子。神经算子通过产生一组用于不同离散化、且与网格无关的参数，来弥补有限维算子方法中网格依赖性的问题。 Neuraloperator 通过直接在傅里叶空间 (Fourier space) 中参数化 (parameterize) 积分核 (integral kernel) 来制定一个新的神经算子，从而实现了富有表现力和高效的架构。论文对 Burgers 方程、Darcy 流和 Navier-Stokes 方程进行了实验。傅里叶神经算子是第一个基于机器学习的方法，成功地用零样本超分辨率模拟湍流。与传统 PDE 求解器相比，它快达三个数量级。
 ## 2. 模型原理
-本章节仅对 NeuralOperator 的模型原理进行简单地介绍，详细的理论推导请阅读
-[Fourier Neural Operator for Parametric Partial Differential Equations](https://arxiv.org/abs/2010.08895)。
+本章节仅对 NeuralOperator 的模型原理进行简单地介绍，详细的理论推导请阅读[Fourier Neural Operator for Parametric Partial Differential Equations](https://arxiv.org/abs/2010.08895)。
 NeuralOperator 引入了傅里叶神经算子 (Fourier neural operator)，这是一种新颖的深度学习架构，能够学习函数之间无限维空间的映射；积分算子被限制为卷积，并通过傅里叶域中的线性变换实例化。傅里叶神经算子是第一个学习湍流状态下 Navier-Stokes 方程族的分辨率不变解算子的工作，其中以前基于图形的神经算子不收敛。该方法共享相同的学习网络参数，而不考虑输入和输出空间上使用的离散化。
 
 
