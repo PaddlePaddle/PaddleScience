@@ -16,5 +16,4 @@ seaborn
 sympy
 tqdm
 typing-extensions
-vtk
 wget
