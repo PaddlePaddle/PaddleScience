@@ -252,7 +252,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
+        cfg=cfg,
     )
     # export model
     from paddle.static import InputSpec
