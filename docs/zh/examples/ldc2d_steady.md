@@ -205,13 +205,13 @@ $$
 ### 3.1 模型构建
 
 在 2D-LDC 问题中，每一个已知的坐标点 $(x, y)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
-三个待求解的未知量，我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y)$ 到 $(u, v, p)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^3$ ，即：
+三个待求解的未知量，我们在这里使用适合于 PINN 任务的 PirateNet 来表示 $(x, y)$ 到 $(u, v, p)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^3$ ，即：
 
 $$
 u, v, p = f(x, y)
 $$
 
-上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
+上式中 $f$ 即为 `PirateNet` 模型本身，用 PaddleScience 代码表示如下
 
 ``` py linenums="41"
 --8<--
