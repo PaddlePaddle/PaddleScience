@@ -56,11 +56,6 @@ def train(cfg: DictConfig):
     # train time-series: 2048    time-steps: 256    block-size: 64  stride: 64
     # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
     # test  time-series: 256     time-steps: 1024
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 

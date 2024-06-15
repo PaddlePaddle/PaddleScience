@@ -177,7 +177,6 @@ def train(cfg: DictConfig):
         geom=geom["interior"],
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
-            "num_workers": 1,
             "batch_size": cfg.TRAIN.batch_size,
             "iters_per_epoch": int(x.shape[0] / cfg.TRAIN.batch_size),
             "sampler": {

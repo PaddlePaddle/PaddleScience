@@ -59,7 +59,6 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint

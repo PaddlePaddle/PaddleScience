@@ -224,7 +224,6 @@ def evaluate_model(
                     "drop_last": False,
                     "shuffle": True,
                 },
-                "num_workers": 0,
             },
             ppsci.loss.FunctionalLoss(loss_wrapper(cfg)),
             {"output": lambda out: out["output"]},
