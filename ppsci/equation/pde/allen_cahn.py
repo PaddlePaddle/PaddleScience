@@ -50,7 +50,6 @@ class AllenCahn(base.PDE):
         # t, x = self.create_symbols("t x")
         # invars = (t, x, )
         # u = self.create_function("u", invars)
-
         # allen_cahn = u.diff(t) + 5 * u**3 - 5 * u - 0.0001 * u.diff(x, 2)
 
         # TODO: Pow(u,3) seems cause slightly larger L2 error than multiply(u*u*u)

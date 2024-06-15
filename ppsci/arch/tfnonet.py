@@ -16,7 +16,7 @@ class FNONet(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-        n_modes (Tuple[int, ...]): number of modes to keep in Fourier Layer, along each dimension
+        n_modes (Tuple[int, ...]): Number of modes to keep in Fourier Layer, along each dimension
             The dimensionality of the TFNO is inferred from ``len(n_modes)`
         hidden_channels (int): Width of the FNO (i.e. number of channels)
         in_channels (int, optional): Number of input channels. Defaults to 3.
@@ -304,8 +304,8 @@ class TFNO2dNet(FNONet):
     Args:
        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-       n_modes_height (int): number of Fourier modes to keep along the height.
-       n_modes_width (int): number of modes to keep in Fourier Layer, along the width.
+       n_modes_height (int): Number of Fourier modes to keep along the height.
+       n_modes_width (int): Number of modes to keep in Fourier Layer, along the width.
        hidden_channels (int): Width of the FNO (i.e. number of channels).
        in_channels (int, optional): Number of input channels. Defaults to 3.
        out_channels (int, optional): Number of output channels. Defaults to 1.

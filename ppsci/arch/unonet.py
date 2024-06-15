@@ -32,7 +32,7 @@ class UNONet(base.Arch):
             Example: For a five layer UNO with 2D input the uno_n_modes can be: [[5,5],[5,5],[5,5],[5,5],[5,5]]. Defaults to None.
         uno_scalings (Tuple[Tuple[int, ...], ...]): Scaling Factors for each Fourier Layers.
             Example: For a five layer UNO with 2D input, the uno_scalings can be : [[1.0,1.0],[0.5,0.5],[1,1],[1,1],[2,2]].Defaults to None.
-        horizontal_skips_map (Dict, optional): a map {...., b: a, ....} denoting horizontal skip connection
+        horizontal_skips_map (Dict, optional): A map {...., b: a, ....} denoting horizontal skip connection
             from a-th layer to b-th layer. If None default skip connection is applied.
             Example: For a 5 layer UNO architecture, the skip connections can be horizontal_skips_map ={4:0,3:1}.Defaults to None.
         incremental_n_modes (tuple[int],optional): Incremental number of modes to use in Fourier domain.

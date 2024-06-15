@@ -251,7 +251,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
 
                     # accumulate all losses
                     total_loss = solver.loss_aggregator(losses_all, solver.global_step)
-                    loss_dict = losses_constraint
+                    loss_dict.update(losses_constraint)
                     loss_dict["loss"] = float(total_loss)
 
                 # backward

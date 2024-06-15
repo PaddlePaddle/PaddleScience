@@ -300,7 +300,7 @@ class PointCloud(geometry.Geometry):
         )
 
     def __str__(self) -> str:
-        """Return the name of class"""
+        """Return the name of class."""
         return ", ".join(
             [
                 self.__class__.__name__,
