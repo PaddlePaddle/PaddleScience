@@ -158,7 +158,7 @@ def StAS(
     # index_E排序
     sp_x = pd_sparse.sparse_coo_tensor(index_E, value_E)
     sp_x = pd_sparse.coalesce(sp_x)
-    index_E = sp_x.indices()
+    index_E = sp_x.indices().astype("int64")
     value_E = sp_x.values()
 
     return index_E, value_E
