@@ -129,7 +129,7 @@ class GradNorm(base.LossAggregator):
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:
-            weight = self._compute_weight(list(losses.values()))
+            weight = paddle.stack(self._compute_weight(list(losses.values())))
             with paddle.no_grad():
                 paddle.assign(
                     self.momentum * self.weight + (1 - self.momentum) * weight,
