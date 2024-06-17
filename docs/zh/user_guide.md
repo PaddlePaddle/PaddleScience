@@ -492,7 +492,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "方式2: 修改代码"
 
-    因此我们只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
+    只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
 
     ``` py hl_lines="7"
     import ppsci
@@ -993,7 +993,7 @@ TODO -->
 
 ## 3. 使用 Nsight 进行性能分析
 
-Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
+Nsight是NVIDIA面向开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
 
 PaddleScience 初步支持使用 Nsight 进行性能分析，以 linux 开发环境 + laplace2d 案例为例，按照如下步骤使用 nsight 工具生成性能分析报告并查看分析结果。
 
