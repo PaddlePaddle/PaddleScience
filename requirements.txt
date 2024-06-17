@@ -7,7 +7,6 @@ meshio==5.3.4
 numpy>=1.20.0,<=1.23.1
 pydantic>=2.5.0
 pyevtk
-pyvista==0.37.0
 pyyaml
 scikit-learn<1.5.0
 scikit-optimize
@@ -16,5 +15,4 @@ seaborn
 sympy
 tqdm
 typing-extensions
-vtk
 wget
