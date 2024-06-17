@@ -5,7 +5,7 @@ tags:
 
 # AMGNet
 
-<!-- <a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
+<a href="https://aistudio.baidu.com/projectdetail/8056981" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
 
