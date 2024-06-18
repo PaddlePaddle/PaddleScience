@@ -10,9 +10,9 @@
 === "模型训练命令"
 
     ``` sh
-    # ICAR-ENSO 数据预训练模型
+    # ICAR-ENSO 数据模型训练
     python examples/earthformer/earthformer_enso_train.py
-    # SEVIR 数据集预训练模型
+    # SEVIR 数据模型训练
     python examples/earthformer/earthformer_sevir_train.py
 
     ```

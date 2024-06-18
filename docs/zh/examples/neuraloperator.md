@@ -1,54 +1,86 @@
 # neuraloperator
 
-开始训练、评估前，请先下载
-
-**darcy-flow数据集**
-
-[测试集：16x16分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy)
-
-[测试集：32x32分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy)
-
-[训练集：16x16分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy)
-
-**SEVIR数据集**
-
-[测试集：32x64分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy)
-
-[测试集：64x128分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy)
-
-[训练集：32x64分辨率](https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy)
-
 === "模型训练命令"
 
     ``` sh
-    # sfno 预训练模型
-    python examples/neuraloperator/train_sfno.py
-    # tfno 预训练模型
+    # darcy-flow 数据集下载
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o darcy_train_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
+    # tfno 模型训练
     python examples/neuraloperator/train_tfno.py
-    # uno 预训练模型
+    # uno 模型训练
     python examples/neuraloperator/train_uno.py
+
+    # SEVIR 数据集下载
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
+
+    # sfno 模型训练
+    python examples/neuraloperator/train_sfno.py
     ```
 
 === "模型评估命令"
 
     ``` sh
-    # sfno 模型评估
-    python examples/neuraloperator/train_sfno.py mode=eval
+    # darcy-flow 数据集下载
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o darcy_train_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
     # tfno 模型评估
-    python examples/neuraloperator/train_tfno.py mode=eval
+    python examples/neuraloperator/train_tfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
     # uno 模型评估
-    python examples/neuraloperator/train_uno.py mode=eval
+    python examples/neuraloperator/train_uno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
+
+    # SEVIR 数据集下载
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
+    # sfno 模型评估
+    python examples/neuraloperator/train_sfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    # tfno 模型导出
+    python examples/neuraloperator/train_tfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
+    # uno 模型导出
+    python examples/neuraloperator/train_uno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
+    # sfno 模型导出
+    python examples/neuraloperator/train_sfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
     ```
 
 === "模型推理命令"
 
     ``` sh
-    # sfno 模型推理
-    python examples/neuraloperator/train_sfno.py mode=infer
     # tfno 模型推理
     python examples/neuraloperator/train_tfno.py mode=infer
     # uno 模型推理
     python examples/neuraloperator/train_uno.py mode=infer
+    # sfno 模型推理
+    python examples/neuraloperator/train_sfno.py mode=infer
     ```
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -63,7 +95,7 @@
 | [sfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams) | 1.01075 | 2.33481 |
 
 ## 1. 背景简介
-许多科学和工程问题涉及反复求解复杂的偏微分方程 (PDE) 系统，以获取某些参数的不同值。例如分子动力学、微力学和湍流流动。通常这样的系统需要精细的离散化才能捕捉所模拟的现象。因此，传统数值求解器速度慢，有时效率低下。机器学习方法可能通过提供快速的求解器来革新科学领域，这些求解器可以近似或增强传统求解器。然而，经典神经网络在有限维空间之间进行映射，因此只能学习与特定离散化相关的解决方案。这通常是实际应用中的一个限制，因此需要开发与网格无关的神经网络。最近，一项新的工作提出了用神经网络学习无网格、无限维算子。神经算子通过产生一组用于不同离散化、且与网格无关的参数，来弥补有限维算子方法中网格依赖性的问题。 Neuraloperator 通过直接在傅里叶空间 (Fourier space) 中参数化 (parameterize) 积分核 (integral kernel) 来制定一个新的神经算子，从而实现了富有表现力和高效的架构。论文对 Burgers 方程、Darcy 流和 Navier-Stokes 方程进行了实验。傅里叶神经算子是第一个基于机器学习的方法，成功地用零样本超分辨率模拟湍流。与传统 PDE 求解器相比，它快达三个数量级。
+许多科学和工程问题，如分子动力学、微力学和湍流流动，都需要反复求解复杂的偏微分方程（PDE）系统，以便获取某些参数的不同值。为了准确捕捉所模拟的现象，这些系统通常需要进行精细的离散化。然而，这也导致了传统数值求解器运行缓慢，有时甚至效率低下。在这种情况下，机器学习方法有望通过提供快速求解器来革新科学领域，这些求解器能够近似或增强传统方法。但值得注意的是，经典神经网络是在有限维空间之间进行映射，因此它们只能学习与特定离散化相关的解决方案，这在实际应用中是一个限制。为了克服这一限制，最近的一项新研究提出了使用神经网络来学习无网格、无限维的算子。这种神经算子通过生成一组用于不同离散化且与网格无关的参数，解决了有限维算子方法中的网格依赖性问题。该研究通过直接在傅里叶空间中参数化积分核，制定了一个新的神经算子，从而创建了一个富有表现力和高效的架构。论文中对 Burgers 方程、Darcy 流和 Navier-Stokes 方程进行了实验验证。值得一提的是，傅里叶神经算子作为首个基于机器学习的方法，成功地以零样本超分辨率模拟了湍流，其速度比传统PDE求解器快达三个数量级。
 ## 2. 模型原理
 本章节仅对 NeuralOperator 的模型原理进行简单地介绍，详细的理论推导请阅读[Fourier Neural Operator for Parametric Partial Differential Equations](https://arxiv.org/abs/2010.08895)。
 NeuralOperator 引入了傅里叶神经算子 (Fourier neural operator)，这是一种新颖的深度学习架构，能够学习函数之间无限维空间的映射；积分算子被限制为卷积，并通过傅里叶域中的线性变换实例化。傅里叶神经算子是第一个学习湍流状态下 Navier-Stokes 方程族的分辨率不变解算子的工作，其中以前基于图形的神经算子不收敛。该方法共享相同的学习网络参数，而不考虑输入和输出空间上使用的离散化。
@@ -80,7 +112,7 @@ NeuralOperator 论文中使用 TFNO 和 UNO 模型训练 Darcy-Flow  数据集�
 
 ### 2.1 模型训练、推理过程
 
-模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $X_[w,h]$ 表示大小为 $w*h$ 的二维偏微分数据，$Y_[w,h]$ 表示预测的大小为 $w*h$ 的二维偏微分方程数值解，$Y_{true[w,h]}$ 表示真实二维偏微分方程数值解。最后网络模型预测的输出和真值计算 LpLoss 或者 H1 损失函数。
+模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $X_{[w,h]}$ 表示大小为 $w*h$ 的二维偏微分数据，$Y_{[w,h]}$ 表示预测的大小为 $w*h$ 的二维偏微分方程数值解，$Y_{true[w,h]}$ 表示真实二维偏微分方程数值解。最后网络模型预测的输出和真值计算 LpLoss 或者 H1 损失函数。
 
 <figure markdown>
   ![FNO-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/neuraloperator/FNO-pretraining.png){ loading=lazy style="margin:0 auto;height:70%;width:70%"}
