@@ -163,14 +163,17 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - pip 安装
 
-        执行以下命令以 pip 的方式安装最新版本的 PaddleScience。
+        执行以下命令以 pip 的方式安装 nightly build / release 版本的 PaddleScience。
         <!-- --8<-- [start:pip_install] -->
         ``` shell
-        pip install -U paddlesci
+        # nightly build
+        pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
+        # release
+        # pip install -U paddlesci
         ```
         <!-- --8<-- [end:pip_install] -->
 
-    - 设置 PYTHONPATH
+    - 设置 PYTHONPATH 并手动安装 requirements
 
         如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
 
