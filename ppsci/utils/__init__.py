@@ -19,7 +19,6 @@ from ppsci.utils import ema
 from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
-from ppsci.utils import profiler
 from ppsci.utils import reader
 from ppsci.utils import writer
 from ppsci.utils.checker import dynamic_import_to_globals
@@ -49,7 +48,6 @@ __all__ = [
     "ema",
     "reader",
     "writer",
-    "profiler",
     "load_csv_file",
     "load_mat_file",
     "load_npz_file",
