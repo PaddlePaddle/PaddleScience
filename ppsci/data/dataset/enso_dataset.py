@@ -56,7 +56,6 @@ def prepare_inputs_targets(
         pred_shift (int): the lead_time of the last target to be predicted.
         pred_length (int): the number of frames to be predicted.
         samples_gap (int): stride of seq sampling.
-
     """
 
     if pred_shift < pred_length:
@@ -107,7 +106,6 @@ def data_transform(data, num_years_per_model):
     Args:
         data (Tuple[list,...]): The input data.Shape of (N, 36, *).
         num_years_per_model (int): The number of years associated with each model.151/140.
-
     """
 
     length = data.shape[0]
@@ -138,8 +136,8 @@ def read_raw_data(ds_dir, out_dir=None):
     Args:
         ds_dir (str): the path of the dataset.
         out_dir (str): the path of output. Defaults to None.
-
     """
+
     import xarray as xr
 
     train_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_train.nc").transpose(
@@ -215,7 +213,6 @@ def cat_over_last_dim(data):
     """treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
     e.g., cmip6sst.shape = (178, 38, 24, 48, 15), converted_cmip6sst.shape = (2670, 38, 24, 48)
     e.g., cmip5sst.shape = (165, 38, 24, 48, 15), converted_cmip6sst.shape = (2475, 38, 24, 48)
-
     """
 
     return np.concatenate(np.moveaxis(data, -1, 0), axis=0)
@@ -240,7 +237,6 @@ class ENSODataset(io.Dataset):
         batch_size (int, optional): Batch size. Defaults to 1.
         num_workers (int, optional): The num of workers. Defaults to 1.
         training (str, optional): Training pathse. Defaults to "train".
-
     """
 
     # Whether support batch indexing for speeding up fetching process.

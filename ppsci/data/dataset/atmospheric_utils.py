@@ -21,11 +21,24 @@ import numpy as np
 import paddle
 import scipy
 
+from ppsci.utils import checker
+
 try:
     import trimesh
     import xarray
 except ModuleNotFoundError:
     pass
+
+if not checker.dynamic_import_to_globals("xarray"):
+    raise ImportError(
+        "Could not import xarray python package. "
+        "Please install it with pip install xarray."
+    )
+if not checker.dynamic_import_to_globals("trimesh"):
+    raise ImportError(
+        "Could not import trimesh python package. "
+        "Please install it with pip install trimesh. And you may also need install rtree with pip install rtree."
+    )
 
 
 def stacked_to_dataset(
@@ -134,7 +147,6 @@ def get_graph_spatial_features(
     Returns:
         Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
         with node and edge features.
-
     """
 
     num_nodes = node_lat.shape[0]
@@ -385,7 +397,6 @@ def get_rotation_matrices_to_local_coordinates(
                   Latitude preserving rotation, followed by longitude preserving rotation.
             * rotate_latitude = True, rotate_longitude = False:
                   Latitude preserving rotation, followed by longitude preserving rotation, and the inverse of the latitude preserving rotation. Note this is computationally different from rotating the longitude only and is. We do it like this, so the polar geodesic curve, continues to be aligned with one of the axis after the rotation.
-
     """
 
     if rotate_longitude and rotate_latitude:
@@ -469,7 +480,6 @@ def get_bipartite_graph_spatial_features(
 
     Returns:
           Arrays of shape: [num_nodes, num_features] and [num_edges, num_features]. with node and edge features.
-
     """
 
     num_senders = senders_node_lat.shape[0]
@@ -656,46 +666,53 @@ def get_bipartite_relative_position_in_receiver_local_coordinates(
 class GraphGridMesh(object):
     def __init__(
         self,
-        config,
-        mesh2mesh_src_index=None,
-        mesh2mesh_dst_index=None,
-        grid2mesh_src_index=None,
-        grid2mesh_dst_index=None,
-        mesh2grid_src_index=None,
-        mesh2grid_dst_index=None,
-        mesh_num_nodes=None,
-        grid_num_nodes=None,
-        mesh_num_edges=None,
-        grid2mesh_num_edges=None,
-        mesh2grid_num_edges=None,
-        grid_node_feat=None,
-        mesh_node_feat=None,
-        mesh_edge_feat=None,
-        grid2mesh_edge_feat=None,
-        mesh2grid_edge_feat=None,
+        mesh_size: int,
+        radius_query_fraction_edge_length: float,
+        mesh2grid_edge_normalization_factor: float,
+        resolution: float,
+        mesh2mesh_src_index: np.array = None,
+        mesh2mesh_dst_index: np.array = None,
+        grid2mesh_src_index: np.array = None,
+        grid2mesh_dst_index: np.array = None,
+        mesh2grid_src_index: np.array = None,
+        mesh2grid_dst_index: np.array = None,
+        mesh_num_nodes: int = None,
+        grid_num_nodes: int = None,
+        mesh_num_edges: int = None,
+        grid2mesh_num_edges: np.array = None,
+        mesh2grid_num_edges: np.array = None,
+        grid_node_feat: np.array = None,
+        mesh_node_feat: np.array = None,
+        mesh_edge_feat: np.array = None,
+        grid2mesh_edge_feat: np.array = None,
+        mesh2grid_edge_feat: np.array = None,
     ):
-        """GraphGridMesh
+        """_summary_
 
         Args:
-            config (_type_): _description_
-            mesh2mesh_src_index (_type_, optional): _description_. Defaults to None.
-            mesh2mesh_dst_index (_type_, optional): _description_. Defaults to None.
-            grid2mesh_src_index (_type_, optional): _description_. Defaults to None.
-            grid2mesh_dst_index (_type_, optional): _description_. Defaults to None.
-            mesh2grid_src_index (_type_, optional): _description_. Defaults to None.
-            mesh2grid_dst_index (_type_, optional): _description_. Defaults to None.
-            mesh_num_nodes (_type_, optional): _description_. Defaults to None.
-            grid_num_nodes (_type_, optional): _description_. Defaults to None.
-            mesh_num_edges (_type_, optional): _description_. Defaults to None.
-            grid2mesh_num_edges (_type_, optional): _description_. Defaults to None.
-            mesh2grid_num_edges (_type_, optional): _description_. Defaults to None.
-            grid_node_feat (_type_, optional): _description_. Defaults to None.
-            mesh_node_feat (_type_, optional): _description_. Defaults to None.
-            mesh_edge_feat (_type_, optional): _description_. Defaults to None.
-            grid2mesh_edge_feat (_type_, optional): _description_. Defaults to None.
-            mesh2grid_edge_feat (_type_, optional): _description_. Defaults to None.
+            mesh_size (int): size of mesh.
+            radius_query_fraction_edge_length (float): _description_
+            mesh2grid_edge_normalization_factor (float): Normalization factor of edge in Mesh2Grid GNN.
+            resolution (float): resolution of atmospheric data.
+            mesh2mesh_src_index (np.array, optional): Index of Mesh2Mesh source node. Defaults to None.
+            mesh2mesh_dst_index (np.array, optional): Index of Mesh2Mesh destination node. Defaults to None.
+            grid2mesh_src_index (np.array, optional): Index of Grid2Mesh source node. Defaults to None.
+            grid2mesh_dst_index (np.array, optional): Index of Grid2Mesh destination node.
+            mesh2grid_src_index (np.array, optional): Index of Mesh2Grid source node. Defaults to None.
+            mesh2grid_dst_index (np.array, optional): Index of Mesh2Grid destination node. Defaults to None.
+            mesh_num_nodes (int, optional): Number of mesh nodes. Defaults to None.
+            grid_num_nodes (int, optional): Number of grid nodes. Defaults to None.
+            mesh_num_edges (int, optional): Number of mesh edges. Defaults to None.
+            grid2mesh_num_edges (int, optional): Number of edges in Grid2Mesh GNN. Defaults to None.
+            mesh2grid_num_edges (int, optional): Number of edges in Mesh2Grid GNN. Defaults to None.
+            grid_node_feat (np.array, optional): Feature of grid nodes. Defaults to None.
+            mesh_node_feat (np.array, optional): Feature of mehs nodes. Defaults to None.
+            mesh_edge_feat (np.array, optional): Feature of mesh edges. Defaults to None.
+            grid2mesh_edge_feat (np.array, optional): Feature of edges in Grid2Mesh GNN. Defaults to None.
+            mesh2grid_edge_feat (np.array, optional): Feature of edges in Mesh2Grid GNN. Defaults to None.
         """
-        self.meshes = get_hierarchy_of_triangular_meshes_for_sphere(config.mesh_size)
+
+        self.meshes = get_hierarchy_of_triangular_meshes_for_sphere(mesh_size)
 
         all_input_vars = [
             mesh2mesh_src_index,
@@ -718,13 +735,12 @@ class GraphGridMesh(object):
         should_init = any(var is None for var in all_input_vars)
 
         if should_init:
-            # 初始化构建
             self.query_radius = (
                 self._get_max_edge_distance(self.finest_mesh)
-                * config.radius_query_fraction_edge_length
+                * radius_query_fraction_edge_length
             )
             self._mesh2grid_edge_normalization_factor = (
-                config.mesh2grid_edge_normalization_factor
+                mesh2grid_edge_normalization_factor
             )
             self._spatial_features_kwargs = dict(
                 add_node_positions=False,
@@ -737,15 +753,13 @@ class GraphGridMesh(object):
 
             self.init_mesh_properties()
             self._init_grid_properties(
-                grid_lat=np.arange(-90.0, 90.0 + config.resolution, config.resolution),
-                grid_lon=np.arange(0.0, 360.0, config.resolution),
+                grid_lat=np.arange(-90.0, 90.0 + resolution, resolution),
+                grid_lon=np.arange(0.0, 360.0, resolution),
             )
             self._grid2mesh_graph_structure = self._init_grid2mesh_graph()
             self._mesh_graph_structure = self._init_mesh_graph()
             self._mesh2grid_graph_structure = self._init_mesh2grid_graph()
         else:
-            # 直接构建图数据
-            # 图结构信息
             self.mesh2mesh_src_index = mesh2mesh_src_index
             self.mesh2mesh_dst_index = mesh2mesh_dst_index
             self.grid2mesh_src_index = grid2mesh_src_index
@@ -760,7 +774,6 @@ class GraphGridMesh(object):
             self.grid2mesh_num_edges = grid2mesh_num_edges
             self.mesh2grid_num_edges = mesh2grid_num_edges
 
-            # 图特征信息
             self.grid_node_feat = grid_node_feat
             self.mesh_node_feat = mesh_node_feat
             self.mesh_edge_feat = mesh_edge_feat
@@ -977,7 +990,8 @@ class TriangularMesh(typing.NamedTuple):
 
 
 def merge_meshes(mesh_list: typing.Sequence[TriangularMesh]) -> TriangularMesh:
-    for mesh_i, mesh_ip1 in itertools.pairwise(mesh_list):
+    for i in range(len(mesh_list) - 1):
+        mesh_i, mesh_ip1 = mesh_list[i], mesh_list[i + 1]
         num_nodes_mesh_i = mesh_i.vertices.shape[0]
         assert np.allclose(mesh_i.vertices, mesh_ip1.vertices[:num_nodes_mesh_i])
 
@@ -1127,8 +1141,8 @@ def faces_to_edges(faces: np.ndarray):
         faces: Integer array of shape [num_faces, 3]. Contains node indices adjacent to each face.
     Returns:
         Tuple with sender/receiver indices, each of shape [num_edges=num_faces*3].
-
     """
+
     assert faces.ndim == 2
     assert faces.shape[-1] == 3
     senders = np.concatenate([faces[:, 0], faces[:, 1], faces[:, 2]])
@@ -1165,7 +1179,7 @@ def radius_query_indices(
     grid_longitude: np.ndarray,
     mesh: TriangularMesh,
     radius: float,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """Returns mesh-grid edge indices for radius query.
 
     Args:

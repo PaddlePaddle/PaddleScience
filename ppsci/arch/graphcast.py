@@ -58,29 +58,42 @@ class GraphCastMLP(nn.Layer):
 
 
 class GraphCastGNN(nn.Layer):
-    def __init__(self, config, src_type="mesh", dst_type="mesh"):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_emb_dim: int,
+        src_type="mesh",
+        dst_type="mesh",
+    ):
         super().__init__()
 
         self.src = src_type
         self.dst = dst_type
-        self.config = config
 
-        self.edge_in_dim = config.grid_node_emb_dim + config.mesh_node_emb_dim
+        self.grid_node_num = grid_node_num
+        self.mesh_node_num = mesh_node_num
+
+        self.edge_in_dim = grid_node_emb_dim + mesh_node_emb_dim
         if src_type == "mesh" and dst_type == "mesh":
-            self.edge_in_dim += config.mesh_edge_emb_dim
-            self.edge_out_dim = config.mesh_edge_emb_dim
-            self.node_in_dim = config.mesh_node_emb_dim + config.mesh_edge_emb_dim
-            self.node_out_dim = config.mesh_node_emb_dim
+            self.edge_in_dim += mesh_edge_emb_dim
+            self.edge_out_dim = mesh_edge_emb_dim
+            self.node_in_dim = mesh_node_emb_dim + mesh_edge_emb_dim
+            self.node_out_dim = mesh_node_emb_dim
         elif src_type == "grid" and dst_type == "mesh":
-            self.edge_in_dim += config.grid2mesh_edge_emb_dim
-            self.edge_out_dim = config.grid2mesh_edge_emb_dim
-            self.node_in_dim = config.mesh_node_emb_dim + config.grid2mesh_edge_emb_dim
-            self.node_out_dim = config.mesh_node_emb_dim
+            self.edge_in_dim += grid2mesh_edge_emb_dim
+            self.edge_out_dim = grid2mesh_edge_emb_dim
+            self.node_in_dim = mesh_node_emb_dim + grid2mesh_edge_emb_dim
+            self.node_out_dim = mesh_node_emb_dim
         elif src_type == "mesh" and dst_type == "grid":
-            self.edge_in_dim += config.mesh2grid_edge_emb_dim
-            self.edge_out_dim = config.mesh2grid_edge_emb_dim
-            self.node_in_dim = config.grid_node_emb_dim + config.mesh2grid_edge_emb_dim
-            self.node_out_dim = config.grid_node_emb_dim
+            self.edge_in_dim += mesh2grid_edge_emb_dim
+            self.edge_out_dim = mesh2grid_edge_emb_dim
+            self.node_in_dim = grid_node_emb_dim + mesh2grid_edge_emb_dim
+            self.node_out_dim = grid_node_emb_dim
         else:
             raise ValueError
 
@@ -94,21 +107,21 @@ class GraphCastGNN(nn.Layer):
             dst_node_feats = graph.mesh_node_feat
             src_idx = graph.mesh2mesh_src_index
             dst_idx = graph.mesh2mesh_dst_index
-            dst_node_num = self.config.mesh_node_num
+            dst_node_num = self.mesh_node_num
         elif self.src == "grid" and self.dst == "mesh":
             edge_feats = graph.grid2mesh_edge_feat
             src_node_feats = graph.grid_node_feat
             dst_node_feats = graph.mesh_node_feat
             src_idx = graph.grid2mesh_src_index
             dst_idx = graph.grid2mesh_dst_index
-            dst_node_num = self.config.mesh_node_num
+            dst_node_num = self.mesh_node_num
         elif self.src == "mesh" and self.dst == "grid":
             edge_feats = graph.mesh2grid_edge_feat
             src_node_feats = graph.mesh_node_feat
             dst_node_feats = graph.grid_node_feat
             src_idx = graph.mesh2grid_src_index
             dst_idx = graph.mesh2grid_dst_index
-            dst_node_num = self.config.grid_node_num
+            dst_node_num = self.grid_node_num
 
         # update edge features
         edge_feats_concat = paddle.concat(
@@ -150,23 +163,29 @@ class GraphCastGNN(nn.Layer):
 
 
 class GraphCastEmbedding(nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_dim: int,
+        grid_node_emb_dim: int,
+        mesh_node_dim: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_dim: int,
+        mesh2grid_edge_emb_dim: int,
+    ):
         super().__init__()
 
-        self.grid_node_embedding = GraphCastMLP(
-            config.grid_node_dim, config.grid_node_emb_dim
-        )
-        self.mesh_node_embedding = GraphCastMLP(
-            config.mesh_node_dim, config.mesh_node_emb_dim
-        )
-        self.mesh_edge_embedding = GraphCastMLP(
-            config.mesh_edge_dim, config.mesh_edge_emb_dim
-        )
+        self.grid_node_embedding = GraphCastMLP(grid_node_dim, grid_node_emb_dim)
+        self.mesh_node_embedding = GraphCastMLP(mesh_node_dim, mesh_node_emb_dim)
+        self.mesh_edge_embedding = GraphCastMLP(mesh_edge_dim, mesh_edge_emb_dim)
         self.grid2mesh_edge_embedding = GraphCastMLP(
-            config.grid2mesh_edge_dim, config.grid2mesh_edge_emb_dim
+            grid2mesh_edge_dim, grid2mesh_edge_emb_dim
         )
         self.mesh2grid_edge_embedding = GraphCastMLP(
-            config.mesh2grid_edge_dim, config.mesh2grid_edge_emb_dim
+            mesh2grid_edge_dim, mesh2grid_edge_emb_dim
         )
 
     def forward(self, graph: atmospheric_utils.GraphGridMesh):
@@ -186,11 +205,30 @@ class GraphCastEmbedding(nn.Layer):
 
 
 class GraphCastGrid2Mesh(paddle.nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_emb_dim: int,
+    ):
         super().__init__()
-        self.grid2mesh_gnn = GraphCastGNN(config, src_type="grid", dst_type="mesh")
+        self.grid2mesh_gnn = GraphCastGNN(
+            grid_node_num=grid_node_num,
+            grid_node_emb_dim=grid_node_emb_dim,
+            mesh_node_num=mesh_node_num,
+            mesh_node_emb_dim=mesh_node_emb_dim,
+            mesh_edge_emb_dim=mesh_edge_emb_dim,
+            grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+            mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+            src_type="grid",
+            dst_type="mesh",
+        )
         self.grid_node_layer = ResidualConnection(
-            GraphCastMLP(config.grid_node_emb_dim, config.grid_node_emb_dim)
+            GraphCastMLP(grid_node_emb_dim, grid_node_emb_dim)
         )
 
     def forward(self, graph: atmospheric_utils.GraphGridMesh):
@@ -200,11 +238,30 @@ class GraphCastGrid2Mesh(paddle.nn.Layer):
 
 
 class GraphCastMesh2Grid(paddle.nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_emb_dim: int,
+    ):
         super().__init__()
-        self.mesh2grid_gnn = GraphCastGNN(config, src_type="mesh", dst_type="grid")
+        self.mesh2grid_gnn = GraphCastGNN(
+            grid_node_num=grid_node_num,
+            grid_node_emb_dim=grid_node_emb_dim,
+            mesh_node_num=mesh_node_num,
+            mesh_node_emb_dim=mesh_node_emb_dim,
+            mesh_edge_emb_dim=mesh_edge_emb_dim,
+            grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+            mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+            src_type="grid",
+            dst_type="mesh",
+        )
         self.mesh_node_layer = ResidualConnection(
-            GraphCastMLP(config.mesh_node_emb_dim, config.mesh_node_emb_dim)
+            GraphCastMLP(mesh_node_emb_dim, mesh_node_emb_dim)
         )
 
     def forward(self, graph: atmospheric_utils.GraphGridMesh):
@@ -214,10 +271,43 @@ class GraphCastMesh2Grid(paddle.nn.Layer):
 
 
 class GraphCastEncoder(nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_dim: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_dim: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_dim: int,
+        mesh2grid_edge_emb_dim: int,
+    ):
         super().__init__()
-        self.embedding = GraphCastEmbedding(config)
-        self.grid2mesh_gnn = GraphCastGrid2Mesh(config)
+        self.embedding = GraphCastEmbedding(
+            grid_node_dim,
+            grid_node_emb_dim,
+            mesh_node_dim,
+            mesh_node_emb_dim,
+            mesh_edge_dim,
+            mesh_edge_emb_dim,
+            grid2mesh_edge_dim,
+            grid2mesh_edge_emb_dim,
+            mesh2grid_edge_dim,
+            mesh2grid_edge_emb_dim,
+        )
+        self.grid2mesh_gnn = GraphCastGrid2Mesh(
+            grid_node_num=grid_node_num,
+            grid_node_emb_dim=grid_node_emb_dim,
+            mesh_node_num=mesh_node_num,
+            mesh_node_emb_dim=mesh_node_emb_dim,
+            mesh_edge_emb_dim=mesh_edge_emb_dim,
+            grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+            mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+        )
 
     def forward(self, graph: atmospheric_utils.GraphGridMesh):
         graph = self.embedding(graph)
@@ -226,13 +316,31 @@ class GraphCastEncoder(nn.Layer):
 
 
 class GraphCastDecoder(nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_emb_dim: int,
+        node_output_dim: int,
+    ):
         super().__init__()
-        self.mesh2grid_gnn = GraphCastMesh2Grid(config)
+        self.mesh2grid_gnn = GraphCastMesh2Grid(
+            grid_node_num=grid_node_num,
+            grid_node_emb_dim=grid_node_emb_dim,
+            mesh_node_num=mesh_node_num,
+            mesh_node_emb_dim=mesh_node_emb_dim,
+            mesh_edge_emb_dim=mesh_edge_emb_dim,
+            grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+            mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+        )
         self.grid_node_layer = GraphCastMLP(
-            config.grid_node_emb_dim,
-            config.node_output_dim,
-            latent_features=config.grid_node_emb_dim,
+            grid_node_emb_dim,
+            node_output_dim,
+            latent_features=grid_node_emb_dim,
             layer_norm=False,
         )
 
@@ -243,14 +351,34 @@ class GraphCastDecoder(nn.Layer):
 
 
 class GraphCastProcessor(nn.Layer):
-    def __init__(self, config):
+    def __init__(
+        self,
+        grid_node_num: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_emb_dim: int,
+        gnn_msg_steps: int,
+    ):
         super().__init__()
 
         self.processor = nn.Sequential()
-        for idx in range(config.gnn_msg_steps):
+        for idx in range(gnn_msg_steps):
             self.processor.add_sublayer(
                 f"{idx}",
-                GraphCastGNN(config, src_type="mesh", dst_type="mesh"),
+                GraphCastGNN(
+                    grid_node_num=grid_node_num,
+                    grid_node_emb_dim=grid_node_emb_dim,
+                    mesh_node_num=mesh_node_num,
+                    mesh_node_emb_dim=mesh_node_emb_dim,
+                    mesh_edge_emb_dim=mesh_edge_emb_dim,
+                    grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+                    mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+                    src_type="grid",
+                    dst_type="mesh",
+                ),
             )
 
     def forward(self, graph: atmospheric_utils.GraphGridMesh):
@@ -260,20 +388,98 @@ class GraphCastProcessor(nn.Layer):
 
 class GraphCastNet(base.Arch):
     def __init__(
-        self, input_keys: Tuple[str, ...], output_keys: Tuple[str, ...], config
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        grid_node_num: int,
+        grid_node_dim: int,
+        grid_node_emb_dim: int,
+        mesh_node_num: int,
+        mesh_node_dim: int,
+        mesh_node_emb_dim: int,
+        mesh_edge_dim: int,
+        mesh_edge_emb_dim: int,
+        grid2mesh_edge_dim: int,
+        grid2mesh_edge_emb_dim: int,
+        mesh2grid_edge_dim: int,
+        mesh2grid_edge_emb_dim: int,
+        gnn_msg_steps: int,
+        node_output_dim: int,
     ):
+        """GraphCast Network
+
+        Args:
+            input_keys (Tuple[str, ...]): Name of input keys.
+            output_keys (Tuple[str, ...]): Name of output keys.
+            grid_node_num (int): Number of grid nodes.
+            grid_node_dim (int): Dimension of grid nodes.
+            grid_node_emb_dim (int): Dimension of emdding grid nodes.
+            mesh_node_num (int): Number of mesh nodes.
+            mesh_node_dim (int): Dimension of mesh nodes.
+            mesh_node_emb_dim (int): Dimension of emdding mesh nodes.
+            mesh_edge_dim (int): Dimension of mesh edges.
+            mesh_edge_emb_dim (int): Dimension of emdding mesh edges.
+            grid2mesh_edge_dim (int): Dimension of mesh edges in Grid2Mesh GNN.
+            grid2mesh_edge_emb_dim (int): Dimension of emdding mesh edges in Grid2Mesh GNN.
+            mesh2grid_edge_dim (int): Dimension of mesh edges in Mesh2Grid GNN.
+            mesh2grid_edge_emb_dim (int): Dimension of emdding mesh edges in Mesh2Grid GNN.
+            gnn_msg_steps (int): Step of gnn messages.
+            node_output_dim (int): Dimension of output nodes.
+        """
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.graphcast = nn.Sequential(
-            ("encoder", GraphCastEncoder(config)),
-            ("processor", GraphCastProcessor(config)),
-            ("decoder", GraphCastDecoder(config)),
+            (
+                "encoder",
+                GraphCastEncoder(
+                    grid_node_num=grid_node_num,
+                    grid_node_dim=grid_node_dim,
+                    grid_node_emb_dim=grid_node_emb_dim,
+                    mesh_node_num=mesh_node_num,
+                    mesh_node_dim=mesh_node_dim,
+                    mesh_node_emb_dim=mesh_node_emb_dim,
+                    mesh_edge_dim=mesh_edge_dim,
+                    mesh_edge_emb_dim=mesh_edge_emb_dim,
+                    grid2mesh_edge_dim=grid2mesh_edge_dim,
+                    grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+                    mesh2grid_edge_dim=mesh2grid_edge_dim,
+                    mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+                ),
+            ),
+            (
+                "processor",
+                GraphCastProcessor(
+                    grid_node_num=grid_node_num,
+                    grid_node_emb_dim=grid_node_emb_dim,
+                    mesh_node_num=mesh_node_num,
+                    mesh_node_emb_dim=mesh_node_emb_dim,
+                    mesh_edge_emb_dim=mesh_edge_emb_dim,
+                    grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+                    mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+                    gnn_msg_steps=gnn_msg_steps,
+                ),
+            ),
+            (
+                "decoder",
+                GraphCastDecoder(
+                    grid_node_num=grid_node_num,
+                    grid_node_emb_dim=grid_node_emb_dim,
+                    mesh_node_num=mesh_node_num,
+                    mesh_node_emb_dim=mesh_node_emb_dim,
+                    mesh_edge_emb_dim=mesh_edge_emb_dim,
+                    grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+                    mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
+                    node_output_dim=node_output_dim,
+                ),
+            ),
         )
 
     def forward(
         self, x: Dict[str, "atmospheric_utils.GraphGridMesh"]
     ) -> Dict[str, paddle.Tensor]:
+        if self._input_transform is not None:
+            x = self._input_transform(x)
         graph = x[self.input_keys[0]]
         pre = self.graphcast(graph)
         return {self.output_keys[0]: pre}

@@ -134,6 +134,20 @@ def build_dataloader(_dataset, cfg):
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             collate_fn=collate_fn,
         )
+    elif getattr(_dataset, "use_graph_grid_mesh", False):
+        # Use special dataloader `GridMeshAtmosphericDataset`.
+
+        if collate_fn is None:
+            collate_fn = batch_transform.default_collate_fn
+        dataloader_ = io.DataLoader(
+            dataset=_dataset,
+            places=device.get_device(),
+            batch_sampler=batch_sampler,
+            collate_fn=collate_fn,
+            num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
+            use_shared_memory=cfg.get("use_shared_memory", False),
+            worker_init_fn=init_fn,
+        )
     else:
         if (
             cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
@@ -159,12 +173,6 @@ def build_dataloader(_dataset, cfg):
                 "Auto collation is disabled and set num_workers to "
                 f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
             )
-
-        if (
-            "name" in cfg["dataset"]
-            and cfg["dataset"]["name"] == "GridMeshAtmosphericDataset"
-        ):
-            collate_fn = batch_transform.default_collate_fn
 
         dataloader_ = io.DataLoader(
             dataset=_dataset,

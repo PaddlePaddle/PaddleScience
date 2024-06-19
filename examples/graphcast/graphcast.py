@@ -25,9 +25,7 @@ from ppsci.data.dataset import atmospheric_dataset
 
 
 def eval(cfg: DictConfig):
-    model = ppsci.arch.GraphCastNet(
-        cfg.MODEL.input_keys, cfg.MODEL.output_keys, cfg.graph_config
-    )
+    model = ppsci.arch.GraphCastNet(**cfg.MODEL)
 
     # set dataloader config
     eval_dataloader_cfg = {
@@ -35,7 +33,7 @@ def eval(cfg: DictConfig):
             "name": "GridMeshAtmosphericDataset",
             "input_keys": ("input",),
             "label_keys": ("label",),
-            "config": cfg.graph_config,
+            **cfg.DATA,
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
@@ -59,7 +57,7 @@ def eval(cfg: DictConfig):
         output_dict: Dict[str, paddle.Tensor],
         label_dict: Dict[str, paddle.Tensor],
         *args,
-    ) -> paddle.Tensor:
+    ) -> Dict[str, paddle.Tensor]:
         graph = output_dict["pred"]
         pred = dataset.denormalize(graph.grid_node_feat.numpy())
         pred = graph.grid_node_outputs_to_prediction(pred, dataset.targets_template)
@@ -71,13 +69,14 @@ def eval(cfg: DictConfig):
         pred = atmospheric_dataset.dataset_to_stacked(pred)
         target = atmospheric_dataset.dataset_to_stacked(target)
         loss = np.average(np.square(pred.data - target.data))
-        return loss
+        loss = paddle.to_tensor(loss)
+        return {"loss": loss}
 
     def metric(
         output_dict: Dict[str, paddle.Tensor],
         label_dict: Dict[str, paddle.Tensor],
         *args,
-    ) -> paddle.Tensor:
+    ) -> Dict[str, paddle.Tensor]:
         graph = output_dict["pred"][0]
         pred = dataset.denormalize(graph.grid_node_feat.numpy())
         pred = graph.grid_node_outputs_to_prediction(pred, dataset.targets_template)

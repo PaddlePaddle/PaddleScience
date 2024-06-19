@@ -62,7 +62,6 @@ def get_grid_positional_encoding(
         input_tensor (paddle.Tensor): The input tensor.
         grid_boundaries (list, optional): The boundaries of the grid. Defaults to [[0, 1], [0, 1]].
         channel_dim (int, optional): The location of unsqueeze. Defaults to 1.
-
     """
 
     shape = list(input_tensor.shape)

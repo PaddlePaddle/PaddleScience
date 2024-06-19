@@ -14,13 +14,29 @@
 
 import datetime
 import math
+from typing import Dict
 from typing import Optional
+from typing import Tuple
 
-import IPython
 import matplotlib
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
+
+from ppsci.utils import checker
+
+if not checker.dynamic_import_to_globals("IPython"):
+    raise ImportError(
+        "Could not import IPython python package. "
+        "Please install it with pip install IPython."
+    )
+import IPython
+
+if not checker.dynamic_import_to_globals("xarray"):
+    raise ImportError(
+        "Could not import xarray python package. "
+        "Please install it with pip install xarray."
+    )
 import xarray
 
 
@@ -48,7 +64,7 @@ def scale(
     data: xarray.Dataset,
     center: Optional[float] = None,
     robust: bool = False,
-) -> tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
+) -> Tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
     vmin = np.nanpercentile(data, (2 if robust else 0))
     vmax = np.nanpercentile(data, (98 if robust else 100))
     if center is not None:
@@ -63,13 +79,13 @@ def scale(
 
 
 def plot_data(
-    data: dict[str, xarray.Dataset],
+    data: Dict[str, xarray.Dataset],
     fig_title: str,
     plot_size: float = 5,
     robust: bool = False,
     cols: int = 4,
     file: str = "result.png",
-) -> tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
+) -> Tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
 
     first_data = next(iter(data.values()))[0]
     max_steps = first_data.sizes.get("time", 1)
@@ -137,7 +153,7 @@ def log_images(
     file="result.png",
 ):
     plot_size = 5
-    plot_max_steps = pred.dims["time"]
+    plot_max_steps = pred.sizes["time"]
 
     data = {
         "Targets": scale(

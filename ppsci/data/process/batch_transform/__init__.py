@@ -86,7 +86,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
         return graph
     elif (
         str(type(sample))
-        == "<class 'ppsci.data.dataset.atmospheric_utils.GraphGridMesh'>"
+        == "<class 'ppsci.data.dataset.atmospheric_dataset.GraphGridMesh'>"
     ):
         graph = sample
         graph.tensor()

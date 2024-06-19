@@ -184,9 +184,9 @@ def compare(paddle_pred):
 
 
 if __name__ == "__main__":
-    convert_parameters()  # step.1
-    make_graph_template()  # step.2
-    test_datasets()  # step.3
+    # convert_parameters()  # step.1
+    # make_graph_template()  # step.2
+    # test_datasets()  # step.3
     target, pred = eval()  # step.4
     visualize(target, pred, "2m_temperature", level=50)
     compare(pred)
