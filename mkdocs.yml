@@ -243,5 +243,4 @@ extra:
       lang: en
   version:
     provider: mike
-    version:
     alias: true
