@@ -43,6 +43,7 @@ jobs:
           if [ "$BRANCH" == "deploy_in_gitpage" ]; then
             ALIAS_VERSION="latest"
             mike deploy --push --update-aliases $ALIAS_VERSION
+            mike set-default --push latest
           elif [ "$BRANCH" == "release/1.2" ]; then
             ALIAS_VERSION="release-1.2"
             mike deploy --push --update-aliases $ALIAS_VERSION
@@ -56,5 +57,3 @@ jobs:
             ALIAS_VERSION="ai4s_universal_platform"
             mike deploy --push --update-aliases $ALIAS_VERSION
           fi
-
-          mike set-default --push latest
