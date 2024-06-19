@@ -1,3 +1,13 @@
+---
+tags:
+  - 方程符号化定义
+  - 几何形状定义
+  - Laplace方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+---
+
 # 2D-Laplace
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a>

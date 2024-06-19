@@ -1,3 +1,8 @@
+---
+tags:
+  - DeepONet求解方法
+---
+
 # DeepONet
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6566389?sUid=438690&shared=1&ts=1690775701017" class="md-button md-button--primary" style>AI Studio快速体验</a>

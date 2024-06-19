@@ -1,6 +1,17 @@
+---
+tags:
+  - 方程符号化定义
+  - NLSMB方程
+  - PINN求解方法
+  - 线性代数
+  - 高阶微分
+  - 复数
+  - 二阶优化
+---
+
 # NLS-MB
 
-<!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
+<a href="https://aistudio.baidu.com/projectdetail/8043128" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
 

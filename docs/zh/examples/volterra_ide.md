@@ -1,3 +1,11 @@
+---
+tags:
+  - 数据处理
+  - 几何形状定义
+  - 积分方程
+  - 线性代数
+---
+
 # Volterra integral equation
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6622866?sUid=438690&shared=1&ts=1691582831601" class="md-button md-button--primary" style>AI Studio快速体验</a>

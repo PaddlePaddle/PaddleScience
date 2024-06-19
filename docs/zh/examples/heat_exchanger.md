@@ -1,4 +1,13 @@
+---
+tags:
+  - 方程符号化定义
+  - 几何形状定义
+  - HeatExchanger方程
+---
+
 # Heat_Exchanger
+
+<a href="https://aistudio.baidu.com/projectdetail/8041447" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
 
