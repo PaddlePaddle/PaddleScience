@@ -40,7 +40,7 @@ jobs:
           BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
           # 根据分支名称部署相应的文档版本
-          if [ "$BRANCH" == "deploy_in_gitpage" ]; then
+          if [ "$BRANCH" == "develop" ]; then
             ALIAS_VERSION="latest"
             mike deploy --push --update-aliases $ALIAS_VERSION
             mike set-default --push latest
