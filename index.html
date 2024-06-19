@@ -1,0 +1,4225 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An out-of-the-box open source library for scientific computing based on deep learning.">
+      
+      
+        <meta name="author" content="PaddlePaddle">
+      
+      
+        <link rel="canonical" href="https://github.com/PaddlePaddle/PaddleScience/">
+      
+      
+      
+        <link rel="next" href="zh/overview/">
+      
+      
+      <link rel="icon" href="images/icons/favcion.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
+    
+    
+      
+        <title>主页 - PaddleScience Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.6543a935.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm-86.2-346.7c7.9-22.3 29.1-37.3 52.8-37.3h58.3c34.9 0 63.1 28.3 63.1 63.1 0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6-13.3 0-24-10.7-24-24v-13.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1 0-8.4-6.8-15.1-15.1-15.1h-58.3c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM224 352a32 32 0 1 1 64 0 32 32 0 1 1-64 0z"/></svg>');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Serif+SC:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Serif SC";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="stylesheets/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#paddlescience" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="." title="PaddleScience Docs" class="md-header__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="images/icons/paddle.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PaddleScience Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              主页
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/zh/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/en/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="." class="md-tabs__link">
+          
+  
+  PaddleScience
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="zh/examples/allen_cahn/" class="md-tabs__link">
+          
+  
+  经典案例
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="zh/api/arch/" class="md-tabs__link">
+          
+  
+  API 文档
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="zh/user_guide/" class="md-tabs__link">
+        
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="zh/development/" class="md-tabs__link">
+          
+  
+  开发与复现指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="zh/technical_doc/" class="md-tabs__link">
+        
+  
+    
+  
+  技术稿件
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="zh/cooperation/" class="md-tabs__link">
+        
+  
+    
+  
+  共创计划
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-tabs__link">
+        
+  
+    
+  
+  实训社区
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="PaddleScience Docs" class="md-nav__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="images/icons/paddle.png" alt="logo">
+
+    </a>
+    PaddleScience Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    PaddleScience
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            PaddleScience
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    主页
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    主页
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      👀简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝案例列表
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀快速安装
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🕘最近更新
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✨特性
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎈其他领域支持
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      💬支持与建议
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      👫开源共建
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯共创计划
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❤️致谢
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      🤝合作单位
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      📜开源协议
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    功能介绍
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/install_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    安装使用
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/quickstart/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    快速开始
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    学习资料
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    经典案例
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            经典案例
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+     
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+             
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_1" id="__nav_2_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    数学(AI for Math)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            数学(AI for Math)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/allen_cahn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AllenCahn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/deephpms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepHPMs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/deeponet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepONet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/euler_beam/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Euler_Beam
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/laplace2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Laplace2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/lorenz/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lorenz_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/pirbn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PIRBN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/rossler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rossler_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/volterra_ide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Volterra_IDE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/nlsmb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NLSMB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/xpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XPINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2" id="__nav_2_1_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    技术科学(AI for Technology)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            技术科学(AI for Technology)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_1" id="__nav_2_1_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    流体
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            流体
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/amgnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AMGNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/aneurysm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Aneurysm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/bubble/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    BubbleNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/cfdgcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CFDGCN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/cylinder2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/cylinder2d_unsteady_transformer_physx/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/darcy2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Darcy2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/deepcfd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepCFD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/ldc2d_steady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_steady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/ldc2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/labelfree_DNN_surrogate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Labelfree_DNN_surrogate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/nsfnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/phycrnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyCRNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/shock_wave/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ShockWave
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/tempoGAN/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tempoGAN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/nsfnet4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNet4
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/viv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ViV
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_2" id="__nav_2_1_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    结构
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            结构
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/biharmonic2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Biharmonic2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/bracket/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bracket
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/control_arm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control_arm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/epnn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EPNN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/phylstm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phy-LSTM
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/topopt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TopOpt
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_3" id="__nav_2_1_2_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    传热
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            传热
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/heat_exchanger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_Exchanger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/heat_pinn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_PINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/phygeonet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyGeoNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/chip_heat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Chip_heat
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_3" id="__nav_2_1_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    材料科学(AI for Material)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            材料科学(AI for Material)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/hpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hPINNs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_4" id="__nav_2_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    地球科学(AI for Earth Science)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            地球科学(AI for Earth Science)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/fourcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FourCastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/nowcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NowcastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/dgmr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DGMR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/examples/earthformer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EarthFormer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API 文档
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            API 文档
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/arch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.arch
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/autodiff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.autodiff
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/constraint/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.constraint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_4" id="__nav_3_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/data/dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/data/process/transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/data/process/batch_transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.batch_transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/equation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.equation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_7" id="__nav_3_1_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.loss
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.loss
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/loss/loss/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.loss
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/loss/mtl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.mtl
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/metric/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.metric
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_9" id="__nav_3_1_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.optimizer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/lr_scheduler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.lr_scheduler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/solver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.solver
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_11" id="__nav_3_1_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/checker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.checker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/expression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.expression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/initializer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.initializer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/logger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.logger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/misc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.misc
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/ema/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.ema
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/save_load/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.save_load
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/utils/symbolic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.symbolic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/validate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.validate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/visualize/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.visualize
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/experimental/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.experimental
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/probability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.probability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    deploy
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/api/depoly/python_infer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    deploy.python_infer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/user_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    使用指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    开发与复现指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            开发与复现指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    开发指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/reproduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    复现指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/technical_doc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    技术稿件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="zh/cooperation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    共创计划
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    实训社区
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      👀简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝案例列表
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀快速安装
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🕘最近更新
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✨特性
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎈其他领域支持
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      💬支持与建议
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      👫开源共建
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯共创计划
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❤️致谢
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      🤝合作单位
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      📜开源协议
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/PaddlePaddle/PaddleScience/edit/develop/docs/index.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/PaddlePaddle/PaddleScience/raw/develop/docs/index.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+<div><h1 id="paddlescience">PaddleScience<a class="headerlink" href="#paddlescience" title="Permanent link">¶</a></h1>
+<blockquote>
+<p><em>Developed with <a href="https://www.paddlepaddle.org.cn/">PaddlePaddle</a></em></p>
+</blockquote>
+<p><a href="https://pypi.org/project/paddlesci/"><img alt="Version" src="https://img.shields.io/pypi/v/paddlesci"></a>
+<a href="https://pypi.org/project/paddlesci/"><img alt="Python Version" src="https://img.shields.io/pypi/pyversions/paddlesci"></a>
+<a href="https://paddlescience-docs.readthedocs.io/zh/latest/"><img alt="Doc" src="https://img.shields.io/readthedocs/paddlescience-docs/latest"></a>
+<a href="https://github.com/psf/black"><img alt="Code Style" src="https://img.shields.io/badge/code_style-black-black"></a>
+<a href="https://hydra.cc/"><img alt="Hydra" src="https://img.shields.io/badge/config-hydra-89b8cd"></a>
+<a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE"><img alt="License" src="https://img.shields.io/github/license/PaddlePaddle/PaddleScience"></a></p>
+<p>🔥 <a href="https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5">IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛</a>，欢迎报名参赛。</p>
+<style>
+    .container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .card {
+        font-family: 'Noto Serif SC', sans-serif;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: black;
+        font-weight: bold;
+        height: 100px;
+        padding: 20px;
+        width: 170px;
+        text-align: center;
+        transition: border-color 0.1s; /* 边框颜色变化的过渡效果 */
+        border: 2px solid transparent; /* 默认透明边框，用于悬浮时边框的平滑过渡 */
+        /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); */
+    }
+    .card:hover {
+        border-color: #7793FF; /* 鼠标悬浮时的深蓝色边框 */
+    }
+    .card-deepxde {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-deepmd {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-modulus {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #666;
+    }
+    .text-large {
+        font-size: 14px;
+    }
+    .text-decoration {
+        text-decoration: underline;
+    }
+</style>
+
+<h2 id="_1">👀简介<a class="headerlink" href="#_1" title="Permanent link">¶</a></h2>
+<p>PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。</p>
+<p><a class="glightbox" href="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" alt="panorama" width="100%" height="auto"></a></p>
+<h2 id="_2">📝案例列表<a class="headerlink" href="#_2" title="Permanent link">¶</a></h2>
+<style>
+    table  th{
+        background: #C1E6FE;
+    }
+</style>
+
+<p align="center"><b>数学(AI for Math)</b></p>
+
+<table>
+<thead>
+<tr>
+<th>问题类型</th>
+<th>案例名称</th>
+<th>优化算法</th>
+<th>模型类型</th>
+<th>训练方式</th>
+<th>数据集</th>
+<th>参考资料</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>相场方程</td>
+<td><a href="zh/examples/allen_cahn/">Allen-Cahn</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat">Data</a></td>
+<td><a href="https://arxiv.org/pdf/2402.00326">Paper</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="zh/examples/laplace2d/">拉普拉斯方程</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="zh/examples/deephpms/">伯格斯方程</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td><a href="https://github.com/maziarraissi/DeepHPMs/tree/master/Data">Data</a></td>
+<td><a href="https://arxiv.org/pdf/1801.06637.pdf">Paper</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="zh/examples/pirbn/">非线性偏微分方程</a></td>
+<td>机理驱动</td>
+<td>PIRBN</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/2304.06234">Paper</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="zh/examples/lorenz/">洛伦兹方程</a></td>
+<td>数据驱动</td>
+<td>Transformer-Physx</td>
+<td>监督学习</td>
+<td><a href="https://github.com/zabaras/transformer-physx">Data</a></td>
+<td><a href="https://arxiv.org/abs/2010.03957">Paper</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="zh/examples/rossler/">若斯叻方程</a></td>
+<td>数据驱动</td>
+<td>Transformer-Physx</td>
+<td>监督学习</td>
+<td><a href="https://github.com/zabaras/transformer-physx">Data</a></td>
+<td><a href="https://arxiv.org/abs/2010.03957">Paper</a></td>
+</tr>
+<tr>
+<td>算子学习</td>
+<td><a href="zh/examples/deeponet/">DeepONet</a></td>
+<td>数据驱动</td>
+<td>MLP</td>
+<td>监督学习</td>
+<td><a href="https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html">Data</a></td>
+<td><a href="https://export.arxiv.org/pdf/1910.03193.pdf">Paper</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/gpinn/poisson_1d.py">梯度增强的物理知识融合 PDE 求解</a></td>
+<td>机理驱动</td>
+<td>gPINN</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.1016/j.cma.2022.114823">Paper</a></td>
+</tr>
+<tr>
+<td>积分方程</td>
+<td><a href="zh/examples/volterra_ide/">沃尔泰拉积分方程</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py">Project</a></td>
+</tr>
+<tr>
+<td>微分方程</td>
+<td><a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py">分数阶微分方程</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>光孤子</td>
+<td><a href="zh/examples/nlsmb/">Optical soliton</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.1007/s11071-023-08824-w">Paper</a></td>
+</tr>
+<tr>
+<td>光纤怪波</td>
+<td><a href="zh/examples/nlsmb/">Optical rogue wave</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.1007/s11071-023-08824-w">Paper</a></td>
+</tr>
+<tr>
+<td>域分解</td>
+<td><a href="zh/examples/xpinns/">XPINN</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.4208/cicp.OA-2020-0164">Paper</a></td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p align="center"><b>技术科学(AI for Technology)</b></p>
+
+<table>
+<thead>
+<tr>
+<th>问题类型</th>
+<th>案例名称</th>
+<th>优化算法</th>
+<th>模型类型</th>
+<th>训练方式</th>
+<th>数据集</th>
+<th>参考资料</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>定常不可压流体</td>
+<td><a href="zh/examples/ldc2d_steady/">2D 定常方腔流</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>定常不可压流体</td>
+<td><a href="zh/examples/darcy2d/">2D 达西流</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>定常不可压流体</td>
+<td><a href="zh/examples/labelfree_DNN_surrogate/">2D 管道流</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/1906.02382">Paper</a></td>
+</tr>
+<tr>
+<td>定常不可压流体</td>
+<td><a href="zh/examples/aneurysm/">3D 血管瘤</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar">Data</a></td>
+<td><a href="https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html">Project</a></td>
+</tr>
+<tr>
+<td>定常不可压流体</td>
+<td><a href="zh/examples/deepcfd/">任意 2D 几何体绕流</a></td>
+<td>数据驱动</td>
+<td>DeepCFD</td>
+<td>监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/2004.08826">Paper</a></td>
+</tr>
+<tr>
+<td>非定常不可压流体</td>
+<td><a href="zh/examples/ldc2d_unsteady/">2D 非定常方腔流</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>非定常不可压流体</td>
+<td><a href="zh/examples/cylinder2d_unsteady/">Re100 2D 圆柱绕流</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>半监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar">Data</a></td>
+<td><a href="https://arxiv.org/abs/2004.08826">Paper</a></td>
+</tr>
+<tr>
+<td>非定常不可压流体</td>
+<td><a href="zh/examples/cylinder2d_unsteady_transformer_physx/">Re100~750 2D 圆柱绕流</a></td>
+<td>数据驱动</td>
+<td>Transformer-Physx</td>
+<td>监督学习</td>
+<td><a href="https://github.com/zabaras/transformer-physx">Data</a></td>
+<td><a href="https://arxiv.org/abs/2010.03957">Paper</a></td>
+</tr>
+<tr>
+<td>可压缩流体</td>
+<td><a href="zh/examples/shock_wave/">2D 空气激波</a></td>
+<td>机理驱动</td>
+<td>PINN-WE</td>
+<td>无监督学习</td>
+<td><a href="https://aistudio.baidu.com/datasetdetail/167250">Data</a></td>
+<td>-</td>
+</tr>
+<tr>
+<td>飞行器设计</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/5322713">MeshGraphNets</a></td>
+<td>数据驱动</td>
+<td>GNN</td>
+<td>监督学习</td>
+<td><a href="https://aistudio.baidu.com/datasetdetail/184320">Data</a></td>
+<td><a href="https://arxiv.org/abs/2010.03409">Paper</a></td>
+</tr>
+<tr>
+<td>飞行器设计</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/4486133">火箭发动机真空羽流</a></td>
+<td>数据驱动</td>
+<td>CNN</td>
+<td>监督学习</td>
+<td><a href="https://aistudio.baidu.com/datasetdetail/167250">Data</a></td>
+<td>-</td>
+</tr>
+<tr>
+<td>飞行器设计</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/5671596">Deep-Flow-Prediction</a></td>
+<td>数据驱动</td>
+<td>TurbNetG</td>
+<td>监督学习</td>
+<td><a href="https://aistudio.baidu.com/datasetdetail/197778">Data</a></td>
+<td><a href="https://arxiv.org/abs/1810.08217">Paper</a></td>
+</tr>
+<tr>
+<td>通用流场模拟</td>
+<td><a href="zh/examples/amgnet/">气动外形设计</a></td>
+<td>数据驱动</td>
+<td>AMGNet</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip">Data</a></td>
+<td><a href="https://arxiv.org/abs/1810.08217">Paper</a></td>
+</tr>
+<tr>
+<td>流固耦合</td>
+<td><a href="zh/examples/viv/">涡激振动</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>半监督学习</td>
+<td><a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fsi/VIV_Training_Neta100.mat">Data</a></td>
+<td><a href="https://arxiv.org/abs/2206.03864">Paper</a></td>
+</tr>
+<tr>
+<td>多相流</td>
+<td><a href="zh/examples/bubble/">气液两相流</a></td>
+<td>机理驱动</td>
+<td>BubbleNet</td>
+<td>半监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat">Data</a></td>
+<td><a href="https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics">Paper</a></td>
+</tr>
+<tr>
+<td>多相流</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/5379212">twophasePINN</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.1016/j.mlwa.2021.100029">Paper</a></td>
+</tr>
+<tr>
+<td>多相流</td>
+<td>非高斯渗透率场估计<sup>coming soon</sup></td>
+<td>机理驱动</td>
+<td>cINN</td>
+<td>监督学习</td>
+<td>-</td>
+<td><a href="https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics">Paper</a></td>
+</tr>
+<tr>
+<td>流场高分辨率重构</td>
+<td><a href="zh/examples/tempoGAN/">2D 湍流流场重构</a></td>
+<td>数据驱动</td>
+<td>tempoGAN</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat">Train Data</a><br><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat">Eval Data</a></td>
+<td><a href="https://dl.acm.org/doi/10.1145/3197517.3201304">Paper</a></td>
+</tr>
+<tr>
+<td>流场高分辨率重构</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/4493261?contributionType=1">2D 湍流流场重构</a></td>
+<td>数据驱动</td>
+<td>cycleGAN</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat">Train Data</a><br><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat">Eval Data</a></td>
+<td><a href="https://arxiv.org/abs/2007.15324">Paper</a></td>
+</tr>
+<tr>
+<td>流场高分辨率重构</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/5807904">基于Voronoi嵌入辅助深度学习的稀疏传感器全局场重建</a></td>
+<td>数据驱动</td>
+<td>CNN</td>
+<td>监督学习</td>
+<td><a href="https://drive.google.com/drive/folders/1K7upSyHAIVtsyNAqe6P8TY1nS5WpxJ2c">Data1</a><br><a href="https://drive.google.com/drive/folders/1pVW4epkeHkT2WHZB7Dym5IURcfOP4cXu">Data2</a><br><a href="https://drive.google.com/drive/folders/1xIY_jIu-hNcRY-TTf4oYX1Xg4_fx8ZvD">Data3</a></td>
+<td><a href="https://arxiv.org/pdf/2202.11214.pdf">Paper</a></td>
+</tr>
+<tr>
+<td>流场高分辨率重构</td>
+<td>基于扩散的流体超分重构<sup>coming soon</sup></td>
+<td>数理融合</td>
+<td>DDPM</td>
+<td>监督学习</td>
+<td>-</td>
+<td><a href="https://www.sciencedirect.com/science/article/pii/S0021999123000670">Paper</a></td>
+</tr>
+<tr>
+<td>求解器耦合</td>
+<td><a href="zh/examples/cfdgcn/">CFD-GCN</a></td>
+<td>数据驱动</td>
+<td>GCN</td>
+<td>监督学习</td>
+<td><a href="https://aistudio.baidu.com/aistudio/datasetdetail/184778">Data</a><br><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar">Mesh</a></td>
+<td><a href="https://arxiv.org/abs/2007.04439">Paper</a></td>
+</tr>
+<tr>
+<td>受力分析</td>
+<td><a href="zh/examples/euler_beam/">1D 欧拉梁变形</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>受力分析</td>
+<td><a href="zh/examples/biharmonic2d/">2D 平板变形</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/2108.07243">Paper</a></td>
+</tr>
+<tr>
+<td>受力分析</td>
+<td><a href="zh/examples/bracket/">3D 连接件变形</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar">Data</a></td>
+<td><a href="https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html">Tutorial</a></td>
+</tr>
+<tr>
+<td>受力分析</td>
+<td><a href="zh/examples/phylstm/">结构震动模拟</a></td>
+<td>机理驱动</td>
+<td>PhyLSTM</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat">Data</a></td>
+<td><a href="https://arxiv.org/abs/2002.10253">Paper</a></td>
+</tr>
+<tr>
+<td>受力分析</td>
+<td><a href="zh/examples/epnn/">2D 弹塑性结构</a></td>
+<td>机理驱动</td>
+<td>EPNN</td>
+<td>无监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat">Train Data</a><br><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat">Eval Data</a></td>
+<td><a href="https://arxiv.org/abs/2204.12088">Paper</a></td>
+</tr>
+<tr>
+<td>受力分析和逆问题</td>
+<td><a href="zh/examples/control_arm/">3D 汽车控制臂变形</a></td>
+<td>机理驱动</td>
+<td>MLP</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>拓扑优化</td>
+<td><a href="zh/examples/topopt/">2D 拓扑优化</a></td>
+<td>数据驱动</td>
+<td>TopOptNN</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5">Data</a></td>
+<td><a href="https://arxiv.org/pdf/1709.09578">Paper</a></td>
+</tr>
+<tr>
+<td>热仿真</td>
+<td><a href="zh/examples/heat_exchanger/">1D 换热器热仿真</a></td>
+<td>机理驱动</td>
+<td>PI-DeepONet</td>
+<td>无监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>热仿真</td>
+<td><a href="zh/examples/heat_pinn/">2D 热仿真</a></td>
+<td>机理驱动</td>
+<td>PINN</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/1711.10561">Paper</a></td>
+</tr>
+<tr>
+<td>热仿真</td>
+<td><a href="zh/examples/chip_heat/">2D 芯片热仿真</a></td>
+<td>机理驱动</td>
+<td>PI-DeepONet</td>
+<td>无监督学习</td>
+<td>-</td>
+<td><a href="https://doi.org/10.1063/5.0194245">Paper</a></td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p align="center"><b>材料科学(AI for Material)</b></p>
+
+<table>
+<thead>
+<tr>
+<th>问题类型</th>
+<th>案例名称</th>
+<th>优化算法</th>
+<th>模型类型</th>
+<th>训练方式</th>
+<th>数据集</th>
+<th>参考资料</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>材料设计</td>
+<td><a href="zh/examples/hpinns/">散射板设计(反问题)</a></td>
+<td>数理融合</td>
+<td>数据驱动</td>
+<td>监督学习</td>
+<td><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat">Train Data</a><br><a href="https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat">Eval Data</a></td>
+<td><a href="https://arxiv.org/pdf/2102.04626.pdf">Paper</a></td>
+</tr>
+<tr>
+<td>材料生成</td>
+<td>面向对称感知的周期性材料生成<sup>coming soon</sup></td>
+<td>数据驱动</td>
+<td>SyMat</td>
+<td>监督学习</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p align="center"><b>地球科学(AI for Earth Science)</b></p>
+
+<table>
+<thead>
+<tr>
+<th>问题类型</th>
+<th>案例名称</th>
+<th>优化算法</th>
+<th>模型类型</th>
+<th>训练方式</th>
+<th>数据集</th>
+<th>参考资料</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>天气预报</td>
+<td><a href="zh/examples/fourcastnet/">FourCastNet 气象预报</a></td>
+<td>数据驱动</td>
+<td>FourCastNet</td>
+<td>监督学习</td>
+<td><a href="https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&amp;origin_path=%2F~%2Fdata%2F">ERA5</a></td>
+<td><a href="https://arxiv.org/pdf/2202.11214.pdf">Paper</a></td>
+</tr>
+<tr>
+<td>天气预报</td>
+<td><a href="zh/examples/nowcastnet/">NowCastNet 气象预报</a></td>
+<td>数据驱动</td>
+<td>NowCastNet</td>
+<td>监督学习</td>
+<td><a href="https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&amp;origin_path=%2F~%2Fdata%2F">MRMS</a></td>
+<td><a href="https://www.nature.com/articles/s41586-023-06184-4">Paper</a></td>
+</tr>
+<tr>
+<td>天气预报</td>
+<td><a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/jointContribution/graphcast/README.md">GraphCast 气象预报</a></td>
+<td>数据驱动</td>
+<td>GraphCastNet</td>
+<td>监督学习</td>
+<td>-</td>
+<td><a href="https://arxiv.org/abs/2212.12794">Paper</a></td>
+</tr>
+<tr>
+<td>大气污染物</td>
+<td><a href="https://aistudio.baidu.com/projectdetail/5663515?channel=0&amp;channelType=0&amp;sUid=438690&amp;shared=1&amp;ts=1698221963752">UNet 污染物扩散</a></td>
+<td>数据驱动</td>
+<td>UNet</td>
+<td>监督学习</td>
+<td><a href="https://aistudio.baidu.com/datasetdetail/198102">Data</a></td>
+<td>-</td>
+</tr>
+<tr>
+<td>天气预报</td>
+<td><a href="zh/examples/dgmr/">DGMR 气象预报</a></td>
+<td>数据驱动</td>
+<td>DGMR</td>
+<td>监督学习</td>
+<td><a href="https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km">UK dataset</a></td>
+<td><a href="https://arxiv.org/pdf/2104.00954.pdf">Paper</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">🚀快速安装<a class="headerlink" href="#_3" title="Permanent link">¶</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">方式1: 源码安装[推荐]</label><label for="__tabbed_1_2">方式2: pip安装</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>develop<span class="w"> </span>https://github.com/PaddlePaddle/PaddleScience.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># 若 github clone 速度比较慢，可以使用 gitee clone</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nb">cd</span><span class="w"> </span>PaddleScience
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># install paddlesci with editable mode</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-i<span class="w"> </span>https://pypi.tuna.tsinghua.edu.cn/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>paddlesci
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>完整安装流程</strong>：<a href="zh/install_setup/">安装与使用</a></p>
+<h2 id="_4">🕘最近更新<a class="headerlink" href="#_4" title="Permanent link">¶</a></h2>
+<ul>
+<li>添加 PirateNet(基于 Allen-cahn 方程和 N-S 方程求解) <a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn/">Allen-Cahn</a>、<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/ldc2d_steady/">LDC2D(Re3200)</a>。</li>
+<li>基于 PaddleScience 的快速热仿真方法 <a href="https://pubs.aip.org/aip/pof/article-abstract/36/3/037142/3277890/A-fast-general-thermal-simulation-model-based-on?redirectedFrom=fulltext">A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network</a> 被 Physics of Fluids 2024 接受。</li>
+<li>添加多目标优化算法 <a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo">Relobralo</a> 。</li>
+<li>添加气泡流求解案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bubble">Bubble</a>)、机翼优化案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deepcfd/">DeepCFD</a>)、热传导仿真案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn">HeatPINN</a>)、非线性短临预报模型(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet">Nowcasting(仅推理)</a>)、拓扑优化案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt">TopOpt</a>)、矩形平板线弹性方程求解案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d">Biharmonic2D</a>)。</li>
+<li>添加二维血管案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate/#4">LabelFree-DNN-Surrogate</a>)、空气激波案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/shock_wave/">ShockWave</a>)、去噪网络模型(<a href="https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/DU_CNN">DUCNN</a>)、风电预测模型(<a href="https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/Deep-Spatio-Temporal">Deep Spatial Temporal</a>)、域分解模型(<a href="https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/XPINNs">XPINNs</a>)、积分方程求解案例(<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide">Volterra Equation</a>)、分数阶方程求解案例(<a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py">Fractional Poisson 2D</a>)。</li>
+<li>针对串联方程和复杂方程场景，<code>Equation</code> 模块支持基于 <a href="https://docs.sympy.org/dev/tutorials/intro-tutorial/intro.html">sympy</a> 的符号计算，并支持和 python 函数混合使用(<a href="https://github.com/PaddlePaddle/PaddleScience/pull/507">#507</a>、<a href="https://github.com/PaddlePaddle/PaddleScience/pull/505">#505</a>)。</li>
+<li><code>Geometry</code> 模块和 <code>InteriorConstraint</code>、<code>InitialConstraint</code> 支持计算 SDF 微分功能(<a href="https://github.com/PaddlePaddle/PaddleScience/pull/539">#539</a>)。</li>
+<li>添加 <strong>M</strong>ulti<strong>T</strong>ask<strong>L</strong>earning(<code>ppsci.loss.mtl</code>) 多任务学习模块，针对多任务优化(如 PINN 方法)进一步提升性能，使用方式：<a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/user_guide/#24">多任务学习指南</a>(<a href="https://github.com/PaddlePaddle/PaddleScience/pull/505">#493</a>、<a href="https://github.com/PaddlePaddle/PaddleScience/pull/505">#492</a>)。</li>
+</ul>
+<h2 id="_5">✨特性<a class="headerlink" href="#_5" title="Permanent link">¶</a></h2>
+<ul>
+<li>支持简单几何和复杂 STL 几何的采样与布尔运算。</li>
+<li>支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。</li>
+<li>支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。</li>
+<li>支持结果可视化输出与日志结构化保存。</li>
+<li>完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。</li>
+<li>支持基于 sympy 符号计算库的方程表示与联立方程组计算。</li>
+<li>更多特性正在开发中...</li>
+</ul>
+<h2 id="_6">🎈其他领域支持<a class="headerlink" href="#_6" title="Permanent link">¶</a></h2>
+<p>除 PaddleScience 套件外，Paddle 框架还支持了 DeepXDE 的所有案例，分子动力学套件 DeepMD-kit 部分案例和功能，以及正在适配中的 Modulus 。</p>
+<div class="container">
+    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
+        <div class="card card-deepxde">
+            DeepXDE
+            <br><span class="text-large">全量支持</span>
+        </div>
+    </a>
+    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
+        <div class="card card-modulus">
+            DeepMD
+            <br><span class="text-large">适配中</span>
+        </div>
+    </a>
+    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
+        <div class="card card-deepmd">
+            Modulus
+            <br><span class="text-large">适配中</span>
+        </div>
+    </a>
+</div>
+
+<h2 id="_7">💬支持与建议<a class="headerlink" href="#_7" title="Permanent link">¶</a></h2>
+<p>如使用过程中遇到问题或想提出开发建议，欢迎在 <a href="https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general"><strong>Discussion</strong></a> 提出建议，或者在 <a href="https://github.com/PaddlePaddle/PaddleScience/issues/new/choose"><strong>Issue</strong></a> 页面新建 issue，会有专业的研发人员进行解答。</p>
+<h2 id="_8">👫开源共建<a class="headerlink" href="#_8" title="Permanent link">¶</a></h2>
+<p>PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会不定期推出开源活动。</p>
+<blockquote>
+<p>在开源活动中如需使用 PaddleScience 进行开发，可参考 <a href="https://paddlescience-docs.readthedocs.io/zh/latest/zh/development/"><strong>PaddleScience 开发与贡献指南</strong></a> 以提升开发效率和质量。</p>
+</blockquote>
+<ul>
+<li>
+<p>🎁快乐开源</p>
+<p>旨在鼓励更多的开发者参与到飞桨科学计算社区的开源建设中，帮助社区修复 bug 或贡献 feature，加入开源、共建飞桨。了解编程基本知识的入门用户即可参与，活动进行中：
+<a href="https://github.com/PaddlePaddle/PaddleScience/issues/379">PaddleScience 快乐开源活动表单</a></p>
+</li>
+<li>
+<p>🔥第六期黑客松</p>
+<p>面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：<a href="https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_6th/%E3%80%90Hackathon%206th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md">【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛</a></p>
+</li>
+</ul>
+<h2 id="_9">🎯共创计划<a class="headerlink" href="#_9" title="Permanent link">¶</a></h2>
+<p>PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 <a href="https://www.paddlepaddle.org.cn/science">飞桨AI for Science共创计划</a>。</p>
+<h2 id="_10">❤️致谢<a class="headerlink" href="#_10" title="Permanent link">¶</a></h2>
+<ul>
+<li>
+<p>PaddleScience 的部分模块和案例设计受 <a href="https://github.com/NVIDIA/modulus/tree/main">NVIDIA-Modulus</a>、<a href="https://github.com/lululxvi/deepxde/tree/master">DeepXDE</a>、<a href="https://github.com/PaddlePaddle/PaddleNLP/tree/develop">PaddleNLP</a>、<a href="https://github.com/PaddlePaddle/PaddleClas/tree/develop">PaddleClas</a> 等优秀开源套件的启发。</p>
+</li>
+<li>
+<p>PaddleScience 的部分代码由以下优秀开发者贡献（按 <a href="https://github.com/PaddlePaddle/PaddleScience/graphs/contributors">Contributors</a> 排序）：</p>
+<p><style>
+    .avatar {
+        height: 64px;
+        width: 64px;
+        border: 2px solid rgba(128, 128, 128, 0.308);
+        border-radius: 50%;
+    }</p>
+<div class="language-text highlight"><pre><span></span><code>.avatar:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.4);
+    transition: 0.4s;
+    transform:translateY(-10px);
+}
+</code></pre></div>
+<p></style>
+</p><div id="contributors"></div>
+</li>
+</ul>
+<h2 id="_11">🤝合作单位<a class="headerlink" href="#_11" title="Permanent link">¶</a></h2>
+<p><a class="glightbox" href="images/overview/cooperation.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="cooperation" src="images/overview/cooperation.png"></a></p>
+<h2 id="_12">📜开源协议<a class="headerlink" href="#_12" title="Permanent link">¶</a></h2>
+<p><a href="https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE">Apache License 2.0</a></p></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 19, 2024</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 19, 2024</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2022 - 2023 PaddlePaddle
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top", "search.suggest", "navigation.instant", "content.code.copy", "content.code.select", "content.code.annotate", "search.highlight", "content.tabs.link", "content.action.edit", "content.action.view"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"alias": true, "provider": "mike"}}</script>
+    
+    
+      <script src="assets/javascripts/bundle.ad660dcc.min.js"></script>
+      
+        <script src="javascripts/bd_statistics.js"></script>
+      
+        <script src="javascripts/mathjax.js"></script>
+      
+        <script src="javascripts/contributors.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>
