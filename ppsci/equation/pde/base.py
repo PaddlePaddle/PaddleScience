@@ -29,7 +29,7 @@ DETACH_FUNC_NAME = "detach"
 
 
 class PDE:
-    """Base class for Partial Differential Equation"""
+    """Base class for Partial Differential Equation."""
 
     def __init__(self):
         super().__init__()
@@ -43,7 +43,7 @@ class PDE:
     def create_symbols(
         symbol_str: str,
     ) -> Union[sp.Symbol, Tuple[sp.Symbol, ...]]:
-        """create symbolic variables.
+        """Create symbolic variables.
 
         Args:
             symbol_str (str): String contains symbols, such as "x", "x y z".
@@ -90,8 +90,7 @@ class PDE:
 
     def _apply_detach(self):
         """
-        Wrap detached sub_expr into detach(sub_expr) to prevent gradient
-        back-propagation, only for those items speicified in self.detach_keys.
+        Wrap detached sub_expr into detach(sub_expr) to prevent gradient back-propagation, only for those items speicified in self.detach_keys.
 
         NOTE: This function is expected to be called after self.equations is ready in PDE.__init__.
 
@@ -206,7 +205,6 @@ class PDE:
             Tensor(shape=[], dtype=float64, place=Place(gpu:0), stop_gradient=False,
                    0.))])
         """
-
         return self.learnable_parameters.state_dict()
 
     def set_state_dict(

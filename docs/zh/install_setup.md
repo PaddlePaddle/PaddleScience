@@ -10,7 +10,7 @@
     # pull image
     docker pull hydrogensulfate/paddlescience
 
-    # create a container named 'paddlescience' based on pulled image
+    # create a container named 'paddlescience_container' based on pulled image
     ## docker version < 19.03
     nvidia-docker run --name paddlescience_container --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
 
@@ -88,6 +88,7 @@
         ``` sh
         cd PaddleScience/
         export PYTHONPATH=$PYTHONPATH:$PWD
+        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
     === "Windows"
@@ -95,6 +96,7 @@
         ``` sh
         cd PaddleScience/
         set PYTHONPATH=%cd%
+        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
     上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
@@ -144,7 +146,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
     PyMesh 库需要以 setup 的方式进行安装，命令如下：
 
     ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
     tar -zxvf PyMesh.tar.gz
 
     # 也可以使用 git 命令下载，速度可能会比较慢

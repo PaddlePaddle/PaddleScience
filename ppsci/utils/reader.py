@@ -210,7 +210,7 @@ def load_vtk_with_time_file(file: str) -> Dict[str, np.ndarray]:
     """Temporary interface for points cloud, will be banished sooner.
 
     Args:
-        file (str): input file name.
+        file (str): Input file name.
 
     Returns:
         Dict[str, np.ndarray]: Input coordinates dict.

@@ -56,6 +56,7 @@ class RealSHT(nn.Layer):
     [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
 
     Initializes the SHT Layer, precomputing the necessary quadrature weights.
+
     Args:
         nlat (int): Input grid resolution in the latitudinal direction.
         nlon (int): Input grid resolution in the longitudinal direction.

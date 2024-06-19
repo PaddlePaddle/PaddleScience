@@ -916,7 +916,7 @@ class CuboidTransformer(base.Arch):
         """
         Args:
             x (paddle.Tensor): Tensor with shape (B, T, H, W, C).
-            verbose (bool): if True, print intermediate shapes.
+            verbose (bool): If True, print intermediate shapes.
 
         Returns:
             out (paddle.Tensor): The output Shape (B, T_out, H, W, C_out)

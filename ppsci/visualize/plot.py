@@ -407,7 +407,6 @@ def save_plot_from_3d_dict(
         ...     1,
         ... ) # doctest: +SKIP
     """
-
     visu_data = [data_dict[k] for k in visu_keys]
     if isinstance(visu_data[0], paddle.Tensor):
         visu_data = [x.numpy() for x in visu_data]

@@ -24,6 +24,74 @@ import ppsci
 from ppsci.utils import logger
 
 
+def plot(input_data, N_EVAL, pinn_output, fdm_output, cfg):
+    x = input_data["x"].reshape(N_EVAL, N_EVAL)
+    y = input_data["y"].reshape(N_EVAL, N_EVAL)
+
+    plt.subplot(2, 1, 1)
+    plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
+    plt.colorbar()
+    plt.title("PINN")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.tight_layout()
+    plt.axis("square")
+
+    plt.subplot(2, 1, 2)
+    plt.pcolormesh(x, y, fdm_output, cmap="magma")
+    plt.colorbar()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("FDM")
+    plt.tight_layout()
+    plt.axis("square")
+    plt.savefig(osp.join(cfg.output_dir, "pinn_fdm_comparison.png"))
+    plt.close()
+
+    frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
+    frames = [*map(int, (frames_val + 1) / 2 * (N_EVAL - 1))]
+    height = 3
+    plt.figure("", figsize=(len(frames) * height, 2 * height))
+
+    for i, var_index in enumerate(frames):
+        plt.subplot(2, len(frames), i + 1)
+        plt.title(f"y = {frames_val[i]:.2f}")
+        plt.plot(
+            x[:, var_index],
+            pinn_output[:, var_index] * 75.0,
+            "r--",
+            lw=4.0,
+            label="pinn",
+        )
+        plt.plot(x[:, var_index], fdm_output[:, var_index], "b", lw=2.0, label="FDM")
+        plt.ylim(0.0, 100.0)
+        plt.xlim(-1.0, +1.0)
+        plt.xlabel("x")
+        plt.ylabel("T")
+        plt.tight_layout()
+        plt.legend()
+
+    for i, var_index in enumerate(frames):
+        plt.subplot(2, len(frames), len(frames) + i + 1)
+        plt.title(f"x = {frames_val[i]:.2f}")
+        plt.plot(
+            y[var_index, :],
+            pinn_output[var_index, :] * 75.0,
+            "r--",
+            lw=4.0,
+            label="pinn",
+        )
+        plt.plot(y[var_index, :], fdm_output[var_index, :], "b", lw=2.0, label="FDM")
+        plt.ylim(0.0, 100.0)
+        plt.xlim(-1.0, +1.0)
+        plt.xlabel("y")
+        plt.ylabel("T")
+        plt.tight_layout()
+        plt.legend()
+
+    plt.savefig(osp.join(cfg.output_dir, "profiles.png"))
+
+
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
@@ -141,72 +209,7 @@ def train(cfg: DictConfig):
     fdm_output = fdm.solve(N_EVAL, 1).T
     mse_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
     logger.info(f"The norm MSE loss between the FDM and PINN is {mse_loss}")
-
-    x = input_data["x"].reshape(N_EVAL, N_EVAL)
-    y = input_data["y"].reshape(N_EVAL, N_EVAL)
-
-    plt.subplot(2, 1, 1)
-    plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
-    plt.colorbar()
-    plt.title("PINN")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.tight_layout()
-    plt.axis("square")
-
-    plt.subplot(2, 1, 2)
-    plt.pcolormesh(x, y, fdm_output, cmap="magma")
-    plt.colorbar()
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title("FDM")
-    plt.tight_layout()
-    plt.axis("square")
-    plt.savefig(osp.join(cfg.output_dir, "pinn_fdm_comparison.png"))
-    plt.close()
-
-    frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
-    frames = [*map(int, (frames_val + 1) / 2 * (N_EVAL - 1))]
-    height = 3
-    plt.figure("", figsize=(len(frames) * height, 2 * height))
-
-    for i, var_index in enumerate(frames):
-        plt.subplot(2, len(frames), i + 1)
-        plt.title(f"y = {frames_val[i]:.2f}")
-        plt.plot(
-            x[:, var_index],
-            pinn_output[:, var_index] * 75.0,
-            "r--",
-            lw=4.0,
-            label="pinn",
-        )
-        plt.plot(x[:, var_index], fdm_output[:, var_index], "b", lw=2.0, label="FDM")
-        plt.ylim(0.0, 100.0)
-        plt.xlim(-1.0, +1.0)
-        plt.xlabel("x")
-        plt.ylabel("T")
-        plt.tight_layout()
-        plt.legend()
-
-    for i, var_index in enumerate(frames):
-        plt.subplot(2, len(frames), len(frames) + i + 1)
-        plt.title(f"x = {frames_val[i]:.2f}")
-        plt.plot(
-            y[var_index, :],
-            pinn_output[var_index, :] * 75.0,
-            "r--",
-            lw=4.0,
-            label="pinn",
-        )
-        plt.plot(y[var_index, :], fdm_output[var_index, :], "b", lw=2.0, label="FDM")
-        plt.ylim(0.0, 100.0)
-        plt.xlim(-1.0, +1.0)
-        plt.xlabel("y")
-        plt.ylabel("T")
-        plt.tight_layout()
-        plt.legend()
-
-    plt.savefig(osp.join(cfg.output_dir, "profiles.png"))
+    plot(input_data, N_EVAL, pinn_output, fdm_output, cfg)
 
 
 def evaluate(cfg: DictConfig):
@@ -239,72 +242,49 @@ def evaluate(cfg: DictConfig):
     fdm_output = fdm.solve(N_EVAL, 1).T
     mse_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
     logger.info(f"The norm MSE loss between the FDM and PINN is {mse_loss:.5e}")
+    plot(input_data, N_EVAL, pinn_output, fdm_output, cfg)
 
-    x = input_data["x"].reshape(N_EVAL, N_EVAL)
-    y = input_data["y"].reshape(N_EVAL, N_EVAL)
 
-    plt.subplot(2, 1, 1)
-    plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
-    plt.colorbar()
-    plt.title("PINN")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.tight_layout()
-    plt.axis("square")
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
-    plt.subplot(2, 1, 2)
-    plt.pcolormesh(x, y, fdm_output, cmap="magma")
-    plt.colorbar()
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title("FDM")
-    plt.tight_layout()
-    plt.axis("square")
-    plt.savefig(osp.join(cfg.output_dir, "pinn_fdm_comparison.png"))
-    plt.close()
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        cfg=cfg,
+    )
+    # export model
+    from paddle.static import InputSpec
 
-    frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
-    frames = [*map(int, (frames_val + 1) / 2 * (N_EVAL - 1))]
-    height = 3
-    plt.figure("", figsize=(len(frames) * height, 2 * height))
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
 
-    for i, var_index in enumerate(frames):
-        plt.subplot(2, len(frames), i + 1)
-        plt.title(f"y = {frames_val[i]:.2f}")
-        plt.plot(
-            x[:, var_index],
-            pinn_output[:, var_index] * 75.0,
-            "r--",
-            lw=4.0,
-            label="pinn",
-        )
-        plt.plot(x[:, var_index], fdm_output[:, var_index], "b", lw=2.0, label="FDM")
-        plt.ylim(0.0, 100.0)
-        plt.xlim(-1.0, +1.0)
-        plt.xlabel("x")
-        plt.ylabel("T")
-        plt.tight_layout()
-        plt.legend()
 
-    for i, var_index in enumerate(frames):
-        plt.subplot(2, len(frames), len(frames) + i + 1)
-        plt.title(f"x = {frames_val[i]:.2f}")
-        plt.plot(
-            y[var_index, :],
-            pinn_output[var_index, :] * 75.0,
-            "r--",
-            lw=4.0,
-            label="pinn",
-        )
-        plt.plot(y[var_index, :], fdm_output[var_index, :], "b", lw=2.0, label="FDM")
-        plt.ylim(0.0, 100.0)
-        plt.xlim(-1.0, +1.0)
-        plt.xlabel("y")
-        plt.ylabel("T")
-        plt.tight_layout()
-        plt.legend()
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
 
-    plt.savefig(osp.join(cfg.output_dir, "profiles.png"))
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((-1.0, -1.0), (1.0, 1.0))}
+    # begin eval
+    N_EVAL = 100
+    input_data = geom["rect"].sample_interior(N_EVAL**2, evenly=True)
+    output_data = predictor.predict(
+        {key: input_data[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_data = {
+        store_key: output_data[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_data.keys())
+    }["u"].reshape(N_EVAL, N_EVAL)
+    fdm_output = fdm.solve(N_EVAL, 1).T
+    mse_loss = np.mean(np.square(output_data - (fdm_output / 75.0)))
+    logger.info(f"The norm MSE loss between the FDM and PINN is {mse_loss:.5e}")
+    plot(input_data, N_EVAL, output_data, fdm_output, cfg)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="heat_pinn.yaml")
@@ -313,8 +293,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

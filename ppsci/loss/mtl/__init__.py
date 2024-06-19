@@ -38,6 +38,7 @@ def build_mtl_aggregator(cfg):
 
     Args:
         cfg (DictConfig): Aggregator config.
+
     Returns:
         Loss: Callable loss aggregator object.
     """

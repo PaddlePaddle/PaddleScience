@@ -2,33 +2,116 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型训练命令"
+=== "Re=1000"
 
-    ``` sh
-    python ldc2d_steady_Re10.py
-    ```
+    === "模型训练命令"
 
-=== "模型评估命令"
+        ``` sh
+        # linux
+        wget -nc -P ./data/ \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat --create-dirs -o ./data/ldc_Re100.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat --create-dirs -o ./data/ldc_Re400.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
+        python ldc_2d_Re3200_sota.py
+        ```
 
-    ``` sh
-    python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams
-    ```
+    === "模型评估命令"
 
-=== "模型导出命令"
+        ``` sh
+        # linux
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
+        python ldc_2d_Re3200_sota.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re1000_sota_pretrained.pdparams
+        ```
 
-    ``` sh
-    python ldc2d_steady_Re10.py mode=export
-    ```
+    === "模型导出命令"
 
-=== "模型推理命令"
+        ``` sh
+        python ldc_2d_Re3200_sota.py mode=export
+        ```
 
-    ``` sh
-    python ldc2d_steady_Re10.py mode=infer
-    ```
+    === "模型推理命令"
 
-| 预训练模型  | 指标 |
-|:--| :--|
-| [ldc2d_steady_Re10_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams) | loss(Residual): 365.36164<br>MSE.momentum_x(Residual): 0.01435<br>MSE.continuity(Residual): 0.04072<br>MSE.momentum_y(Residual): 0.02471 |
+        ``` sh
+        # linux
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
+        python ldc_2d_Re3200_sota.py mode=infer
+        ```
+
+    | 预训练模型  | $Re$  | 指标 |
+    | :-- | :-- | :-- |
+    | - | 100 | U_validator/loss: 0.00017<br>U_validator/L2Rel.U: 0.04875 |
+    | - | 400 | U_validator/loss: 0.00047<br>U_validator/L2Rel.U: 0.07554 |
+    | [**ldc_re1000_sota_pretrained.pdparams**](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re1000_sota_pretrained.pdparams) | 1000 | **U_validator/loss: 0.00053<br>U_validator/L2Rel.U: 0.07777** |
+    | - | 3200 | U_validator/loss: 0.00227<br>U_validator/L2Rel.U: 0.15440 |
+
+=== "Re=3200"
+
+    === "模型训练命令"
+
+        ``` sh
+        # linux
+        wget -nc -P ./data/ \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1600.mat \
+            https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re100.mat --create-dirs -o ./data/ldc_Re100.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re400.mat --create-dirs -o ./data/ldc_Re400.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1000.mat --create-dirs -o ./data/ldc_Re1000.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re1600.mat --create-dirs -o ./data/ldc_Re1600.mat
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
+        python ldc_2d_Re3200_piratenet.py
+        ```
+
+    === "模型评估命令"
+
+        ``` sh
+        # linux
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
+        python ldc_2d_Re3200_piratenet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re3200_piratenet_pretrained.pdparams
+        ```
+
+    === "模型导出命令"
+
+        ``` sh
+        python ldc_2d_Re3200_piratenet.py mode=export
+        ```
+
+    === "模型推理命令"
+
+        ``` sh
+        # linux
+        wget -nc -P ./data/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/ldc/ldc_Re3200.mat --create-dirs -o ./data/ldc_Re3200.mat
+        python ldc_2d_Re3200_piratenet.py mode=infer
+        ```
+
+    | 预训练模型  | $Re$  | 指标 |
+    | :-- | :-- | :-- |
+    | - | 100 | U_validator/loss: 0.00016<br>U_validator/L2Rel.U: 0.04741 |
+    | - | 400 | U_validator/loss: 0.00071<br>U_validator/L2Rel.U: 0.09288 |
+    | - | 1000 | U_validator/loss: 0.00191<br>U_validator/L2Rel.U: 0.14797 |
+    | - | 1600 | U_validator/loss: 0.00276<br>U_validator/L2Rel.U: 0.17360 |
+    | [**ldc_re3200_piratenet_pretrained.pdparams**](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc/ldc_re3200_piratenet_pretrained.pdparams) | 3200 | **U_validator/loss: 0.00016<br>U_validator/L2Rel.U: 0.04166** |
+
+!!! 说明
+
+    本案例仅提供 $Re=1000/3200$ 两种情况下的预训练模型，若需要其他雷诺数下的预训练模型，请执行训练命令手动训练即可得到各雷诺数下的模型权重。
 
 ## 1. 背景简介
 
@@ -40,7 +123,7 @@
 
 ## 2. 问题定义
 
-本案例中我们对于一个长宽均为 1 的方腔内部作为计算域，并应用以下公式进行顶盖驱动方腔流研究**稳态**流场问题：
+本案例假设 $Re=3200$，计算域为一个长宽均为 1 的方腔，应用以下公式进行顶盖驱动方腔流研究**稳态**流场问题：
 
 质量守恒：
 
@@ -105,22 +188,10 @@ $$
 上边界：
 
 $$
-u=1, v=0
+u(x, y) = 1 − \dfrac{\cosh (C_0(x − 0.5))} {\cosh (0.5C_0)} ,
 $$
 
-下边界
-
-$$
-u=0, v=0
-$$
-
-左边界：
-
-$$
-u=0, v=0
-$$
-
-右边界：
+左边界、下边界、右边界：
 
 $$
 u=0, v=0
@@ -134,48 +205,65 @@ $$
 ### 3.1 模型构建
 
 在 2D-LDC 问题中，每一个已知的坐标点 $(x, y)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
-三个待求解的未知量，我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t, x, y)$ 到 $(u, v, p)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^3$ ，即：
+三个待求解的未知量，我们在这里使用适合于 PINN 任务的 PirateNet 来表示 $(x, y)$ 到 $(u, v, p)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^3$ ，即：
 
 $$
 u, v, p = f(x, y)
 $$
 
-上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
+上式中 $f$ 即为 `PirateNet` 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="30"
+``` py linenums="41"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:30:31
+examples/ldc/ldc_2d_Re3200_piratenet.py:41:42
+--8<--
+```
+
+其中 `cfg.MODEL` 配置如下所示：
+
+``` yaml linenums="38"
+--8<--
+examples/ldc/conf/ldc_2d_Re3200_piratenet.yaml:38:41
 --8<--
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了一个拥有 9 层隐藏神经元，每层神经元数为 50，使用 "tanh" 作为激活函数的神经网络模型 `model`。
+如上所示，通过指定 `PirateNet` 的层数、神经元个数以及激活函数，我们就实例化出了一个拥有 12 层隐藏神经元，每层神经元数为 256，使用 "tanh" 作为激活函数的神经网络模型 `model`。
 
-### 3.2 方程构建
+### 3.2 Curriculum Learning
+
+为了加快收敛速度，我们使用 Curriculum learning 的方法来训练模型，即先训练模型在低雷诺数下，然后逐步增加雷诺数，最终达到高雷诺数下的收敛。
+
+``` py linenums="210"
+--8<--
+examples/ldc/ldc_2d_Re3200_piratenet.py:210:211
+--8<--
+```
+
+### 3.3 方程构建
 
 由于 2D-LDC 使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="33"
+``` py linenums="88"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:33:34
---8<--
-```
-
-在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu=0.01$, 流体密度 $\rho=1.0$。
-
-### 3.3 计算域构建
-
-本文中 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，
-因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
-
-``` py linenums="36"
---8<--
-examples/ldc/ldc2d_steady_Re10.py:36:37
+examples/ldc/ldc_2d_Re3200_piratenet.py:88:91
 --8<--
 ```
 
-### 3.4 约束构建
+在课程学习的函数中，我们在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu=\frac{1}{Re}$, 流体密度 $\rho=1.0$，其中 $Re$ 是一个随着训练过程中会逐步增大的变量。
+
+### 3.4 计算域构建
+
+本文中 2D-LDC 问题训练、评估所需的数据，通过读取对应雷诺数的文件得到。
+
+``` py linenums="93"
+--8<--
+examples/ldc/ldc_2d_Re3200_piratenet.py:93:103
+--8<--
+```
+
+### 3.5 约束构建
 
 根据 [2. 问题定义](#2) 得到的无量纲公式和和边界条件，对应了在计算域中指导模型训练的两个约束条件，即：
 
@@ -197,185 +285,149 @@ examples/ldc/ldc2d_steady_Re10.py:36:37
 
 2. 施加在矩形上、下、左、右边界上的 Dirichlet 边界条件约束
 
-    $$
-    上边界：u=1,v=0
-    $$
+    上边界：
 
     $$
-    下边界：u=0,v=0
+    u(x, y) = 1 − \dfrac{\cosh (C_0(x − 0.5))} {\cosh (0.5C_0)} ,
     $$
 
-    $$
-    左边界：u=0,v=0
-    $$
+    左边界、下边界、右边界：
 
     $$
-    右边界：u=0,v=0
+    u=0, v=0
     $$
 
-接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述两种约束条件。
+接下来使用 PaddleScience 内置的 `SupervisedConstraint` 构建上述两种约束条件。
 
-在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
+#### 3.5.1 内部点约束
 
-``` py linenums="39"
+以作用在矩形内部点上的 `SupervisedConstraint` 为例，代码如下：
+
+``` py linenums="105"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:39:49
+examples/ldc/ldc_2d_Re3200_piratenet.py:105:132
 --8<--
 ```
 
-#### 3.4.1 内部点约束
+`SupervisedConstraint` 的第一个参数是数据集配置，用于描述如何构建输入数据，此处填入输入数据和标签数据的构造函数函数 `gen_input_batch` 和 `gen_label_batch`，以及数据集的名称 `ContinuousNamedArrayDataset`；
 
-以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
+第二个参数是约束变量的目标值，此处填入在 [3.3 方程构建](#33) 章节中实例化好的 `equation["NavierStokes"].equations`；
 
-``` py linenums="51"
-# set constraint
-pde = ppsci.constraint.InteriorConstraint(
-    equation["NavierStokes"].equations,
-    {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-    geom["rect"],
-    {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
-    ppsci.loss.MSELoss("sum"),
-    evenly=True,
-    weight_dict=cfg.TRAIN.weight.pde, # (1)
-    name="EQ",
-)
-```
+第三个参数是损失函数，此处我们选用常用的 `MSE` 函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项平均；
 
-1. 本案例中PDE约束损失的数量级远大于边界约束损失，因此需要给PDE约束权重设置一个较小的值，有利于模型收敛
+第四个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "PDE" 即可。
 
-`InteriorConstraint` 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["NavierStokes"].equations`；
+#### 3.5.2 边界约束
 
-第二个参数是约束变量的目标值，在本问题中我们希望 Navier-Stokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
+将上边界的标签数据按照上述对应公式进行处理，其余点的标签数据设置为 0。然后继续构建方腔边界的 Dirichlet 约束，我们仍然使用 `SupervisedConstraint` 类。
 
-第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33) 章节实例化好的 `geom["time_rect"]` 即可；
-
-第四个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 `dataset` 字段设置为 "IterableNamedArrayDataset" 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 9801(表示99x99的等间隔网格)；
-
-第五个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"sum"`，即我们会将参与计算的所有数据点产生的损失项求和；
-
-第六个参数是选择是否在计算域上进行等间隔采样，此处我们选择开启等间隔采样，这样能让训练点均匀分布在计算域上，有利于训练收敛；
-
-第七个参数是权重系数，该配置可以精确调整每一个变量参与损失计算时的权重，设置为 0.0001 是一个比较合适的值；
-
-第八个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "EQ" 即可。
-
-#### 3.4.2 边界约束
-
-同理，我们还需要构建矩形的上、下、左、右四个边界的 Dirichlet 边界约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类。
-
-其次约束的目标变量也不同，Dirichlet 条件约束对象是 MLP 模型输出的 $u$ 和 $v$（本文不对 $p$ 做约束），因此第一个参数使用 lambda 表达式直接返回 MLP 的输出结果 `out["u"]` 和 `out["v"]` 作为程序运行时的约束对象。
-
-然后给 $u$ 和 $v$ 设置约束目标值，请注意在 `bc_top` 上边界中，$u$ 的约束目标值要设置为 1。
-
-由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
-
-``` py linenums="62"
+``` py linenums="134"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:62:97
+examples/ldc/ldc_2d_Re3200_piratenet.py:134:160
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="98"
+``` py linenums="161"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:98:105
---8<--
-```
-
-### 3.5 超参数设定
-
-接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
-
-``` yaml linenums="39"
---8<--
-examples/ldc/conf/ldc2d_steady_Re10.yaml:39:42
+examples/ldc/ldc_2d_Re3200_piratenet.py:161:165
 --8<--
 ```
 
-### 3.6 优化器构建
+### 3.6 超参数设定
+
+接下来需要在配置文件中指定训练轮数，分别在 Re=100, 400, 1000, 1600, 3200 上训练 10, 20, 50, 50, 500 轮，每轮迭代次数为 1000，
+
+``` yaml linenums="33"
+--8<--
+examples/ldc/conf/ldc_2d_Re3200_piratenet.yaml:33:35
+--8<--
+```
+
+其次，设置合适的学习率衰减策略，
+
+``` yaml linenums="52"
+--8<--
+examples/ldc/conf/ldc_2d_Re3200_piratenet.yaml:52:66
+--8<--
+```
+
+最后，设置训练过程中损失自动平衡策略为 `GradNorm`，
+
+``` yaml linenums="72"
+--8<--
+examples/ldc/conf/ldc_2d_Re3200_piratenet.yaml:72:75
+--8<--
+```
+
+### 3.7 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="107"
+``` py linenums="44"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:107:112
---8<--
-```
-
-### 3.7 评估器构建
-
-在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
-
-``` py linenums="114"
---8<--
-examples/ldc/ldc2d_steady_Re10.py:114:131
+examples/ldc/ldc_2d_Re3200_piratenet.py:44:48
 --8<--
 ```
 
-方程设置与 [约束构建](#34) 的设置相同，表示如何计算所需评估的目标变量；
+### 3.8 评估器构建
 
-此处我们为 `momentum_x`, `continuity`, `momentum_y` 三个目标变量设置标签值为 0；
+在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-计算域与 [约束构建](#34) 的设置相同，表示在指定计算域上进行评估；
-
-采样点配置则需要指定总的评估点数 `total_size`，此处我们设置为 9801(99x99等间隔网格)；
-
-评价指标 `metric` 选择 `ppsci.metric.MSE` 即可；
-
-其余配置与 [约束构建](#34) 的设置类似。
-
-### 3.8 可视化器构建
-
-在模型评估时，如果评估结果是可以可视化的数据，我们可以选择合适的可视化器来对输出结果进行可视化。
-
-本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
-
-``` py linenums="133"
+``` py linenums="167"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:133:143
+examples/ldc/ldc_2d_Re3200_piratenet.py:167:185
 --8<--
 ```
+
+此处计算 $U=\sqrt{u^2+v^2}$ 的预测误差；
+
+评价指标 `metric` 选择 `ppsci.metric.L2Rel` 即可；
+
+其余配置与 [约束构建](#35) 的设置类似。
 
 ### 3.9 模型训练、评估与可视化
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估
 
-``` py linenums="145"
+``` py linenums="187"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:145:167
+examples/ldc/ldc_2d_Re3200_piratenet.py:187:208
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="ldc2d_steady_Re10.py"
+``` py linenums="1" title="ldc_2d_Re3200_piratenet.py"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py
+examples/ldc/ldc_2d_Re3200_piratenet.py
 --8<--
 ```
 
 ## 5. 结果展示
 
-下方展示了模型对于边长为 1 的正方形计算域的内部点进行预测的结果、OpeFOAM求解结果，包括每个点的水平(x)方向流速$u(x,y)$、垂直(y)方向流速$v(x,y)$、压力$p(x,y)$。
+下方展示了模型对于边长为 1 的正方形计算域的内部点进行预测的结果 $U=\sqrt{u^2+v^2}$。
 
-???+ info "说明"
+=== "Re=1000"
 
-    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一些差别。
+    <figure markdown>
+    ![ldc_re1000_sota_ac](https://paddle-org.bj.bcebos.com/paddlescience/docs/ldc/ldc_re1000_sota_ac.png){ loading=lazy }
+    <figcaption> </figcaption>
+    </figure>
 
-<figure markdown>
-  ![u_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/p_pred_openfoam.png){ loading=lazy }
-  <figcaption>左：模型预测结果 u ，右：OpenFOAM结果 u </figcaption>
-</figure>
+    可以看到在 $Re=1000$ 下，预测结果与求解器的结果基本相同（L2 相对误差为 7.7%）。
 
-<figure markdown>
-  ![v_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/v_pred_openfoam.png){ loading=lazy }
-  <figcaption>左：模型预测结果 v ，右：OpenFOAM结果 v </figcaption>
-</figure>
+=== "Re=3200"
 
-<figure markdown>
-  ![p_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/p_pred_openfoam.png){ loading=lazy }
-  <figcaption>左：模型预测结果 p ，右：OpenFOAM结果 p </figcaption>
-</figure>
+    <figure markdown>
+    ![ldc_re3200_piratenet_ac](https://paddle-org.bj.bcebos.com/paddlescience/docs/ldc/ldc_re3200_piratenet_ac.png){ loading=lazy }
+    <figcaption></figcaption>
+    </figure>
 
-可以看到模型预测结果与OpenFOAM的预测结果大致相同。
+    可以看到在 $Re=3200$ 下，预测结果与求解器的结果基本相同（L2 相对误差为 4.1%）。
+
+## 6. 参考资料
+
+- [PIRATENETS: PHYSICS-INFORMED DEEP LEARNING WITHRESIDUAL ADAPTIVE NETWORKS](https://arxiv.org/pdf/2402.00326.pdf)
+- [jaxpi LDC example](https://github.com/PredictiveIntelligenceLab/jaxpi/tree/main/examples/ldc#readme)

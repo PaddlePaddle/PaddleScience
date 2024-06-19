@@ -20,7 +20,7 @@ class DomainPadding(nn.Layer):
     """Applies domain padding scaled automatically to the input's resolution
 
     Args:
-        domain_padding (Union[float, List[float]]): typically, between zero and one, percentage of padding to use.
+        domain_padding (Union[float, List[float]]): Typically, between zero and one, percentage of padding to use.
         padding_mode (str, optional): Whether to pad on both sides, by default
             'one-sided'.Options are 'symmetric' or 'one-sided'。 Defaults to "one-sided".
         output_scaling_factor (Union[int, List[int]], optional): Scaling factor for the
@@ -149,7 +149,7 @@ class SoftGating(nn.Layer):
 
     Args:
         in_features (int): The number of input features.
-        out_features (int, optional): number of output features. Defaults to None.
+        out_features (int, optional): Number of output features. Defaults to None.
         n_dim (int, optional): Dimensionality of the input (excluding batch-size and channels).
             ``n_dim=2`` corresponds to having Module2D. Defaults to 2.
         bias (bool, optional): Whether to use bias. Defaults to False.
@@ -203,7 +203,7 @@ def skip_connection(
         n_dim (int, optional): Dimensionality of the input (excluding batch-size and channels).
             ``n_dim=2`` corresponds to having Module2D. . Defaults to 2.
         bias (bool, optional): Whether to use a bias. Defaults to False.
-        type (str, optional): kind of skip connection to use,{'identity', 'linear', soft-gating'}.
+        type (str, optional): Kind of skip connection to use,{'identity', 'linear', soft-gating'}.
             Defaults to "soft-gating".
     """
 
@@ -384,7 +384,7 @@ def get_contract_fun(
         implementation (str, optional): {'reconstructed', 'factorized'}.
             whether to reconstruct the weight and do a forward pass (reconstructed)
             or contract directly the factors of the factorized weight with the input (factorized). Defaults to "reconstructed".
-        separable (bool, optional): whether to use the separable implementation of contraction. This
+        separable (bool, optional): Whether to use the separable implementation of contraction. This
             arg  is only checked when `implementation=reconstructed`. Defaults to False.
 
     Returns:
@@ -463,10 +463,10 @@ def resample(x, res_scale, axis, output_shape=None):
     """A module for generic n-dimentional interpolation (Fourier resampling).
 
     Args:
-        x (paddle.Tensor): input activation of size (batch_size, channels, d1, ..., dN).
+        x (paddle.Tensor): Input activation of size (batch_size, channels, d1, ..., dN).
         res_scale (optional[int,tuple]): Scaling factor along each of the dimensions in
             'axis' parameter. If res_scale is scaler, then isotropic scaling is performed.
-        axis (int): axis or dimensions along which interpolation will be performed.
+        axis (int): Axis or dimensions along which interpolation will be performed.
         output_shape (optional[None ,tuple[int]]): The output shape. Defaults to None.
     """
 

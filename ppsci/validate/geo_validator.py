@@ -90,7 +90,7 @@ class GeometryValidator(base.Validator):
 
         nx = dataloader_cfg["total_size"]
         self.num_timestamps = 1
-        # TODO(sensen): simplify code below
+        # TODO(sensen): Simplify code below
         if isinstance(geom, geometry.TimeXGeometry):
             if geom.timedomain.num_timestamps is not None:
                 if with_initial:

@@ -251,7 +251,7 @@ class LBFGS:
             optimization step. Defaults to None.
         tolerance_grad (float, optional): Termination tolerance on first order optimality.
             Defaults to 1e-07.
-        tolerance_change (float, optional): termination tolerance on function
+        tolerance_change (float, optional): Termination tolerance on function
             value/parameter changes. Defaults to 1e-09.
         history_size (int, optional): Update history size. Defaults to 100.
         line_search_fn (Optional[Literal["strong_wolfe"]]): Either 'strong_wolfe' or None.
@@ -426,7 +426,7 @@ class AdamW:
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
 
-        # TODO(gaotingquan): model_list is None when in static graph, "no_weight_decay" not work.
+        # TODO(gaotingquan): Model_list is None when in static graph, "no_weight_decay" not work.
         if model_list is None:
             if (
                 self.one_dim_param_no_weight_decay

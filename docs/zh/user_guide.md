@@ -183,7 +183,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 !!! warning
 
-    目前 PaddleScience 的模型导出功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键导出。
+    少数案例尚未支持导出功能，因此对应文档中未给出导出命令。
 
 在训练完毕后，我们通常需要将模型导出为 `*.pdmodel`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
 
@@ -334,11 +334,11 @@ pip install paddle2onnx
 
 !!! warning
 
-    目前 PaddleScience 的 Inference 推理(python) 功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键推理。
+    少数案例尚未支持导出、推理功能，因此对应文档中未给出导出、推理命令。
 
 首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.pdmodel`, `*.pdiparams` 两个文件。
 
-以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件保存在 `./inference/aneurysm` 文件夹下，则推理代码示例如下。
+以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件以 `./inference/aneurysm.*` 的形式保存，则推理代码示例如下。
 
 ``` sh
 # linux
@@ -482,18 +482,28 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 4. `latest.pdstates`，该文件保存了 latest 对应 epoch 的所有评估指标以及 epoch 数。
 5. `latest.pdscaler`（可选），在开启自动混合精度（AMP）功能时，该文件保存了 `GradScaler` 梯度缩放器内部的参数。
 
-因此我们只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
+=== "方式1: 命令行指定[推荐]"
 
-``` py hl_lines="7"
-import ppsci
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.checkpoint_path` 为 `latest.*` 的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
 
-...
+    ``` sh
+    python example.py {++TRAIN.checkpoint_path=\'/path/to/latest\'++}
+    ```
 
-solver = ppsci.solver.Solver(
-    ...,
-    checkpoint_path="/path/to/latest"
-)
-```
+=== "方式2: 修改代码"
+
+    只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
+
+    ``` py hl_lines="7"
+    import ppsci
+
+    ...
+
+    solver = ppsci.solver.Solver(
+        ...,
+        checkpoint_path="/path/to/latest"
+    )
+    ```
 
 !!! Warning "路径填写注意事项"
 
@@ -503,7 +513,15 @@ solver = ppsci.solver.Solver(
 
 迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重后开始微调训练；也可以调用 `Solver.finetune` 接口并指定 `pretrained_model_path` 参数，自动载入预训练模型权重并开始微调训练。
 
-=== "手动载入预训练模型"
+=== "方式1: 命令行指定[推荐]"
+
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.pretrained_model_path` 为预训练权重的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
+
+    ``` sh
+    python example.py {++TRAIN.pretrained_model_path=\'/path/to/pretrain\'++}
+    ```
+
+=== "方式2: 手动载入预训练模型"
 
     ``` py hl_lines="8 12"
     import ppsci
@@ -520,7 +538,7 @@ solver = ppsci.solver.Solver(
     solver.train()
     ```
 
-=== "调用 `Solver.finetune` 接口"
+=== "方式3: 调用 `Solver.finetune` 接口"
 
     ``` py hl_lines="11"
     import ppsci
@@ -542,22 +560,34 @@ solver = ppsci.solver.Solver(
 
 ### 1.6 模型评估
 
-当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
+当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则可以选择下面的几种方式之一进行评估。
 
-``` py hl_lines="10"
-import ppsci
-import ppsci.utils
+=== "方式1: 命令行指定[推荐]"
 
-...
-...
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `EVAL.pretrained_model_path` 为待评估模型权重的所在路径（建议用`\'`包裹），并指定模式为`eval`后，执行评估命令即可，免去修改案例代码。
 
-solver = ppsci.solver.Solver(
-    ...,
-    ...,
-    pretrained_model_path="/path/to/model"
-)
-solver.eval()
-```
+    ``` sh
+    python example.py {++mode=eval EVAL.pretrained_model_path=\'/path/to/pretrain\'++}
+    ```
+
+=== "方式2: 修改代码"
+
+    在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
+
+    ``` py hl_lines="10"
+    import ppsci
+    import ppsci.utils
+
+    ...
+    ...
+
+    solver = ppsci.solver.Solver(
+        ...,
+        ...,
+        pretrained_model_path="/path/to/model"
+    )
+    solver.eval()
+    ```
 
 ### 1.7 实验过程可视化
 
@@ -573,14 +603,24 @@ solver.eval()
         pip install tensorboard tensorboardX
         ```
 
-    2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
+    2. 在案例中启用 tensorboardX
 
-        ``` py hl_lines="3"
-        solver = ppsci.solver.Solver(
-            ...,
-            use_tbd=True,
-        )
-        ```
+        === "方式1: 命令行指定[推荐]"
+
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_tbd` 再执行训练命令即可，免去修改案例代码。
+
+            ``` sh
+            python example.py {++use_tbd=True++}
+            ```
+
+        === "方式2: 修改代码"
+
+            ``` py hl_lines="3"
+            solver = ppsci.solver.Solver(
+                ...,
+                use_tbd=True,
+            )
+            ```
 
     3. 可视化记录数据
 
@@ -611,14 +651,24 @@ solver.eval()
         pip install -U visualdl
         ```
 
-    2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
+    2. 在案例中启用 visualDL
 
-        ``` py hl_lines="3"
-        solver = ppsci.solver.Solver(
-            ...,
-            use_vdl=True,
-        )
-        ```
+        === "方式1: 命令行指定[推荐]"
+
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_vdl` 再执行训练命令即可，免去修改案例代码。
+
+            ``` sh
+            python example.py {++use_vdl=True++}
+            ```
+
+        === "方式2: 修改代码"
+
+            ``` py hl_lines="3"
+            solver = ppsci.solver.Solver(
+                ...,
+                use_vdl=True,
+            )
+            ```
 
     3. 可视化记录数据
 
@@ -655,21 +705,31 @@ solver.eval()
         # 根据 login 提示，输入 API key 并回车确认
         ```
 
-    3. 在案例中开启 wandb
+    3. 在案例中启用 wandb
 
-        ``` py hl_lines="3 4 5 6 7 8"
-        solver = ppsci.solver.Solver(
-            ...,
-            use_wandb=True,
-            wandb_config={
-                "project": "PaddleScience",
-                "name": "Laplace2D",
-                "dir": OUTPUT_DIR,
-            },
-            ...
-        )
-        solver.train()
-        ```
+        === "方式1: 命令行指定[推荐]"
+
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_wandb` 再执行训练命令即可，免去修改案例代码。
+
+            ``` sh
+            python example.py {++use_wandb=True++}
+            ```
+
+        === "方式2: 修改代码"
+
+            ``` py hl_lines="3 4 5 6 7 8"
+            solver = ppsci.solver.Solver(
+                ...,
+                use_wandb=True,
+                wandb_config={
+                    "project": "PaddleScience",
+                    "name": "Laplace2D",
+                    "dir": OUTPUT_DIR,
+                },
+                ...
+            )
+            solver.train()
+            ```
 
         如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
 
@@ -819,8 +879,6 @@ best_value: 0.02460772916674614
             "iters_per_epoch": ITERS_PER_EPOCH,
             "sampler": {
                 "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
             },
         },
         loss=ppsci.loss.MSELoss("mean"),
@@ -851,17 +909,29 @@ TODO -->
 
 接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
 
-实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
+若想在训练中启用自动混合精度，则可以选择下面的几种方式之一。`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
 
-``` py hl_lines="5 6"
-# initialize solver
-solver = ppsci.solver.Solver(
-    ...,
-    ...,
-    use_amp=True,
-    amp_level="O1", # or amp_level="O2"
-)
-```
+=== "方式1: 命令行指定[推荐]"
+
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_amp`、`amp_level` 再执行训练/评估命令即可，免去修改案例代码。
+
+    ``` sh
+    python example.py {++use_amp=True amp_level=O1++}
+    ```
+
+=== "方式2: 修改代码"
+
+    实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式。
+
+    ``` py hl_lines="5 6"
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        ...,
+        ...,
+        use_amp=True,
+        amp_level="O1", # or amp_level="O2"
+    )
+    ```
 
 ### 2.4 梯度累加
 
@@ -869,14 +939,24 @@ solver = ppsci.solver.Solver(
 
 实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
 
-``` py hl_lines="5"
-# initialize solver
-solver = ppsci.solver.Solver(
-    ...,
-    ...,
-    update_freq=2, # or 4, 8
-)
-```
+=== "方式1: 命令行指定[推荐]"
+
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.update_freq` 再执行训练命令即可，免去修改案例代码。
+
+    ``` sh
+    python example.py {++TRAIN.update_freq=2++}
+    ```
+
+=== "方式2: 修改代码"
+
+    ``` py hl_lines="5"
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        ...,
+        ...,
+        update_freq=2, # or 4, 8
+    )
+    ```
 
 ### 2.5 多任务学习
 
@@ -913,7 +993,7 @@ solver = ppsci.solver.Solver(
 
 ## 3. 使用 Nsight 进行性能分析
 
-Nsight是NVIDIA面相开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
+Nsight是NVIDIA面向开发者提供的开发工具套件，能提供深入的跟踪、调试、评测和分析，以优化跨 NVIDIA GPU和CPU的复杂计算应用程序。详细文档可参考：[Nsight Systems Document](https://docs.nvidia.com/nsight-systems/index.html)
 
 PaddleScience 初步支持使用 Nsight 进行性能分析，以 linux 开发环境 + laplace2d 案例为例，按照如下步骤使用 nsight 工具生成性能分析报告并查看分析结果。
 

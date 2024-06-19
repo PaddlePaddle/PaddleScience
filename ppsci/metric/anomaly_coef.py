@@ -46,7 +46,7 @@ class LatitudeWeightedACC(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
         variable_dict (Optional[Dict[str, int]]): Variable dictionary, the key is the name of a variable and
             the value is its index. Defaults to None.
-        unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
+        unlog (bool, optional): Whether calculate expm1 for all elements in the array. Defaults to False.
         scale (float, optional): The scale value used after expm1. Defaults to 1e-5.
 
     Examples:
