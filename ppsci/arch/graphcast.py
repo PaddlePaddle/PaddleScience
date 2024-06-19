@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Tuple
 
 import paddle
 import paddle.nn as nn
 
-import ppsci.data.dataset.atmospheric_utils as atmospheric_utils
 from ppsci.arch import base
+
+if TYPE_CHECKING:
+    import ppsci.data.dataset.atmospheric_dataset as atmospheric_dataset
 
 
 class ResidualConnection(nn.Layer):
@@ -100,7 +103,7 @@ class GraphCastGNN(nn.Layer):
         self.edge_layer = GraphCastMLP(self.edge_in_dim, self.edge_out_dim)
         self.node_layer = GraphCastMLP(self.node_in_dim, self.node_out_dim)
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         if self.src == "mesh" and self.dst == "mesh":
             edge_feats = graph.mesh_edge_feat
             src_node_feats = graph.mesh_node_feat
@@ -188,7 +191,7 @@ class GraphCastEmbedding(nn.Layer):
             mesh2grid_edge_dim, mesh2grid_edge_emb_dim
         )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         grid_node_emb = self.grid_node_embedding(graph.grid_node_feat)
         mesh_node_emb = self.mesh_node_embedding(graph.mesh_node_feat)
         mesh_edge_emb = self.mesh_edge_embedding(graph.mesh_edge_feat)
@@ -231,7 +234,7 @@ class GraphCastGrid2Mesh(paddle.nn.Layer):
             GraphCastMLP(grid_node_emb_dim, grid_node_emb_dim)
         )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         graph = self.grid2mesh_gnn(graph)
         graph.grid_node_feat = self.grid_node_layer(graph.grid_node_feat)
         return graph
@@ -264,7 +267,7 @@ class GraphCastMesh2Grid(paddle.nn.Layer):
             GraphCastMLP(mesh_node_emb_dim, mesh_node_emb_dim)
         )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         graph = self.mesh2grid_gnn(graph)
         graph.mesh_node_feat = self.mesh_node_layer(graph.mesh_node_feat)
         return graph
@@ -309,7 +312,7 @@ class GraphCastEncoder(nn.Layer):
             mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
         )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         graph = self.embedding(graph)
         graph = self.grid2mesh_gnn(graph)
         return graph
@@ -344,7 +347,7 @@ class GraphCastDecoder(nn.Layer):
             layer_norm=False,
         )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         graph = self.mesh2grid_gnn(graph)
         graph.grid_node_feat = self.grid_node_layer(graph.grid_node_feat)
         return graph
@@ -381,7 +384,7 @@ class GraphCastProcessor(nn.Layer):
                 ),
             )
 
-    def forward(self, graph: atmospheric_utils.GraphGridMesh):
+    def forward(self, graph: "atmospheric_dataset.GraphGridMesh"):
         graph = self.processor(graph)
         return graph
 
@@ -476,7 +479,7 @@ class GraphCastNet(base.Arch):
         )
 
     def forward(
-        self, x: Dict[str, "atmospheric_utils.GraphGridMesh"]
+        self, x: Dict[str, "atmospheric_dataset.GraphGridMesh"]
     ) -> Dict[str, paddle.Tensor]:
         if self._input_transform is not None:
             x = self._input_transform(x)

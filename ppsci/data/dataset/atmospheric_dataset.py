@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
 import typing
 from typing import Optional
 from typing import Tuple
@@ -23,21 +22,11 @@ import pandas as pd
 import scipy
 from paddle import io
 
-from ppsci.utils import checker
-
-if not checker.dynamic_import_to_globals("xarray"):
-    raise ImportError(
-        "Could not import xarray python package. "
-        "Please install it with pip install xarray."
-    )
-import xarray
-
-if not checker.dynamic_import_to_globals("trimesh"):
-    raise ImportError(
-        "Could not import trimesh python package. "
-        "Please install it with pip install trimesh. And you may also need install rtree with pip install rtree."
-    )
-import trimesh
+try:
+    import trimesh
+    import xarray
+except ModuleNotFoundError:
+    pass
 
 # https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5
 PRESSURE_LEVELS_ERA5_37 = (
@@ -1171,8 +1160,11 @@ def merge_meshes(mesh_list: typing.Sequence[TriangularMesh]) -> TriangularMesh:
 
 def get_icosahedron():
     phi = (1 + np.sqrt(5)) / 2
+    product = [[1.0, phi], [1.0, -phi], [-1.0, phi], [-1.0, -phi]]
     vertices = []
-    for c1, c2 in itertools.product([1.0, -1.0], [phi, -phi]):
+    for p in product:
+        c1 = p[0]
+        c2 = p[1]
         vertices.append((c1, c2, 0.0))
         vertices.append((0.0, c1, c2))
         vertices.append((c2, 0.0, c1))
