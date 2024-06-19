@@ -1595,14 +1595,30 @@ class GridMeshAtmosphericDataset(io.Dataset):
     Args:
         input_keys (Tuple[str, ...]): Name of input data.
         label_keys (Tuple[str, ...]): Name of label data.
-        config: Configuration of graph.
+        data_path: Path of atmospheric datafile.
+        mean_path: Path of mean datafile.
+        stddev_path: Path of standard deviation datafile.
+        stddev_diffs_path: Path of standard deviation different datafile.
+        type: Type of GraphCast network.
+        mesh_size: Size of mesh.
+        mesh2grid_edge_normalization_factor: Factor of normalization of edges in Mesh2Grid GNN.
+        radius_query_fraction_edge_length: Length of radius query fraction edges.
+        resolution: Resolution of atmospheric data.
 
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.GridMeshAtmosphericDataset(
         ...     "input_keys": ("input",),
         ...     "label_keys": ("output",),
-        ...     "config": config,
+        ...     "data_path": "/path/to/file.nc",
+        ...     "mean_path": "/path/to/file.nc",
+        ...     "stddev_path": "/path/to/file.nc",
+        ...     "stddev_diffs_path": "/path/to/file.nc",
+        ...     "type": "graphcast_small",
+        ...     "mesh_size": 5,
+        ...     "mesh2grid_edge_normalization_factor": 0.06,
+        ...     "radius_query_fraction_edge_length": 0.6180338738074472,
+        ...     "resolution": 1,
         ... )  # doctest: +SKIP
     """
 
@@ -1614,8 +1630,8 @@ class GridMeshAtmosphericDataset(io.Dataset):
         label_keys: Tuple[str, ...],
         data_path: str,
         mean_path: str,
-        stddev_diffs_path: str,
         stddev_path: str,
+        stddev_diffs_path: str,
         type: str,
         mesh_size: int,
         mesh2grid_edge_normalization_factor: float,
@@ -1721,10 +1737,10 @@ class GridMeshAtmosphericDataset(io.Dataset):
         self.target_data = []
 
         graph = GraphGridMesh(
-            mesh_size,
-            radius_query_fraction_edge_length,
-            mesh2grid_edge_normalization_factor,
-            resolution,
+            mesh_size=mesh_size,
+            radius_query_fraction_edge_length=radius_query_fraction_edge_length,
+            mesh2grid_edge_normalization_factor=mesh2grid_edge_normalization_factor,
+            resolution=resolution,
         )
 
         graph.grid_node_feat = np.concatenate(
