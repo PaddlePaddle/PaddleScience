@@ -41,9 +41,9 @@ jobs:
 
           # 根据分支名称部署相应的文档版本
           if [ "$BRANCH" == "develop" ]; then
-            ALIAS_VERSION="latest"
+            ALIAS_VERSION="develop"
             mike deploy --push --update-aliases $ALIAS_VERSION
-            mike set-default --push latest
+            mike set-default --push develop
           elif [ "$BRANCH" == "release/1.2" ]; then
             ALIAS_VERSION="release-1.2"
             mike deploy --push --update-aliases $ALIAS_VERSION
