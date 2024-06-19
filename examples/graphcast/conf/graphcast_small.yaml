@@ -44,16 +44,16 @@ MODEL:
   output_keys: ["pred"]
   grid_node_dim: 186
   grid_node_num: 65160
-  grid_node_emb_dim: 512 # same as latent_size
+  grid_node_emb_dim: 512
   mesh_node_dim: 186
   mesh_node_num: 10242
   mesh_edge_dim: 4
-  mesh_node_emb_dim: 512 # same as latent_size
-  mesh_edge_emb_dim: 512 # same as latent_size
+  mesh_node_emb_dim: 512
+  mesh_edge_emb_dim: 512
   mesh2grid_edge_dim: 4
-  mesh2grid_edge_emb_dim: 512 # same as latent_size
+  mesh2grid_edge_emb_dim: 512
   grid2mesh_edge_dim: 4
-  grid2mesh_edge_emb_dim: 512 # same as latent_size
+  grid2mesh_edge_emb_dim: 512
   gnn_msg_steps: 16
   node_output_dim: 83
 

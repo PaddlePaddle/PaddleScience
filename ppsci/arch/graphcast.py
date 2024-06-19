@@ -291,16 +291,16 @@ class GraphCastEncoder(nn.Layer):
     ):
         super().__init__()
         self.embedding = GraphCastEmbedding(
-            grid_node_dim,
-            grid_node_emb_dim,
-            mesh_node_dim,
-            mesh_node_emb_dim,
-            mesh_edge_dim,
-            mesh_edge_emb_dim,
-            grid2mesh_edge_dim,
-            grid2mesh_edge_emb_dim,
-            mesh2grid_edge_dim,
-            mesh2grid_edge_emb_dim,
+            grid_node_dim=grid_node_dim,
+            grid_node_emb_dim=grid_node_emb_dim,
+            mesh_node_dim=mesh_node_dim,
+            mesh_node_emb_dim=mesh_node_emb_dim,
+            mesh_edge_dim=mesh_edge_dim,
+            mesh_edge_emb_dim=mesh_edge_emb_dim,
+            grid2mesh_edge_dim=grid2mesh_edge_dim,
+            grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
+            mesh2grid_edge_dim=mesh2grid_edge_dim,
+            mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
         )
         self.grid2mesh_gnn = GraphCastGrid2Mesh(
             grid_node_num=grid_node_num,
