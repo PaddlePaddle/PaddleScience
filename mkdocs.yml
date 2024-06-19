@@ -181,7 +181,12 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [./ppsci]
+          setup_commands:
+            - import sys
+            - sys.path.append("../")
+          paths: [../ppsci]
+          selection:
+            new_path_syntax: true
   - mkdocs-video
   - git-revision-date-localized:
       enable_creation_date: true
