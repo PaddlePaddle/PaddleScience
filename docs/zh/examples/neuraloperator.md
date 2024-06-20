@@ -19,9 +19,9 @@
 
     # SWE 数据集下载
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy ./datasets/SWE/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy ./datasets/SWE/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy ./datasets/SWE/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -P ./datasets/SWE/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -P ./datasets/SWE/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -P ./datasets/SWE/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
