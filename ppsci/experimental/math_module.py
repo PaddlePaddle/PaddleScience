@@ -18,6 +18,7 @@ import functools
 from typing import Any
 from typing import Callable
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -462,3 +463,181 @@ def trapezoid_integrate(
         return paddle.cumulative_trapezoid(y, x, dx, axis)
     else:
         raise ValueError(f'mode should be "sum" or "cumsum", but got {mode}')
+
+
+def montecarlo_integrate(
+    fn: Callable,
+    dim: int,
+    N: int = 1000,
+    integration_domain: Optional[List[List[float]], paddle.Tensor] = None,
+    seed: int = None,
+):
+    """Integrates the passed function on the passed domain using vanilla Monte
+    Carlo Integration.
+
+    Args:
+        fn (Callable): The function to integrate over.
+        dim (int): Dimensionality of the function's domain over which to
+            integrate.
+        N (Optional[int]): Number of sample points to use for the integration.
+            Defaults to 1000.
+        integration_domain (Optional[List[List[float]], paddle.Tensor]): Integration
+            domain, e.g. [[-1,1],[0,1]]. Defaults to [-1,1]^dim.
+        seed (Optional[int]): Random number generation seed to the sampling
+            point creation, only set if provided. Defaults to None.
+
+    Raises:
+        ValueError: If len(integration_domain) != dim
+
+    Returns:
+        Integral value
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+
+        >>> _ = paddle.seed(1024)
+        >>> # The function we want to integrate, in this example
+        >>> # f(x0,x1) = sin(x0) + e^x1 for x0=[0,1] and x1=[-1,1]
+        >>> # Note that the function needs to support multiple evaluations at once (first
+        >>> # dimension of x here)
+        >>> # Expected result here is ~3.2698
+        >>> def some_function(x):
+        >>>    return paddle.sin(x[:, 0]) + paddle.exp(x[:, 1])
+
+        >>> # Compute the function integral by sampling 10000 points over domain
+        >>> integral_value = ppsci.experimental.montecarlo_integrate(
+        >>>    some_function,
+        >>>    dim=2,
+        >>>    N=10000,
+        >>>    integration_domain=[[0, 1], [-1, 1]]
+        >>> )
+
+        >>> print(integral_value)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True, 3.25152588)
+    """
+
+    @expand_func_values_and_squeeze_integral
+    def calculate_result(function_values, integration_domain):
+        """Calculate an integral result from the function evaluations
+
+        Args:
+            function_values (paddle.Tensor): Output of the integrand
+            integration_domain (paddle.Tensor): Integration domain
+
+        Returns:
+            Quadrature result
+        """
+        scales = integration_domain[:, 1] - integration_domain[:, 0]
+        volume = paddle.prod(scales)
+
+        # Integral = V / N * sum(func values)
+        N = function_values.shape[0]
+        integral = volume * paddle.sum(function_values, axis=0) / N
+        return integral
+
+    def calculate_sample_points(
+        N: int, integration_domain: paddle.Tensor, seed: Optional[int] = None
+    ):
+        """Calculate random points for the integrand evaluation.
+
+        Args:
+            N (int): Number of points
+            integration_domain (paddle.Tensor): Integration domain.
+            seed (int, optional): Random number generation seed for the sampling point creation, only set if provided. Defaults to None.
+        Returns:
+            Sample points.
+        """
+        dim = integration_domain.shape[0]
+        domain_starts = integration_domain[:, 0]
+        domain_sizes = integration_domain[:, 1] - domain_starts
+        # Scale and translate random numbers via broadcasting
+        return (
+            paddle.uniform(
+                shape=[N, dim],
+                dtype=domain_sizes.dtype,
+                min=0.0,
+                max=1.0,
+                seed=seed or 0,
+            )
+            * domain_sizes
+            + domain_starts
+        )
+
+    if dim is not None:
+        if dim < 1:
+            raise ValueError("Dimension needs to be 1 or larger.")
+        if N is not None:
+            if N < 1 or type(N) is not int:
+                raise ValueError("N has to be a positive integer.")
+
+    integration_domain = _setup_integration_domain(dim, integration_domain)
+    sample_points = calculate_sample_points(N, integration_domain, seed)
+    function_values, _ = _evaluate_integrand(fn, sample_points)
+    return calculate_result(function_values, integration_domain)
+
+
+def _setup_integration_domain(
+    dim: int, integration_domain: Optional[List[List[float]], paddle.Tensor]
+) -> paddle.Tensor:
+    """Sets up the integration domain if unspecified by the user.
+    Args:
+        dim (int): Dimensionality of the integration domain.
+        integration_domain (List or Tensor): Integration domain, e.g. [[-1,1],[0,1]]. Defaults to [-1,1]^dim.
+    Returns:
+        Integration domain.
+    """
+    # If no integration_domain is specified, create [-1,1]^d bounds
+    if integration_domain is None:
+        integration_domain = [[-1.0, 1.0]] * dim
+
+    integration_domain = [[float(b) for b in bounds] for bounds in integration_domain]
+
+    integration_domain = paddle.to_tensor(integration_domain)
+
+    if tuple(integration_domain.shape) != (dim, 2):
+        raise ValueError(
+            "The integration domain has an unexpected shape. "
+            f"Expected {(dim, 2)}, got {integration_domain.shape}"
+        )
+    return integration_domain
+
+
+def _evaluate_integrand(fn, points, weights=None, args=None):
+    """Evaluate the integrand function at the passed points.
+
+    Args:
+        fn (Callable): Integrand function.
+        points (paddle.Tensor): Integration points.
+        weights (Optional[paddle.Tensor]): Integration weights. Defaults to None.
+        args (Optional[List, Tuple]): Any arguments required by the function. Defaults to None.
+
+    Returns:
+        padlde.Tensor: Integrand function output.
+        int: Number of evaluated points.
+    """
+    num_points = points.shape[0]
+
+    if args is None:
+        args = ()
+
+    result = fn(points, *args)
+    num_results = result.shape[0]
+    if num_results != num_points:
+        raise ValueError(
+            f"The passed function was given {num_points} points but only returned {num_results} value(s)."
+            f"Please ensure that your function is vectorized, i.e. can be called with multiple evaluation points at once. It should return a tensor "
+            f"where first dimension matches length of passed elements. "
+        )
+
+    if weights is not None:
+        if (
+            len(result.shape) > 1
+        ):  # if the the integrand is multi-dimensional, we need to reshape/repeat weights so they can be broadcast in the *=
+            integrand_shape = paddle.to_tensor(result.shape[1:])
+            weights = paddle.repeat(
+                paddle.unsqueeze(weights, axis=1), paddle.prod(integrand_shape)
+            ).reshape((weights.shape[0], *(integrand_shape)))
+        result *= weights
+
+    return result, num_points
