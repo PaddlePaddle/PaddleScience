@@ -77,11 +77,10 @@ class GraphCastGNN(nn.Layer):
 
         self.src = src_type
         self.dst = dst_type
-
         self.grid_node_num = grid_node_num
         self.mesh_node_num = mesh_node_num
-
         self.edge_in_dim = grid_node_emb_dim + mesh_node_emb_dim
+
         if src_type == "mesh" and dst_type == "mesh":
             self.edge_in_dim += mesh_edge_emb_dim
             self.edge_out_dim = mesh_edge_emb_dim
@@ -483,6 +482,10 @@ class GraphCastNet(base.Arch):
     ) -> Dict[str, paddle.Tensor]:
         if self._input_transform is not None:
             x = self._input_transform(x)
+
         graph = x[self.input_keys[0]]
-        pre = self.graphcast(graph)
-        return {self.output_keys[0]: pre}
+        y = self.graphcast(graph)
+
+        if self._output_transform is not None:
+            y = self._output_transform(x, y)
+        return {self.output_keys[0]: y}
