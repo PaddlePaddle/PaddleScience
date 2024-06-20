@@ -1,0 +1,4426 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An out-of-the-box open source library for scientific computing based on deep learning.">
+      
+      
+        <meta name="author" content="PaddlePaddle">
+      
+      
+        <link rel="canonical" href="https://github.com/PaddlePaddle/PaddleScience/develop/zh/examples/laplace2d/">
+      
+      
+        <link rel="prev" href="../euler_beam/">
+      
+      
+        <link rel="next" href="../lorenz/">
+      
+      
+      <link rel="icon" href="../../../images/icons/favcion.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.12">
+    
+    
+      
+        <title>Laplace2D - PaddleScience Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e359304.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm-86.2-346.7c7.9-22.3 29.1-37.3 52.8-37.3h58.3c34.9 0 63.1 28.3 63.1 63.1 0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6-13.3 0-24-10.7-24-24v-13.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1 0-8.4-6.8-15.1-15.1-15.1h-58.3c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM224 352a32 32 0 1 1 64 0 32 32 0 1 1-64 0z"/></svg>');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Serif+SC:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Serif SC";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#2d-laplace" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="PaddleScience Docs" class="md-header__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="../../../images/icons/paddle.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PaddleScience Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Laplace2D
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/zh/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/en/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  PaddleScience
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../allen_cahn/" class="md-tabs__link">
+          
+  
+  经典案例
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/arch/" class="md-tabs__link">
+          
+  
+  API 文档
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_guide/" class="md-tabs__link">
+        
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../development/" class="md-tabs__link">
+          
+  
+  开发与复现指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../technical_doc/" class="md-tabs__link">
+        
+  
+    
+  
+  技术稿件
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cooperation/" class="md-tabs__link">
+        
+  
+    
+  
+  共创计划
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-tabs__link">
+        
+  
+    
+  
+  实训社区
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="PaddleScience Docs" class="md-nav__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="../../../images/icons/paddle.png" alt="logo">
+
+    </a>
+    PaddleScience Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    PaddleScience
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            PaddleScience
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    主页
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    功能介绍
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    安装使用
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    快速开始
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    学习资料
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    经典案例
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            经典案例
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+     
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+             
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_1" id="__nav_2_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    数学(AI for Math)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            数学(AI for Math)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allen_cahn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AllenCahn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deephpms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepHPMs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deeponet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepONet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../euler_beam/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Euler_Beam
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Laplace2D
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Laplace2D
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 背景简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 问题定义
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 问题求解
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 问题求解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1 模型构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2 方程构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3 计算域构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4 约束构建
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 约束构建">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4.1 内部点约束
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4.2 边界约束
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.5 超参数设定
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.6 优化器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.7 评估器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.8 可视化器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#39" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.9 模型训练、评估与可视化
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 完整代码
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 结果展示
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lorenz/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lorenz_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pirbn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PIRBN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rossler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rossler_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../volterra_ide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Volterra_IDE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nlsmb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NLSMB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XPINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2" id="__nav_2_1_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    技术科学(AI for Technology)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            技术科学(AI for Technology)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_1" id="__nav_2_1_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    流体
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            流体
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../amgnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AMGNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aneurysm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Aneurysm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bubble/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    BubbleNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cfdgcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CFDGCN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cylinder2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cylinder2d_unsteady_transformer_physx/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../darcy2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Darcy2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deepcfd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepCFD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ldc2d_steady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_steady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ldc2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../labelfree_DNN_surrogate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Labelfree_DNN_surrogate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nsfnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phycrnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyCRNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shock_wave/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ShockWave
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tempoGAN/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tempoGAN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nsfnet4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNet4
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ViV
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_2" id="__nav_2_1_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    结构
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            结构
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../biharmonic2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Biharmonic2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bracket/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bracket
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../control_arm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control_arm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../epnn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EPNN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phylstm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phy-LSTM
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../topopt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TopOpt
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_3" id="__nav_2_1_2_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    传热
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            传热
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../heat_exchanger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_Exchanger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../heat_pinn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_PINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phygeonet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyGeoNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chip_heat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Chip_heat
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_3" id="__nav_2_1_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    材料科学(AI for Material)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            材料科学(AI for Material)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hPINNs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_4" id="__nav_2_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    地球科学(AI for Earth Science)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            地球科学(AI for Earth Science)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fourcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FourCastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nowcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NowcastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dgmr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DGMR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../earthformer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EarthFormer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API 文档
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            API 文档
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/arch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.arch
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/autodiff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.autodiff
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/constraint/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.constraint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_4" id="__nav_3_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/process/transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/process/batch_transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.batch_transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/equation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.equation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_7" id="__nav_3_1_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.loss
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.loss
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/loss/loss/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.loss
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/loss/mtl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.mtl
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metric/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.metric
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_9" id="__nav_3_1_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.optimizer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/lr_scheduler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.lr_scheduler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/solver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.solver
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_11" id="__nav_3_1_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/checker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.checker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/expression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.expression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/initializer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.initializer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/logger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.logger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/misc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.misc
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/ema/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.ema
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/save_load/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.save_load
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/symbolic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.symbolic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/validate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.validate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/visualize/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.visualize
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/experimental/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.experimental
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/probability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.probability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    deploy
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/depoly/python_infer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    deploy.python_infer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    使用指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    开发与复现指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            开发与复现指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    开发指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reproduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    复现指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../technical_doc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    技术稿件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cooperation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    共创计划
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    实训社区
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 背景简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 问题定义
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 问题求解
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 问题求解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1 模型构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2 方程构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3 计算域构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4 约束构建
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 约束构建">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4.1 内部点约束
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#342" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.4.2 边界约束
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.5 超参数设定
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.6 优化器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.7 评估器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.8 可视化器构建
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#39" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.9 模型训练、评估与可视化
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 完整代码
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 结果展示
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/PaddlePaddle/PaddleScience/edit/develop/docs/zh/examples/laplace2d.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/PaddlePaddle/PaddleScience/raw/develop/docs/zh/examples/laplace2d.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+<div><h1 id="2d-laplace">2D-Laplace<a class="headerlink" href="#2d-laplace" title="Permanent link">¶</a></h1>
+<p><a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&amp;shared=1&amp;ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a></p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">模型训练命令</label><label for="__tabbed_1_2">模型评估命令</label><label for="__tabbed_1_3">模型导出命令</label><label for="__tabbed_1_4">模型推理命令</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>laplace2d.py
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>laplace2d.py<span class="w"> </span><span class="nv">mode</span><span class="o">=</span><span class="nb">eval</span><span class="w"> </span>EVAL.pretrained_model_path<span class="o">=</span>https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>laplace2d.py<span class="w"> </span><span class="nv">mode</span><span class="o">=</span><span class="nb">export</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>laplace2d.py<span class="w"> </span><span class="nv">mode</span><span class="o">=</span>infer
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">预训练模型</th>
+<th style="text-align: left;">指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams">laplace2d_pretrained.pdparams</a></td>
+<td style="text-align: left;">loss(MSE_Metric): 0.00002<br>MSE.u(MSE_Metric): 0.00002</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1">1. 背景简介<a class="headerlink" href="#1" title="Permanent link">¶</a></h2>
+<p>拉普拉斯方程由法国数学家拉普拉斯首先提出而得名，该方程在许多领域都有重要应用，例如电磁学、天文学和流体力学等。在实际应用中，拉普拉斯方程的求解往往是一个复杂的数学问题。对于一些具有特定边界条件和初始条件的实际问题，可以通过特定的数值方法（如有限元方法、有限差分方法等）来求解拉普拉斯方程。对于一些复杂的问题，可能需要采用更高级的数值方法或者借助高性能计算机进行计算。</p>
+<p>本案例通过深度学习的方式对拉普拉斯方程的2维形式进行求解。</p>
+<h2 id="2">2. 问题定义<a class="headerlink" href="#2" title="Permanent link">¶</a></h2>
+<p>拉普拉斯方程（2维形式）：</p>
+<div class="arithmatex">\[
+\dfrac{\partial^{2} u}{\partial x^{2}} + \dfrac{\partial^{2} u}{\partial y^{2}} = 0, x \in (0, 1), y \in (0, 1)
+\]</div>
+<h2 id="3">3. 问题求解<a class="headerlink" href="#3" title="Permanent link">¶</a></h2>
+<p>接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
+为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 <a href="../../api/arch/">API文档</a>。</p>
+<h3 id="31">3.1 模型构建<a class="headerlink" href="#31" title="Permanent link">¶</a></h3>
+<p>在 2D-Laplace 问题中，每一个已知的坐标点 <span class="arithmatex">\((x, y)\)</span> 都有对应的待求解的未知量 <span class="arithmatex">\(u\)</span>
+，我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 <span class="arithmatex">\((x, y)\)</span> 到 <span class="arithmatex">\((u)\)</span> 的映射函数 <span class="arithmatex">\(f: \mathbb{R}^2 \to \mathbb{R}^1\)</span> ，即：</p>
+<div class="arithmatex">\[
+u = f(x, y)
+\]</div>
+<p>上式中 <span class="arithmatex">\(f\)</span> 即为 MLP 模型本身，用 PaddleScience 代码表示如下</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-23">23</a></span>
+<span class="normal"><a href="#__codelineno-4-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23"></a><span class="c1"># set model</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24"></a><span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 <code>("x", "y")</code>，输出变量名是 <code>("u",)</code>，这些命名与后续代码保持一致。</p>
+<p>接着通过指定 MLP 的层数、神经元个数，我们就实例化出了一个拥有 5 层隐藏神经元，每层神经元数为 20 的神经网络模型 <code>model</code>。</p>
+<h3 id="32">3.2 方程构建<a class="headerlink" href="#32" title="Permanent link">¶</a></h3>
+<p>由于 2D-Laplace 使用的是 Laplace 方程的2维形式，因此可以直接使用 PaddleScience 内置的 <code>Laplace</code>，指定该类的参数 <code>dim</code> 为2。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-26">26</a></span>
+<span class="normal"><a href="#__codelineno-5-27">27</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26"></a><span class="c1"># set equation</span>
+</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27"></a><span class="n">equation</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"laplace"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">equation</span><span class="o">.</span><span class="n">Laplace</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)}</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="33">3.3 计算域构建<a class="headerlink" href="#33" title="Permanent link">¶</a></h3>
+<p>本文中 2D Laplace 问题作用在以 (0.0, 0.0),  (1.0, 1.0) 为对角线的二维矩形区域，
+因此可以直接使用 PaddleScience 内置的空间几何 <code>Rectangle</code> 作为计算域。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-29">29</a></span>
+<span class="normal"><a href="#__codelineno-6-30">30</a></span>
+<span class="normal"><a href="#__codelineno-6-31">31</a></span>
+<span class="normal"><a href="#__codelineno-6-32">32</a></span>
+<span class="normal"><a href="#__codelineno-6-33">33</a></span>
+<span class="normal"><a href="#__codelineno-6-34">34</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29"></a><span class="c1"># set geometry</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30"></a><span class="n">geom</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31"></a>    <span class="s2">"rect"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+</span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32"></a>        <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmax</span>
+</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33"></a>    <span class="p">)</span>
+</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="34">3.4 约束构建<a class="headerlink" href="#34" title="Permanent link">¶</a></h3>
+<p>在本案例中，我们使用了两个约束条件在计算域中指导模型的训练分别是作用于采样点上的 Laplace 方程约束和作用于边界点上的约束。</p>
+<p>在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。</p>
+<div class="language-yaml highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-30">30</a></span>
+<span class="normal"><a href="#__codelineno-7-31">31</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30"></a><span class="nt">NPOINT_INTERIOR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9801</span>
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31"></a><span class="nt">NPOINT_BC</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">400</span>
+</span></code></pre></div></td></tr></table></div>
+<h4 id="341">3.4.1 内部点约束<a class="headerlink" href="#341" title="Permanent link">¶</a></h4>
+<p>以作用在内部点上的 <code>InteriorConstraint</code> 为例，代码如下：</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-50">50</a></span>
+<span class="normal"><a href="#__codelineno-8-51">51</a></span>
+<span class="normal"><a href="#__codelineno-8-52">52</a></span>
+<span class="normal"><a href="#__codelineno-8-53">53</a></span>
+<span class="normal"><a href="#__codelineno-8-54">54</a></span>
+<span class="normal"><a href="#__codelineno-8-55">55</a></span>
+<span class="normal"><a href="#__codelineno-8-56">56</a></span>
+<span class="normal"><a href="#__codelineno-8-57">57</a></span>
+<span class="normal"><a href="#__codelineno-8-58">58</a></span>
+<span class="normal"><a href="#__codelineno-8-59">59</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50"></a><span class="c1"># set constraint</span>
+</span><span id="__span-8-51"><a id="__codelineno-8-51" name="__codelineno-8-51"></a><span class="n">pde_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-8-52"><a id="__codelineno-8-52" name="__codelineno-8-52"></a>    <span class="n">equation</span><span class="p">[</span><span class="s2">"laplace"</span><span class="p">]</span><span class="o">.</span><span class="n">equations</span><span class="p">,</span>
+</span><span id="__span-8-53"><a id="__codelineno-8-53" name="__codelineno-8-53"></a>    <span class="p">{</span><span class="s2">"laplace"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+</span><span id="__span-8-54"><a id="__codelineno-8-54" name="__codelineno-8-54"></a>    <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-8-55"><a id="__codelineno-8-55" name="__codelineno-8-55"></a>    <span class="p">{</span><span class="o">**</span><span class="n">train_dataloader_cfg</span><span class="p">,</span> <span class="s2">"batch_size"</span><span class="p">:</span> <span class="n">NPOINT_TOTAL</span><span class="p">},</span>
+</span><span id="__span-8-56"><a id="__codelineno-8-56" name="__codelineno-8-56"></a>    <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">),</span>
+</span><span id="__span-8-57"><a id="__codelineno-8-57" name="__codelineno-8-57"></a>    <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-8-58"><a id="__codelineno-8-58" name="__codelineno-8-58"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"EQ"</span><span class="p">,</span>
+</span><span id="__span-8-59"><a id="__codelineno-8-59" name="__codelineno-8-59"></a><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><code>InteriorConstraint</code> 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 <a href="#32">3.2 方程构建</a> 章节中实例化好的 <code>equation["laplace"].equations</code>；</p>
+<p>第二个参数是约束变量的目标值，在本问题中我们希望 Laplace 方程产生的结果 <code>laplace</code> 被优化至 0，因此将它的目标值全设为 0；</p>
+<p>第三个参数是约束方程作用的计算域，此处填入在 <a href="#33">3.3 计算域构建</a> 章节实例化好的 <code>geom["rect"]</code> 即可；</p>
+<p>第四个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 <code>dataset</code> 字段设置为 "IterableNamedArrayDataset" 且 <code>iters_per_epoch</code> 也设置为 1，采样点数 <code>batch_size</code> 设为 10201(表示99x99的等间隔网格加400个边界点)；</p>
+<p>第五个参数是损失函数，此处我们选用常用的MSE函数，且 <code>reduction</code> 设置为 <code>"sum"</code>，即我们会将参与计算的所有数据点产生的损失项求和；</p>
+<p>第六个参数是选择是否在计算域上进行等间隔采样，此处我们选择开启等间隔采样，这样能让训练点均匀分布在计算域上，有利于训练收敛；</p>
+<p>第七个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "EQ" 即可。</p>
+<h4 id="342">3.4.2 边界约束<a class="headerlink" href="#342" title="Permanent link">¶</a></h4>
+<p>同理，我们还需要构建矩形的四个边界的约束。但与构建 <code>InteriorConstraint</code> 约束不同的是，由于作用区域是边界，因此我们使用 <code>BoundaryConstraint</code> 类，代码如下：</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-60">60</a></span>
+<span class="normal"><a href="#__codelineno-9-61">61</a></span>
+<span class="normal"><a href="#__codelineno-9-62">62</a></span>
+<span class="normal"><a href="#__codelineno-9-63">63</a></span>
+<span class="normal"><a href="#__codelineno-9-64">64</a></span>
+<span class="normal"><a href="#__codelineno-9-65">65</a></span>
+<span class="normal"><a href="#__codelineno-9-66">66</a></span>
+<span class="normal"><a href="#__codelineno-9-67">67</a></span>
+<span class="normal"><a href="#__codelineno-9-68">68</a></span>
+<span class="normal"><a href="#__codelineno-9-69">69</a></span>
+<span class="normal"><a href="#__codelineno-9-70">70</a></span>
+<span class="normal"><a href="#__codelineno-9-71">71</a></span>
+<span class="normal"><a href="#__codelineno-9-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-60"><a id="__codelineno-9-60" name="__codelineno-9-60"></a><span class="n">bc</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">BoundaryConstraint</span><span class="p">(</span>
+</span><span id="__span-9-61"><a id="__codelineno-9-61" name="__codelineno-9-61"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-9-62"><a id="__codelineno-9-62" name="__codelineno-9-62"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">u_solution_func</span><span class="p">},</span>
+</span><span id="__span-9-63"><a id="__codelineno-9-63" name="__codelineno-9-63"></a>    <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-9-64"><a id="__codelineno-9-64" name="__codelineno-9-64"></a>    <span class="p">{</span><span class="o">**</span><span class="n">train_dataloader_cfg</span><span class="p">,</span> <span class="s2">"batch_size"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_BC</span><span class="p">},</span>
+</span><span id="__span-9-65"><a id="__codelineno-9-65" name="__codelineno-9-65"></a>    <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">),</span>
+</span><span id="__span-9-66"><a id="__codelineno-9-66" name="__codelineno-9-66"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"BC"</span><span class="p">,</span>
+</span><span id="__span-9-67"><a id="__codelineno-9-67" name="__codelineno-9-67"></a><span class="p">)</span>
+</span><span id="__span-9-68"><a id="__codelineno-9-68" name="__codelineno-9-68"></a><span class="c1"># wrap constraints together</span>
+</span><span id="__span-9-69"><a id="__codelineno-9-69" name="__codelineno-9-69"></a><span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-9-70"><a id="__codelineno-9-70" name="__codelineno-9-70"></a>    <span class="n">pde_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">pde_constraint</span><span class="p">,</span>
+</span><span id="__span-9-71"><a id="__codelineno-9-71" name="__codelineno-9-71"></a>    <span class="n">bc</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">bc</span><span class="p">,</span>
+</span><span id="__span-9-72"><a id="__codelineno-9-72" name="__codelineno-9-72"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p><code>BoundaryConstraint</code> 类第一个参数表示我们直接对网络模型的输出结果 <code>out["u"]</code> 作为程序运行时的约束对象；</p>
+<p>第二个参数是指我们约束对象的真值如何获得，这里我们直接通过其解析解进行计算，定义解析解的代码如下：</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-36">36</a></span>
+<span class="normal"><a href="#__codelineno-10-37">37</a></span>
+<span class="normal"><a href="#__codelineno-10-38">38</a></span>
+<span class="normal"><a href="#__codelineno-10-39">39</a></span>
+<span class="normal"><a href="#__codelineno-10-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-36"><a id="__codelineno-10-36" name="__codelineno-10-36"></a><span class="c1"># compute ground truth function</span>
+</span><span id="__span-10-37"><a id="__codelineno-10-37" name="__codelineno-10-37"></a><span class="k">def</span> <span class="nf">u_solution_func</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
+</span><span id="__span-10-38"><a id="__codelineno-10-38" name="__codelineno-10-38"></a><span class="w">    </span><span class="sd">"""compute ground truth for u as label data"""</span>
+</span><span id="__span-10-39"><a id="__codelineno-10-39" name="__codelineno-10-39"></a>    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"x"</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">"y"</span><span class="p">]</span>
+</span><span id="__span-10-40"><a id="__codelineno-10-40" name="__codelineno-10-40"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p><code>BoundaryConstraint</code> 类其他参数的含义与 <code>InteriorConstraint</code> 基本一致，这里不再介绍。</p>
+<h3 id="35">3.5 超参数设定<a class="headerlink" href="#35" title="Permanent link">¶</a></h3>
+<p>接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。</p>
+<div class="language-yaml highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-45">45</a></span>
+<span class="normal"><a href="#__codelineno-11-46">46</a></span>
+<span class="normal"><a href="#__codelineno-11-47">47</a></span>
+<span class="normal"><a href="#__codelineno-11-48">48</a></span>
+<span class="normal"><a href="#__codelineno-11-49">49</a></span>
+<span class="normal"><a href="#__codelineno-11-50">50</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-45"><a id="__codelineno-11-45" name="__codelineno-11-45"></a><span class="c1"># training settings</span>
+</span><span id="__span-11-46"><a id="__codelineno-11-46" name="__codelineno-11-46"></a><span class="nt">TRAIN</span><span class="p">:</span>
+</span><span id="__span-11-47"><a id="__codelineno-11-47" name="__codelineno-11-47"></a><span class="w">  </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span>
+</span><span id="__span-11-48"><a id="__codelineno-11-48" name="__codelineno-11-48"></a><span class="w">  </span><span class="nt">iters_per_epoch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-11-49"><a id="__codelineno-11-49" name="__codelineno-11-49"></a><span class="w">  </span><span class="nt">eval_during_train</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-11-50"><a id="__codelineno-11-50" name="__codelineno-11-50"></a><span class="w">  </span><span class="nt">eval_freq</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="36">3.6 优化器构建<a class="headerlink" href="#36" title="Permanent link">¶</a></h3>
+<p>训练过程会调用优化器来更新模型参数，此处选择较为常用的 <code>Adam</code> 优化器。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-74">74</a></span>
+<span class="normal"><a href="#__codelineno-12-75">75</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-74"><a id="__codelineno-12-74" name="__codelineno-12-74"></a><span class="c1"># set optimizer</span>
+</span><span id="__span-12-75"><a id="__codelineno-12-75" name="__codelineno-12-75"></a><span class="n">optimizer</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)(</span><span class="n">model</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="37">3.7 评估器构建<a class="headerlink" href="#37" title="Permanent link">¶</a></h3>
+<p>在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 <code>ppsci.validate.GeometryValidator</code> 构建评估器。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-77">77</a></span>
+<span class="normal"><a href="#__codelineno-13-78">78</a></span>
+<span class="normal"><a href="#__codelineno-13-79">79</a></span>
+<span class="normal"><a href="#__codelineno-13-80">80</a></span>
+<span class="normal"><a href="#__codelineno-13-81">81</a></span>
+<span class="normal"><a href="#__codelineno-13-82">82</a></span>
+<span class="normal"><a href="#__codelineno-13-83">83</a></span>
+<span class="normal"><a href="#__codelineno-13-84">84</a></span>
+<span class="normal"><a href="#__codelineno-13-85">85</a></span>
+<span class="normal"><a href="#__codelineno-13-86">86</a></span>
+<span class="normal"><a href="#__codelineno-13-87">87</a></span>
+<span class="normal"><a href="#__codelineno-13-88">88</a></span>
+<span class="normal"><a href="#__codelineno-13-89">89</a></span>
+<span class="normal"><a href="#__codelineno-13-90">90</a></span>
+<span class="normal"><a href="#__codelineno-13-91">91</a></span>
+<span class="normal"><a href="#__codelineno-13-92">92</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-77"><a id="__codelineno-13-77" name="__codelineno-13-77"></a><span class="c1"># set validator</span>
+</span><span id="__span-13-78"><a id="__codelineno-13-78" name="__codelineno-13-78"></a><span class="n">mse_metric</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">validate</span><span class="o">.</span><span class="n">GeometryValidator</span><span class="p">(</span>
+</span><span id="__span-13-79"><a id="__codelineno-13-79" name="__codelineno-13-79"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-13-80"><a id="__codelineno-13-80" name="__codelineno-13-80"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">u_solution_func</span><span class="p">},</span>
+</span><span id="__span-13-81"><a id="__codelineno-13-81" name="__codelineno-13-81"></a>    <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-13-82"><a id="__codelineno-13-82" name="__codelineno-13-82"></a>    <span class="p">{</span>
+</span><span id="__span-13-83"><a id="__codelineno-13-83" name="__codelineno-13-83"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"IterableNamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-13-84"><a id="__codelineno-13-84" name="__codelineno-13-84"></a>        <span class="s2">"total_size"</span><span class="p">:</span> <span class="n">NPOINT_TOTAL</span><span class="p">,</span>
+</span><span id="__span-13-85"><a id="__codelineno-13-85" name="__codelineno-13-85"></a>    <span class="p">},</span>
+</span><span id="__span-13-86"><a id="__codelineno-13-86" name="__codelineno-13-86"></a>    <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-13-87"><a id="__codelineno-13-87" name="__codelineno-13-87"></a>    <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-13-88"><a id="__codelineno-13-88" name="__codelineno-13-88"></a>    <span class="n">metric</span><span class="o">=</span><span class="p">{</span><span class="s2">"MSE"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">MSE</span><span class="p">()},</span>
+</span><span id="__span-13-89"><a id="__codelineno-13-89" name="__codelineno-13-89"></a>    <span class="n">with_initial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-13-90"><a id="__codelineno-13-90" name="__codelineno-13-90"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"MSE_Metric"</span><span class="p">,</span>
+</span><span id="__span-13-91"><a id="__codelineno-13-91" name="__codelineno-13-91"></a><span class="p">)</span>
+</span><span id="__span-13-92"><a id="__codelineno-13-92" name="__codelineno-13-92"></a><span class="n">validator</span> <span class="o">=</span> <span class="p">{</span><span class="n">mse_metric</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">mse_metric</span><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="38">3.8 可视化器构建<a class="headerlink" href="#38" title="Permanent link">¶</a></h3>
+<p>在模型评估时，如果评估结果是可以可视化的数据，我们可以选择合适的可视化器来对输出结果进行可视化。</p>
+<p>本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 <strong>vtu格式</strong> 文件，最后用可视化软件打开查看即可。代码如下：</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-14-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-14-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-14-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-14-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-14-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-14-100">100</a></span>
+<span class="normal"><a href="#__codelineno-14-101">101</a></span>
+<span class="normal"><a href="#__codelineno-14-102">102</a></span>
+<span class="normal"><a href="#__codelineno-14-103">103</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-94"><a id="__codelineno-14-94" name="__codelineno-14-94"></a><span class="c1"># set visualizer(optional)</span>
+</span><span id="__span-14-95"><a id="__codelineno-14-95" name="__codelineno-14-95"></a><span class="n">vis_points</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">]</span><span class="o">.</span><span class="n">sample_interior</span><span class="p">(</span><span class="n">NPOINT_TOTAL</span><span class="p">,</span> <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-14-96"><a id="__codelineno-14-96" name="__codelineno-14-96"></a><span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-14-97"><a id="__codelineno-14-97" name="__codelineno-14-97"></a>    <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerVtu</span><span class="p">(</span>
+</span><span id="__span-14-98"><a id="__codelineno-14-98" name="__codelineno-14-98"></a>        <span class="n">vis_points</span><span class="p">,</span>
+</span><span id="__span-14-99"><a id="__codelineno-14-99" name="__codelineno-14-99"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-14-100"><a id="__codelineno-14-100" name="__codelineno-14-100"></a>        <span class="n">num_timestamps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-14-101"><a id="__codelineno-14-101" name="__codelineno-14-101"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">"result_u"</span><span class="p">,</span>
+</span><span id="__span-14-102"><a id="__codelineno-14-102" name="__codelineno-14-102"></a>    <span class="p">)</span>
+</span><span id="__span-14-103"><a id="__codelineno-14-103" name="__codelineno-14-103"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<h3 id="39">3.9 模型训练、评估与可视化<a class="headerlink" href="#39" title="Permanent link">¶</a></h3>
+<p>完成上述设置之后，只需要将上述实例化的对象按顺序传递给 <code>ppsci.solver.Solver</code>，然后启动训练、评估、可视化。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-105">105</a></span>
+<span class="normal"><a href="#__codelineno-15-106">106</a></span>
+<span class="normal"><a href="#__codelineno-15-107">107</a></span>
+<span class="normal"><a href="#__codelineno-15-108">108</a></span>
+<span class="normal"><a href="#__codelineno-15-109">109</a></span>
+<span class="normal"><a href="#__codelineno-15-110">110</a></span>
+<span class="normal"><a href="#__codelineno-15-111">111</a></span>
+<span class="normal"><a href="#__codelineno-15-112">112</a></span>
+<span class="normal"><a href="#__codelineno-15-113">113</a></span>
+<span class="normal"><a href="#__codelineno-15-114">114</a></span>
+<span class="normal"><a href="#__codelineno-15-115">115</a></span>
+<span class="normal"><a href="#__codelineno-15-116">116</a></span>
+<span class="normal"><a href="#__codelineno-15-117">117</a></span>
+<span class="normal"><a href="#__codelineno-15-118">118</a></span>
+<span class="normal"><a href="#__codelineno-15-119">119</a></span>
+<span class="normal"><a href="#__codelineno-15-120">120</a></span>
+<span class="normal"><a href="#__codelineno-15-121">121</a></span>
+<span class="normal"><a href="#__codelineno-15-122">122</a></span>
+<span class="normal"><a href="#__codelineno-15-123">123</a></span>
+<span class="normal"><a href="#__codelineno-15-124">124</a></span>
+<span class="normal"><a href="#__codelineno-15-125">125</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-105"><a id="__codelineno-15-105" name="__codelineno-15-105"></a><span class="c1"># initialize solver</span>
+</span><span id="__span-15-106"><a id="__codelineno-15-106" name="__codelineno-15-106"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-15-107"><a id="__codelineno-15-107" name="__codelineno-15-107"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-15-108"><a id="__codelineno-15-108" name="__codelineno-15-108"></a>    <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-15-109"><a id="__codelineno-15-109" name="__codelineno-15-109"></a>    <span class="n">cfg</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span id="__span-15-110"><a id="__codelineno-15-110" name="__codelineno-15-110"></a>    <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-15-111"><a id="__codelineno-15-111" name="__codelineno-15-111"></a>    <span class="n">epochs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+</span><span id="__span-15-112"><a id="__codelineno-15-112" name="__codelineno-15-112"></a>    <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">iters_per_epoch</span><span class="p">,</span>
+</span><span id="__span-15-113"><a id="__codelineno-15-113" name="__codelineno-15-113"></a>    <span class="n">eval_during_train</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">eval_during_train</span><span class="p">,</span>
+</span><span id="__span-15-114"><a id="__codelineno-15-114" name="__codelineno-15-114"></a>    <span class="n">eval_freq</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">eval_freq</span><span class="p">,</span>
+</span><span id="__span-15-115"><a id="__codelineno-15-115" name="__codelineno-15-115"></a>    <span class="n">equation</span><span class="o">=</span><span class="n">equation</span><span class="p">,</span>
+</span><span id="__span-15-116"><a id="__codelineno-15-116" name="__codelineno-15-116"></a>    <span class="n">geom</span><span class="o">=</span><span class="n">geom</span><span class="p">,</span>
+</span><span id="__span-15-117"><a id="__codelineno-15-117" name="__codelineno-15-117"></a>    <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span>
+</span><span id="__span-15-118"><a id="__codelineno-15-118" name="__codelineno-15-118"></a>    <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-15-119"><a id="__codelineno-15-119" name="__codelineno-15-119"></a><span class="p">)</span>
+</span><span id="__span-15-120"><a id="__codelineno-15-120" name="__codelineno-15-120"></a><span class="c1"># train model</span>
+</span><span id="__span-15-121"><a id="__codelineno-15-121" name="__codelineno-15-121"></a><span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span><span id="__span-15-122"><a id="__codelineno-15-122" name="__codelineno-15-122"></a><span class="c1"># evaluate after finished training</span>
+</span><span id="__span-15-123"><a id="__codelineno-15-123" name="__codelineno-15-123"></a><span class="n">solver</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span><span id="__span-15-124"><a id="__codelineno-15-124" name="__codelineno-15-124"></a><span class="c1"># visualize prediction after finished training</span>
+</span><span id="__span-15-125"><a id="__codelineno-15-125" name="__codelineno-15-125"></a><span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="4">4. 完整代码<a class="headerlink" href="#4" title="Permanent link">¶</a></h2>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">laplace2d.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">  1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">  2</a></span>
+<span class="normal"><a href="#__codelineno-16-3">  3</a></span>
+<span class="normal"><a href="#__codelineno-16-4">  4</a></span>
+<span class="normal"><a href="#__codelineno-16-5">  5</a></span>
+<span class="normal"><a href="#__codelineno-16-6">  6</a></span>
+<span class="normal"><a href="#__codelineno-16-7">  7</a></span>
+<span class="normal"><a href="#__codelineno-16-8">  8</a></span>
+<span class="normal"><a href="#__codelineno-16-9">  9</a></span>
+<span class="normal"><a href="#__codelineno-16-10"> 10</a></span>
+<span class="normal"><a href="#__codelineno-16-11"> 11</a></span>
+<span class="normal"><a href="#__codelineno-16-12"> 12</a></span>
+<span class="normal"><a href="#__codelineno-16-13"> 13</a></span>
+<span class="normal"><a href="#__codelineno-16-14"> 14</a></span>
+<span class="normal"><a href="#__codelineno-16-15"> 15</a></span>
+<span class="normal"><a href="#__codelineno-16-16"> 16</a></span>
+<span class="normal"><a href="#__codelineno-16-17"> 17</a></span>
+<span class="normal"><a href="#__codelineno-16-18"> 18</a></span>
+<span class="normal"><a href="#__codelineno-16-19"> 19</a></span>
+<span class="normal"><a href="#__codelineno-16-20"> 20</a></span>
+<span class="normal"><a href="#__codelineno-16-21"> 21</a></span>
+<span class="normal"><a href="#__codelineno-16-22"> 22</a></span>
+<span class="normal"><a href="#__codelineno-16-23"> 23</a></span>
+<span class="normal"><a href="#__codelineno-16-24"> 24</a></span>
+<span class="normal"><a href="#__codelineno-16-25"> 25</a></span>
+<span class="normal"><a href="#__codelineno-16-26"> 26</a></span>
+<span class="normal"><a href="#__codelineno-16-27"> 27</a></span>
+<span class="normal"><a href="#__codelineno-16-28"> 28</a></span>
+<span class="normal"><a href="#__codelineno-16-29"> 29</a></span>
+<span class="normal"><a href="#__codelineno-16-30"> 30</a></span>
+<span class="normal"><a href="#__codelineno-16-31"> 31</a></span>
+<span class="normal"><a href="#__codelineno-16-32"> 32</a></span>
+<span class="normal"><a href="#__codelineno-16-33"> 33</a></span>
+<span class="normal"><a href="#__codelineno-16-34"> 34</a></span>
+<span class="normal"><a href="#__codelineno-16-35"> 35</a></span>
+<span class="normal"><a href="#__codelineno-16-36"> 36</a></span>
+<span class="normal"><a href="#__codelineno-16-37"> 37</a></span>
+<span class="normal"><a href="#__codelineno-16-38"> 38</a></span>
+<span class="normal"><a href="#__codelineno-16-39"> 39</a></span>
+<span class="normal"><a href="#__codelineno-16-40"> 40</a></span>
+<span class="normal"><a href="#__codelineno-16-41"> 41</a></span>
+<span class="normal"><a href="#__codelineno-16-42"> 42</a></span>
+<span class="normal"><a href="#__codelineno-16-43"> 43</a></span>
+<span class="normal"><a href="#__codelineno-16-44"> 44</a></span>
+<span class="normal"><a href="#__codelineno-16-45"> 45</a></span>
+<span class="normal"><a href="#__codelineno-16-46"> 46</a></span>
+<span class="normal"><a href="#__codelineno-16-47"> 47</a></span>
+<span class="normal"><a href="#__codelineno-16-48"> 48</a></span>
+<span class="normal"><a href="#__codelineno-16-49"> 49</a></span>
+<span class="normal"><a href="#__codelineno-16-50"> 50</a></span>
+<span class="normal"><a href="#__codelineno-16-51"> 51</a></span>
+<span class="normal"><a href="#__codelineno-16-52"> 52</a></span>
+<span class="normal"><a href="#__codelineno-16-53"> 53</a></span>
+<span class="normal"><a href="#__codelineno-16-54"> 54</a></span>
+<span class="normal"><a href="#__codelineno-16-55"> 55</a></span>
+<span class="normal"><a href="#__codelineno-16-56"> 56</a></span>
+<span class="normal"><a href="#__codelineno-16-57"> 57</a></span>
+<span class="normal"><a href="#__codelineno-16-58"> 58</a></span>
+<span class="normal"><a href="#__codelineno-16-59"> 59</a></span>
+<span class="normal"><a href="#__codelineno-16-60"> 60</a></span>
+<span class="normal"><a href="#__codelineno-16-61"> 61</a></span>
+<span class="normal"><a href="#__codelineno-16-62"> 62</a></span>
+<span class="normal"><a href="#__codelineno-16-63"> 63</a></span>
+<span class="normal"><a href="#__codelineno-16-64"> 64</a></span>
+<span class="normal"><a href="#__codelineno-16-65"> 65</a></span>
+<span class="normal"><a href="#__codelineno-16-66"> 66</a></span>
+<span class="normal"><a href="#__codelineno-16-67"> 67</a></span>
+<span class="normal"><a href="#__codelineno-16-68"> 68</a></span>
+<span class="normal"><a href="#__codelineno-16-69"> 69</a></span>
+<span class="normal"><a href="#__codelineno-16-70"> 70</a></span>
+<span class="normal"><a href="#__codelineno-16-71"> 71</a></span>
+<span class="normal"><a href="#__codelineno-16-72"> 72</a></span>
+<span class="normal"><a href="#__codelineno-16-73"> 73</a></span>
+<span class="normal"><a href="#__codelineno-16-74"> 74</a></span>
+<span class="normal"><a href="#__codelineno-16-75"> 75</a></span>
+<span class="normal"><a href="#__codelineno-16-76"> 76</a></span>
+<span class="normal"><a href="#__codelineno-16-77"> 77</a></span>
+<span class="normal"><a href="#__codelineno-16-78"> 78</a></span>
+<span class="normal"><a href="#__codelineno-16-79"> 79</a></span>
+<span class="normal"><a href="#__codelineno-16-80"> 80</a></span>
+<span class="normal"><a href="#__codelineno-16-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-16-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-16-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-16-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-16-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-16-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-16-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-16-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-16-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-16-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-16-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-16-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-16-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-16-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-16-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-16-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-16-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-16-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-16-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-16-100">100</a></span>
+<span class="normal"><a href="#__codelineno-16-101">101</a></span>
+<span class="normal"><a href="#__codelineno-16-102">102</a></span>
+<span class="normal"><a href="#__codelineno-16-103">103</a></span>
+<span class="normal"><a href="#__codelineno-16-104">104</a></span>
+<span class="normal"><a href="#__codelineno-16-105">105</a></span>
+<span class="normal"><a href="#__codelineno-16-106">106</a></span>
+<span class="normal"><a href="#__codelineno-16-107">107</a></span>
+<span class="normal"><a href="#__codelineno-16-108">108</a></span>
+<span class="normal"><a href="#__codelineno-16-109">109</a></span>
+<span class="normal"><a href="#__codelineno-16-110">110</a></span>
+<span class="normal"><a href="#__codelineno-16-111">111</a></span>
+<span class="normal"><a href="#__codelineno-16-112">112</a></span>
+<span class="normal"><a href="#__codelineno-16-113">113</a></span>
+<span class="normal"><a href="#__codelineno-16-114">114</a></span>
+<span class="normal"><a href="#__codelineno-16-115">115</a></span>
+<span class="normal"><a href="#__codelineno-16-116">116</a></span>
+<span class="normal"><a href="#__codelineno-16-117">117</a></span>
+<span class="normal"><a href="#__codelineno-16-118">118</a></span>
+<span class="normal"><a href="#__codelineno-16-119">119</a></span>
+<span class="normal"><a href="#__codelineno-16-120">120</a></span>
+<span class="normal"><a href="#__codelineno-16-121">121</a></span>
+<span class="normal"><a href="#__codelineno-16-122">122</a></span>
+<span class="normal"><a href="#__codelineno-16-123">123</a></span>
+<span class="normal"><a href="#__codelineno-16-124">124</a></span>
+<span class="normal"><a href="#__codelineno-16-125">125</a></span>
+<span class="normal"><a href="#__codelineno-16-126">126</a></span>
+<span class="normal"><a href="#__codelineno-16-127">127</a></span>
+<span class="normal"><a href="#__codelineno-16-128">128</a></span>
+<span class="normal"><a href="#__codelineno-16-129">129</a></span>
+<span class="normal"><a href="#__codelineno-16-130">130</a></span>
+<span class="normal"><a href="#__codelineno-16-131">131</a></span>
+<span class="normal"><a href="#__codelineno-16-132">132</a></span>
+<span class="normal"><a href="#__codelineno-16-133">133</a></span>
+<span class="normal"><a href="#__codelineno-16-134">134</a></span>
+<span class="normal"><a href="#__codelineno-16-135">135</a></span>
+<span class="normal"><a href="#__codelineno-16-136">136</a></span>
+<span class="normal"><a href="#__codelineno-16-137">137</a></span>
+<span class="normal"><a href="#__codelineno-16-138">138</a></span>
+<span class="normal"><a href="#__codelineno-16-139">139</a></span>
+<span class="normal"><a href="#__codelineno-16-140">140</a></span>
+<span class="normal"><a href="#__codelineno-16-141">141</a></span>
+<span class="normal"><a href="#__codelineno-16-142">142</a></span>
+<span class="normal"><a href="#__codelineno-16-143">143</a></span>
+<span class="normal"><a href="#__codelineno-16-144">144</a></span>
+<span class="normal"><a href="#__codelineno-16-145">145</a></span>
+<span class="normal"><a href="#__codelineno-16-146">146</a></span>
+<span class="normal"><a href="#__codelineno-16-147">147</a></span>
+<span class="normal"><a href="#__codelineno-16-148">148</a></span>
+<span class="normal"><a href="#__codelineno-16-149">149</a></span>
+<span class="normal"><a href="#__codelineno-16-150">150</a></span>
+<span class="normal"><a href="#__codelineno-16-151">151</a></span>
+<span class="normal"><a href="#__codelineno-16-152">152</a></span>
+<span class="normal"><a href="#__codelineno-16-153">153</a></span>
+<span class="normal"><a href="#__codelineno-16-154">154</a></span>
+<span class="normal"><a href="#__codelineno-16-155">155</a></span>
+<span class="normal"><a href="#__codelineno-16-156">156</a></span>
+<span class="normal"><a href="#__codelineno-16-157">157</a></span>
+<span class="normal"><a href="#__codelineno-16-158">158</a></span>
+<span class="normal"><a href="#__codelineno-16-159">159</a></span>
+<span class="normal"><a href="#__codelineno-16-160">160</a></span>
+<span class="normal"><a href="#__codelineno-16-161">161</a></span>
+<span class="normal"><a href="#__codelineno-16-162">162</a></span>
+<span class="normal"><a href="#__codelineno-16-163">163</a></span>
+<span class="normal"><a href="#__codelineno-16-164">164</a></span>
+<span class="normal"><a href="#__codelineno-16-165">165</a></span>
+<span class="normal"><a href="#__codelineno-16-166">166</a></span>
+<span class="normal"><a href="#__codelineno-16-167">167</a></span>
+<span class="normal"><a href="#__codelineno-16-168">168</a></span>
+<span class="normal"><a href="#__codelineno-16-169">169</a></span>
+<span class="normal"><a href="#__codelineno-16-170">170</a></span>
+<span class="normal"><a href="#__codelineno-16-171">171</a></span>
+<span class="normal"><a href="#__codelineno-16-172">172</a></span>
+<span class="normal"><a href="#__codelineno-16-173">173</a></span>
+<span class="normal"><a href="#__codelineno-16-174">174</a></span>
+<span class="normal"><a href="#__codelineno-16-175">175</a></span>
+<span class="normal"><a href="#__codelineno-16-176">176</a></span>
+<span class="normal"><a href="#__codelineno-16-177">177</a></span>
+<span class="normal"><a href="#__codelineno-16-178">178</a></span>
+<span class="normal"><a href="#__codelineno-16-179">179</a></span>
+<span class="normal"><a href="#__codelineno-16-180">180</a></span>
+<span class="normal"><a href="#__codelineno-16-181">181</a></span>
+<span class="normal"><a href="#__codelineno-16-182">182</a></span>
+<span class="normal"><a href="#__codelineno-16-183">183</a></span>
+<span class="normal"><a href="#__codelineno-16-184">184</a></span>
+<span class="normal"><a href="#__codelineno-16-185">185</a></span>
+<span class="normal"><a href="#__codelineno-16-186">186</a></span>
+<span class="normal"><a href="#__codelineno-16-187">187</a></span>
+<span class="normal"><a href="#__codelineno-16-188">188</a></span>
+<span class="normal"><a href="#__codelineno-16-189">189</a></span>
+<span class="normal"><a href="#__codelineno-16-190">190</a></span>
+<span class="normal"><a href="#__codelineno-16-191">191</a></span>
+<span class="normal"><a href="#__codelineno-16-192">192</a></span>
+<span class="normal"><a href="#__codelineno-16-193">193</a></span>
+<span class="normal"><a href="#__codelineno-16-194">194</a></span>
+<span class="normal"><a href="#__codelineno-16-195">195</a></span>
+<span class="normal"><a href="#__codelineno-16-196">196</a></span>
+<span class="normal"><a href="#__codelineno-16-197">197</a></span>
+<span class="normal"><a href="#__codelineno-16-198">198</a></span>
+<span class="normal"><a href="#__codelineno-16-199">199</a></span>
+<span class="normal"><a href="#__codelineno-16-200">200</a></span>
+<span class="normal"><a href="#__codelineno-16-201">201</a></span>
+<span class="normal"><a href="#__codelineno-16-202">202</a></span>
+<span class="normal"><a href="#__codelineno-16-203">203</a></span>
+<span class="normal"><a href="#__codelineno-16-204">204</a></span>
+<span class="normal"><a href="#__codelineno-16-205">205</a></span>
+<span class="normal"><a href="#__codelineno-16-206">206</a></span>
+<span class="normal"><a href="#__codelineno-16-207">207</a></span>
+<span class="normal"><a href="#__codelineno-16-208">208</a></span>
+<span class="normal"><a href="#__codelineno-16-209">209</a></span>
+<span class="normal"><a href="#__codelineno-16-210">210</a></span>
+<span class="normal"><a href="#__codelineno-16-211">211</a></span>
+<span class="normal"><a href="#__codelineno-16-212">212</a></span>
+<span class="normal"><a href="#__codelineno-16-213">213</a></span>
+<span class="normal"><a href="#__codelineno-16-214">214</a></span>
+<span class="normal"><a href="#__codelineno-16-215">215</a></span>
+<span class="normal"><a href="#__codelineno-16-216">216</a></span>
+<span class="normal"><a href="#__codelineno-16-217">217</a></span>
+<span class="normal"><a href="#__codelineno-16-218">218</a></span>
+<span class="normal"><a href="#__codelineno-16-219">219</a></span>
+<span class="normal"><a href="#__codelineno-16-220">220</a></span>
+<span class="normal"><a href="#__codelineno-16-221">221</a></span>
+<span class="normal"><a href="#__codelineno-16-222">222</a></span>
+<span class="normal"><a href="#__codelineno-16-223">223</a></span>
+<span class="normal"><a href="#__codelineno-16-224">224</a></span>
+<span class="normal"><a href="#__codelineno-16-225">225</a></span>
+<span class="normal"><a href="#__codelineno-16-226">226</a></span>
+<span class="normal"><a href="#__codelineno-16-227">227</a></span>
+<span class="normal"><a href="#__codelineno-16-228">228</a></span>
+<span class="normal"><a href="#__codelineno-16-229">229</a></span>
+<span class="normal"><a href="#__codelineno-16-230">230</a></span>
+<span class="normal"><a href="#__codelineno-16-231">231</a></span>
+<span class="normal"><a href="#__codelineno-16-232">232</a></span>
+<span class="normal"><a href="#__codelineno-16-233">233</a></span>
+<span class="normal"><a href="#__codelineno-16-234">234</a></span>
+<span class="normal"><a href="#__codelineno-16-235">235</a></span>
+<span class="normal"><a href="#__codelineno-16-236">236</a></span>
+<span class="normal"><a href="#__codelineno-16-237">237</a></span>
+<span class="normal"><a href="#__codelineno-16-238">238</a></span>
+<span class="normal"><a href="#__codelineno-16-239">239</a></span>
+<span class="normal"><a href="#__codelineno-16-240">240</a></span>
+<span class="normal"><a href="#__codelineno-16-241">241</a></span>
+<span class="normal"><a href="#__codelineno-16-242">242</a></span>
+<span class="normal"><a href="#__codelineno-16-243">243</a></span>
+<span class="normal"><a href="#__codelineno-16-244">244</a></span>
+<span class="normal"><a href="#__codelineno-16-245">245</a></span>
+<span class="normal"><a href="#__codelineno-16-246">246</a></span>
+<span class="normal"><a href="#__codelineno-16-247">247</a></span>
+<span class="normal"><a href="#__codelineno-16-248">248</a></span>
+<span class="normal"><a href="#__codelineno-16-249">249</a></span>
+<span class="normal"><a href="#__codelineno-16-250">250</a></span>
+<span class="normal"><a href="#__codelineno-16-251">251</a></span>
+<span class="normal"><a href="#__codelineno-16-252">252</a></span>
+<span class="normal"><a href="#__codelineno-16-253">253</a></span>
+<span class="normal"><a href="#__codelineno-16-254">254</a></span>
+<span class="normal"><a href="#__codelineno-16-255">255</a></span>
+<span class="normal"><a href="#__codelineno-16-256">256</a></span>
+<span class="normal"><a href="#__codelineno-16-257">257</a></span>
+<span class="normal"><a href="#__codelineno-16-258">258</a></span>
+<span class="normal"><a href="#__codelineno-16-259">259</a></span>
+<span class="normal"><a href="#__codelineno-16-260">260</a></span>
+<span class="normal"><a href="#__codelineno-16-261">261</a></span>
+<span class="normal"><a href="#__codelineno-16-262">262</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="c1"># Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="c1">#</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a><span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a><span class="c1"># you may not use this file except in compliance with the License.</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5"></a><span class="c1"># You may obtain a copy of the License at</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6"></a><span class="c1">#</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7"></a><span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8"></a><span class="c1">#</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9"></a><span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10"></a><span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11"></a><span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12"></a><span class="c1"># See the License for the specific language governing permissions and</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13"></a><span class="c1"># limitations under the License.</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14"></a>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15"></a><span class="kn">import</span> <span class="nn">hydra</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17"></a><span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">DictConfig</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18"></a>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19"></a><span class="kn">import</span> <span class="nn">ppsci</span>
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20"></a>
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21"></a>
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22"></a><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">):</span>
+</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23"></a>    <span class="c1"># set model</span>
+</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="p">)</span>
+</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25"></a>
+</span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26"></a>    <span class="c1"># set equation</span>
+</span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27"></a>    <span class="n">equation</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"laplace"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">equation</span><span class="o">.</span><span class="n">Laplace</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)}</span>
+</span><span id="__span-16-28"><a id="__codelineno-16-28" name="__codelineno-16-28"></a>
+</span><span id="__span-16-29"><a id="__codelineno-16-29" name="__codelineno-16-29"></a>    <span class="c1"># set geometry</span>
+</span><span id="__span-16-30"><a id="__codelineno-16-30" name="__codelineno-16-30"></a>    <span class="n">geom</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-31"><a id="__codelineno-16-31" name="__codelineno-16-31"></a>        <span class="s2">"rect"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+</span><span id="__span-16-32"><a id="__codelineno-16-32" name="__codelineno-16-32"></a>            <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmax</span>
+</span><span id="__span-16-33"><a id="__codelineno-16-33" name="__codelineno-16-33"></a>        <span class="p">)</span>
+</span><span id="__span-16-34"><a id="__codelineno-16-34" name="__codelineno-16-34"></a>    <span class="p">}</span>
+</span><span id="__span-16-35"><a id="__codelineno-16-35" name="__codelineno-16-35"></a>
+</span><span id="__span-16-36"><a id="__codelineno-16-36" name="__codelineno-16-36"></a>    <span class="c1"># compute ground truth function</span>
+</span><span id="__span-16-37"><a id="__codelineno-16-37" name="__codelineno-16-37"></a>    <span class="k">def</span> <span class="nf">u_solution_func</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
+</span><span id="__span-16-38"><a id="__codelineno-16-38" name="__codelineno-16-38"></a><span class="w">        </span><span class="sd">"""compute ground truth for u as label data"""</span>
+</span><span id="__span-16-39"><a id="__codelineno-16-39" name="__codelineno-16-39"></a>        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"x"</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">"y"</span><span class="p">]</span>
+</span><span id="__span-16-40"><a id="__codelineno-16-40" name="__codelineno-16-40"></a>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span id="__span-16-41"><a id="__codelineno-16-41" name="__codelineno-16-41"></a>
+</span><span id="__span-16-42"><a id="__codelineno-16-42" name="__codelineno-16-42"></a>    <span class="c1"># set train dataloader config</span>
+</span><span id="__span-16-43"><a id="__codelineno-16-43" name="__codelineno-16-43"></a>    <span class="n">train_dataloader_cfg</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-44"><a id="__codelineno-16-44" name="__codelineno-16-44"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"IterableNamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-16-45"><a id="__codelineno-16-45" name="__codelineno-16-45"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">iters_per_epoch</span><span class="p">,</span>
+</span><span id="__span-16-46"><a id="__codelineno-16-46" name="__codelineno-16-46"></a>    <span class="p">}</span>
+</span><span id="__span-16-47"><a id="__codelineno-16-47" name="__codelineno-16-47"></a>
+</span><span id="__span-16-48"><a id="__codelineno-16-48" name="__codelineno-16-48"></a>    <span class="n">NPOINT_TOTAL</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_INTERIOR</span> <span class="o">+</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_BC</span>
+</span><span id="__span-16-49"><a id="__codelineno-16-49" name="__codelineno-16-49"></a>
+</span><span id="__span-16-50"><a id="__codelineno-16-50" name="__codelineno-16-50"></a>    <span class="c1"># set constraint</span>
+</span><span id="__span-16-51"><a id="__codelineno-16-51" name="__codelineno-16-51"></a>    <span class="n">pde_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-16-52"><a id="__codelineno-16-52" name="__codelineno-16-52"></a>        <span class="n">equation</span><span class="p">[</span><span class="s2">"laplace"</span><span class="p">]</span><span class="o">.</span><span class="n">equations</span><span class="p">,</span>
+</span><span id="__span-16-53"><a id="__codelineno-16-53" name="__codelineno-16-53"></a>        <span class="p">{</span><span class="s2">"laplace"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+</span><span id="__span-16-54"><a id="__codelineno-16-54" name="__codelineno-16-54"></a>        <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-16-55"><a id="__codelineno-16-55" name="__codelineno-16-55"></a>        <span class="p">{</span><span class="o">**</span><span class="n">train_dataloader_cfg</span><span class="p">,</span> <span class="s2">"batch_size"</span><span class="p">:</span> <span class="n">NPOINT_TOTAL</span><span class="p">},</span>
+</span><span id="__span-16-56"><a id="__codelineno-16-56" name="__codelineno-16-56"></a>        <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">),</span>
+</span><span id="__span-16-57"><a id="__codelineno-16-57" name="__codelineno-16-57"></a>        <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-58"><a id="__codelineno-16-58" name="__codelineno-16-58"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"EQ"</span><span class="p">,</span>
+</span><span id="__span-16-59"><a id="__codelineno-16-59" name="__codelineno-16-59"></a>    <span class="p">)</span>
+</span><span id="__span-16-60"><a id="__codelineno-16-60" name="__codelineno-16-60"></a>    <span class="n">bc</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">BoundaryConstraint</span><span class="p">(</span>
+</span><span id="__span-16-61"><a id="__codelineno-16-61" name="__codelineno-16-61"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-16-62"><a id="__codelineno-16-62" name="__codelineno-16-62"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">u_solution_func</span><span class="p">},</span>
+</span><span id="__span-16-63"><a id="__codelineno-16-63" name="__codelineno-16-63"></a>        <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-16-64"><a id="__codelineno-16-64" name="__codelineno-16-64"></a>        <span class="p">{</span><span class="o">**</span><span class="n">train_dataloader_cfg</span><span class="p">,</span> <span class="s2">"batch_size"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_BC</span><span class="p">},</span>
+</span><span id="__span-16-65"><a id="__codelineno-16-65" name="__codelineno-16-65"></a>        <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">),</span>
+</span><span id="__span-16-66"><a id="__codelineno-16-66" name="__codelineno-16-66"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"BC"</span><span class="p">,</span>
+</span><span id="__span-16-67"><a id="__codelineno-16-67" name="__codelineno-16-67"></a>    <span class="p">)</span>
+</span><span id="__span-16-68"><a id="__codelineno-16-68" name="__codelineno-16-68"></a>    <span class="c1"># wrap constraints together</span>
+</span><span id="__span-16-69"><a id="__codelineno-16-69" name="__codelineno-16-69"></a>    <span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-70"><a id="__codelineno-16-70" name="__codelineno-16-70"></a>        <span class="n">pde_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">pde_constraint</span><span class="p">,</span>
+</span><span id="__span-16-71"><a id="__codelineno-16-71" name="__codelineno-16-71"></a>        <span class="n">bc</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">bc</span><span class="p">,</span>
+</span><span id="__span-16-72"><a id="__codelineno-16-72" name="__codelineno-16-72"></a>    <span class="p">}</span>
+</span><span id="__span-16-73"><a id="__codelineno-16-73" name="__codelineno-16-73"></a>
+</span><span id="__span-16-74"><a id="__codelineno-16-74" name="__codelineno-16-74"></a>    <span class="c1"># set optimizer</span>
+</span><span id="__span-16-75"><a id="__codelineno-16-75" name="__codelineno-16-75"></a>    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-16-76"><a id="__codelineno-16-76" name="__codelineno-16-76"></a>
+</span><span id="__span-16-77"><a id="__codelineno-16-77" name="__codelineno-16-77"></a>    <span class="c1"># set validator</span>
+</span><span id="__span-16-78"><a id="__codelineno-16-78" name="__codelineno-16-78"></a>    <span class="n">mse_metric</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">validate</span><span class="o">.</span><span class="n">GeometryValidator</span><span class="p">(</span>
+</span><span id="__span-16-79"><a id="__codelineno-16-79" name="__codelineno-16-79"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-16-80"><a id="__codelineno-16-80" name="__codelineno-16-80"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">u_solution_func</span><span class="p">},</span>
+</span><span id="__span-16-81"><a id="__codelineno-16-81" name="__codelineno-16-81"></a>        <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-16-82"><a id="__codelineno-16-82" name="__codelineno-16-82"></a>        <span class="p">{</span>
+</span><span id="__span-16-83"><a id="__codelineno-16-83" name="__codelineno-16-83"></a>            <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"IterableNamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-16-84"><a id="__codelineno-16-84" name="__codelineno-16-84"></a>            <span class="s2">"total_size"</span><span class="p">:</span> <span class="n">NPOINT_TOTAL</span><span class="p">,</span>
+</span><span id="__span-16-85"><a id="__codelineno-16-85" name="__codelineno-16-85"></a>        <span class="p">},</span>
+</span><span id="__span-16-86"><a id="__codelineno-16-86" name="__codelineno-16-86"></a>        <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-16-87"><a id="__codelineno-16-87" name="__codelineno-16-87"></a>        <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-88"><a id="__codelineno-16-88" name="__codelineno-16-88"></a>        <span class="n">metric</span><span class="o">=</span><span class="p">{</span><span class="s2">"MSE"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">MSE</span><span class="p">()},</span>
+</span><span id="__span-16-89"><a id="__codelineno-16-89" name="__codelineno-16-89"></a>        <span class="n">with_initial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-90"><a id="__codelineno-16-90" name="__codelineno-16-90"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"MSE_Metric"</span><span class="p">,</span>
+</span><span id="__span-16-91"><a id="__codelineno-16-91" name="__codelineno-16-91"></a>    <span class="p">)</span>
+</span><span id="__span-16-92"><a id="__codelineno-16-92" name="__codelineno-16-92"></a>    <span class="n">validator</span> <span class="o">=</span> <span class="p">{</span><span class="n">mse_metric</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">mse_metric</span><span class="p">}</span>
+</span><span id="__span-16-93"><a id="__codelineno-16-93" name="__codelineno-16-93"></a>
+</span><span id="__span-16-94"><a id="__codelineno-16-94" name="__codelineno-16-94"></a>    <span class="c1"># set visualizer(optional)</span>
+</span><span id="__span-16-95"><a id="__codelineno-16-95" name="__codelineno-16-95"></a>    <span class="n">vis_points</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">]</span><span class="o">.</span><span class="n">sample_interior</span><span class="p">(</span><span class="n">NPOINT_TOTAL</span><span class="p">,</span> <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-16-96"><a id="__codelineno-16-96" name="__codelineno-16-96"></a>    <span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-97"><a id="__codelineno-16-97" name="__codelineno-16-97"></a>        <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerVtu</span><span class="p">(</span>
+</span><span id="__span-16-98"><a id="__codelineno-16-98" name="__codelineno-16-98"></a>            <span class="n">vis_points</span><span class="p">,</span>
+</span><span id="__span-16-99"><a id="__codelineno-16-99" name="__codelineno-16-99"></a>            <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-16-100"><a id="__codelineno-16-100" name="__codelineno-16-100"></a>            <span class="n">num_timestamps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-16-101"><a id="__codelineno-16-101" name="__codelineno-16-101"></a>            <span class="n">prefix</span><span class="o">=</span><span class="s2">"result_u"</span><span class="p">,</span>
+</span><span id="__span-16-102"><a id="__codelineno-16-102" name="__codelineno-16-102"></a>        <span class="p">)</span>
+</span><span id="__span-16-103"><a id="__codelineno-16-103" name="__codelineno-16-103"></a>    <span class="p">}</span>
+</span><span id="__span-16-104"><a id="__codelineno-16-104" name="__codelineno-16-104"></a>
+</span><span id="__span-16-105"><a id="__codelineno-16-105" name="__codelineno-16-105"></a>    <span class="c1"># initialize solver</span>
+</span><span id="__span-16-106"><a id="__codelineno-16-106" name="__codelineno-16-106"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-16-107"><a id="__codelineno-16-107" name="__codelineno-16-107"></a>        <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-16-108"><a id="__codelineno-16-108" name="__codelineno-16-108"></a>        <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-16-109"><a id="__codelineno-16-109" name="__codelineno-16-109"></a>        <span class="n">cfg</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span id="__span-16-110"><a id="__codelineno-16-110" name="__codelineno-16-110"></a>        <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-16-111"><a id="__codelineno-16-111" name="__codelineno-16-111"></a>        <span class="n">epochs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+</span><span id="__span-16-112"><a id="__codelineno-16-112" name="__codelineno-16-112"></a>        <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">iters_per_epoch</span><span class="p">,</span>
+</span><span id="__span-16-113"><a id="__codelineno-16-113" name="__codelineno-16-113"></a>        <span class="n">eval_during_train</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">eval_during_train</span><span class="p">,</span>
+</span><span id="__span-16-114"><a id="__codelineno-16-114" name="__codelineno-16-114"></a>        <span class="n">eval_freq</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">eval_freq</span><span class="p">,</span>
+</span><span id="__span-16-115"><a id="__codelineno-16-115" name="__codelineno-16-115"></a>        <span class="n">equation</span><span class="o">=</span><span class="n">equation</span><span class="p">,</span>
+</span><span id="__span-16-116"><a id="__codelineno-16-116" name="__codelineno-16-116"></a>        <span class="n">geom</span><span class="o">=</span><span class="n">geom</span><span class="p">,</span>
+</span><span id="__span-16-117"><a id="__codelineno-16-117" name="__codelineno-16-117"></a>        <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span>
+</span><span id="__span-16-118"><a id="__codelineno-16-118" name="__codelineno-16-118"></a>        <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-16-119"><a id="__codelineno-16-119" name="__codelineno-16-119"></a>    <span class="p">)</span>
+</span><span id="__span-16-120"><a id="__codelineno-16-120" name="__codelineno-16-120"></a>    <span class="c1"># train model</span>
+</span><span id="__span-16-121"><a id="__codelineno-16-121" name="__codelineno-16-121"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span><span id="__span-16-122"><a id="__codelineno-16-122" name="__codelineno-16-122"></a>    <span class="c1"># evaluate after finished training</span>
+</span><span id="__span-16-123"><a id="__codelineno-16-123" name="__codelineno-16-123"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span><span id="__span-16-124"><a id="__codelineno-16-124" name="__codelineno-16-124"></a>    <span class="c1"># visualize prediction after finished training</span>
+</span><span id="__span-16-125"><a id="__codelineno-16-125" name="__codelineno-16-125"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span><span id="__span-16-126"><a id="__codelineno-16-126" name="__codelineno-16-126"></a>
+</span><span id="__span-16-127"><a id="__codelineno-16-127" name="__codelineno-16-127"></a>
+</span><span id="__span-16-128"><a id="__codelineno-16-128" name="__codelineno-16-128"></a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">):</span>
+</span><span id="__span-16-129"><a id="__codelineno-16-129" name="__codelineno-16-129"></a>    <span class="c1"># set model</span>
+</span><span id="__span-16-130"><a id="__codelineno-16-130" name="__codelineno-16-130"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="p">)</span>
+</span><span id="__span-16-131"><a id="__codelineno-16-131" name="__codelineno-16-131"></a>
+</span><span id="__span-16-132"><a id="__codelineno-16-132" name="__codelineno-16-132"></a>    <span class="c1"># set equation</span>
+</span><span id="__span-16-133"><a id="__codelineno-16-133" name="__codelineno-16-133"></a>    <span class="n">equation</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"laplace"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">equation</span><span class="o">.</span><span class="n">Laplace</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)}</span>
+</span><span id="__span-16-134"><a id="__codelineno-16-134" name="__codelineno-16-134"></a>
+</span><span id="__span-16-135"><a id="__codelineno-16-135" name="__codelineno-16-135"></a>    <span class="c1"># set geometry</span>
+</span><span id="__span-16-136"><a id="__codelineno-16-136" name="__codelineno-16-136"></a>    <span class="n">geom</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-137"><a id="__codelineno-16-137" name="__codelineno-16-137"></a>        <span class="s2">"rect"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+</span><span id="__span-16-138"><a id="__codelineno-16-138" name="__codelineno-16-138"></a>            <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmax</span>
+</span><span id="__span-16-139"><a id="__codelineno-16-139" name="__codelineno-16-139"></a>        <span class="p">)</span>
+</span><span id="__span-16-140"><a id="__codelineno-16-140" name="__codelineno-16-140"></a>    <span class="p">}</span>
+</span><span id="__span-16-141"><a id="__codelineno-16-141" name="__codelineno-16-141"></a>
+</span><span id="__span-16-142"><a id="__codelineno-16-142" name="__codelineno-16-142"></a>    <span class="c1"># compute ground truth function</span>
+</span><span id="__span-16-143"><a id="__codelineno-16-143" name="__codelineno-16-143"></a>    <span class="k">def</span> <span class="nf">u_solution_func</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
+</span><span id="__span-16-144"><a id="__codelineno-16-144" name="__codelineno-16-144"></a><span class="w">        </span><span class="sd">"""compute ground truth for u as label data"""</span>
+</span><span id="__span-16-145"><a id="__codelineno-16-145" name="__codelineno-16-145"></a>        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"x"</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">"y"</span><span class="p">]</span>
+</span><span id="__span-16-146"><a id="__codelineno-16-146" name="__codelineno-16-146"></a>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span id="__span-16-147"><a id="__codelineno-16-147" name="__codelineno-16-147"></a>
+</span><span id="__span-16-148"><a id="__codelineno-16-148" name="__codelineno-16-148"></a>    <span class="n">NPOINT_TOTAL</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_INTERIOR</span> <span class="o">+</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_BC</span>
+</span><span id="__span-16-149"><a id="__codelineno-16-149" name="__codelineno-16-149"></a>
+</span><span id="__span-16-150"><a id="__codelineno-16-150" name="__codelineno-16-150"></a>    <span class="c1"># set validator</span>
+</span><span id="__span-16-151"><a id="__codelineno-16-151" name="__codelineno-16-151"></a>    <span class="n">mse_metric</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">validate</span><span class="o">.</span><span class="n">GeometryValidator</span><span class="p">(</span>
+</span><span id="__span-16-152"><a id="__codelineno-16-152" name="__codelineno-16-152"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-16-153"><a id="__codelineno-16-153" name="__codelineno-16-153"></a>        <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">u_solution_func</span><span class="p">},</span>
+</span><span id="__span-16-154"><a id="__codelineno-16-154" name="__codelineno-16-154"></a>        <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">],</span>
+</span><span id="__span-16-155"><a id="__codelineno-16-155" name="__codelineno-16-155"></a>        <span class="p">{</span>
+</span><span id="__span-16-156"><a id="__codelineno-16-156" name="__codelineno-16-156"></a>            <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"IterableNamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-16-157"><a id="__codelineno-16-157" name="__codelineno-16-157"></a>            <span class="s2">"total_size"</span><span class="p">:</span> <span class="n">NPOINT_TOTAL</span><span class="p">,</span>
+</span><span id="__span-16-158"><a id="__codelineno-16-158" name="__codelineno-16-158"></a>        <span class="p">},</span>
+</span><span id="__span-16-159"><a id="__codelineno-16-159" name="__codelineno-16-159"></a>        <span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-16-160"><a id="__codelineno-16-160" name="__codelineno-16-160"></a>        <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-161"><a id="__codelineno-16-161" name="__codelineno-16-161"></a>        <span class="n">metric</span><span class="o">=</span><span class="p">{</span><span class="s2">"MSE"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">MSE</span><span class="p">()},</span>
+</span><span id="__span-16-162"><a id="__codelineno-16-162" name="__codelineno-16-162"></a>        <span class="n">with_initial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-163"><a id="__codelineno-16-163" name="__codelineno-16-163"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"MSE_Metric"</span><span class="p">,</span>
+</span><span id="__span-16-164"><a id="__codelineno-16-164" name="__codelineno-16-164"></a>    <span class="p">)</span>
+</span><span id="__span-16-165"><a id="__codelineno-16-165" name="__codelineno-16-165"></a>    <span class="n">validator</span> <span class="o">=</span> <span class="p">{</span><span class="n">mse_metric</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">mse_metric</span><span class="p">}</span>
+</span><span id="__span-16-166"><a id="__codelineno-16-166" name="__codelineno-16-166"></a>
+</span><span id="__span-16-167"><a id="__codelineno-16-167" name="__codelineno-16-167"></a>    <span class="c1"># set visualizer(optional)</span>
+</span><span id="__span-16-168"><a id="__codelineno-16-168" name="__codelineno-16-168"></a>    <span class="n">vis_points</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">]</span><span class="o">.</span><span class="n">sample_interior</span><span class="p">(</span><span class="n">NPOINT_TOTAL</span><span class="p">,</span> <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-16-169"><a id="__codelineno-16-169" name="__codelineno-16-169"></a>    <span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-170"><a id="__codelineno-16-170" name="__codelineno-16-170"></a>        <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerVtu</span><span class="p">(</span>
+</span><span id="__span-16-171"><a id="__codelineno-16-171" name="__codelineno-16-171"></a>            <span class="n">vis_points</span><span class="p">,</span>
+</span><span id="__span-16-172"><a id="__codelineno-16-172" name="__codelineno-16-172"></a>            <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-16-173"><a id="__codelineno-16-173" name="__codelineno-16-173"></a>            <span class="n">num_timestamps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-16-174"><a id="__codelineno-16-174" name="__codelineno-16-174"></a>            <span class="n">prefix</span><span class="o">=</span><span class="s2">"result_u"</span><span class="p">,</span>
+</span><span id="__span-16-175"><a id="__codelineno-16-175" name="__codelineno-16-175"></a>        <span class="p">)</span>
+</span><span id="__span-16-176"><a id="__codelineno-16-176" name="__codelineno-16-176"></a>    <span class="p">}</span>
+</span><span id="__span-16-177"><a id="__codelineno-16-177" name="__codelineno-16-177"></a>
+</span><span id="__span-16-178"><a id="__codelineno-16-178" name="__codelineno-16-178"></a>    <span class="c1"># initialize solver</span>
+</span><span id="__span-16-179"><a id="__codelineno-16-179" name="__codelineno-16-179"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-16-180"><a id="__codelineno-16-180" name="__codelineno-16-180"></a>        <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-16-181"><a id="__codelineno-16-181" name="__codelineno-16-181"></a>        <span class="n">output_dir</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span id="__span-16-182"><a id="__codelineno-16-182" name="__codelineno-16-182"></a>        <span class="n">seed</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+</span><span id="__span-16-183"><a id="__codelineno-16-183" name="__codelineno-16-183"></a>        <span class="n">equation</span><span class="o">=</span><span class="n">equation</span><span class="p">,</span>
+</span><span id="__span-16-184"><a id="__codelineno-16-184" name="__codelineno-16-184"></a>        <span class="n">geom</span><span class="o">=</span><span class="n">geom</span><span class="p">,</span>
+</span><span id="__span-16-185"><a id="__codelineno-16-185" name="__codelineno-16-185"></a>        <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span>
+</span><span id="__span-16-186"><a id="__codelineno-16-186" name="__codelineno-16-186"></a>        <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-16-187"><a id="__codelineno-16-187" name="__codelineno-16-187"></a>        <span class="n">pretrained_model_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EVAL</span><span class="o">.</span><span class="n">pretrained_model_path</span><span class="p">,</span>
+</span><span id="__span-16-188"><a id="__codelineno-16-188" name="__codelineno-16-188"></a>    <span class="p">)</span>
+</span><span id="__span-16-189"><a id="__codelineno-16-189" name="__codelineno-16-189"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span><span id="__span-16-190"><a id="__codelineno-16-190" name="__codelineno-16-190"></a>    <span class="c1"># visualize prediction</span>
+</span><span id="__span-16-191"><a id="__codelineno-16-191" name="__codelineno-16-191"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span><span id="__span-16-192"><a id="__codelineno-16-192" name="__codelineno-16-192"></a>
+</span><span id="__span-16-193"><a id="__codelineno-16-193" name="__codelineno-16-193"></a>
+</span><span id="__span-16-194"><a id="__codelineno-16-194" name="__codelineno-16-194"></a><span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">):</span>
+</span><span id="__span-16-195"><a id="__codelineno-16-195" name="__codelineno-16-195"></a>    <span class="c1"># set model</span>
+</span><span id="__span-16-196"><a id="__codelineno-16-196" name="__codelineno-16-196"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="p">)</span>
+</span><span id="__span-16-197"><a id="__codelineno-16-197" name="__codelineno-16-197"></a>
+</span><span id="__span-16-198"><a id="__codelineno-16-198" name="__codelineno-16-198"></a>    <span class="c1"># initialize solver</span>
+</span><span id="__span-16-199"><a id="__codelineno-16-199" name="__codelineno-16-199"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-16-200"><a id="__codelineno-16-200" name="__codelineno-16-200"></a>        <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-16-201"><a id="__codelineno-16-201" name="__codelineno-16-201"></a>        <span class="n">pretrained_model_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">INFER</span><span class="o">.</span><span class="n">pretrained_model_path</span><span class="p">,</span>
+</span><span id="__span-16-202"><a id="__codelineno-16-202" name="__codelineno-16-202"></a>    <span class="p">)</span>
+</span><span id="__span-16-203"><a id="__codelineno-16-203" name="__codelineno-16-203"></a>    <span class="c1"># export model</span>
+</span><span id="__span-16-204"><a id="__codelineno-16-204" name="__codelineno-16-204"></a>    <span class="kn">from</span> <span class="nn">paddle.static</span> <span class="kn">import</span> <span class="n">InputSpec</span>
+</span><span id="__span-16-205"><a id="__codelineno-16-205" name="__codelineno-16-205"></a>
+</span><span id="__span-16-206"><a id="__codelineno-16-206" name="__codelineno-16-206"></a>    <span class="n">input_spec</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-16-207"><a id="__codelineno-16-207" name="__codelineno-16-207"></a>        <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">InputSpec</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"float32"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">input_keys</span><span class="p">},</span>
+</span><span id="__span-16-208"><a id="__codelineno-16-208" name="__codelineno-16-208"></a>    <span class="p">]</span>
+</span><span id="__span-16-209"><a id="__codelineno-16-209" name="__codelineno-16-209"></a>    <span class="n">solver</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">input_spec</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INFER</span><span class="o">.</span><span class="n">export_path</span><span class="p">)</span>
+</span><span id="__span-16-210"><a id="__codelineno-16-210" name="__codelineno-16-210"></a>
+</span><span id="__span-16-211"><a id="__codelineno-16-211" name="__codelineno-16-211"></a>
+</span><span id="__span-16-212"><a id="__codelineno-16-212" name="__codelineno-16-212"></a><span class="k">def</span> <span class="nf">inference</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">):</span>
+</span><span id="__span-16-213"><a id="__codelineno-16-213" name="__codelineno-16-213"></a>    <span class="kn">from</span> <span class="nn">deploy.python_infer</span> <span class="kn">import</span> <span class="n">pinn_predictor</span>
+</span><span id="__span-16-214"><a id="__codelineno-16-214" name="__codelineno-16-214"></a>
+</span><span id="__span-16-215"><a id="__codelineno-16-215" name="__codelineno-16-215"></a>    <span class="n">predictor</span> <span class="o">=</span> <span class="n">pinn_predictor</span><span class="o">.</span><span class="n">PINNPredictor</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</span><span id="__span-16-216"><a id="__codelineno-16-216" name="__codelineno-16-216"></a>
+</span><span id="__span-16-217"><a id="__codelineno-16-217" name="__codelineno-16-217"></a>    <span class="c1"># set geometry</span>
+</span><span id="__span-16-218"><a id="__codelineno-16-218" name="__codelineno-16-218"></a>    <span class="n">geom</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-219"><a id="__codelineno-16-219" name="__codelineno-16-219"></a>        <span class="s2">"rect"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+</span><span id="__span-16-220"><a id="__codelineno-16-220" name="__codelineno-16-220"></a>            <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DIAGONAL_COORD</span><span class="o">.</span><span class="n">xmax</span>
+</span><span id="__span-16-221"><a id="__codelineno-16-221" name="__codelineno-16-221"></a>        <span class="p">)</span>
+</span><span id="__span-16-222"><a id="__codelineno-16-222" name="__codelineno-16-222"></a>    <span class="p">}</span>
+</span><span id="__span-16-223"><a id="__codelineno-16-223" name="__codelineno-16-223"></a>    <span class="n">NPOINT_TOTAL</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_INTERIOR</span> <span class="o">+</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NPOINT_BC</span>
+</span><span id="__span-16-224"><a id="__codelineno-16-224" name="__codelineno-16-224"></a>    <span class="n">input_dict</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">"rect"</span><span class="p">]</span><span class="o">.</span><span class="n">sample_interior</span><span class="p">(</span><span class="n">NPOINT_TOTAL</span><span class="p">,</span> <span class="n">evenly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-16-225"><a id="__codelineno-16-225" name="__codelineno-16-225"></a>
+</span><span id="__span-16-226"><a id="__codelineno-16-226" name="__codelineno-16-226"></a>    <span class="n">output_dict</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span id="__span-16-227"><a id="__codelineno-16-227" name="__codelineno-16-227"></a>        <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">input_keys</span><span class="p">},</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INFER</span><span class="o">.</span><span class="n">batch_size</span>
+</span><span id="__span-16-228"><a id="__codelineno-16-228" name="__codelineno-16-228"></a>    <span class="p">)</span>
+</span><span id="__span-16-229"><a id="__codelineno-16-229" name="__codelineno-16-229"></a>
+</span><span id="__span-16-230"><a id="__codelineno-16-230" name="__codelineno-16-230"></a>    <span class="c1"># mapping data to cfg.INFER.output_keys</span>
+</span><span id="__span-16-231"><a id="__codelineno-16-231" name="__codelineno-16-231"></a>    <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-232"><a id="__codelineno-16-232" name="__codelineno-16-232"></a>        <span class="n">store_key</span><span class="p">:</span> <span class="n">output_dict</span><span class="p">[</span><span class="n">infer_key</span><span class="p">]</span>
+</span><span id="__span-16-233"><a id="__codelineno-16-233" name="__codelineno-16-233"></a>        <span class="k">for</span> <span class="n">store_key</span><span class="p">,</span> <span class="n">infer_key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">output_keys</span><span class="p">,</span> <span class="n">output_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span><span id="__span-16-234"><a id="__codelineno-16-234" name="__codelineno-16-234"></a>    <span class="p">}</span>
+</span><span id="__span-16-235"><a id="__codelineno-16-235" name="__codelineno-16-235"></a>
+</span><span id="__span-16-236"><a id="__codelineno-16-236" name="__codelineno-16-236"></a>    <span class="c1"># save result</span>
+</span><span id="__span-16-237"><a id="__codelineno-16-237" name="__codelineno-16-237"></a>    <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">save_vtu_from_dict</span><span class="p">(</span>
+</span><span id="__span-16-238"><a id="__codelineno-16-238" name="__codelineno-16-238"></a>        <span class="s2">"./laplace2d_pred.vtu"</span><span class="p">,</span>
+</span><span id="__span-16-239"><a id="__codelineno-16-239" name="__codelineno-16-239"></a>        <span class="p">{</span><span class="o">**</span><span class="n">input_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">output_dict</span><span class="p">},</span>
+</span><span id="__span-16-240"><a id="__codelineno-16-240" name="__codelineno-16-240"></a>        <span class="n">input_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+</span><span id="__span-16-241"><a id="__codelineno-16-241" name="__codelineno-16-241"></a>        <span class="n">cfg</span><span class="o">.</span><span class="n">MODEL</span><span class="o">.</span><span class="n">output_keys</span><span class="p">,</span>
+</span><span id="__span-16-242"><a id="__codelineno-16-242" name="__codelineno-16-242"></a>    <span class="p">)</span>
+</span><span id="__span-16-243"><a id="__codelineno-16-243" name="__codelineno-16-243"></a>
+</span><span id="__span-16-244"><a id="__codelineno-16-244" name="__codelineno-16-244"></a>
+</span><span id="__span-16-245"><a id="__codelineno-16-245" name="__codelineno-16-245"></a><span class="nd">@hydra</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">version_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config_path</span><span class="o">=</span><span class="s2">"./conf"</span><span class="p">,</span> <span class="n">config_name</span><span class="o">=</span><span class="s2">"laplace2d.yaml"</span><span class="p">)</span>
+</span><span id="__span-16-246"><a id="__codelineno-16-246" name="__codelineno-16-246"></a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">):</span>
+</span><span id="__span-16-247"><a id="__codelineno-16-247" name="__codelineno-16-247"></a>    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"train"</span><span class="p">:</span>
+</span><span id="__span-16-248"><a id="__codelineno-16-248" name="__codelineno-16-248"></a>        <span class="n">train</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</span><span id="__span-16-249"><a id="__codelineno-16-249" name="__codelineno-16-249"></a>    <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"eval"</span><span class="p">:</span>
+</span><span id="__span-16-250"><a id="__codelineno-16-250" name="__codelineno-16-250"></a>        <span class="n">evaluate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</span><span id="__span-16-251"><a id="__codelineno-16-251" name="__codelineno-16-251"></a>    <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"export"</span><span class="p">:</span>
+</span><span id="__span-16-252"><a id="__codelineno-16-252" name="__codelineno-16-252"></a>        <span class="n">export</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</span><span id="__span-16-253"><a id="__codelineno-16-253" name="__codelineno-16-253"></a>    <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"infer"</span><span class="p">:</span>
+</span><span id="__span-16-254"><a id="__codelineno-16-254" name="__codelineno-16-254"></a>        <span class="n">inference</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</span><span id="__span-16-255"><a id="__codelineno-16-255" name="__codelineno-16-255"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-16-256"><a id="__codelineno-16-256" name="__codelineno-16-256"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="__span-16-257"><a id="__codelineno-16-257" name="__codelineno-16-257"></a>            <span class="sa">f</span><span class="s2">"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '</span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">'"</span>
+</span><span id="__span-16-258"><a id="__codelineno-16-258" name="__codelineno-16-258"></a>        <span class="p">)</span>
+</span><span id="__span-16-259"><a id="__codelineno-16-259" name="__codelineno-16-259"></a>
+</span><span id="__span-16-260"><a id="__codelineno-16-260" name="__codelineno-16-260"></a>
+</span><span id="__span-16-261"><a id="__codelineno-16-261" name="__codelineno-16-261"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+</span><span id="__span-16-262"><a id="__codelineno-16-262" name="__codelineno-16-262"></a>    <span class="n">main</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="5">5. 结果展示<a class="headerlink" href="#5" title="Permanent link">¶</a></h2>
+<p>使用训练得到的模型对上述计算域中均匀取的共 <code>NPOINT_TOTAL</code> 个点 <span class="arithmatex">\((x_i,y_i)\)</span> 进行预测，预测结果如下所示。图像中每个点 <span class="arithmatex">\((x_i,y_i)\)</span> 的值代表对应坐标上模型对 2D-Laplace 问题预测的解 <span class="arithmatex">\(u(x_i,y_i)\)</span>。</p>
+<figure>
+<p><a class="glightbox" href="https://paddle-org.bj.bcebos.com/paddlescience/docs/laplace2d/laplace2d.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="laplace 2d" loading="lazy" src="https://paddle-org.bj.bcebos.com/paddlescience/docs/laplace2d/laplace2d.png"></a>
+  </p>
+<figcaption>模型预测结果</figcaption>
+</figure></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 29, 2024</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 25, 2023</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2022 - 2023 PaddlePaddle
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top", "search.suggest", "navigation.instant", "content.code.copy", "content.code.select", "content.code.annotate", "search.highlight", "content.tabs.link", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"alias": true, "provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      
+        <script src="../../../javascripts/bd_statistics.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="../../../javascripts/contributors.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>

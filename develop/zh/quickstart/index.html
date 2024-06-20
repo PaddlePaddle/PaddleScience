@@ -1,0 +1,4162 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An out-of-the-box open source library for scientific computing based on deep learning.">
+      
+      
+        <meta name="author" content="PaddlePaddle">
+      
+      
+        <link rel="canonical" href="https://github.com/PaddlePaddle/PaddleScience/develop/zh/quickstart/">
+      
+      
+        <link rel="prev" href="../install_setup/">
+      
+      
+        <link rel="next" href="../tutorials/">
+      
+      
+      <link rel="icon" href="../../images/icons/favcion.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.12">
+    
+    
+      
+        <title>快速开始 - PaddleScience Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm-86.2-346.7c7.9-22.3 29.1-37.3 52.8-37.3h58.3c34.9 0 63.1 28.3 63.1 63.1 0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6-13.3 0-24-10.7-24-24v-13.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1 0-8.4-6.8-15.1-15.1-15.1h-58.3c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM224 352a32 32 0 1 1 64 0 32 32 0 1 1-64 0z"/></svg>');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Serif+SC:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Serif SC";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="PaddleScience Docs" class="md-header__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="../../images/icons/paddle.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PaddleScience Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              快速开始
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/zh/" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/en/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  PaddleScience
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/allen_cahn/" class="md-tabs__link">
+          
+  
+  经典案例
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/arch/" class="md-tabs__link">
+          
+  
+  API 文档
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../user_guide/" class="md-tabs__link">
+        
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../development/" class="md-tabs__link">
+          
+  
+  开发与复现指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../technical_doc/" class="md-tabs__link">
+        
+  
+    
+  
+  技术稿件
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../cooperation/" class="md-tabs__link">
+        
+  
+    
+  
+  共创计划
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-tabs__link">
+        
+  
+    
+  
+  实训社区
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PaddleScience Docs" class="md-nav__button md-logo" aria-label="PaddleScience Docs" data-md-component="logo">
+      
+  <img src="../../images/icons/paddle.png" alt="logo">
+
+    </a>
+    PaddleScience Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PaddlePaddle/PaddleScience" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PaddleScience
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    PaddleScience
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            PaddleScience
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    主页
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    功能介绍
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    安装使用
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    快速开始
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    快速开始
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 问题简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 场景一
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 场景二
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    学习资料
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    经典案例
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            经典案例
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+     
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+             
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_1" id="__nav_2_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    数学(AI for Math)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            数学(AI for Math)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/allen_cahn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AllenCahn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/deephpms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepHPMs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/deeponet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepONet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/euler_beam/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Euler_Beam
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/laplace2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Laplace2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/lorenz/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lorenz_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/pirbn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PIRBN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/rossler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rossler_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/volterra_ide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Volterra_IDE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/nlsmb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NLSMB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/xpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    XPINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2" id="__nav_2_1_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    技术科学(AI for Technology)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            技术科学(AI for Technology)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_1" id="__nav_2_1_2_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    流体
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            流体
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/amgnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AMGNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/aneurysm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Aneurysm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/bubble/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    BubbleNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/cfdgcn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CFDGCN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/cylinder2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/cylinder2d_unsteady_transformer_physx/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cylinder2D_unsteady_transform_physx
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/darcy2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Darcy2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/deepcfd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DeepCFD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/ldc2d_steady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_steady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/ldc2d_unsteady/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LDC2D_unsteady
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/labelfree_DNN_surrogate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Labelfree_DNN_surrogate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/nsfnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/phycrnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyCRNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/shock_wave/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ShockWave
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/tempoGAN/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tempoGAN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/nsfnet4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NSFNet4
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/viv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ViV
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_2" id="__nav_2_1_2_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    结构
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            结构
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/biharmonic2d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Biharmonic2D
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/bracket/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bracket
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/control_arm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control_arm
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/epnn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EPNN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/phylstm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phy-LSTM
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/topopt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TopOpt
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_2_3" id="__nav_2_1_2_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    传热
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            传热
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/heat_exchanger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_Exchanger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/heat_pinn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Heat_PINN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/phygeonet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PhyGeoNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/chip_heat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Chip_heat
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_3" id="__nav_2_1_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    材料科学(AI for Material)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            材料科学(AI for Material)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/hpinns/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    hPINNs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_4" id="__nav_2_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    地球科学(AI for Earth Science)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            地球科学(AI for Earth Science)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/fourcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FourCastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/nowcastnet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NowcastNet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dgmr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DGMR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earthformer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EarthFormer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API 文档
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            API 文档
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/arch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.arch
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/autodiff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.autodiff
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/constraint/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.constraint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_4" id="__nav_3_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.data
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.data
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/data/dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/data/process/transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/data/process/batch_transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.data.batch_transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/equation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.equation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_7" id="__nav_3_1_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.loss
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.loss
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/loss/loss/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.loss
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/loss/mtl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.loss.mtl
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/metric/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.metric
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_9" id="__nav_3_1_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.optimizer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/lr_scheduler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.optimizer.lr_scheduler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/solver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.solver
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1_11" id="__nav_3_1_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ppsci.utils
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            ppsci.utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/checker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.checker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/expression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.expression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/initializer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.initializer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/logger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.logger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/misc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.misc
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/ema/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.ema
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/writer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.writer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/save_load/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.save_load
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/symbolic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.utils.symbolic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/validate/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.validate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/visualize/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.visualize
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/experimental/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.experimental
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/probability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ppsci.probability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    deploy
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            deploy
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/depoly/python_infer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    deploy.python_infer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    使用指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    开发与复现指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            开发与复现指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    开发指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reproduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    复现指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical_doc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    技术稿件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cooperation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    共创计划
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    实训社区
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 问题简介
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 场景一
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 场景二
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/PaddlePaddle/PaddleScience/edit/develop/docs/zh/quickstart.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/PaddlePaddle/PaddleScience/raw/develop/docs/zh/quickstart.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+<div><h1 id="_1">快速开始<a class="headerlink" href="#_1" title="Permanent link">¶</a></h1>
+<p><a href="https://aistudio.baidu.com/projectdetail/6665190?contributionType=1&amp;sUid=438690&amp;shared=1&amp;ts=1692616326196" class="md-button md-button--primary" style>AI Studio快速体验</a></p>
+<p>本文通过一个简单的 demo 及其扩展问题，介绍如何使用 PaddleScience 训练模型，解决一类方程学习与预测问题，并可视化预测结果。</p>
+<h2 id="1">1. 问题简介<a class="headerlink" href="#1" title="Permanent link">¶</a></h2>
+<p>假设我们希望用神经网络模型去拟合 <span class="arithmatex">\(x \in [-\pi, \pi]\)</span> 区间内，<span class="arithmatex">\(u=\sin(x)\)</span> 这一函数。在拟合函数已知和未知两种情形下，如何去尽可能地准确拟合 <span class="arithmatex">\(u=\sin(x)\)</span>。</p>
+<p>第一种场景下，假设已知目标函数 <span class="arithmatex">\(u\)</span> 的解析解就是 <span class="arithmatex">\(u=\sin(x)\)</span>，我们采用监督训练的思路，直接用该公式生成标签因变量 <span class="arithmatex">\(u\)</span>，与自变量 <span class="arithmatex">\(x\)</span> 共同作为监督数据对模型进行训练。</p>
+<p>第二种场景下，假设不知道目标函数 <span class="arithmatex">\(u\)</span> 的解析解，但我们知道其满足某种微分关系，我们这里以其中一个满足条件的微分方程 <span class="arithmatex">\(\dfrac{\partial u} {\partial x}=\cos(x)\)</span> 为例，介绍如何生成数据进行训练。</p>
+<h2 id="2">2. 场景一<a class="headerlink" href="#2" title="Permanent link">¶</a></h2>
+<p>目标拟合函数：</p>
+<div class="arithmatex">\[
+u=\sin(x), x \in [-\pi, \pi].
+\]</div>
+<p>我们生成 <span class="arithmatex">\(N\)</span> 组数据对 <span class="arithmatex">\((x_i, u_i), i=1,...,N\)</span> 作为监督数据进行训练即可。</p>
+<p>在撰写代码之前，我们首先导入必要的包。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">ppsci</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">ppsci.utils</span> <span class="kn">import</span> <span class="n">logger</span>
+</span></code></pre></div></td></tr></table></div>
+<p>然后创建日志和模型保存目录供训练过程记录和保存使用，这一步是绝大部分案例在正式开始前都需要进行的操作。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-1-10">10</a></span>
+<span class="normal"><a href="#__codelineno-1-11">11</a></span>
+<span class="normal"><a href="#__codelineno-1-12">12</a></span>
+<span class="normal"><a href="#__codelineno-1-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><span class="c1"># set random seed(42) for reproducibility</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="n">ppsci</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="c1"># set output directory</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="s2">"./output_quick_start_case1"</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><span class="c1"># initialize logger while create output directory</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="n">logger</span><span class="o">.</span><span class="n">init_logger</span><span class="p">(</span><span class="s2">"ppsci"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/train.log"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>接下来正式开始撰写代码。</p>
+<p>首先定义问题区间，我们使用 <code>ppsci.geometry.Interval</code> 定义一个线段几何形状，方便后续在该线段上对 <span class="arithmatex">\(x\)</span> 进行采样。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-15">15</a></span>
+<span class="normal"><a href="#__codelineno-2-16">16</a></span>
+<span class="normal"><a href="#__codelineno-2-17">17</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15"></a><span class="c1"># set 1D-geometry domain([-π, π])</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16"></a><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17"></a><span class="n">x_domain</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>然后定义一个简单的 3 层 MLP 模型。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-19">19</a></span>
+<span class="normal"><a href="#__codelineno-3-20">20</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19"></a><span class="c1"># set model to 3-layer MLP</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20"></a><span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">((</span><span class="s2">"x"</span><span class="p">,),</span> <span class="p">(</span><span class="s2">"u"</span><span class="p">,),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>上述代码表示模型接受自变量 <span class="arithmatex">\(x\)</span> 作为输入，输出预测结果 <span class="arithmatex">\(\hat{u}\)</span></p>
+<p>然后我们定义已知的 <span class="arithmatex">\(u=\sin(x)\)</span> 计算函数，作为 <code>ppsci.constraint.InteriorConstraint</code> 的参数，用于计算标签数据，<code>InteriorConstraint</code> 表示以给定的几何形状或数据集中的数据作为输入，联合给定的标签数据，指导模型进行优化。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-22">22</a></span>
+<span class="normal"><a href="#__codelineno-4-23">23</a></span>
+<span class="normal"><a href="#__codelineno-4-24">24</a></span>
+<span class="normal"><a href="#__codelineno-4-25">25</a></span>
+<span class="normal"><a href="#__codelineno-4-26">26</a></span>
+<span class="normal"><a href="#__codelineno-4-27">27</a></span>
+<span class="normal"><a href="#__codelineno-4-28">28</a></span>
+<span class="normal"><a href="#__codelineno-4-29">29</a></span>
+<span class="normal"><a href="#__codelineno-4-30">30</a></span>
+<span class="normal"><a href="#__codelineno-4-31">31</a></span>
+<span class="normal"><a href="#__codelineno-4-32">32</a></span>
+<span class="normal"><a href="#__codelineno-4-33">33</a></span>
+<span class="normal"><a href="#__codelineno-4-34">34</a></span>
+<span class="normal"><a href="#__codelineno-4-35">35</a></span>
+<span class="normal"><a href="#__codelineno-4-36">36</a></span>
+<span class="normal"><a href="#__codelineno-4-37">37</a></span>
+<span class="normal"><a href="#__codelineno-4-38">38</a></span>
+<span class="normal"><a href="#__codelineno-4-39">39</a></span>
+<span class="normal"><a href="#__codelineno-4-40">40</a></span>
+<span class="normal"><a href="#__codelineno-4-41">41</a></span>
+<span class="normal"><a href="#__codelineno-4-42">42</a></span>
+<span class="normal"><a href="#__codelineno-4-43">43</a></span>
+<span class="normal"><a href="#__codelineno-4-44">44</a></span>
+<span class="normal"><a href="#__codelineno-4-45">45</a></span>
+<span class="normal"><a href="#__codelineno-4-46">46</a></span>
+<span class="normal"><a href="#__codelineno-4-47">47</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22"></a><span class="c1"># standard solution of sin(x)</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23"></a><span class="k">def</span> <span class="nf">sin_compute_func</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25"></a>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26"></a>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27"></a><span class="c1"># set constraint on 1D-geometry([-π, π])</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28"></a><span class="n">ITERS_PER_EPOCH</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># use 100 iterations per training epoch</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29"></a><span class="n">interior_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30"></a>    <span class="n">output_expr</span><span class="o">=</span><span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31"></a>    <span class="n">label_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">sin_compute_func</span><span class="p">},</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32"></a>    <span class="n">geom</span><span class="o">=</span><span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39"></a>        <span class="p">},</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>  <span class="c1"># use 32 samples(points) per iteration for interior constraint</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41"></a>    <span class="p">},</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43"></a><span class="p">)</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44"></a><span class="c1"># wrap constraint(s) into one dict</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45"></a><span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46"></a>    <span class="n">interior_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">interior_constraint</span><span class="p">,</span>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>此处的 <code>interior_constraint</code> 表示一个训练目标，即我们希望在 <span class="arithmatex">\([-\pi, \pi]\)</span> 这段区间内，优化模型让模型的预测结果 <span class="arithmatex">\(\hat{u}\)</span> 尽可能地接近它的标签值 <span class="arithmatex">\(u\)</span>。</p>
+<p>接下来就可以开始定义模型训练相关的内容，比如训练轮数、优化器、可视化器。</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-48">48</a></span>
+<span class="normal"><a href="#__codelineno-5-49">49</a></span>
+<span class="normal"><a href="#__codelineno-5-50">50</a></span>
+<span class="normal"><a href="#__codelineno-5-51">51</a></span>
+<span class="normal"><a href="#__codelineno-5-52">52</a></span>
+<span class="normal"><a href="#__codelineno-5-53">53</a></span>
+<span class="normal"><a href="#__codelineno-5-54">54</a></span>
+<span class="normal"><a href="#__codelineno-5-55">55</a></span>
+<span class="normal"><a href="#__codelineno-5-56">56</a></span>
+<span class="normal"><a href="#__codelineno-5-57">57</a></span>
+<span class="normal"><a href="#__codelineno-5-58">58</a></span>
+<span class="normal"><a href="#__codelineno-5-59">59</a></span>
+<span class="normal"><a href="#__codelineno-5-60">60</a></span>
+<span class="normal"><a href="#__codelineno-5-61">61</a></span>
+<span class="normal"><a href="#__codelineno-5-62">62</a></span>
+<span class="normal"><a href="#__codelineno-5-63">63</a></span>
+<span class="normal"><a href="#__codelineno-5-64">64</a></span>
+<span class="normal"><a href="#__codelineno-5-65">65</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-48"><a id="__codelineno-5-48" name="__codelineno-5-48"></a><span class="c1"># set training hyper-parameters</span>
+</span><span id="__span-5-49"><a id="__codelineno-5-49" name="__codelineno-5-49"></a><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="__span-5-50"><a id="__codelineno-5-50" name="__codelineno-5-50"></a><span class="c1"># set optimizer</span>
+</span><span id="__span-5-51"><a id="__codelineno-5-51" name="__codelineno-5-51"></a><span class="n">optimizer</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="mf">2e-3</span><span class="p">)(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-5-52"><a id="__codelineno-5-52" name="__codelineno-5-52"></a>
+</span><span id="__span-5-53"><a id="__codelineno-5-53" name="__codelineno-5-53"></a><span class="c1"># set visualizer</span>
+</span><span id="__span-5-54"><a id="__codelineno-5-54" name="__codelineno-5-54"></a><span class="n">visual_input_dict</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-5-55"><a id="__codelineno-5-55" name="__codelineno-5-55"></a>    <span class="s2">"x"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-5-56"><a id="__codelineno-5-56" name="__codelineno-5-56"></a><span class="p">}</span>
+</span><span id="__span-5-57"><a id="__codelineno-5-57" name="__codelineno-5-57"></a><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-5-58"><a id="__codelineno-5-58" name="__codelineno-5-58"></a><span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-5-59"><a id="__codelineno-5-59" name="__codelineno-5-59"></a>    <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerScatter1D</span><span class="p">(</span>
+</span><span id="__span-5-60"><a id="__codelineno-5-60" name="__codelineno-5-60"></a>        <span class="n">visual_input_dict</span><span class="p">,</span>
+</span><span id="__span-5-61"><a id="__codelineno-5-61" name="__codelineno-5-61"></a>        <span class="p">(</span><span class="s2">"x"</span><span class="p">,),</span>
+</span><span id="__span-5-62"><a id="__codelineno-5-62" name="__codelineno-5-62"></a>        <span class="p">{</span><span class="s2">"u_pred"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="s2">"u_ref"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]},</span>
+</span><span id="__span-5-63"><a id="__codelineno-5-63" name="__codelineno-5-63"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">"u=sin(x)"</span><span class="p">,</span>
+</span><span id="__span-5-64"><a id="__codelineno-5-64" name="__codelineno-5-64"></a>    <span class="p">),</span>
+</span><span id="__span-5-65"><a id="__codelineno-5-65" name="__codelineno-5-65"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>最后将上述定义的对象传递给训练调度类 <code>Solver</code>，即可开始模型训练</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-67">67</a></span>
+<span class="normal"><a href="#__codelineno-6-68">68</a></span>
+<span class="normal"><a href="#__codelineno-6-69">69</a></span>
+<span class="normal"><a href="#__codelineno-6-70">70</a></span>
+<span class="normal"><a href="#__codelineno-6-71">71</a></span>
+<span class="normal"><a href="#__codelineno-6-72">72</a></span>
+<span class="normal"><a href="#__codelineno-6-73">73</a></span>
+<span class="normal"><a href="#__codelineno-6-74">74</a></span>
+<span class="normal"><a href="#__codelineno-6-75">75</a></span>
+<span class="normal"><a href="#__codelineno-6-76">76</a></span>
+<span class="normal"><a href="#__codelineno-6-77">77</a></span>
+<span class="normal"><a href="#__codelineno-6-78">78</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-67"><a id="__codelineno-6-67" name="__codelineno-6-67"></a><span class="c1"># initialize solver</span>
+</span><span id="__span-6-68"><a id="__codelineno-6-68" name="__codelineno-6-68"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-6-69"><a id="__codelineno-6-69" name="__codelineno-6-69"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-6-70"><a id="__codelineno-6-70" name="__codelineno-6-70"></a>    <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-6-71"><a id="__codelineno-6-71" name="__codelineno-6-71"></a>    <span class="n">OUTPUT_DIR</span><span class="p">,</span>
+</span><span id="__span-6-72"><a id="__codelineno-6-72" name="__codelineno-6-72"></a>    <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-6-73"><a id="__codelineno-6-73" name="__codelineno-6-73"></a>    <span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span>
+</span><span id="__span-6-74"><a id="__codelineno-6-74" name="__codelineno-6-74"></a>    <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-6-75"><a id="__codelineno-6-75" name="__codelineno-6-75"></a>    <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-6-76"><a id="__codelineno-6-76" name="__codelineno-6-76"></a><span class="p">)</span>
+</span><span id="__span-6-77"><a id="__codelineno-6-77" name="__codelineno-6-77"></a><span class="c1"># train model</span>
+</span><span id="__span-6-78"><a id="__codelineno-6-78" name="__codelineno-6-78"></a><span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p>训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-81">81</a></span>
+<span class="normal"><a href="#__codelineno-7-82">82</a></span>
+<span class="normal"><a href="#__codelineno-7-83">83</a></span>
+<span class="normal"><a href="#__codelineno-7-84">84</a></span>
+<span class="normal"><a href="#__codelineno-7-85">85</a></span>
+<span class="normal"><a href="#__codelineno-7-86">86</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-81"><a id="__codelineno-7-81" name="__codelineno-7-81"></a><span class="c1"># compute l2-relative error of trained model</span>
+</span><span id="__span-7-82"><a id="__codelineno-7-82" name="__codelineno-7-82"></a><span class="n">pred_u</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">,</span> <span class="n">return_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"u"</span><span class="p">]</span>
+</span><span id="__span-7-83"><a id="__codelineno-7-83" name="__codelineno-7-83"></a><span class="n">l2_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pred_u</span> <span class="o">-</span> <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+</span><span id="__span-7-84"><a id="__codelineno-7-84" name="__codelineno-7-84"></a>    <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span>
+</span><span id="__span-7-85"><a id="__codelineno-7-85" name="__codelineno-7-85"></a><span class="p">)</span>
+</span><span id="__span-7-86"><a id="__codelineno-7-86" name="__codelineno-7-86"></a><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l2_rel = </span><span class="si">{</span><span class="n">l2_rel</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>再对这 1000 个点的预测结果进行可视化</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-88">88</a></span>
+<span class="normal"><a href="#__codelineno-8-89">89</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-8-88"><a id="__codelineno-8-88" name="__codelineno-8-88"></a><span class="c1"># visualize prediction after finished training</span>
+</span><span id="__span-8-89"><a id="__codelineno-8-89" name="__codelineno-8-89"></a><span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p>训练记录下所示</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>...
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>...
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>ppsci INFO: [Train][Epoch  9/10][Iter  80/100] lr: 0.00200, loss: 0.00663, EQ: 0.00663, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17756.64, eta: 0:00:00
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>ppsci INFO: [Train][Epoch  9/10][Iter  90/100] lr: 0.00200, loss: 0.00598, EQ: 0.00598, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17793.97, eta: 0:00:00
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>ppsci INFO: [Train][Epoch  9/10][Iter 100/100] lr: 0.00200, loss: 0.00547, EQ: 0.00547, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17864.08, eta: 0:00:00
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>ppsci INFO: [Train][Epoch 10/10][Iter  10/100] lr: 0.00200, loss: 0.00079, EQ: 0.00079, batch_cost: 0.00182s, reader_cost: 0.00012s, ips: 17547.05, eta: 0:00:00
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>ppsci INFO: [Train][Epoch 10/10][Iter  20/100] lr: 0.00200, loss: 0.00075, EQ: 0.00075, batch_cost: 0.00183s, reader_cost: 0.00011s, ips: 17482.92, eta: 0:00:00
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>ppsci INFO: [Train][Epoch 10/10][Iter  30/100] lr: 0.00200, loss: 0.00077, EQ: 0.00077, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17539.51, eta: 0:00:00
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>ppsci INFO: [Train][Epoch 10/10][Iter  40/100] lr: 0.00200, loss: 0.00074, EQ: 0.00074, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17587.51, eta: 0:00:00
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>ppsci INFO: [Train][Epoch 10/10][Iter  50/100] lr: 0.00200, loss: 0.00071, EQ: 0.00071, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17563.59, eta: 0:00:00
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>ppsci INFO: [Train][Epoch 10/10][Iter  60/100] lr: 0.00200, loss: 0.00070, EQ: 0.00070, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17604.60, eta: 0:00:00
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>ppsci INFO: [Train][Epoch 10/10][Iter  70/100] lr: 0.00200, loss: 0.00074, EQ: 0.00074, batch_cost: 0.00181s, reader_cost: 0.00011s, ips: 17699.28, eta: 0:00:00
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>ppsci INFO: [Train][Epoch 10/10][Iter  80/100] lr: 0.00200, loss: 0.00077, EQ: 0.00077, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17764.92, eta: 0:00:00
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>ppsci INFO: [Train][Epoch 10/10][Iter  90/100] lr: 0.00200, loss: 0.00075, EQ: 0.00075, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17795.87, eta: 0:00:00
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>ppsci INFO: [Train][Epoch 10/10][Iter 100/100] lr: 0.00200, loss: 0.00071, EQ: 0.00071, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17872.00, eta: 0:00:00
+</span></code></pre></div>
+<p>训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-81">81</a></span>
+<span class="normal"><a href="#__codelineno-10-82">82</a></span>
+<span class="normal"><a href="#__codelineno-10-83">83</a></span>
+<span class="normal"><a href="#__codelineno-10-84">84</a></span>
+<span class="normal"><a href="#__codelineno-10-85">85</a></span>
+<span class="normal"><a href="#__codelineno-10-86">86</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-81"><a id="__codelineno-10-81" name="__codelineno-10-81"></a><span class="c1"># compute l2-relative error of trained model</span>
+</span><span id="__span-10-82"><a id="__codelineno-10-82" name="__codelineno-10-82"></a><span class="n">pred_u</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">,</span> <span class="n">return_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"u"</span><span class="p">]</span>
+</span><span id="__span-10-83"><a id="__codelineno-10-83" name="__codelineno-10-83"></a><span class="n">l2_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pred_u</span> <span class="o">-</span> <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+</span><span id="__span-10-84"><a id="__codelineno-10-84" name="__codelineno-10-84"></a>    <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span>
+</span><span id="__span-10-85"><a id="__codelineno-10-85" name="__codelineno-10-85"></a><span class="p">)</span>
+</span><span id="__span-10-86"><a id="__codelineno-10-86" name="__codelineno-10-86"></a><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l2_rel = </span><span class="si">{</span><span class="n">l2_rel</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>可以看到利用标准解监督训练模型，在标准解附近仍有很好的预测能力，L2-相对误差为 0.02677。</p>
+<p>预测结果可视化如下所示</p>
+<p><a class="glightbox" href="../../images/quickstart/u_pred_case1.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="u=sin(x) prediction" src="../../images/quickstart/u_pred_case1.png"></a></p>
+<p>场景一的完整代码如下所示</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">examples/quick_start/case1.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-11-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-11-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-11-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-11-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-11-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-11-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-11-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-11-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-11-10">10</a></span>
+<span class="normal"><a href="#__codelineno-11-11">11</a></span>
+<span class="normal"><a href="#__codelineno-11-12">12</a></span>
+<span class="normal"><a href="#__codelineno-11-13">13</a></span>
+<span class="normal"><a href="#__codelineno-11-14">14</a></span>
+<span class="normal"><a href="#__codelineno-11-15">15</a></span>
+<span class="normal"><a href="#__codelineno-11-16">16</a></span>
+<span class="normal"><a href="#__codelineno-11-17">17</a></span>
+<span class="normal"><a href="#__codelineno-11-18">18</a></span>
+<span class="normal"><a href="#__codelineno-11-19">19</a></span>
+<span class="normal"><a href="#__codelineno-11-20">20</a></span>
+<span class="normal"><a href="#__codelineno-11-21">21</a></span>
+<span class="normal"><a href="#__codelineno-11-22">22</a></span>
+<span class="normal"><a href="#__codelineno-11-23">23</a></span>
+<span class="normal"><a href="#__codelineno-11-24">24</a></span>
+<span class="normal"><a href="#__codelineno-11-25">25</a></span>
+<span class="normal"><a href="#__codelineno-11-26">26</a></span>
+<span class="normal"><a href="#__codelineno-11-27">27</a></span>
+<span class="normal"><a href="#__codelineno-11-28">28</a></span>
+<span class="normal"><a href="#__codelineno-11-29">29</a></span>
+<span class="normal"><a href="#__codelineno-11-30">30</a></span>
+<span class="normal"><a href="#__codelineno-11-31">31</a></span>
+<span class="normal"><a href="#__codelineno-11-32">32</a></span>
+<span class="normal"><a href="#__codelineno-11-33">33</a></span>
+<span class="normal"><a href="#__codelineno-11-34">34</a></span>
+<span class="normal"><a href="#__codelineno-11-35">35</a></span>
+<span class="normal"><a href="#__codelineno-11-36">36</a></span>
+<span class="normal"><a href="#__codelineno-11-37">37</a></span>
+<span class="normal"><a href="#__codelineno-11-38">38</a></span>
+<span class="normal"><a href="#__codelineno-11-39">39</a></span>
+<span class="normal"><a href="#__codelineno-11-40">40</a></span>
+<span class="normal"><a href="#__codelineno-11-41">41</a></span>
+<span class="normal"><a href="#__codelineno-11-42">42</a></span>
+<span class="normal"><a href="#__codelineno-11-43">43</a></span>
+<span class="normal"><a href="#__codelineno-11-44">44</a></span>
+<span class="normal"><a href="#__codelineno-11-45">45</a></span>
+<span class="normal"><a href="#__codelineno-11-46">46</a></span>
+<span class="normal"><a href="#__codelineno-11-47">47</a></span>
+<span class="normal"><a href="#__codelineno-11-48">48</a></span>
+<span class="normal"><a href="#__codelineno-11-49">49</a></span>
+<span class="normal"><a href="#__codelineno-11-50">50</a></span>
+<span class="normal"><a href="#__codelineno-11-51">51</a></span>
+<span class="normal"><a href="#__codelineno-11-52">52</a></span>
+<span class="normal"><a href="#__codelineno-11-53">53</a></span>
+<span class="normal"><a href="#__codelineno-11-54">54</a></span>
+<span class="normal"><a href="#__codelineno-11-55">55</a></span>
+<span class="normal"><a href="#__codelineno-11-56">56</a></span>
+<span class="normal"><a href="#__codelineno-11-57">57</a></span>
+<span class="normal"><a href="#__codelineno-11-58">58</a></span>
+<span class="normal"><a href="#__codelineno-11-59">59</a></span>
+<span class="normal"><a href="#__codelineno-11-60">60</a></span>
+<span class="normal"><a href="#__codelineno-11-61">61</a></span>
+<span class="normal"><a href="#__codelineno-11-62">62</a></span>
+<span class="normal"><a href="#__codelineno-11-63">63</a></span>
+<span class="normal"><a href="#__codelineno-11-64">64</a></span>
+<span class="normal"><a href="#__codelineno-11-65">65</a></span>
+<span class="normal"><a href="#__codelineno-11-66">66</a></span>
+<span class="normal"><a href="#__codelineno-11-67">67</a></span>
+<span class="normal"><a href="#__codelineno-11-68">68</a></span>
+<span class="normal"><a href="#__codelineno-11-69">69</a></span>
+<span class="normal"><a href="#__codelineno-11-70">70</a></span>
+<span class="normal"><a href="#__codelineno-11-71">71</a></span>
+<span class="normal"><a href="#__codelineno-11-72">72</a></span>
+<span class="normal"><a href="#__codelineno-11-73">73</a></span>
+<span class="normal"><a href="#__codelineno-11-74">74</a></span>
+<span class="normal"><a href="#__codelineno-11-75">75</a></span>
+<span class="normal"><a href="#__codelineno-11-76">76</a></span>
+<span class="normal"><a href="#__codelineno-11-77">77</a></span>
+<span class="normal"><a href="#__codelineno-11-78">78</a></span>
+<span class="normal"><a href="#__codelineno-11-79">79</a></span>
+<span class="normal"><a href="#__codelineno-11-80">80</a></span>
+<span class="normal"><a href="#__codelineno-11-81">81</a></span>
+<span class="normal"><a href="#__codelineno-11-82">82</a></span>
+<span class="normal"><a href="#__codelineno-11-83">83</a></span>
+<span class="normal"><a href="#__codelineno-11-84">84</a></span>
+<span class="normal"><a href="#__codelineno-11-85">85</a></span>
+<span class="normal"><a href="#__codelineno-11-86">86</a></span>
+<span class="normal"><a href="#__codelineno-11-87">87</a></span>
+<span class="normal"><a href="#__codelineno-11-88">88</a></span>
+<span class="normal"><a href="#__codelineno-11-89">89</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="kn">import</span> <span class="nn">ppsci</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="kn">from</span> <span class="nn">ppsci.utils</span> <span class="kn">import</span> <span class="n">logger</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><span class="c1"># set random seed(42) for reproducibility</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><span class="n">ppsci</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9"></a><span class="c1"># set output directory</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10"></a><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="s2">"./output_quick_start_case1"</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11"></a>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12"></a><span class="c1"># initialize logger while create output directory</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13"></a><span class="n">logger</span><span class="o">.</span><span class="n">init_logger</span><span class="p">(</span><span class="s2">"ppsci"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/train.log"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">)</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14"></a>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15"></a><span class="c1"># set 1D-geometry domain([-π, π])</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16"></a><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17"></a><span class="n">x_domain</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">)</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18"></a>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19"></a><span class="c1"># set model to 3-layer MLP</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20"></a><span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">((</span><span class="s2">"x"</span><span class="p">,),</span> <span class="p">(</span><span class="s2">"u"</span><span class="p">,),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21"></a>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22"></a><span class="c1"># standard solution of sin(x)</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23"></a><span class="k">def</span> <span class="nf">sin_compute_func</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25"></a>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26"></a>
+</span><span id="__span-11-27"><a id="__codelineno-11-27" name="__codelineno-11-27"></a><span class="c1"># set constraint on 1D-geometry([-π, π])</span>
+</span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28"></a><span class="n">ITERS_PER_EPOCH</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># use 100 iterations per training epoch</span>
+</span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29"></a><span class="n">interior_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-11-30"><a id="__codelineno-11-30" name="__codelineno-11-30"></a>    <span class="n">output_expr</span><span class="o">=</span><span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-11-31"><a id="__codelineno-11-31" name="__codelineno-11-31"></a>    <span class="n">label_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="n">sin_compute_func</span><span class="p">},</span>
+</span><span id="__span-11-32"><a id="__codelineno-11-32" name="__codelineno-11-32"></a>    <span class="n">geom</span><span class="o">=</span><span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-11-33"><a id="__codelineno-11-33" name="__codelineno-11-33"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-11-34"><a id="__codelineno-11-34" name="__codelineno-11-34"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-11-35"><a id="__codelineno-11-35" name="__codelineno-11-35"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-11-36"><a id="__codelineno-11-36" name="__codelineno-11-36"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-11-37"><a id="__codelineno-11-37" name="__codelineno-11-37"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-11-38"><a id="__codelineno-11-38" name="__codelineno-11-38"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-11-39"><a id="__codelineno-11-39" name="__codelineno-11-39"></a>        <span class="p">},</span>
+</span><span id="__span-11-40"><a id="__codelineno-11-40" name="__codelineno-11-40"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>  <span class="c1"># use 32 samples(points) per iteration for interior constraint</span>
+</span><span id="__span-11-41"><a id="__codelineno-11-41" name="__codelineno-11-41"></a>    <span class="p">},</span>
+</span><span id="__span-11-42"><a id="__codelineno-11-42" name="__codelineno-11-42"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-11-43"><a id="__codelineno-11-43" name="__codelineno-11-43"></a><span class="p">)</span>
+</span><span id="__span-11-44"><a id="__codelineno-11-44" name="__codelineno-11-44"></a><span class="c1"># wrap constraint(s) into one dict</span>
+</span><span id="__span-11-45"><a id="__codelineno-11-45" name="__codelineno-11-45"></a><span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-11-46"><a id="__codelineno-11-46" name="__codelineno-11-46"></a>    <span class="n">interior_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">interior_constraint</span><span class="p">,</span>
+</span><span id="__span-11-47"><a id="__codelineno-11-47" name="__codelineno-11-47"></a><span class="p">}</span>
+</span><span id="__span-11-48"><a id="__codelineno-11-48" name="__codelineno-11-48"></a>
+</span><span id="__span-11-49"><a id="__codelineno-11-49" name="__codelineno-11-49"></a><span class="c1"># set training hyper-parameters</span>
+</span><span id="__span-11-50"><a id="__codelineno-11-50" name="__codelineno-11-50"></a><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="__span-11-51"><a id="__codelineno-11-51" name="__codelineno-11-51"></a><span class="c1"># set optimizer</span>
+</span><span id="__span-11-52"><a id="__codelineno-11-52" name="__codelineno-11-52"></a><span class="n">optimizer</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="mf">2e-3</span><span class="p">)(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-11-53"><a id="__codelineno-11-53" name="__codelineno-11-53"></a>
+</span><span id="__span-11-54"><a id="__codelineno-11-54" name="__codelineno-11-54"></a><span class="c1"># set visualizer</span>
+</span><span id="__span-11-55"><a id="__codelineno-11-55" name="__codelineno-11-55"></a><span class="n">visual_input_dict</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-11-56"><a id="__codelineno-11-56" name="__codelineno-11-56"></a>    <span class="s2">"x"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-11-57"><a id="__codelineno-11-57" name="__codelineno-11-57"></a><span class="p">}</span>
+</span><span id="__span-11-58"><a id="__codelineno-11-58" name="__codelineno-11-58"></a><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-11-59"><a id="__codelineno-11-59" name="__codelineno-11-59"></a><span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-11-60"><a id="__codelineno-11-60" name="__codelineno-11-60"></a>    <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerScatter1D</span><span class="p">(</span>
+</span><span id="__span-11-61"><a id="__codelineno-11-61" name="__codelineno-11-61"></a>        <span class="n">visual_input_dict</span><span class="p">,</span>
+</span><span id="__span-11-62"><a id="__codelineno-11-62" name="__codelineno-11-62"></a>        <span class="p">(</span><span class="s2">"x"</span><span class="p">,),</span>
+</span><span id="__span-11-63"><a id="__codelineno-11-63" name="__codelineno-11-63"></a>        <span class="p">{</span><span class="s2">"u_pred"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="s2">"u_ref"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]},</span>
+</span><span id="__span-11-64"><a id="__codelineno-11-64" name="__codelineno-11-64"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">"u=sin(x)"</span><span class="p">,</span>
+</span><span id="__span-11-65"><a id="__codelineno-11-65" name="__codelineno-11-65"></a>    <span class="p">),</span>
+</span><span id="__span-11-66"><a id="__codelineno-11-66" name="__codelineno-11-66"></a><span class="p">}</span>
+</span><span id="__span-11-67"><a id="__codelineno-11-67" name="__codelineno-11-67"></a>
+</span><span id="__span-11-68"><a id="__codelineno-11-68" name="__codelineno-11-68"></a><span class="c1"># initialize solver</span>
+</span><span id="__span-11-69"><a id="__codelineno-11-69" name="__codelineno-11-69"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-11-70"><a id="__codelineno-11-70" name="__codelineno-11-70"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-11-71"><a id="__codelineno-11-71" name="__codelineno-11-71"></a>    <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-11-72"><a id="__codelineno-11-72" name="__codelineno-11-72"></a>    <span class="n">OUTPUT_DIR</span><span class="p">,</span>
+</span><span id="__span-11-73"><a id="__codelineno-11-73" name="__codelineno-11-73"></a>    <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-11-74"><a id="__codelineno-11-74" name="__codelineno-11-74"></a>    <span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span>
+</span><span id="__span-11-75"><a id="__codelineno-11-75" name="__codelineno-11-75"></a>    <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-11-76"><a id="__codelineno-11-76" name="__codelineno-11-76"></a>    <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-11-77"><a id="__codelineno-11-77" name="__codelineno-11-77"></a><span class="p">)</span>
+</span><span id="__span-11-78"><a id="__codelineno-11-78" name="__codelineno-11-78"></a><span class="c1"># train model</span>
+</span><span id="__span-11-79"><a id="__codelineno-11-79" name="__codelineno-11-79"></a><span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span><span id="__span-11-80"><a id="__codelineno-11-80" name="__codelineno-11-80"></a>
+</span><span id="__span-11-81"><a id="__codelineno-11-81" name="__codelineno-11-81"></a><span class="c1"># compute l2-relative error of trained model</span>
+</span><span id="__span-11-82"><a id="__codelineno-11-82" name="__codelineno-11-82"></a><span class="n">pred_u</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">,</span> <span class="n">return_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"u"</span><span class="p">]</span>
+</span><span id="__span-11-83"><a id="__codelineno-11-83" name="__codelineno-11-83"></a><span class="n">l2_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pred_u</span> <span class="o">-</span> <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+</span><span id="__span-11-84"><a id="__codelineno-11-84" name="__codelineno-11-84"></a>    <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span>
+</span><span id="__span-11-85"><a id="__codelineno-11-85" name="__codelineno-11-85"></a><span class="p">)</span>
+</span><span id="__span-11-86"><a id="__codelineno-11-86" name="__codelineno-11-86"></a><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l2_rel = </span><span class="si">{</span><span class="n">l2_rel</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-11-87"><a id="__codelineno-11-87" name="__codelineno-11-87"></a>
+</span><span id="__span-11-88"><a id="__codelineno-11-88" name="__codelineno-11-88"></a><span class="c1"># visualize prediction after finished training</span>
+</span><span id="__span-11-89"><a id="__codelineno-11-89" name="__codelineno-11-89"></a><span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="3">3. 场景二<a class="headerlink" href="#3" title="Permanent link">¶</a></h2>
+<p>可以看到场景一的监督训练方式能较好地解决函数拟合问题，但一般情况下我们是无法得知拟合函数本身的解析式的，因此也无法直接构造因变量的监督数据。</p>
+<p>虽然无法求出解析式直接构造监督数据，但往往可以利用相关数学知识，推导出目标拟合函数符合的某种数学关系，以训练模型以满足这种数学关系的方式，达到以“间接监督”的方式优化模型的目的。</p>
+<p>假设我们不再使用 <span class="arithmatex">\(u=\sin(x)\)</span> 这一先验公式，因而无法计算标签数据 <span class="arithmatex">\(u\)</span>。因此使用如下方程组，其含有一个偏微分方程和边界条件</p>
+<div class="arithmatex">\[
+\begin{cases}
+\begin{aligned}
+    \dfrac{\partial u} {\partial x} &amp;= \cos(x) \\
+    u(-\pi) &amp;= 2
+\end{aligned}
+\end{cases}
+\]</div>
+<p>构造数据对 <span class="arithmatex">\((x_i, \cos(x_i)), i=1,...,N\)</span>。
+这意味着我们仍然能保持模型的输入、输出不变，但优化目标变成了：让 <span class="arithmatex">\(\dfrac{\partial \hat{u}} {\partial x}\)</span> 尽可能地接近 <span class="arithmatex">\(\cos(x)\)</span>，且 <span class="arithmatex">\(\hat{u}(-\pi)\)</span> 也要尽可能地接近 <span class="arithmatex">\(2\)</span>。</p>
+<p>基于以上理论，我们对场景一的代码进行少量的改写即可得到本场景二的代码。</p>
+<p>首先由于我们需要使用一阶微分这一操作，因此在代码开头处需导入一阶微分 API</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1">1</a></span>
+<span class="normal"><a href="#__codelineno-12-2">2</a></span>
+<span class="normal"><a href="#__codelineno-12-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="kn">import</span> <span class="nn">ppsci</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="hll"><span class="kn">from</span> <span class="nn">ppsci.autodiff</span> <span class="kn">import</span> <span class="n">jacobian</span>
+</span></span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a><span class="kn">from</span> <span class="nn">ppsci.utils</span> <span class="kn">import</span> <span class="n">logger</span>
+</span></code></pre></div></td></tr></table></div>
+<p>然后在原来的标签计算函数下方，新增一个微分标签值计算函数</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-28">28</a></span>
+<span class="normal"><a href="#__codelineno-13-29">29</a></span>
+<span class="normal"><a href="#__codelineno-13-30">30</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-28"><a id="__codelineno-13-28" name="__codelineno-13-28"></a><span class="c1"># standard solution of cos(x)</span>
+</span><span id="__span-13-29"><a id="__codelineno-13-29" name="__codelineno-13-29"></a><span class="k">def</span> <span class="nf">cos_compute_func</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-13-30"><a id="__codelineno-13-30" name="__codelineno-13-30"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span></code></pre></div></td></tr></table></div>
+<p>接着将 <code>interior_constraint</code> 这一约束条件从约束“模型输出”，改为约束“模型输出对输入的一阶微分”</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-33">33</a></span>
+<span class="normal"><a href="#__codelineno-14-34">34</a></span>
+<span class="normal"><a href="#__codelineno-14-35">35</a></span>
+<span class="normal"><a href="#__codelineno-14-36">36</a></span>
+<span class="normal"><a href="#__codelineno-14-37">37</a></span>
+<span class="normal"><a href="#__codelineno-14-38">38</a></span>
+<span class="normal"><a href="#__codelineno-14-39">39</a></span>
+<span class="normal"><a href="#__codelineno-14-40">40</a></span>
+<span class="normal"><a href="#__codelineno-14-41">41</a></span>
+<span class="normal"><a href="#__codelineno-14-42">42</a></span>
+<span class="normal"><a href="#__codelineno-14-43">43</a></span>
+<span class="normal"><a href="#__codelineno-14-44">44</a></span>
+<span class="normal"><a href="#__codelineno-14-45">45</a></span>
+<span class="normal"><a href="#__codelineno-14-46">46</a></span>
+<span class="normal"><a href="#__codelineno-14-47">47</a></span>
+<span class="normal"><a href="#__codelineno-14-48">48</a></span>
+<span class="normal"><a href="#__codelineno-14-49">49</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33"></a><span class="c1"># set constraint on 1D-geometry([-π, π])</span>
+</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34"></a><span class="n">ITERS_PER_EPOCH</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># use 100 iterations per training epoch</span>
+</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35"></a><span class="n">interior_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36"></a><span class="hll">    <span class="n">output_expr</span><span class="o">=</span><span class="p">{</span><span class="s2">"du_dx"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">jacobian</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])},</span>
+</span></span><span id="__span-14-37"><a id="__codelineno-14-37" name="__codelineno-14-37"></a>    <span class="n">label_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">"du_dx"</span><span class="p">:</span> <span class="n">cos_compute_func</span><span class="p">},</span>
+</span><span id="__span-14-38"><a id="__codelineno-14-38" name="__codelineno-14-38"></a>    <span class="n">geom</span><span class="o">=</span><span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-14-39"><a id="__codelineno-14-39" name="__codelineno-14-39"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-14-40"><a id="__codelineno-14-40" name="__codelineno-14-40"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-14-41"><a id="__codelineno-14-41" name="__codelineno-14-41"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-14-42"><a id="__codelineno-14-42" name="__codelineno-14-42"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-14-43"><a id="__codelineno-14-43" name="__codelineno-14-43"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-14-44"><a id="__codelineno-14-44" name="__codelineno-14-44"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-14-45"><a id="__codelineno-14-45" name="__codelineno-14-45"></a>        <span class="p">},</span>
+</span><span id="__span-14-46"><a id="__codelineno-14-46" name="__codelineno-14-46"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>  <span class="c1"># use 32 samples(points) per iteration for interior constraint</span>
+</span><span id="__span-14-47"><a id="__codelineno-14-47" name="__codelineno-14-47"></a>    <span class="p">},</span>
+</span><span id="__span-14-48"><a id="__codelineno-14-48" name="__codelineno-14-48"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-14-49"><a id="__codelineno-14-49" name="__codelineno-14-49"></a><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>考虑到一般情况下偏微分方程的解会存在待定系数，需通过定解条件（初（边）值条件）来确定，因此需要在 <code>interior_constraint</code> 构建代码的后面，额外添加一个边界条件约束 <code>bc_constraint</code>，如下所示</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-50">50</a></span>
+<span class="normal"><a href="#__codelineno-15-51">51</a></span>
+<span class="normal"><a href="#__codelineno-15-52">52</a></span>
+<span class="normal"><a href="#__codelineno-15-53">53</a></span>
+<span class="normal"><a href="#__codelineno-15-54">54</a></span>
+<span class="normal"><a href="#__codelineno-15-55">55</a></span>
+<span class="normal"><a href="#__codelineno-15-56">56</a></span>
+<span class="normal"><a href="#__codelineno-15-57">57</a></span>
+<span class="normal"><a href="#__codelineno-15-58">58</a></span>
+<span class="normal"><a href="#__codelineno-15-59">59</a></span>
+<span class="normal"><a href="#__codelineno-15-60">60</a></span>
+<span class="normal"><a href="#__codelineno-15-61">61</a></span>
+<span class="normal"><a href="#__codelineno-15-62">62</a></span>
+<span class="normal"><a href="#__codelineno-15-63">63</a></span>
+<span class="normal"><a href="#__codelineno-15-64">64</a></span>
+<span class="normal"><a href="#__codelineno-15-65">65</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-15-50"><a id="__codelineno-15-50" name="__codelineno-15-50"></a><span class="n">bc_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">BoundaryConstraint</span><span class="p">(</span>
+</span><span id="__span-15-51"><a id="__codelineno-15-51" name="__codelineno-15-51"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-15-52"><a id="__codelineno-15-52" name="__codelineno-15-52"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">sin_compute_func</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">},</span>  <span class="c1"># (1)</span>
+</span><span id="__span-15-53"><a id="__codelineno-15-53" name="__codelineno-15-53"></a>    <span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-15-54"><a id="__codelineno-15-54" name="__codelineno-15-54"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-15-55"><a id="__codelineno-15-55" name="__codelineno-15-55"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-15-56"><a id="__codelineno-15-56" name="__codelineno-15-56"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-15-57"><a id="__codelineno-15-57" name="__codelineno-15-57"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-15-58"><a id="__codelineno-15-58" name="__codelineno-15-58"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-15-59"><a id="__codelineno-15-59" name="__codelineno-15-59"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-15-60"><a id="__codelineno-15-60" name="__codelineno-15-60"></a>        <span class="p">},</span>
+</span><span id="__span-15-61"><a id="__codelineno-15-61" name="__codelineno-15-61"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># use 1 sample(point) per iteration for boundary constraint</span>
+</span><span id="__span-15-62"><a id="__codelineno-15-62" name="__codelineno-15-62"></a>    <span class="p">},</span>
+</span><span id="__span-15-63"><a id="__codelineno-15-63" name="__codelineno-15-63"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-15-64"><a id="__codelineno-15-64" name="__codelineno-15-64"></a>    <span class="n">criteria</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">l_limit</span><span class="p">),</span>
+</span><span id="__span-15-65"><a id="__codelineno-15-65" name="__codelineno-15-65"></a><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<ol>
+<li>对应边界条件 <span class="arithmatex">\(u(x_0)=sin(x_0)+2\)</span></li>
+</ol>
+<p>然后将该边界约束 <code>bc_constraint</code> 添加到 <code>constraint</code> 中</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-66">66</a></span>
+<span class="normal"><a href="#__codelineno-16-67">67</a></span>
+<span class="normal"><a href="#__codelineno-16-68">68</a></span>
+<span class="normal"><a href="#__codelineno-16-69">69</a></span>
+<span class="normal"><a href="#__codelineno-16-70">70</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-16-66"><a id="__codelineno-16-66" name="__codelineno-16-66"></a><span class="c1"># wrap constraint(s) into one dict</span>
+</span><span id="__span-16-67"><a id="__codelineno-16-67" name="__codelineno-16-67"></a><span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-16-68"><a id="__codelineno-16-68" name="__codelineno-16-68"></a>    <span class="n">interior_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">interior_constraint</span><span class="p">,</span>
+</span><span id="__span-16-69"><a id="__codelineno-16-69" name="__codelineno-16-69"></a><span class="hll">    <span class="n">bc_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">bc_constraint</span><span class="p">,</span>
+</span></span><span id="__span-16-70"><a id="__codelineno-16-70" name="__codelineno-16-70"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>同样地，修改 Visualizer 绘制的标准解为 <span class="arithmatex">\(sin(x)+2\)</span></p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-77">77</a></span>
+<span class="normal"><a href="#__codelineno-17-78">78</a></span>
+<span class="normal"><a href="#__codelineno-17-79">79</a></span>
+<span class="normal"><a href="#__codelineno-17-80">80</a></span>
+<span class="normal"><a href="#__codelineno-17-81">81</a></span>
+<span class="normal"><a href="#__codelineno-17-82">82</a></span>
+<span class="normal"><a href="#__codelineno-17-83">83</a></span>
+<span class="normal"><a href="#__codelineno-17-84">84</a></span>
+<span class="normal"><a href="#__codelineno-17-85">85</a></span>
+<span class="normal"><a href="#__codelineno-17-86">86</a></span>
+<span class="normal"><a href="#__codelineno-17-87">87</a></span>
+<span class="normal"><a href="#__codelineno-17-88">88</a></span>
+<span class="normal"><a href="#__codelineno-17-89">89</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-17-77"><a id="__codelineno-17-77" name="__codelineno-17-77"></a><span class="c1"># set visualizer</span>
+</span><span id="__span-17-78"><a id="__codelineno-17-78" name="__codelineno-17-78"></a><span class="n">visual_input_dict</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-17-79"><a id="__codelineno-17-79" name="__codelineno-17-79"></a>    <span class="s2">"x"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-17-80"><a id="__codelineno-17-80" name="__codelineno-17-80"></a><span class="p">}</span>
+</span><span id="__span-17-81"><a id="__codelineno-17-81" name="__codelineno-17-81"></a><span class="hll"><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span> <span class="o">+</span> <span class="mf">2.0</span>
+</span></span><span id="__span-17-82"><a id="__codelineno-17-82" name="__codelineno-17-82"></a><span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-17-83"><a id="__codelineno-17-83" name="__codelineno-17-83"></a>    <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerScatter1D</span><span class="p">(</span>
+</span><span id="__span-17-84"><a id="__codelineno-17-84" name="__codelineno-17-84"></a>        <span class="n">visual_input_dict</span><span class="p">,</span>
+</span><span id="__span-17-85"><a id="__codelineno-17-85" name="__codelineno-17-85"></a>        <span class="p">(</span><span class="s2">"x"</span><span class="p">,),</span>
+</span><span id="__span-17-86"><a id="__codelineno-17-86" name="__codelineno-17-86"></a>        <span class="p">{</span><span class="s2">"u_pred"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="s2">"u_ref"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]},</span>
+</span><span id="__span-17-87"><a id="__codelineno-17-87" name="__codelineno-17-87"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">"u=sin(x)"</span><span class="p">,</span>
+</span><span id="__span-17-88"><a id="__codelineno-17-88" name="__codelineno-17-88"></a>    <span class="p">),</span>
+</span><span id="__span-17-89"><a id="__codelineno-17-89" name="__codelineno-17-89"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>修改完毕后执行训练</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-18-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-18-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-18-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-18-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-18-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-18-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-18-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-18-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-18-100">100</a></span>
+<span class="normal"><a href="#__codelineno-18-101">101</a></span>
+<span class="normal"><a href="#__codelineno-18-102">102</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-18-91"><a id="__codelineno-18-91" name="__codelineno-18-91"></a><span class="c1"># initialize solver</span>
+</span><span id="__span-18-92"><a id="__codelineno-18-92" name="__codelineno-18-92"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-18-93"><a id="__codelineno-18-93" name="__codelineno-18-93"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-18-94"><a id="__codelineno-18-94" name="__codelineno-18-94"></a>    <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-18-95"><a id="__codelineno-18-95" name="__codelineno-18-95"></a>    <span class="n">OUTPUT_DIR</span><span class="p">,</span>
+</span><span id="__span-18-96"><a id="__codelineno-18-96" name="__codelineno-18-96"></a>    <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-18-97"><a id="__codelineno-18-97" name="__codelineno-18-97"></a>    <span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span>
+</span><span id="__span-18-98"><a id="__codelineno-18-98" name="__codelineno-18-98"></a>    <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-18-99"><a id="__codelineno-18-99" name="__codelineno-18-99"></a>    <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-18-100"><a id="__codelineno-18-100" name="__codelineno-18-100"></a><span class="p">)</span>
+</span><span id="__span-18-101"><a id="__codelineno-18-101" name="__codelineno-18-101"></a><span class="c1"># train model</span>
+</span><span id="__span-18-102"><a id="__codelineno-18-102" name="__codelineno-18-102"></a><span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div>
+<p>训练日志如下所示</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>...
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>...
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>ppsci INFO: [Train][Epoch  9/10][Iter  90/100] lr: 0.00200, loss: 0.00176, EQ: 0.00087, BC: 0.00088, batch_cost: 0.00346s, reader_cost: 0.00024s, ips: 9527.80, eta: 0:00:00
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>ppsci INFO: [Train][Epoch  9/10][Iter 100/100] lr: 0.00200, loss: 0.00170, EQ: 0.00087, BC: 0.00083, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9452.07, eta: 0:00:00
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>ppsci INFO: [Train][Epoch 10/10][Iter  10/100] lr: 0.00200, loss: 0.00107, EQ: 0.00072, BC: 0.00035, batch_cost: 0.00350s, reader_cost: 0.00025s, ips: 9424.75, eta: 0:00:00
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>ppsci INFO: [Train][Epoch 10/10][Iter  20/100] lr: 0.00200, loss: 0.00116, EQ: 0.00083, BC: 0.00033, batch_cost: 0.00350s, reader_cost: 0.00025s, ips: 9441.33, eta: 0:00:00
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>ppsci INFO: [Train][Epoch 10/10][Iter  30/100] lr: 0.00200, loss: 0.00103, EQ: 0.00079, BC: 0.00024, batch_cost: 0.00355s, reader_cost: 0.00025s, ips: 9291.90, eta: 0:00:00
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>ppsci INFO: [Train][Epoch 10/10][Iter  40/100] lr: 0.00200, loss: 0.00108, EQ: 0.00078, BC: 0.00030, batch_cost: 0.00353s, reader_cost: 0.00025s, ips: 9348.09, eta: 0:00:00
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>ppsci INFO: [Train][Epoch 10/10][Iter  50/100] lr: 0.00200, loss: 0.00163, EQ: 0.00082, BC: 0.00082, batch_cost: 0.00350s, reader_cost: 0.00024s, ips: 9416.24, eta: 0:00:00
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>ppsci INFO: [Train][Epoch 10/10][Iter  60/100] lr: 0.00200, loss: 0.00160, EQ: 0.00083, BC: 0.00077, batch_cost: 0.00353s, reader_cost: 0.00024s, ips: 9345.73, eta: 0:00:00
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>ppsci INFO: [Train][Epoch 10/10][Iter  70/100] lr: 0.00200, loss: 0.00150, EQ: 0.00082, BC: 0.00068, batch_cost: 0.00351s, reader_cost: 0.00024s, ips: 9393.89, eta: 0:00:00
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>ppsci INFO: [Train][Epoch 10/10][Iter  80/100] lr: 0.00200, loss: 0.00146, EQ: 0.00081, BC: 0.00064, batch_cost: 0.00350s, reader_cost: 0.00024s, ips: 9424.81, eta: 0:00:00
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>ppsci INFO: [Train][Epoch 10/10][Iter  90/100] lr: 0.00200, loss: 0.00138, EQ: 0.00081, BC: 0.00058, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9444.12, eta: 0:00:00
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>ppsci INFO: [Train][Epoch 10/10][Iter 100/100] lr: 0.00200, loss: 0.00133, EQ: 0.00079, BC: 0.00054, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9461.54, eta: 0:00:00
+</span></code></pre></div>
+<p>训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-104">104</a></span>
+<span class="normal"><a href="#__codelineno-20-105">105</a></span>
+<span class="normal"><a href="#__codelineno-20-106">106</a></span>
+<span class="normal"><a href="#__codelineno-20-107">107</a></span>
+<span class="normal"><a href="#__codelineno-20-108">108</a></span>
+<span class="normal"><a href="#__codelineno-20-109">109</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-20-104"><a id="__codelineno-20-104" name="__codelineno-20-104"></a><span class="c1"># compute l2-relative error of trained model</span>
+</span><span id="__span-20-105"><a id="__codelineno-20-105" name="__codelineno-20-105"></a><span class="n">pred_u</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">,</span> <span class="n">return_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"u"</span><span class="p">]</span>
+</span><span id="__span-20-106"><a id="__codelineno-20-106" name="__codelineno-20-106"></a><span class="n">l2_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pred_u</span> <span class="o">-</span> <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+</span><span id="__span-20-107"><a id="__codelineno-20-107" name="__codelineno-20-107"></a>    <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span>
+</span><span id="__span-20-108"><a id="__codelineno-20-108" name="__codelineno-20-108"></a><span class="p">)</span>
+</span><span id="__span-20-109"><a id="__codelineno-20-109" name="__codelineno-20-109"></a><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l2_rel = </span><span class="si">{</span><span class="n">l2_rel</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>可以看到利用微分方程训练的模型，在标准解附近仍有很好的预测能力，L2-相对误差为 0.00564。</p>
+<p>预测结果可视化如下所示</p>
+<p><a class="glightbox" href="../../images/quickstart/u_pred_case2.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="u=sin(x)+2 prediction" src="../../images/quickstart/u_pred_case2.png"></a></p>
+<p>可以发现利用微分关系训练的模型仍然具备良好的预测能力，并且结合定解条件，能学习出同时符合微分方程和定解条件的正确解模型。</p>
+<p>场景二的完整代码如下所示</p>
+<div class="language-py highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">  1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">  2</a></span>
+<span class="normal"><a href="#__codelineno-21-3">  3</a></span>
+<span class="normal"><a href="#__codelineno-21-4">  4</a></span>
+<span class="normal"><a href="#__codelineno-21-5">  5</a></span>
+<span class="normal"><a href="#__codelineno-21-6">  6</a></span>
+<span class="normal"><a href="#__codelineno-21-7">  7</a></span>
+<span class="normal"><a href="#__codelineno-21-8">  8</a></span>
+<span class="normal"><a href="#__codelineno-21-9">  9</a></span>
+<span class="normal"><a href="#__codelineno-21-10"> 10</a></span>
+<span class="normal"><a href="#__codelineno-21-11"> 11</a></span>
+<span class="normal"><a href="#__codelineno-21-12"> 12</a></span>
+<span class="normal"><a href="#__codelineno-21-13"> 13</a></span>
+<span class="normal"><a href="#__codelineno-21-14"> 14</a></span>
+<span class="normal"><a href="#__codelineno-21-15"> 15</a></span>
+<span class="normal"><a href="#__codelineno-21-16"> 16</a></span>
+<span class="normal"><a href="#__codelineno-21-17"> 17</a></span>
+<span class="normal"><a href="#__codelineno-21-18"> 18</a></span>
+<span class="normal"><a href="#__codelineno-21-19"> 19</a></span>
+<span class="normal"><a href="#__codelineno-21-20"> 20</a></span>
+<span class="normal"><a href="#__codelineno-21-21"> 21</a></span>
+<span class="normal"><a href="#__codelineno-21-22"> 22</a></span>
+<span class="normal"><a href="#__codelineno-21-23"> 23</a></span>
+<span class="normal"><a href="#__codelineno-21-24"> 24</a></span>
+<span class="normal"><a href="#__codelineno-21-25"> 25</a></span>
+<span class="normal"><a href="#__codelineno-21-26"> 26</a></span>
+<span class="normal"><a href="#__codelineno-21-27"> 27</a></span>
+<span class="normal"><a href="#__codelineno-21-28"> 28</a></span>
+<span class="normal"><a href="#__codelineno-21-29"> 29</a></span>
+<span class="normal"><a href="#__codelineno-21-30"> 30</a></span>
+<span class="normal"><a href="#__codelineno-21-31"> 31</a></span>
+<span class="normal"><a href="#__codelineno-21-32"> 32</a></span>
+<span class="normal"><a href="#__codelineno-21-33"> 33</a></span>
+<span class="normal"><a href="#__codelineno-21-34"> 34</a></span>
+<span class="normal"><a href="#__codelineno-21-35"> 35</a></span>
+<span class="normal"><a href="#__codelineno-21-36"> 36</a></span>
+<span class="normal"><a href="#__codelineno-21-37"> 37</a></span>
+<span class="normal"><a href="#__codelineno-21-38"> 38</a></span>
+<span class="normal"><a href="#__codelineno-21-39"> 39</a></span>
+<span class="normal"><a href="#__codelineno-21-40"> 40</a></span>
+<span class="normal"><a href="#__codelineno-21-41"> 41</a></span>
+<span class="normal"><a href="#__codelineno-21-42"> 42</a></span>
+<span class="normal"><a href="#__codelineno-21-43"> 43</a></span>
+<span class="normal"><a href="#__codelineno-21-44"> 44</a></span>
+<span class="normal"><a href="#__codelineno-21-45"> 45</a></span>
+<span class="normal"><a href="#__codelineno-21-46"> 46</a></span>
+<span class="normal"><a href="#__codelineno-21-47"> 47</a></span>
+<span class="normal"><a href="#__codelineno-21-48"> 48</a></span>
+<span class="normal"><a href="#__codelineno-21-49"> 49</a></span>
+<span class="normal"><a href="#__codelineno-21-50"> 50</a></span>
+<span class="normal"><a href="#__codelineno-21-51"> 51</a></span>
+<span class="normal"><a href="#__codelineno-21-52"> 52</a></span>
+<span class="normal"><a href="#__codelineno-21-53"> 53</a></span>
+<span class="normal"><a href="#__codelineno-21-54"> 54</a></span>
+<span class="normal"><a href="#__codelineno-21-55"> 55</a></span>
+<span class="normal"><a href="#__codelineno-21-56"> 56</a></span>
+<span class="normal"><a href="#__codelineno-21-57"> 57</a></span>
+<span class="normal"><a href="#__codelineno-21-58"> 58</a></span>
+<span class="normal"><a href="#__codelineno-21-59"> 59</a></span>
+<span class="normal"><a href="#__codelineno-21-60"> 60</a></span>
+<span class="normal"><a href="#__codelineno-21-61"> 61</a></span>
+<span class="normal"><a href="#__codelineno-21-62"> 62</a></span>
+<span class="normal"><a href="#__codelineno-21-63"> 63</a></span>
+<span class="normal"><a href="#__codelineno-21-64"> 64</a></span>
+<span class="normal"><a href="#__codelineno-21-65"> 65</a></span>
+<span class="normal"><a href="#__codelineno-21-66"> 66</a></span>
+<span class="normal"><a href="#__codelineno-21-67"> 67</a></span>
+<span class="normal"><a href="#__codelineno-21-68"> 68</a></span>
+<span class="normal"><a href="#__codelineno-21-69"> 69</a></span>
+<span class="normal"><a href="#__codelineno-21-70"> 70</a></span>
+<span class="normal"><a href="#__codelineno-21-71"> 71</a></span>
+<span class="normal"><a href="#__codelineno-21-72"> 72</a></span>
+<span class="normal"><a href="#__codelineno-21-73"> 73</a></span>
+<span class="normal"><a href="#__codelineno-21-74"> 74</a></span>
+<span class="normal"><a href="#__codelineno-21-75"> 75</a></span>
+<span class="normal"><a href="#__codelineno-21-76"> 76</a></span>
+<span class="normal"><a href="#__codelineno-21-77"> 77</a></span>
+<span class="normal"><a href="#__codelineno-21-78"> 78</a></span>
+<span class="normal"><a href="#__codelineno-21-79"> 79</a></span>
+<span class="normal"><a href="#__codelineno-21-80"> 80</a></span>
+<span class="normal"><a href="#__codelineno-21-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-21-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-21-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-21-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-21-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-21-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-21-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-21-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-21-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-21-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-21-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-21-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-21-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-21-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-21-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-21-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-21-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-21-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-21-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-21-100">100</a></span>
+<span class="normal"><a href="#__codelineno-21-101">101</a></span>
+<span class="normal"><a href="#__codelineno-21-102">102</a></span>
+<span class="normal"><a href="#__codelineno-21-103">103</a></span>
+<span class="normal"><a href="#__codelineno-21-104">104</a></span>
+<span class="normal"><a href="#__codelineno-21-105">105</a></span>
+<span class="normal"><a href="#__codelineno-21-106">106</a></span>
+<span class="normal"><a href="#__codelineno-21-107">107</a></span>
+<span class="normal"><a href="#__codelineno-21-108">108</a></span>
+<span class="normal"><a href="#__codelineno-21-109">109</a></span>
+<span class="normal"><a href="#__codelineno-21-110">110</a></span>
+<span class="normal"><a href="#__codelineno-21-111">111</a></span>
+<span class="normal"><a href="#__codelineno-21-112">112</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3"></a><span class="kn">import</span> <span class="nn">ppsci</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4"></a><span class="kn">from</span> <span class="nn">ppsci.autodiff</span> <span class="kn">import</span> <span class="n">jacobian</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5"></a><span class="kn">from</span> <span class="nn">ppsci.utils</span> <span class="kn">import</span> <span class="n">logger</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6"></a>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7"></a><span class="c1"># set random seed(42) for reproducibility</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8"></a><span class="n">ppsci</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9"></a>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10"></a><span class="c1"># set output directory</span>
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11"></a><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="s2">"./output_quick_start_case2"</span>
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12"></a>
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13"></a><span class="c1"># initialize logger while create output directory</span>
+</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14"></a><span class="n">logger</span><span class="o">.</span><span class="n">init_logger</span><span class="p">(</span><span class="s2">"ppsci"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2">/train.log"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">)</span>
+</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15"></a>
+</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16"></a><span class="c1"># set 1D-geometry domain([-π, π])</span>
+</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17"></a><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+</span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18"></a><span class="n">x_domain</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">)</span>
+</span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19"></a>
+</span><span id="__span-21-20"><a id="__codelineno-21-20" name="__codelineno-21-20"></a><span class="c1"># set model to 3-layer MLP</span>
+</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21"></a><span class="n">model</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">MLP</span><span class="p">((</span><span class="s2">"x"</span><span class="p">,),</span> <span class="p">(</span><span class="s2">"u"</span><span class="p">,),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22"></a>
+</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23"></a><span class="c1"># standard solution of sin(x)</span>
+</span><span id="__span-21-24"><a id="__codelineno-21-24" name="__codelineno-21-24"></a><span class="k">def</span> <span class="nf">sin_compute_func</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-21-25"><a id="__codelineno-21-25" name="__codelineno-21-25"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-21-26"><a id="__codelineno-21-26" name="__codelineno-21-26"></a>
+</span><span id="__span-21-27"><a id="__codelineno-21-27" name="__codelineno-21-27"></a>
+</span><span id="__span-21-28"><a id="__codelineno-21-28" name="__codelineno-21-28"></a><span class="c1"># standard solution of cos(x)</span>
+</span><span id="__span-21-29"><a id="__codelineno-21-29" name="__codelineno-21-29"></a><span class="k">def</span> <span class="nf">cos_compute_func</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-21-30"><a id="__codelineno-21-30" name="__codelineno-21-30"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
+</span><span id="__span-21-31"><a id="__codelineno-21-31" name="__codelineno-21-31"></a>
+</span><span id="__span-21-32"><a id="__codelineno-21-32" name="__codelineno-21-32"></a>
+</span><span id="__span-21-33"><a id="__codelineno-21-33" name="__codelineno-21-33"></a><span class="c1"># set constraint on 1D-geometry([-π, π])</span>
+</span><span id="__span-21-34"><a id="__codelineno-21-34" name="__codelineno-21-34"></a><span class="n">ITERS_PER_EPOCH</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># use 100 iterations per training epoch</span>
+</span><span id="__span-21-35"><a id="__codelineno-21-35" name="__codelineno-21-35"></a><span class="n">interior_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">InteriorConstraint</span><span class="p">(</span>
+</span><span id="__span-21-36"><a id="__codelineno-21-36" name="__codelineno-21-36"></a>    <span class="n">output_expr</span><span class="o">=</span><span class="p">{</span><span class="s2">"du_dx"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">jacobian</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])},</span>
+</span><span id="__span-21-37"><a id="__codelineno-21-37" name="__codelineno-21-37"></a>    <span class="n">label_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">"du_dx"</span><span class="p">:</span> <span class="n">cos_compute_func</span><span class="p">},</span>
+</span><span id="__span-21-38"><a id="__codelineno-21-38" name="__codelineno-21-38"></a>    <span class="n">geom</span><span class="o">=</span><span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-21-39"><a id="__codelineno-21-39" name="__codelineno-21-39"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-21-40"><a id="__codelineno-21-40" name="__codelineno-21-40"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-21-41"><a id="__codelineno-21-41" name="__codelineno-21-41"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-21-42"><a id="__codelineno-21-42" name="__codelineno-21-42"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-21-43"><a id="__codelineno-21-43" name="__codelineno-21-43"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-21-44"><a id="__codelineno-21-44" name="__codelineno-21-44"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-21-45"><a id="__codelineno-21-45" name="__codelineno-21-45"></a>        <span class="p">},</span>
+</span><span id="__span-21-46"><a id="__codelineno-21-46" name="__codelineno-21-46"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>  <span class="c1"># use 32 samples(points) per iteration for interior constraint</span>
+</span><span id="__span-21-47"><a id="__codelineno-21-47" name="__codelineno-21-47"></a>    <span class="p">},</span>
+</span><span id="__span-21-48"><a id="__codelineno-21-48" name="__codelineno-21-48"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-21-49"><a id="__codelineno-21-49" name="__codelineno-21-49"></a><span class="p">)</span>
+</span><span id="__span-21-50"><a id="__codelineno-21-50" name="__codelineno-21-50"></a><span class="n">bc_constraint</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">constraint</span><span class="o">.</span><span class="n">BoundaryConstraint</span><span class="p">(</span>
+</span><span id="__span-21-51"><a id="__codelineno-21-51" name="__codelineno-21-51"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"u"</span><span class="p">]},</span>
+</span><span id="__span-21-52"><a id="__codelineno-21-52" name="__codelineno-21-52"></a>    <span class="p">{</span><span class="s2">"u"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">sin_compute_func</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">},</span>  <span class="c1"># (1)</span>
+</span><span id="__span-21-53"><a id="__codelineno-21-53" name="__codelineno-21-53"></a>    <span class="n">x_domain</span><span class="p">,</span>
+</span><span id="__span-21-54"><a id="__codelineno-21-54" name="__codelineno-21-54"></a>    <span class="n">dataloader_cfg</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-21-55"><a id="__codelineno-21-55" name="__codelineno-21-55"></a>        <span class="s2">"dataset"</span><span class="p">:</span> <span class="s2">"NamedArrayDataset"</span><span class="p">,</span>
+</span><span id="__span-21-56"><a id="__codelineno-21-56" name="__codelineno-21-56"></a>        <span class="s2">"iters_per_epoch"</span><span class="p">:</span> <span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-21-57"><a id="__codelineno-21-57" name="__codelineno-21-57"></a>        <span class="s2">"sampler"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-21-58"><a id="__codelineno-21-58" name="__codelineno-21-58"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"BatchSampler"</span><span class="p">,</span>
+</span><span id="__span-21-59"><a id="__codelineno-21-59" name="__codelineno-21-59"></a>            <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-21-60"><a id="__codelineno-21-60" name="__codelineno-21-60"></a>        <span class="p">},</span>
+</span><span id="__span-21-61"><a id="__codelineno-21-61" name="__codelineno-21-61"></a>        <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># use 1 sample(point) per iteration for boundary constraint</span>
+</span><span id="__span-21-62"><a id="__codelineno-21-62" name="__codelineno-21-62"></a>    <span class="p">},</span>
+</span><span id="__span-21-63"><a id="__codelineno-21-63" name="__codelineno-21-63"></a>    <span class="n">loss</span><span class="o">=</span><span class="n">ppsci</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span>
+</span><span id="__span-21-64"><a id="__codelineno-21-64" name="__codelineno-21-64"></a>    <span class="n">criteria</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">l_limit</span><span class="p">),</span>
+</span><span id="__span-21-65"><a id="__codelineno-21-65" name="__codelineno-21-65"></a><span class="p">)</span>
+</span><span id="__span-21-66"><a id="__codelineno-21-66" name="__codelineno-21-66"></a><span class="c1"># wrap constraint(s) into one dict</span>
+</span><span id="__span-21-67"><a id="__codelineno-21-67" name="__codelineno-21-67"></a><span class="n">constraint</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-21-68"><a id="__codelineno-21-68" name="__codelineno-21-68"></a>    <span class="n">interior_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">interior_constraint</span><span class="p">,</span>
+</span><span id="__span-21-69"><a id="__codelineno-21-69" name="__codelineno-21-69"></a>    <span class="n">bc_constraint</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">bc_constraint</span><span class="p">,</span>
+</span><span id="__span-21-70"><a id="__codelineno-21-70" name="__codelineno-21-70"></a><span class="p">}</span>
+</span><span id="__span-21-71"><a id="__codelineno-21-71" name="__codelineno-21-71"></a>
+</span><span id="__span-21-72"><a id="__codelineno-21-72" name="__codelineno-21-72"></a><span class="c1"># set training hyper-parameters</span>
+</span><span id="__span-21-73"><a id="__codelineno-21-73" name="__codelineno-21-73"></a><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="__span-21-74"><a id="__codelineno-21-74" name="__codelineno-21-74"></a><span class="c1"># set optimizer</span>
+</span><span id="__span-21-75"><a id="__codelineno-21-75" name="__codelineno-21-75"></a><span class="n">optimizer</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="mf">2e-3</span><span class="p">)(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-21-76"><a id="__codelineno-21-76" name="__codelineno-21-76"></a>
+</span><span id="__span-21-77"><a id="__codelineno-21-77" name="__codelineno-21-77"></a><span class="c1"># set visualizer</span>
+</span><span id="__span-21-78"><a id="__codelineno-21-78" name="__codelineno-21-78"></a><span class="n">visual_input_dict</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-21-79"><a id="__codelineno-21-79" name="__codelineno-21-79"></a>    <span class="s2">"x"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">l_limit</span><span class="p">,</span> <span class="n">r_limit</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-21-80"><a id="__codelineno-21-80" name="__codelineno-21-80"></a><span class="p">}</span>
+</span><span id="__span-21-81"><a id="__codelineno-21-81" name="__codelineno-21-81"></a><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span> <span class="o">+</span> <span class="mf">2.0</span>
+</span><span id="__span-21-82"><a id="__codelineno-21-82" name="__codelineno-21-82"></a><span class="n">visualizer</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-21-83"><a id="__codelineno-21-83" name="__codelineno-21-83"></a>    <span class="s2">"visualize_u"</span><span class="p">:</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">visualize</span><span class="o">.</span><span class="n">VisualizerScatter1D</span><span class="p">(</span>
+</span><span id="__span-21-84"><a id="__codelineno-21-84" name="__codelineno-21-84"></a>        <span class="n">visual_input_dict</span><span class="p">,</span>
+</span><span id="__span-21-85"><a id="__codelineno-21-85" name="__codelineno-21-85"></a>        <span class="p">(</span><span class="s2">"x"</span><span class="p">,),</span>
+</span><span id="__span-21-86"><a id="__codelineno-21-86" name="__codelineno-21-86"></a>        <span class="p">{</span><span class="s2">"u_pred"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u"</span><span class="p">],</span> <span class="s2">"u_ref"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]},</span>
+</span><span id="__span-21-87"><a id="__codelineno-21-87" name="__codelineno-21-87"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">"u=sin(x)"</span><span class="p">,</span>
+</span><span id="__span-21-88"><a id="__codelineno-21-88" name="__codelineno-21-88"></a>    <span class="p">),</span>
+</span><span id="__span-21-89"><a id="__codelineno-21-89" name="__codelineno-21-89"></a><span class="p">}</span>
+</span><span id="__span-21-90"><a id="__codelineno-21-90" name="__codelineno-21-90"></a>
+</span><span id="__span-21-91"><a id="__codelineno-21-91" name="__codelineno-21-91"></a><span class="c1"># initialize solver</span>
+</span><span id="__span-21-92"><a id="__codelineno-21-92" name="__codelineno-21-92"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">ppsci</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span>
+</span><span id="__span-21-93"><a id="__codelineno-21-93" name="__codelineno-21-93"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-21-94"><a id="__codelineno-21-94" name="__codelineno-21-94"></a>    <span class="n">constraint</span><span class="p">,</span>
+</span><span id="__span-21-95"><a id="__codelineno-21-95" name="__codelineno-21-95"></a>    <span class="n">OUTPUT_DIR</span><span class="p">,</span>
+</span><span id="__span-21-96"><a id="__codelineno-21-96" name="__codelineno-21-96"></a>    <span class="n">optimizer</span><span class="p">,</span>
+</span><span id="__span-21-97"><a id="__codelineno-21-97" name="__codelineno-21-97"></a>    <span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span>
+</span><span id="__span-21-98"><a id="__codelineno-21-98" name="__codelineno-21-98"></a>    <span class="n">iters_per_epoch</span><span class="o">=</span><span class="n">ITERS_PER_EPOCH</span><span class="p">,</span>
+</span><span id="__span-21-99"><a id="__codelineno-21-99" name="__codelineno-21-99"></a>    <span class="n">visualizer</span><span class="o">=</span><span class="n">visualizer</span><span class="p">,</span>
+</span><span id="__span-21-100"><a id="__codelineno-21-100" name="__codelineno-21-100"></a><span class="p">)</span>
+</span><span id="__span-21-101"><a id="__codelineno-21-101" name="__codelineno-21-101"></a><span class="c1"># train model</span>
+</span><span id="__span-21-102"><a id="__codelineno-21-102" name="__codelineno-21-102"></a><span class="n">solver</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span><span id="__span-21-103"><a id="__codelineno-21-103" name="__codelineno-21-103"></a>
+</span><span id="__span-21-104"><a id="__codelineno-21-104" name="__codelineno-21-104"></a><span class="c1"># compute l2-relative error of trained model</span>
+</span><span id="__span-21-105"><a id="__codelineno-21-105" name="__codelineno-21-105"></a><span class="n">pred_u</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">visual_input_dict</span><span class="p">,</span> <span class="n">return_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"u"</span><span class="p">]</span>
+</span><span id="__span-21-106"><a id="__codelineno-21-106" name="__codelineno-21-106"></a><span class="n">l2_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pred_u</span> <span class="o">-</span> <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+</span><span id="__span-21-107"><a id="__codelineno-21-107" name="__codelineno-21-107"></a>    <span class="n">visual_input_dict</span><span class="p">[</span><span class="s2">"u_ref"</span><span class="p">]</span>
+</span><span id="__span-21-108"><a id="__codelineno-21-108" name="__codelineno-21-108"></a><span class="p">)</span>
+</span><span id="__span-21-109"><a id="__codelineno-21-109" name="__codelineno-21-109"></a><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l2_rel = </span><span class="si">{</span><span class="n">l2_rel</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-21-110"><a id="__codelineno-21-110" name="__codelineno-21-110"></a>
+</span><span id="__span-21-111"><a id="__codelineno-21-111" name="__codelineno-21-111"></a><span class="c1"># visualize prediction after finished training</span>
+</span><span id="__span-21-112"><a id="__codelineno-21-112" name="__codelineno-21-112"></a><span class="n">solver</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</span></code></pre></div></td></tr></table></div></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 17, 2024</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">March 30, 2023</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2022 - 2023 PaddlePaddle
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.sections", "navigation.top", "search.suggest", "navigation.instant", "content.code.copy", "content.code.select", "content.code.annotate", "search.highlight", "content.tabs.link", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"alias": true, "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      
+        <script src="../../javascripts/bd_statistics.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="../../javascripts/contributors.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>
