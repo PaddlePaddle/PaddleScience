@@ -44,9 +44,9 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
     # tfno 模型评估
-    python examples/neuraloperator/train_tfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
+    python train_tfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
     # uno 模型评估
-    python examples/neuraloperator/train_uno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
+    python train_uno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
 
     # SEVIR 数据集下载
     # linux
@@ -58,29 +58,29 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
     # sfno 模型评估
-    python examples/neuraloperator/train_sfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
+    python train_sfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
     ```
 
 === "模型导出命令"
 
     ``` sh
     # tfno 模型导出
-    python examples/neuraloperator/train_tfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
+    python train_tfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
     # uno 模型导出
-    python examples/neuraloperator/train_uno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
+    python train_uno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
     # sfno 模型导出
-    python examples/neuraloperator/train_sfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
+    python train_sfno.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
     ```
 
 === "模型推理命令"
 
     ``` sh
     # tfno 模型推理
-    python examples/neuraloperator/train_tfno.py mode=infer
+    python train_tfno.py mode=infer
     # uno 模型推理
-    python examples/neuraloperator/train_uno.py mode=infer
+    python train_uno.py mode=infer
     # sfno 模型推理
-    python examples/neuraloperator/train_sfno.py mode=infer
+    python train_sfno.py mode=infer
     ```
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
