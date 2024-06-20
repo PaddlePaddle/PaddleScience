@@ -5,30 +5,30 @@
     ``` sh
     # darcy-flow 数据集下载
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -P ./datasets/darcyflow/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -P ./datasets/darcyflow/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -P ./datasets/darcyflow/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o darcy_train_16.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
     # tfno 模型训练
-    python examples/neuraloperator/train_tfno.py
+    python train_tfno.py
     # uno 模型训练
-    python examples/neuraloperator/train_uno.py
+    python train_uno.py
 
-    # SEVIR 数据集下载
+    # SWE 数据集下载
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy ./datasets/SWE/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy ./datasets/SWE/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy ./datasets/SWE/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
 
     # sfno 模型训练
-    python examples/neuraloperator/train_sfno.py
+    python train_sfno.py
     ```
 
 === "模型评估命令"
