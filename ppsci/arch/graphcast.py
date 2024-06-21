@@ -259,8 +259,8 @@ class GraphCastMesh2Grid(paddle.nn.Layer):
             mesh_edge_emb_dim=mesh_edge_emb_dim,
             grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
             mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
-            src_type="grid",
-            dst_type="mesh",
+            src_type="mesh",
+            dst_type="grid",
         )
         self.mesh_node_layer = ResidualConnection(
             GraphCastMLP(mesh_node_emb_dim, mesh_node_emb_dim)
@@ -378,7 +378,7 @@ class GraphCastProcessor(nn.Layer):
                     mesh_edge_emb_dim=mesh_edge_emb_dim,
                     grid2mesh_edge_emb_dim=grid2mesh_edge_emb_dim,
                     mesh2grid_edge_emb_dim=mesh2grid_edge_emb_dim,
-                    src_type="grid",
+                    src_type="mesh",
                     dst_type="mesh",
                 ),
             )
