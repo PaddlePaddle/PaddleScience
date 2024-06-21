@@ -9,9 +9,9 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -P ./datasets/darcyflow/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -P ./datasets/darcyflow/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o darcy_train_16.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o ./datasets/darcyflow/darcy_train_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o ./datasets/darcyflow/darcy_test_32.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o ./datasets/darcyflow/darcy_test_16.npy
     # tfno 模型训练
     python train_tfno.py
     # uno 模型训练
@@ -23,9 +23,9 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -P ./datasets/SWE/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -P ./datasets/SWE/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o ./datasets/SWE/train_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o ./datasets/SWE/test_SWE_64x128.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o ./datasets/SWE/test_SWE_32x64.npy
 
     # sfno 模型训练
     python train_sfno.py
@@ -40,23 +40,23 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -P ./datasets/darcyflow/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -P ./datasets/darcyflow/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o darcy_train_16.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o darcy_test_32.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o darcy_test_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_train_16.npy -o ./datasets/darcyflow/darcy_train_16.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_32.npy -o ./datasets/darcyflow/darcy_test_32.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/darcy_flow/darcy_test_16.npy -o ./datasets/darcyflow/darcy_test_16.npy
     # tfno 模型评估
     python train_tfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams
     # uno 模型评估
     python train_uno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams
 
-    # SEVIR 数据集下载
+    # SWE 数据集下载
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -P ./datasets/SWE/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -P ./datasets/SWE/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -P ./datasets/SWE/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o train_SWE_32x64.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o test_SWE_64x128.npy
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o test_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/train_SWE_32x64.npy -o ./datasets/SWE/train_SWE_32x64.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_64x128.npy -o ./datasets/SWE/test_SWE_64x128.npy
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/neuraloperator/SWE_data/test_SWE_32x64.npy -o ./datasets/SWE/test_SWE_32x64.npy
     # sfno 模型评估
     python train_sfno.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams
     ```
@@ -140,7 +140,7 @@ $-\nabla\cdot (k(x)\nabla u(x))=f(x),x\in D$
 
 **训练数据和测试数据：**
 
-数据集包括 1000 条 16x16 分辨率大小的训练数据；50 条 32x32 和 50 条 32x32分辨率大小的测试数据。数据格式采用 NPY 格式保存。
+数据集包括 1000 条 16x16 分辨率大小的训练数据；50 条 32x32 和 50 条 32x32 分辨率大小的测试数据。数据格式采用 NPY 格式保存。
 
 ### 3.2 模型预训练
 
@@ -464,7 +464,7 @@ examples/neuraloperator/train_uno.py:318:341
 
 ### 5.1 数据集介绍
 
-球面浅水方程（Spherical Shallow Water Equations，简称SWE）是一组描述在旋转地球表面上的浅水流动的偏微分方程。浅水方程通常用于模拟海洋、湖泊和河流中的流体运动，当流体的垂直尺度远小于其水平尺度时，可以忽略流体的垂直结构，只考虑其水平运动。
+球面浅水方程（Spherical Shallow Water Equations，简称 SWE）是一组描述在旋转地球表面上的浅水流动的偏微分方程。浅水方程通常用于模拟海洋、湖泊和河流中的流体运动，当流体的垂直尺度远小于其水平尺度时，可以忽略流体的垂直结构，只考虑其水平运动。
 
 球面浅水方程在数学上可以由以下方程组表示：
 
