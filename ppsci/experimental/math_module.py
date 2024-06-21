@@ -584,6 +584,7 @@ def _setup_integration_domain(
     Args:
         dim (int): Dimensionality of the integration domain.
         integration_domain (List or Tensor): Integration domain, e.g. [[-1,1],[0,1]]. Defaults to [-1,1]^dim.
+
     Returns:
         Integration domain.
     """
