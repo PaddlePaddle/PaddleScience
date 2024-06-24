@@ -578,7 +578,7 @@ def montecarlo_integrate(
 
 
 def _setup_integration_domain(
-    dim: int, integration_domain: Optional[List[List[float]], paddle.Tensor]
+    dim: int, integration_domain: Union[List[List[float]], paddle.Tensor]
 ) -> paddle.Tensor:
     """Sets up the integration domain if unspecified by the user.
     Args:
