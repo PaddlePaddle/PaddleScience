@@ -481,7 +481,7 @@ def montecarlo_integrate(
             integrate.
         N (Optional[int]): Number of sample points to use for the integration.
             Defaults to 1000.
-        integration_domain (Optional[List[List[float]], paddle.Tensor]): Integration
+        integration_domain (Union[List[List[float]], paddle.Tensor]): Integration
             domain, e.g. [[-1,1],[0,1]]. Defaults to [-1,1]^dim.
         seed (Optional[int]): Random number generation seed to the sampling
             point creation, only set if provided. Defaults to None.
