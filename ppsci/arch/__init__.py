@@ -47,6 +47,7 @@ from ppsci.arch.sfnonet import SFNONet  # isort:skip
 from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
+from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid
 from ppsci.utils import logger  # isort:skip
 
 
@@ -62,6 +63,7 @@ __all__ = [
     "RosslerEmbedding",
     "CylinderEmbedding",
     "CuboidTransformer",
+    "ExtFormerMoECuboid",
     "Generator",
     "Discriminator",
     "PhysformerGPT2",

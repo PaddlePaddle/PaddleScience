@@ -1,0 +1,2 @@
+- mode=eval
+- EVAL.pretrained_model_path=./outputs_extformer_moe_pretrain/checkpoints/best_model.pdparams
