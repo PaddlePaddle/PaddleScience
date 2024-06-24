@@ -158,7 +158,7 @@ examples/extformer_moe/extformer_moe_enso_train.py:97:101
 
 ``` yaml linenums="47" title="examples/earthformer/conf/earthformer_enso_pretrain.yaml"
 --8<--
-examples/earthformer/conf/earthformer_enso_pretrain.yaml:47:129
+examples/extformer_moe/conf/extformer_moe_enso_pretrain.yaml:47:129
 --8<--
 ```
 

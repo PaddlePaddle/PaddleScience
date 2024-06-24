@@ -422,18 +422,6 @@ class RnCLoss(paddle.nn.Layer):
             loss_batch = self.cal_loss(feat, label)
             
             loss = loss_T + loss_H + loss_W + loss_batch
-        elif self.rank_mode == 'batch-T':
-            features = features.reshape([B * T_o, -1, C_o]).transpose([1, 0, 2])
-            labels = labels.reshape([B * T_o, -1, C_l]).transpose([1, 0, 2])
-            loss = self.cal_loss(features, labels)
-        elif self.rank_mode == 'cuboid':
-            features = features.reshape([B, -1, C_o])
-            labels = labels.reshape([B, -1, C_l])
-            loss = self.cal_loss(features, labels)
-        elif self.rank_mode == 'H-W':
-            features = features.reshape([B * T_o, -1, C_o])
-            labels = labels.reshape([B * T_o, -1, C_l])
-            loss = self.cal_loss(features, labels)
         else:
             raise NotImplementedError
         

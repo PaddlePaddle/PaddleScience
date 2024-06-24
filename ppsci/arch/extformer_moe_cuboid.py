@@ -596,7 +596,6 @@ class ExtFormerMoECuboid(base.Arch):
         norm_init_mode: str = "0",
         moe_config: dict = None,
         rnc_config: dict = None,
-        rnc_pretrain_flag: bool = False,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -612,7 +611,6 @@ class ExtFormerMoECuboid(base.Arch):
         self.moe_config = moe_config
         self.rnc_config = rnc_config
         self.checkpoint_level = checkpoint_level
-        self.rnc_pretrain_flag = rnc_pretrain_flag
 
         num_blocks = len(enc_depth)
         if isinstance(self_pattern, str):
@@ -992,7 +990,7 @@ class ExtFormerMoECuboid(base.Arch):
         out_dict["aux_loss"] = aux_loss
             
         # rnc
-        if (self.training or (self.rnc_config["rnc_pretrain"] and self.rnc_pretrain_flag)) and self.rnc_config["use_rnc"]:
+        if self.training and self.rnc_config["use_rnc"]:
             rank_loss = self.rnc_cri(dec_out, labels)
             rank_loss = rank_loss.unsqueeze(0)
         else:
