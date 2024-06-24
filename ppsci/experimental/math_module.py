@@ -469,7 +469,7 @@ def montecarlo_integrate(
     fn: Callable,
     dim: int,
     N: int = 1000,
-    integration_domain: Optional[List[List[float]], paddle.Tensor] = None,
+    integration_domain: Union[List[List[float]], paddle.Tensor] = None,
     seed: int = None,
 ):
     """Integrates the passed function on the passed domain using vanilla Monte
