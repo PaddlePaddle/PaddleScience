@@ -128,10 +128,6 @@ RNC:
   rank_reg_coeff: 0.01
   loss_cal_style: "computation-efficient" # computation-efficient, memory-efficient
 
-  rnc_pretrain: false
-  pretrain_update_freq: 16
-  load_rnc_pretrain_params: false
-
 # training settings
 TRAIN:
   epochs: 100
