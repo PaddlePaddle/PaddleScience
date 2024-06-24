@@ -503,18 +503,19 @@ def montecarlo_integrate(
         >>> # dimension of x here)
         >>> # Expected result here is ~3.2698
         >>> def some_function(x):
-        >>>    return paddle.sin(x[:, 0]) + paddle.exp(x[:, 1])
+        ...     return paddle.sin(x[:, 0]) + paddle.exp(x[:, 1])
 
         >>> # Compute the function integral by sampling 10000 points over domain
         >>> integral_value = ppsci.experimental.montecarlo_integrate(
-        >>>    some_function,
-        >>>    dim=2,
-        >>>    N=10000,
-        >>>    integration_domain=[[0, 1], [-1, 1]]
-        >>> )
+        ...     some_function,
+        ...     dim=2,
+        ...     N=10000,
+        ...     integration_domain=[[0, 1], [-1, 1]],
+        ... )
 
         >>> print(integral_value)
-        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True, 3.25152588)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               3.25152588)
     """
 
     @expand_func_values_and_squeeze_integral
