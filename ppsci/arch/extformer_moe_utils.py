@@ -1,7 +1,6 @@
 import math
 from typing import Any, Optional, Union, Sequence, overload
 import paddle
-import paddle.nn.functional as paddle_F
 
 # MoE Gating
 
