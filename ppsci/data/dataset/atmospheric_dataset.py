@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing
+from typing import List
+from typing import NamedTuple
 from typing import Optional
+from typing import Sequence
 from typing import Tuple
 
 import numpy as np
@@ -201,7 +203,7 @@ YEAR_PROGRESS = "year_progress"
 def stacked_to_dataset(
     stacked_array: "xarray.Variable",
     template_dataset: "xarray.Dataset",
-    preserved_dims: typing.Tuple[str, ...] = ("batch", "lat", "lon"),
+    preserved_dims: Tuple[str, ...] = ("batch", "lat", "lon"),
 ) -> "xarray.Dataset":
     """The inverse of dataset_to_stacked.
 
@@ -820,7 +822,32 @@ def get_bipartite_relative_position_in_receiver_local_coordinates(
     return sender_pos_in_in_rotated_space - receiver_pos_in_rotated_space
 
 
-class GraphGridMesh(object):
+class GraphGridMesh:
+    """Graph datatype of GraphCast.
+
+    Args:
+        mesh_size (int): size of mesh.
+        radius_query_fraction_edge_length (float): _description_
+        mesh2grid_edge_normalization_factor (float): Normalization factor of edge in Mesh2Grid GNN.
+        resolution (float): resolution of atmospheric data.
+        mesh2mesh_src_index (np.array, optional): Index of Mesh2Mesh source node. Defaults to None.
+        mesh2mesh_dst_index (np.array, optional): Index of Mesh2Mesh destination node. Defaults to None.
+        grid2mesh_src_index (np.array, optional): Index of Grid2Mesh source node. Defaults to None.
+        grid2mesh_dst_index (np.array, optional): Index of Grid2Mesh destination node.
+        mesh2grid_src_index (np.array, optional): Index of Mesh2Grid source node. Defaults to None.
+        mesh2grid_dst_index (np.array, optional): Index of Mesh2Grid destination node. Defaults to None.
+        mesh_num_nodes (int, optional): Number of mesh nodes. Defaults to None.
+        grid_num_nodes (int, optional): Number of grid nodes. Defaults to None.
+        mesh_num_edges (int, optional): Number of mesh edges. Defaults to None.
+        grid2mesh_num_edges (int, optional): Number of edges in Grid2Mesh GNN. Defaults to None.
+        mesh2grid_num_edges (int, optional): Number of edges in Mesh2Grid GNN. Defaults to None.
+        grid_node_feat (np.array, optional): Feature of grid nodes. Defaults to None.
+        mesh_node_feat (np.array, optional): Feature of mehs nodes. Defaults to None.
+        mesh_edge_feat (np.array, optional): Feature of mesh edges. Defaults to None.
+        grid2mesh_edge_feat (np.array, optional): Feature of edges in Grid2Mesh GNN. Defaults to None.
+        mesh2grid_edge_feat (np.array, optional): Feature of edges in Mesh2Grid GNN. Defaults to None.
+    """
+
     def __init__(
         self,
         mesh_size: int,
@@ -844,31 +871,6 @@ class GraphGridMesh(object):
         grid2mesh_edge_feat: np.array = None,
         mesh2grid_edge_feat: np.array = None,
     ):
-        """Graph datatype of GraphCast.
-
-        Args:
-            mesh_size (int): size of mesh.
-            radius_query_fraction_edge_length (float): _description_
-            mesh2grid_edge_normalization_factor (float): Normalization factor of edge in Mesh2Grid GNN.
-            resolution (float): resolution of atmospheric data.
-            mesh2mesh_src_index (np.array, optional): Index of Mesh2Mesh source node. Defaults to None.
-            mesh2mesh_dst_index (np.array, optional): Index of Mesh2Mesh destination node. Defaults to None.
-            grid2mesh_src_index (np.array, optional): Index of Grid2Mesh source node. Defaults to None.
-            grid2mesh_dst_index (np.array, optional): Index of Grid2Mesh destination node.
-            mesh2grid_src_index (np.array, optional): Index of Mesh2Grid source node. Defaults to None.
-            mesh2grid_dst_index (np.array, optional): Index of Mesh2Grid destination node. Defaults to None.
-            mesh_num_nodes (int, optional): Number of mesh nodes. Defaults to None.
-            grid_num_nodes (int, optional): Number of grid nodes. Defaults to None.
-            mesh_num_edges (int, optional): Number of mesh edges. Defaults to None.
-            grid2mesh_num_edges (int, optional): Number of edges in Grid2Mesh GNN. Defaults to None.
-            mesh2grid_num_edges (int, optional): Number of edges in Mesh2Grid GNN. Defaults to None.
-            grid_node_feat (np.array, optional): Feature of grid nodes. Defaults to None.
-            mesh_node_feat (np.array, optional): Feature of mehs nodes. Defaults to None.
-            mesh_edge_feat (np.array, optional): Feature of mesh edges. Defaults to None.
-            grid2mesh_edge_feat (np.array, optional): Feature of edges in Grid2Mesh GNN. Defaults to None.
-            mesh2grid_edge_feat (np.array, optional): Feature of edges in Mesh2Grid GNN. Defaults to None.
-        """
-
         self.meshes = get_hierarchy_of_triangular_meshes_for_sphere(mesh_size)
 
         all_input_vars = [
@@ -1141,12 +1143,12 @@ class GraphGridMesh(object):
         return stacked_to_dataset(grid_xarray.variable, targets_template)
 
 
-class TriangularMesh(typing.NamedTuple):
+class TriangularMesh(NamedTuple):
     vertices: np.ndarray
     faces: np.ndarray
 
 
-def merge_meshes(mesh_list: typing.Sequence[TriangularMesh]) -> TriangularMesh:
+def merge_meshes(mesh_list: Sequence[TriangularMesh]) -> TriangularMesh:
     for i in range(len(mesh_list) - 1):
         mesh_i, mesh_ip1 = mesh_list[i], mesh_list[i + 1]
         num_nodes_mesh_i = mesh_i.vertices.shape[0]
@@ -1210,7 +1212,7 @@ def get_icosahedron():
 
 def get_hierarchy_of_triangular_meshes_for_sphere(
     splits: int,
-) -> typing.List[TriangularMesh]:
+) -> List[TriangularMesh]:
     current_mesh = get_icosahedron()
     output_meshes = [current_mesh]
     for _ in range(splits):
@@ -1244,7 +1246,7 @@ def _two_split_unit_sphere_triangle_faces(
     )
 
 
-class _ChildVerticesBuilder(object):
+class _ChildVerticesBuilder:
     """Bookkeeping of new child vertices added to an existing set of vertices."""
 
     def __init__(self, parent_vertices):

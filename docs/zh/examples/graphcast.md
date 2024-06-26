@@ -1,6 +1,7 @@
 # GraphCast
 
 === "模型评估命令"
+
     ``` sh
 
     # linux
@@ -23,7 +24,7 @@
     unzip -q stats.zip -d data/
     unzip -q template_graph.zip -d data/
 
-    python graphcast.py
+    python graphcast.py EVAL.pretrained_model_path="data/params/GraphCast_small---ERA5-1979-2015---resolution-1.0---pressure-levels-13---mesh-2to5---precipitation-input-and-output.pdparams"
     ```
 
 ## 1. 背景简介

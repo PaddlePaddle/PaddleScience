@@ -70,8 +70,8 @@ class GraphCastGNN(nn.Layer):
         mesh_edge_emb_dim: int,
         grid2mesh_edge_emb_dim: int,
         mesh2grid_edge_emb_dim: int,
-        src_type="mesh",
-        dst_type="mesh",
+        src_type: str = "mesh",
+        dst_type: str = "mesh",
     ):
         super().__init__()
 
@@ -206,7 +206,7 @@ class GraphCastEmbedding(nn.Layer):
         return graph
 
 
-class GraphCastGrid2Mesh(paddle.nn.Layer):
+class GraphCastGrid2Mesh(nn.Layer):
     def __init__(
         self,
         grid_node_num: int,
@@ -239,7 +239,7 @@ class GraphCastGrid2Mesh(paddle.nn.Layer):
         return graph
 
 
-class GraphCastMesh2Grid(paddle.nn.Layer):
+class GraphCastMesh2Grid(nn.Layer):
     def __init__(
         self,
         grid_node_num: int,
@@ -389,6 +389,27 @@ class GraphCastProcessor(nn.Layer):
 
 
 class GraphCastNet(base.Arch):
+    """GraphCast Network
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys.
+        output_keys (Tuple[str, ...]): Name of output keys.
+        grid_node_num (int): Number of grid nodes.
+        grid_node_dim (int): Dimension of grid nodes.
+        grid_node_emb_dim (int): Dimension of emdding grid nodes.
+        mesh_node_num (int): Number of mesh nodes.
+        mesh_node_dim (int): Dimension of mesh nodes.
+        mesh_node_emb_dim (int): Dimension of emdding mesh nodes.
+        mesh_edge_dim (int): Dimension of mesh edges.
+        mesh_edge_emb_dim (int): Dimension of emdding mesh edges.
+        grid2mesh_edge_dim (int): Dimension of mesh edges in Grid2Mesh GNN.
+        grid2mesh_edge_emb_dim (int): Dimension of emdding mesh edges in Grid2Mesh GNN.
+        mesh2grid_edge_dim (int): Dimension of mesh edges in Mesh2Grid GNN.
+        mesh2grid_edge_emb_dim (int): Dimension of emdding mesh edges in Mesh2Grid GNN.
+        gnn_msg_steps (int): Step of gnn messages.
+        node_output_dim (int): Dimension of output nodes.
+    """
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -408,26 +429,6 @@ class GraphCastNet(base.Arch):
         gnn_msg_steps: int,
         node_output_dim: int,
     ):
-        """GraphCast Network
-
-        Args:
-            input_keys (Tuple[str, ...]): Name of input keys.
-            output_keys (Tuple[str, ...]): Name of output keys.
-            grid_node_num (int): Number of grid nodes.
-            grid_node_dim (int): Dimension of grid nodes.
-            grid_node_emb_dim (int): Dimension of emdding grid nodes.
-            mesh_node_num (int): Number of mesh nodes.
-            mesh_node_dim (int): Dimension of mesh nodes.
-            mesh_node_emb_dim (int): Dimension of emdding mesh nodes.
-            mesh_edge_dim (int): Dimension of mesh edges.
-            mesh_edge_emb_dim (int): Dimension of emdding mesh edges.
-            grid2mesh_edge_dim (int): Dimension of mesh edges in Grid2Mesh GNN.
-            grid2mesh_edge_emb_dim (int): Dimension of emdding mesh edges in Grid2Mesh GNN.
-            mesh2grid_edge_dim (int): Dimension of mesh edges in Mesh2Grid GNN.
-            mesh2grid_edge_emb_dim (int): Dimension of emdding mesh edges in Mesh2Grid GNN.
-            gnn_msg_steps (int): Step of gnn messages.
-            node_output_dim (int): Dimension of output nodes.
-        """
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
