@@ -84,7 +84,7 @@ def build_dataset(cfg) -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (List[DictConfig]): dataset config list.
+        cfg (List[DictConfig]): Dataset config list.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
