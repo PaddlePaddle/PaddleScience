@@ -39,11 +39,11 @@ import paddle
 import paddle.fft
 import paddle.nn as nn
 
-from ppsci.paddle_harmonics.legendre import _precompute_dlegpoly
-from ppsci.paddle_harmonics.legendre import _precompute_legpoly
-from ppsci.paddle_harmonics.quadrature import clenshaw_curtiss_weights
-from ppsci.paddle_harmonics.quadrature import legendre_gauss_weights
-from ppsci.paddle_harmonics.quadrature import lobatto_weights
+from ppsci.arch.paddle_harmonics.legendre import _precompute_dlegpoly
+from ppsci.arch.paddle_harmonics.legendre import _precompute_legpoly
+from ppsci.arch.paddle_harmonics.quadrature import clenshaw_curtiss_weights
+from ppsci.arch.paddle_harmonics.quadrature import legendre_gauss_weights
+from ppsci.arch.paddle_harmonics.quadrature import lobatto_weights
 
 
 class RealSHT(nn.Layer):

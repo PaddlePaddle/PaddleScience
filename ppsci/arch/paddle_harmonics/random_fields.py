@@ -35,7 +35,7 @@ Code below is heavily based on [torch-harmonics](https://github.com/NVIDIA/torch
 import paddle
 from paddle import nn
 
-from ppsci.paddle_harmonics.sht import InverseRealSHT
+from ppsci.arch.paddle_harmonics.sht import InverseRealSHT
 
 
 class GaussianRandomFieldS2(nn.Layer):
