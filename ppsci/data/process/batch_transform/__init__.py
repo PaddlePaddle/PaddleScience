@@ -84,10 +84,17 @@ def default_collate_fn(batch: List[Any]) -> Any:
         graph.tensor()
         graph.shape = [len(batch)]
         return graph
-
+    elif (
+        str(type(sample))
+        == "<class 'ppsci.data.dataset.atmospheric_dataset.GraphGridMesh'>"
+    ):
+        graph = sample
+        graph.tensor()
+        graph.shape = [1]
+        return graph
     raise TypeError(
         "batch data can only contains: paddle.Tensor, numpy.ndarray, "
-        f"dict, list, number, None, pgl.Graph, but got {type(sample)}"
+        f"dict, list, number, None, pgl.Graph, GraphGridMesh, but got {type(sample)}"
     )
 
 
