@@ -15,5 +15,6 @@
         - fractional_diff
         - gaussian_integrate
         - trapezoid_integrate
+        - montecarlo_integrate
       show_root_heading: true
       heading_level: 3
