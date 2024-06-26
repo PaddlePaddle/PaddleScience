@@ -15,7 +15,7 @@
 
     ``` sh
     # ICAR-ENSO 模型评估: Extformer-MoE
-    python examples/extformer_moe/extformer_moe_enso_train.py mode=eval EVAL.pretrained_model_path=./outputs_extformer_moe_pretrain/checkpoints/best_model.pdparams
+    python examples/extformer_moe/extformer_moe_enso_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams
     ```
 
 | 模型 | 变量名称 | C-Nino3.4-M | C-Nino3.4-WM | MSE(1E-4) | MAE(1E-1) | RMSE |
@@ -58,7 +58,7 @@ Earthformer 的网络模型使用了基于 Cuboid Attention 的分层 Encoder-De
 Earthformer 的总体结构如图所示：
 
 <center class ='img'>
-<img title="Earthformer" src="./extformer_moe_figs/Earthformer.png" width="60%">
+<img title="Earthformer" src="https://paddle-org.bj.bcebos.com/paddlescience/docs/extformer-moe/Earthformer.png" width="60%">
 </center>
 
 ### 2.2 Mixture-of-Experts
@@ -71,7 +71,7 @@ Earthformer 的总体结构如图所示：
 MoE 的总体结构如图所示：
 
 <center class ='img'>
-<img title="MoE" src="./extformer_moe_figs/MoE.png" width="60%">
+<img title="MoE" src="https://paddle-org.bj.bcebos.com/paddlescience/docs/extformer-moe/MoE.png" width="60%">
 </center>
 
 ### 2.3 Rank-N-Contrast
@@ -79,7 +79,7 @@ MoE 的总体结构如图所示：
 Rank-N-Contrast（RNC）是一种根据样本在标签空间中的相互间的排序，通过对比来学习以学习连续性表征的的回归方法。RNC 的一个简单示例如图所示：
 
 <center class ='img'>
-<img title="RNC" src="./extformer_moe_figs/RNC.png" width="70%">
+<img title="RNC" src="https://paddle-org.bj.bcebos.com/paddlescience/docs/extformer-moe/RNC.png" width="70%">
 </center>
 
 ### 2.4 Extformer-MoE 模型的训练、推理过程
