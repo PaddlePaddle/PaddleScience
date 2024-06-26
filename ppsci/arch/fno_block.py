@@ -153,7 +153,6 @@ class SoftGating(nn.Layer):
         n_dim (int, optional): Dimensionality of the input (excluding batch-size and channels).
             ``n_dim=2`` corresponds to having Module2D. Defaults to 2.
         bias (bool, optional): Whether to use bias. Defaults to False.
-
     """
 
     def __init__(
@@ -469,7 +468,6 @@ def resample(x, res_scale, axis, output_shape=None):
             'axis' parameter. If res_scale is scaler, then isotropic scaling is performed.
         axis (int): Axis or dimensions along which interpolation will be performed.
         output_shape (optional[None ,tuple[int]]): The output shape. Defaults to None.
-
     """
 
     if isinstance(res_scale, (float, int)):
@@ -576,7 +574,6 @@ class FactorizedSpectralConv(nn.Layer):
             single tensor. Defaults to False.
         init_std (str, optional): The std to use for the init. Defaults to "auto".
         fft_norm (str, optional):The normalization mode for the FFT. Defaults to "backward".
-
     """
 
     def __init__(

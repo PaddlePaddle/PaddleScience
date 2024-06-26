@@ -243,8 +243,8 @@ def advertise():
     ==                                                       ==
     ==     https://github.com/PaddlePaddle/PaddleScience     ==
     ===========================================================
-
     """
+
     _copyright = "PaddleScience is powered by PaddlePaddle !"
     ad = "Please refer to the following website for more info."
     website = "https://github.com/PaddlePaddle/PaddleScience"

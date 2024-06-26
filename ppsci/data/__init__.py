@@ -101,7 +101,6 @@ def build_dataloader(_dataset, cfg):
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
-
     collate_fn = None
     if isinstance(batch_transforms_cfg, (list, tuple)):
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
@@ -134,6 +133,20 @@ def build_dataloader(_dataset, cfg):
             shuffle=sampler_cfg.get("shuffle", False),
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             collate_fn=collate_fn,
+        )
+    elif getattr(_dataset, "use_graph_grid_mesh", False):
+        # Use special dataloader `GridMeshAtmosphericDataset`.
+
+        if collate_fn is None:
+            collate_fn = batch_transform.default_collate_fn
+        dataloader_ = io.DataLoader(
+            dataset=_dataset,
+            places=device.get_device(),
+            batch_sampler=batch_sampler,
+            collate_fn=collate_fn,
+            num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
+            use_shared_memory=cfg.get("use_shared_memory", False),
+            worker_init_fn=init_fn,
         )
     else:
         if (
