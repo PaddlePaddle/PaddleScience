@@ -56,7 +56,6 @@ def prepare_inputs_targets(
         pred_shift (int): the lead_time of the last target to be predicted.
         pred_length (int): the number of frames to be predicted.
         samples_gap (int): stride of seq sampling.
-
     """
 
     if pred_shift < pred_length:
