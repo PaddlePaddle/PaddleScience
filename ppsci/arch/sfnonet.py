@@ -10,7 +10,7 @@ from paddle import nn
 
 from ppsci.arch import base
 from ppsci.arch import fno_block
-from ppsci.paddle_harmonics import sht as paddle_sht
+from ppsci.arch.paddle_harmonics import sht as paddle_sht
 from ppsci.utils import initializer
 
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
