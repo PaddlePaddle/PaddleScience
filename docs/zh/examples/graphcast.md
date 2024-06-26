@@ -24,7 +24,7 @@
     unzip -q stats.zip -d data/
     unzip -q template_graph.zip -d data/
 
-    python graphcast.py EVAL.pretrained_model_path="data/params/GraphCast_small---ERA5-1979-2015---resolution-1.0---pressure-levels-13---mesh-2to5---precipitation-input-and-output.pdparams"
+    python graphcast.py mode=eval EVAL.pretrained_model_path="data/params/GraphCast_small---ERA5-1979-2015---resolution-1.0---pressure-levels-13---mesh-2to5---precipitation-input-and-output.pdparams"
     ```
 
 ## 1. 背景简介
@@ -175,12 +175,10 @@ $$ \hat{X}^{t+1} = GraphCast(X^{t}, X^{t-1}) = X^{t} + \hat{Y}^{t} $$
 
 ### 3.2 加载预训练模型
 
-在配置文件中设置预训练模型的文件路径。
+在执行命令中设定预训练模型的文件路径，如下。
 
-``` py linenums="68"
---8<--
-examples/graphcast/conf/graphcast_small.yaml:68:68
---8<--
+``` sh
+python graphcast.py mode=eval EVAL.pretrained_model_path="data/params/GraphCast_small---ERA5-1979-2015---resolution-1.0---pressure-levels-13---mesh-2to5---precipitation-input-and-output.pdparams"
 ```
 
 ### 3.3 模型构建
@@ -189,7 +187,7 @@ examples/graphcast/conf/graphcast_small.yaml:68:68
 
 ``` py linenums="28"
 --8<--
-examples/graphcast/graphcast.py:28:30
+examples/graphcast/graphcast.py:28:29
 --8<--
 ```
 
@@ -197,33 +195,33 @@ examples/graphcast/graphcast.py:28:30
 
 我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。首先定义数据加载器的配置，然后创建评估器。
 
-``` py linenums="32"
+``` py linenums="31"
 --8<--
-examples/graphcast/graphcast.py:32:56
+examples/graphcast/graphcast.py:31:39
 --8<--
 ```
 
 我们需要定义训练损失函数的计算过程。
 
-``` py linenums="58"
+``` py linenums="50"
 --8<--
-examples/graphcast/graphcast.py:58:74
+examples/graphcast/graphcast.py:50:67
 --8<--
 ```
 
 接着我们还需要定义 metric 指标。
 
-``` py linenums="76"
+``` py linenums="69"
 --8<--
-examples/graphcast/graphcast.py:76:93
+examples/graphcast/graphcast.py:69:86
 --8<--
 ```
 
 最后完成评估器的构建。
 
-``` py linenums="95"
+``` py linenums="88"
 --8<--
-examples/graphcast/graphcast.py:95:99
+examples/graphcast/graphcast.py:88:92
 --8<--
 ```
 
@@ -231,9 +229,9 @@ examples/graphcast/graphcast.py:95:99
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动评估。
 
-``` py linenums="101"
+``` py linenums="94"
 --8<--
-examples/graphcast/graphcast.py:101:113
+examples/graphcast/graphcast.py:94:104
 --8<--
 ```
 
@@ -241,9 +239,9 @@ examples/graphcast/graphcast.py:101:113
 
 评估完成后，我们以图片的形式对结果进行可视化，如下所示。
 
-``` py linenums="115"
+``` py linenums="106"
 --8<--
-examples/graphcast/graphcast.py:115:129
+examples/graphcast/graphcast.py:106:118
 --8<--
 ```
 
