@@ -3,7 +3,6 @@
 === "模型评估命令"
 
     ``` sh
-
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip
@@ -266,4 +265,4 @@ examples/graphcast/graphcast.py
 
 ## 6. 参考文献
 
-- [GraphCast: Learning skillful medium-range global weather forecasting](https://doi.org/10.1080/09540091.2022.2131737)
+- [GraphCast: Learning skillful medium-range global weather forecasting](https://arxiv.org/abs/2212.12794)
