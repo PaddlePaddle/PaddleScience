@@ -324,7 +324,7 @@ def evaluate(cfg: DictConfig):
         eval_cfg,
         ppsci.loss.MSELoss("mean"),
         {"u": lambda out: out["u"]},
-        {"Cross_section_velocity_profile_MAE": KL_divergence()},
+        {"KL_divergence": KL_divergence()},
         name="KL_divergence",
     )
     validator = {
