@@ -40,23 +40,23 @@ def train(cfg: DictConfig):
     ## split the data into training, validation, and test sets
     idx = np.random.permutation(inputs.shape[0])
     n_train = 20000
-    n_val = 10000
-    # n_test = 10000
+    # n_val = 10000
+    n_test = 10000
     inputs_train, outputs_train, grid_train = (
         inputs[idx[:n_train]],
         outputs[idx[:n_train]],
         grid[idx[:n_train]],
     )
-    inputs_val, outputs_val, grid_val = (
-        inputs[idx[n_train : n_train + n_val]],
-        outputs[idx[n_train : n_train + n_val]],
-        grid[idx[n_train : n_train + n_val]],
-    )
-    # inputs_test, outputs_test, grid_test = (
-    #     inputs[idx[-n_test:]],
-    #     outputs[idx[-n_test:]],
-    #     grid[idx[-n_test:]],
+    # inputs_val, outputs_val, grid_val = (
+    #     inputs[idx[n_train : n_train + n_val]],
+    #     outputs[idx[n_train : n_train + n_val]],
+    #     grid[idx[n_train : n_train + n_val]],
     # )
+    inputs_test, outputs_test, grid_test = (
+        inputs[idx[-n_test:]],
+        outputs[idx[-n_test:]],
+        grid[idx[-n_test:]],
+    )
 
     def gen_input_batch_train():
         batch_idx = np.random.randint(0, inputs_train.shape[0], [cfg.TRAIN.batch_size])
@@ -102,56 +102,29 @@ def train(cfg: DictConfig):
     )(model)
 
     # set validator
-    def gen_input_batch_val():
-        batch_idx = np.random.randint(0, inputs_val.shape[0], [cfg.EVAL.batch_size])
-        grid_idx = np.sort(
-            np.random.randint(0, inputs_val.shape[1], [cfg.EVAL.grid_size])
-        )
-        return {
-            "u": inputs_val[batch_idx, :],  # [N, 200, 1]
-            "y": grid_val[batch_idx, :][:, grid_idx],  # [N, G, 1]
-            "batch_idx": batch_idx,
-            "grid_idx": grid_idx,
-        }
-
-    def gen_label_batch_val(input_batch):
-        batch_idx, grid_idx = input_batch["batch_idx"], input_batch["grid_idx"]
-        return {
-            "s": outputs_val[batch_idx, :][:, grid_idx, None],  # [N, G]
-        }
-
-    inputs_val_all = []
-    label_val_all = []
-    for _ in range(n_val // cfg.EVAL.batch_size):
-        input_batch = gen_input_batch_val()
-        label_batch = gen_label_batch_val(input_batch)
-        input_batch.pop("batch_idx")
-        input_batch.pop("grid_idx")
-        inputs_val_all.append(input_batch)
-        label_val_all.append(label_batch)
-    inputs_val_all = ppsci.utils.misc.concat_dict_list(inputs_val_all)
-    label_val_all = ppsci.utils.misc.concat_dict_list(label_val_all)
-
     def avg_l2_metric_func(output_dict, label_dict):
-        error = 0.0
+        metric_dict = {}
         for key in label_dict:
-            for bid in range(len(label_dict[key]) // cfg.EVAL.batch_size):
-                st, ed = bid * cfg.EVAL.batch_size, (bid + 1) * cfg.EVAL.batch_size
-                error += ppsci.metric.L2Rel.l2_relative_error(
-                    output_dict[key][st:ed, :, 0],
-                    label_dict[key][st:ed, :, 0],
-                )
-        error /= len(label_dict[key]) // cfg.EVAL.batch_size
-        return {"s": paddle.to_tensor(error)}
+            # reshape to [B, L]
+            x, y = output_dict[key].squeeze(-1), label_dict[key].squeeze(-1)
+            error = paddle.linalg.norm(x - y, 2, axis=-1) / paddle.linalg.norm(
+                y, 2, axis=-1
+            )
+            # compute metrics along all samples
+            metric_dict[f"{key}.mean"] = error.mean()
+            metric_dict[f"{key}.median"] = error.median()
+            metric_dict[f"{key}.min"] = error.min()
+            metric_dict[f"{key}.max"] = error.max()
+        return metric_dict
 
     u_validator = ppsci.validate.SupervisedValidator(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": inputs_val_all,
-                "label": label_val_all,
+                "input": {"u": inputs_test, "y": grid_test},
+                "label": {"s": outputs_test[..., None]},
             },
-            "batch_size": 256,
+            "batch_size": 1000,
         },
         ppsci.loss.MSELoss("mean"),
         {"s": lambda out: out["s"]},
@@ -169,9 +142,9 @@ def train(cfg: DictConfig):
         cfg=cfg,
     )
     solver.eval()
-    # train model
+    # # train model
     solver.train()
-    # evaluate after finished training
+    # # evaluate after finished training
     solver.eval()
 
 
