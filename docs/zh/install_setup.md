@@ -189,6 +189,8 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
         手动找到并删除这些空文件夹，再执行 `git submodule update --init --recursive --progress` 命
         令即可恢复这些空文件夹至正常含有文件的状态，此时再继续执行剩余安装命令即可。
 
+        3. 由于自测工具 nose 未适配 Python>=3.10，因此执行 `pymesh.test()` 会报错，**不影响 pymesh 正常使用**。
+
 ## 2. 验证安装
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
