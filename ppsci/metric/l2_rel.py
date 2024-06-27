@@ -65,13 +65,19 @@ class L2Rel(base.Metric):
             raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
         super().__init__(keep_batch)
 
+    @classmethod
+    def l2_relative_error(self, x, y, eps=EPS):
+        # 'eps' prevents from dividing by zero
+        return paddle.linalg.norm(x - y, p=2) / paddle.linalg.norm(y, p=2).clip(min=eps)
+
     @paddle.no_grad()
     def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
         metric_dict = {}
         for key in label_dict:
-            rel_l2 = paddle.norm(label_dict[key] - output_dict[key], p=2) / paddle.norm(
-                label_dict[key], p=2
-            ).clip(min=self.EPS)
+            # rel_l2 = paddle.norm(label_dict[key] - output_dict[key], p=2) / paddle.norm(
+            #     label_dict[key], p=2
+            # ).clip(min=self.EPS)
+            rel_l2 = self.l2_relative_error(label_dict[key], output_dict[key], self.EPS)
             metric_dict[key] = rel_l2
 
         return metric_dict

@@ -20,6 +20,7 @@ from ppsci.arch.phycrnet import PhyCRNet
 
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
+from ppsci.arch.cvit import CVit1D  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
 from ppsci.arch.mlp import PirateNet  # isort:skip
@@ -53,6 +54,7 @@ from ppsci.utils import logger  # isort:skip
 __all__ = [
     "Arch",
     "AMGNet",
+    "CVit1D",
     "MLP",
     "ModifiedMLP",
     "PirateNet",
