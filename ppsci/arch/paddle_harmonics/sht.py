@@ -235,7 +235,6 @@ class RealVectorSHT(nn.Layer):
     [2] Wang, B., Wang, L., Xie, Z.; Accurate calculation of spherical and vector spherical harmonic expansions via spectral element grids; Adv Comput Math.
 
     Initializes the vector SHT Layer, precomputing the necessary quadrature weights.
-
     """
 
     def __init__(

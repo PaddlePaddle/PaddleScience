@@ -461,8 +461,8 @@ def faces_to_edges(faces: np.ndarray):
             adjacent to each face.
     Returns:
         Tuple with sender/receiver indices, each of shape [num_edges=num_faces*3].
-
     """
+
     assert faces.ndim == 2
     assert faces.shape[-1] == 3
     senders = np.concatenate([faces[:, 0], faces[:, 1], faces[:, 2]])
