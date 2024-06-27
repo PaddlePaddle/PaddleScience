@@ -161,7 +161,7 @@ def StAS(
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
-    return index_E, value_E
+    return index_E.astype("int64"), value_E
 
 
 def FillZeros(
@@ -194,7 +194,7 @@ def FillZeros(
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
-    return index_E, value_E
+    return index_E.astype("int64"), value_E
 
 
 def remove_self_loops(
