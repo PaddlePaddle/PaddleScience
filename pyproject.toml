@@ -64,3 +64,6 @@ version_scheme = "post-release"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
+
+[tool.isort]
+profile = "black"

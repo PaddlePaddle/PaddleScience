@@ -25,6 +25,7 @@ import paddle
 from paddle import io
 
 from ppsci.solver import printer
+from ppsci.utils import logger
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
@@ -167,10 +168,11 @@ def _eval_by_dataset(
         for metric_name, metric_func in _validator.metric.items():
             # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
-            assert metric_name not in metric_dict_group, (
-                f"Metric name({metric_name}) already exists, please ensure all metric "
-                "names are unique over all validators."
-            )
+            if metric_name in metric_dict_group:
+                logger.warning(
+                    f"Metric name({metric_name}) already exists, please ensure "
+                    "all metric names are unique over all validators."
+                )
             metric_dict_group[metric_name] = {
                 k: float(v) for k, v in metric_dict.items()
             }
@@ -254,10 +256,11 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
-                assert metric_name not in metric_dict_group, (
-                    f"Metric name({metric_name}) already exists, please ensure all metric "
-                    "names are unique over all validators."
-                )
+                if metric_name in metric_dict_group:
+                    logger.warning(
+                        f"Metric name({metric_name}) already exists, please ensure "
+                        "all metric names are unique over all validators."
+                    )
                 metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
                 metric_dict = metric_func(output_dict, label_dict)
                 for var_name, metric_value in metric_dict.items():
