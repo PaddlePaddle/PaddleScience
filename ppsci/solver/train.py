@@ -62,11 +62,6 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
 
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.train_time_info:
-                    solver.train_time_info[key].reset()
-
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False

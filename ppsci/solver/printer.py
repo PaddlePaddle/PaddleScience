@@ -92,6 +92,10 @@ def log_train_info(
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     logger.info(log_str)
 
+    # reset time information after printing
+    for key in solver.train_time_info:
+        solver.train_time_info[key].reset()
+
     logger.scalar(
         {
             "train/lr": solver.optimizer.get_lr(),
@@ -143,6 +147,10 @@ def log_eval_info(
             f"[Eval][Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
             f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
         )
+
+    # reset time information after printing
+    for key in solver.train_time_info:
+        solver.train_time_info[key].reset()
 
     # logger.scalar(
     #     {
