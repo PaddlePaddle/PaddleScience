@@ -29,6 +29,7 @@
         - ChipDeepONets
         - AutoEncoder
         - CuboidTransformer
+        - ExtFormerMoECuboid
         - SFNONet
         - UNONet
         - TFNO1dNet

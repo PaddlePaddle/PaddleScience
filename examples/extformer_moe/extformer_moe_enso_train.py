@@ -25,7 +25,7 @@ def get_parameter_names(model, forbidden_layer_types):
             for n in get_parameter_names(child, forbidden_layer_types)
             if not isinstance(child, tuple(forbidden_layer_types))
         ]
-    # Add model specific parameters (defined with nn.Parameter) since they are not in any child.
+    # Add model specific parameters since they are not in any child.
     result += list(model._parameters.keys())
     return result
 
@@ -139,7 +139,6 @@ def train(cfg: DictConfig):
         update_freq=cfg.TRAIN.update_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
         seed=cfg.seed,
-        device=f'gpu:{cfg.DEVICE}' if cfg.DEVICE != -1 else 'cpu', 
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -193,7 +192,6 @@ def evaluate(cfg: DictConfig):
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
         seed=cfg.seed,
-        device=f'gpu:{cfg.DEVICE}' if cfg.DEVICE != -1 else 'cpu', 
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
@@ -209,7 +207,6 @@ def evaluate(cfg: DictConfig):
     config_name="extformer_moe_enso_pretrain.yaml",
 )
 def main(cfg: DictConfig):
-    paddle.device.set_device(f'gpu:{cfg.DEVICE}' if cfg.DEVICE != -1 else 'cpu')
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":

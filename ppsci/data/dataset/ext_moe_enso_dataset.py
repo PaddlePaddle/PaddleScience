@@ -51,15 +51,15 @@ def prepare_inputs_targets(
 
     Args:
         len_time (int): The total number of time steps in the dataset.
-        input_gap (int): time gaps between two consecutive input frames.
-        input_length (int): the number of input frames.
-        pred_shift (int): the lead_time of the last target to be predicted.
-        pred_length (int): the number of frames to be predicted.
-        samples_gap (int): stride of seq sampling.
+        input_gap (int): Time gaps between two consecutive input frames.
+        input_length (int): The number of input frames.
+        pred_shift (int): The lead_time of the last target to be predicted.
+        pred_length (int): The number of frames to be predicted.
+        samples_gap (int): Stride of seq sampling.
     """
 
     if pred_shift < pred_length:
-        raise ValueError("pred_shift should be small than pred_length")
+        raise ValueError("Pred_shift should be small than pred_length")
     input_span = input_gap * (input_length - 1) + 1
     pred_gap = pred_shift // pred_length
     input_ind = np.arange(0, input_span, input_gap)
@@ -82,7 +82,7 @@ def fold(data, size=36, stride=12):
         stride (int, optional): The step.Defaults to 12.
 
     Returns:
-        outdata (np.array): (N_, *).N/size is the number/width of sliding blocks
+        outdata (np.ndarray): (N_, *).N/size is the number/width of sliding blocks
     """
 
     if size % stride != 0:
@@ -106,7 +106,6 @@ def data_transform(data, num_years_per_model):
     Args:
         data (Tuple[list,...]): The input data.Shape of (N, 36, *).
         num_years_per_model (int): The number of years associated with each model.151/140.
-
     """
 
     length = data.shape[0]
@@ -135,9 +134,8 @@ def read_raw_data(ds_dir, out_dir=None):
     """read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
 
     Args:
-        ds_dir (str): the path of the dataset.
-        out_dir (str): the path of output. Defaults to None.
-
+        ds_dir (str): The path of the dataset.
+        out_dir (str): The path of output. Defaults to None.
     """
     import xarray as xr
 
@@ -214,7 +212,6 @@ def cat_over_last_dim(data):
     """treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
     e.g., cmip6sst.shape = (178, 38, 24, 48, 15), converted_cmip6sst.shape = (2670, 38, 24, 48)
     e.g., cmip5sst.shape = (165, 38, 24, 48, 15), converted_cmip6sst.shape = (2475, 38, 24, 48)
-
     """
 
     return np.concatenate(np.moveaxis(data, -1, 0), axis=0)
@@ -239,7 +236,6 @@ class ExtMoEENSODataset(io.Dataset):
         batch_size (int, optional): Batch size. Defaults to 1.
         num_workers (int, optional): The num of workers. Defaults to 1.
         training (str, optional): Training pathse. Defaults to "train".
-
     """
 
     # Whether support batch indexing for speeding up fetching process.
@@ -251,17 +247,16 @@ class ExtMoEENSODataset(io.Dataset):
         label_keys: Tuple[str, ...],
         data_dir: str,
         weight_dict: Optional[Dict[str, float]] = None,
-        in_len=12,
-        out_len=26,
-        in_stride=1,
-        out_stride=1,
-        train_samples_gap=10,
-        eval_samples_gap=11,
-        normalize_sst=True,
-        # datamodule_only
-        batch_size=1,
-        num_workers=1,
-        training="train",
+        in_len: int = 12,
+        out_len: int = 26,
+        in_stride: int = 1,
+        out_stride: int = 1,
+        train_samples_gap: int = 10,
+        eval_samples_gap: int = 11,
+        normalize_sst: bool = True,
+        batch_size: int = 1,
+        num_workers: int = 1,
+        training: str = "train",
     ):
         super(ExtMoEENSODataset, self).__init__()
         if importlib.util.find_spec("xarray") is None:
@@ -378,8 +373,6 @@ class ExtMoEENSODataset(io.Dataset):
         assert self.sst.shape[0] == self.target_nino.shape[0]
         assert self.sst.shape[1] == self.in_len + self.out_len
         assert self.target_nino.shape[1] == self.out_len - NINO_WINDOW_T + 1
-        
-        # print('###', self.training, self.sst.shape[0])
         
         return self.sst, self.target_nino
 

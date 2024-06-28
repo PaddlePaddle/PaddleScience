@@ -102,7 +102,7 @@ def get_norm_layer(
             norm_layer = RMSNorm(d=in_channels, epsilon=epsilon, **kwargs)
         else:
             raise NotImplementedError(
-                "normalization={} is not supported".format(normalization)
+                f"normalization={normalization} is not supported"
             )
         return norm_layer
     elif normalization is None:
