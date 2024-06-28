@@ -256,11 +256,6 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
-                if metric_name in metric_dict_group:
-                    logger.warning(
-                        f"Metric name({metric_name}) already exists, please ensure "
-                        "all metric names are unique over all validators."
-                    )
                 metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
                 metric_dict = metric_func(output_dict, label_dict)
                 for var_name, metric_value in metric_dict.items():
@@ -292,6 +287,11 @@ def _eval_by_batch(
 
         # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
+            if metric_name in metric_dict_group:
+                logger.warning(
+                    f"Metric name({metric_name}) already exists, please ensure "
+                    "all metric names are unique over all validators."
+                )
             for var_name, metric_value in metric_dict.items():
                 # NOTE: concat single metric(scalar) list into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]
