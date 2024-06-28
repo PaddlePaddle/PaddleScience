@@ -63,7 +63,7 @@ def eval(cfg: DictConfig):
         pred = atmospheric_dataset.dataset_to_stacked(pred)
         target = atmospheric_dataset.dataset_to_stacked(target)
         loss = np.average(np.square(pred.data - target.data))
-        loss = paddle.to_tensor(loss)
+        loss = paddle.full([], loss)
         return {"loss": loss}
 
     def metric(

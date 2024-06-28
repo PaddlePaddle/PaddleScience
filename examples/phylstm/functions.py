@@ -21,7 +21,7 @@ import paddle.nn.functional as F
 
 
 def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:
-    return {"dummy_loss": paddle.to_tensor(0.0)}
+    return {"dummy_loss": paddle.full([], 0.0)}
 
 
 # transform
