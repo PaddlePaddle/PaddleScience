@@ -26,7 +26,6 @@ class PatchMerging3D(paddle.nn.Layer):
         padding_type (str, optional): The type of padding. Defaults to "nearest".
         linear_init_mode (str, optional): The mode of linear init. Defaults to "0".
         norm_init_mode (str, optional): The mode of normalization init. Defaults to "0".
-
     """
 
     def __init__(
@@ -995,7 +994,6 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
         attn_linear_init_mode (str, optional): The mode of attention linear initialization. Defaults to "0".
         ffn_linear_init_mode (str, optional): The mode of FFN linear initialization. Defaults to "0".
         norm_init_mode (str, optional): The mode of normalization initialization. Defaults to "0".
-
     """
 
     def __init__(
@@ -1277,7 +1275,6 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         conv_init_mode (str, optional): The mode of conv initialization. Defaults to "0".
         down_linear_init_mode (str, optional): The mode of downsample linear initialization. Defaults to "0".
         norm_init_mode (str, optional): The mode of normalization. Defaults to "0".
-
     """
 
     def __init__(

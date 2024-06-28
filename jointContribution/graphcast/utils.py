@@ -68,7 +68,6 @@ def get_graph_spatial_features(
     Returns:
       Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
       with node and edge features.
-
     """
 
     num_nodes = node_lat.shape[0]
@@ -328,7 +327,6 @@ def get_rotation_matrices_to_local_coordinates(
               this is computationally different from rotating the longitude only
               and is. We do it like this, so the polar geodesic curve, continues
               to be aligned with one of the axis after the rotation.
-
     """
 
     if rotate_longitude and rotate_latitude:
@@ -429,7 +427,6 @@ def get_bipartite_graph_spatial_features(
     Returns:
       Arrays of shape: [num_nodes, num_features] and [num_edges, num_features].
       with node and edge features.
-
     """
 
     num_senders = senders_node_lat.shape[0]
