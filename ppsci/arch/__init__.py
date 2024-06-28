@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.graphcast import GraphCastNet
 from ppsci.arch.phycrnet import PhyCRNet
 
 from ppsci.arch.base import Arch  # isort:skip
@@ -86,6 +87,7 @@ __all__ = [
     "UNONet",
     "build_model",
     "CFDGCN",
+    "GraphCastNet",
 ]
 
 

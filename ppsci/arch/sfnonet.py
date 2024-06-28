@@ -90,7 +90,6 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
             {'reconstructed', 'factorized'} Defaults to "reconstructed".
         separable (bool, optional): Whether to use the separable implementation of contraction. This arg is
             only checked when `implementation=reconstructed`. Defaults to False.
-
     """
 
     if implementation == "reconstructed":
@@ -208,7 +207,6 @@ class SphericalConv(nn.Layer):
         sht_norm (str, optional): The normalization mode of the SHT. Defaults to "ortho".
         sht_grids (str, optional): The grid of the SHT. Defaults to "equiangular".
         dtype (paddle.float32, optional): The data type. Defaults to paddle.float32.
-
     """
 
     def __init__(
