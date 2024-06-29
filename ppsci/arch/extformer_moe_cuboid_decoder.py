@@ -29,7 +29,15 @@ class PosEmbed(paddle.nn.Layer):
                 Embed the spatial position to embeddings
     """
 
-    def __init__(self, embed_dim, maxT, maxH, maxW, typ: str = "t+h+w", moe_config: dict = None,):
+    def __init__(
+        self,
+        embed_dim,
+        maxT,
+        maxH,
+        maxW,
+        typ: str = "t+h+w",
+        moe_config: dict = None,
+    ):
         super(PosEmbed, self).__init__()
         self.typ = typ
         assert self.typ in ["t+h+w", "t+hw"]
@@ -731,7 +739,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                         )
                     ]
                 )
-        
+
         if moe_config["use_attn_moe"]:
             self.attn_l = paddle.nn.LayerList(
                 sublayers=[
@@ -762,7 +770,10 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                         moe_config=moe_config,
                     )
                     for ele_cuboid_hw, ele_shift_hw, ele_strategy, ele_n_temporal in zip(
-                        block_cuboid_hw, block_shift_hw, block_strategy, block_n_temporal
+                        block_cuboid_hw,
+                        block_shift_hw,
+                        block_strategy,
+                        block_n_temporal,
                     )
                 ]
             )
@@ -794,7 +805,10 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                         norm_init_mode=norm_init_mode,
                     )
                     for ele_cuboid_hw, ele_shift_hw, ele_strategy, ele_n_temporal in zip(
-                        block_cuboid_hw, block_shift_hw, block_strategy, block_n_temporal
+                        block_cuboid_hw,
+                        block_shift_hw,
+                        block_strategy,
+                        block_n_temporal,
                     )
                 ]
             )
@@ -1114,8 +1128,10 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 assert (
                     len(block_self_shift_size) == self.num_blocks
                 ), f"Incorrect input format! Received block_self_shift_size={block_self_shift_size}"
-        
-        expert_shape_list = [(target_temporal_length,) + mem_shape[1:] for mem_shape in mem_shapes]
+
+        expert_shape_list = [
+            (target_temporal_length,) + mem_shape[1:] for mem_shape in mem_shapes
+        ]
         self_blocks = []
         for i in range(self.num_blocks):
             if not self.use_first_self_attn and i == self.num_blocks - 1:
@@ -1155,7 +1171,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
             ]
             self_blocks.append(paddle.nn.LayerList(sublayers=stack_cuboid_blocks))
         self.self_blocks = paddle.nn.LayerList(sublayers=self_blocks)
-        
+
         if block_cross_attn_patterns is not None:
             if isinstance(block_cross_attn_patterns, (tuple, list)):
                 assert len(block_cross_attn_patterns) == self.num_blocks
@@ -1353,80 +1369,119 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
 
 
 class MixtureCrossAttention(paddle.nn.Layer):
-
-    def __init__(self, dim, num_heads, cuboid_hw, shift_hw, strategy, n_temporal, cross_last_n_frames, 
-                 padding_type, qkv_bias, qk_scale, attn_drop, proj_drop, norm_layer, max_temporal_relative, 
-                 use_global_vector, separate_global_qkv, global_dim_ratio, checkpoint_level, 
-                 use_relative_pos, attn_linear_init_mode, ffn_linear_init_mode, norm_init_mode,
-                 expert_shape, moe_config):
+    def __init__(
+        self,
+        dim,
+        num_heads,
+        cuboid_hw,
+        shift_hw,
+        strategy,
+        n_temporal,
+        cross_last_n_frames,
+        padding_type,
+        qkv_bias,
+        qk_scale,
+        attn_drop,
+        proj_drop,
+        norm_layer,
+        max_temporal_relative,
+        use_global_vector,
+        separate_global_qkv,
+        global_dim_ratio,
+        checkpoint_level,
+        use_relative_pos,
+        attn_linear_init_mode,
+        ffn_linear_init_mode,
+        norm_init_mode,
+        expert_shape,
+        moe_config,
+    ):
         super().__init__()
-        
+
         self.in_dim = dim
         self.out_dim = dim
-        self.expert_shape = expert_shape # T, H, W, C
+        self.expert_shape = expert_shape  # T, H, W, C
         self.num_experts = moe_config["num_experts"]
         self.out_planes = moe_config["out_planes"]
         self.moe_config = moe_config
         assert expert_shape is not None and moe_config["use_attn_moe"]
         assert not use_global_vector
-        
-        if moe_config["gate_style"] == 'linear':
+
+        if moe_config["gate_style"] == "linear":
             self.gate = moe_utils.LinearGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'spatial-latent':
+        elif moe_config["gate_style"] == "spatial-latent":
             self.gate = moe_utils.SpatialLatentGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'cuboid-latent':
+        elif moe_config["gate_style"] == "cuboid-latent":
             self.gate = moe_utils.CuboidLatentGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'spatial-latent-linear':
-            self.gate = moe_utils.SpatialLatentLinearGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'cuboid-latent-linear':
-            self.gate = moe_utils.CuboidLatentLinearGatingNet(moe_config, expert_shape, dim)
-        else: 
+        elif moe_config["gate_style"] == "spatial-latent-linear":
+            self.gate = moe_utils.SpatialLatentLinearGatingNet(
+                moe_config, expert_shape, dim
+            )
+        elif moe_config["gate_style"] == "cuboid-latent-linear":
+            self.gate = moe_utils.CuboidLatentLinearGatingNet(
+                moe_config, expert_shape, dim
+            )
+        else:
             raise NotImplementedError
-        
+
         self.experts = paddle.nn.LayerList(
-            [CuboidCrossAttentionLayer(
-                dim=dim,
-                num_heads=num_heads,
-                cuboid_hw=cuboid_hw,
-                shift_hw=shift_hw,
-                strategy=strategy,
-                n_temporal=n_temporal,
-                cross_last_n_frames=cross_last_n_frames,
-                padding_type=padding_type,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                attn_drop=attn_drop,
-                proj_drop=proj_drop,
-                norm_layer=norm_layer,
-                max_temporal_relative=max_temporal_relative,
-                use_global_vector=use_global_vector,
-                separate_global_qkv=separate_global_qkv,
-                global_dim_ratio=global_dim_ratio,
-                checkpoint_level=checkpoint_level,
-                use_relative_pos=use_relative_pos,
-                attn_linear_init_mode=attn_linear_init_mode,
-                ffn_linear_init_mode=ffn_linear_init_mode,
-                norm_init_mode=norm_init_mode)
-            for _ in range(self.num_experts)]
+            [
+                CuboidCrossAttentionLayer(
+                    dim=dim,
+                    num_heads=num_heads,
+                    cuboid_hw=cuboid_hw,
+                    shift_hw=shift_hw,
+                    strategy=strategy,
+                    n_temporal=n_temporal,
+                    cross_last_n_frames=cross_last_n_frames,
+                    padding_type=padding_type,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    attn_drop=attn_drop,
+                    proj_drop=proj_drop,
+                    norm_layer=norm_layer,
+                    max_temporal_relative=max_temporal_relative,
+                    use_global_vector=use_global_vector,
+                    separate_global_qkv=separate_global_qkv,
+                    global_dim_ratio=global_dim_ratio,
+                    checkpoint_level=checkpoint_level,
+                    use_relative_pos=use_relative_pos,
+                    attn_linear_init_mode=attn_linear_init_mode,
+                    ffn_linear_init_mode=ffn_linear_init_mode,
+                    norm_init_mode=norm_init_mode,
+                )
+                for _ in range(self.num_experts)
+            ]
         )
 
     def forward(self, x, mem, mem_global_vectors=None):
-        
+
         B, T_x, H, W, C = x.shape
         _, T_m, _, _, _ = mem.shape
         E = self.num_experts
         assert C == self.in_dim and list(self.expert_shape)[:-1] == x.shape[1:-1]
-        dense_routing_weights, sparse_routing_weights, sparse_routing_inds, self.aux_loss = self.gate(x) # dense: B, T_x, H, W, E
-        
-        dispatcher = moe_utils.DenseDispatcher(E, sparse_routing_weights.reshape([B * T_x * H * W, -1]), 
-                                        sparse_routing_inds.reshape([B * T_x * H * W, -1]))
-        expert_outputs = paddle.stack([self.experts[i](x, mem, mem_global_vectors) for i in range(E)], axis=-2).reshape([B * T_x * H * W, E, C])
+        (
+            dense_routing_weights,
+            sparse_routing_weights,
+            sparse_routing_inds,
+            self.aux_loss,
+        ) = self.gate(
+            x
+        )  # dense: B, T_x, H, W, E
+
+        dispatcher = moe_utils.DenseDispatcher(
+            E,
+            sparse_routing_weights.reshape([B * T_x * H * W, -1]),
+            sparse_routing_inds.reshape([B * T_x * H * W, -1]),
+        )
+        expert_outputs = paddle.stack(
+            [self.experts[i](x, mem, mem_global_vectors) for i in range(E)], axis=-2
+        ).reshape([B * T_x * H * W, E, C])
         y = dispatcher.combine(expert_outputs).reshape([B, T_x, H, W, C])
 
         return y
 
     def reset_parameters(self):
-        
+
         for i in range(len(self.experts)):
             self.experts[i].reset_parameters()
-   

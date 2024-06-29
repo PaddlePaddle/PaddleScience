@@ -1,9 +1,11 @@
-from os import path as osp
 import os
+from os import path as osp
+
 import hydra
 import numpy as np
 import paddle
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
+from omegaconf import OmegaConf
 from paddle import nn
 
 import examples.extformer_moe.enso_metric as enso_metric
@@ -62,7 +64,7 @@ def train(cfg: DictConfig):
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
-    
+
     # set iters_per_epoch by dataloader length
     ITERS_PER_EPOCH = len(sup_constraint.data_loader)
     # set eval dataloader config
@@ -93,7 +95,7 @@ def train(cfg: DictConfig):
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
-    
+
     moe_config = OmegaConf.to_object(cfg.MOE)
     rnc_config = OmegaConf.to_object(cfg.RNC)
     model = ppsci.arch.ExtFormerMoECuboid(
@@ -126,19 +128,17 @@ def train(cfg: DictConfig):
     optimizer = paddle.optimizer.AdamW(
         lr_scheduler, parameters=optimizer_grouped_parameters
     )
-        
+
     # initialize solver, eval_freq: int = 1
     solver = ppsci.solver.Solver(
         model,
         constraint,
         cfg.output_dir,
         optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        ITERS_PER_EPOCH,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
         update_freq=cfg.TRAIN.update_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
-        seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -186,17 +186,12 @@ def evaluate(cfg: DictConfig):
         **cfg.MODEL, moe_config=moe_config, rnc_config=rnc_config
     )
 
-    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
+
     # evaluate
     solver.eval()
 
@@ -212,9 +207,7 @@ def main(cfg: DictConfig):
     elif cfg.mode == "eval":
         evaluate(cfg)
     else:
-        raise ValueError(
-            f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'"
-        )
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":

@@ -101,9 +101,7 @@ def get_norm_layer(
             assert axis == -1
             norm_layer = RMSNorm(d=in_channels, epsilon=epsilon, **kwargs)
         else:
-            raise NotImplementedError(
-                f"normalization={normalization} is not supported"
-            )
+            raise NotImplementedError(f"normalization={normalization} is not supported")
         return norm_layer
     elif normalization is None:
         return paddle.nn.Identity()
@@ -197,7 +195,7 @@ def apply_initialization(
             m.weight.data = initializer.trunc_normal_(m.weight.data, std=0.02)
         else:
             raise NotImplementedError(f"{embed_mode} is invalid.")
-    elif isinstance(m, paddle.nn.Layer) and hasattr(m, 'experts'):
+    elif isinstance(m, paddle.nn.Layer) and hasattr(m, "experts"):
         for lin in m.experts:
             assert isinstance(lin, paddle.nn.Linear)
             apply_initialization(lin, linear_mode=linear_mode)

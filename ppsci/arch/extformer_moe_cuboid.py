@@ -6,12 +6,12 @@ import paddle
 from paddle import nn
 from paddle.distributed import fleet
 
-import ppsci.arch.extformer_moe_cuboid_encoder as cuboid_encoder
 import ppsci.arch.extformer_moe_cuboid_decoder as cuboid_decoder
+import ppsci.arch.extformer_moe_cuboid_encoder as cuboid_encoder
 import ppsci.arch.extformer_moe_cuboid_utils as cuboid_utils
-from ppsci.arch import extformer_moe_utils
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
+from ppsci.arch import extformer_moe_utils
 from ppsci.arch.extformer_moe_cuboid_encoder import NEGATIVE_SLOPE
 from ppsci.utils import initializer
 
@@ -752,10 +752,10 @@ class ExtFormerMoECuboid(base.Arch):
             norm_init_mode=norm_init_mode,
             moe_config=moe_config,
         )
-        
+
         if rnc_config["use_rnc"]:
             self.rnc_cri = extformer_moe_utils.RnCLoss(rnc_config)
-        
+
         self.reset_parameters()
 
     def get_initial_encoder_final_decoder(
@@ -935,7 +935,7 @@ class ExtFormerMoECuboid(base.Arch):
         Returns:
             out (paddle.Tensor): The output Shape (B, T_out, H, W, C_out)
         """
-        
+
         labels = x["sst_target"]
         x = self.concat_to_tensor(x, self.input_keys)
         flag_ndim = x.ndim
@@ -971,24 +971,24 @@ class ExtFormerMoECuboid(base.Arch):
 
         dec_out = self.final_decoder(dec_out)
         out = self.dec_final_proj(dec_out)
-        
+
         if flag_ndim == 6:
             out = out.reshape([-1, *out.shape])
 
         out_dict = {key: out for key in self.output_keys[:2]}
-        
+
         # moe loss
         if self.training:
             aux_losses = extformer_moe_utils.aggregate_aux_losses(self)
-            if len(aux_losses) > 0: 
+            if len(aux_losses) > 0:
                 aux_loss = paddle.concat(aux_losses).mean()
-            else: 
+            else:
                 aux_loss = None
         else:
             aux_loss = None
         assert "aux_loss" in self.output_keys
         out_dict["aux_loss"] = aux_loss
-            
+
         # rnc
         if self.training and self.rnc_config["use_rnc"]:
             rank_loss = self.rnc_cri(dec_out, labels)
@@ -997,5 +997,5 @@ class ExtFormerMoECuboid(base.Arch):
             rank_loss = None
         assert "rank_loss" in self.output_keys
         out_dict["rank_loss"] = rank_loss
-        
+
         return out_dict

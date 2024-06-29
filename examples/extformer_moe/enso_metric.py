@@ -87,37 +87,37 @@ def train_mse_func(
         "sst_target": F.mse_loss(output_dict["sst_target"], label_dict["sst_target"])
     }
 
+
 def train_extformer_moe_func(
     output_dict: Dict[str, "paddle.Tensor"],
     label_dict: Dict[str, "paddle.Tensor"],
     *args,
 ) -> paddle.Tensor:
-    
+
     total_loss = F.mse_loss(output_dict["sst_target"], label_dict["sst_target"])
-    
+
     aux_loss = output_dict["aux_loss"]
     if aux_loss is not None:
         assert aux_loss.stop_gradient == False
         total_loss += aux_loss
-        
+
     rank_loss = output_dict["rank_loss"]
     if rank_loss is not None:
         assert rank_loss[0].stop_gradient == False
         total_loss += rank_loss[0]
-    
-    return {
-        "sst_target": total_loss
-    }
+
+    return {"sst_target": total_loss}
+
 
 def rnc_pretrain_func(
     output_dict: Dict[str, "paddle.Tensor"],
     label_dict: Dict[str, "paddle.Tensor"],
     *args,
 ) -> paddle.Tensor:
-         
+
     rank_loss = output_dict["rank_loss"]
     assert rank_loss is not None
-    
+
     return rank_loss[0]
 
 
@@ -160,13 +160,14 @@ def eval_rmse_func(
         "corr_nino3.4_weighted_epoch": valid_weighted_acc,
     }
 
+
 def eval_rnc_pretrain_func(
     output_dict: Dict[str, "paddle.Tensor"],
     label_dict: Dict[str, "paddle.Tensor"],
     nino_out_len: int = 12,
     *args,
 ) -> Dict[str, paddle.Tensor]:
-    
+
     rank_loss = output_dict["rank_loss"]
     assert rank_loss is not None
 

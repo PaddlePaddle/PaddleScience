@@ -19,7 +19,7 @@
     ```
 
 | 模型 | 变量名称 | C-Nino3.4-M | C-Nino3.4-WM | MSE(1E-4) | MAE(1E-1) | RMSE |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- | 
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | [Extformer-MoE](https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams) | sst | 0.7651 | 2.39771 | 3.0000 | 0.1291 | 0.50243 |
 
 ## 1. 背景简介
@@ -222,4 +222,3 @@ examples/extformer_moe/extformer_moe_enso_train.py:155:182
 examples/extformer_moe/extformer_moe_enso_train.py
 --8<--
 ```
-

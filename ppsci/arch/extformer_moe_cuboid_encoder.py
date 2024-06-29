@@ -190,9 +190,14 @@ class PositionwiseFFN(paddle.nn.Layer):
         self.dropout_layer = paddle.nn.Dropout(p=dropout)
         self.activation_dropout_layer = paddle.nn.Dropout(p=activation_dropout)
 
-        if moe_config['use_linear_moe']:
-            self.ffn_1 = MixtureLinear(in_dim=units, out_dim=hidden_size, bias_attr=True, 
-                                       expert_shape=expert_shape[:-1] + (hidden_size,), moe_config=moe_config)
+        if moe_config["use_linear_moe"]:
+            self.ffn_1 = MixtureLinear(
+                in_dim=units,
+                out_dim=hidden_size,
+                bias_attr=True,
+                expert_shape=expert_shape[:-1] + (hidden_size,),
+                moe_config=moe_config,
+            )
         else:
             self.ffn_1 = paddle.nn.Linear(
                 in_features=units, out_features=hidden_size, bias_attr=True
@@ -205,10 +210,15 @@ class PositionwiseFFN(paddle.nn.Layer):
             self.activation = nn.LeakyReLU(NEGATIVE_SLOPE)
         else:
             self.activation = act_mod.get_activation(activation)
-            
-        if moe_config['use_linear_moe']:
-            self.ffn_2 = MixtureLinear(in_dim=hidden_size, out_dim=units, bias_attr=True, 
-                                       expert_shape=expert_shape, moe_config=moe_config)
+
+        if moe_config["use_linear_moe"]:
+            self.ffn_2 = MixtureLinear(
+                in_dim=hidden_size,
+                out_dim=units,
+                bias_attr=True,
+                expert_shape=expert_shape,
+                moe_config=moe_config,
+            )
         else:
             self.ffn_2 = paddle.nn.Linear(
                 in_features=hidden_size, out_features=units, bias_attr=True
@@ -1063,7 +1073,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
             raise ValueError(
                 "The lengths of block_cuboid_size, block_shift_size, and block_strategy must be equal."
             )
-        
+
         self.num_attn = len(block_cuboid_size)
         self.checkpoint_level = checkpoint_level
         self.use_inter_ffn = use_inter_ffn
@@ -1231,7 +1241,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
                             )
                         ]
                     )
-        
+
         if moe_config["use_attn_moe"]:
             self.attn_l = paddle.nn.LayerList(
                 sublayers=[
@@ -1477,7 +1487,7 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         self.num_heads = num_heads
         self.use_global_vector = use_global_vector
         self.checkpoint_level = checkpoint_level
-        
+
         if block_units is None:
             block_units = [
                 cuboid_utils.round_to(
@@ -1554,7 +1564,7 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         self.block_cuboid_size = block_cuboid_size
         self.block_strategy = block_strategy
         self.block_shift_size = block_shift_size
-        
+
         expert_shape_list = self.get_mem_shapes()
         self.blocks = paddle.nn.LayerList(
             sublayers=[
@@ -1666,207 +1676,319 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
 
 
 class MixtureLinear(paddle.nn.Layer):
-
     def __init__(self, in_dim, out_dim, expert_shape, moe_config, bias_attr=True):
         super().__init__()
-        
+
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.bias = bias_attr
-        self.expert_shape = expert_shape # T, H, W, C_o
+        self.expert_shape = expert_shape  # T, H, W, C_o
         self.num_experts = moe_config["num_experts"]
         self.out_planes = moe_config["out_planes"]
         self.moe_config = moe_config
         assert expert_shape is not None and moe_config["use_linear_moe"]
 
-        if moe_config["gate_style"] == 'linear':
+        if moe_config["gate_style"] == "linear":
             self.gate = moe_utils.LinearGatingNet(moe_config, expert_shape, in_dim)
-        elif moe_config["gate_style"] == 'spatial-latent':
-            self.gate = moe_utils.SpatialLatentGatingNet(moe_config, expert_shape, in_dim)
-        elif moe_config["gate_style"] == 'cuboid-latent':
-            self.gate = moe_utils.CuboidLatentGatingNet(moe_config, expert_shape, in_dim)
-        elif moe_config["gate_style"] == 'spatial-latent-linear':
-            self.gate = moe_utils.SpatialLatentLinearGatingNet(moe_config, expert_shape, in_dim)
-        elif moe_config["gate_style"] == 'cuboid-latent-linear':
-            self.gate = moe_utils.CuboidLatentLinearGatingNet(moe_config, expert_shape, in_dim)
-        else: 
+        elif moe_config["gate_style"] == "spatial-latent":
+            self.gate = moe_utils.SpatialLatentGatingNet(
+                moe_config, expert_shape, in_dim
+            )
+        elif moe_config["gate_style"] == "cuboid-latent":
+            self.gate = moe_utils.CuboidLatentGatingNet(
+                moe_config, expert_shape, in_dim
+            )
+        elif moe_config["gate_style"] == "spatial-latent-linear":
+            self.gate = moe_utils.SpatialLatentLinearGatingNet(
+                moe_config, expert_shape, in_dim
+            )
+        elif moe_config["gate_style"] == "cuboid-latent-linear":
+            self.gate = moe_utils.CuboidLatentLinearGatingNet(
+                moe_config, expert_shape, in_dim
+            )
+        else:
             raise NotImplementedError
-        
-        self.experts = paddle.nn.LayerList([paddle.nn.Linear(in_features=in_dim, out_features=out_dim, bias_attr=bias_attr) for _ in range(self.num_experts)])
+
+        self.experts = paddle.nn.LayerList(
+            [
+                paddle.nn.Linear(
+                    in_features=in_dim, out_features=out_dim, bias_attr=bias_attr
+                )
+                for _ in range(self.num_experts)
+            ]
+        )
 
     def forward(self, x):
-        
+
         B, T, H, W, C = x.shape
         E = self.num_experts
         assert C == self.in_dim and list(self.expert_shape)[:-1] == x.shape[1:-1]
-        dense_routing_weights, sparse_routing_weights, sparse_routing_inds, self.aux_loss = self.gate(x) # dense: B, T, H, W, E
-        
-        if self.moe_config["dispatch_style"] == 'dense':
-            dispatcher = moe_utils.DenseDispatcher(E, sparse_routing_weights.reshape([B * T * H * W, -1]), 
-                                         sparse_routing_inds.reshape([B * T * H * W, -1]))
-            expert_outputs = paddle.stack([self.experts[i](x.reshape([B * T * H * W, -1])) for i in range(E)], axis=-2)
+        (
+            dense_routing_weights,
+            sparse_routing_weights,
+            sparse_routing_inds,
+            self.aux_loss,
+        ) = self.gate(
+            x
+        )  # dense: B, T, H, W, E
+
+        if self.moe_config["dispatch_style"] == "dense":
+            dispatcher = moe_utils.DenseDispatcher(
+                E,
+                sparse_routing_weights.reshape([B * T * H * W, -1]),
+                sparse_routing_inds.reshape([B * T * H * W, -1]),
+            )
+            expert_outputs = paddle.stack(
+                [self.experts[i](x.reshape([B * T * H * W, -1])) for i in range(E)],
+                axis=-2,
+            )
             y = dispatcher.combine(expert_outputs).reshape([B, T, H, W, -1])
-        elif self.moe_config["dispatch_style"] == 'sparse':
-            dispatcher = moe_utils.SparseDispatcher(E, sparse_routing_weights.reshape([B * T * H * W, -1]), 
-                                          sparse_routing_inds.reshape([B * T * H * W, -1]))
+        elif self.moe_config["dispatch_style"] == "sparse":
+            dispatcher = moe_utils.SparseDispatcher(
+                E,
+                sparse_routing_weights.reshape([B * T * H * W, -1]),
+                sparse_routing_inds.reshape([B * T * H * W, -1]),
+            )
             expert_inputs = dispatcher.dispatch(x.reshape([B * T * H * W, -1]))
-            expert_outputs = [self.experts[i](expert_inputs[i]) if expert_inputs[i].shape[0] > 0 
-                              else paddle.zeros([0, self.out_dim]) 
-                              for i in range(E)]
+            expert_outputs = [
+                self.experts[i](expert_inputs[i])
+                if expert_inputs[i].shape[0] > 0
+                else paddle.zeros([0, self.out_dim])
+                for i in range(E)
+            ]
             y = dispatcher.combine(expert_outputs).reshape([B, T, H, W, -1])
-        else: 
+        else:
             raise NotImplementedError
-        
+
         return y
 
 
 class MixtureFFN(paddle.nn.Layer):
-    
-    def __init__(self, units, hidden_size, activation_dropout, dropout, 
-                 gated_proj, activation, normalization, pre_norm, linear_init_mode, norm_init_mode, 
-                 expert_shape, moe_config):
+    def __init__(
+        self,
+        units,
+        hidden_size,
+        activation_dropout,
+        dropout,
+        gated_proj,
+        activation,
+        normalization,
+        pre_norm,
+        linear_init_mode,
+        norm_init_mode,
+        expert_shape,
+        moe_config,
+    ):
         super().__init__()
 
         self.in_dim = units
         self.out_dim = units
-        self.expert_shape = expert_shape # T, H, W, C_o
+        self.expert_shape = expert_shape  # T, H, W, C_o
         self.num_experts = moe_config["num_experts"]
         self.out_planes = moe_config["out_planes"]
         self.moe_config = moe_config
         assert expert_shape is not None and moe_config["use_ffn_moe"]
 
-        if moe_config["gate_style"] == 'linear':
+        if moe_config["gate_style"] == "linear":
             self.gate = moe_utils.LinearGatingNet(moe_config, expert_shape, units)
-        elif moe_config["gate_style"] == 'spatial-latent':
-            self.gate = moe_utils.SpatialLatentGatingNet(moe_config, expert_shape, units)
-        elif moe_config["gate_style"] == 'cuboid-latent':
+        elif moe_config["gate_style"] == "spatial-latent":
+            self.gate = moe_utils.SpatialLatentGatingNet(
+                moe_config, expert_shape, units
+            )
+        elif moe_config["gate_style"] == "cuboid-latent":
             self.gate = moe_utils.CuboidLatentGatingNet(moe_config, expert_shape, units)
-        elif moe_config["gate_style"] == 'spatial-latent-linear':
-            self.gate = moe_utils.SpatialLatentLinearGatingNet(moe_config, expert_shape, units)
-        elif moe_config["gate_style"] == 'cuboid-latent-linear':
-            self.gate = moe_utils.CuboidLatentLinearGatingNet(moe_config, expert_shape, units)
-        else: 
+        elif moe_config["gate_style"] == "spatial-latent-linear":
+            self.gate = moe_utils.SpatialLatentLinearGatingNet(
+                moe_config, expert_shape, units
+            )
+        elif moe_config["gate_style"] == "cuboid-latent-linear":
+            self.gate = moe_utils.CuboidLatentLinearGatingNet(
+                moe_config, expert_shape, units
+            )
+        else:
             raise NotImplementedError
-        
+
         self.experts = paddle.nn.LayerList(
-            [PositionwiseFFN(
-                units=units,
-                hidden_size=hidden_size,
-                activation_dropout=activation_dropout,
-                dropout=dropout,
-                gated_proj=gated_proj,
-                activation=activation,
-                normalization=normalization,
-                pre_norm=pre_norm,
-                linear_init_mode=linear_init_mode,
-                norm_init_mode=norm_init_mode,
-                moe_config=moe_config,
-                expert_shape=expert_shape) 
-                for _ in range(self.num_experts)]
+            [
+                PositionwiseFFN(
+                    units=units,
+                    hidden_size=hidden_size,
+                    activation_dropout=activation_dropout,
+                    dropout=dropout,
+                    gated_proj=gated_proj,
+                    activation=activation,
+                    normalization=normalization,
+                    pre_norm=pre_norm,
+                    linear_init_mode=linear_init_mode,
+                    norm_init_mode=norm_init_mode,
+                    moe_config=moe_config,
+                    expert_shape=expert_shape,
+                )
+                for _ in range(self.num_experts)
+            ]
         )
-    
+
     def forward(self, x):
-    
+
         B, T, H, W, C = x.shape
         E = self.num_experts
         assert C == self.in_dim and list(self.expert_shape)[:-1] == x.shape[1:-1]
-        dense_routing_weights, sparse_routing_weights, sparse_routing_inds, self.aux_loss = self.gate(x) # dense: B, T, H, W, E
-        
-        if self.moe_config["dispatch_style"] == 'dense':
-            dispatcher = moe_utils.DenseDispatcher(E, sparse_routing_weights.reshape([B * T * H * W, -1]), 
-                                         sparse_routing_inds.reshape([B * T * H * W, -1]))
-            expert_outputs = paddle.stack([self.experts[i](x.reshape([B * T * H * W, -1])) for i in range(E)], axis=-2)
+        (
+            dense_routing_weights,
+            sparse_routing_weights,
+            sparse_routing_inds,
+            self.aux_loss,
+        ) = self.gate(
+            x
+        )  # dense: B, T, H, W, E
+
+        if self.moe_config["dispatch_style"] == "dense":
+            dispatcher = moe_utils.DenseDispatcher(
+                E,
+                sparse_routing_weights.reshape([B * T * H * W, -1]),
+                sparse_routing_inds.reshape([B * T * H * W, -1]),
+            )
+            expert_outputs = paddle.stack(
+                [self.experts[i](x.reshape([B * T * H * W, -1])) for i in range(E)],
+                axis=-2,
+            )
             y = dispatcher.combine(expert_outputs).reshape([B, T, H, W, C])
-        elif self.moe_config["dispatch_style"] == 'sparse':
-            dispatcher = moe_utils.SparseDispatcher(E, sparse_routing_weights.reshape([B * T * H * W, -1]), 
-                                          sparse_routing_inds.reshape([B * T * H * W, -1]))
+        elif self.moe_config["dispatch_style"] == "sparse":
+            dispatcher = moe_utils.SparseDispatcher(
+                E,
+                sparse_routing_weights.reshape([B * T * H * W, -1]),
+                sparse_routing_inds.reshape([B * T * H * W, -1]),
+            )
             expert_inputs = dispatcher.dispatch(x.reshape([B * T * H * W, -1]))
-            expert_outputs = [self.experts[i](expert_inputs[i]) if expert_inputs[i].shape[0] > 0 
-                              else paddle.zeros([0, self.out_dim]) 
-                              for i in range(E)]
+            expert_outputs = [
+                self.experts[i](expert_inputs[i])
+                if expert_inputs[i].shape[0] > 0
+                else paddle.zeros([0, self.out_dim])
+                for i in range(E)
+            ]
             y = dispatcher.combine(expert_outputs).reshape([B, T, H, W, C])
-        else: 
+        else:
             raise NotImplementedError
-        
-        return y     
-    
+
+        return y
+
     def reset_parameters(self):
-        
+
         for i in range(len(self.experts)):
             self.experts[i].reset_parameters()
 
 
 class MixtureSelfAttention(paddle.nn.Layer):
-
-    def __init__(self, dim, num_heads, cuboid_size, shift_size, strategy, padding_type, qkv_bias, 
-                qk_scale, attn_drop, proj_drop, norm_layer, use_global_vector, use_global_self_attn, 
-                separate_global_qkv, global_dim_ratio, checkpoint_level, use_relative_pos, use_final_proj, 
-                attn_linear_init_mode, ffn_linear_init_mode, norm_init_mode, 
-                expert_shape, moe_config):
+    def __init__(
+        self,
+        dim,
+        num_heads,
+        cuboid_size,
+        shift_size,
+        strategy,
+        padding_type,
+        qkv_bias,
+        qk_scale,
+        attn_drop,
+        proj_drop,
+        norm_layer,
+        use_global_vector,
+        use_global_self_attn,
+        separate_global_qkv,
+        global_dim_ratio,
+        checkpoint_level,
+        use_relative_pos,
+        use_final_proj,
+        attn_linear_init_mode,
+        ffn_linear_init_mode,
+        norm_init_mode,
+        expert_shape,
+        moe_config,
+    ):
         super().__init__()
-        
+
         self.in_dim = dim
         self.out_dim = dim
-        self.expert_shape = expert_shape # T, H, W, C
+        self.expert_shape = expert_shape  # T, H, W, C
         self.num_experts = moe_config["num_experts"]
         self.out_planes = moe_config["out_planes"]
         self.moe_config = moe_config
         assert expert_shape is not None and moe_config["use_attn_moe"]
         assert not use_global_vector
-        
-        if moe_config["gate_style"] == 'linear':
+
+        if moe_config["gate_style"] == "linear":
             self.gate = moe_utils.LinearGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'spatial-latent':
+        elif moe_config["gate_style"] == "spatial-latent":
             self.gate = moe_utils.SpatialLatentGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'cuboid-latent':
+        elif moe_config["gate_style"] == "cuboid-latent":
             self.gate = moe_utils.CuboidLatentGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'spatial-latent-linear':
-            self.gate = moe_utils.SpatialLatentLinearGatingNet(moe_config, expert_shape, dim)
-        elif moe_config["gate_style"] == 'cuboid-latent-linear':
-            self.gate = moe_utils.CuboidLatentLinearGatingNet(moe_config, expert_shape, dim)
-        else: 
+        elif moe_config["gate_style"] == "spatial-latent-linear":
+            self.gate = moe_utils.SpatialLatentLinearGatingNet(
+                moe_config, expert_shape, dim
+            )
+        elif moe_config["gate_style"] == "cuboid-latent-linear":
+            self.gate = moe_utils.CuboidLatentLinearGatingNet(
+                moe_config, expert_shape, dim
+            )
+        else:
             raise NotImplementedError
-        
+
         self.experts = paddle.nn.LayerList(
-            [CuboidSelfAttentionLayer(
-                dim=dim, 
-                num_heads=num_heads,
-                cuboid_size=cuboid_size,
-                shift_size=shift_size,
-                strategy=strategy,
-                padding_type=padding_type,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                attn_drop=attn_drop,
-                proj_drop=proj_drop,
-                norm_layer=norm_layer,
-                use_global_vector=use_global_vector,
-                use_global_self_attn=use_global_self_attn,
-                separate_global_qkv=separate_global_qkv,
-                global_dim_ratio=global_dim_ratio,
-                checkpoint_level=checkpoint_level,
-                use_relative_pos=use_relative_pos,
-                use_final_proj=use_final_proj,
-                attn_linear_init_mode=attn_linear_init_mode,
-                ffn_linear_init_mode=ffn_linear_init_mode,
-                norm_init_mode=norm_init_mode)
-            for _ in range(self.num_experts)]
+            [
+                CuboidSelfAttentionLayer(
+                    dim=dim,
+                    num_heads=num_heads,
+                    cuboid_size=cuboid_size,
+                    shift_size=shift_size,
+                    strategy=strategy,
+                    padding_type=padding_type,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    attn_drop=attn_drop,
+                    proj_drop=proj_drop,
+                    norm_layer=norm_layer,
+                    use_global_vector=use_global_vector,
+                    use_global_self_attn=use_global_self_attn,
+                    separate_global_qkv=separate_global_qkv,
+                    global_dim_ratio=global_dim_ratio,
+                    checkpoint_level=checkpoint_level,
+                    use_relative_pos=use_relative_pos,
+                    use_final_proj=use_final_proj,
+                    attn_linear_init_mode=attn_linear_init_mode,
+                    ffn_linear_init_mode=ffn_linear_init_mode,
+                    norm_init_mode=norm_init_mode,
+                )
+                for _ in range(self.num_experts)
+            ]
         )
 
     def forward(self, x, global_vectors=None):
-        
+
         B, T, H, W, C = x.shape
         E = self.num_experts
         assert C == self.in_dim and list(self.expert_shape)[:-1] == x.shape[1:-1]
-        dense_routing_weights, sparse_routing_weights, sparse_routing_inds, self.aux_loss = self.gate(x) # dense: B, T, H, W, E
-        
-        dispatcher = moe_utils.DenseDispatcher(E, sparse_routing_weights.reshape([B * T * H * W, -1]), sparse_routing_inds.reshape([B * T * H * W, -1]))
-        expert_outputs = paddle.stack([self.experts[i](x, global_vectors) for i in range(E)], axis=-2).reshape([B * T * H * W, E, C])
+        (
+            dense_routing_weights,
+            sparse_routing_weights,
+            sparse_routing_inds,
+            self.aux_loss,
+        ) = self.gate(
+            x
+        )  # dense: B, T, H, W, E
+
+        dispatcher = moe_utils.DenseDispatcher(
+            E,
+            sparse_routing_weights.reshape([B * T * H * W, -1]),
+            sparse_routing_inds.reshape([B * T * H * W, -1]),
+        )
+        expert_outputs = paddle.stack(
+            [self.experts[i](x, global_vectors) for i in range(E)], axis=-2
+        ).reshape([B * T * H * W, E, C])
         y = dispatcher.combine(expert_outputs).reshape([B, T, H, W, C])
 
         return y
 
     def reset_parameters(self):
-        
+
         for i in range(len(self.experts)):
             self.experts[i].reset_parameters()

@@ -373,7 +373,7 @@ class ExtMoEENSODataset(io.Dataset):
         assert self.sst.shape[0] == self.target_nino.shape[0]
         assert self.sst.shape[1] == self.in_len + self.out_len
         assert self.target_nino.shape[1] == self.out_len - NINO_WINDOW_T + 1
-        
+
         return self.sst, self.target_nino
 
     def get_datashape(self):
@@ -390,14 +390,14 @@ class ExtMoEENSODataset(io.Dataset):
         weight_item = self.weight_dict
 
         if self.training == "train":
-            input_item = {self.input_keys[0]: in_seq, 'sst_target': target_seq}
+            input_item = {self.input_keys[0]: in_seq, "sst_target": target_seq}
             label_item = {
                 self.label_keys[0]: target_seq,
             }
 
             return input_item, label_item, weight_item
         else:
-            input_item = {self.input_keys[0]: in_seq, 'sst_target': target_seq}
+            input_item = {self.input_keys[0]: in_seq, "sst_target": target_seq}
             label_item = {
                 self.label_keys[0]: target_seq,
                 self.label_keys[1]: self.target_nino[idx],
