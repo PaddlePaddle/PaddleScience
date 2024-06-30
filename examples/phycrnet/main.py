@@ -2,7 +2,6 @@
 PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
-from os import path as osp
 
 import functions
 import hydra
@@ -11,15 +10,9 @@ import scipy.io as scio
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set initial states for convlstm
     NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))
@@ -114,14 +107,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
-        cfg.output_dir,
-        optimizer,
-        scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
+        optimizer=optimizer,
         validator=validator_pde,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        cfg=cfg,
     )
 
     # train model
@@ -132,11 +120,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set initial states for convlstm
     NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))

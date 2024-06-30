@@ -26,16 +26,9 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import jacobian
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -164,18 +157,10 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -195,12 +180,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -231,11 +210,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate model
     solver.eval()
@@ -261,7 +237,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
+        cfg=cfg,
     )
     # export model
     from paddle.static import InputSpec

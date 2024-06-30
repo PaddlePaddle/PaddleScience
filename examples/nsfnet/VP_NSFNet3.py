@@ -164,7 +164,6 @@ def main(cfg: DictConfig):
 
 def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set random seed for reproducibility
     SEED = cfg.seed
@@ -222,11 +221,6 @@ def train(cfg: DictConfig):
         },
         "batch_size": NB_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     train_dataloader_cfg_0 = {
@@ -237,11 +231,6 @@ def train(cfg: DictConfig):
         },
         "batch_size": N0_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     valida_dataloader_cfg = {
@@ -252,11 +241,6 @@ def train(cfg: DictConfig):
         },
         "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     geom = ppsci.geometry.PointCloud(
         {"x": x_train, "y": y_train, "z": z_train, "t": t_train}, ("x", "y", "z", "t")
@@ -332,21 +316,12 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     # initialize solver
     solver = ppsci.solver.Solver(
-        model=model,
-        constraint=constraint,
+        model,
+        constraint,
         optimizer=optimizer,
-        epochs=EPOCHS,
-        lr_scheduler=lr_scheduler,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.eval_freq,
-        seed=SEED,
         equation=equation,
-        geom=geom,
         validator=validator,
-        visualizer=None,
-        eval_with_no_grad=False,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -358,29 +333,10 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-
-    # set random seed for reproducibility
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
     ppsci.utils.load_pretrain(model, cfg.pretrained_model_path)
-
-    # set the number of residual samples
-    N_TRAIN = cfg.ntrain
-
-    # unsupervised part
-    xx = np.random.randint(31, size=N_TRAIN) / 15 - 1
-    yy = np.random.randint(31, size=N_TRAIN) / 15 - 1
-    zz = np.random.randint(31, size=N_TRAIN) / 15 - 1
-    tt = np.random.randint(11, size=N_TRAIN) / 10
-
-    x_train = xx.reshape(xx.shape[0], 1).astype("float32")
-    y_train = yy.reshape(yy.shape[0], 1).astype("float32")
-    z_train = zz.reshape(zz.shape[0], 1).astype("float32")
-    t_train = tt.reshape(tt.shape[0], 1).astype("float32")
 
     # test data
     x_star = ((np.random.rand(1000, 1) - 1 / 2) * 2).astype("float32")
@@ -400,16 +356,7 @@ def evaluate(cfg: DictConfig):
         },
         "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
-    geom = ppsci.geometry.PointCloud(
-        {"x": x_train, "y": y_train, "z": z_train, "t": t_train}, ("x", "y", "z", "t")
-    )
-
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
             nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
@@ -434,8 +381,8 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         equation=equation,
-        geom=geom,
         validator=validator,
+        cfg=cfg,
     )
 
     # print the relative error

@@ -3,7 +3,6 @@ Reference: https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivativ
 """
 
 import os
-from os import path as osp
 from typing import Callable
 from typing import Tuple
 
@@ -18,11 +17,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.DeepONet(**cfg.MODEL)
 
@@ -71,18 +65,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_freq=cfg.TRAIN.eval_freq,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         validator=validator,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -96,11 +81,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.DeepONet(**cfg.MODEL)
 
@@ -125,11 +105,8 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        None,
-        cfg.output_dir,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     solver.eval()
 

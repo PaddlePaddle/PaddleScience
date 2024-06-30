@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import functools
-import os.path as osp
 from typing import Tuple
 
 import h5py
@@ -24,7 +23,6 @@ from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
 import ppsci
-from ppsci.utils import logger
 
 
 def get_vis_data(
@@ -58,11 +56,6 @@ def get_vis_data(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", f"{cfg.output_dir}/train.log", "info")
-
     wind_data_mean, wind_data_std = fourcast_utils.get_mean_std(
         cfg.WIND_MEAN_PATH, cfg.WIND_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -126,11 +119,6 @@ def train(cfg: DictConfig):
             "transforms": transforms,
             "training": False,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -188,11 +176,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set testing hyper-parameters
     output_keys = tuple(f"output_{i}" for i in range(cfg.EVAL.num_timestamps))
 
@@ -242,11 +225,6 @@ def evaluate(cfg: DictConfig):
             "stride": 8,
             "transforms": transforms,
             "training": False,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -318,12 +296,9 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction

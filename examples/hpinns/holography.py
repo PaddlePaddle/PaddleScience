@@ -16,7 +16,6 @@
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
 
-from os import path as osp
 
 import functions as func_module
 import hydra
@@ -34,10 +33,6 @@ from ppsci.utils import logger
 def train(cfg: DictConfig):
     # open FLAG for higher order differential operator
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
@@ -184,14 +179,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint,
-        cfg.output_dir,
-        optimizer_adam,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_adam,
         validator=validator,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     # train model
@@ -209,14 +199,9 @@ def train(cfg: DictConfig):
         solver = ppsci.solver.Solver(
             model_list,
             constraint,
-            cfg.output_dir,
-            optimizer_lbfgs,
-            None,
-            cfg.TRAIN.epochs_lbfgs,
-            cfg.TRAIN.iters_per_epoch,
-            eval_during_train=cfg.TRAIN.eval_during_train,
+            optimizer=optimizer_lbfgs,
             validator=validator,
-            checkpoint_path=cfg.TRAIN.checkpoint_path,
+            cfg=cfg,
         )
 
         # train model
@@ -259,14 +244,9 @@ def train(cfg: DictConfig):
             solver = ppsci.solver.Solver(
                 model_list,
                 constraint,
-                cfg.output_dir,
-                optimizer_lbfgs,
-                None,
-                cfg.TRAIN.epochs_lbfgs,
-                cfg.TRAIN.iters_per_epoch,
-                eval_during_train=cfg.TRAIN.eval_during_train,
+                optimizer=optimizer_lbfgs,
                 validator=validator,
-                checkpoint_path=cfg.TRAIN.checkpoint_path,
+                cfg=cfg,
             )
 
             # train model
@@ -295,10 +275,6 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # open FLAG for higher order differential operator
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
@@ -399,10 +375,8 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model_list,
-        output_dir=cfg.output_dir,
-        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
 
     # evaluate

@@ -233,15 +233,10 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -259,14 +254,12 @@ def train(cfg: DictConfig):
         model,
         constraint,
         OUTPUT_DIR,
-        optimizer_lbfgs,
-        None,
-        EPOCHS,
-        cfg.TRAIN.lbfgs.iters_per_epoch,
+        optimizer=optimizer_lbfgs,
+        epochs=EPOCHS,
+        iters_per_epoch=cfg.TRAIN.lbfgs.iters_per_epoch,
         eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
         eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
     )
     # train model
@@ -341,12 +334,9 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
 
@@ -374,7 +364,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
+        cfg=cfg,
     )
     # export model
     from paddle.static import InputSpec

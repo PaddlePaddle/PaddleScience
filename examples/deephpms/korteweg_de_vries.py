@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -62,10 +61,6 @@ def boundary_loss_func(output_dict, *args):
 def train(cfg: DictConfig):
     # open FLAG for higher order differential operator when order >= 4
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(42)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
@@ -165,13 +160,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_idn,
-        cfg.output_dir,
         optimizer_idn,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
         validator=validator_idn,
+        cfg=cfg,
     )
 
     # train model
@@ -229,13 +220,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_pde,
-        cfg.output_dir,
-        optimizer_pde,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_pde,
         validator=validator_pde,
+        cfg=cfg,
     )
 
     # train model
@@ -330,13 +317,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_sol,
-        cfg.output_dir,
-        optimizer_sol,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_sol,
         validator=validator_sol,
+        cfg=cfg,
     )
 
     # train model
@@ -348,10 +331,6 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # open FLAG for higher order differential operator when order >= 4
     paddle.framework.core.set_prim_eager_enabled(True)
-
-    ppsci.utils.misc.set_random_seed(42)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)

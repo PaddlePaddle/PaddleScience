@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -21,7 +20,6 @@ from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
 import ppsci
-from ppsci.utils import logger
 
 
 def get_data_stat(cfg: DictConfig):
@@ -38,11 +36,6 @@ def get_data_stat(cfg: DictConfig):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     data_mean, data_std = fourcast_utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -119,11 +112,6 @@ def train(cfg: DictConfig):
             "transforms": transforms,
             "training": False,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -170,7 +158,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
         eval_during_train=True,
-        seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -182,11 +169,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     data_mean, data_std = fourcast_utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -213,11 +195,6 @@ def evaluate(cfg: DictConfig):
             "vars_channel": cfg.VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -251,13 +228,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate
     solver.eval()

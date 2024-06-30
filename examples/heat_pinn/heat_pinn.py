@@ -93,12 +93,6 @@ def plot(input_data, N_EVAL, pinn_output, fdm_output, cfg):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -185,17 +179,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -213,12 +199,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -228,10 +208,7 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     # begin eval
     N_EVAL = 100

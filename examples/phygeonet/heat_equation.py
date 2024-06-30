@@ -84,10 +84,8 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         sup_constraint,
-        cfg.output_dir,
-        optimizer,
-        epochs=cfg.epochs,
-        iters_per_epoch=iters_per_epoch,
+        optimizer=optimizer,
+        cfg=cfg,
     )
     solver.train()
     solver.plot_loss_history()
@@ -104,7 +102,7 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.USCNN(**cfg.MODEL)
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
+        cfg=cfg,
     )
     output_v = solver.predict({"coords": paddle.to_tensor(coords)})
     output_v = output_v["output_v"]

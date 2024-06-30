@@ -14,23 +14,15 @@
 
 from __future__ import annotations
 
-from os import path as osp
-
 import hydra
 import paddle
 from omegaconf import DictConfig
 from paddle.nn import functional as F
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.AutoEncoder(**cfg.MODEL)
 
@@ -99,16 +91,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -117,11 +102,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.AutoEncoder(**cfg.MODEL)
 
@@ -151,11 +131,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        None,
-        output_dir=cfg.output_dir,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate after finished training
     solver.eval()

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import functools
-from os import path as osp
 from typing import Tuple
 
 import h5py
@@ -24,7 +23,6 @@ from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
 import ppsci
-from ppsci.utils import logger
 
 
 def get_vis_data(
@@ -56,12 +54,6 @@ def get_vis_data(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.set_random_seed(cfg.seed)
-
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set training hyper-parameters
     output_keys = tuple(f"output_{i}" for i in range(cfg.TRAIN.num_timestamps))
 
@@ -123,11 +115,6 @@ def train(cfg: DictConfig):
             "num_label_timestamps": cfg.TRAIN.num_timestamps,
             "training": False,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -177,9 +164,8 @@ def train(cfg: DictConfig):
         constraint,
         cfg.output_dir,
         optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        ITERS_PER_EPOCH,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         validator=validator,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
@@ -193,11 +179,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set testing hyper-parameters
     output_keys = tuple(f"output_{i}" for i in range(cfg.EVAL.num_timestamps))
 
@@ -237,11 +218,6 @@ def evaluate(cfg: DictConfig):
             "num_label_timestamps": cfg.EVAL.num_timestamps,
             "training": False,
             "stride": 8,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -321,12 +297,9 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction from pretrained_model_path

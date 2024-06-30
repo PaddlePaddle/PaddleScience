@@ -26,7 +26,6 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import jacobian
-from ppsci.utils import logger
 
 
 class gPINN1D(ppsci.equation.PDE):
@@ -55,11 +54,6 @@ class gPINN1D(ppsci.equation.PDE):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -123,7 +117,6 @@ def train(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE_EVAL,
             "batch_size": cfg.EVAL.batch_size.l2rel_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
@@ -136,18 +129,10 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -214,11 +199,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -253,7 +233,6 @@ def evaluate(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.l2rel_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
@@ -265,10 +244,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     # evaluate after finished training
     solver.eval()

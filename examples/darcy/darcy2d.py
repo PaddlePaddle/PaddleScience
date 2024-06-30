@@ -25,11 +25,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -94,7 +89,6 @@ def train(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -149,17 +143,11 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -180,15 +168,14 @@ def train(cfg: DictConfig):
         constraint,
         OUTPUT_DIR,
         optimizer_lbfgs,
-        None,
-        EPOCHS,
-        cfg.TRAIN.lbfgs.iters_per_epoch,
+        epochs=EPOCHS,
+        iters_per_epoch=cfg.TRAIN.lbfgs.iters_per_epoch,
         eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
         eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -199,11 +186,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -231,7 +213,6 @@ def evaluate(cfg: DictConfig):
             "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -284,12 +265,10 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction

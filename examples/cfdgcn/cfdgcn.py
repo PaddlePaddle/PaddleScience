@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from typing import Dict
 from typing import List
 
@@ -25,7 +24,6 @@ from omegaconf import DictConfig
 from paddle.nn import functional as F
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train_mse_func(
@@ -49,11 +47,6 @@ def eval_rmse_func(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
-
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
@@ -107,11 +100,6 @@ def train(cfg: DictConfig):
             "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -126,17 +114,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     # train model
@@ -174,7 +154,6 @@ def evaluate(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -207,11 +186,6 @@ def evaluate(cfg: DictConfig):
             "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -224,12 +198,8 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
 
     # evaluate model

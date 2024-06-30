@@ -1,18 +1,26 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from os import path as osp
 
 import hydra
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -67,7 +75,6 @@ def train(cfg: DictConfig):
                 "drop_last": True,
                 "shuffle": True,
             },
-            "num_workers": 1,
             "batch_size": cfg.TRAIN.batch_size.arm_interior,
         },
         ppsci.loss.MSELoss("sum"),
@@ -98,11 +105,6 @@ def train(cfg: DictConfig):
         geom["geo"],
         {
             "dataset": "NamedArrayDataset",
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
             "total_size": cfg.EVAL.total_size.validator,
             "batch_size": cfg.EVAL.batch_size.validator,
         },
@@ -143,22 +145,11 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.TRAIN.eval_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        cfg=cfg,
     )
 
     # train model
@@ -169,11 +160,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -207,11 +193,6 @@ def evaluate(cfg: DictConfig):
         geom["geo"],
         {
             "dataset": "NamedArrayDataset",
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
             "total_size": cfg.EVAL.total_size.validator,
             "batch_size": cfg.EVAL.batch_size.validator,
         },
@@ -251,13 +232,9 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        seed=cfg.seed,
-        log_freq=cfg.log_freq,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     # evaluate after finished training
     solver.eval()

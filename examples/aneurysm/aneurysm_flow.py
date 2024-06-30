@@ -177,7 +177,6 @@ def train(cfg: DictConfig):
         geom=geom["interior"],
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
-            "num_workers": 1,
             "batch_size": cfg.TRAIN.batch_size,
             "iters_per_epoch": int(x.shape[0] / cfg.TRAIN.batch_size),
             "sampler": {
@@ -276,11 +275,7 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
 
     def model_predict(

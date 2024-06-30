@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from os import path as osp
 
 import hydra
@@ -6,14 +20,9 @@ from omegaconf import DictConfig
 from paddle import distributed as dist
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
     # set parallel
     enable_parallel = dist.get_world_size() > 1
 
@@ -55,7 +64,6 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -187,21 +195,10 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.TRAIN.eval_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
         visualizer=visualizer,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        cfg=cfg,
     )
 
     # train model
@@ -212,11 +209,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
@@ -268,13 +260,8 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model_list,
-        output_dir=cfg.output_dir,
-        seed=cfg.seed,
-        geom=geom,
-        log_freq=cfg.log_freq,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
 
     # visualize prediction after finished training

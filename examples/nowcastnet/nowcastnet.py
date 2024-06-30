@@ -8,7 +8,6 @@ import paddle
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
@@ -16,11 +15,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     if cfg.CASE_TYPE == "large":
         dataset_path = cfg.LARGE_DATASET_PATH
         model_cfg = cfg.MODEL.large
@@ -57,7 +51,7 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
 
     for batch_id, test_ims in enumerate(test_data_loader):

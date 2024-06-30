@@ -69,11 +69,6 @@ def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set models
     disp_net = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -229,16 +224,8 @@ def train(cfg: DictConfig):
     solver_adam = ppsci.solver.Solver(
         disp_net,
         constraint,
-        cfg.output_dir,
         optimizer_adam,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         equation=equation,
-        geom=geom,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
     )
@@ -250,35 +237,24 @@ def train(cfg: DictConfig):
     solver_lbfgs = ppsci.solver.Solver(
         disp_net,
         constraint,
-        cfg.output_dir,
         optimizer_lbfgs,
-        None,
-        1,
-        1,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
+        epochs=1,
+        iters_per_epoch=1,
         equation=equation,
-        geom=geom,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        cfg=cfg,
     )
     # evaluate after finished training
     solver_lbfgs.train()
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set models
     disp_net = ppsci.arch.MLP(**cfg.MODEL)
 
     # load pretrained model
     solver = ppsci.solver.Solver(
-        model=disp_net, pretrained_model_path=cfg.EVAL.pretrained_model_path
+        model=disp_net,
+        cfg=cfg,
     )
 
     # generate samples
@@ -359,7 +335,8 @@ def export(cfg: DictConfig):
 
     # load pretrained model
     solver = ppsci.solver.Solver(
-        model=disp_net, pretrained_model_path=cfg.INFER.pretrained_model_path
+        model=disp_net,
+        cfg=cfg,
     )
 
     class Wrapped_Model(nn.Layer):

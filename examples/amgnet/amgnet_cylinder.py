@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from os import path as osp
 from typing import TYPE_CHECKING
 from typing import Dict
 from typing import List
@@ -53,11 +52,6 @@ def eval_rmse_func(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set cylinder model
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 
@@ -76,7 +70,6 @@ def train(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -102,11 +95,6 @@ def train(cfg: DictConfig):
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -121,16 +109,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -152,11 +133,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set airfoil model
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 
@@ -170,11 +146,6 @@ def evaluate(cfg: DictConfig):
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -187,12 +158,8 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate model
     solver.eval()

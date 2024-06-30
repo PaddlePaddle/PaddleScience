@@ -68,11 +68,6 @@ def train(cfg: DictConfig):
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_16x16",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -91,11 +86,6 @@ def train(cfg: DictConfig):
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_32x32",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
@@ -166,7 +156,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
         eval_during_train=cfg.TRAIN.eval_during_train,
-        seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -195,11 +184,6 @@ def evaluate(cfg: DictConfig):
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_16x16",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
     }
@@ -218,11 +202,6 @@ def evaluate(cfg: DictConfig):
             "encoding": cfg.DATASET.encoding,
             "channel_dim": cfg.DATASET.channel_dim,
             "data_split": "test_32x32",
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 0,
@@ -271,7 +250,6 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,

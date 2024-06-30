@@ -24,7 +24,6 @@ from omegaconf import DictConfig
 import ppsci
 from ppsci import equation
 from ppsci.autodiff import jacobian
-from ppsci.utils import logger
 from ppsci.utils import misc
 
 
@@ -245,12 +244,6 @@ def generate_bc_left_points(
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -403,18 +396,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # HACK: Given entire solver to euaqtion object for tracking run-time epoch
     # to compute factor `relu` dynamically.
@@ -426,22 +410,13 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        seed=cfg.seed,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
 
     # visualize prediction

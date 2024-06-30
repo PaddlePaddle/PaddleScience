@@ -59,7 +59,6 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
     }
 
     # set constraint
@@ -277,11 +276,6 @@ def train(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
         {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
@@ -325,22 +319,11 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
-        seed=cfg.seed,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -453,11 +436,6 @@ def evaluate(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
         {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
@@ -500,13 +478,9 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # evaluate
     solver.eval()

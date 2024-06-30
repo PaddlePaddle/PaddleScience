@@ -56,11 +56,6 @@ def train(cfg: DictConfig):
     # train time-series: 2048    time-steps: 256    block-size: 64  stride: 64
     # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
     # test  time-series: 256     time-steps: 1024
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
@@ -117,11 +112,6 @@ def train(cfg: DictConfig):
             "stride": 1024,
             "embedding_model": embedding_model,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
@@ -159,9 +149,8 @@ def train(cfg: DictConfig):
         constraint,
         cfg.output_dir,
         optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        ITERS_PER_EPOCH,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
@@ -195,11 +184,6 @@ def evaluate(cfg: DictConfig):
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
@@ -235,10 +219,9 @@ def evaluate(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)
@@ -259,7 +242,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
+        cfg=cfg,
     )
     # export model
     from paddle.static import InputSpec

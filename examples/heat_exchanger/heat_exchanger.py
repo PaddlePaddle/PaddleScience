@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-from os import path as osp
-
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,11 +23,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.HEDeepONets(**cfg.MODEL)
 
@@ -293,11 +286,6 @@ def train(cfg: DictConfig):
                 "label": test_bc_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"T_h": lambda out: out["T_h"] - cfg.T_hin},
@@ -312,11 +300,6 @@ def train(cfg: DictConfig):
                 "label": test_bc_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"T_h": lambda out: out["T_c"] - cfg.T_cin},
@@ -331,11 +314,6 @@ def train(cfg: DictConfig):
                 "label": test_interior_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr=equation["heat_exchanger"].equations,
@@ -352,16 +330,10 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         equation=equation,
-        geom=geom,
         validator=validator,
+        cfg=cfg,
     )
     # train model
     solver.train()
@@ -378,11 +350,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.HEDeepONets(**cfg.MODEL)
 
@@ -463,11 +430,6 @@ def evaluate(cfg: DictConfig):
                 "label": test_bc_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
@@ -484,11 +446,6 @@ def evaluate(cfg: DictConfig):
                 "label": test_bc_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
@@ -505,11 +462,6 @@ def evaluate(cfg: DictConfig):
                 "label": test_interior_label,
             },
             "batch_size": cfg.NTIME,
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr=equation["heat_exchanger"].equations,
@@ -525,11 +477,9 @@ def evaluate(cfg: DictConfig):
     # directly evaluate pretrained model(optional)
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     solver.eval()
 

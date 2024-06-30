@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path as osp
 
 import hydra
 import numpy as np
@@ -74,10 +73,6 @@ def sol_l2_rel_func(output_dict, label_dict):
 
 
 def train(cfg: DictConfig):
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
@@ -184,11 +179,6 @@ def train(cfg: DictConfig):
             },
         },
         "batch_size": cfg.TRAIN.batch_size.eval,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     sup_validator_idn = ppsci.validate.SupervisedValidator(
@@ -204,13 +194,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_idn,
-        cfg.output_dir,
-        optimizer_idn,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_idn,
         validator=validator_idn,
+        cfg=cfg,
     )
 
     # train model
@@ -263,11 +249,6 @@ def train(cfg: DictConfig):
             },
         },
         "batch_size": cfg.TRAIN.batch_size.eval,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     sup_validator_pde = ppsci.validate.SupervisedValidator(
@@ -288,13 +269,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_pde,
-        cfg.output_dir,
-        optimizer_pde,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_pde,
         validator=validator_pde,
+        cfg=cfg,
     )
 
     # train model
@@ -389,11 +366,6 @@ def train(cfg: DictConfig):
             },
         },
         "batch_size": cfg.TRAIN.batch_size.eval,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
     }
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
@@ -409,13 +381,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         constraint_sol,
-        cfg.output_dir,
-        optimizer_idn,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        optimizer=optimizer_idn,
         validator=validator_sol,
+        cfg=cfg,
     )
 
     # train model
@@ -425,10 +393,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
