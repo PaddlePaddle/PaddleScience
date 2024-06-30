@@ -50,7 +50,7 @@ MODEL:
   num_mlp_layers: 1
   mlp_ratio: 1
   out_dim: 1
-  layer_norm_eps: 1e-5
+  layer_norm_eps: 1.0e-5
   embedding_type: grid
 
 # training settings
@@ -65,14 +65,16 @@ TRAIN:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     learning_rate: 1.0e-4
     gamma: 0.95
-    decay_steps: 5000
+    decay_steps: 1000
     by_epoch: false
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
   batch_size: 256
   grid_size: 128
   pretrained_model_path: null
   checkpoint_path: null
   ema:
-    use_ema: true
+    use_ema: false
     decay: 0.999
     avg_freq: 1
 
@@ -80,7 +82,7 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
-  batch_size: 256
+  batch_size: 1000
   grid_size: 200
 
 # inference settings
@@ -99,4 +101,5 @@ INFER:
   gpu_id: 0
   max_batch_size: 1024
   num_cpu_threads: 10
-  batch_size: 1024
+  seq_len: 200
+  grid_size: 128

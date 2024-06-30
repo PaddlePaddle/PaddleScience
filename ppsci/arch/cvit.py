@@ -19,7 +19,6 @@ from typing import Tuple
 import einops
 
 # import flax.linen as nn
-import numpy as np
 import paddle
 
 # from einops import rearrange
@@ -46,7 +45,8 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim: int, pos: paddle.Tensor):
     omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape([-1])  # (M,)
-    out = paddle.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
+    out = pos.unsqueeze(1) @ omega.unsqueeze(0)
+    # out = paddle.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
 
     emb_sin = paddle.sin(out)  # (M, D/2)
     emb_cos = paddle.cos(out)  # (M, D/2)
@@ -170,13 +170,13 @@ class SelfAttnBlock(nn.Layer):
         self.num_heads = num_heads
         self.emb_dim = emb_dim
         self.mlp_ratio = mlp_ratio
-        self.layer_norm1 = LayerNorm(emb_dim, -1, layer_norm_eps)
+        self.layer_norm1 = nn.LayerNorm(emb_dim, layer_norm_eps)
         self.attn_layer = MultiHeadDotProductAttention(
             self.emb_dim,
             num_heads=self.num_heads,
             qkv_features=self.emb_dim,
         )
-        self.layer_norm2 = LayerNorm(emb_dim, -1, layer_norm_eps)
+        self.layer_norm2 = nn.LayerNorm(emb_dim, layer_norm_eps)
         self.mlp = MlpBlock(self.emb_dim, self.emb_dim * self.mlp_ratio, self.emb_dim)
 
     def forward(self, inputs):
@@ -266,7 +266,7 @@ class Mlp(nn.Layer):
         self.gelu = nn.GELU(True)
         self.norms = nn.LayerList(
             [
-                LayerNorm(self.hidden_dim, axis=-1, epsilon=self.layer_norm_eps)
+                nn.LayerNorm(self.hidden_dim, epsilon=self.layer_norm_eps)
                 for _ in range(num_layers)
             ]
         )
@@ -503,39 +503,39 @@ s_emb_init = get_2d_sincos_pos_embed
 #     )
 
 
-class LayerNorm(nn.Layer):
-    """Custom layer norm which can do normalization along any given axis.
+# class LayerNorm(nn.Layer):
+#     """Custom layer norm which can do normalization along any given axis.
 
-    Args:
-        num_features (_type_): Number of features to normalize.
-        axis (int): Axis to normalize along.
-        epsilon (float): Epsilon for numerical stability.
-    """
+#     Args:
+#         num_features (_type_): Number of features to normalize.
+#         axis (int): Axis to normalize along.
+#         epsilon (float): Epsilon for numerical stability.
+#     """
 
-    def __init__(self, num_features, axis: int, epsilon: float, use_bias: bool = True):
-        super().__init__()
-        self.num_features = num_features
-        self.norm = nn.LayerNorm(num_features, epsilon, bias_attr=use_bias)
-        self.axis = axis
+#     def __init__(self, num_features, axis: int, epsilon: float, use_bias: bool = True):
+#         super().__init__()
+#         self.num_features = num_features
+#         self.norm = nn.LayerNorm(num_features, epsilon, bias_attr=use_bias)
+#         self.axis = axis
 
-    def forward(self, x):
-        x_shape = x.shape
-        assert x_shape[self.axis] == self.num_features
+#     def forward(self, x):
+#         x_shape = x.shape
+#         assert x_shape[self.axis] == self.num_features
 
-        if self.axis != -1:
-            perm = list(range(x.ndim))
-            perm[-1], perm[self.axis] = perm[self.axis], perm[-1]
+#         if self.axis != -1:
+#             perm = list(range(x.ndim))
+#             perm[-1], perm[self.axis] = perm[self.axis], perm[-1]
 
-            perm_inv = np.empty_like(perm)
-            perm_inv[perm] = np.arange(len(perm), dtype="int64").tolist()
-            x = paddle.transpose(x, perm)
+#             perm_inv = np.empty_like(perm)
+#             perm_inv[perm] = np.arange(len(perm), dtype="int64").tolist()
+#             x = paddle.transpose(x, perm)
 
-        x = self.norm(x)
+#         x = self.norm(x)
 
-        if self.axis != -1:
-            x = paddle.transpose(x, perm_inv)
+#         if self.axis != -1:
+#             x = paddle.transpose(x, perm_inv)
 
-        return x
+#         return x
 
 
 class PatchEmbed1D(nn.Layer):
@@ -560,7 +560,7 @@ class PatchEmbed1D(nn.Layer):
             data_format="NLC",
         )
         self.norm = (
-            LayerNorm(emb_dim, -1, self.layer_norm_eps)
+            nn.LayerNorm(emb_dim, self.layer_norm_eps)
             if self.use_norm
             else nn.Identity()
         )
@@ -613,11 +613,11 @@ class CrossAttnBlock(nn.Layer):
         self.mlp_ratio = mlp_ratio
         self.layer_norm_eps = layer_norm_eps
         self.head_dim = self.emb_dim // self.num_heads
-        self.layer_norm_q = LayerNorm(self.emb_dim, -1, epsilon=self.layer_norm_eps)
-        self.layer_norm_kv = LayerNorm(self.emb_dim, -1, epsilon=self.layer_norm_eps)
-        self.layer_norm_y = LayerNorm(self.emb_dim, -1, epsilon=self.layer_norm_eps)
+        self.layer_norm_q = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
+        self.layer_norm_kv = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
+        self.layer_norm_y = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
         self.mlp = MlpBlock(self.emb_dim, self.emb_dim * self.mlp_ratio, self.emb_dim)
-        self.attn = MultiHeadDotProductAttention(
+        self.attn_layer = MultiHeadDotProductAttention(
             self.emb_dim,
             num_heads=num_heads,
             qkv_features=qkv_features,
@@ -629,7 +629,7 @@ class CrossAttnBlock(nn.Layer):
         kv = self.layer_norm_kv(kv_inputs)  # [B, N_grid, self.dec_emb_dim]
         q_reshape = q  # .reshape(q.shape[:-1] + [self.num_heads, self.head_dim])
         kv_reshape = kv  # .reshape(kv.shape[:-1] + [self.num_heads, self.head_dim])
-        x = self.attn(q_reshape, kv_reshape)  # [B, L/ps, self.dec_emb_dim]
+        x = self.attn_layer(q_reshape, kv_reshape)  # [B, L/ps, self.dec_emb_dim]
         x = x + q_inputs  # [B, L/ps, self.dec_emb_dim]
         y = self.layer_norm_y(x)  # [B, L/ps, self.dec_emb_dim]
         y = self.mlp(y)  # [B, L/ps, self.dec_emb_dim]
@@ -721,7 +721,8 @@ def dot_product_attention_weights(
     depth = query.shape[-1]
     query = query / (depth**0.5)
     # attn weight shape is (batch..., num_heads, q_length, kv_length)
-    attn_weights = paddle.einsum("...qhd,...khd->...hqk", query, key)
+    # print(725, query.shape, key.shape) # [b, q, h, d] x [b, k, h, d] -> [b, h, q, k]
+    attn_weights = paddle.einsum("bqhd,bkhd->bhqk", query, key)
 
     # apply attention bias: masking, dropout, proximity bias, etc.
     if bias is not None:
@@ -780,7 +781,8 @@ def dot_product_attention(
     )
 
     # return weighted sum over values for each query position
-    return paddle.einsum("...hqk,...khd->...qhd", attn_weights, value)
+    # print(785, query.shape, key.shape)
+    return paddle.einsum("bhqk,bkhd->bqhd", attn_weights, value)
 
 
 class MultiHeadDotProductAttention(nn.Layer):
@@ -849,11 +851,9 @@ class MultiHeadDotProductAttention(nn.Layer):
             bias_attr=use_bias,
         )
         self.query_ln = (
-            LayerNorm(self.qkv_features, use_bias) if normalize_qk else nn.Identity()
+            nn.LayerNorm(self.qkv_features) if normalize_qk else nn.Identity()
         )
-        self.key_ln = (
-            LayerNorm(self.qkv_features, use_bias) if normalize_qk else nn.Identity()
-        )
+        self.key_ln = nn.LayerNorm(self.qkv_features) if normalize_qk else nn.Identity()
         self.linear_out = nn.Linear(
             self.qkv_features,
             self.out_features,
@@ -974,10 +974,10 @@ class CVit1D(base.Arch):
                 [n_x, self.latent_dim], default_initializer=nn.initializer.Normal()
             )
             self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
-            self.norm = LayerNorm(self.dec_emb_dim, -1, self.layer_norm_eps)
+            self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
         elif self.embedding_type == "mlp":
             self.mlp = MlpBlock(self.latent_dim, self.dec_emb_dim, self.dec_emb_dim)
-            self.norm = LayerNorm(self.dec_emb_dim, -1, self.layer_norm_eps)
+            self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
 
         self.encoder = Encoder1D(
             self.in_dim,
@@ -989,7 +989,7 @@ class CVit1D(base.Arch):
             self.mlp_ratio,
             self.layer_norm_eps,
         )
-        self.enc_norm = LayerNorm(self.emb_dim, -1, self.layer_norm_eps)
+        self.enc_norm = nn.LayerNorm(self.emb_dim, self.layer_norm_eps)
         self.fc1 = nn.Linear(self.emb_dim, self.dec_emb_dim)
         self.blocks = nn.LayerList(
             [
@@ -1005,7 +1005,7 @@ class CVit1D(base.Arch):
                 for _ in range(self.dec_depth)
             ]
         )
-        self.block_norm = LayerNorm(self.dec_emb_dim, -1, self.layer_norm_eps)
+        self.block_norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
         self.final_mlp = Mlp(
             self.num_mlp_layers,
             self.dec_emb_dim,
@@ -1023,7 +1023,9 @@ class CVit1D(base.Arch):
         if self.embedding_type == "grid":
             d2 = (coords - self.grid[None, :]) ** 2
             w = paddle.exp(-1e5 * d2) / paddle.exp(-1e5 * d2).sum(axis=1, keepdim=True)
-            coords = paddle.einsum("ic,pi->pc", self.latents, w)
+
+            # coords = paddle.einsum("ic,pi->pc", self.latents, w)
+            coords = w @ self.latents  # [N_grid, self.latent_dim]
             coords = self.fc(coords)  # [N_grid, self.dec_emb_dim]
             coords = self.norm(coords)  # [N_grid, self.dec_emb_dim]
 
