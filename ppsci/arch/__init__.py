@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid
 from ppsci.arch.graphcast import GraphCastNet
 from ppsci.arch.phycrnet import PhyCRNet
 
@@ -48,7 +49,6 @@ from ppsci.arch.sfnonet import SFNONet  # isort:skip
 from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
-from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid
 from ppsci.utils import logger  # isort:skip
 
 
