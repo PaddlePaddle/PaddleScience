@@ -1,5 +1,3 @@
-import os
-
 import hydra
 import paddle
 from omegaconf import DictConfig
@@ -8,11 +6,6 @@ from paddle import nn
 
 import examples.extformer_moe.enso_metric as enso_metric
 import ppsci
-
-try:
-    import xarray as xr
-except ModuleNotFoundError:
-    raise ModuleNotFoundError("Please install xarray with `pip install xarray`.")
 
 
 def get_parameter_names(model, forbidden_layer_types):

@@ -98,12 +98,10 @@ def train_extformer_moe_func(
 
     aux_loss = output_dict["aux_loss"]
     if aux_loss is not None:
-        assert aux_loss.stop_gradient == False
         total_loss += aux_loss
 
     rank_loss = output_dict["rank_loss"]
     if rank_loss is not None:
-        assert rank_loss[0].stop_gradient == False
         total_loss += rank_loss[0]
 
     return {"sst_target": total_loss}

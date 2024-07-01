@@ -4,7 +4,6 @@ from typing import Union
 
 import paddle
 from paddle import nn
-from paddle.distributed import fleet
 
 import ppsci.arch.extformer_moe_cuboid_decoder as cuboid_decoder
 import ppsci.arch.extformer_moe_cuboid_encoder as cuboid_encoder
