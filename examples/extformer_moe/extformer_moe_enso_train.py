@@ -1,8 +1,6 @@
 import os
-from os import path as osp
 
 import hydra
-import numpy as np
 import paddle
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
@@ -10,8 +8,6 @@ from paddle import nn
 
 import examples.extformer_moe.enso_metric as enso_metric
 import ppsci
-from ppsci.data.dataset import ext_moe_enso_dataset as enso_dataset
-from ppsci.utils import logger
 
 try:
     import xarray as xr
