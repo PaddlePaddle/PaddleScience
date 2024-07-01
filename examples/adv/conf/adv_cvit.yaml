@@ -55,10 +55,10 @@ MODEL:
 
 # training settings
 TRAIN:
-  epochs: 200
-  iters_per_epoch: 1000
-  save_freq: 10
-  eval_during_train: true
+  epochs: 200000
+  iters_per_epoch: 1
+  save_freq: 1000
+  eval_during_train: false
   eval_freq: 5
   lr_scheduler:
     epochs: ${TRAIN.epochs}
@@ -74,7 +74,7 @@ TRAIN:
   pretrained_model_path: null
   checkpoint_path: null
   ema:
-    use_ema: false
+    use_ema: true
     decay: 0.999
     avg_freq: 1
 

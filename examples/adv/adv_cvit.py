@@ -6,11 +6,13 @@ from os import path as osp
 
 import einops
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 
 dtype = paddle.get_default_dtype()
 
@@ -87,49 +89,54 @@ def train(cfg: DictConfig):
         grad_clip=paddle.nn.ClipGradByGlobalNorm(cfg.TRAIN.grad_clip),
     )(model)
 
-    # set validator
-    def avg_l2_metric_func(output_dict, label_dict):
-        metric_dict = {}
-        for key in label_dict:
-            # reshape to [B, L]
-            x, y = output_dict[key].squeeze(-1), label_dict[key].squeeze(-1)
-            # compute metrics along all samples
-            l2_err = (x - y).norm(p=2, axis=-1) / y.norm(p=2, axis=-1)
-            metric_dict[f"{key}.min"] = l2_err.min()
-            metric_dict[f"{key}.median"] = l2_err.median()
-            metric_dict[f"{key}.mean"] = l2_err.mean()
-            metric_dict[f"{key}.max"] = l2_err.max()
-        return metric_dict
-
-    u_validator = ppsci.validate.SupervisedValidator(
-        {
-            "dataset": {
-                "name": "NamedArrayDataset",
-                "input": {"u": inputs_test, "y": grid_test},
-                "label": {"s": outputs_test[..., None]},
-            },
-            "batch_size": cfg.EVAL.batch_size,
-        },
-        ppsci.loss.MSELoss("mean"),
-        {"s": lambda out: out["s"]},
-        metric={"L2Rel": ppsci.metric.FunctionalMetric(avg_l2_metric_func)},
-        name="s_validator",
-    )
-    validator = {u_validator.name: u_validator}
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
         optimizer=optimizer,
-        validator=validator,
         cfg=cfg,
     )
-    solver.eval()
     # train model
     solver.train()
-    # # evaluate after finished training
-    solver.eval()
+    # visualzie result on ema model
+    solver.ema_model.apply_shadow()
+    pred_s = solver.predict(
+        {"u": inputs_test, "y": grid_test},
+        batch_size=cfg.EVAL.batch_size,
+        return_numpy=True,
+    )["s"]
+
+    def compute_tvd(f, g, dx):
+        df = np.abs(np.diff(f, axis=1))
+        dg = np.abs(np.diff(g, axis=1))
+
+        tvd = np.sum(np.abs(df - dg), axis=1) * dx
+        return tvd
+
+    tvd = compute_tvd(np.squeeze(pred_s, axis=-1), outputs_test, 1 / 199)
+    logger.message(
+        f"mean: {np.mean(tvd)}, "
+        f"median: {np.median(tvd)}, "
+        f"max: {np.amax(tvd)}, "
+        f"min: {np.amin(tvd)}"
+    )
+
+    best_idx = np.argmin(tvd)
+    worst_idx = np.argmax(tvd)
+    logger.message(f"best: {best_idx}, worst: {worst_idx}")
+
+    idx = 7811
+    x = np.linspace(0, 1, 200)
+    plt.plot(x, pred_s[idx], "r--")
+    plt.plot(x, outputs_test[idx], "b-")
+    plt.title(f"CViT (TV: {tvd[idx]:.2f})")
+    plt.xlabel("$y$")
+    plt.ylim([-1.4, 1.4])
+
+    plt.tight_layout()
+    plt.savefig(osp.join(cfg.output_dir, "./adv_cvit.png"))
+    logger.message(f"Result saved to: {osp.join(cfg.output_dir, './adv_cvit.png')}")
+    solver.ema_model.restore()
 
 
 def evaluate(cfg: DictConfig):
@@ -155,43 +162,47 @@ def evaluate(cfg: DictConfig):
         grid[idx[-n_test:]],
     )
 
-    # set validator
-    def avg_l2_metric_func(output_dict, label_dict):
-        metric_dict = {}
-        for key in label_dict:
-            # reshape to [B, L]
-            x, y = output_dict[key].squeeze(-1), label_dict[key].squeeze(-1)
-            # compute metrics along all samples
-            l2_err = (x - y).norm(p=2, axis=-1) / y.norm(p=2, axis=-1)
-            metric_dict[f"{key}.mean"] = l2_err.mean()
-            metric_dict[f"{key}.median"] = l2_err.median()
-            metric_dict[f"{key}.min"] = l2_err.min()
-            metric_dict[f"{key}.max"] = l2_err.max()
-        return metric_dict
-
-    u_validator = ppsci.validate.SupervisedValidator(
-        {
-            "dataset": {
-                "name": "NamedArrayDataset",
-                "input": {"u": inputs_test, "y": grid_test},
-                "label": {"s": outputs_test[..., None]},
-            },
-            "batch_size": cfg.EVAL.batch_size,
-        },
-        ppsci.loss.MSELoss("mean"),
-        {"s": lambda out: out["s"]},
-        metric={"L2Rel": ppsci.metric.FunctionalMetric(avg_l2_metric_func)},
-        name="s_validator",
-    )
-    validator = {u_validator.name: u_validator}
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        validator=validator,
         cfg=cfg,
     )
-    solver.eval()
+    pred_s = solver.predict(
+        {"u": inputs_test, "y": grid_test},
+        batch_size=cfg.EVAL.batch_size,
+        return_numpy=True,
+    )["s"]
+
+    def compute_tvd(f, g, dx):
+        df = np.abs(np.diff(f, axis=1))
+        dg = np.abs(np.diff(g, axis=1))
+
+        tvd = np.sum(np.abs(df - dg), axis=1) * dx
+        return tvd
+
+    tvd = compute_tvd(np.squeeze(pred_s, axis=-1), outputs_test, 1 / 199)
+    logger.message(
+        f"mean: {np.mean(tvd)}, "
+        f"median: {np.median(tvd)}, "
+        f"max: {np.amax(tvd)}, "
+        f"min: {np.amin(tvd)}"
+    )
+
+    best_idx = np.argmin(tvd)
+    worst_idx = np.argmax(tvd)
+    logger.message(f"best: {best_idx}, worst: {worst_idx}")
+
+    idx = 7811
+    x = np.linspace(0, 1, 200)
+    plt.plot(x, pred_s[idx], "r--")
+    plt.plot(x, outputs_test[idx], "b-")
+    plt.title(f"CViT (TV: {tvd[idx]:.2f})")
+    plt.xlabel("$y$")
+    plt.ylim([-1.4, 1.4])
+
+    plt.tight_layout()
+    plt.savefig(osp.join(cfg.output_dir, "./adv_cvit.png"))
+    logger.message(f"Result saved to: {osp.join(cfg.output_dir, './adv_cvit.png')}")
 
 
 def export(cfg: DictConfig):
