@@ -21,7 +21,7 @@ import pandas as pd
 from omegaconf import DictConfig
 
 from deploy.python_infer import base
-from examples.yinglong1.timefeatures import time_features
+from examples.yinglong.timefeatures import time_features
 from ppsci.utils import logger
 
 
@@ -57,6 +57,7 @@ class YingLongPredictor(base.Predictor):
         self.input_data_handle = self.predictor.get_input_handle(self.input_names[0])
         self.time_stamps_handle = self.predictor.get_input_handle(self.input_names[1])
         self.nwp_data_handle = self.predictor.get_input_handle(self.input_names[2])
+        self.geo_data_handle = self.predictor.get_input_handle(self.input_names[3])
 
         # get output names and data handles
         self.output_names = self.predictor.get_output_names()
@@ -95,6 +96,7 @@ class YingLongPredictor(base.Predictor):
         input_data: np.ndarray,
         time_stamps: List[List[pd.Timestamp]],
         nwp_data: np.ndarray,
+        geo_data: np.ndarray,
         batch_size: int = 1,
     ) -> np.ndarray:
         """Predicts the output of the yinglong model for the given input.
@@ -103,6 +105,7 @@ class YingLongPredictor(base.Predictor):
             input_data (np.ndarray): Input data of shape (N, T, H, W).
             time_stamps (List[List[pd.Timestamp]]): Timestamps data.
             nwp_data (np.ndarray): NWP data.
+            geo_data (np.ndarray): Geographic data.
             batch_size (int, optional): Batch size, now only support 1. Defaults to 1.
 
         Returns:
@@ -118,6 +121,7 @@ class YingLongPredictor(base.Predictor):
             self.input_names[0]: self.input_data_handle,
             self.input_names[1]: self.time_stamps_handle,
             self.input_names[2]: self.nwp_data_handle,
+            self.input_names[3]: self.geo_data_handle,
         }
         # prepare output handle(s)
         output_handles = {self.output_names[0]: self.output_handle}
@@ -144,6 +148,7 @@ class YingLongPredictor(base.Predictor):
                 self.input_names[0]: input_data,
                 self.input_names[1]: time_stamps,
                 self.input_names[2]: nwp_data,
+                self.input_names[3]: geo_data,
             }
 
             # send batch input data to input handle(s)
