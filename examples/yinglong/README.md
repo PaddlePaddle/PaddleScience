@@ -55,7 +55,7 @@ tar -xvf inference.tar
 
 ### 2. Run the code
 
-The following code runs the YingLong model, and the model output will be saved in 'outputs_yinglong_eastern(western)/result.npy'.
+The following code runs the YingLong model, and the model output will be saved in `outputs_yinglong_eastern(western)/result.npy`.
 
 ``` shell
 # yinglong_eastern

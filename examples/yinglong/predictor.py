@@ -105,7 +105,7 @@ class YingLongPredictor(base.Predictor):
             input_data (np.ndarray): Input data of shape (N, T, H, W).
             time_stamps (List[List[pd.Timestamp]]): Timestamps data.
             nwp_data (np.ndarray): NWP data.
-            geo_data (np.ndarray): Geo data.
+            geo_data (np.ndarray): Geographic data.
             batch_size (int, optional): Batch size, now only support 1. Defaults to 1.
 
         Returns:
