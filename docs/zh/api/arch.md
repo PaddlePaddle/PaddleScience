@@ -9,6 +9,7 @@
         - AMGNet
         - AutoEncoder
         - ChipDeepONets
+        - CVit1D
         - CuboidTransformer
         - CylinderEmbedding
         - DeepONet

@@ -625,10 +625,6 @@ class CVit1D(base.Arch):
         )
 
     def forward_tensor(self, x, coords):
-        """
-        x: [B, L, C]
-        coords: [N_grid, 1]
-        """
         b, h, c = x.shape
 
         if self.embedding_type == "grid":

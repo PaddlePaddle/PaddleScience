@@ -472,7 +472,7 @@ def montecarlo_integrate(
     N: int = 1000,
     integration_domain: Union[List[List[float]], paddle.Tensor] = None,
     seed: int = None,
-):
+) -> paddle.Tensor:
     """Integrates the passed function on the passed domain using vanilla Monte
     Carlo Integration.
 
@@ -491,7 +491,7 @@ def montecarlo_integrate(
         ValueError: If len(integration_domain) != dim
 
     Returns:
-        Integral value
+        paddle.Tensor: Integral result.
 
     Examples:
         >>> import paddle
