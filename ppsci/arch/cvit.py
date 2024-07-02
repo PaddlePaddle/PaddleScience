@@ -185,7 +185,7 @@ class PatchEmbed1D(nn.Layer):
     def __init__(
         self,
         in_dim: int,
-        patch_size: Tuple[int, ...] = (4,),
+        patch_size: Sequence[int] = (4,),
         emb_dim: int = 768,
         use_norm: bool = False,
         layer_norm_eps: float = 1e-5,
@@ -265,7 +265,7 @@ class Encoder1D(nn.Layer):
     def __init__(
         self,
         in_dim: int,
-        seq_length: int,
+        spatial_dims: int,
         patch_size: int = (4,),
         emb_dim: int = 256,
         depth: int = 3,
@@ -275,7 +275,7 @@ class Encoder1D(nn.Layer):
     ):
         super().__init__()
         self.in_dim = in_dim
-        self.seq_length = seq_length
+        self.spatial_dims = spatial_dims
         self.patch_size = patch_size
         self.emb_dim = emb_dim
         self.depth = depth
@@ -298,7 +298,7 @@ class Encoder1D(nn.Layer):
         self.register_buffer(
             "pos_emb",
             get_1d_sincos_pos_embed(
-                self.emb_dim, self.seq_length // self.patch_size[0]
+                self.emb_dim, self.spatial_dims // self.patch_size[0]
             ),
         )
 
@@ -346,7 +346,7 @@ def dot_product_attention_weights(
     depth = query.shape[-1]
     query = query / (depth**0.5)
     # attn weight shape is (batch..., num_heads, q_length, kv_length)
-    attn_weights = paddle.einsum("bqhd,bkhd->bhqk", query, key)
+    attn_weights = paddle.einsum("...qhd,...khd->...hqk", query, key)
 
     # apply attention bias: masking, dropout, proximity bias, etc.
     if bias is not None:
@@ -508,11 +508,41 @@ class MultiHeadDotProductAttention(nn.Layer):
 
 
 class CVit1D(base.Arch):
+    """
+    1D Convolutional Vision Transformer (CVit1D) class.
+
+    This class implements a 1D Convolutional Vision Transformer model, which combines
+    convolutional layers with self-attention mechanisms to process sequential data.
+    It inherits from the base Architecture class and is designed for tasks that require
+    spatial understanding and transformation of 1D signals.
+
+    Args:
+        input_keys (Sequence[str]): Keys identifying the input tensors.
+        output_keys (Sequence[str]): Keys identifying the output tensors.
+        spatial_dims (int): The spatial dimensions of the input data.
+        in_dim (int): The dimensionality of the input data.
+        coords_dim (int): The dimensionality of the positional encoding.
+        patch_size (Sequence[int], optional): Size of the patches. Defaults to (4,).
+        grid_size (Sequence[int], optional): Size of the grid. Defaults to (200,).
+        latent_dim (int, optional): Dimensionality of the latent space. Defaults to 256.
+        emb_dim (int, optional): Dimensionality of the embedding space. Defaults to 256.
+        depth (int, optional): Number of transformer encoder layers. Defaults to 3.
+        num_heads (int, optional): Number of attention heads. Defaults to 8.
+        dec_emb_dim (int, optional): Dimensionality of the decoder embedding space. Defaults to 256.
+        dec_num_heads (int, optional): Number of decoder attention heads. Defaults to 8.
+        dec_depth (int, optional): Number of decoder transformer layers. Defaults to 1.
+        num_mlp_layers (int, optional): Number of layers in the MLP. Defaults to 1.
+        mlp_ratio (int, optional): Ratio for determining the size of the MLP's hidden layer. Defaults to 1.
+        out_dim (int, optional): Dimensionality of the output data. Defaults to 1.
+        layer_norm_eps (float, optional): Epsilon for layer normalization. Defaults to 1e-5.
+        embedding_type (str, optional): Type of embedding to use ("grid" or other options). Defaults to "grid".
+    """
+
     def __init__(
         self,
         input_keys: Sequence[str],
         output_keys: Sequence[str],
-        seq_length: int,
+        spatial_dims: int,
         in_dim: int,
         coords_dim: int,
         patch_size: Sequence[int] = (4,),
@@ -533,7 +563,7 @@ class CVit1D(base.Arch):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.seq_length = seq_length
+        self.spatial_dims = spatial_dims
         self.in_dim = in_dim
         self.coords_dim = coords_dim
         self.patch_size = patch_size
@@ -566,7 +596,7 @@ class CVit1D(base.Arch):
 
         self.encoder = Encoder1D(
             self.in_dim,
-            self.seq_length,
+            self.spatial_dims,
             self.patch_size,
             self.emb_dim,
             self.depth,

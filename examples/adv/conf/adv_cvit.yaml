@@ -37,7 +37,7 @@ MODEL:
   output_keys: [s]
   coords_dim: 1
   in_dim: 1
-  seq_length: 200
+  spatial_dims: [200]
   patch_size: [4]
   grid_size: [200]
   latent_dim: 256
@@ -57,7 +57,7 @@ MODEL:
 TRAIN:
   epochs: 200000
   iters_per_epoch: 1
-  save_freq: 1000
+  save_freq: 10000
   eval_during_train: false
   eval_freq: 5
   lr_scheduler:
@@ -101,5 +101,5 @@ INFER:
   gpu_id: 0
   max_batch_size: 1024
   num_cpu_threads: 10
-  seq_len: 200
+  spatial_dims: 200
   grid_size: 128
