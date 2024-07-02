@@ -511,10 +511,7 @@ class CVit1D(base.Arch):
     """
     1D Convolutional Vision Transformer (CVit1D) class.
 
-    This class implements a 1D Convolutional Vision Transformer model, which combines
-    convolutional layers with self-attention mechanisms to process sequential data.
-    It inherits from the base Architecture class and is designed for tasks that require
-    spatial understanding and transformation of 1D signals.
+    [Bridging Operator Learning and Conditioned Neural Fields: A Unifying Perspective](https://arxiv.org/abs/2405.13998)
 
     Args:
         input_keys (Sequence[str]): Keys identifying the input tensors.

@@ -5,34 +5,34 @@
     options:
       members:
         - Arch
+        - AFNONet
         - AMGNet
-        - MLP
-        - ModifiedMLP
-        - PirateNet
+        - AutoEncoder
+        - ChipDeepONets
+        - CuboidTransformer
+        - CylinderEmbedding
         - DeepONet
         - DeepPhyLSTM
-        - LorenzEmbedding
-        - RosslerEmbedding
-        - CylinderEmbedding
-        - Generator
-        - Discriminator
-        - PhysformerGPT2
-        - ModelList
-        - AFNONet
-        - PrecipNet
-        - PhyCRNet
-        - UNetEx
-        - USCNN
-        - NowcastNet
-        - HEDeepONets
         - DGMR
-        - ChipDeepONets
-        - AutoEncoder
-        - CuboidTransformer
+        - Discriminator
+        - Generator
+        - HEDeepONets
+        - LorenzEmbedding
+        - MLP
+        - ModelList
+        - ModifiedMLP
+        - NowcastNet
+        - PhyCRNet
+        - PhysformerGPT2
+        - PirateNet
+        - PrecipNet
+        - RosslerEmbedding
         - SFNONet
-        - UNONet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - UNetEx
+        - UNONet
+        - USCNN
       show_root_heading: true
       heading_level: 3
