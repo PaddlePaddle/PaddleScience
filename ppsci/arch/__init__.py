@@ -16,9 +16,6 @@ from __future__ import annotations
 
 import copy
 
-from ppsci.arch.graphcast import GraphCastNet
-from ppsci.arch.phycrnet import PhyCRNet
-
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.cvit import CVit1D  # isort:skip
@@ -31,7 +28,9 @@ from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
+from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
+from ppsci.arch.phycrnet import PhyCRNet  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip

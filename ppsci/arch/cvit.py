@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
+
+try:
+    import einops
+except ModuleNotFoundError:
+    pass
 from typing import Callable
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
-import einops
 import paddle
 from paddle import nn
 from paddle.nn import functional as F
@@ -557,6 +562,10 @@ class CVit1D(base.Arch):
         layer_norm_eps: float = 1e-5,
         embedding_type: str = "grid",
     ):
+        if not importlib.util.find_spec("einops"):
+            raise ModuleNotFoundError(
+                "Please install `einops` by running 'pip install einops'."
+            )
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys

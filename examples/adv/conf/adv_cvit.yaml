@@ -37,7 +37,7 @@ MODEL:
   output_keys: [s]
   coords_dim: 1
   in_dim: 1
-  spatial_dims: [200]
+  spatial_dims: 200
   patch_size: [4]
   grid_size: [200]
   latent_dim: 256
@@ -87,8 +87,8 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_pretrained.pdparams
-  export_path: ./inference/allen_cahn
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/cvit/adv_cvit_pretrained.pdparams
+  export_path: ./inference/adv_cvit
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
@@ -101,5 +101,6 @@ INFER:
   gpu_id: 0
   max_batch_size: 1024
   num_cpu_threads: 10
-  spatial_dims: 200
-  grid_size: 128
+  spatial_dims: ${MODEL.spatial_dims}
+  grid_size: ${MODEL.grid_size}
+  batch_size: 1000
