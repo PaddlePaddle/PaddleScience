@@ -167,7 +167,18 @@ def build_dataloader(_dataset, cfg):
             # (also the only) batch data in batch list, or there will be a redundant
             # axis at the first dimension returned by dataloader. This step is necessary
             # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
-            collate_fn = lambda batch: batch[0]  # noqa: E731
+            class IdentityCollateFn:
+                def __call__(self, *batch_list):
+                    for d in batch_list:
+                        for k in d:
+                            d[k] = d[k][0]
+                    return batch_list
+
+            collate_fn = (
+                IdentityCollateFn()
+                if collate_fn is None
+                else transform.Compose([collate_fn, IdentityCollateFn()])
+            )  # noqa: E731
             _DEFAULT_NUM_WORKERS = 0
             logger.info(
                 "Auto collation is disabled and set num_workers to "

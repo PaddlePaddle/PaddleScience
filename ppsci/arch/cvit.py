@@ -41,6 +41,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim: int, pos: paddle.Tensor):
     omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape([-1])  # (M,)
+    # out = pos.unsqueeze(-1) @ oemga.unsqueeze(0)
     out = paddle.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
 
     emb_sin = paddle.sin(out)  # (M, D/2)
@@ -225,6 +226,62 @@ class PatchEmbed1D(nn.Layer):
         initializer.constant_(self.conv.bias, 0)
 
 
+class PatchEmbed(nn.Layer):
+    def __init__(
+        self,
+        in_dim: int,
+        spatial_dims: Sequence[int],
+        patch_size: Tuple[int, ...] = (1, 16, 16),
+        emb_dim: int = 768,
+        use_norm: bool = False,
+        layer_norm_eps: float = 1e-5,
+    ):
+        super().__init__()
+        self.patch_size = patch_size
+        self.emb_dim = emb_dim
+        self.use_norm = use_norm
+        self.layer_norm_eps = layer_norm_eps
+        self.conv = nn.Conv3D(
+            in_dim,
+            self.emb_dim,
+            (self.patch_size[0], self.patch_size[1], self.patch_size[2]),
+            (self.patch_size[0], self.patch_size[1], self.patch_size[2]),
+            data_format="NDHWC",
+        )
+        self.norm = (
+            nn.LayerNorm(self.emb_dim, self.layer_norm_eps)
+            if self.use_norm
+            else nn.Identity()
+        )
+        t, h, w = spatial_dims
+        self.num_patches = [
+            t // self.patch_size[0],
+            h // self.patch_size[1],
+            w // self.patch_size[2],
+        ]
+        self._init_weights()
+
+    def forward(self, x):
+        b, t, h, w, c = x.shape
+
+        x = self.conv(x)  # [B, L, C] --> [B, L/ps, self.emb_dim]
+        x = x.reshape(
+            [
+                b,
+                self.num_patches[0],
+                self.num_patches[1] * self.num_patches[2],
+                self.emb_dim,
+            ]
+        )
+        if self.use_norm:
+            x = self.norm(x)
+        return x
+
+    def _init_weights(self) -> None:
+        initializer.xavier_uniform_(self.conv.weight)
+        initializer.constant_(self.conv.bias, 0)
+
+
 class CrossAttnBlock(nn.Layer):
     def __init__(
         self,
@@ -310,6 +367,116 @@ class Encoder1D(nn.Layer):
     def forward(self, x):
         x = self.patch_embedding(x)
         x = x + self.pos_emb
+
+        for _, block in enumerate(self.blocks):
+            x = block(x)
+
+        return x
+
+
+class TimeAggregation(nn.Layer):
+    def __init__(
+        self,
+        emb_dim: int,
+        depth: int,
+        num_heads: int = 8,
+        num_latents: int = 64,
+        mlp_ratio: int = 1,
+        layer_norm_eps: float = 1e-5,
+    ):
+        super().__init__()
+        self.emb_dim = emb_dim
+        self.depth = depth
+        self.num_heads = num_heads
+        self.num_latents = num_latents
+        self.mlp_ratio = mlp_ratio
+        self.layer_norm_eps = layer_norm_eps
+        self.latents = self.create_parameter(
+            [self.num_latents, self.emb_dim],
+            default_initializer=nn.initializer.Normal(),
+        )
+
+    def forward(self, x):  # (B, T, S, D) --> (B, T', S, D)
+        latents = einops.repeat(
+            self.latents, "t d -> b s t d", b=x.shape[0], s=x.shape[2]
+        )  # (B, T', S, D)
+        x = einops.rearrange(x, "b t s d -> b s t d")  # (B, S, T, D)
+
+        # Transformer
+        for _ in range(self.depth):
+            latents = CrossAttnBlock(
+                self.num_heads, self.emb_dim, self.mlp_ratio, self.layer_norm_eps
+            )(latents, x)
+        latents = einops.rearrange(latents, "b s t d -> b t s d")  # (B, T', S, D)
+        return latents
+
+
+class Encoder(nn.Layer):
+    def __init__(
+        self,
+        in_dim: int,
+        spatial_dims: Sequence[int],
+        patch_size: int = (1, 16, 16),
+        emb_dim: int = 256,
+        depth: int = 3,
+        num_heads: int = 8,
+        mlp_ratio: int = 1,
+        layer_norm_eps: float = 1e-5,
+    ):
+        super().__init__()
+        self.in_dim = in_dim
+        self.spatial_dims = spatial_dims
+        self.patch_size = patch_size
+        self.emb_dim = emb_dim
+        self.depth = depth
+        self.num_heads = num_heads
+        self.mlp_ratio = mlp_ratio
+        self.layer_norm_eps = layer_norm_eps
+        self.patch_embedding = PatchEmbed(
+            in_dim, spatial_dims, self.patch_size, self.emb_dim
+        )
+
+        self.blocks = nn.LayerList(
+            [
+                SelfAttnBlock(
+                    self.num_heads,
+                    self.emb_dim,
+                    self.mlp_ratio,
+                    self.layer_norm_eps,
+                )
+                for _ in range(self.depth)
+            ]
+        )
+        self.time_aggreator = TimeAggregation(
+            self.emb_dim,
+            2,
+            self.num_heads,
+            1,
+            self.mlp_ratio,
+            self.layer_norm_eps,
+        )
+        t, h, w = spatial_dims
+        self.register_buffer(
+            "time_emb",
+            get_1d_sincos_pos_embed(self.emb_dim, t // self.patch_size[0]),
+        )
+        self.register_buffer(
+            "pos_emb",
+            get_2d_sincos_pos_embed(
+                self.emb_dim, (h // self.patch_size[1], w // self.patch_size[2])
+            ),
+        )
+        self.norm = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
+
+    def forward(self, x):
+        x = self.patch_embedding(x)
+
+        x = x + self.time_emb.unsqueeze(2) + self.pos_emb.unsqueeze(1)
+
+        x = self.time_aggreator(x)
+
+        x = self.norm(x)
+        x = einops.rearrange(x, "b t s d -> b (t s) d")
 
         for _, block in enumerate(self.blocks):
             x = block(x)
@@ -670,6 +837,148 @@ class CVit1D(base.Arch):
         x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
 
         y = self.forward_tensor(x, coords[0])
+
+        y_dict = {self.output_keys[0]: y}
+        if self._output_transform is not None:
+            y_dict = self._output_transform(x_dict, y_dict)
+
+        return y_dict
+
+
+class CVit(base.Arch):
+    def __init__(
+        self,
+        input_keys: Sequence[str],
+        output_keys: Sequence[str],
+        spatial_dims: Sequence[int],
+        in_dim: int,
+        coords_dim: int,
+        patch_size: Sequence[int] = (1, 16, 16),
+        grid_size: Sequence[int] = (128, 128),
+        latent_dim: int = 256,
+        emb_dim: int = 256,
+        depth: int = 3,
+        num_heads: int = 8,
+        dec_emb_dim: int = 256,
+        dec_num_heads: int = 8,
+        dec_depth: int = 1,
+        num_mlp_layers: int = 1,
+        mlp_ratio: int = 1,
+        out_dim: int = 1,
+        layer_norm_eps: float = 1e-5,
+        embedding_type: str = "grid",
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        self.spatial_dims = spatial_dims
+        self.in_dim = in_dim
+        self.coords_dim = coords_dim
+        self.patch_size = patch_size
+        self.grid_size = grid_size
+        self.latent_dim = latent_dim
+        self.emb_dim = emb_dim
+        self.depth = depth
+        self.num_heads = num_heads
+        self.dec_emb_dim = dec_emb_dim
+        self.dec_num_heads = dec_num_heads
+        self.dec_depth = dec_depth
+        self.num_mlp_layers = num_mlp_layers
+        self.mlp_ratio = mlp_ratio
+        self.out_dim = out_dim
+        self.layer_norm_eps = layer_norm_eps
+        self.embedding_type = embedding_type
+
+        if self.embedding_type == "grid":
+            # Create grid and latents
+            n_x, n_y = self.grid_size[0], self.grid_size[1]
+
+            x = paddle.linspace(0, 1, n_x)
+            y = paddle.linspace(0, 1, n_y)
+            xx, yy = paddle.meshgrid(x, y, indexing="ij")
+
+            self.grid = paddle.hstack([xx.flatten()[:, None], yy.flatten()[:, None]])
+            self.latents = self.create_parameter(
+                [n_x * n_y, self.latent_dim],
+                default_initializer=nn.initializer.Normal(),
+            )
+            self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
+            self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
+        elif self.embedding_type == "mlp":
+            self.mlp = MlpBlock(self.latent_dim, self.dec_emb_dim, self.dec_emb_dim)
+            self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
+
+        self.encoder = Encoder(
+            self.in_dim,
+            self.spatial_dims,
+            self.patch_size,
+            self.emb_dim,
+            self.depth,
+            self.num_heads,
+            self.mlp_ratio,
+            self.layer_norm_eps,
+        )
+        self.enc_norm = nn.LayerNorm(self.emb_dim, self.layer_norm_eps)
+        self.fc1 = nn.Linear(self.emb_dim, self.dec_emb_dim)
+        self.blocks = nn.LayerList(
+            [
+                CrossAttnBlock(
+                    self.dec_num_heads,
+                    self.dec_emb_dim,
+                    self.mlp_ratio,
+                    self.layer_norm_eps,
+                    self.dec_emb_dim,
+                    self.dec_emb_dim,
+                )
+                for _ in range(self.dec_depth)
+            ]
+        )
+        self.block_norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
+        self.final_mlp = Mlp(
+            self.num_mlp_layers,
+            self.dec_emb_dim,
+            self.out_dim,
+            layer_norm_eps=self.layer_norm_eps,
+        )
+
+    def forward_tensor(self, x, coords):
+        b, t, h, w, c = x.shape
+        if self.embedding_type == "grid":
+            d2 = ((coords.unsqueeze(1) - self.grid.unsqueeze(0)) ** 2).sum(axis=2)
+            w = paddle.exp(-1e5 * d2) / paddle.exp(-1e5 * d2).sum(axis=1, keepdim=True)
+
+            coords = paddle.einsum("ic,pi->pc", self.latents, w)
+            coords = self.fc(coords)
+            coords = self.norm(coords)
+
+        elif self.embedding_type == "mlp":
+            coords = self.mlp(coords)
+            coords = self.norm(coords)
+
+        coords = einops.repeat(coords, "n d -> b n d", b=b)
+
+        x = self.encoder(x)
+
+        x = self.enc_norm(x)
+        x = self.fc1(x)
+
+        for i, block in enumerate(self.blocks):
+            x = block(coords, x)
+
+        x = self.block_norm(x)
+        x = self.final_mlp(x)
+
+        return x
+
+    def forward(self, x_dict):
+        if self._input_transform is not None:
+            x = self._input_transform(x_dict)
+
+        x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
+        if coords.ndim >= 3:
+            coords = coords[0]
+
+        y = self.forward_tensor(x, coords)
 
         y_dict = {self.output_keys[0]: y}
         if self._output_transform is not None:

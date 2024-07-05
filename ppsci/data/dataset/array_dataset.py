@@ -209,7 +209,10 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
     def to_tensor_dict(_dict):
         if _dict is None:
             return None
-        return {k: paddle.to_tensor(v) for k, v in _dict.items()}
+        return {
+            k: (paddle.to_tensor(v) if v is not None else None)
+            for k, v in _dict.items()
+        }
 
     def __iter__(self):
         while True:
