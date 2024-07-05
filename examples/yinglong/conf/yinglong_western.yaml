@@ -2,7 +2,7 @@ hydra:
   run:
     # dynamic output directory according to running time and override name
     # dir: outputs_yinglong/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
-    dir: ./outputs_yinglong_24
+    dir: ./outputs_yinglong_western
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -33,7 +33,7 @@ log_freq: 20
 # inference settings
 INFER:
   pretrained_model_path: null
-  export_path: ./inference/yinglong_24
+  export_path: inference/yinglong_western
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
@@ -43,13 +43,14 @@ INFER:
   ir_optim: false
   min_subgraph_size: 30
   gpu_mem: 100
-  gpu_id: 0
+  gpu_id: 3
   max_batch_size: 1
   num_cpu_threads: 10
   batch_size: 1
-  mean_path: ./hrrr_example_69vars/stat/mean_crop.npy
-  std_path: ./hrrr_example_69vars/stat/std_crop.npy
-  input_file: ./hrrr_example_69vars/valid/2022/01/01.h5
+  mean_path: ./western_valid_data/stat/mean_crop.npy
+  std_path: ./western_valid_data/stat/std_crop.npy
+  input_file: [./western_valid_data/valid/2022/01/01.h5, ./western_valid_data/valid/2022/01/02.h5, ./western_valid_data/valid/2022/01/03.h5]
   init_time: 2022/01/01/00
-  nwp_file: ./hrrr_example_69vars/nwp_convert/2022/01/01/00.h5
-  num_timestamps: 22
+  nwp_file: [./western_valid_data/hrrr_nwp_h5/2022/01/01.h5, ./western_valid_data/hrrr_nwp_h5/2022/01/02.h5, ./western_valid_data/hrrr_nwp_h5/2022/01/03.h5]
+  geo_file: ./western_valid_data/geo.h5
+  num_timestamps: 48
