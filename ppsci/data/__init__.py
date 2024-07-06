@@ -153,10 +153,7 @@ def build_dataloader(_dataset, cfg):
             cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
             is False
         ):
-            if (
-                "transforms" in cfg["dataset"]
-                and "auto_collation" not in cfg["dataset"]
-            ):
+            if "transforms" in cfg["dataset"] and "auto_collation" not in cfg:
                 logger.warning(
                     "'transforms' and batch indexing(auto_collation=False) are both "
                     "enabled. If you do want to apply transforms to the batch samples, "
