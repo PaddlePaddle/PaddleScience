@@ -104,9 +104,9 @@ def train(cfg: DictConfig):
         label_dict: Dict[str, np.ndarray],
         weight_dict: Dict[str, np.ndarray],
     ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        u_key, y_key = cfg.MODEL.input_keys
+        y_key = cfg.MODEL.input_keys[1]
         s_key = cfg.MODEL.output_keys[0]
-        npos = input_dict[u_key].shape[1]
+        npos = input_dict[y_key].shape[1]
         assert cfg.TRAIN.num_query_points <= npos, (
             f"Number of query points({cfg.TRAIN.num_query_points}) must be "
             f"less than or equal to number of positions({npos})."
