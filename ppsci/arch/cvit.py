@@ -346,7 +346,7 @@ class Encoder1D(nn.Layer):
         self.layer_norm_eps = layer_norm_eps
         self.patch_embedding = PatchEmbed1D(in_dim, self.patch_size, self.emb_dim)
 
-        self.blocks = nn.LayerList(
+        self.self_attn_blocks = nn.LayerList(
             [
                 SelfAttnBlock(
                     self.num_heads,
@@ -368,7 +368,7 @@ class Encoder1D(nn.Layer):
         x = self.patch_embedding(x)
         x = x + self.pos_emb
 
-        for _, block in enumerate(self.blocks):
+        for _, block in enumerate(self.self_attn_blocks):
             x = block(x)
 
         return x
@@ -452,7 +452,7 @@ class Encoder(nn.Layer):
             self.layer_norm_eps,
         )
 
-        self.blocks = nn.LayerList(
+        self.self_attn_blocks = nn.LayerList(
             [
                 SelfAttnBlock(
                     self.num_heads,
@@ -486,7 +486,7 @@ class Encoder(nn.Layer):
         x = self.norm(x)
         x = einops.rearrange(x, "b t s d -> b (t s) d")
 
-        for _, block in enumerate(self.blocks):
+        for _, block in enumerate(self.self_attn_blocks):
             x = block(x)
 
         return x
@@ -787,7 +787,7 @@ class CVit1D(base.Arch):
         )
         self.enc_norm = nn.LayerNorm(self.emb_dim, self.layer_norm_eps)
         self.fc1 = nn.Linear(self.emb_dim, self.dec_emb_dim)
-        self.blocks = nn.LayerList(
+        self.cross_attn_blocks = nn.LayerList(
             [
                 CrossAttnBlock(
                     self.dec_num_heads,
@@ -830,8 +830,8 @@ class CVit1D(base.Arch):
         x = self.enc_norm(x)
         x = self.fc1(x)
 
-        for i in range(self.dec_depth):
-            x = self.blocks[i](coords, x)
+        for i, block in enumerate(self.dec_depth):
+            x = block(coords, x)
 
         x = self.block_norm(x)
         x = self.final_mlp(x)
@@ -928,7 +928,7 @@ class CVit(base.Arch):
         )
         self.enc_norm = nn.LayerNorm(self.emb_dim, self.layer_norm_eps)
         self.fc1 = nn.Linear(self.emb_dim, self.dec_emb_dim)
-        self.blocks = nn.LayerList(
+        self.cross_attn_blocks = nn.LayerList(
             [
                 CrossAttnBlock(
                     self.dec_num_heads,
@@ -970,7 +970,7 @@ class CVit(base.Arch):
         x = self.enc_norm(x)
         x = self.fc1(x)
 
-        for i, block in enumerate(self.blocks):
+        for i, block in enumerate(self.cross_attn_blocks):
             x = block(coords, x)
 
         x = self.block_norm(x)
