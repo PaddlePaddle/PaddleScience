@@ -416,7 +416,9 @@ def inference(cfg: DictConfig):
     plot(pred[0, ..., 2], y[0, ..., 2], "./ns_uy.png")
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="ns_cvit.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="ns_cvit_small_8x8.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
