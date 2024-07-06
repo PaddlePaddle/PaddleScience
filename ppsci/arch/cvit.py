@@ -811,28 +811,29 @@ class CVit1D(base.Arch):
     def forward_tensor(self, x, coords):
         b, h, c = x.shape
 
+        # process query coordinates
         if self.embedding_type == "grid":
             d2 = (coords - self.grid.unsqueeze(0)) ** 2
             w = paddle.exp(-1e5 * d2) / paddle.exp(-1e5 * d2).sum(axis=1, keepdim=True)
-
             coords = paddle.einsum("ic,pi->pc", self.latents, w)
             coords = self.fc(coords)
             coords = self.norm(coords)
-
         elif self.embedding_type == "mlp":
             coords = self.mlp(coords)
             coords = self.norm(coords)
 
         coords = einops.repeat(coords, "n d -> b n d", b=b)
 
+        # process input function(encoder)
         x = self.encoder(x)
-
         x = self.enc_norm(x)
         x = self.fc1(x)
 
+        # decoder
         for i, block in enumerate(self.dec_depth):
             x = block(coords, x)
 
+        # mlp
         x = self.block_norm(x)
         x = self.final_mlp(x)
 
@@ -951,28 +952,30 @@ class CVit(base.Arch):
 
     def forward_tensor(self, x, coords):
         b, t, h, w, c = x.shape
+
+        # process query coordinates
         if self.embedding_type == "grid":
             d2 = ((coords.unsqueeze(1) - self.grid.unsqueeze(0)) ** 2).sum(axis=2)
             w = paddle.exp(-1e5 * d2) / paddle.exp(-1e5 * d2).sum(axis=1, keepdim=True)
-
             coords = paddle.einsum("ic,pi->pc", self.latents, w)
             coords = self.fc(coords)
             coords = self.norm(coords)
-
         elif self.embedding_type == "mlp":
             coords = self.mlp(coords)
             coords = self.norm(coords)
 
         coords = einops.repeat(coords, "n d -> b n d", b=b)
 
+        # process input function(encoder)
         x = self.encoder(x)
-
         x = self.enc_norm(x)
         x = self.fc1(x)
 
+        # decoder
         for i, block in enumerate(self.cross_attn_blocks):
             x = block(coords, x)
 
+        # mlp
         x = self.block_norm(x)
         x = self.final_mlp(x)
 
@@ -984,7 +987,7 @@ class CVit(base.Arch):
 
         x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
         if coords.ndim == 3:
-            coords = coords[0]  # [b, n, 3] -> [n, 3]
+            coords = coords[0]  # [b, n, c] -> [n, c]
 
         y = self.forward_tensor(x, coords)
 

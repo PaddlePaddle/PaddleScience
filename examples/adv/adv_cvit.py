@@ -210,8 +210,9 @@ def export(cfg: DictConfig):
         },
     ]
     # NOTE: Put einops into ignore module when exporting, or error will occur
-    paddle.jit.ignore_module([einops])
-    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
+    solver.export(
+        input_spec, cfg.INFER.export_path, with_onnx=False, ignore_modules=[einops]
+    )
 
 
 def inference(cfg: DictConfig):

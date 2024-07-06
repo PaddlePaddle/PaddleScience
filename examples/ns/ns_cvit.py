@@ -97,7 +97,9 @@ def train(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     train_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    train_coords = np.tile(train_coords[None, :], [len(train_inputs), 1, 1])
+    train_coords = np.broadcast(
+        train_coords[None, :], [len(train_inputs), train_outputs.shape[1], 2]
+    )
 
     def random_query(
         input_dict: Dict[str, np.ndarray],
@@ -106,12 +108,12 @@ def train(cfg: DictConfig):
     ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         y_key = cfg.MODEL.input_keys[1]
         s_key = cfg.MODEL.output_keys[0]
+        # random select coords and labels
         npos = input_dict[y_key].shape[1]
         assert cfg.TRAIN.num_query_points <= npos, (
             f"Number of query points({cfg.TRAIN.num_query_points}) must be "
             f"less than or equal to number of positions({npos})."
         )
-        # random select coords and labels
         random_pos = np.random.choice(npos, cfg.TRAIN.num_query_points, replace=False)
         input_dict[y_key] = input_dict[y_key][0, random_pos]
         label_dict[s_key] = label_dict[s_key][:, random_pos]
@@ -168,7 +170,9 @@ def train(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     test_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    test_coords = np.tile(test_coords[None, :], [len(test_inputs), 1, 1])
+    test_coords = np.broadcast(
+        test_coords[None, :], [len(test_inputs), test_outputs.shape[1], 2]
+    )
 
     def l2_err_func(
         output_dict: Dict[str, np.ndarray],
@@ -229,7 +233,9 @@ def evaluate(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     test_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    test_coords = np.tile(test_coords[None, :], [len(test_inputs), 1, 1])
+    test_coords = np.broadcast(
+        test_coords[None, :], [len(test_inputs), test_outputs.shape[1], 2]
+    )
 
     def l2_err_func(
         output_dict: Dict[str, np.ndarray],
@@ -276,7 +282,6 @@ def export(cfg: DictConfig):
     # export model
     from paddle.static import InputSpec
 
-    paddle.jit.ignore_module([einops])
     input_spec = [
         {
             model.input_keys[0]: InputSpec(
@@ -289,7 +294,9 @@ def export(cfg: DictConfig):
             ),
         },
     ]
-    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
+    solver.export(
+        input_spec, cfg.INFER.export_path, with_onnx=False, ignore_modules=[einops]
+    )
 
 
 def inference(cfg: DictConfig):
