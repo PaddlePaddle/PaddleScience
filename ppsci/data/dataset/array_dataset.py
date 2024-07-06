@@ -205,16 +205,12 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
             "ContinuousNamedArrayDataset has no fixed number of samples."
         )
 
-    @staticmethod
-    def to_tensor_dict(_dict):
-        if _dict is None:
-            return None
-        return {
-            k: (paddle.to_tensor(v) if v is not None else None)
-            for k, v in _dict.items()
-        }
-
     def __iter__(self):
+        def to_tensor_dict(_dict):
+            if _dict is None:
+                return None
+            return {k: paddle.to_tensor(v) for k, v in _dict.items()}
+
         while True:
             input_batch = self.input_fn()
             label_batch = self.label_fn(input_batch)
@@ -227,9 +223,9 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
                 input_batch, label_batch, weight_batch = self.transforms(
                     input_batch, label_batch, weight_batch
                 )
-            yield self.to_tensor_dict(input_batch), self.to_tensor_dict(
+            yield to_tensor_dict(input_batch), to_tensor_dict(
                 label_batch
-            ), self.to_tensor_dict(weight_batch)
+            ), to_tensor_dict(weight_batch)
 
     def __len__(self):
         return 1

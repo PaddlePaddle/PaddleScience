@@ -853,7 +853,7 @@ class Solver:
 
         if self.pretrained_model_path is None:
             logger.warning(
-                "'pretrained_model_path' is not given, so the weights of exported "
+                "'INFER.pretrained_model_path' is not given, so the weights of exported "
                 "model will be random initialized."
             )
 

@@ -395,6 +395,14 @@ class TimeAggregation(nn.Layer):
             [self.num_latents, self.emb_dim],
             default_initializer=nn.initializer.Normal(),
         )
+        self.cross_attn_blocks = nn.LayerList(
+            [
+                CrossAttnBlock(
+                    self.num_heads, self.emb_dim, self.mlp_ratio, self.layer_norm_eps
+                )
+                for _ in range(self.depth)
+            ]
+        )
 
     def forward(self, x):  # (B, T, S, D) --> (B, T', S, D)
         latents = einops.repeat(
@@ -403,10 +411,9 @@ class TimeAggregation(nn.Layer):
         x = einops.rearrange(x, "b t s d -> b s t d")  # (B, S, T, D)
 
         # Transformer
-        for _ in range(self.depth):
-            latents = CrossAttnBlock(
-                self.num_heads, self.emb_dim, self.mlp_ratio, self.layer_norm_eps
-            )(latents, x)
+        for i, block in enumerate(self.cross_attn_blocks):
+            latents = block(latents, x)
+
         latents = einops.rearrange(latents, "b s t d -> b t s d")  # (B, T', S, D)
         return latents
 
@@ -436,6 +443,15 @@ class Encoder(nn.Layer):
             in_dim, spatial_dims, self.patch_size, self.emb_dim
         )
 
+        self.time_aggreator = TimeAggregation(
+            self.emb_dim,
+            2,
+            self.num_heads,
+            1,
+            self.mlp_ratio,
+            self.layer_norm_eps,
+        )
+
         self.blocks = nn.LayerList(
             [
                 SelfAttnBlock(
@@ -446,14 +462,6 @@ class Encoder(nn.Layer):
                 )
                 for _ in range(self.depth)
             ]
-        )
-        self.time_aggreator = TimeAggregation(
-            self.emb_dim,
-            2,
-            self.num_heads,
-            1,
-            self.mlp_ratio,
-            self.layer_norm_eps,
         )
         t, h, w = spatial_dims
         self.register_buffer(
@@ -975,8 +983,8 @@ class CVit(base.Arch):
             x = self._input_transform(x_dict)
 
         x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
-        if coords.ndim >= 3:
-            coords = coords[0]
+        if coords.ndim == 3:
+            coords = coords[0]  # [b, n, 3] -> [n, 3]
 
         y = self.forward_tensor(x, coords)
 

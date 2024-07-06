@@ -237,7 +237,7 @@ class Timer(ContextDecorator):
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
-            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+            logger.message(f"{self.name}.time_cost = {self.interval * 1000:.2f} ms")
 
     def start(self, name: str = "Timer"):
         """Push a new timer context.
