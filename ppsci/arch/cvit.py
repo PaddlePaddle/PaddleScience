@@ -451,6 +451,7 @@ class Encoder(nn.Layer):
             self.mlp_ratio,
             self.layer_norm_eps,
         )
+        self.norm = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
 
         self.self_attn_blocks = nn.LayerList(
             [
@@ -474,7 +475,6 @@ class Encoder(nn.Layer):
                 self.emb_dim, (h // self.patch_size[1], w // self.patch_size[2])
             ),
         )
-        self.norm = nn.LayerNorm(self.emb_dim, epsilon=self.layer_norm_eps)
 
     def forward(self, x):
         x = self.patch_embedding(x)
@@ -859,9 +859,9 @@ class CVit(base.Arch):
         self,
         input_keys: Sequence[str],
         output_keys: Sequence[str],
-        spatial_dims: Sequence[int],
         in_dim: int,
         coords_dim: int,
+        spatial_dims: Sequence[int],
         patch_size: Sequence[int] = (1, 16, 16),
         grid_size: Sequence[int] = (128, 128),
         latent_dim: int = 256,
@@ -986,7 +986,7 @@ class CVit(base.Arch):
             x = self._input_transform(x_dict)
 
         x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
-        if coords.ndim == 3:
+        if coords.ndim >= 3:
             coords = coords[0]  # [b, n, c] -> [n, c]
 
         y = self.forward_tensor(x, coords)

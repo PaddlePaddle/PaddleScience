@@ -97,7 +97,7 @@ def train(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     train_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    train_coords = np.broadcast(
+    train_coords = np.broadcast_to(
         train_coords[None, :], [len(train_inputs), train_outputs.shape[1], 2]
     )
 
@@ -170,7 +170,7 @@ def train(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     test_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    test_coords = np.broadcast(
+    test_coords = np.broadcast_to(
         test_coords[None, :], [len(test_inputs), test_outputs.shape[1], 2]
     )
 
@@ -233,7 +233,7 @@ def evaluate(cfg: DictConfig):
     y_star = np.linspace(0, 1, w, dtype=dtype)
     x_star, y_star = np.meshgrid(x_star, y_star, indexing="ij")
     test_coords = np.hstack([x_star.flatten()[:, None], y_star.flatten()[:, None]])
-    test_coords = np.broadcast(
+    test_coords = np.broadcast_to(
         test_coords[None, :], [len(test_inputs), test_outputs.shape[1], 2]
     )
 
@@ -383,7 +383,7 @@ def inference(cfg: DictConfig):
     def plot(pred, ref, filename):
         fig, axes = plt.subplots(
             3, cfg.INFER.rollout_steps, figsize=(cfg.INFER.rollout_steps * 5, 3 * 5)
-        )  # 3行4列的子图
+        )
 
         def min_max_norm(x):
             return (x - x.min()) / (x.max() - x.min())
@@ -396,7 +396,6 @@ def inference(cfg: DictConfig):
             axes[0, t].set_title(rf"$t={t}$")
             axes[0, t].axis("off")
         axes[0, 0].set_ylabel("Reference", size="large", labelpad=20)
-        axes[0, 0].yaxis.set_label_position("left")
         # plot prediction
         for t in range(cfg.INFER.rollout_steps):
             res = ref[t]
@@ -405,7 +404,6 @@ def inference(cfg: DictConfig):
             axes[1, t].set_title(rf"$t={t}$")
             axes[1, t].axis("off")
         axes[1, 0].set_ylabel("Prediction", size="large", labelpad=20)
-        axes[1, 0].yaxis.set_label_position("left")
         # plot abs error
         for t in range(cfg.INFER.rollout_steps):
             res = pred[t] - ref[t]
@@ -413,7 +411,6 @@ def inference(cfg: DictConfig):
             axes[2, t].set_title(rf"$t={t}$")
             axes[2, t].axis("off")
         axes[2, 0].set_ylabel("Abs. Error", size="large", labelpad=20)
-        axes[2, 0].yaxis.set_label_position("left")
         plt.tight_layout()
         plt.savefig(filename)
         plt.close()

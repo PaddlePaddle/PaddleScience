@@ -856,7 +856,7 @@ class Solver:
             full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
                 when set to True, where otherwise use Abstract Syntax Tree(AST) if False.
                 Defaults to True.
-            ignore_module (List[ModuleType]): Adds modules that should be ignored during
+            ignore_modules (List[ModuleType]): Adds modules that should be ignored during
                 conversion. Builtin modules that have been ignored are collections, pdb,
                 copy, inspect, re, numpy, logging, six. For example, einops can be added
                 here. Defaults to None.
