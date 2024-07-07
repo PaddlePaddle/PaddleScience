@@ -389,7 +389,7 @@ class TimeAggregation(nn.Layer):
         self.layer_norm_eps = layer_norm_eps
         self.latents = self.create_parameter(
             [self.num_latents, self.emb_dim],
-            default_initializer=nn.initializer.Normal(),
+            default_initializer=nn.initializer.Normal(std=1e-2),
         )
         self.cross_attn_blocks = nn.LayerList(
             [
@@ -800,7 +800,8 @@ class CVit1D(base.Arch):
             n_x = self.grid_size[0]
             self.grid = paddle.linspace(0, 1, n_x)
             self.latents = self.create_parameter(
-                [n_x, self.latent_dim], default_initializer=nn.initializer.Normal()
+                [n_x, self.latent_dim],
+                default_initializer=nn.initializer.Normal(std=1e-2),
             )
             self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
@@ -1003,7 +1004,7 @@ class CVit(base.Arch):
             self.grid = paddle.hstack([xx.flatten()[:, None], yy.flatten()[:, None]])
             self.latents = self.create_parameter(
                 [n_x * n_y, self.latent_dim],
-                default_initializer=nn.initializer.Normal(),
+                default_initializer=nn.initializer.Normal(std=1e-2),
             )
             self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
