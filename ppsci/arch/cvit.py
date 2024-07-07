@@ -357,11 +357,11 @@ class Encoder1D(nn.Layer):
                 for _ in range(self.depth)
             ]
         )
-        self.register_buffer(
-            "pos_emb",
-            get_1d_sincos_pos_embed(
-                self.emb_dim, self.spatial_dims // self.patch_size[0]
-            ),
+        pos_emb = get_1d_sincos_pos_embed(
+            self.emb_dim, self.spatial_dims // self.patch_size[0]
+        )
+        self.pos_emb = self.create_parameter(
+            pos_emb.shape, default_initializer=nn.initializer.Assign(pos_emb)
         )
 
     def forward(self, x):
@@ -465,15 +465,17 @@ class Encoder(nn.Layer):
             ]
         )
         t, h, w = spatial_dims
-        self.register_buffer(
-            "time_emb",
-            get_1d_sincos_pos_embed(self.emb_dim, t // self.patch_size[0]),
+
+        time_emb = get_1d_sincos_pos_embed(self.emb_dim, t // self.patch_size[0])
+        self.time_emb = self.create_parameter(
+            time_emb.shape, default_initializer=nn.initializer.Assign(time_emb)
         )
-        self.register_buffer(
-            "pos_emb",
-            get_2d_sincos_pos_embed(
-                self.emb_dim, (h // self.patch_size[1], w // self.patch_size[2])
-            ),
+
+        pos_emb = get_2d_sincos_pos_embed(
+            self.emb_dim, (h // self.patch_size[1], w // self.patch_size[2])
+        )
+        self.pos_emb = self.create_parameter(
+            pos_emb.shape, default_initializer=nn.initializer.Assign(pos_emb)
         )
 
     def forward(self, x):
@@ -830,7 +832,7 @@ class CVit1D(base.Arch):
         x = self.fc1(x)
 
         # decoder
-        for i, block in enumerate(self.dec_depth):
+        for i, block in enumerate(self.cross_attn_blocks):
             x = block(coords, x)
 
         # mlp

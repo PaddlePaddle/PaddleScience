@@ -326,7 +326,7 @@ def inference(cfg: DictConfig):
         pred_list = []
         for k in range(rollout_steps):
             input_dict = {"u": x, "y": coords}
-            pred = predictor.predict(input_dict, None)
+            pred = predictor.predict(input_dict, batch_size=None)
             # mapping data to cfg.INFER.output_keys
             pred = {
                 store_key: pred[infer_key]
