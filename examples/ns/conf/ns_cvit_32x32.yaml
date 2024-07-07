@@ -41,9 +41,9 @@ DATA:
 MODEL:
   input_keys: [u, y]
   output_keys: [s]
-  spatial_dims: [10, 128, 128]
   in_dim: 3
   coords_dim: 2
+  spatial_dims: [10, 128, 128]
   patch_size: [1, 32, 32]
   grid_size: [128, 128]
   latent_dim: 512

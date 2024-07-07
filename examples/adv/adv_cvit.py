@@ -93,8 +93,8 @@ def train(cfg: DictConfig):
             np.random.randint(0, inputs_train.shape[1], [cfg.TRAIN.grid_size])
         )
         return {
-            "u": inputs_train[batch_idx],  # [N, 200, 1]
-            "y": grid_train[batch_idx][:, grid_idx],  # [N, G, 1]
+            "u": inputs_train[batch_idx],
+            "y": grid_train[batch_idx][:, grid_idx],
             "batch_idx": batch_idx,
             "grid_idx": grid_idx,
         }
@@ -102,7 +102,7 @@ def train(cfg: DictConfig):
     def gen_label_batch_train(input_batch):
         batch_idx, grid_idx = input_batch.pop("batch_idx"), input_batch.pop("grid_idx")
         return {
-            "s": outputs_train[batch_idx][:, grid_idx, None],  # [N, G, 1]
+            "s": outputs_train[batch_idx][:, grid_idx, None],
         }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(

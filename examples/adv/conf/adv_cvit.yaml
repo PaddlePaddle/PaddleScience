@@ -35,8 +35,8 @@ DATA_DIR: ./data/
 MODEL:
   input_keys: [u, y]
   output_keys: [s]
-  coords_dim: 1
   in_dim: 1
+  coords_dim: 1
   spatial_dims: 200
   patch_size: [4]
   grid_size: [200]

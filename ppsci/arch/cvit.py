@@ -41,7 +41,6 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim: int, pos: paddle.Tensor):
     omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape([-1])  # (M,)
-    # out = pos.unsqueeze(-1) @ oemga.unsqueeze(0)
     out = paddle.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
 
     emb_sin = paddle.sin(out)  # (M, D/2)
@@ -129,10 +128,8 @@ class SelfAttnBlock(nn.Layer):
         x = self.layer_norm1(inputs)
         x = self.attn_layer(x, x)
         x = x + inputs
-
         y = self.layer_norm2(x)
         y = self.mlp(y)
-
         return x + y
 
 
@@ -315,7 +312,6 @@ class CrossAttnBlock(nn.Layer):
         # [B, L/ps, self.dec_emb_dim]
         q = self.layer_norm_q(q_inputs)
         kv = self.layer_norm_kv(kv_inputs)
-
         x = self.attn_layer(q, kv)
         x = x + q_inputs
         y = self.layer_norm_y(x)
@@ -479,12 +475,14 @@ class Encoder(nn.Layer):
         )
 
     def forward(self, x):
+        # patchify
         x = self.patch_embedding(x)
 
+        # add positional embedding
         x = x + self.time_emb.unsqueeze(2) + self.pos_emb.unsqueeze(1)
 
+        # aggregate along time dimension
         x = self.time_aggreator(x)
-
         x = self.norm(x)
         x = einops.rearrange(x, "b t s d -> b (t s) d")
 
@@ -715,6 +713,39 @@ class CVit1D(base.Arch):
         out_dim (int, optional): Dimensionality of the output data. Defaults to 1.
         layer_norm_eps (float, optional): Epsilon for layer normalization. Defaults to 1e-5.
         embedding_type (str, optional): Type of embedding to use ("grid" or other options). Defaults to "grid".
+
+    Examples:
+        >>> import ppsci
+        >>> b, l, c = 2, 32, 1
+        >>> l_query = 42
+        >>> c_in = 1
+        >>> c_out = 1
+        >>> model = ppsci.arch.CVit1D(
+        ...     input_keys=["u", "y"],
+        ...     output_keys=["s"],
+        ...     in_dim=c_in,
+        ...     coords_dim=1,
+        ...     spatial_dims=l,
+        ...     patch_size=[4],
+        ...     grid_size=[l],
+        ...     latent_dim=32,
+        ...     emb_dim=32,
+        ...     depth=3,
+        ...     num_heads=8,
+        ...     dec_emb_dim=32,
+        ...     dec_num_heads=8,
+        ...     dec_depth=1,
+        ...     num_mlp_layers=1,
+        ...     mlp_ratio=1,
+        ...     out_dim=c_out,
+        ...     layer_norm_eps=1e-5,
+        ...     embedding_type="grid",
+        ... )
+        >>> x = paddle.randn([b, l, c_in])
+        >>> coords = paddle.randn([l_query, 1])
+        >>> out = model({"u": x, "y": coords})["s"]
+        >>> print(out.shape) # output shape should be [b, l_query, c_out]
+        [2, 42, 1]
     """
 
     def __init__(
@@ -846,8 +877,10 @@ class CVit1D(base.Arch):
             x = self._input_transform(x_dict)
 
         x, coords = x_dict[self.input_keys[0]], x_dict[self.input_keys[1]]
+        if coords.ndim >= 3:
+            coords = coords[0]  # [b, n, c] -> [n, c]
 
-        y = self.forward_tensor(x, coords[0])
+        y = self.forward_tensor(x, coords)
 
         y_dict = {self.output_keys[0]: y}
         if self._output_transform is not None:
@@ -857,6 +890,65 @@ class CVit1D(base.Arch):
 
 
 class CVit(base.Arch):
+    """
+    CVit architecture.
+
+    [Bridging Operator Learning and Conditioned Neural Fields: A Unifying Perspective](https://arxiv.org/abs/2405.13998)
+
+    Args:
+        input_keys (Sequence[str]): Input keys.
+        output_keys (Sequence[str]): Output keys.
+        in_dim (int): Dimensionality of the input data.
+        coords_dim (int): Dimensionality of the coordinates.
+        spatial_dims (Sequence[int]): Spatial dimensions.
+        patch_size (Sequence[int], optional): Size of the patches. Defaults to (1, 16, 16).
+        grid_size (Sequence[int], optional): Size of the grid. Defaults to (128, 128).
+        latent_dim (int, optional): Dimensionality of the latent space. Defaults to 256.
+        emb_dim (int, optional): Dimensionality of the embedding space. Defaults to 256.
+        depth (int, optional): Number of transformer encoder layers. Defaults to 3.
+        num_heads (int, optional): Number of attention heads. Defaults to 8.
+        dec_emb_dim (int, optional): Dimensionality of the decoder embedding space. Defaults to 256.
+        dec_num_heads (int, optional): Number of decoder attention heads. Defaults to 8.
+        dec_depth (int, optional): Number of decoder transformer layers. Defaults to 1.
+        num_mlp_layers (int, optional): Number of MLP layers. Defaults to 1.
+        mlp_ratio (int, optional): Ratio of hidden units. Defaults to 1.
+        out_dim (int, optional): Dimensionality of the output. Defaults to 1.
+        layer_norm_eps (float, optional): Epsilon value for layer normalization. Defaults to 1e-5.
+        embedding_type (str, optional): Type of embedding. Defaults to "grid".
+
+    Examples:
+        >>> import ppsci
+        >>> b, t, h, w, c_in = 2, 4, 8, 8, 3
+        >>> c_out = 3
+        >>> h_query, w_query = 32, 32
+        >>> model = ppsci.arch.CVit(
+        ...     input_keys=["u", "y"],
+        ...     output_keys=["s"],
+        ...     in_dim=c_in,
+        ...     coords_dim=2,
+        ...     spatial_dims=[t, h, w],
+        ...     patch_size=(1, 4, 4),
+        ...     grid_size=(h, w),
+        ...     latent_dim=32,
+        ...     emb_dim=32,
+        ...     depth=3,
+        ...     num_heads=8,
+        ...     dec_emb_dim=32,
+        ...     dec_num_heads=8,
+        ...     dec_depth=1,
+        ...     num_mlp_layers=1,
+        ...     mlp_ratio=1,
+        ...     out_dim=c_out,
+        ...     layer_norm_eps=1e-5,
+        ...     embedding_type="grid",
+        ... )
+        >>> x = paddle.randn([b, t, h, w, c_in])
+        >>> coords = paddle.randn([h_query * w_query, 2])
+        >>> out = model({"u": x, "y": coords})["s"]
+        >>> print(out.shape) # output shape should be [b, h_query * w_query, c_out]
+        [2, 1024, 3]
+    """
+
     def __init__(
         self,
         input_keys: Sequence[str],
