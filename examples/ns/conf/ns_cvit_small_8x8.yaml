@@ -43,7 +43,10 @@ MODEL:
   output_keys: [s]
   in_dim: 3
   coords_dim: 2
-  spatial_dims: [10, 128, 128] # t, h, w
+  spatial_dims:
+    - 10
+    - ${MODEL.grid_size[0]}
+    - ${MODEL.grid_size[1]}
   grid_size: [128, 128]
   latent_dim: 512
   emb_dim: 384

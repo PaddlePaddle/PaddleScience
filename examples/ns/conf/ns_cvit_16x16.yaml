@@ -41,7 +41,10 @@ DATA:
 MODEL:
   input_keys: [u, y]
   output_keys: [s]
-  spatial_dims: [10, 128, 128]
+  spatial_dims:
+    - 10
+    - ${MODEL.grid_size[0]}
+    - ${MODEL.grid_size[1]}
   in_dim: 3
   coords_dim: 2
   patch_size: [1, 16, 16]
