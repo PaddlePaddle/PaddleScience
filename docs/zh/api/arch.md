@@ -4,18 +4,19 @@
     handler: python
     options:
       members:
-        - Arch
         - AFNONet
         - AMGNet
+        - Arch
         - AutoEncoder
         - ChipDeepONets
-        - CVit1D
         - CuboidTransformer
+        - CVit1D
         - CylinderEmbedding
         - DeepONet
         - DeepPhyLSTM
         - DGMR
         - Discriminator
+        - ExtFormerMoECuboid
         - Generator
         - HEDeepONets
         - LorenzEmbedding
@@ -23,11 +24,6 @@
         - ModelList
         - ModifiedMLP
         - NowcastNet
-        - PhyCRNet
-        - PhysformerGPT2
-        - PirateNet
-        - PrecipNet
-        - RosslerEmbedding
         - SFNONet
         - TFNO1dNet
         - TFNO2dNet

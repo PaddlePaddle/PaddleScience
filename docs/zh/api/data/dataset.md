@@ -12,6 +12,7 @@
         - ContinuousNamedArrayDataset
         - ERA5Dataset
         - ERA5SampledDataset
+        - ExtMoEENSODataset
         - IterableMatDataset
         - MatDataset
         - IterableNPZDataset
