@@ -139,12 +139,12 @@ def read_raw_data(ds_dir, out_dir=None):
     """
     import xarray as xr
 
-    train_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_train.nc", engine="h5netcdf").transpose(
-        "year", "month", "lat", "lon"
-    )
-    label_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_label.nc", engine="h5netcdf").transpose(
-        "year", "month"
-    )
+    train_cmip = xr.open_dataset(
+        Path(ds_dir) / "CMIP_train.nc", engine="h5netcdf"
+    ).transpose("year", "month", "lat", "lon")
+    label_cmip = xr.open_dataset(
+        Path(ds_dir) / "CMIP_label.nc", engine="h5netcdf"
+    ).transpose("year", "month")
     # train_cmip.sst.values.shape = (4645, 36, 24, 48)
 
     # select longitudes
