@@ -12,7 +12,7 @@ def round_to(dat, c):
     return dat + (dat - dat % c) % c
 
 
-class RMSNorm(paddle.nn.Layer):
+class RMSNorm(nn.Layer):
     """Root Mean Square Layer Normalization proposed in "[NeurIPS2019] Root Mean Square Layer Normalization"
 
     Args:
@@ -94,7 +94,7 @@ def get_norm_layer(
         if normalization == "layer_norm":
             assert in_channels > 0
             assert axis == -1
-            norm_layer = paddle.nn.LayerNorm(
+            norm_layer = nn.LayerNorm(
                 normalized_shape=in_channels, epsilon=epsilon, **kwargs
             )
         elif normalization == "rms_norm":
@@ -106,7 +106,7 @@ def get_norm_layer(
             )
         return norm_layer
     elif normalization is None:
-        return paddle.nn.Identity()
+        return nn.Identity()
     else:
         raise NotImplementedError("The type of normalization must be str")
 
@@ -117,7 +117,7 @@ def generalize_padding(x, pad_t, pad_h, pad_w, padding_type, t_pad_left=False):
     assert padding_type in ["zeros", "ignore", "nearest"]
     B, T, H, W, C = x.shape
     if padding_type == "nearest":
-        return paddle.nn.functional.interpolate(
+        return nn.functional.interpolate(
             x=x.transpose(perm=[0, 4, 1, 2, 3]), size=(T + pad_t, H + pad_h, W + pad_w)
         ).transpose(perm=[0, 2, 3, 4, 1])
     elif t_pad_left:
@@ -138,7 +138,7 @@ def generalize_unpadding(x, pad_t, pad_h, pad_w, padding_type):
     if pad_t == 0 and pad_h == 0 and pad_w == 0:
         return x
     if padding_type == "nearest":
-        return paddle.nn.functional.interpolate(
+        return nn.functional.interpolate(
             x=x.transpose(perm=[0, 4, 1, 2, 3]), size=(T - pad_t, H - pad_h, W - pad_w)
         ).transpose(perm=[0, 2, 3, 4, 1])
     else:
@@ -146,13 +146,13 @@ def generalize_unpadding(x, pad_t, pad_h, pad_w, padding_type):
 
 
 def apply_initialization(
-    m: paddle.nn.Layer,
+    m: nn.Layer,
     linear_mode: str = "0",
     conv_mode: str = "0",
     norm_mode: str = "0",
     embed_mode: str = "0",
 ):
-    if isinstance(m, paddle.nn.Linear):
+    if isinstance(m, nn.Linear):
         if linear_mode in ("0",):
             m.weight = initializer.kaiming_normal_(m.weight, nonlinearity="linear")
         elif linear_mode in ("1",):
@@ -166,10 +166,10 @@ def apply_initialization(
     elif isinstance(
         m,
         (
-            paddle.nn.Conv2D,
-            paddle.nn.Conv3D,
-            paddle.nn.Conv2DTranspose,
-            paddle.nn.Conv3DTranspose,
+            nn.Conv2D,
+            nn.Conv3D,
+            nn.Conv2DTranspose,
+            nn.Conv3DTranspose,
         ),
     ):
         if conv_mode in ("0",):
@@ -180,19 +180,19 @@ def apply_initialization(
             raise NotImplementedError(f"{conv_mode} is invalid.")
         if hasattr(m, "bias") and m.bias is not None:
             m.bias = initializer.zeros_(m.bias)
-    elif isinstance(m, paddle.nn.LayerNorm):
+    elif isinstance(m, nn.LayerNorm):
         if norm_mode in ("0",):
             m.weight = initializer.zeros_(m.weight)
             m.bias = initializer.zeros_(m.bias)
         else:
             raise NotImplementedError(f"{norm_mode} is invalid.")
-    elif isinstance(m, paddle.nn.GroupNorm):
+    elif isinstance(m, nn.GroupNorm):
         if norm_mode in ("0",):
             m.weight = initializer.ones_(m.weight)
             m.bias = initializer.zeros_(m.bias)
         else:
             raise NotImplementedError(f"{norm_mode} is invalid.")
-    elif isinstance(m, paddle.nn.Embedding):
+    elif isinstance(m, nn.Embedding):
         if embed_mode in ("0",):
             m.weight.data = initializer.trunc_normal_(m.weight.data, std=0.02)
         else:

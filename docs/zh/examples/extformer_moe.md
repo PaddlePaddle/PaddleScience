@@ -1,14 +1,18 @@
 # Extformer-MoE
 
-开始训练、评估前，请先下载，并对应修改 yaml 配置文件中的 FILE_PATH
+!!! note
 
-[ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)
+    1. 开始训练、评估前，请先下载 [ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)，并对应修改 yaml 配置文件中的 `FILE_PATH` 为解压后的数据集路径。
+    2. 开始训练、评估前，请安装 `xarray` 和 `h5netcdf`：`pip install requirements.txt`
+    3. 若训练时显存不足，可指定 `MODEL.checkpoint_level` 为 `1` 或 `2`，此时使用 recompute 模式运行，以训练时间换取显存。
 
 === "模型训练命令"
 
     ``` sh
     # ICAR-ENSO 数据预训练模型: Extformer-MoE
     python extformer_moe_enso_train.py
+    # python extformer_moe_enso_train.py MODEL.checkpoint_level=1 # using recompute to run in device with small GPU memory
+    # python extformer_moe_enso_train.py MODEL.checkpoint_level=2 # using recompute to run in device with small GPU memory
     ```
 
 === "模型评估命令"
@@ -45,7 +49,6 @@ Earthformer，一种用于地球系统预测的时空转换器。为了更好地
 气象数据的不均衡分布会导致模型偏向于预测频繁出现的正常气象状况，而低估了观测值稀少的极端状况，因为模型训练中常用的回归损失函数比如均方误差（MSE）损失会导致预测结果的过平滑现象。与具有离散标签空间的不平衡分类问题不同，不平衡回归问题具有连续的标签空间，为极端预测问题带来了更大的挑战。
 
 Rank-N-Contrast（RNC）是一种表征学习方法，旨在学习一种回归感知的样本表征，该表征以连续标签空间中的距离为依据，对嵌入空间中的样本间距离进行排序，然后利用它来预测最终连续的标签。在地球系统极端预测问题中，RNC 可以对气象数据的表征进行规范，使其满足嵌入空间的连续性，和标签空间对齐，最终缓解极端事件的预测结果的过平滑问题。
-
 
 ## 2. 模型原理
 
