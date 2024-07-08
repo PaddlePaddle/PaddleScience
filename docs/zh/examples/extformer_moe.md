@@ -2,15 +2,15 @@
 
 !!! note
 
-    开始训练、评估前，请先下载 [ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)，并对应修改 yaml 配置文件中的 `FILE_PATH` 为解压后的数据集路径。
-    若训练时显存不足，可指定 `MODEL.checkpoint_level` 为 0、1 或 2，此时使用 recompute 模式运行，以训练时间换取显存。
+    1. 开始训练、评估前，请先下载 [ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)，并对应修改 yaml 配置文件中的 `FILE_PATH` 为解压后的数据集路径。
+    2. 开始训练、评估前，请安装 `xarray` 和 `h5netcdf`：`pip install requirements.txt`
+    3. 若训练时显存不足，可指定 `MODEL.checkpoint_level` 为 `1` 或 `2`，此时使用 recompute 模式运行，以训练时间换取显存。
 
 === "模型训练命令"
 
     ``` sh
     # ICAR-ENSO 数据预训练模型: Extformer-MoE
     python extformer_moe_enso_train.py
-    # python extformer_moe_enso_train.py MODEL.checkpoint_level=0 # using recompute to run in device with small GPU memory
     # python extformer_moe_enso_train.py MODEL.checkpoint_level=1 # using recompute to run in device with small GPU memory
     # python extformer_moe_enso_train.py MODEL.checkpoint_level=2 # using recompute to run in device with small GPU memory
     ```
