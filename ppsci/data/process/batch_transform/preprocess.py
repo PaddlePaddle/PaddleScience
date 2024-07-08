@@ -18,6 +18,8 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 
@@ -26,31 +28,37 @@ class FunctionalBatchTransform:
     """Functional data transform class, which allows to use custom data transform function from given transform_func for special cases.
 
     Args:
-        transform_func (Callable): Function of data transform.
+        transform_func (Callable): Function of batch data transform.
 
     Examples:
-        >>> # This is the transform_func function. It takes three dictionaries as input: data_dict, label_dict, and weight_dict.
-        >>> # The function will perform some transformations on the data in data_dict, convert all labels in label_dict to uppercase,
-        >>> # and modify the weights in weight_dict by dividing each weight by 10.
-        >>> # Finally, it returns the transformed data, labels, and weights as a tuple.
         >>> import ppsci
-        >>> def transform_func(data_dict, label_dict, weight_dict):
-        ...     for key in data_dict:
-        ...         data_dict[key] = data_dict[key] * 2
-        ...     for key in label_dict:
-        ...         label_dict[key] = label_dict[key] + 1.0
-        ...     for key in weight_dict:
-        ...         weight_dict[key] = weight_dict[key] / 10
-        ...     return data_dict, label_dict, weight_dict
-        >>> transform = ppsci.data.transform.FunctionalTransform(transform_func)
+        >>> from typing import Tuple, Dict, Optional
+        >>> def batch_transform_func(
+        ...     data_list: List[
+        ...         Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Optional[Dict[str, np.ndarray]]]
+        ...     ],
+        ... ) -> List[Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Optional[Dict[str, np.ndarray]]]]:
+        ...     input_dicts, label_dicts, weight_dicts = zip(*data_list)
+        ...
+        ...     for input_dict in input_dicts:
+        ...         for key in input_dict:
+        ...             input_dict[key] = input_dict[key] * 2
+        ...
+        ...     for label_dict in label_dicts:
+        ...         for key in label_dict:
+        ...             label_dict[key] = label_dict[key] + 1.0
+        ...
+        ...     return list(zip(input_dicts, label_dicts, weight_dicts))
+        ...
+        >>> # Create a FunctionalBatchTransform object with the batch_transform_func function
+        >>> transform = ppsci.data.batch_transform.FunctionalBatchTransform(batch_transform_func)
         >>> # Define some sample data, labels, and weights
-        >>> data = {'feature1': np.array([1, 2, 3]), 'feature2': np.array([4, 5, 6])}
-        >>> label = {'class': 0.0, 'instance': 0.1}
-        >>> weight = {'weight1': 0.5, 'weight2': 0.5}
-        >>> # Apply the transform function to the data, labels, and weights using the FunctionalTransform instance
-        >>> transformed_data = transform(data, label, weight)
-        >>> print(transformed_data)
-        ({'feature1': array([2, 4, 6]), 'feature2': array([ 8, 10, 12])}, {'class': 1.0, 'instance': 1.1}, {'weight1': 0.05, 'weight2': 0.05})
+        >>> data = [({'x': 1}, {'y': 2}, None), ({'x': 11}, {'y': 22}, None)]
+        >>> transformed_data = transform(data)
+        >>> for tuple in transformed_data:
+        ...     print(tuple)
+        ({'x': 2}, {'y': 3.0}, None)
+        ({'x': 22}, {'y': 23.0}, None)
     """
 
     def __init__(
@@ -61,7 +69,6 @@ class FunctionalBatchTransform:
 
     def __call__(
         self,
-        list_data: List[List[Dict[str, np.ndarray]]],
-        # [{'u': arr, 'y': arr}, {'u': arr, 'y': arr}, {'u': arr, 'y': arr}], [{'s': arr}, {'s': arr}, {'s': arr}], [{}, {}, {}]
-    ) -> List[Dict[str, np.ndarray]]:
-        return self.transform_func(list_data)
+        data_list: List[Tuple[Optional[Dict[str, np.ndarray]], ...]],
+    ) -> List[Tuple[Optional[Dict[str, np.ndarray]], ...]]:
+        return self.transform_func(data_list)
