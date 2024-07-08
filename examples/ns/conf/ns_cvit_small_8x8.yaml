@@ -92,7 +92,7 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: null
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/cvit/ns_cvit_pretrained.pdparams
   export_path: ./inference/ns_cvit_small_8x8
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams

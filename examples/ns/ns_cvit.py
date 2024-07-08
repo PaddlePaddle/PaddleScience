@@ -370,7 +370,7 @@ def inference(cfg: DictConfig):
             "text.usetex": True,
             "font.family": "serif",
             "font.serif": ["Computer Modern Roman"],
-            "font.size": 12,
+            "font.size": 24,
         }
     )
     pred = einops.rearrange(
@@ -380,37 +380,52 @@ def inference(cfg: DictConfig):
         y, "B (T H W) C -> B T H W C", T=cfg.INFER.rollout_steps, W=w, H=h
     )
 
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
     def plot(pred, ref, filename):
         fig, axes = plt.subplots(
-            3, cfg.INFER.rollout_steps, figsize=(cfg.INFER.rollout_steps * 5, 3 * 5)
+            3,
+            cfg.INFER.rollout_steps,
+            figsize=((cfg.INFER.rollout_steps) * 5, 3 * 5),
+            gridspec_kw={"width_ratios": [1, 1, 1, 1.2]},
         )
-
-        def min_max_norm(x):
-            return (x - x.min()) / (x.max() - x.min())
 
         # plot reference
         for t in range(cfg.INFER.rollout_steps):
             res = pred[t]
-            res = min_max_norm(res)
-            axes[0, t].imshow(res, cmap="turbo", vmin=res.min(), vmax=res.max())
-            axes[0, t].set_title(rf"$t={t}$")
-            axes[0, t].axis("off")
+            im = axes[0, t].imshow(
+                res, cmap="turbo", vmin=res.min(), vmax=res.max(), aspect="auto"
+            )
+            axes[0, t].set_yticks([])
+            axes[0, t].xaxis.set_visible(False)
         axes[0, 0].set_ylabel("Reference", size="large", labelpad=20)
+        divider = make_axes_locatable(axes[0, -1])
+        cax = divider.append_axes("right", size="5%", pad=0.5)
+        fig.colorbar(im, cax=cax)
         # plot prediction
         for t in range(cfg.INFER.rollout_steps):
             res = ref[t]
-            res = min_max_norm(res)
-            axes[1, t].imshow(res, cmap="turbo", vmin=res.min(), vmax=res.max())
-            axes[1, t].set_title(rf"$t={t}$")
-            axes[1, t].axis("off")
+            im = axes[1, t].imshow(
+                res, cmap="turbo", vmin=res.min(), vmax=res.max(), aspect="auto"
+            )
+            axes[1, t].set_yticks([])
+            axes[1, t].xaxis.set_visible(False)
         axes[1, 0].set_ylabel("Prediction", size="large", labelpad=20)
+        divider = make_axes_locatable(axes[1, -1])
+        cax = divider.append_axes("right", size="5%", pad=0.5)
+        fig.colorbar(im, cax=cax)
         # plot abs error
         for t in range(cfg.INFER.rollout_steps):
             res = pred[t] - ref[t]
-            axes[2, t].imshow(res, cmap="turbo", vmin=res.min(), vmax=res.max())
-            axes[2, t].set_title(rf"$t={t}$")
-            axes[2, t].axis("off")
+            im = axes[2, t].imshow(
+                res, cmap="turbo", vmin=res.min(), vmax=res.max(), aspect="auto"
+            )
+            axes[2, t].set_yticks([])
+            axes[2, t].xaxis.set_visible(False)
         axes[2, 0].set_ylabel("Abs. Error", size="large", labelpad=20)
+        divider = make_axes_locatable(axes[2, -1])
+        cax = divider.append_axes("right", size="5%", pad=0.5)
+        fig.colorbar(im, cax=cax)
         plt.tight_layout()
         plt.savefig(filename)
         plt.close()
