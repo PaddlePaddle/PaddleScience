@@ -8,7 +8,7 @@
 
     ``` sh
     # ICAR-ENSO 数据预训练模型: Extformer-MoE
-    python examples/extformer_moe/extformer_moe_enso_train.py
+    python extformer_moe_enso_train.py
     ```
 
 === "模型评估命令"
