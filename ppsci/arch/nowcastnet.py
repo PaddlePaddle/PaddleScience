@@ -16,6 +16,7 @@ import collections
 from typing import Tuple
 
 import paddle
+from paddle import nn
 
 from ppsci.arch import base
 
@@ -139,7 +140,7 @@ class NowcastNet(base.Arch):
         return gen_result.unsqueeze(axis=-1)
 
 
-class Evolution_Network(paddle.nn.Layer):
+class Evolution_Network(nn.Layer):
     def __init__(self, n_channels, n_classes, base_c=64, bilinear=True):
         super().__init__()
         self.n_channels = n_channels
@@ -161,7 +162,7 @@ class Evolution_Network(paddle.nn.Layer):
         gamma = self.create_parameter(
             shape=param1.shape,
             dtype=param1.dtype,
-            default_initializer=paddle.nn.initializer.Assign(param1),
+            default_initializer=nn.initializer.Assign(param1),
         )
         gamma.stop_gradient = False
         self.gamma = gamma
@@ -190,26 +191,26 @@ class Evolution_Network(paddle.nn.Layer):
         return x, v
 
 
-class DoubleConv(paddle.nn.Layer):
+class DoubleConv(nn.Layer):
     def __init__(self, in_channels, out_channels, kernel=3, mid_channels=None):
         super().__init__()
         if not mid_channels:
             mid_channels = out_channels
-        self.double_conv = paddle.nn.Sequential(
-            paddle.nn.BatchNorm2D(num_features=in_channels),
-            paddle.nn.ReLU(),
-            paddle.nn.utils.spectral_norm(
-                layer=paddle.nn.Conv2D(
+        self.double_conv = nn.Sequential(
+            nn.BatchNorm2D(num_features=in_channels),
+            nn.ReLU(),
+            nn.utils.spectral_norm(
+                layer=nn.Conv2D(
                     in_channels=in_channels,
                     out_channels=mid_channels,
                     kernel_size=kernel,
                     padding=kernel // 2,
                 )
             ),
-            paddle.nn.BatchNorm2D(num_features=mid_channels),
-            paddle.nn.ReLU(),
-            paddle.nn.utils.spectral_norm(
-                layer=paddle.nn.Conv2D(
+            nn.BatchNorm2D(num_features=mid_channels),
+            nn.ReLU(),
+            nn.utils.spectral_norm(
+                layer=nn.Conv2D(
                     in_channels=mid_channels,
                     out_channels=out_channels,
                     kernel_size=kernel,
@@ -217,10 +218,10 @@ class DoubleConv(paddle.nn.Layer):
                 )
             ),
         )
-        self.single_conv = paddle.nn.Sequential(
-            paddle.nn.BatchNorm2D(num_features=in_channels),
-            paddle.nn.utils.spectral_norm(
-                layer=paddle.nn.Conv2D(
+        self.single_conv = nn.Sequential(
+            nn.BatchNorm2D(num_features=in_channels),
+            nn.utils.spectral_norm(
+                layer=nn.Conv2D(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     kernel_size=kernel,
@@ -236,11 +237,11 @@ class DoubleConv(paddle.nn.Layer):
         return x
 
 
-class Down(paddle.nn.Layer):
+class Down(nn.Layer):
     def __init__(self, in_channels, out_channels, kernel=3):
         super().__init__()
-        self.maxpool_conv = paddle.nn.Sequential(
-            paddle.nn.MaxPool2D(kernel_size=2),
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool2D(kernel_size=2),
             DoubleConv(in_channels, out_channels, kernel),
         )
 
@@ -249,18 +250,16 @@ class Down(paddle.nn.Layer):
         return x
 
 
-class Up(paddle.nn.Layer):
+class Up(nn.Layer):
     def __init__(self, in_channels, out_channels, bilinear=True, kernel=3):
         super().__init__()
         if bilinear:
-            self.up = paddle.nn.Upsample(
-                scale_factor=2, mode="bilinear", align_corners=True
-            )
+            self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
             self.conv = DoubleConv(
                 in_channels, out_channels, kernel=kernel, mid_channels=in_channels // 2
             )
         else:
-            self.up = paddle.nn.Conv2DTranspose(
+            self.up = nn.Conv2DTranspose(
                 in_channels=in_channels,
                 out_channels=in_channels // 2,
                 kernel_size=2,
@@ -273,25 +272,23 @@ class Up(paddle.nn.Layer):
         # input is CHW
         diffY = x2.shape[2] - x1.shape[2]
         diffX = x2.shape[3] - x1.shape[3]
-        x1 = paddle.nn.functional.pad(
+        x1 = nn.functional.pad(
             x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2]
         )
         x = paddle.concat(x=[x2, x1], axis=1)
         return self.conv(x)
 
 
-class Up_S(paddle.nn.Layer):
+class Up_S(nn.Layer):
     def __init__(self, in_channels, out_channels, bilinear=True, kernel=3):
         super().__init__()
         if bilinear:
-            self.up = paddle.nn.Upsample(
-                scale_factor=2, mode="bilinear", align_corners=True
-            )
+            self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
             self.conv = DoubleConv(
                 in_channels, out_channels, kernel=kernel, mid_channels=in_channels
             )
         else:
-            self.up = paddle.nn.Conv2DTranspose(
+            self.up = nn.Conv2DTranspose(
                 in_channels=in_channels,
                 out_channels=in_channels,
                 kernel_size=2,
@@ -304,10 +301,10 @@ class Up_S(paddle.nn.Layer):
         return self.conv(x)
 
 
-class OutConv(paddle.nn.Layer):
+class OutConv(nn.Layer):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.conv = paddle.nn.Conv2D(
+        self.conv = nn.Conv2D(
             in_channels=in_channels, out_channels=out_channels, kernel_size=1
         )
 
@@ -315,7 +312,7 @@ class OutConv(paddle.nn.Layer):
         return self.conv(x)
 
 
-class Generative_Encoder(paddle.nn.Layer):
+class Generative_Encoder(nn.Layer):
     def __init__(self, n_channels, base_c=64):
         super().__init__()
         base_c = base_c
@@ -332,13 +329,13 @@ class Generative_Encoder(paddle.nn.Layer):
         return x
 
 
-class Generative_Decoder(paddle.nn.Layer):
+class Generative_Decoder(nn.Layer):
     def __init__(self, opt):
         super().__init__()
         self.opt = opt
         nf = opt.ngf
         ic = opt.ic_feature
-        self.fc = paddle.nn.Conv2D(
+        self.fc = nn.Conv2D(
             in_channels=ic, out_channels=8 * nf, kernel_size=3, padding=1
         )
         self.head_0 = GenBlock(8 * nf, 8 * nf, opt)
@@ -348,10 +345,10 @@ class Generative_Decoder(paddle.nn.Layer):
         self.up_1 = GenBlock(2 * nf, 1 * nf, opt, double_conv=True)
         self.up_2 = GenBlock(1 * nf, 1 * nf, opt, double_conv=True)
         final_nc = nf * 1
-        self.conv_img = paddle.nn.Conv2D(
+        self.conv_img = nn.Conv2D(
             in_channels=final_nc, out_channels=self.opt.gen_oc, kernel_size=3, padding=1
         )
-        self.up = paddle.nn.Upsample(scale_factor=2)
+        self.up = nn.Upsample(scale_factor=2)
 
     def forward(self, x, evo):
         x = self.fc(x)
@@ -364,26 +361,26 @@ class Generative_Decoder(paddle.nn.Layer):
         x = self.up(x)
         x = self.up_1(x, evo)
         x = self.up_2(x, evo)
-        x = self.conv_img(paddle.nn.functional.leaky_relu(x=x, negative_slope=0.2))
+        x = self.conv_img(nn.functional.leaky_relu(x=x, negative_slope=0.2))
         return x
 
 
-class GenBlock(paddle.nn.Layer):
+class GenBlock(nn.Layer):
     def __init__(self, fin, fout, opt, use_se=False, dilation=1, double_conv=False):
         super().__init__()
         self.learned_shortcut = fin != fout
         fmiddle = min(fin, fout)
         self.opt = opt
         self.double_conv = double_conv
-        self.pad = paddle.nn.Pad2D(padding=dilation, mode="reflect")
-        self.conv_0 = paddle.nn.Conv2D(
+        self.pad = nn.Pad2D(padding=dilation, mode="reflect")
+        self.conv_0 = nn.Conv2D(
             in_channels=fin,
             out_channels=fmiddle,
             kernel_size=3,
             padding=0,
             dilation=dilation,
         )
-        self.conv_1 = paddle.nn.Conv2D(
+        self.conv_1 = nn.Conv2D(
             in_channels=fmiddle,
             out_channels=fout,
             kernel_size=3,
@@ -391,13 +388,13 @@ class GenBlock(paddle.nn.Layer):
             dilation=dilation,
         )
         if self.learned_shortcut:
-            self.conv_s = paddle.nn.Conv2D(
+            self.conv_s = nn.Conv2D(
                 in_channels=fin, out_channels=fout, kernel_size=1, bias_attr=False
             )
-        self.conv_0 = paddle.nn.utils.spectral_norm(layer=self.conv_0)
-        self.conv_1 = paddle.nn.utils.spectral_norm(layer=self.conv_1)
+        self.conv_0 = nn.utils.spectral_norm(layer=self.conv_0)
+        self.conv_1 = nn.utils.spectral_norm(layer=self.conv_1)
         if self.learned_shortcut:
-            self.conv_s = paddle.nn.utils.spectral_norm(layer=self.conv_s)
+            self.conv_s = nn.utils.spectral_norm(layer=self.conv_s)
         ic = opt.evo_ic
         self.norm_0 = SPADE(fin, ic)
         self.norm_1 = SPADE(fmiddle, ic)
@@ -420,37 +417,37 @@ class GenBlock(paddle.nn.Layer):
         return x_s
 
     def actvn(self, x):
-        return paddle.nn.functional.leaky_relu(x=x, negative_slope=0.2)
+        return nn.functional.leaky_relu(x=x, negative_slope=0.2)
 
 
-class SPADE(paddle.nn.Layer):
+class SPADE(nn.Layer):
     def __init__(self, norm_nc, label_nc):
         super().__init__()
         ks = 3
-        self.param_free_norm = paddle.nn.InstanceNorm2D(
+        self.param_free_norm = nn.InstanceNorm2D(
             num_features=norm_nc, weight_attr=False, bias_attr=False, momentum=1 - 0.1
         )
         nhidden = 64
         ks = 3
         pw = ks // 2
-        self.mlp_shared = paddle.nn.Sequential(
-            paddle.nn.Pad2D(padding=pw, mode="reflect"),
-            paddle.nn.Conv2D(
+        self.mlp_shared = nn.Sequential(
+            nn.Pad2D(padding=pw, mode="reflect"),
+            nn.Conv2D(
                 in_channels=label_nc, out_channels=nhidden, kernel_size=ks, padding=0
             ),
-            paddle.nn.ReLU(),
+            nn.ReLU(),
         )
-        self.pad = paddle.nn.Pad2D(padding=pw, mode="reflect")
-        self.mlp_gamma = paddle.nn.Conv2D(
+        self.pad = nn.Pad2D(padding=pw, mode="reflect")
+        self.mlp_gamma = nn.Conv2D(
             in_channels=nhidden, out_channels=norm_nc, kernel_size=ks, padding=0
         )
-        self.mlp_beta = paddle.nn.Conv2D(
+        self.mlp_beta = nn.Conv2D(
             in_channels=nhidden, out_channels=norm_nc, kernel_size=ks, padding=0
         )
 
     def forward(self, x, evo):
         normalized = self.param_free_norm(x)
-        evo = paddle.nn.functional.adaptive_avg_pool2d(x=evo, output_size=x.shape[2:])
+        evo = nn.functional.adaptive_avg_pool2d(x=evo, output_size=x.shape[2:])
         actv = self.mlp_shared(evo)
         gamma = self.mlp_gamma(self.pad(actv))
         beta = self.mlp_beta(self.pad(actv))
@@ -458,12 +455,12 @@ class SPADE(paddle.nn.Layer):
         return out
 
 
-class Noise_Projector(paddle.nn.Layer):
+class Noise_Projector(nn.Layer):
     def __init__(self, input_length):
         super().__init__()
         self.input_length = input_length
-        self.conv_first = paddle.nn.utils.spectral_norm(
-            paddle.nn.Conv2D(
+        self.conv_first = nn.utils.spectral_norm(
+            nn.Conv2D(
                 in_channels=self.input_length,
                 out_channels=self.input_length * 2,
                 kernel_size=3,
@@ -484,29 +481,29 @@ class Noise_Projector(paddle.nn.Layer):
         return x
 
 
-class ProjBlock(paddle.nn.Layer):
+class ProjBlock(nn.Layer):
     def __init__(self, in_channel, out_channel):
         super().__init__()
-        self.one_conv = paddle.nn.utils.spectral_norm(
-            paddle.nn.Conv2D(
+        self.one_conv = nn.utils.spectral_norm(
+            nn.Conv2D(
                 in_channels=in_channel,
                 out_channels=out_channel - in_channel,
                 kernel_size=1,
                 padding=0,
             )
         )
-        self.double_conv = paddle.nn.Sequential(
-            paddle.nn.utils.spectral_norm(
-                paddle.nn.Conv2D(
+        self.double_conv = nn.Sequential(
+            nn.utils.spectral_norm(
+                nn.Conv2D(
                     in_channels=in_channel,
                     out_channels=out_channel,
                     kernel_size=3,
                     padding=1,
                 )
             ),
-            paddle.nn.ReLU(),
-            paddle.nn.utils.spectral_norm(
-                paddle.nn.Conv2D(
+            nn.ReLU(),
+            nn.utils.spectral_norm(
+                nn.Conv2D(
                     in_channels=out_channel,
                     out_channels=out_channel,
                     kernel_size=3,
@@ -538,7 +535,7 @@ def warp(input, flow, grid, mode="bilinear", padding_mode="zeros"):
     vgrid[:, 0, :, :] = 2.0 * vgrid[:, 0, :, :].clone() / max(W - 1, 1) - 1.0
     vgrid[:, 1, :, :] = 2.0 * vgrid[:, 1, :, :].clone() / max(H - 1, 1) - 1.0
     vgrid = vgrid.transpose(perm=[0, 2, 3, 1])
-    output = paddle.nn.functional.grid_sample(
+    output = nn.functional.grid_sample(
         x=input.cpu(),
         grid=vgrid.cpu(),
         padding_mode=padding_mode,
@@ -552,7 +549,7 @@ def l2normalize(v, eps=1e-12):
     return v / (v.norm() + eps)
 
 
-class spectral_norm(paddle.nn.Layer):
+class spectral_norm(nn.Layer):
     def __init__(self, module, name="weight", power_iterations=1):
         super().__init__()
         self.module = module
@@ -596,7 +593,7 @@ class spectral_norm(paddle.nn.Layer):
         out_0 = paddle.create_parameter(
             shape=tmp_w.shape,
             dtype=tmp_w.numpy().dtype,
-            default_initializer=paddle.nn.initializer.Assign(tmp_w),
+            default_initializer=nn.initializer.Assign(tmp_w),
         )
         out_0.stop_gradient = True
         u = out_0
@@ -605,7 +602,7 @@ class spectral_norm(paddle.nn.Layer):
         out_1 = paddle.create_parameter(
             shape=tmp_w.shape,
             dtype=tmp_w.numpy().dtype,
-            default_initializer=paddle.nn.initializer.Assign(tmp_w),
+            default_initializer=nn.initializer.Assign(tmp_w),
         )
         out_1.stop_gradient = True
         v = out_1
@@ -615,7 +612,7 @@ class spectral_norm(paddle.nn.Layer):
         out_2 = paddle.create_parameter(
             shape=tmp_w.shape,
             dtype=tmp_w.numpy().dtype,
-            default_initializer=paddle.nn.initializer.Assign(tmp_w),
+            default_initializer=nn.initializer.Assign(tmp_w),
         )
         out_2.stop_gradient = False
         w_bar = out_2
@@ -636,7 +633,7 @@ def create_param(x):
     param = paddle.create_parameter(
         shape=x.shape,
         dtype=x.dtype,
-        default_initializer=paddle.nn.initializer.Assign(x),
+        default_initializer=nn.initializer.Assign(x),
     )
     param.stop_gradient = x.stop_gradient
     return param
