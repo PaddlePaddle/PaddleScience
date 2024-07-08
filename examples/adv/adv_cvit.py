@@ -54,8 +54,8 @@ def plot_result(pred: np.ndarray, label: np.ndarray, output_dir: str):
     plt.ylim([-1.4, 1.4])
 
     plt.tight_layout()
-    plt.savefig(osp.join(output_dir, "./adv_cvit.png"))
-    logger.message(f"Result saved to: {osp.join(output_dir, './adv_cvit.png')}")
+    plt.savefig(osp.join(output_dir, "adv_cvit.png"))
+    logger.message(f"Result saved to: {osp.join(output_dir, 'adv_cvit.png')}")
 
 
 def train(cfg: DictConfig):
@@ -248,7 +248,7 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    plot_result(output_dict[cfg.MODEL.output_keys[0]], outputs_test, cfg.output_dir)
+    plot_result(output_dict[cfg.MODEL.output_keys[0]], outputs_test, "./")
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="adv_cvit.yaml")
