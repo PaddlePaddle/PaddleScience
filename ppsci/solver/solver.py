@@ -266,6 +266,18 @@ class Solver:
                         f"{self.compute_metric_by_batch} when compute_metric_by_batch="
                         f"{self.compute_metric_by_batch}."
                     )
+            # check metric name uniqueness over all validators
+            _count = {}
+            for _validator in validator.values():
+                for metric_name in _validator.metric:
+                    if metric_name in _count:
+                        logger.warning(
+                            f"Metric name({metric_name}) is duplicated, please ensure "
+                            "all metric names are unique over all given validators."
+                        )
+                    _count[metric_name] = 1
+            del _count
+
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         if not cfg:
             self.eval_with_no_grad = eval_with_no_grad
