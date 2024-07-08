@@ -29,6 +29,7 @@ from ppsci.data.dataset.dgmr_dataset import DGMRDataset
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
+from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.dataset.mrms_dataset import MRMSDataset
@@ -75,6 +76,7 @@ __all__ = [
     "DarcyFlowDataset",
     "SphericalSWEDataset",
     "ENSODataset",
+    "ExtMoEENSODataset",
     "SEVIRDataset",
     "build_dataset",
 ]

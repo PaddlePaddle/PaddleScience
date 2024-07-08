@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid
 from ppsci.arch.graphcast import GraphCastNet
 from ppsci.arch.phycrnet import PhyCRNet
 
@@ -63,6 +64,7 @@ __all__ = [
     "RosslerEmbedding",
     "CylinderEmbedding",
     "CuboidTransformer",
+    "ExtFormerMoECuboid",
     "Generator",
     "Discriminator",
     "PhysformerGPT2",
