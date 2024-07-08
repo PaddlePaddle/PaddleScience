@@ -15,7 +15,7 @@
 
     ``` sh
     # ICAR-ENSO 模型评估: Extformer-MoE
-    python examples/extformer_moe/extformer_moe_enso_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams
+    python extformer_moe_enso_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams
     ```
 
 | 模型 | 变量名称 | C-Nino3.4-M | C-Nino3.4-WM | MSE(1E-4) | MAE(1E-1) | RMSE |
