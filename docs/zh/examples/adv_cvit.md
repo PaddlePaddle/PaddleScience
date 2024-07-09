@@ -46,7 +46,23 @@ sciml 领域所使用的模型现阶段与CV、NLP领域的先进模型有较大
 
 CVit 作为一种算子学习模型，以输入函数 $u$、函数 $s$ 的查询点 query coordinate $y$ 为输入，输出经过算子映射后的函数，在查询点 $y$ 处的函数值 $s(y)$。
 
-本问题基于不连续的对流问题，求解对流方程。
+本问题求解如下方程：
+
+Formulation The 1D advection equation in $\Omega=[0,1)$ is
+$$
+\begin{aligned}
+& \frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0 \quad x \in \Omega, \\
+& u(0)=u_0
+\end{aligned}
+$$
+where $c=1$ is the constant advection speed, and periodic boundary conditions are imposed. We are interested in the map from the initial $u_0$ to solution $u(\cdot, T)$ at $T=0.5$. The initial condition $u_0$ is assumed to be
+$$
+u_0=-1+2 \mathbb{1}\left\{\tilde{u_0} \geq 0\right\}
+$$
+where $\widetilde{u_0}$ a centered Gaussian
+$$
+\widetilde{u_0} \sim \mathbb{N}(0, \mathrm{C}) \quad \text { and } \quad \mathrm{C}=\left(-\Delta+\tau^2\right)^{-d} \text {; }
+$$
 
 ## 3. 问题求解
 
@@ -160,3 +176,4 @@ examples/adv/adv_cvit.py
 
 - [Bridging Operator Learning and Conditioned Neural Fields: A Unifying Perspective](https://arxiv.org/abs/2405.13998)
 - [PredictiveIntelligenceLab/cvit/adv](https://github.com/PredictiveIntelligenceLab/cvit/blob/main/adv/README.md)
+- [The Cost-Accuracy Trade-Off In Operator Learning With Neural Networks](https://arxiv.org/abs/2203.13181)
