@@ -368,7 +368,7 @@ def inference(cfg: DictConfig):
     # plot prediction of the first sample
     plt.rcParams.update(
         {
-            "text.usetex": True,
+            # "text.usetex": True, # NOTE: This may cause error when using latex
             "font.family": "serif",
             "font.serif": ["Computer Modern Roman"],
             "font.size": 24,
