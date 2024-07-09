@@ -46,8 +46,8 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
-| 定常不可压流体 | [1D 不连续对流](https://paddlescience-docs.readthedocs.io/zh/examples/adv_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
-| 定常不可压流体 | [2D 方腔浮力驱动流](https://paddlescience-docs.readthedocs.io/zh/examples/ns_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
+| 一维线性对流问题 | [1D 线性对流](https://paddlescience-docs.readthedocs.io/zh/examples/adv_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
+| 非定常不可压流体 | [2D 方腔浮力驱动流](https://paddlescience-docs.readthedocs.io/zh/examples/ns_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
 | 定常不可压流体 | [2D 定常方腔流](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/ldc2d_steady) | 机理驱动 | MLP | 无监督学习 | - |  |
 | 定常不可压流体 | [2D 达西流](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/darcy2d) | 机理驱动 | MLP | 无监督学习 | - |   |
 | 定常不可压流体 | [2D 管道流](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/1906.02382) |
