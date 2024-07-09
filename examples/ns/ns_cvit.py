@@ -90,7 +90,7 @@ def train(cfg: DictConfig):
         cfg.TRAIN.train_samples,
         cfg.DATA.downsample,
     )
-    print("train_data", train_inputs.shape, train_outputs.shape)
+    print("training input ", train_inputs.shape, "training label", train_outputs.shape)
     train_outputs = einops.rearrange(train_outputs, "b t h w c -> b (t h w) c")
     h, w = train_inputs.shape[2:4]
     x_star = np.linspace(0, 1, h, dtype=dtype)
@@ -101,6 +101,7 @@ def train(cfg: DictConfig):
         train_coords[None, :], [len(train_inputs), train_outputs.shape[1], 2]
     )
 
+    # set constraint
     def random_query(
         input_dict: Dict[str, np.ndarray],
         label_dict: Dict[str, np.ndarray],
@@ -153,7 +154,7 @@ def train(cfg: DictConfig):
         grad_clip=paddle.nn.ClipGradByGlobalNorm(cfg.TRAIN.grad_clip),
     )(model)
 
-    # init validator
+    # set validator
     test_inputs, test_outputs = prepare_ns_dataset(
         cfg.DATA.path,
         "test",
@@ -163,7 +164,7 @@ def train(cfg: DictConfig):
         cfg.EVAL.test_samples,
         cfg.DATA.downsample,
     )
-    print("test data", test_inputs.shape, test_outputs.shape)
+    print("testing input ", test_inputs.shape, "testing label", test_outputs.shape)
     test_outputs = einops.rearrange(test_outputs, "b t h w c -> b (t h w) c")
     h, w = test_inputs.shape[2:4]
     x_star = np.linspace(0, 1, h, dtype=dtype)

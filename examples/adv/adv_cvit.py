@@ -2,16 +2,9 @@
 Reference: https://github.com/PredictiveIntelligenceLab/cvit/tree/main/adv/
 """
 
-import importlib
 from os import path as osp
 
-if not importlib.util.find_spec("einops"):
-    raise ModuleNotFoundError(
-        "Please install `einops` by running 'pip install einops'."
-    )
-else:
-    import einops
-
+import einops
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
