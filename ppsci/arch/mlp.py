@@ -103,7 +103,7 @@ class PeriodEmbedding(nn.Layer):
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }
-        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
+        self.freqs = nn.ParameterList(list(self.freqs_dict.values()))
 
     def forward(self, x: Dict[str, paddle.Tensor]):
         y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
