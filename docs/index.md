@@ -91,6 +91,8 @@
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 定常不可压流体 | [1D 不连续对流](./zh/examples/adv_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
+| 定常不可压流体 | [2D 方腔浮力驱动流](./zh/examples/ns_cvit.md) | 机理驱动 | MLP | 无监督学习 | - |  |
 | 定常不可压流体 | [2D 定常方腔流](./zh/examples/ldc2d_steady.md) | 机理驱动 | MLP | 无监督学习 | - |  |
 | 定常不可压流体 | [2D 达西流](./zh/examples/darcy2d.md) | 机理驱动 | MLP | 无监督学习 | - |   |
 | 定常不可压流体 | [2D 管道流](./zh/examples/labelfree_DNN_surrogate.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/1906.02382) |
