@@ -1,4 +1,4 @@
-# Advection CVit
+# CVit(Advection)
 
 <a href="https://aistudio.baidu.com/projectdetail/8141430" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
