@@ -80,6 +80,7 @@ def train(cfg: DictConfig):
         grid[idx[-n_test:]],
     )
 
+    # set constraint
     def gen_input_batch_train():
         batch_idx = np.random.randint(0, inputs_train.shape[0], [cfg.TRAIN.batch_size])
         grid_idx = np.sort(
