@@ -55,11 +55,18 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
             # fetch data from data loader
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push("Data load")
+
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
                 _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_pop()
+
             reader_cost += time.perf_counter() - reader_tic
 
             for v in input_dict.values():

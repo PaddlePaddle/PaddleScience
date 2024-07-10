@@ -54,6 +54,8 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 if TYPE_CHECKING:
+    from types import ModuleType
+
     from paddle.static import InputSpec
 
 
@@ -264,6 +266,18 @@ class Solver:
                         f"{self.compute_metric_by_batch} when compute_metric_by_batch="
                         f"{self.compute_metric_by_batch}."
                     )
+            # check metric name uniqueness over all validators
+            _count = {}
+            for _validator in validator.values():
+                for metric_name in _validator.metric:
+                    if metric_name in _count:
+                        logger.warning(
+                            f"Metric name({metric_name}) is duplicated, please ensure "
+                            "all metric names are unique over all given validators."
+                        )
+                    _count[metric_name] = 1
+            del _count
+
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         if not cfg:
             self.eval_with_no_grad = eval_with_no_grad
@@ -836,6 +850,9 @@ class Solver:
         export_path: str,
         with_onnx: bool = False,
         skip_prune_program: bool = False,
+        *,
+        full_graph: bool = True,
+        ignore_modules: Optional[List[ModuleType]] = None,
     ):
         """
         Convert model to static graph model and export to files.
@@ -848,12 +865,22 @@ class Solver:
                 paddle inference models are exported. Defaults to False.
             skip_prune_program (bool, optional): Whether prune program, pruning program
                 may cause unexpectable result, e.g. llm-inference. Defaults to False.
+            full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
+                when set to True, where otherwise use Abstract Syntax Tree(AST) if False.
+                Defaults to True.
+            ignore_modules (List[ModuleType]): Adds modules that should be ignored during
+                conversion. Builtin modules that have been ignored are collections, pdb,
+                copy, inspect, re, numpy, logging, six. For example, einops can be added
+                here. Defaults to None.
         """
+        if ignore_modules is not None:
+            jit.ignore_module(ignore_modules)
+
         jit.enable_to_static(True)
 
         if self.pretrained_model_path is None:
             logger.warning(
-                "'pretrained_model_path' is not given, so the weights of exported "
+                "'INFER.pretrained_model_path' is not given, so the weights of exported "
                 "model will be random initialized."
             )
 
@@ -861,7 +888,8 @@ class Solver:
         static_model = jit.to_static(
             self.model,
             input_spec=input_spec,
-            full_graph=True,
+            full_graph=full_graph,
+            ignore_module=ignore_modules,
         )
 
         # save static graph model to disk

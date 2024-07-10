@@ -60,6 +60,21 @@ class Arch(nn.Layer):
                 logger.warning(f"{name} has no attribute 'shape'")
         return num
 
+    @property
+    def num_buffers(self) -> int:
+        """Return number of buffers within network.
+
+        Returns:
+            int: Number of buffers.
+        """
+        num = 0
+        for name, buffer in self.named_buffers():
+            if hasattr(buffer, "shape"):
+                num += np.prod(list(buffer.shape), dtype="int")
+            else:
+                logger.warning(f"{name} has no attribute 'shape'")
+        return num
+
     @staticmethod
     def concat_to_tensor(
         data_dict: Dict[str, paddle.Tensor], keys: Tuple[str, ...], axis=-1
@@ -259,5 +274,6 @@ class Arch(nn.Layer):
                 f"num_conv = {num_conv}",
                 f"num_bn = {num_bn}",
                 f"num_params = {self.num_params}",
+                f"num_buffers = {self.num_buffers}",
             ]
         )

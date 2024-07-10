@@ -25,7 +25,6 @@ import paddle
 from paddle import io
 
 from ppsci.solver import printer
-from ppsci.utils import logger
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
@@ -90,11 +89,6 @@ def _eval_by_dataset(
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
             reader_cost = time.perf_counter() - reader_tic
-
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.eval_time_info:
-                    solver.eval_time_info[key].reset()
 
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
@@ -168,11 +162,6 @@ def _eval_by_dataset(
         for metric_name, metric_func in _validator.metric.items():
             # NOTE: compute metric with entire output and label
             metric_dict = metric_func(all_output, all_label)
-            if metric_name in metric_dict_group:
-                logger.warning(
-                    f"Metric name({metric_name}) already exists, please ensure "
-                    "all metric names are unique over all validators."
-                )
             metric_dict_group[metric_name] = {
                 k: float(v) for k, v in metric_dict.items()
             }
@@ -226,11 +215,6 @@ def _eval_by_batch(
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
             reader_cost = time.perf_counter() - reader_tic
-
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.eval_time_info:
-                    solver.eval_time_info[key].reset()
 
             batch_size = next(iter(input_dict.values())).shape[0]
             for v in input_dict.values():
@@ -287,11 +271,6 @@ def _eval_by_batch(
 
         # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
-            if metric_name in metric_dict_group:
-                logger.warning(
-                    f"Metric name({metric_name}) already exists, please ensure "
-                    "all metric names are unique over all validators."
-                )
             for var_name, metric_value in metric_dict.items():
                 # NOTE: concat single metric(scalar) list into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]

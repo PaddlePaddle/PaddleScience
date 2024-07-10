@@ -4,36 +4,32 @@
     handler: python
     options:
       members:
-        - Arch
+        - AFNONet
         - AMGNet
-        - MLP
-        - ModifiedMLP
-        - PirateNet
+        - Arch
+        - AutoEncoder
+        - ChipDeepONets
+        - CuboidTransformer
+        - CVit1D
+        - CylinderEmbedding
         - DeepONet
         - DeepPhyLSTM
-        - LorenzEmbedding
-        - RosslerEmbedding
-        - CylinderEmbedding
-        - Generator
-        - Discriminator
-        - PhysformerGPT2
-        - ModelList
-        - AFNONet
-        - PrecipNet
-        - PhyCRNet
-        - UNetEx
-        - USCNN
-        - NowcastNet
-        - HEDeepONets
         - DGMR
-        - ChipDeepONets
-        - AutoEncoder
-        - CuboidTransformer
+        - Discriminator
         - ExtFormerMoECuboid
+        - Generator
+        - HEDeepONets
+        - LorenzEmbedding
+        - MLP
+        - ModelList
+        - ModifiedMLP
+        - NowcastNet
         - SFNONet
-        - UNONet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - UNetEx
+        - UNONet
+        - USCNN
       show_root_heading: true
       heading_level: 3
