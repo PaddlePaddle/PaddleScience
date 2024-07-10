@@ -407,7 +407,33 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         export LD_LIBRARY_PATH=/PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH
         ```
 
-    3. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
+    3. [可选] 确保安装了带有 TensorRT 推理功能的 PaddlePaddle。
+
+        === "pip 安装"
+
+            ``` sh
+            pip install paddlepaddle-gpu==2.3.0rc1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/
+            ```
+
+        === "源码编译"
+
+            ``` sh
+            git clone https://github.com/PaddlePaddle/Paddle.git -b develop && cd Paddle/
+            mkdir build && cd build
+            cmake .. -DPY_VERSION=3.9 \
+                -DPYTHON_EXECUTABLE=$(which python3) \
+                -DWITH_GPU=ON \
+                -WITH_DISTRIBUTE=ON \
+                -DWITH_TESTING=OFF \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+                -DPYTHON_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.so \
+                -DWITH_TENSORRT=ON \
+                -DTENSORRT_ROOT=$TRT_PATH
+            pip install python/dist/paddlepaddle_gpu-0.0.0-cp*
+            ```
+
+    4. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
 
         ``` sh
         # 运行前需设置指定GPU，否则可能无法启动 TensorRT

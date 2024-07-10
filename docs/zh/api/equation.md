@@ -12,10 +12,10 @@
         - Laplace
         - LinearElasticity
         - NavierStokes
+        - NLSMB
         - NormalDotVec
         - Poisson
         - Vibration
         - Volterra
-        - NLSMB
       show_root_heading: true
       heading_level: 3

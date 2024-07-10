@@ -196,7 +196,7 @@ if importlib.util.find_spec("pydantic") is not None:
         gpu_id: int = 0
         max_batch_size: int = 1024
         num_cpu_threads: int = 10
-        batch_size: int = 256
+        batch_size: Optional[int] = 256
 
         # Fine-grained validator(s) below
         @field_validator("engine")

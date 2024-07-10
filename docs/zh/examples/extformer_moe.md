@@ -125,9 +125,9 @@ EarthFFormer 模型对于 ICAR-ENSO 数据集的训练中，只对其中海面�
 
 数据加载的代码如下:
 
-``` py linenums="35" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="25" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:35:56
+examples/extformer_moe/extformer_moe_enso_train.py:25:47
 --8<--
 ```
 
@@ -135,9 +135,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:35:56
 
 定义监督约束的代码如下：
 
-``` py linenums="58" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="49" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:58:64
+examples/extformer_moe/extformer_moe_enso_train.py:49:55
 --8<--
 ```
 
@@ -151,9 +151,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:58:64
 
 在该案例中，海面温度模型基于 ExtFormerMoECuboid 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="97" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="88" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:97:101
+examples/extformer_moe/extformer_moe_enso_train.py:88:92
 --8<--
 ```
 
@@ -172,9 +172,9 @@ examples/extformer_moe/conf/extformer_moe_enso_pretrain.yaml:47:129
 本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 `2e-4`。优化器使用 `AdamW`，并将参数进行分组，使用不同的
 `weight_decay`,用 PaddleScience 代码表示如下：
 
-``` py linenums="103" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="94" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:103:128
+examples/extformer_moe/extformer_moe_enso_train.py:94:119
 --8<--
 ```
 
@@ -182,9 +182,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:103:128
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="68" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="59" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:68:95
+examples/extformer_moe/extformer_moe_enso_train.py:59:86
 --8<--
 ```
 
@@ -194,9 +194,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:68:95
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="130" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="121" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:130:151
+examples/extformer_moe/extformer_moe_enso_train.py:121:137
 --8<--
 ```
 
@@ -204,17 +204,17 @@ examples/extformer_moe/extformer_moe_enso_train.py:130:151
 
 构建模型的代码为：
 
-``` py linenums="184" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="138" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:184:188
+examples/extformer_moe/extformer_moe_enso_train.py:138:139
 --8<--
 ```
 
 构建评估器的代码为：
 
-``` py linenums="155" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="142" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:155:182
+examples/extformer_moe/extformer_moe_enso_train.py:142:182
 --8<--
 ```
 

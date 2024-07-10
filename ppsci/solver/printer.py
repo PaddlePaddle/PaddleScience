@@ -149,8 +149,8 @@ def log_eval_info(
         )
 
     # reset time information after printing
-    for key in solver.train_time_info:
-        solver.train_time_info[key].reset()
+    for key in solver.eval_time_info:
+        solver.eval_time_info[key].reset()
 
     # logger.scalar(
     #     {
