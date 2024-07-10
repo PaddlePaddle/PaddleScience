@@ -1,0 +1,113 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_ns_cvit_base_8x8/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+DATA:
+  path: "./NavierStokes-2D"
+  components: ["u", "vx", "vy"]
+  prev_steps: 10
+  pred_steps: 1
+  downsample: 1
+  rollout_steps: 4
+
+# model settings
+MODEL:
+  input_keys: [u, y]
+  output_keys: [s]
+  in_dim: 3
+  coords_dim: 2
+  spatial_dims: [10, 128, 128]
+  patch_size: [1, 8, 8]
+  grid_size: [128, 128]
+  latent_dim: 512
+  emb_dim: 512
+  depth: 10
+  num_heads: 8
+  dec_emb_dim: 512
+  dec_num_heads: 16
+  dec_depth: 1
+  num_mlp_layers: 1
+  mlp_ratio: 1
+  out_dim: 3
+  layer_norm_eps: 1.0e-5
+  embedding_type: grid
+
+# training settings
+TRAIN:
+  epochs: 200
+  iters_per_epoch: 1000
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 5000
+    by_epoch: false
+    warmup_epoch: 5
+    warmup_start_lr: 0.0
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  batch_size: 64
+  pretrained_model_path: null
+  checkpoint_path: null
+  train_samples: 6500
+  num_query_points: 1024
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  # compute_metric_by_batch: true
+  batch_size: 8
+  rollout_steps: 4
+  test_samples: 1000
+
+# inference settings
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/ns_cvit_base_8x8
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 8
+  test_samples: 1000
+  rollout_steps: 4

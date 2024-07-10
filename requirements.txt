@@ -1,4 +1,5 @@
 colorlog
+einops
 h5py
 hydra-core
 imageio
