@@ -1,0 +1,4 @@
+git+https://github.com/PaddlePaddle/PGL.git
+matplotlib
+pyamg
+scipy
