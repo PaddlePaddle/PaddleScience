@@ -20,6 +20,7 @@ from typing import Tuple
 
 import hydra
 import numpy as np
+import paddle
 from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
@@ -376,17 +377,17 @@ def evaluate(cfg: DictConfig):
 
     # define loss
     def loss_expr(
-        output_dict: Dict[str, np.ndarray],
-        label_dict: Dict[str, np.ndarray] = None,
-        weight_dict: Dict[str, np.ndarray] = None,
-    ) -> float:
+        output_dict: Dict[str, "paddle.Tensor"],
+        label_dict: Dict[str, "paddle.Tensor"] = None,
+        weight_dict: Dict[str, "paddle.Tensor"] = None,
+    ) -> Dict[str, "paddle.Tensor"]:
         output = output_dict["output"]
         y = label_dict["output"]
         loss_u = (output[:, 0:1, :, :] - y[:, 0:1, :, :]) ** 2
         loss_v = (output[:, 1:2, :, :] - y[:, 1:2, :, :]) ** 2
         loss_p = (output[:, 2:3, :, :] - y[:, 2:3, :, :]).abs()
         loss = (loss_u + loss_v + loss_p) / CHANNELS_WEIGHTS
-        return loss.sum()
+        return {"custom_loss": loss.sum()}
 
     # manually build validator
     eval_dataloader_cfg = {
@@ -404,10 +405,10 @@ def evaluate(cfg: DictConfig):
     }
 
     def metric_expr(
-        output_dict: Dict[str, np.ndarray],
-        label_dict: Dict[str, np.ndarray] = None,
-        weight_dict: Dict[str, np.ndarray] = None,
-    ) -> Dict[str, float]:
+        output_dict: Dict[str, "paddle.Tensor"],
+        label_dict: Dict[str, "paddle.Tensor"] = None,
+        weight_dict: Dict[str, "paddle.Tensor"] = None,
+    ) -> Dict[str, "paddle.Tensor"]:
         output = output_dict["output"]
         y = label_dict["output"]
         total_mse = ((output - y) ** 2).sum() / len(test_x)
