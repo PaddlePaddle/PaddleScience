@@ -450,7 +450,7 @@ class Solver:
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
                     f"Detected paddlepaddle version is '{paddle_version}', "
-                    "currently it is recommended to use release 2.6 or develop version."
+                    "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
         else:
             paddle_version = f"develop({paddle.version.commit[:7]})"
