@@ -185,15 +185,7 @@ class Dataset:
             return {k: np.asarray(v, dtype="float32") for k, v in dct.items()}
 
         input_dict_train = to_numpy_dict(input_dict_train)
-        for k, v in input_dict_train.items():
-            print(f"input_dict_train {k} {type(v)}")
         label_dict_train = to_numpy_dict(label_dict_train)
-        for k, v in label_dict_train.items():
-            print(f"label_dict_train {k} {type(v)}")
         input_dict_val = to_numpy_dict(input_dict_val)
-        for k, v in input_dict_val.items():
-            print(f"input_dict_val {k} {type(v)}")
         label_dict_val = to_numpy_dict(label_dict_val)
-        for k, v in label_dict_val.items():
-            print(f"label_dict_val {k} {type(v)}")
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
