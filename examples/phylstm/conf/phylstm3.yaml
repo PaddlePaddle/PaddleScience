@@ -1,3 +1,13 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -5,15 +15,6 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
