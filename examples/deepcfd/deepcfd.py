@@ -35,7 +35,9 @@ def split_tensors(
 
     Args:
         tensors (List[np.array]): Non-empty tensor list.
-        ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
+        ratio (float): Split ratio. For example, tensor list A is split to A1 and A2.
+            len(A1) / len(A) = ratio.
+
     Returns:
         Tuple[List[np.array], List[np.array]]: Split tensors.
     """
@@ -193,10 +195,7 @@ def predict_and_save_plot(
     plt.colorbar(orientation="horizontal")
     plt.tight_layout()
     plt.show()
-    plt.savefig(
-        os.path.join(plot_dir, f"cfd_{index}.png"),
-        bbox_inches="tight",
-    )
+    plt.savefig(os.path.join(plot_dir, f"cfd_{index}.png"), bbox_inches="tight")
 
 
 def train(cfg: DictConfig):
