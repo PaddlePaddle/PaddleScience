@@ -178,6 +178,15 @@ if importlib.util.find_spec("pydantic") is not None:
         pretrained_model_path: Optional[str] = None
         eval_with_no_grad: bool = False
         compute_metric_by_batch: bool = False
+        batch_size: Optional[int] = 256
+
+        @field_validator("batch_size")
+        def batch_size_check(cls, v):
+            if isinstance(v, int) and v <= 0:
+                raise ValueError(
+                    f"'EVAL.batch_size' should be greater than 0 or None, but got {v}"
+                )
+            return v
 
     class InferConfig(BaseModel):
         """
@@ -332,7 +341,8 @@ if importlib.util.find_spec("pydantic") is not None:
         - TRAIN/swa: swa_default  <-- 'swa_default' used here
       - EVAL: eval_default        <-- 'eval_default' used here
       - INFER: infer_default      <-- 'infer_default' used here
-      - _self_
+      - _self_                    <-- config defined in current yaml
+
     mode: train
     seed: 42
     ...
@@ -390,6 +400,7 @@ if importlib.util.find_spec("pydantic") is not None:
         "EVAL.pretrained_model_path",
         "EVAL.eval_with_no_grad",
         "EVAL.compute_metric_by_batch",
+        "EVAL.batch_size",
         "INFER.pretrained_model_path",
         "INFER.export_path",
         "INFER.pdmodel_path",
