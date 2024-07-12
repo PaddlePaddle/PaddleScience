@@ -49,17 +49,22 @@ CVit 作为一种算子学习模型，以输入函数 $u$、函数 $s$ 的查询
 本问题求解如下方程：
 
 Formulation The 1D advection equation in $\Omega=[0,1)$ is
+
 $$
 \begin{aligned}
 & \frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0 \quad x \in \Omega, \\
 & u(0)=u_0
 \end{aligned}
 $$
+
 where $c=1$ is the constant advection speed, and periodic boundary conditions are imposed. We are interested in the map from the initial $u_0$ to solution $u(\cdot, T)$ at $T=0.5$. The initial condition $u_0$ is assumed to be
+
 $$
 u_0=-1+2 \mathbb{1}\left\{\tilde{u_0} \geq 0\right\}
 $$
+
 where $\widetilde{u_0}$ a centered Gaussian
+
 $$
 \widetilde{u_0} \sim \mathbb{N}(0, \mathrm{C}) \quad \text { and } \quad \mathrm{C}=\left(-\Delta+\tau^2\right)^{-d} \text {; }
 $$
