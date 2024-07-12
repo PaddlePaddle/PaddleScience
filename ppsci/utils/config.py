@@ -42,7 +42,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def decay_check(cls, v):
             if v <= 0 or v >= 1:
                 raise ValueError(
-                    f"'decay' should be in (0, 1) when is type of float, but got {v}"
+                    f"'ema.decay' should be in (0, 1) when is type of float, but got {v}"
                 )
             return v
 
@@ -50,7 +50,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def avg_freq_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'avg_freq' should be a positive integer when is type of int, "
+                    "'ema.avg_freq' should be a positive integer when is type of int, "
                     f"but got {v}"
                 )
             return v
@@ -63,15 +63,17 @@ if importlib.util.find_spec("pydantic") is not None:
         @field_validator("avg_range")
         def avg_range_check(cls, v, info: ValidationInfo):
             if isinstance(v, tuple) and v[0] > v[1]:
-                raise ValueError(f"'avg_range' should be a valid range, but got {v}.")
+                raise ValueError(
+                    f"'swa.avg_range' should be a valid range, but got {v}."
+                )
             if isinstance(v, tuple) and v[0] < 0:
                 raise ValueError(
-                    "The start epoch of 'avg_range' should be a non-negtive integer"
+                    "The start epoch of 'swa.avg_range' should be a non-negtive integer"
                     f" , but got {v[0]}."
                 )
             if isinstance(v, tuple) and v[1] > info.data["epochs"]:
                 raise ValueError(
-                    "The end epoch of 'avg_range' should not be lager than "
+                    "The end epoch of 'swa.avg_range' should not be lager than "
                     f"'epochs'({info.data['epochs']}), but got {v[1]}."
                 )
             return v
@@ -80,7 +82,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def avg_freq_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'avg_freq' should be a positive integer when is type of int, "
+                    "'swa.avg_freq' should be a positive integer when is type of int, "
                     f"but got {v}"
                 )
             return v
@@ -107,7 +109,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def epochs_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'epochs' should be a positive integer when is type of int, "
+                    "'TRAIN.epochs' should be a positive integer when is type of int, "
                     f"but got {v}"
                 )
             return v
@@ -116,7 +118,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def iters_per_epoch_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'iters_per_epoch' should be a positive integer when is type of int"
+                    "'TRAIN.iters_per_epoch' should be a positive integer when is type of int"
                     f", but got {v}"
                 )
             return v
@@ -125,7 +127,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def update_freq_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'update_freq' should be a positive integer when is type of int"
+                    "'TRAIN.update_freq' should be a positive integer when is type of int"
                     f", but got {v}"
                 )
             return v
@@ -134,7 +136,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def save_freq_check(cls, v):
             if v < 0:
                 raise ValueError(
-                    "'save_freq' should be a non-negtive integer when is type of int"
+                    "'TRAIN.save_freq' should be a non-negtive integer when is type of int"
                     f", but got {v}"
                 )
             return v
@@ -144,8 +146,8 @@ if importlib.util.find_spec("pydantic") is not None:
             if info.data["eval_during_train"]:
                 if v <= 0:
                     raise ValueError(
-                        f"'start_eval_epoch' should be a positive integer when "
-                        f"'eval_during_train' is True, but got {v}"
+                        f"'TRAIN.start_eval_epoch' should be a positive integer when "
+                        f"'TRAIN.eval_during_train' is True, but got {v}"
                     )
             return v
 
@@ -154,8 +156,8 @@ if importlib.util.find_spec("pydantic") is not None:
             if info.data["eval_during_train"]:
                 if v <= 0:
                     raise ValueError(
-                        f"'eval_freq' should be a positive integer when "
-                        f"'eval_during_train' is True, but got {v}"
+                        f"'TRAIN.eval_freq' should be a positive integer when "
+                        f"'TRAIN.eval_during_train' is True, but got {v}"
                     )
             return v
 
@@ -203,12 +205,12 @@ if importlib.util.find_spec("pydantic") is not None:
         def engine_check(cls, v, info: ValidationInfo):
             if v == "tensorrt" and info.data["device"] != "gpu":
                 raise ValueError(
-                    "'device' should be 'gpu' when 'engine' is 'tensorrt', "
+                    "'INFER.device' should be 'gpu' when 'INFER.engine' is 'tensorrt', "
                     f"but got '{info.data['device']}'"
                 )
             if v == "mkldnn" and info.data["device"] != "cpu":
                 raise ValueError(
-                    "'device' should be 'cpu' when 'engine' is 'mkldnn', "
+                    "'INFER.device' should be 'cpu' when 'INFER.engine' is 'mkldnn', "
                     f"but got '{info.data['device']}'"
                 )
 
@@ -218,21 +220,25 @@ if importlib.util.find_spec("pydantic") is not None:
         def min_subgraph_size_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'min_subgraph_size' should be greater than 0, " f"but got {v}"
+                    "'INFER.min_subgraph_size' should be greater than 0, "
+                    f"but got {v}"
                 )
             return v
 
         @field_validator("gpu_mem")
         def gpu_mem_check(cls, v):
             if v <= 0:
-                raise ValueError("'gpu_mem' should be greater than 0, " f"but got {v}")
+                raise ValueError(
+                    "'INFER.gpu_mem' should be greater than 0, " f"but got {v}"
+                )
             return v
 
         @field_validator("gpu_id")
         def gpu_id_check(cls, v):
             if v < 0:
                 raise ValueError(
-                    "'gpu_id' should be greater than or equal to 0, " f"but got {v}"
+                    "'INFER.gpu_id' should be greater than or equal to 0, "
+                    f"but got {v}"
                 )
             return v
 
@@ -240,7 +246,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def max_batch_size_check(cls, v):
             if v <= 0:
                 raise ValueError(
-                    "'max_batch_size' should be greater than 0, " f"but got {v}"
+                    "'INFER.max_batch_size' should be greater than 0, " f"but got {v}"
                 )
             return v
 
@@ -248,16 +254,16 @@ if importlib.util.find_spec("pydantic") is not None:
         def num_cpu_threads_check(cls, v):
             if v < 0:
                 raise ValueError(
-                    "'num_cpu_threads' should be greater than or equal to 0, "
+                    "'INFER.num_cpu_threads' should be greater than or equal to 0, "
                     f"but got {v}"
                 )
             return v
 
         @field_validator("batch_size")
         def batch_size_check(cls, v):
-            if v <= 0:
+            if isinstance(v, int) and v <= 0:
                 raise ValueError(
-                    "'batch_size' should be greater than 0, " f"but got {v}"
+                    f"'INFER.batch_size' should be greater than 0 or None, but got {v}"
                 )
             return v
 
