@@ -159,7 +159,7 @@ class PINNPredictor(base.Predictor):
                 ed = min(num_samples, batch_id * batch_size)
                 batch_input_dict = {key: input_dict[key][st:ed] for key in input_dict}
             else:
-                batch_input_dict = {key: input_dict[key] for key in input_dict}
+                batch_input_dict = {**input_dict}
 
             # send batch input data to input handle(s)
             if self.engine != "onnx":
