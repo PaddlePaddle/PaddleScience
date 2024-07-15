@@ -51,3 +51,6 @@ repos:
         entry: bash .clang_format.hook -i
         language: system
         files: \.(c|cc|cxx|cpp|cu|h|hpp|hxx|cuh|proto)$
+
+exclude: |
+  ^jointContribution/

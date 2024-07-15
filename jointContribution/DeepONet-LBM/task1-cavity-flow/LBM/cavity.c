@@ -554,4 +554,3 @@ void  data_read()
        fread(f,sizeof(double),M1*N1*Q,fp);
        fclose(fp);
 }
-
