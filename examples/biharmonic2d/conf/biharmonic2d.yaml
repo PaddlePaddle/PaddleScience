@@ -72,8 +72,7 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
-  batch_size:
-    sup_validator: 128
+  batch_size: 128
 
 INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/biharmonic2d/biharmonic2d_pretrained.pdparams
