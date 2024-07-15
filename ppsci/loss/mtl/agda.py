@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from typing import List
 
 import paddle
@@ -29,6 +30,10 @@ class AGDA(base.LossAggregator):
     [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new)
 
     NOTE: This loss aggregator is only suitable for two-task learning and the first task loss must be PDE loss.
+
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:
         model (nn.Layer): Training model.
@@ -49,6 +54,7 @@ class AGDA(base.LossAggregator):
         ...     bc_loss = paddle.sum((y2 - 2) ** 2)
         ...     loss_aggregator({'pde_loss': pde_loss, 'bc_loss': bc_loss}).backward()
     """
+    should_persist: ClassVar[bool] = False
 
     def __init__(self, model: nn.Layer, M: int = 100, gamma: float = 0.999) -> None:
         super().__init__(model)

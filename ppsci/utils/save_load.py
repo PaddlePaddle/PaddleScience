@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from paddle import optimizer
 
     from ppsci import equation
+    from ppsci.loss import mtl
     from ppsci.utils import ema
 
 
@@ -42,7 +43,10 @@ __all__ = [
 
 
 def _load_pretrain_from_path(
-    path: str, model: nn.Layer, equation: Optional[Dict[str, equation.PDE]] = None
+    path: str,
+    model: nn.Layer,
+    equation: Optional[Dict[str, equation.PDE]] = None,
+    loss_aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """Load pretrained model from given path.
 
@@ -77,9 +81,26 @@ def _load_pretrain_from_path(
                 f"Finish loading pretrained equation parameters from: {path}.pdeqn"
             )
 
+    if loss_aggregator is not None:
+        if not os.path.exists(f"{path}.pdagg"):
+            if loss_aggregator.should_persist:
+                logger.warning(
+                    f"Given loss_aggregator({type(loss_aggregator)}) has persistable"
+                    f"parameters or buffers, but {path}.pdagg not found."
+                )
+        else:
+            aggregator_dict = paddle.load(f"{path}.pdagg")
+            loss_aggregator.set_state_dict(aggregator_dict)
+            logger.message(
+                f"Finish loading pretrained equation parameters from: {path}.pdagg"
+            )
+
 
 def load_pretrain(
-    model: nn.Layer, path: str, equation: Optional[Dict[str, equation.PDE]] = None
+    model: nn.Layer,
+    path: str,
+    equation: Optional[Dict[str, equation.PDE]] = None,
+    loss_aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """
     Load pretrained model from given path or url.
@@ -121,7 +142,7 @@ def load_pretrain(
     # remove ".pdparams" in suffix of path for convenient
     if path.endswith(".pdparams"):
         path = path[:-9]
-    _load_pretrain_from_path(path, model, equation)
+    _load_pretrain_from_path(path, model, equation, loss_aggregator)
 
 
 def load_checkpoint(
@@ -131,6 +152,7 @@ def load_checkpoint(
     grad_scaler: Optional[amp.GradScaler] = None,
     equation: Optional[Dict[str, equation.PDE]] = None,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ) -> Dict[str, Any]:
     """Load from checkpoint.
 
@@ -141,6 +163,7 @@ def load_checkpoint(
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -189,6 +212,10 @@ def load_checkpoint(
         avg_param_dict = paddle.load(f"{path}_ema.pdparams")
         ema_model.set_state_dict(avg_param_dict)
 
+    if aggregator is not None:
+        aggregator_dict = paddle.load(f"{path}.pdagg")
+        aggregator.set_state_dict(aggregator_dict)
+
     logger.message(f"Finish loading checkpoint from {path}")
     return metric_dict
 
@@ -203,6 +230,7 @@ def save_checkpoint(
     equation: Optional[Dict[str, equation.PDE]] = None,
     print_log: bool = True,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """
     Save checkpoint, including model params, optimizer params, metric information.
@@ -219,6 +247,7 @@ def save_checkpoint(
             keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
             Defaults to True.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -257,6 +286,9 @@ def save_checkpoint(
 
     if ema_model:
         paddle.save(ema_model.state_dict(), f"{ckpt_path}_ema.pdparams")
+
+    if aggregator and aggregator.should_persist:
+        paddle.save(aggregator.state_dict(), f"{ckpt_path}.pdagg")
 
     if print_log:
         log_str = f"Finish saving checkpoint to: {ckpt_path}"

@@ -95,7 +95,7 @@
 
         ``` sh
         cd PaddleScience/
-        set PYTHONPATH=%cd%
+        set PYTHONPATH=%PYTHONPATH%;%CD%
         pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 

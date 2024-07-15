@@ -334,6 +334,7 @@ class Solver:
                 self.scaler,
                 self.equation,
                 self.ema_model,
+                self.loss_aggregator,
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -567,6 +568,7 @@ class Solver:
                         self.output_dir,
                         "best_model",
                         self.equation,
+                        aggregator=self.loss_aggregator,
                     )
                 logger.info(
                     f"[Eval][Epoch {epoch_id}]"
@@ -633,6 +635,7 @@ class Solver:
                     f"epoch_{epoch_id}",
                     self.equation,
                     ema_model=self.ema_model,
+                    aggregator=self.loss_aggregator,
                 )
 
             # save the latest model for convenient resume training
@@ -646,6 +649,7 @@ class Solver:
                 self.equation,
                 print_log=(epoch_id == start_epoch),
                 ema_model=self.ema_model,
+                aggregator=self.loss_aggregator,
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
