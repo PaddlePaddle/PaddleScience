@@ -926,7 +926,7 @@ PaddleScience 是一个开源的代码库，由多人共同参与开发，因此
 PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
 让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
 
-因此在 commit 您的代码之前，请务必先执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
+因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
 
 ``` sh
 pip install pre-commit
