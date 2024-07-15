@@ -97,8 +97,7 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
-  batch_size:
-    sup_validator: 4096
+  batch_size: 4096
 
 # inference settings
 INFER:
