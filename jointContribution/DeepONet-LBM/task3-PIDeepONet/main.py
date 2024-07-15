@@ -2,7 +2,6 @@ import time
 
 import numpy as np
 import paddle as pd
-
 import paddle.nn.functional as F
 from dataset import DataSet
 
