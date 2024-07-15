@@ -190,7 +190,7 @@ def train(cfg: DictConfig):
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
         ppsci.loss.MSELoss("mean"),
         {
             "p": lambda out: out["p"],
@@ -213,7 +213,7 @@ def train(cfg: DictConfig):
                 "v": lambda out: out["v"],
                 "w": lambda out: out["w"],
             },
-            batch_size=cfg.EVAL.batch_size.sup_validator,
+            batch_size=cfg.EVAL.batch_size,
             prefix="result_u_v_w_p",
         ),
     }
@@ -288,7 +288,7 @@ def evaluate(cfg: DictConfig):
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
         ppsci.loss.MSELoss("mean"),
         {
             "p": lambda out: out["p"],
@@ -311,7 +311,7 @@ def evaluate(cfg: DictConfig):
                 "v": lambda out: out["v"],
                 "w": lambda out: out["w"],
             },
-            batch_size=cfg.EVAL.batch_size.sup_validator,
+            batch_size=cfg.EVAL.batch_size,
             prefix="result_u_v_w_p",
         ),
     }
