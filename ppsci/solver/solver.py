@@ -710,7 +710,7 @@ class Solver:
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
         expr_dict: Optional[Dict[str, Callable]] = None,
-        batch_size: int = 64,
+        batch_size: Optional[int] = 64,
         no_grad: bool = True,
         return_numpy: bool = False,
     ) -> Dict[str, Union[paddle.Tensor, np.ndarray]]:
@@ -720,7 +720,9 @@ class Solver:
             input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Input data in dict.
             expr_dict (Optional[Dict[str, Callable]]): Expression dict, which guide to
                 compute equation variable with callable function. Defaults to None.
-            batch_size (int, optional): Predicting by batch size. Defaults to 64.
+            batch_size (Optional[int]): Predicting by batch size. If None, data in
+                `input_dict` will be used directly for inference without any batch slicing.
+                Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
             return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
@@ -773,26 +775,32 @@ class Solver:
             if self.world_size > 1
             else input_dict
         )
-        local_batch_num = (local_num_samples_pad + (batch_size - 1)) // batch_size
+        local_batch_num = (
+            (local_num_samples_pad + (batch_size - 1)) // batch_size
+            if batch_size is not None
+            else 1
+        )
 
         pred_dict = misc.Prettydefaultdict(list)
         with self.no_grad_context_manager(no_grad), self.no_sync_context_manager(
             self.world_size > 1, self.model
         ):
             for batch_id in range(local_batch_num):
-                batch_input_dict = {}
-                st = batch_id * batch_size
-                ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
-
                 # prepare batch input dict
-                for key in local_input_dict:
-                    if not paddle.is_tensor(local_input_dict[key]):
-                        batch_input_dict[key] = paddle.to_tensor(
-                            local_input_dict[key][st:ed], paddle.get_default_dtype()
-                        )
-                    else:
-                        batch_input_dict[key] = local_input_dict[key][st:ed]
-                    batch_input_dict[key].stop_gradient = no_grad
+                batch_input_dict = {}
+                if batch_size is not None:
+                    st = batch_id * batch_size
+                    ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
+                    for key in local_input_dict:
+                        if not paddle.is_tensor(local_input_dict[key]):
+                            batch_input_dict[key] = paddle.to_tensor(
+                                local_input_dict[key][st:ed], paddle.get_default_dtype()
+                            )
+                        else:
+                            batch_input_dict[key] = local_input_dict[key][st:ed]
+                        batch_input_dict[key].stop_gradient = no_grad
+                else:
+                    batch_input_dict = {**local_input_dict}
 
                 # forward
                 with self.autocast_context_manager(self.use_amp, self.amp_level):

@@ -54,6 +54,7 @@ CVit 作为一种算子学习模型，以输入函数 $u$、函数 $s$ 的查询
 本问题基于固定方腔的不可压 buoyancy-driven flow 即方腔内的浮力驱动流动问题，求解如下方程：
 
 Formulation We consider the vorticity-stream $(\omega-\psi)$ formulation of the incompressible Navier-Stokes equations on a two-dimensional periodic domain, $D=D_u=D_v=[0,2 \pi]^2$ :
+
 $$
 \begin{aligned}
 & \frac{\partial \omega}{\partial t}+(v \cdot \nabla) \omega-v \Delta \omega=f^{\prime} \\
