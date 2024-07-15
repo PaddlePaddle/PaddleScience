@@ -284,7 +284,7 @@ def train(cfg: DictConfig):
         },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
         ppsci.loss.MSELoss("mean"),
         {
             "u": lambda out: out["u"],
@@ -460,7 +460,7 @@ def evaluate(cfg: DictConfig):
         },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size},
         ppsci.loss.MSELoss("mean"),
         {
             "u": lambda out: out["u"],
