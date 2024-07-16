@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from typing import Dict
 from typing import List
 
@@ -42,6 +43,10 @@ class GradNorm(base.LossAggregator):
     \end{align*}
     $$
 
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
+
     Args:
         model (nn.Layer): Training model.
         num_losses (int, optional): Number of losses. Defaults to 1.
@@ -63,6 +68,7 @@ class GradNorm(base.LossAggregator):
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
         ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
+    should_persist: ClassVar[bool] = True
     weight: paddle.Tensor
 
     def __init__(

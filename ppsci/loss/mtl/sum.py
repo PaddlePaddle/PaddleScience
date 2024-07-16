@@ -20,6 +20,8 @@ from typing import Dict
 if TYPE_CHECKING:
     import paddle
 
+from typing import ClassVar
+
 from ppsci.loss.mtl.base import LossAggregator
 
 
@@ -30,7 +32,12 @@ class Sum(LossAggregator):
     $$
     loss = \sum_i^N losses_i
     $$
+
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
     """
+    should_persist: ClassVar[bool] = False
 
     def __init__(self) -> None:
         self.step = 0

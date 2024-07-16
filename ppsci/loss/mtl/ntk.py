@@ -14,15 +14,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import ClassVar
 from typing import List
 
 import paddle
-from paddle import nn
 
 from ppsci.loss.mtl import base
 
+if TYPE_CHECKING:
+    from paddle import nn
+
 
 class NTK(base.LossAggregator):
+    should_persist: ClassVar[bool] = True
+
     def __init__(
         self,
         model: nn.Layer,

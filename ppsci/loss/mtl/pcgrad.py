@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from typing import List
 
 import numpy as np
@@ -30,6 +31,10 @@ class PCGrad(base.LossAggregator):
     [Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
 
     Code reference: [https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py](https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py)
+
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:
         model (nn.Layer): Training model.
@@ -48,6 +53,7 @@ class PCGrad(base.LossAggregator):
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
         ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
+    should_persist: ClassVar[bool] = False
 
     def __init__(self, model: nn.Layer) -> None:
         super().__init__(model)
