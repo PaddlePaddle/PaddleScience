@@ -46,7 +46,6 @@ def _load_pretrain_from_path(
     path: str,
     model: nn.Layer,
     equation: Optional[Dict[str, equation.PDE]] = None,
-    loss_aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """Load pretrained model from given path.
 
@@ -81,26 +80,11 @@ def _load_pretrain_from_path(
                 f"Finish loading pretrained equation parameters from: {path}.pdeqn"
             )
 
-    if loss_aggregator is not None:
-        if not os.path.exists(f"{path}.pdagg"):
-            if loss_aggregator.should_persist:
-                logger.warning(
-                    f"Given loss_aggregator({type(loss_aggregator)}) has persistable"
-                    f"parameters or buffers, but {path}.pdagg not found."
-                )
-        else:
-            aggregator_dict = paddle.load(f"{path}.pdagg")
-            loss_aggregator.set_state_dict(aggregator_dict)
-            logger.message(
-                f"Finish loading pretrained equation parameters from: {path}.pdagg"
-            )
-
 
 def load_pretrain(
     model: nn.Layer,
     path: str,
     equation: Optional[Dict[str, equation.PDE]] = None,
-    loss_aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """
     Load pretrained model from given path or url.
@@ -142,7 +126,7 @@ def load_pretrain(
     # remove ".pdparams" in suffix of path for convenient
     if path.endswith(".pdparams"):
         path = path[:-9]
-    _load_pretrain_from_path(path, model, equation, loss_aggregator)
+    _load_pretrain_from_path(path, model, equation)
 
 
 def load_checkpoint(
