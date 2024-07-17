@@ -62,7 +62,7 @@ class LossAggregator(nn.Layer):
 
     def state_dict(self):
         agg_state = super().state_dict()
-        model_state = self.model.state_dictq()
+        model_state = self.model.state_dict()
         # remove model parameters from state dict for already in pdparams
         agg_state = {k: v for k, v in agg_state.items() if k not in model_state}
         return agg_state
