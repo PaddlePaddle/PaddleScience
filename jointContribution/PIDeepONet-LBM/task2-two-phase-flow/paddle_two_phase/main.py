@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -7,8 +8,13 @@ import paddle.nn.functional as F
 import scipy.io as io
 from dataset import DataSet
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--local_rank", default="0", type=str)
+args = parser.parse_args()
+device = args.local_rank
+
 pd.set_default_dtype("float32")
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = device
 
 pd.seed(1234)
 np.random.seed(1234)
