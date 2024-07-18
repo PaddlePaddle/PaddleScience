@@ -25,6 +25,7 @@ from paddle import inference as paddle_inference
 from typing_extensions import Literal
 
 from ppsci.utils import logger
+from ppsci.utils import misc
 
 if TYPE_CHECKING:
     import onnxruntime
@@ -99,18 +100,22 @@ class Predictor:
     def _create_paddle_predictor(
         self,
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
+        if misc.check_flag_enabled("FLAGS_enable_pir_api"):
+            # PIR mode
+            self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json")
+
         if not osp.exists(self.pdmodel_path):
             raise FileNotFoundError(
                 f"Given 'pdmodel_path': {self.pdmodel_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdmodel_path is correct."
             )
         if not osp.exists(self.pdiparams_path):
             raise FileNotFoundError(
                 f"Given 'pdiparams_path': {self.pdiparams_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdiparams_path is correct."
             )
-
         config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
+
         if self.device == "gpu":
             config.enable_use_gpu(self.gpu_mem, self.gpu_id)
             if self.engine == "tensorrt":

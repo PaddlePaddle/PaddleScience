@@ -911,10 +911,16 @@ class Solver:
             jit.save(static_model, export_path, skip_prune_program=skip_prune_program)
         except Exception as e:
             raise e
+
         logger.message(
             f"Inference model has been exported to: {export_path}, including "
-            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            + (
+                "*.json, *.pdiparams files."
+                if misc.check_flag_enabled("FLAGS_enable_pir_api")
+                else "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            )
         )
+
         jit.enable_to_static(False)
 
         if with_onnx:
