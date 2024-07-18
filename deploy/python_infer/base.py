@@ -101,8 +101,8 @@ class Predictor:
         self,
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
         if misc.check_flag_enabled("FLAGS_enable_pir_api"):
-            # PIR mode
-            self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json")
+            # NOTE: Using 'json' as suffix instead of 'pdmodel' in PIR mode
+            self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json", 1)
 
         if not osp.exists(self.pdmodel_path):
             raise FileNotFoundError(
@@ -114,8 +114,8 @@ class Predictor:
                 f"Given 'pdiparams_path': {self.pdiparams_path} does not exist. "
                 "Please check if cfg.INFER.pdiparams_path is correct."
             )
-        config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
 
+        config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
         if self.device == "gpu":
             config.enable_use_gpu(self.gpu_mem, self.gpu_id)
             if self.engine == "tensorrt":

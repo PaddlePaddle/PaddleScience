@@ -635,13 +635,13 @@ def plot_curve(
 
 
 def check_flag_enabled(flag_name: str) -> bool:
-    """Split given array into single channel array at axis -1 in order of given keys.
+    """Check whether the flag is enabled.
 
     Args:
         flag_name(str): Flag name to be checked whether enabled or disabled.
 
     Returns:
-        bool: Whether the flag is enabled.
+        bool: Whether given flag name is enabled in environment.
     """
     value = os.getenv(flag_name, False)
     if isinstance(value, str):
