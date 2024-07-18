@@ -52,6 +52,7 @@ __all__ = [
     "run_on_eval_mode",
     "run_at_rank0",
     "plot_curve",
+    "check_flag_enabled",
 ]
 
 
@@ -631,3 +632,18 @@ def plot_curve(
     plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
     plt.close()
+
+
+def check_flag_enabled(flag_name: str) -> bool:
+    """Check whether the flag is enabled.
+
+    Args:
+        flag_name(str): Flag name to be checked whether enabled or disabled.
+
+    Returns:
+        bool: Whether given flag name is enabled in environment.
+    """
+    value = os.getenv(flag_name, False)
+    if isinstance(value, str):
+        return value.lower() in ["true", "1"]
+    return False
