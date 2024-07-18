@@ -913,11 +913,18 @@ class Solver:
             raise e
         logger.message(
             f"Inference model has been exported to: {export_path}, including "
-            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            + (
+                "*.json, *.pdiparams files."
+                if misc.check_flag_enabled("FLAGS_enable_pir_api")
+                else "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            )
         )
         jit.enable_to_static(False)
 
         if with_onnx:
+            # TODO: support pir + onnx
+            if misc.check_flag_enabled("FLAGS_enable_pir_api"):
+                raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
                     "Please install paddle2onnx with `pip install paddle2onnx`"
