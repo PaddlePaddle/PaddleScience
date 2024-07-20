@@ -20,6 +20,7 @@ from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
+from ppsci.arch.spinn import SPINN  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
@@ -60,6 +61,7 @@ __all__ = [
     "AutoEncoder",
     "build_model",
     "CFDGCN",
+    "SPINN",
     "ChipDeepONets",
     "CuboidTransformer",
     "CVit",
