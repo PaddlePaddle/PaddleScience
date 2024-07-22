@@ -236,7 +236,7 @@ class Solver:
         if self.device != "cpu" and paddle.device.get_device() == "cpu":
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
             self.device = "cpu"
-        self.device = paddle.set_device(self.device)
+        self.device = paddle.device.set_device(self.device)
 
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
@@ -790,21 +790,21 @@ class Solver:
             self.world_size > 1, self.model
         ):
             for batch_id in range(local_batch_num):
-                # prepare batch input dict
-                batch_input_dict = {}
+                # prepare local batch input
                 if batch_size is not None:
                     st = batch_id * batch_size
                     ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
-                    for key in local_input_dict:
-                        if not paddle.is_tensor(local_input_dict[key]):
-                            batch_input_dict[key] = paddle.to_tensor(
-                                local_input_dict[key][st:ed], paddle.get_default_dtype()
-                            )
-                        else:
-                            batch_input_dict[key] = local_input_dict[key][st:ed]
-                        batch_input_dict[key].stop_gradient = no_grad
+                    batch_input_dict = {
+                        k: v[st:ed] for k, v in local_input_dict.items()
+                    }
                 else:
                     batch_input_dict = {**local_input_dict}
+                # Keep dtype unchanged as all dtype be correct when given into predict function
+                for key in batch_input_dict:
+                    if not paddle.is_tensor(batch_input_dict[key]):
+                        batch_input_dict[key] = paddle.to_tensor(
+                            batch_input_dict[key], stop_gradient=no_grad
+                        )
 
                 # forward
                 with self.autocast_context_manager(self.use_amp, self.amp_level):
@@ -812,21 +812,21 @@ class Solver:
                         expr_dict, batch_input_dict, self.model
                     )
 
-                # collect batch data
+                # collect local batch output
                 for key, batch_output in batch_output_dict.items():
                     pred_dict[key].append(
                         batch_output.detach() if no_grad else batch_output
                     )
 
-            # concatenate local predictions
+            # concatenate local output
             pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
             if self.world_size > 1:
-                # gather global predictions from all devices if world_size > 1
+                # gather global output from all devices if world_size > 1
                 pred_dict = {
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
-                # rearrange predictions as the same order of input_dict according
+                # rearrange output as the same order of input_dict according
                 # to inverse permutation
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(
@@ -837,7 +837,7 @@ class Solver:
                 perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
                 perm_inv = paddle.to_tensor(perm_inv)
                 pred_dict = {key: value[perm_inv] for key, value in pred_dict.items()}
-                # then discard predictions of padding data at the end if num_pad > 0
+                # then discard output of padding data at the end if num_pad > 0
                 if num_pad > 0:
                     pred_dict = {
                         key: value[:num_samples] for key, value in pred_dict.items()
