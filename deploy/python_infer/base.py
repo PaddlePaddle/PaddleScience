@@ -95,7 +95,9 @@ class Predictor:
         )
 
     def predict(self, input_dict):
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"Method 'predict' is should be implemented in {self.__class__.__name__} class."
+        )
 
     def _create_paddle_predictor(
         self,
