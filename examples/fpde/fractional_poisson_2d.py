@@ -190,8 +190,8 @@ def train(cfg: DictConfig):
     solver.train()
 
     # visualize prediction after finished training
-    theta = np.arange(0, 2 * math.pi, 0.04)
-    rho = np.arange(0, 1, 0.005)
+    theta = np.arange(0, 2 * math.pi, 0.04, dtype=paddle.get_default_dtype())
+    rho = np.arange(0, 1, 0.005, dtype=paddle.get_default_dtype())
     mt, mr = np.meshgrid(theta, rho)
     x = mr * np.cos(mt)
     y = mr * np.sin(mt)
@@ -248,8 +248,8 @@ def evaluate(cfg: DictConfig):
     solver.train()
 
     # visualize prediction after finished training
-    theta = np.arange(0, 2 * math.pi, 0.04)
-    rho = np.arange(0, 1, 0.005)
+    theta = np.arange(0, 2 * math.pi, 0.04, dtype=paddle.get_default_dtype())
+    rho = np.arange(0, 1, 0.005, dtype=paddle.get_default_dtype())
     mt, mr = np.meshgrid(theta, rho)
     x = mr * np.cos(mt)
     y = mr * np.sin(mt)
