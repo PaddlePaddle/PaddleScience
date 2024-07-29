@@ -187,7 +187,7 @@ def train(cfg: DictConfig):
         cfg=cfg,
     )
     # train model
-    # solver.train()
+    solver.train()
 
     # visualize prediction after finished training
     theta = np.arange(0, 2 * math.pi, 0.04, dtype=paddle.get_default_dtype())
