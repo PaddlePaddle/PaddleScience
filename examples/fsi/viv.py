@@ -201,6 +201,7 @@ def export(cfg: DictConfig):
             self.func = func
 
         def forward(self, x):
+            x = {**x}
             model_out = self.model(x)
             func_out = self.func(x)
             return {**model_out, "f": func_out}

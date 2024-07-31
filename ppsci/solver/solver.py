@@ -858,7 +858,7 @@ class Solver:
     @misc.run_on_eval_mode
     def export(
         self,
-        input_spec: List["InputSpec"],
+        input_spec: List[Dict[str, InputSpec]],
         export_path: str,
         with_onnx: bool = False,
         skip_prune_program: bool = False,
@@ -870,8 +870,8 @@ class Solver:
         Convert model to static graph model and export to files.
 
         Args:
-            input_spec (List[InputSpec]): InputSpec describes the signature information
-                of the model input.
+            input_spec (List[Dict[str, InputSpec]]): InputSpec describes the signature
+                information of the model input.
             export_path (str): The path prefix to save model.
             with_onnx (bool, optional): Whether to export model into onnx after
                 paddle inference models are exported. Defaults to False.
