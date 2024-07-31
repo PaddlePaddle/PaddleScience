@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 from ppsci.utils import misc
 
 dtype = paddle.get_default_dtype()
@@ -71,15 +72,12 @@ def helmholtz3d_source_term(a1, a2, a3, x, y, z, lda=1.0):
 
 
 def _spinn_train_generator_helmholtz3d(a1, a2, a3, nc):
-    # collocation points
     xc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
     yc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
     zc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
     # source term
     xcm, ycm, zcm = np.meshgrid(xc, yc, zc, indexing="ij")
     uc = helmholtz3d_source_term(a1, a2, a3, xcm, ycm, zcm).astype("float32")
-    # xc, yc, zc = xc.reshape(-1, 1), yc.reshape(-1, 1), zc.reshape(-1, 1)
-    # uc = uc.reshape(-1, 1)
     # boundary (hard-coded)
     xb = [
         np.asarray([1.0], dtype="float32"),
@@ -136,6 +134,7 @@ def train(cfg: DictConfig):
             self._gen()
 
         def _gen(self):
+            logger.info(f"Generating training data for #iter {self.iter}")
             global xb, yb, zb
             xc, yc, zc, uc, xb, yb, zb = _spinn_train_generator_helmholtz3d(
                 cfg.a1,
@@ -146,7 +145,7 @@ def train(cfg: DictConfig):
             self.xc = xc
             self.yc = yc
             self.zc = zc
-            self.uc = uc
+            self.uc = uc[..., np.newaxis]
 
         def __call__(self):
             self.iter += 1
@@ -244,8 +243,10 @@ def train(cfg: DictConfig):
         return {"helmholtz": input_batch["uc"]}
 
     def gen_label_batch_bc(data_dict):
-        N = len(data_dict["x"]) * len(data_dict["y"]) * len(data_dict["z"])
-        return {"u": np.zeros([N, 1])}
+        nx = len(data_dict["x"])
+        ny = len(data_dict["y"])
+        nz = len(data_dict["z"])
+        return {"u": np.zeros([nx, ny, nz, 1])}
 
     pde_constraint = ppsci.constraint.SupervisedConstraint(
         {
@@ -383,10 +384,9 @@ def train(cfg: DictConfig):
             },
             batch_size=None,
             return_numpy=True,
-        )["u"]
-        l2_err = np.linalg.norm(u_pred - u_gt, ord="fro") / np.linalg.norm(
-            u_gt, ord="fro"
-        )
+        )["u"].reshape(-1)
+        u_gt = u_gt.reshape(-1)
+        l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
         print(f"l2_err = {l2_err:.3f}")
 
     compute_l2_error()
@@ -404,50 +404,29 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PirateNet(**cfg.MODEL)
+    model = ppsci.arch.SPINN(**cfg.MODEL)
 
-    data = sio.loadmat(cfg.DATA_PATH)
-    u_ref = data["usol"].astype(dtype)  # (nt, nx)
-    t_star = data["t"].flatten().astype(dtype)  # [nt, ]
-    x_star = data["x"].flatten().astype(dtype)  # [nx, ]
-
-    # set validator
-    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
-    eval_data = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
-    eval_label = {"u": u_ref.reshape([-1, 1])}
-    u_validator = ppsci.validate.SupervisedValidator(
-        {
-            "dataset": {
-                "name": "NamedArrayDataset",
-                "input": eval_data,
-                "label": eval_label,
-            },
-            "batch_size": cfg.EVAL.batch_size,
-        },
-        ppsci.loss.MSELoss("mean"),
-        {"u": lambda out: out["u"]},
-        metric={"L2Rel": ppsci.metric.L2Rel()},
-        name="u_validator",
-    )
-    validator = {u_validator.name: u_validator}
-
-    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        validator=validator,
         cfg=cfg,
     )
 
-    # evaluate after finished training
-    solver.eval()
-    # visualize prediction after finished training
-    u_pred = solver.predict(
-        eval_data, batch_size=cfg.EVAL.batch_size, return_numpy=True
-    )["u"]
-    u_pred = u_pred.reshape([len(t_star), len(x_star)])
+    def compute_l2_error():
+        x, y, z, u_gt = _test_generator_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
+        u_pred = solver.predict(
+            {
+                "x": x,
+                "y": y,
+                "z": z,
+            },
+            batch_size=None,
+            return_numpy=True,
+        )["u"].reshape(-1)
+        u_gt = u_gt.reshape(-1)
+        l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
+        print(f"l2_err = {l2_err:.3f}")
 
-    # plot
-    plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
+    compute_l2_error()
 
 
 def export(cfg: DictConfig):

@@ -805,6 +805,13 @@ class Solver:
                         batch_input_dict[key].stop_gradient = no_grad
                 else:
                     batch_input_dict = {**local_input_dict}
+                    for key in local_input_dict:
+                        if not paddle.is_tensor(local_input_dict[key]):
+                            batch_input_dict[key] = paddle.to_tensor(
+                                local_input_dict[key], paddle.get_default_dtype()
+                            )
+                        else:
+                            batch_input_dict[key] = local_input_dict[key]
 
                 # forward
                 with self.autocast_context_manager(self.use_amp, self.amp_level):

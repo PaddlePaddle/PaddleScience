@@ -23,7 +23,7 @@ import paddle
 import paddle.nn as nn
 
 from ppsci.arch import base
-from ppsci.arch.mlp import MLP
+from ppsci.arch.mlp import ModifiedMLP
 from ppsci.utils import initializer
 
 
@@ -51,7 +51,7 @@ class SPINN(base.Arch):
         self.branch_nets = nn.LayerList()
         for i in range(input_dim):
             self.branch_nets.append(
-                MLP(
+                ModifiedMLP(
                     input_keys=(input_keys[i],),
                     output_keys=("f",),
                     num_layers=num_layers,

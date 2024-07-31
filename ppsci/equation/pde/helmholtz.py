@@ -27,7 +27,7 @@ from ppsci.equation.pde import base
 
 # forward over forward
 def hvp_fwdfwd(f, primals):
-    g = lambda x, y, z: paddle.incubate.autograd.jvp(f, (x, y, z))[1]
+    g = lambda primals: paddle.incubate.autograd.jvp(f, primals)[1]
     _, tangents_out = paddle.incubate.autograd.jvp(g, primals)
     return tangents_out
 
@@ -63,14 +63,6 @@ class Helmholtz(base.PDE):
         self.lda = lda
         self.detach_keys = detach_keys
 
-        # invars = self.create_symbols("x y z")[:dim]
-        # u = self.create_function("u", invars)
-        # if isinstance(source, str):
-        # source = self.create_symbols(source)
-
-        # helmholtz = self.lda * u
-        # for var in invars:
-        #     helmholtz += u.diff(var, 2)
         self.model: paddle.nn.Layer
 
         def helmholtz(data_dict: Dict[str, "paddle.Tensor"]):
@@ -81,9 +73,15 @@ class Helmholtz(base.PDE):
             )  # [n1, ], [n2, ], [n3, ]
             u = data_dict["u"]  # [n1n2n3, 1]
 
-            u__x__x = hvp_fwdfwd(self.model.forward_tensor, (x, y, z))  # [n1n2n3, 1]
-            u__y__y = hvp_fwdfwd(self.model.forward_tensor, (x, y, z))  # [n1n2n3, 1]
-            u__z__z = hvp_fwdfwd(self.model.forward_tensor, (x, y, z))  # [n1n2n3, 1]
+            u__x__x = hvp_fwdfwd(
+                lambda x_: self.model.forward_tensor(x_, y, z), (x,)
+            )  # [n1n2n3, 1]
+            u__y__y = hvp_fwdfwd(
+                lambda y_: self.model.forward_tensor(x, y_, z), (y,)
+            )  # [n1n2n3, 1]
+            u__z__z = hvp_fwdfwd(
+                lambda z_: self.model.forward_tensor(x, y, z_), (z,)
+            )  # [n1n2n3, 1]
 
             out = self.lda * u + u__x__x + u__y__y + u__z__z
             return out

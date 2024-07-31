@@ -85,9 +85,7 @@ class MSELoss(base.Loss):
         losses = {}
 
         for key in label_dict:
-            loss = F.mse_loss(
-                output_dict[key].reshape([-1]), label_dict[key].reshape([-1]), "none"
-            )
+            loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
