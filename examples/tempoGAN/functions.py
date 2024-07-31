@@ -64,11 +64,12 @@ def reshape_input(input_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tens
     Returns:
         Dict[str, paddle.Tensor]: reshaped data dict.
     """
+    out_dict = {}
     for key in input_dict:
         input = input_dict[key]
         N, C, H, W = input.shape
-        input_dict[key] = paddle.reshape(input, [N * C, 1, H, W])
-    return input_dict
+        out_dict[key] = paddle.reshape(input, [N * C, 1, H, W])
+    return out_dict
 
 
 def dereshape_input(
