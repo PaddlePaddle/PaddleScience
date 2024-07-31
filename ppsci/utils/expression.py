@@ -89,17 +89,15 @@ class ExpressionSolver(nn.Layer):
         for i, cst_name in enumerate(constraint):
             cst_obj = constraint[cst_name]
 
+            # model forward
             if self.nvtx_flag:  # only for nsight analysis
                 core.nvprof_nvtx_push(f"Constraint {cst_name}")
 
-            # shallow copy input_dict for pure function call
-            data_dict = {k: v for k, v in input_dicts[i].items()}
-
-            # model forward
-            output_dict = model(data_dict)
-            data_dict.update(output_dict)
+            output_dict = model(input_dicts[i])
 
             # equation forward
+            data_dict = {k: v for k, v in input_dicts[i].items()}
+            data_dict.update(output_dict)
             for name, expr in expr_dicts[i].items():
                 output_dict[name] = expr(data_dict)
 
@@ -157,14 +155,12 @@ class ExpressionSolver(nn.Layer):
             Tuple[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]]: Result dict and loss for
                 given validator.
         """
-        # shallow copy input_dict for pure function call
-        data_dict = {k: v for k, v in input_dict.items()}
-
         # model forward
-        output_dict = model(data_dict)
-        data_dict.update(output_dict)
+        output_dict = model(input_dict)
 
         # equation forward
+        data_dict = {k: v for k, v in input_dict.items()}
+        data_dict.update(output_dict)
         for name, expr in expr_dict.items():
             output_dict[name] = expr(data_dict)
 
