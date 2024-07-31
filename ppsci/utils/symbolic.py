@@ -496,9 +496,8 @@ class ComposedNode(nn.Layer):
         self.callable_nodes = nn.LayerList(callable_nodes)
 
     def forward(self, data_dict: DATA_DICT) -> paddle.Tensor:
-        if not paddle.in_dynamic_mode():
-            # shallow copy input_dict for pure function call for dy2st
-            data_dict = {**data_dict}
+        # shallow copy input_dict for pure function call for dy2st
+        data_dict = {**data_dict}
 
         # call all callable_nodes in order
         for i, func in enumerate(self.callable_nodes):
