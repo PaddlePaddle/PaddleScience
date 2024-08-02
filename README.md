@@ -213,7 +213,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
 ## 🎈其他领域支持
 
-除 PaddleScience 套件外，Paddle 框架还支持了 [DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能，以及正在适配中的 Modulus。
+除 PaddleScience 套件外，Paddle 框架还支持了 [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能。
 
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
