@@ -135,6 +135,9 @@ def train(cfg: DictConfig):
                 "uc": self.uc,
             }
 
+    def gen_label_batch(input_batch):
+        return {"helmholtz": input_batch["uc"]}
+
     class BCDataGenerator:
         def __init__(self, idx: int):
             self.idx = idx
@@ -147,9 +150,6 @@ def train(cfg: DictConfig):
                 "z": zb[self.idx],
             }
             return tmp
-
-    def gen_label_batch(input_batch):
-        return {"helmholtz": input_batch["uc"]}
 
     pde_constraint = ppsci.constraint.SupervisedConstraint(
         {
@@ -223,7 +223,7 @@ def train(cfg: DictConfig):
     logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
 
     save_result(
-        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+        osp.join(cfg.output_dir, "helmholtz3d_result.vtu"), x, y, z, u_pred, u_gt
     )
 
 
@@ -236,6 +236,7 @@ def evaluate(cfg: DictConfig):
         cfg=cfg,
     )
 
+    # evaluate
     x, y, z, u_gt = generate_test_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
     u_pred = solver.predict(
         {
@@ -252,7 +253,7 @@ def evaluate(cfg: DictConfig):
     logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
 
     save_result(
-        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+        osp.join(cfg.output_dir, "helmholtz3d_result.vtu"), x, y, z, u_pred, u_gt
     )
 
 
@@ -276,6 +277,7 @@ def inference(cfg: DictConfig):
 
     predictor = pinn_predictor.PINNPredictor(cfg)
 
+    # evaluate
     x, y, z, u_gt = generate_test_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
     output_dict = predictor.predict(
         {
@@ -292,13 +294,12 @@ def inference(cfg: DictConfig):
     }
     u_pred = output_dict["u"].reshape(-1)
     u_gt = u_gt.reshape(-1)
-
     l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
     rmse = np.sqrt(np.mean((u_pred - u_gt) ** 2))
     logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
 
     save_result(
-        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+        osp.join(cfg.output_dir, "helmholtz3d_result.vtu"), x, y, z, u_pred, u_gt
     )
 
 
