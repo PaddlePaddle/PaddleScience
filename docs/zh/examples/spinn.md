@@ -5,25 +5,25 @@
 === "模型训练命令"
 
     ``` sh
-    python helmholtz.py
+    python helmholtz3d.py
     ```
 
 === "模型评估命令"
 
     ``` sh
-    python helmholtz.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/spinn/spinn_helmholtz3d_pretrained.pdparams
+    python helmholtz3d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/spinn/spinn_helmholtz3d_pretrained.pdparams
     ```
 
 === "模型导出命令"
 
     ``` sh
-    python helmholtz.py mode=export
+    python helmholtz3d.py mode=export
     ```
 
 === "模型推理命令"
 
     ``` sh
-    python helmholtz.py mode=infer
+    python helmholtz3d.py mode=infer
     ```
 
 | 预训练模型  | 指标 |
@@ -167,7 +167,7 @@ examples/spinn/helmholtz3d.py:198:227
 
 ## 4. 完整代码
 
-``` py linenums="1" title="helmholtz.py"
+``` py linenums="1" title="helmholtz3d.py"
 --8<--
 examples/spinn/helmholtz3d.py
 --8<--
