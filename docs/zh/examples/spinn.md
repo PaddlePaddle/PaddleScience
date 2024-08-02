@@ -1,6 +1,6 @@
 # SPINN(helmholtz3d)
 
-<a href="https://aistudio.baidu.com/projectdetail/8219967" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<!-- <a href="https://aistudio.baidu.com/projectdetail/8219967" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
 === "模型训练命令"
 
@@ -34,14 +34,16 @@
 
 Helmholtz方程是一个重要的偏微分方程，广泛应用于物理学和工程学中，特别是在波动理论和振动问题中。它以德国物理学家赫尔曼·冯·亥姆霍兹（Hermann von Helmholtz）的名字命名。Helmholtz方程的标准形式如下：
 
-$$ \nabla^2 \psi + k^2 \psi = f $$
+$$
+\nabla^2 \psi + k^2 \psi = f
+$$
 
 这里：
 
-- $ \nabla^2 $ 是拉普拉斯算子（也称为拉普拉斯算符），在三维直角坐标系下，它的形式是：$ \nabla^2 = \frac{\partial^2 }{\partial x^2} + \frac{\partial^2 }{\partial y^2} + \frac{\partial^2 }{\partial z^2} $
-- $ \psi $ 是待求解的函数，通常表示物理量的幅度，如电磁场、声压或量子波函数等。
-- $ k $ 是波数，定义为 $ k = \frac{2\pi}{\lambda} $，其中 $ \lambda $ 是波长。
-- $ f $ 是源项，通常表示物理量与时间、空间导数之间的相互作用。
+- $\nabla^2$ 是拉普拉斯算子（也称为拉普拉斯算符），在三维直角坐标系下，它的形式是：$\nabla^2 = \frac{\partial^2 }{\partial x^2} + \frac{\partial^2 }{\partial y^2} + \frac{\partial^2 }{\partial z^2}$
+- $\psi$ 是待求解的函数，通常表示物理量的幅度，如电磁场、声压或量子波函数等。
+- $k$ 是波数，定义为 $k = \frac{2\pi}{\lambda}$，其中 $\lambda$ 是波长。
+- $f$ 是源项，通常表示物理量与时间、空间导数之间的相互作用。
 
 本案例解决以下三维 Helmholtz 方程：
 
@@ -54,7 +56,7 @@ $$
 
 ## 2. 问题定义
 
-本问题的计算域在 $[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $ \psi = 0 $。
+本问题的计算域在 $[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $\psi = 0$。
 
 ## 3. 问题求解
 
@@ -173,7 +175,7 @@ examples/spinn/helmholtz3d.py
 
 ## 5. 结果展示
 
-在计算域上均匀采样出 $201\times501$ 个点，其预测结果和解析解如下图所示。
+在计算域上均匀采样出 $100^3$ 个点，其预测结果和解析解如下图所示。
 
 <figure markdown>
   ![spinn_helmholtz3d.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/spinn/spinn_helmholtz3d.png){ loading=lazy }
@@ -181,7 +183,6 @@ examples/spinn/helmholtz3d.py
 </figure>
 
 本问题使用模型预测的误差为 l2_err = 0.0183，rmse = 0.0064，与解析解误差较小，基本一致。
-
 
 ## 6. 参考资料
 

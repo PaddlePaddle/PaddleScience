@@ -112,7 +112,7 @@ class SPINN(base.Arch):
         for i, input_var in enumerate((x, y, z)):
             input_i = {self.input_keys[i]: input_var.unsqueeze(1)}
             output_f_i = self.branch_nets[i](input_i)
-            feature_f.append(output_f_i[self.output_keys[0]])  # [B, r*output_dim]
+            feature_f.append(output_f_i["f"])  # [B, r*output_dim]
 
         # dot product and sum over all branch outputs and
         output = []
