@@ -64,11 +64,12 @@ def reshape_input(input_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tens
     Returns:
         Dict[str, paddle.Tensor]: reshaped data dict.
     """
+    out_dict = {}
     for key in input_dict:
         input = input_dict[key]
         N, C, H, W = input.shape
-        input_dict[key] = paddle.reshape(input, [N * C, 1, H, W])
-    return input_dict
+        out_dict[key] = paddle.reshape(input, [N * C, 1, H, W])
+    return out_dict
 
 
 def dereshape_input(
@@ -406,7 +407,7 @@ class DiscFuncs:
             out_disc_from_gen, label_zeros, reduction="mean"
         )
         losses = loss_disc_from_target * self.weight_disc + loss_disc_from_gen
-        return losses
+        return {"CE_loss", losses}
 
     def loss_func_tempo(self, output_dict, *args):
         out_disc_tempo_from_target = output_dict["out_disc_tempo_from_target"]
@@ -424,7 +425,7 @@ class DiscFuncs:
         losses = (
             loss_disc_tempo_from_target * self.weight_disc + loss_disc_tempo_from_gen
         )
-        return losses
+        return {"CE_tempo_loss", losses}
 
 
 class DataFuncs:

@@ -50,9 +50,9 @@
 
 ## 1. 背景简介
 
-深度学习方法可以用于处理血管瘤问题，其中包括基于物理信息的深度学习方法。这种方法可以用于脑血管瘤的压力建模，以预测和评估血管瘤破裂的风险。
+深度学习方法可以用于处理颅内动脉瘤问题，其中包括基于物理信息的深度学习方法。这种方法可以用于脑颅内动脉瘤的压力建模，以预测和评估颅内动脉瘤破裂的风险。
 
-针对如下血管瘤几何模型，本案例通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
+针对如下颅内动脉瘤几何模型，本案例通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
 
 <figure markdown>
   ![equation](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%"}
@@ -60,7 +60,7 @@
 
 ## 2. 问题定义
 
-假设血管瘤模型中，在入口 inlet 部分，中心点的流速为 1.5，并向四周逐渐减小；在出口 outlet 区域，压力恒为 0；在边界上无滑移，流速为 0；血管内部则符合 N-S 方程运动规律，中间段的平均流量为负（流入），出口段的平均流量为正（流出）。
+假设颅内动脉瘤模型中，在入口 inlet 部分，中心点的流速为 1.5，并向四周逐渐减小；在出口 outlet 区域，压力恒为 0；在边界上无滑移，流速为 0；血管内部则符合 N-S 方程运动规律，中间段的平均流量为负（流入），出口段的平均流量为正（流出）。
 
 ## 3. 问题求解
 
@@ -90,7 +90,7 @@ examples/aneurysm/aneurysm.py:14:15
 
 ### 3.2 方程构建
 
-血管瘤模型涉及到 2 个方程，一是流体 N-S 方程，二是流量计算方程，因此使用 PaddleScience 内置的 `NavierStokes` 和 `NormalDotVec` 即可。
+颅内动脉瘤模型涉及到 2 个方程，一是流体 N-S 方程，二是流量计算方程，因此使用 PaddleScience 内置的 `NavierStokes` 和 `NormalDotVec` 即可。
 
 ``` py linenums="17"
 --8<--
@@ -278,7 +278,7 @@ examples/aneurysm/aneurysm.py
 
 ## 5. 结果展示
 
-对于血管瘤测试集（共 2,962,708 个三维坐标点），模型预测结果如下所示。
+对于颅内动脉瘤测试集（共 2,962,708 个三维坐标点），模型预测结果如下所示。
 
 <figure markdown>
   ![aneurysm_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm_compare.png){ loading=lazy }
