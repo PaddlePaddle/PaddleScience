@@ -58,7 +58,7 @@ TRAIN:
     gamma: 0.9
     decay_steps: 1000
     by_epoch: false
-  nc: 16
+  nc: 64
   pretrained_model_path: null
   checkpoint_path: null
 
@@ -71,7 +71,7 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: null
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/spinn/spinn_helmholtz3d_pretrained.pdparams
   export_path: ./inference/spinn_helmholtz3d
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams

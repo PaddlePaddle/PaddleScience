@@ -46,7 +46,9 @@ class Helmholtz(base.PDE):
 
     $$
     \nabla^2 u + k^2 u = f
+    $$
 
+    $$
     \text{where } f \text{ is the source term}.
     $$
 
