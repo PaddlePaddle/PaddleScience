@@ -14,53 +14,61 @@
 
 from __future__ import annotations
 
+from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import paddle
-import paddle.autograd
 
 from ppsci.equation.pde import base
 
 
-# forward over forward
-def hvp_fwdfwd(f, primals):
+def hvp_revrev(f: Callable, primals: Tuple[paddle.Tensor, ...]) -> paddle.Tensor:
+    """Compute the Hessian vector product of f with respect to primals using
+        double backward trick in reverse mode AD.
+
+    Args:
+        f (Callable): Function to compute HVP.
+        primals (Tuple[paddle.Tensor, ...]): Input tensors.
+
+    Returns:
+        paddle.Tensor: Hessian vector product of f with respect to primals.
+    """
+    # TODO: Merge this option into ppsci.autodiff.ad
     g = lambda primals: paddle.incubate.autograd.jvp(f, primals)[1]
-    _, tangents_out = paddle.incubate.autograd.jvp(g, primals)
+    tangents_out = paddle.incubate.autograd.jvp(g, primals)[1]
     return tangents_out
 
 
 class Helmholtz(base.PDE):
-    r"""Class for biharmonic equation with supporting special load.
+    r"""Class for helmholtz equation.
 
     $$
-    \nabla^4 \varphi = \dfrac{q}{D}
+    \nabla^2 u + k^2 u = f
+
+    \text{where } f \text{ is the source term}.
     $$
 
     Args:
         dim (int): Dimension of equation.
-        q (Union[float, str, sympy.Basic]): Load.
-        D (Union[float, str]): Rigidity.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
+        >>> pde = ppsci.equation.Helmholtz(2, -1.0, 1.0)
     """
 
     def __init__(
         self,
         dim: int,
-        lda: float,
-        source: Union[str, float],
+        k: float,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()
         self.dim = dim
-        self.lda = lda
+        self.k = k
         self.detach_keys = detach_keys
 
         self.model: paddle.nn.Layer
@@ -70,20 +78,14 @@ class Helmholtz(base.PDE):
                 data_dict["x"],
                 data_dict["y"],
                 data_dict["z"],
-            )  # [n1, ], [n2, ], [n3, ]
-            u = data_dict["u"]  # [n1n2n3, 1]
+            )
 
-            u__x__x = hvp_fwdfwd(
-                lambda x_: self.model.forward_tensor(x_, y, z), (x,)
-            )  # [n1n2n3, 1]
-            u__y__y = hvp_fwdfwd(
-                lambda y_: self.model.forward_tensor(x, y_, z), (y,)
-            )  # [n1n2n3, 1]
-            u__z__z = hvp_fwdfwd(
-                lambda z_: self.model.forward_tensor(x, y, z_), (z,)
-            )  # [n1n2n3, 1]
+            # TODO: Hard code here, for hvp_revrev requires tuple input(s) but not dict
+            u__x__x = hvp_revrev(lambda x_: self.model.forward_tensor(x_, y, z), (x,))
+            u__y__y = hvp_revrev(lambda y_: self.model.forward_tensor(x, y_, z), (y,))
+            u__z__z = hvp_revrev(lambda z_: self.model.forward_tensor(x, y, z_), (z,))
 
-            out = self.lda * u + u__x__x + u__y__y + u__z__z
+            out = (self.k**2) * data_dict["u"] + u__x__x + u__y__y + u__z__z
             return out
 
         self.add_equation("helmholtz", helmholtz)

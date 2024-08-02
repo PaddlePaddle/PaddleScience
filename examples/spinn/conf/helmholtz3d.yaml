@@ -30,6 +30,7 @@ output_dir: ${hydra:run.dir}
 log_freq: 100
 
 # set working condition
+K: 1.0
 a1: 4
 a2: 4
 a3: 3
@@ -50,7 +51,13 @@ TRAIN:
   save_freq: 10
   eval_during_train: false
   eval_freq: 5
-  learning_rate: 1.0e-3
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 1000
+    by_epoch: false
   nc: 16
   pretrained_model_path: null
   checkpoint_path: null

@@ -1,5 +1,5 @@
 """
-Reference: https://github.com/PredictiveIntelligenceLab/jaxpi/tree/main/examples/allen_cahn
+Reference: https://github.com/stnamjef/SPINN/blob/main/helmholtz3d.py
 """
 
 from os import path as osp
@@ -7,81 +7,58 @@ from os import path as osp
 import hydra
 import numpy as np
 import paddle
-import scipy.io as sio
-from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
-from ppsci.utils import misc
 
 dtype = paddle.get_default_dtype()
 
 
-def plot(
-    t_star: np.ndarray,
-    x_star: np.ndarray,
-    u_ref: np.ndarray,
-    u_pred: np.ndarray,
-    output_dir: str,
-):
-    fig = plt.figure(figsize=(18, 5))
-    TT, XX = np.meshgrid(t_star, x_star, indexing="ij")
-    u_ref = u_ref.reshape([len(t_star), len(x_star)])
-
-    plt.subplot(1, 3, 1)
-    plt.pcolor(TT, XX, u_ref, cmap="jet")
-    plt.colorbar()
-    plt.xlabel("t")
-    plt.ylabel("x")
-    plt.title("Exact")
-    plt.tight_layout()
-
-    plt.subplot(1, 3, 2)
-    plt.pcolor(TT, XX, u_pred, cmap="jet")
-    plt.colorbar()
-    plt.xlabel("t")
-    plt.ylabel("x")
-    plt.title("Predicted")
-    plt.tight_layout()
-
-    plt.subplot(1, 3, 3)
-    plt.pcolor(TT, XX, np.abs(u_ref - u_pred), cmap="jet")
-    plt.colorbar()
-    plt.xlabel("t")
-    plt.ylabel("x")
-    plt.title("Absolute error")
-    plt.tight_layout()
-
-    fig_path = osp.join(output_dir, "ac.png")
-    print(f"Saving figure to {fig_path}")
-    fig.savefig(fig_path, bbox_inches="tight", dpi=400)
-    plt.close()
+def save_result(filename, x, y, z, u_pred, u_ref):
+    xm, ym, zm = np.meshgrid(x, y, z, indexing="ij")
+    xm = xm.reshape(-1, 1)
+    ym = ym.reshape(-1, 1)
+    zm = zm.reshape(-1, 1)
+    u_pred = u_pred.reshape(-1, 1)
+    u_ref = u_ref.reshape(-1, 1)
+    ppsci.visualize.save_vtu_from_dict(
+        filename,
+        {
+            "x": xm,
+            "y": ym,
+            "z": zm,
+            "u_pred": u_pred,
+            "u_ref": u_ref,
+        },
+        ("x", "y", "z"),
+        ("u_pred", "u_ref"),
+    )
 
 
-def helmholtz3d_exact_u(a1, a2, a3, x, y, z):
+def _helmholtz3d_exact_u(a1, a2, a3, x, y, z):
     return np.sin(a1 * np.pi * x) * np.sin(a2 * np.pi * y) * np.sin(a3 * np.pi * z)
 
 
-def helmholtz3d_source_term(a1, a2, a3, x, y, z, lda=1.0):
-    u_gt = helmholtz3d_exact_u(a1, a2, a3, x, y, z)
+def _helmholtz3d_source_term(a1, a2, a3, x, y, z, lda=1.0):
+    u_gt = _helmholtz3d_exact_u(a1, a2, a3, x, y, z)
     uxx = -((a1 * np.pi) ** 2) * u_gt
     uyy = -((a2 * np.pi) ** 2) * u_gt
     uzz = -((a3 * np.pi) ** 2) * u_gt
     return uxx + uyy + uzz + lda * u_gt
 
 
-def _spinn_train_generator_helmholtz3d(a1, a2, a3, nc):
-    xc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
-    yc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
-    zc = np.random.uniform(-1.0, 1.0, [nc]).astype("float32")
+def generate_train_helmholtz3d(a1, a2, a3, nc):
+    xc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
+    yc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
+    zc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
     # source term
     xcm, ycm, zcm = np.meshgrid(xc, yc, zc, indexing="ij")
-    uc = helmholtz3d_source_term(a1, a2, a3, xcm, ycm, zcm).astype("float32")
+    uc = _helmholtz3d_source_term(a1, a2, a3, xcm, ycm, zcm).astype(dtype)
     # boundary (hard-coded)
     xb = [
-        np.asarray([1.0], dtype="float32"),
-        np.asarray([-1.0], dtype="float32"),
+        np.asarray([1.0], dtype=dtype),
+        np.asarray([-1.0], dtype=dtype),
         xc,
         xc,
         xc,
@@ -90,8 +67,8 @@ def _spinn_train_generator_helmholtz3d(a1, a2, a3, nc):
     yb = [
         yc,
         yc,
-        np.asarray([1.0], dtype="float32"),
-        np.asarray([-1.0], dtype="float32"),
+        np.asarray([1.0], dtype=dtype),
+        np.asarray([-1.0], dtype=dtype),
         yc,
         yc,
     ]
@@ -100,19 +77,18 @@ def _spinn_train_generator_helmholtz3d(a1, a2, a3, nc):
         zc,
         zc,
         zc,
-        np.asarray([1.0], dtype="float32"),
-        np.asarray([-1.0], dtype="float32"),
+        np.asarray([1.0], dtype=dtype),
+        np.asarray([-1.0], dtype=dtype),
     ]
     return xc, yc, zc, uc, xb, yb, zb
 
 
-def _test_generator_helmholtz3d(a1, a2, a3, nc_test):
-    x = np.linspace(-1.0, 1.0, nc_test, dtype="float32")
-    y = np.linspace(-1.0, 1.0, nc_test, dtype="float32")
-    z = np.linspace(-1.0, 1.0, nc_test, dtype="float32")
+def generate_test_helmholtz3d(a1, a2, a3, nc_test):
+    x = np.linspace(-1.0, 1.0, nc_test, dtype=dtype)
+    y = np.linspace(-1.0, 1.0, nc_test, dtype=dtype)
+    z = np.linspace(-1.0, 1.0, nc_test, dtype=dtype)
     xm, ym, zm = np.meshgrid(x, y, z, indexing="ij")
-    u_gt = helmholtz3d_exact_u(a1, a2, a3, xm, ym, zm).astype("float32")
-    # u_gt = u_gt.reshape(-1, 1)
+    u_gt = _helmholtz3d_exact_u(a1, a2, a3, xm, ym, zm).astype(dtype)
     x = x.reshape(-1, 1)
     y = y.reshape(-1, 1)
     z = z.reshape(-1, 1)
@@ -124,19 +100,18 @@ def train(cfg: DictConfig):
     model = ppsci.arch.SPINN(**cfg.MODEL)
 
     # set equation
-    equation = {"Helmholtz": ppsci.equation.Helmholtz(3, 1.0, "uc")}
-    equation["Helmholtz"].model = model
+    equation = {"Helmholtz": ppsci.equation.Helmholtz(3, 1.0)}
+    equation["Helmholtz"].model = model  # set model to equation for hvp
 
     # set constraint
-    class pde_sample:
+    class InteriorDataGenerator:
         def __init__(self):
             self.iter = 0
             self._gen()
 
         def _gen(self):
-            logger.info(f"Generating training data for #iter {self.iter}")
             global xb, yb, zb
-            xc, yc, zc, uc, xb, yb, zb = _spinn_train_generator_helmholtz3d(
+            xc, yc, zc, uc, xb, yb, zb = generate_train_helmholtz3d(
                 cfg.a1,
                 cfg.a2,
                 cfg.a3,
@@ -149,110 +124,38 @@ def train(cfg: DictConfig):
 
         def __call__(self):
             self.iter += 1
+
             if self.iter % 100 == 0:
                 self._gen()
 
-            tmp = {
+            return {
                 "x": self.xc,
                 "y": self.yc,
                 "z": self.zc,
                 "uc": self.uc,
             }
 
-            return tmp
-
-    class bc_sample1:
-        def __init__(self):
-            pass
+    class BCDataGenerator:
+        def __init__(self, idx: int):
+            self.idx = idx
 
         def __call__(self):
             global xb, yb, zb
             tmp = {
-                "x": xb[0],
-                "y": yb[0],
-                "z": zb[0],
-            }
-            return tmp
-
-    class bc_sample2:
-        def __init__(self):
-            pass
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[1],
-                "y": yb[1],
-                "z": zb[1],
-            }
-            return tmp
-
-    class bc_sample3:
-        def __init__(self):
-            pass
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[2],
-                "y": yb[2],
-                "z": zb[2],
-            }
-            return tmp
-
-    class bc_sample4:
-        def __init__(self):
-            pass
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[3],
-                "y": yb[3],
-                "z": zb[3],
-            }
-            return tmp
-
-    class bc_sample5:
-        def __init__(self):
-            pass
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[4],
-                "y": yb[4],
-                "z": zb[4],
-            }
-            return tmp
-
-    class bc_sample6:
-        def __init__(self):
-            pass
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[5],
-                "y": yb[5],
-                "z": zb[5],
+                "x": xb[self.idx],
+                "y": yb[self.idx],
+                "z": zb[self.idx],
             }
             return tmp
 
     def gen_label_batch(input_batch):
         return {"helmholtz": input_batch["uc"]}
 
-    def gen_label_batch_bc(data_dict):
-        nx = len(data_dict["x"])
-        ny = len(data_dict["y"])
-        nz = len(data_dict["z"])
-        return {"u": np.zeros([nx, ny, nz, 1])}
-
     pde_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "ContinuousNamedArrayDataset",
-                "input": pde_sample(),
+                "input": InteriorDataGenerator(),
                 "label": gen_label_batch,
             },
         },
@@ -260,107 +163,37 @@ def train(cfg: DictConfig):
         loss=ppsci.loss.MSELoss("mean"),
         name="PDE",
     )
-    bc1_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample1(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC1",
-    )
-    bc2_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample2(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC2",
-    )
-    bc3_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample3(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC3",
-    )
-    bc4_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample4(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC4",
-    )
-    bc5_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample5(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC5",
-    )
-    bc6_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "ContinuousNamedArrayDataset",
-                "input": bc_sample6(),
-                "label": gen_label_batch_bc,
-            },
-        },
-        output_expr={"u": lambda out: out["u"]},
-        loss=ppsci.loss.MSELoss("mean"),
-        name="BC6",
-    )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
-        bc1_constraint.name: bc1_constraint,
-        bc2_constraint.name: bc2_constraint,
-        bc3_constraint.name: bc3_constraint,
-        bc4_constraint.name: bc4_constraint,
-        bc5_constraint.name: bc5_constraint,
-        bc6_constraint.name: bc6_constraint,
     }
 
-    # set optimizer
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
+    def gen_bc_label(data_dict):
+        nx = len(data_dict["x"])
+        ny = len(data_dict["y"])
+        nz = len(data_dict["z"])
+        return {"u": np.zeros([nx, ny, nz, 1])}
 
-    # set validator
-    # u_validator = ppsci.validate.SupervisedValidator(
-    #     {
-    #         "dataset": {
-    #             "name": "NamedArrayDataset",
-    #             "input": {'x': x, 'y': y, 'z': z},
-    #             "label": {'u': u_gt},
-    #         },
-    #         "batch_size": cfg.EVAL.batch_size,
-    #     },
-    #     ppsci.loss.MSELoss("mean"),
-    #     metric={"L2Rel": ppsci.metric.L2Rel()},
-    #     name="u_validator",
-    # )
-    # validator = {u_validator.name: u_validator}
+    for i in range(6):
+        bc_constraint_i = ppsci.constraint.SupervisedConstraint(
+            {
+                "dataset": {
+                    "name": "ContinuousNamedArrayDataset",
+                    "input": BCDataGenerator(i),
+                    "label": gen_bc_label,
+                },
+            },
+            output_expr={"u": lambda out: out["u"]},
+            loss=ppsci.loss.MSELoss("mean"),
+            name=f"BC{i}",
+        )
+        constraint[bc_constraint_i.name] = bc_constraint_i
+
+    # set optimizer
+    lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
+        **cfg.TRAIN.lr_scheduler
+    )()
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -368,38 +201,30 @@ def train(cfg: DictConfig):
         constraint,
         optimizer=optimizer,
         equation=equation,
-        # validator=validator,
         cfg=cfg,
     )
     # train model
     solver.train()
 
-    def compute_l2_error():
-        x, y, z, u_gt = _test_generator_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
-        u_pred = solver.predict(
-            {
-                "x": x,
-                "y": y,
-                "z": z,
-            },
-            batch_size=None,
-            return_numpy=True,
-        )["u"].reshape(-1)
-        u_gt = u_gt.reshape(-1)
-        l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
-        print(f"l2_err = {l2_err:.3f}")
+    # evaluate after training
+    x, y, z, u_gt = generate_test_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
+    u_pred = solver.predict(
+        {
+            "x": x,
+            "y": y,
+            "z": z,
+        },
+        batch_size=None,
+        return_numpy=True,
+    )["u"].reshape(-1)
+    u_gt = u_gt.reshape(-1)
+    l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
+    rmse = np.sqrt(np.mean((u_pred - u_gt) ** 2))
+    logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
 
-    compute_l2_error()
-    # evaluate after finished training
-    # solver.eval()
-    # visualize prediction after finished training
-    # u_pred = solver.predict(
-    #     eval_data, batch_size=cfg.EVAL.batch_size, return_numpy=True
-    # )["u"]
-    # u_pred = u_pred.reshape([len(t_star), len(x_star)])
-
-    # # plot
-    # plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
+    save_result(
+        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+    )
 
 
 def evaluate(cfg: DictConfig):
@@ -411,27 +236,29 @@ def evaluate(cfg: DictConfig):
         cfg=cfg,
     )
 
-    def compute_l2_error():
-        x, y, z, u_gt = _test_generator_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
-        u_pred = solver.predict(
-            {
-                "x": x,
-                "y": y,
-                "z": z,
-            },
-            batch_size=None,
-            return_numpy=True,
-        )["u"].reshape(-1)
-        u_gt = u_gt.reshape(-1)
-        l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
-        print(f"l2_err = {l2_err:.3f}")
+    x, y, z, u_gt = generate_test_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
+    u_pred = solver.predict(
+        {
+            "x": x,
+            "y": y,
+            "z": z,
+        },
+        batch_size=None,
+        return_numpy=True,
+    )["u"].reshape(-1)
+    u_gt = u_gt.reshape(-1)
+    l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
+    rmse = np.sqrt(np.mean((u_pred - u_gt) ** 2))
+    logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
 
-    compute_l2_error()
+    save_result(
+        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+    )
 
 
 def export(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PirateNet(**cfg.MODEL)
+    model = ppsci.arch.SPINN(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(model, cfg=cfg)
@@ -448,22 +275,31 @@ def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
 
     predictor = pinn_predictor.PINNPredictor(cfg)
-    data = sio.loadmat(cfg.DATA_PATH)
-    u_ref = data["usol"].astype(dtype)  # (nt, nx)
-    t_star = data["t"].flatten().astype(dtype)  # [nt, ]
-    x_star = data["x"].flatten().astype(dtype)  # [nx, ]
-    tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
 
-    input_dict = {"t": tx_star[:, 0:1], "x": tx_star[:, 1:2]}
-    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    x, y, z, u_gt = generate_test_helmholtz3d(cfg.a1, cfg.a2, cfg.a3, cfg.EVAL.nc)
+    output_dict = predictor.predict(
+        {
+            "x": x,
+            "y": y,
+            "z": z,
+        },
+        batch_size=None,
+    )
     # mapping data to cfg.INFER.output_keys
     output_dict = {
         store_key: output_dict[infer_key]
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
-    u_pred = output_dict["u"].reshape([len(t_star), len(x_star)])
+    u_pred = output_dict["u"].reshape(-1)
+    u_gt = u_gt.reshape(-1)
 
-    plot(t_star, x_star, u_ref, u_pred, cfg.output_dir)
+    l2_err = np.linalg.norm(u_pred - u_gt, ord=2) / np.linalg.norm(u_gt, ord=2)
+    rmse = np.sqrt(np.mean((u_pred - u_gt) ** 2))
+    logger.message(f"l2_err = {l2_err:.4f}, rmse = {rmse:.4f}")
+
+    save_result(
+        osp.join(cfg.output_dir, "./helmholtz3d_result.png"), x, y, z, u_pred, u_gt
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="helmholtz3d.yaml")
