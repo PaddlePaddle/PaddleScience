@@ -27,6 +27,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 三维亥姆霍兹方程 | [SPINN(Helmholtz3D)](https://paddlescience-docs.readthedocs.io/zh/examples/spinn.md) | 机理驱动 | ModifiedMLP | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
 | 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/laplace2d) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
@@ -232,9 +233,9 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
     旨在鼓励更多的开发者参与到飞桨科学计算社区的开源建设中，帮助社区修复 bug 或贡献 feature，加入开源、共建飞桨。了解编程基本知识的入门用户即可参与，活动进行中：
     [PaddleScience 快乐开源活动表单](https://github.com/PaddlePaddle/PaddleScience/issues/379)
 
-- 🔥第六期黑客松
+<!-- - 🔥第六期黑客松
 
-    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：[【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛](https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_6th/%E3%80%90Hackathon%206th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md)
+    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：[【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛](https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_6th/%E3%80%90Hackathon%206th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md) -->
 <!-- --8<-- [end:contribution] -->
 
 <!-- --8<-- [start:collaboration] -->

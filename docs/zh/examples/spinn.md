@@ -28,7 +28,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [spinn_helmholtz3d.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/spinn/spinn_helmholtz3d_pretrained.pdparams) | l2_err = 0.0183 <br> rmse = 0.0064 |
+| [spinn_helmholtz3d.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/spinn/spinn_helmholtz3d_pretrained.pdparams) | l2_err: 0.0183 <br> rmse: 0.0064 |
 
 ## 1. 背景简介
 
@@ -47,14 +47,14 @@ $$ \nabla^2 \psi + k^2 \psi = f $$
 
 $$
 \begin{aligned}
-    \nabla^2 \psi + k^2 \psi = \nabla^2 f + k^2 \\
-    f = \sin(a_1 * \pi * x) * \sin(a_2 * \pi * y) * \sin(a_3 * \pi * z)
+    \nabla^2 \psi + k^2 \psi &= \nabla^2 f + k^2 \\
+    f &= \sin(a_1 * \pi * x) * \sin(a_2 * \pi * y) * \sin(a_3 * \pi * z)
 \end{aligned}
 $$
 
 ## 2. 问题定义
 
-本问题的计算域在 $\[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $ \psi = 0 $。
+本问题的计算域在 $[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $ \psi = 0 $。
 
 ## 3. 问题求解
 
@@ -67,7 +67,7 @@ SPINN 的模型结构设计如下：
 
 ![SPINN_structure](https://paddle-org.bj.bcebos.com/paddlescience/docs/spinn/spinn_structure.png)
 
-在 Helmholtz 问题中，每一个已知的坐标点 $(x, y, z)$ 都有对应的待求解的未知量 $\psi$，此处我们用字母 $(u)$代替，在这里使用 SPINN 来表示 $(x, y, z)$ 到 $(u)$ 的映射函数 $f: \mathbb{R}^3 \to \mathbb{R}^1$ ，即：
+在 Helmholtz 问题中，每一个已知的坐标点 $(x, y, z)$ 都有对应的待求解的未知量 $\psi$（此处我们用 $u$代替），在这里使用 SPINN 来表示 $(x, y, z)$ 到 $(u)$ 的映射函数 $f: \mathbb{R}^3 \to \mathbb{R}^1$ ，即：
 
 $$
 u = m(x, y, z)

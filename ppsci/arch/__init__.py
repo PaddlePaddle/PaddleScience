@@ -20,7 +20,6 @@ from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
-from ppsci.arch.spinn import SPINN  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
@@ -46,6 +45,7 @@ from ppsci.arch.phycrnet import PhyCRNet  # isort:skip
 from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.sfnonet import SFNONet  # isort:skip
+from ppsci.arch.spinn import SPINN  # isort:skip
 from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
 from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
@@ -61,7 +61,6 @@ __all__ = [
     "AutoEncoder",
     "build_model",
     "CFDGCN",
-    "SPINN",
     "ChipDeepONets",
     "CuboidTransformer",
     "CVit",
@@ -87,6 +86,7 @@ __all__ = [
     "PrecipNet",
     "RosslerEmbedding",
     "SFNONet",
+    "SPINN",
     "TFNO1dNet",
     "TFNO2dNet",
     "TFNO3dNet",
