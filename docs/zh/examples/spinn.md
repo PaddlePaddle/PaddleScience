@@ -35,28 +35,35 @@
 Helmholtz方程是一个重要的偏微分方程，广泛应用于物理学和工程学中，特别是在波动理论和振动问题中。它以德国物理学家赫尔曼·冯·亥姆霍兹（Hermann von Helmholtz）的名字命名。Helmholtz方程的标准形式如下：
 
 $$
-\nabla^2 \psi + k^2 \psi = f
+\nabla^2 u + k^2 u = q
 $$
 
 这里：
 
 - $\nabla^2$ 是拉普拉斯算子（也称为拉普拉斯算符），在三维直角坐标系下，它的形式是：$\nabla^2 = \frac{\partial^2 }{\partial x^2} + \frac{\partial^2 }{\partial y^2} + \frac{\partial^2 }{\partial z^2}$
-- $\psi$ 是待求解的函数，通常表示物理量的幅度，如电磁场、声压或量子波函数等。
+- $u$ 是待求解的函数，通常表示物理量的幅度，如电磁场、声压或量子波函数等。
 - $k$ 是波数，定义为 $k = \frac{2\pi}{\lambda}$，其中 $\lambda$ 是波长。
-- $f$ 是源项，通常表示物理量与时间、空间导数之间的相互作用。
+- $q$ 是源项，通常表示物理量与时间、空间导数之间的相互作用。
 
 本案例解决以下三维 Helmholtz 方程：
 
 $$
 \begin{aligned}
-    \nabla^2 \psi + k^2 \psi &= \nabla^2 f + k^2 \\
-    f &= \sin(a_1 * \pi * x) * \sin(a_2 * \pi * y) * \sin(a_3 * \pi * z)
+  & \nabla^2 u + k^2 u = q, x \in \Omega^3 \\
+  & u(x) = 0, x \in \partial \Omega \\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+  & \text{source term } q = -(a_1 \pi)^2 u -(a_2 \pi)^2 u -(a_3 \pi)^2 u + k^2 u \\
+  & \text{where }k=1, a_1=4, a_2=4, a_3=3
 \end{aligned}
 $$
 
 ## 2. 问题定义
 
-本问题的计算域在 $[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $\psi = 0$。
+本问题的计算域在 $[-1, 1] ^3$ 一个单位正方体内，对于计算域内部点，要求满足上述 Helmholtz 方程，对于计算域边界点，要求满足 $u = 0$。
 
 ## 3. 问题求解
 
@@ -69,7 +76,7 @@ SPINN 的模型结构设计如下：
 
 ![SPINN_structure](https://paddle-org.bj.bcebos.com/paddlescience/docs/spinn/spinn_structure.png)
 
-在 Helmholtz 问题中，每一个已知的坐标点 $(x, y, z)$ 都有对应的待求解的未知量 $\psi$（此处我们用 $u$代替），在这里使用 SPINN 来表示 $(x, y, z)$ 到 $(u)$ 的映射函数 $f: \mathbb{R}^3 \to \mathbb{R}^1$ ，即：
+在 Helmholtz 问题中，每一个已知的坐标点 $(x, y, z)$ 都有对应的待求解的未知量 $u$（此处我们用 $u$代替），在这里使用 SPINN 来表示 $(x, y, z)$ 到 $(u)$ 的映射函数 $f: \mathbb{R}^3 \to \mathbb{R}^1$ ，即：
 
 $$
 u = m(x, y, z)
@@ -109,11 +116,19 @@ examples/spinn/helmholtz3d.py:102:104
 
 #### 3.3.1 内部点约束
 
-以作用在内部点上的 `SupervisedConstraint` 为例，代码如下：
+以作用在内部点上的 `SupervisedConstraint` 为例，用于生成内部点训练数据的代码如下：
+
+``` py linenums="39"
+--8<--
+examples/spinn/helmholtz3d.py:39:83
+--8<--
+```
+
+用于构建内部点约束的代码如下：
 
 ``` py linenums="106"
 --8<--
-examples/spinn/helmholtz3d.py:106:140
+examples/spinn/helmholtz3d.py:106:156
 --8<--
 ```
 
@@ -129,9 +144,9 @@ examples/spinn/helmholtz3d.py:106:140
 
 第三个约束条件是边值约束，代码如下：
 
-``` py linenums="166"
+``` py linenums="158"
 --8<--
-examples/spinn/helmholtz3d.py:166:190
+examples/spinn/helmholtz3d.py:158:190
 --8<--
 ```
 

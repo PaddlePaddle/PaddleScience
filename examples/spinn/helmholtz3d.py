@@ -138,19 +138,6 @@ def train(cfg: DictConfig):
     def gen_label_batch(input_batch):
         return {"helmholtz": input_batch["uc"]}
 
-    class BCDataGenerator:
-        def __init__(self, idx: int):
-            self.idx = idx
-
-        def __call__(self):
-            global xb, yb, zb
-            tmp = {
-                "x": xb[self.idx],
-                "y": yb[self.idx],
-                "z": zb[self.idx],
-            }
-            return tmp
-
     pde_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -167,6 +154,19 @@ def train(cfg: DictConfig):
     constraint = {
         pde_constraint.name: pde_constraint,
     }
+
+    class BCDataGenerator:
+        def __init__(self, idx: int):
+            self.idx = idx
+
+        def __call__(self):
+            global xb, yb, zb
+            tmp = {
+                "x": xb[self.idx],
+                "y": yb[self.idx],
+                "z": zb[self.idx],
+            }
+            return tmp
 
     def gen_bc_label(data_dict):
         nx = len(data_dict["x"])
