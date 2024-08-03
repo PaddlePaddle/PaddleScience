@@ -38,7 +38,7 @@ def hvp_revrev(f: Callable, primals: Tuple[paddle.Tensor, ...]) -> paddle.Tensor
     # TODO: Merge this option into ppsci.autodiff.ad
     g = lambda primals: paddle.incubate.autograd.jvp(f, primals)[1]
     tangents_out = paddle.incubate.autograd.jvp(g, primals)[1]
-    return tangents_out
+    return tangents_out[0]
 
 
 class Helmholtz(base.PDE):

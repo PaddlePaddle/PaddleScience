@@ -49,7 +49,7 @@ $$
 
 $$
 \begin{aligned}
-  & \nabla^2 u + k^2 u = q, x \in \Omega^3 \\
+  & \nabla^2 u + k^2 u = q, x \in \Omega \\
   & u(x) = 0, x \in \partial \Omega \\
 \end{aligned}
 $$

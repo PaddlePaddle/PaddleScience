@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
 from __future__ import annotations
 
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import paddle
 import paddle.nn as nn
 
 from ppsci.arch import base
@@ -27,12 +29,12 @@ from ppsci.utils import initializer
 
 
 class SPINN(base.Arch):
-    """
-    SPINN: Sparse Interaction Neural Network
+    """Separable Physics-Informed Neural Networks.
+
     Args:
         input_keys (Tuple[str, ...]): Keys of input variables.
         output_keys (Tuple[str, ...]): Keys of output variables.
-        r (int): Number of features for each output.
+        r (int): Number of features for each output dimension.
         num_layers (int): Number of layers.
         hidden_size (Union[int, Tuple[int, ...]]): Size of hidden layer.
         activation (str, optional): Name of activation function.
@@ -46,17 +48,19 @@ class SPINN(base.Arch):
         >>> from ppsci.arch import SPINN
         >>> model = SPINN(
         ...     input_keys=('x', 'y', 'z'),
-        ...     output_keys=('u',),
-        ...     r=316,
+        ...     output_keys=('u', 'v'),
+        ...     r=32,
         ...     num_layers=4,
         ...     hidden_size=32,
         ... )
-        >>> input_dict = {"x": paddle.rand([10]),
-        ...               "y": paddle.rand([10]),
-        ...               "z": paddle.rand([10])}
+        >>> input_dict = {"x": paddle.rand([3, 1]),
+        ...               "y": paddle.rand([4, 1]),
+        ...               "z": paddle.rand([5, 1])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
-        [10, 10, 10, 1]
+        [3, 4, 5, 1]
+        >>> print(output_dict["v"].shape)
+        [3, 4, 5, 1]
     """
 
     def __init__(
@@ -106,18 +110,45 @@ class SPINN(base.Arch):
                 initializer.glorot_normal_(m.weight)
                 initializer.zeros_(m.bias)
 
-    def forward_tensor(self, x, y, z):
+    def _tensor_contraction(self, x: paddle.Tensor, y: paddle.Tensor) -> paddle.Tensor:
+        """Tensor contraction between two tensors along the last channel.
+
+        Args:
+            x (Tensor): Input tensor with shape [*N, C].
+            y (Tensor): Input tensor with shape [*M, C]
+
+        Returns:
+            Tensor: Output tensor with shape [*N, *M, C].
+        """
+        x_ndim = x.ndim
+        y_ndim = y.ndim
+        out_dim = x_ndim + y_ndim - 1
+
+        # Align the dimensions of x and y to out_dim
+        if x_ndim < out_dim:
+            # Add singleton dimensions to x at the end of dimensions
+            x = x.unsqueeze([-2] * (out_dim - x_ndim))
+        if y_ndim < out_dim:
+            # Add singleton dimensions to y at the begin of dimensions
+            y = y.unsqueeze([0] * (out_dim - y_ndim))
+
+        # Multiply x and y with implicit broadcasting
+        out = x * y
+
+        return out
+
+    def forward_tensor(self, x, y, z) -> List[paddle.Tensor]:
         # forward each dim branch
         feature_f = []
         for i, input_var in enumerate((x, y, z)):
-            input_i = {self.input_keys[i]: input_var.unsqueeze(1)}
+            input_i = {self.input_keys[i]: input_var}
             output_f_i = self.branch_nets[i](input_i)
             feature_f.append(output_f_i["f"])  # [B, r*output_dim]
 
-        # dot product and sum over all branch outputs and
         output = []
         for i, key in enumerate(self.output_keys):
             st, ed = i * self.r, (i + 1) * self.r
+            # do tensor contraction and sum over all branch outputs
             if ed - st == self.r:
                 output_i = feature_f[0]
             else:
@@ -128,20 +159,18 @@ class SPINN(base.Arch):
                     output_ii = feature_f[j]
                 else:
                     output_ii = feature_f[j][:, st:ed]
-                if j != len(self.input_keys) - 1:
-                    output_i = output_i.unsqueeze(1) * output_ii.unsqueeze(0)
-                else:
-                    output_i = (
-                        output_i.unsqueeze(2) * output_ii.unsqueeze(0).unsqueeze(0)
-                    ).sum(axis=-1, keepdim=True)
+                output_i = self._tensor_contraction(output_i, output_ii)
+
+            output_i = output_i.sum(-1, keepdim=True)
             output.append(output_i)
 
-        return output[-1]
+        return output
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
-        output = [self.forward_tensor(x["x"], x["y"], x["z"])]
+
+        output = self.forward_tensor(*[x[key] for key in self.input_keys])
 
         output = {key: output[i] for i, key in enumerate(self.output_keys)}
 

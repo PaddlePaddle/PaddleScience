@@ -41,7 +41,7 @@ def _helmholtz3d_exact_u(a1, a2, a3, x, y, z):
 
 
 def _helmholtz3d_source_term(a1, a2, a3, x, y, z, lda=1.0):
-    u_gt = _helmholtz3d_exact_u(a1, a2, a3, x, y, z)
+    u_gt = _helmholtz3d_exact_u(a1, a2, a3, x, y, z)[..., None]
     uxx = -((a1 * np.pi) ** 2) * u_gt
     uyy = -((a2 * np.pi) ** 2) * u_gt
     uzz = -((a3 * np.pi) ** 2) * u_gt
@@ -49,16 +49,16 @@ def _helmholtz3d_source_term(a1, a2, a3, x, y, z, lda=1.0):
 
 
 def generate_train_helmholtz3d(a1, a2, a3, nc):
-    xc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
-    yc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
-    zc = np.random.uniform(-1.0, 1.0, [nc]).astype(dtype)
+    xc = np.random.uniform(-1.0, 1.0, [nc, 1]).astype(dtype)
+    yc = np.random.uniform(-1.0, 1.0, [nc, 1]).astype(dtype)
+    zc = np.random.uniform(-1.0, 1.0, [nc, 1]).astype(dtype)
     # source term
     xcm, ycm, zcm = np.meshgrid(xc, yc, zc, indexing="ij")
     uc = _helmholtz3d_source_term(a1, a2, a3, xcm, ycm, zcm).astype(dtype)
     # boundary (hard-coded)
     xb = [
-        np.asarray([1.0], dtype=dtype),
-        np.asarray([-1.0], dtype=dtype),
+        np.asarray([[1.0]], dtype=dtype),
+        np.asarray([[-1.0]], dtype=dtype),
         xc,
         xc,
         xc,
@@ -67,8 +67,8 @@ def generate_train_helmholtz3d(a1, a2, a3, nc):
     yb = [
         yc,
         yc,
-        np.asarray([1.0], dtype=dtype),
-        np.asarray([-1.0], dtype=dtype),
+        np.asarray([[1.0]], dtype=dtype),
+        np.asarray([[-1.0]], dtype=dtype),
         yc,
         yc,
     ]
@@ -77,8 +77,8 @@ def generate_train_helmholtz3d(a1, a2, a3, nc):
         zc,
         zc,
         zc,
-        np.asarray([1.0], dtype=dtype),
-        np.asarray([-1.0], dtype=dtype),
+        np.asarray([[1.0]], dtype=dtype),
+        np.asarray([[-1.0]], dtype=dtype),
     ]
     return xc, yc, zc, uc, xb, yb, zb
 
@@ -88,7 +88,7 @@ def generate_test_helmholtz3d(a1, a2, a3, nc_test):
     y = np.linspace(-1.0, 1.0, nc_test, dtype=dtype)
     z = np.linspace(-1.0, 1.0, nc_test, dtype=dtype)
     xm, ym, zm = np.meshgrid(x, y, z, indexing="ij")
-    u_gt = _helmholtz3d_exact_u(a1, a2, a3, xm, ym, zm).astype(dtype)
+    u_gt = _helmholtz3d_exact_u(a1, a2, a3, xm, ym, zm).astype(dtype)[..., None]
     x = x.reshape(-1, 1)
     y = y.reshape(-1, 1)
     z = z.reshape(-1, 1)
@@ -120,7 +120,7 @@ def train(cfg: DictConfig):
             self.xc = xc
             self.yc = yc
             self.zc = zc
-            self.uc = uc[..., np.newaxis]
+            self.uc = uc
 
         def __call__(self):
             self.iter += 1
