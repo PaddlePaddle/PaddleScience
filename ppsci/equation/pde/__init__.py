@@ -17,6 +17,7 @@ from ppsci.equation.pde.base import DETACH_FUNC_NAME
 from ppsci.equation.pde.base import PDE
 from ppsci.equation.pde.biharmonic import Biharmonic
 from ppsci.equation.pde.heat_exchanger import HeatExchanger
+from ppsci.equation.pde.helmholtz import Helmholtz
 from ppsci.equation.pde.laplace import Laplace
 from ppsci.equation.pde.linear_elasticity import LinearElasticity
 from ppsci.equation.pde.navier_stokes import NavierStokes
@@ -31,6 +32,7 @@ __all__ = [
     "AllenCahn",
     "Biharmonic",
     "HeatExchanger",
+    "Helmholtz",
     "Laplace",
     "LinearElasticity",
     "NavierStokes",
