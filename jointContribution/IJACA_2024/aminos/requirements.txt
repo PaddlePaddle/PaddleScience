@@ -1,0 +1,11 @@
+h5py
+matplotlib
+natsort
+numpy
+paddlepaddle_gpu
+pgl
+pyvista
+scipy
+trimesh
+visualdl
+vtk
