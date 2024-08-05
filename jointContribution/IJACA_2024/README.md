@@ -1,11 +1,15 @@
 # IJACA_Code
 The paddle version of the top three in each track of the IJACA 2024 competition.
+
 Inference codes only now.
 
-## Dataset(To be added)
+## Dataset
 Please refer to the .ipynb files in each directory to download the data and set the corresponding parameters.
 
-## Checkpoint(To be added)
+## Checkpoint
+Download all checkpoints from https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+
+Please refer to the address loaded by `paddle.load()` in the code to find where the checkpoints are placed.
 
 ## Inference commands
 ### aminos
