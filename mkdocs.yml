@@ -95,6 +95,7 @@ nav:
         - GraphCast: zh/examples/graphcast.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
+      
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
