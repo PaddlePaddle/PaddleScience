@@ -1386,7 +1386,7 @@ def radius_query_indices(
 
 def in_mesh_triangle_indices(
     *, grid_latitude: np.ndarray, grid_longitude: np.ndarray, mesh: TriangularMesh
-) -> tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """Returns mesh-grid edge indices for grid points contained in mesh triangles.
 
     Args:
