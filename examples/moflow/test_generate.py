@@ -31,16 +31,16 @@ from tabulate import tabulate
 
 import ppsci
 import moflow_transform
-from ppsci.arch.moflow_utils import Hyperparameters
-from ppsci.arch.moflow_utils import _to_numpy_array
-from ppsci.arch.moflow_utils import adj_to_smiles
-from ppsci.arch.moflow_utils import check_novelty
-from ppsci.arch.moflow_utils import check_validity
-from ppsci.arch.moflow_utils import construct_mol
-from ppsci.arch.moflow_utils import correct_mol
-from ppsci.arch.moflow_utils import penalized_logp
-from ppsci.arch.moflow_utils import valid_mol
-from ppsci.arch.moflow_utils import valid_mol_can_with_seg
+from moflow_utils import Hyperparameters
+from moflow_utils import _to_numpy_array
+from moflow_utils import adj_to_smiles
+from moflow_utils import check_novelty
+from moflow_utils import check_validity
+from moflow_utils import construct_mol
+from moflow_utils import correct_mol
+from moflow_utils import penalized_logp
+from moflow_utils import valid_mol
+from moflow_utils import valid_mol_can_with_seg
 from ppsci.utils import logger
 
 
