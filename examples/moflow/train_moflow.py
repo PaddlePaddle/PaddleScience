@@ -22,8 +22,8 @@ from tabulate import tabulate
 
 import ppsci
 import moflow_transform
-from ppsci.arch.moflow_utils import Hyperparameters
-from ppsci.arch.moflow_utils import check_validity
+from moflow_utils import Hyperparameters
+from moflow_utils import check_validity
 from ppsci.utils import logger
 
 
