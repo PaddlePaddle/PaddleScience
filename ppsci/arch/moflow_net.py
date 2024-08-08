@@ -24,8 +24,6 @@ import paddle
 from ppsci.arch import base
 from ppsci.arch.moflow_glow import Glow
 from ppsci.arch.moflow_glow import GlowOnGraph
-from ppsci.arch.moflow_utils import Hyperparameters
-
 
 def gaussian_nll(x, mean, ln_var, reduce="sum"):
     """Computes the negative log-likelihood of a Gaussian distribution.
@@ -106,7 +104,7 @@ class MoFlowNet(base.Arch):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        hyper_params: Hyperparameters,
+        hyper_params: None,
     ):
         super(MoFlowNet, self).__init__()
         self.input_keys = input_keys
