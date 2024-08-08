@@ -1,6 +1,5 @@
 CairoSVG
 networkx
-orderedset==2.0.3
 pandas==2.2.2
 rdkit==2022.3.3
 scipy
