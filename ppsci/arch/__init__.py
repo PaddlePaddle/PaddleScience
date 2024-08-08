@@ -51,6 +51,7 @@ from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.ifm_mlp import IFMMLP # isort:skip
 
 
 __all__ = [
@@ -91,6 +92,7 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
+    "IFMMLP"
 ]
 
 
