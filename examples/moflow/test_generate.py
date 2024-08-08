@@ -17,19 +17,10 @@ from os import path as osp
 
 import cairosvg
 import hydra
+import moflow_transform
 import numpy as np
 import paddle
 import pandas as pd
-from omegaconf import DictConfig
-from rdkit import Chem
-from rdkit import DataStructs
-from rdkit.Chem import AllChem
-from rdkit.Chem import Descriptors
-from rdkit.Chem import Draw
-from tabulate import tabulate
-
-import ppsci
-import moflow_transform
 from moflow_utils import Hyperparameters
 from moflow_utils import _to_numpy_array
 from moflow_utils import adj_to_smiles
@@ -40,6 +31,15 @@ from moflow_utils import correct_mol
 from moflow_utils import penalized_logp
 from moflow_utils import valid_mol
 from moflow_utils import valid_mol_can_with_seg
+from omegaconf import DictConfig
+from rdkit import Chem
+from rdkit import DataStructs
+from rdkit.Chem import AllChem
+from rdkit.Chem import Descriptors
+from rdkit.Chem import Draw
+from tabulate import tabulate
+
+import ppsci
 from ppsci.utils import logger
 
 
@@ -168,7 +168,7 @@ def visualize_interpolation_between_2_points(
     ]
     valid_mols = [mol for mol in interpolation_mols if mol is not None]
     valid_mols_smiles = [Chem.MolToSmiles(mol) for mol in valid_mols]
-    valid_mols_smiles_unique = list(OrderedSet(valid_mols_smiles))
+    valid_mols_smiles_unique = list(set(valid_mols_smiles))
     valid_mols_unique = [Chem.MolFromSmiles(s) for s in valid_mols_smiles_unique]
     valid_mols_smiles_unique_label = []
     for s, m in zip(valid_mols_smiles_unique, valid_mols_unique):
@@ -262,7 +262,7 @@ def visualize_interpolation(
     if keep_duplicate:
         valid_mols_smiles_unique = valid_mols_smiles
     else:
-        valid_mols_smiles_unique = list(OrderedSet(valid_mols_smiles))
+        valid_mols_smiles_unique = list(set(valid_mols_smiles))
     valid_mols_unique = [Chem.MolFromSmiles(s) for s in valid_mols_smiles_unique]
     valid_mols_smiles_unique_label = []
     logger.info(
@@ -400,7 +400,7 @@ def evaluate(cfg: DictConfig):
     )
 
     if cfg.EVAL.reconstruct:
-        train_dataloader = ppsci.data.build_ader(train, dataloader_cfg)
+        train_dataloader = ppsci.data.build_dataloader(train, dataloader_cfg)
         reconstruction_rate_list = []
         max_iter = len(train_dataloader)
         input_keys = cfg.MODEL.input_keys

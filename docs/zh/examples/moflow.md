@@ -19,13 +19,14 @@
 === "模型推理评估命令"
 
     ``` sh
-    python test_generate.py
+    python test_generate.py data_name=qm9 EVAL_mode=Reconstruct EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_pretrained.pdparams
+    python test_generate.py data_name=zinc250k EVAL_mode=Reconstruct EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
     ```
 
 === "模型优化评估命令"
 
     ``` sh
-    python optimize_moflow.py
+    python optimize_moflow.py data_name=zinc250k  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
     ```
 
 | 预训练模型  | 指标 |
