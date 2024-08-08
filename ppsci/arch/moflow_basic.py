@@ -142,10 +142,11 @@ class InvConv2d(nn.Layer):
         q, _ = paddle.linalg.qr(weight)
         weight = q.unsqueeze(2).unsqueeze(3)
         self.weight = paddle.create_parameter(
-            weight,
+            weight.shape,
+            weight.numpy().dtype,
             default_initializer=nn.initializer.Assign(weight),
         )
-
+        
     def forward(self, input):
         _, _, height, width = tuple(input.shape)
         out = nn.functional.conv2d(x=input, weight=self.weight)
@@ -182,17 +183,20 @@ class InvConv2dLU(nn.Layer):
             name="l_eye", tensor=paddle.eye(num_rows=tuple(l_mask.shape)[0])
         )
         self.w_l = paddle.create_parameter(
-            w_l,
+            w_l.shape,
+            w_l.numpy().dtype,
             default_initializer=nn.initializer.Assign(w_l),
         )
        
         self.w_s = paddle.create_parameter(
-            logabs(w_s),
+            logabs(w_s).shape,
+            logabs(w_s).numpy().dtype,
             default_initializer=nn.initializer.Assign(logabs(w_s)),
         )
 
         self.w_u = paddle.create_parameter(
-            w_u,
+            w_u.shape,
+            w_u.numpy().dtype,
             default_initializer=nn.initializer.Assign(w_u),
         )
 
