@@ -266,7 +266,7 @@ class MoFlowNet(base.Arch):
         if nll_x.item() < 0:
             print("nll_x:{}".format(nll_x.item()))
         losses = nll_x + nll_adj
-        return losses
+        return {"total_loss": losses}
 
     def save_hyperparams(self, path):
         self.hyper_params.save(path)
