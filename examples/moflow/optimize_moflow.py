@@ -27,10 +27,10 @@ from tabulate import tabulate
 
 import ppsci
 import moflow_transform
-from ppsci.arch.moflow_utils import Hyperparameters
-from ppsci.arch.moflow_utils import adj_to_smiles
-from ppsci.arch.moflow_utils import check_validity
-from ppsci.arch.moflow_utils import penalized_logp
+from moflow_utils import Hyperparameters
+from moflow_utils import adj_to_smiles
+from moflow_utils import check_validity
+from moflow_utils import penalized_logp
 from ppsci.data.dataset.moflow_dataset import MolGraph
 from ppsci.utils import logger
 
