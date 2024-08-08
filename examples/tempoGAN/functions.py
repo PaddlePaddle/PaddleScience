@@ -407,7 +407,7 @@ class DiscFuncs:
             out_disc_from_gen, label_zeros, reduction="mean"
         )
         losses = loss_disc_from_target * self.weight_disc + loss_disc_from_gen
-        return {"CE_loss", losses}
+        return {"CE_loss": losses}
 
     def loss_func_tempo(self, output_dict, *args):
         out_disc_tempo_from_target = output_dict["out_disc_tempo_from_target"]
@@ -425,7 +425,7 @@ class DiscFuncs:
         losses = (
             loss_disc_tempo_from_target * self.weight_disc + loss_disc_tempo_from_gen
         )
-        return {"CE_tempo_loss", losses}
+        return {"CE_tempo_loss": losses}
 
 
 class DataFuncs:
