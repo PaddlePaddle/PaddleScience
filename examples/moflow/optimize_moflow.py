@@ -454,10 +454,7 @@ def optimize(cfg: DictConfig):
 
     logger.info("Model params:\n" + tabulate(model_params.print()))
 
-    if cfg.OPTIMIZE.hidden in ("", ","):
-        hidden = []
-    else:
-        hidden = [int(d) for d in cfg.OPTIMIZE.hidden.strip(",").split(",")]
+    hidden = cfg.OPTIMIZE.hidden
     logger.info("Hidden dim for output regression:{}".format(hidden))
 
     # set transforms
