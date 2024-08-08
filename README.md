@@ -27,7 +27,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
-| 三维亥姆霍兹方程 | [SPINN(Helmholtz3D)](https://paddlescience-docs.readthedocs.io/zh/examples/spinn.md) | 机理驱动 | ModifiedMLP | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
+| 亥姆霍兹方程 | [SPINN(Helmholtz3D)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/spinn) | 机理驱动 | SPINN | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
 | 相场方程 | [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/allen_cahn) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/laplace2d) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
@@ -133,7 +133,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>develop</b></font> 版的 PaddlePaddle。
+请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>3.0-beta 或 develop</b></font> 版的 PaddlePaddle。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 
@@ -213,7 +213,9 @@ python -c "import paddle; paddle.utils.run_check()"
 
 ## 🎈其他领域支持
 
+<!-- --8<-- [start:adaptation] -->
 除 PaddleScience 套件外，Paddle 框架还支持了 [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能。
+<!-- --8<-- [end:adaptation] -->
 
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
