@@ -191,7 +191,7 @@ $$
 
 在数据处理中，首先通过读取化学分子结构，采用化学分子库的处理，将数据集中的化学结构部分进行化学键和分子节点的提取，对原子结构和键值进行处理，用 PaddleScience 代码表示如下
 
-``` py linenums="384" title="data/dataset/moflow_dataset.py"
+``` py linenums="390" title="data/dataset/moflow_dataset.py"
 --8<--
 data/dataset/moflow_dataset.py:390:423
 --8<--
@@ -203,7 +203,7 @@ data/dataset/moflow_dataset.py:390:423
 
 本案例基于数据从中学习化学键约束的方法求解问题，因此按照 PaddleScience 的API结构说明，采用内置的 SupervisedConstraint 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数。
 
-``` py linenums="126" title="examples/moflow/train_moflow.py"
+``` py linenums="141" title="examples/moflow/train_moflow.py"
 --8<--
 examples/moflow/train_moflow.py:141:162
 --8<--
@@ -213,7 +213,7 @@ examples/moflow/train_moflow.py:141:162
 
 定义监督约束的代码如下：
 
-``` py linenums="154" title="examples/moflow/train_moflow.py"
+``` py linenums="168" title="examples/moflow/train_moflow.py"
 --8<--
 examples/moflow/train_moflow.py:168:178
 --8<--
@@ -223,7 +223,7 @@ examples/moflow/train_moflow.py:168:178
 
 在该案例中，海面温度模型基于 MoFlowNet 网络模型实现，结合 PaddleScience 代码标准格式，对于模型进行分装，单独对flow，grow等模模型进行调用，其中模型构成的代码表示如下：
 
-``` py linenums="147" title="examples/moflow/train_moflow.py"
+``` py linenums="163" title="examples/moflow/train_moflow.py"
 --8<--
 examples/moflow/train_moflow.py:163:167
 --8<--
@@ -231,7 +231,7 @@ examples/moflow/train_moflow.py:163:167
 
 模型网络参数配置如下：
 
-``` py linenums="94" title="examples/moflow/train_moflow.py"
+``` py linenums="97" title="examples/moflow/train_moflow.py"
 --8<--
 examples/moflow/train_moflow.py:97:128
 --8<--
@@ -251,9 +251,9 @@ examples/moflow/conf/moflow_train.yaml:22:79
 
 本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`,用 PaddleScience 代码表示如下：
 
-``` py linenums="165" title="examples/moflow/train_moflow.py"
+``` py linenums="181" title="examples/moflow/train_moflow.py"
 --8<--
-examples/moflow/train_moflow.py:165:170
+examples/moflow/train_moflow.py:181:184
 --8<--
 ```
 
@@ -261,9 +261,9 @@ examples/moflow/train_moflow.py:165:170
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="188" title="examples/moflow/train_moflow.py"
+``` py linenums="185" title="examples/moflow/train_moflow.py"
 --8<--
-examples/moflow/train_moflow.py:188:198
+examples/moflow/train_moflow.py:185:214
 --8<--
 ```
 
@@ -273,9 +273,9 @@ examples/moflow/train_moflow.py:188:198
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 ppsci.solver.Solver，然后启动训练、评估
 
-``` py linenums="200" title="examples/moflow/train_moflow.py"
+``` py linenums="215" title="examples/moflow/train_moflow.py"
 --8<--
-examples/moflow/train_moflow.py:200:222
+examples/moflow/train_moflow.py:215:237
 --8<--
 ```
 
@@ -293,9 +293,9 @@ examples/moflow/conf/moflow_test.yaml:81:126
 
 构建评估器的代码为：
 
-``` py linenums="331" title="examples/moflow/test_generate.py"
+``` py linenums="368" title="examples/moflow/test_generate.py"
 --8<--
-examples/moflow/test_generate.py:331:484
+examples/moflow/test_generate.py:368:529
 --8<--
 ```
 
@@ -303,9 +303,9 @@ examples/moflow/test_generate.py:331:484
 
 在模型完成训练后，进行分子优化和约束优化，训练一个额外的MLP模型，从潜空间到QED属性或者plogp属性，得到优化后的分子属性，并进行评估，受到与属性相似性的约束，代码如下：
 
-``` py linenums="106" title="examples/moflow/optimize_moflow.py"
+``` py linenums="473" title="examples/moflow/optimize_moflow.py"
 --8<--
-examples/moflow/optimize_moflow.py:333:393
+examples/moflow/optimize_moflow.py:473:289
 --8<--
 ```
 
