@@ -25,6 +25,7 @@ from ppsci.arch import base
 from ppsci.arch.moflow_glow import Glow
 from ppsci.arch.moflow_glow import GlowOnGraph
 
+
 def gaussian_nll(x, mean, ln_var, reduce="sum"):
     """Computes the negative log-likelihood of a Gaussian distribution.
 
@@ -120,9 +121,11 @@ class MoFlowNet(base.Arch):
             self.ln_var = paddle.create_parameter(
                 paddle.zeros(shape=[1]).shape,
                 paddle.zeros(shape=[1]).numpy().dtype,
-                default_initializer=paddle.nn.initializer.Assign(paddle.
-                zeros(shape=[1])))
-         
+                default_initializer=paddle.nn.initializer.Assign(
+                    paddle.zeros(shape=[1])
+                ),
+            )
+
         else:
             self.register_buffer(name="ln_var", tensor=paddle.zeros(shape=[1]))
         self.bond_model = Glow(
@@ -183,14 +186,14 @@ class MoFlowNet(base.Arch):
     def reverse(self, z, true_adj=None):
         """
         Returns a molecule, given its latent vector.
-        
+
         Args:
             z: latent vector. Shape: [B, N*N*M + N*T]    (100,369) 369=9*9 * 4 + 9*5
             B = Batch size, N = number of atoms, M = number of bond types,
             T = number of atom types (Carbon, Oxygen etc.)
             true_adj: used for testing. An adjacency matrix of a real molecule
 
-        return: 
+        return:
             adjacency matrix and feature matrix of a molecule
         """
         batch_size = tuple(z.shape)[0]
@@ -275,7 +278,7 @@ class MoFlowProp(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("nodes","edges",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output","sum_log_det").
-        model (MoFlowNet): pre-trained model. 
+        model (MoFlowNet): pre-trained model.
         hidden_size (int): Hidden dimension list for output regression.
     """
 

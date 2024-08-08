@@ -30,12 +30,12 @@ class ActNorm(nn.Layer):
         super().__init__()
         self.loc = self.create_parameter(
             [1, in_channel, 1, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=0.0)
+            default_initializer=nn.initializer.ConstantInitializer(value=0.0),
         )
 
         self.scale = self.create_parameter(
             [1, in_channel, 1, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=1.0)
+            default_initializer=nn.initializer.ConstantInitializer(value=1.0),
         )
 
         self.register_buffer(
@@ -86,14 +86,14 @@ class ActNorm2D(nn.Layer):
         super().__init__()
         self.loc = self.create_parameter(
             [1, in_dim, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=0.0)
+            default_initializer=nn.initializer.ConstantInitializer(value=0.0),
         )
-   
+
         self.scale = self.create_parameter(
             [1, in_dim, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=1.0)
+            default_initializer=nn.initializer.ConstantInitializer(value=1.0),
         )
-      
+
         self.register_buffer(
             name="initialized", tensor=paddle.to_tensor(data=0, dtype="uint8")
         )
@@ -146,7 +146,7 @@ class InvConv2d(nn.Layer):
             weight.numpy().dtype,
             default_initializer=nn.initializer.Assign(weight),
         )
-        
+
     def forward(self, input):
         _, _, height, width = tuple(input.shape)
         out = nn.functional.conv2d(x=input, weight=self.weight)
@@ -187,7 +187,7 @@ class InvConv2dLU(nn.Layer):
             w_l.numpy().dtype,
             default_initializer=nn.initializer.Assign(w_l),
         )
-       
+
         self.w_s = paddle.create_parameter(
             logabs(w_s).shape,
             logabs(w_s).numpy().dtype,
@@ -228,11 +228,11 @@ class InvConv2dLU(nn.Layer):
 
 class GraphLinear(nn.Layer):
     """Graph Linear layer.
-        This function assumes its input is 3-dimensional. Or 4-dim or whatever, only last dim are changed
-        Differently from :class:`nn.Linear`, it applies an affine
-        transformation to the third axis of input `x`.
-        Warning: original Chainer.link.Link use i.i.d. Gaussian initialization as default,
-        while default nn.Linear initialization using init.kaiming_uniform_
+    This function assumes its input is 3-dimensional. Or 4-dim or whatever, only last dim are changed
+    Differently from :class:`nn.Linear`, it applies an affine
+    transformation to the third axis of input `x`.
+    Warning: original Chainer.link.Link use i.i.d. Gaussian initialization as default,
+    while default nn.Linear initialization using init.kaiming_uniform_
     """
 
     def __init__(self, in_size, out_size, bias=True):
@@ -273,10 +273,11 @@ class GraphConv(nn.Layer):
     Args:
         in_channels:   e.g. 8
         out_channels:  e.g. 64
-        num_edge_type (types of edges/bonds):  e.g. 4 
+        num_edge_type (types of edges/bonds):  e.g. 4
     return:
         class:`chainer.Variable`:
     """
+
     def __init__(self, in_channels, out_channels, num_edge_type=4):
         super(GraphConv, self).__init__()
         self.graph_linear_self = GraphLinear(in_channels, out_channels)

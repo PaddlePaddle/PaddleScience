@@ -12,8 +12,8 @@ from rdkit.Chem import Draw
 from rdkit.Chem import rdMolDescriptors
 from rdkit.six import iteritems
 
-from ppsci.utils import logger
 from ppsci.utils import download
+from ppsci.utils import logger
 
 atom_decoder_m = {0: 6, 1: 7, 2: 8, 3: 9}
 bond_decoder_m = {
@@ -60,7 +60,7 @@ class Hyperparameters:
         seed=1,
         noise_scale=0.6,
     ):
-        """ Model Hyperparameters
+        """Model Hyperparameters
         Args:
             b_n_type (int, optional): Number of bond types/channels.
             b_n_flow (int, optional): Number of masked glow coupling layers per block for bond tensor.
@@ -189,7 +189,7 @@ def Tensor2Mol(A, x):
 
 
 def construct_mol(x, A, atomic_num_list):
-    """ 
+    """
 
     Args:
         x (paddle.Tensor): nodes.
@@ -227,7 +227,7 @@ def construct_mol(x, A, atomic_num_list):
 
 
 def construct_mol_with_validation(x, A, atomic_num_list):
-    """ 
+    """
     Args:
         x (paddle.Tensor): nodes.
         A (paddle.Tensor): Adjacency.
@@ -289,7 +289,7 @@ def check_valency(mol):
     valency.
     Args:
         mol (object): rdkit mol object.
-    Returns: 
+    Returns:
         True if no valency issues, False otherwise.
     """
     try:
@@ -358,7 +358,7 @@ def check_validity(
     largest_connected_comp=True,
     debug=False,
 ):
-    """ 
+    """
 
     Args:
         adj (paddle.Tensor): Adjacency.
@@ -452,7 +452,10 @@ def readFragmentScores(name="fpscores"):
     if name == "fpscores":
         name = os.path.join(os.path.dirname(__file__), name)
     if not os.path.exists(name):
-        download._download('https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/fpscores.pkl.gz', './')
+        download._download(
+            "https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/fpscores.pkl.gz",
+            "./",
+        )
     _fscores = cPickle.load(gzip.open("%s.pkl.gz" % name))
     outDict = {}
     for i in _fscores:

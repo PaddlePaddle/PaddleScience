@@ -131,11 +131,11 @@ class GraphAffineCoupling(nn.Layer):
         else:
             self.net_lin.append(GraphLinear(last_dim, in_dim))
         self.scale = paddle.create_parameter(
-            paddle.zeros(shape=[1]).shape, 
+            paddle.zeros(shape=[1]).shape,
             paddle.zeros(shape=[1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(paddle.zeros(
-            shape=[1])))
-            
+            default_initializer=nn.initializer.Assign(paddle.zeros(shape=[1])),
+        )
+
         mask = paddle.ones(shape=[n_node, in_dim])
         mask[masked_row, :] = 0
         self.register_buffer(name="mask", tensor=mask)

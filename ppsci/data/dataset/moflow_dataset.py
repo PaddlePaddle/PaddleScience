@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 from paddle import io
 from tqdm import tqdm
+
 from ppsci.utils import logger
 
 try:
@@ -34,6 +35,7 @@ try:
     from rdkit.Chem import rdmolops
 except ModuleNotFoundError:
     pass
+
 
 class MolGraph:
     """

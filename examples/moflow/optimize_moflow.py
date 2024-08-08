@@ -15,9 +15,14 @@
 from os import path as osp
 
 import hydra
+import moflow_transform
 import numpy as np
 import paddle
 import pandas as pd
+from moflow_utils import Hyperparameters
+from moflow_utils import adj_to_smiles
+from moflow_utils import check_validity
+from moflow_utils import penalized_logp
 from omegaconf import DictConfig
 from rdkit import Chem
 from rdkit import DataStructs
@@ -26,11 +31,6 @@ from rdkit.Chem import Descriptors
 from tabulate import tabulate
 
 import ppsci
-import moflow_transform
-from moflow_utils import Hyperparameters
-from moflow_utils import adj_to_smiles
-from moflow_utils import check_validity
-from moflow_utils import penalized_logp
 from ppsci.data.dataset.moflow_dataset import MolGraph
 from ppsci.utils import logger
 

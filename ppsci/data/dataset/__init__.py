@@ -32,6 +32,7 @@ from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
+from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
 from ppsci.data.dataset.mrms_dataset import MRMSDataset
 from ppsci.data.dataset.mrms_dataset import MRMSSampledDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
@@ -43,7 +44,6 @@ from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
-from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
