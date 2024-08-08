@@ -15,15 +15,15 @@
 from os import path as osp
 
 import hydra
+import moflow_transform
 import numpy as np
 import paddle
+from moflow_utils import Hyperparameters
+from moflow_utils import check_validity
 from omegaconf import DictConfig
 from tabulate import tabulate
 
 import ppsci
-import moflow_transform
-from moflow_utils import Hyperparameters
-from moflow_utils import check_validity
 from ppsci.utils import logger
 
 
@@ -102,7 +102,6 @@ def train(cfg: DictConfig):
     mask_row_stride_list = list(cfg.get(cfg.data_name).mask_row_stride_list)
     a_n_type = len(cfg.get(cfg.data_name).atomic_num_list)
     atomic_num_list = list(cfg.get(cfg.data_name).atomic_num_list)
-
 
     model_params = Hyperparameters(
         b_n_type=cfg.get(cfg.data_name).b_n_type,
