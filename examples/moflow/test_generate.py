@@ -21,7 +21,6 @@ import numpy as np
 import paddle
 import pandas as pd
 from omegaconf import DictConfig
-from orderedset import OrderedSet
 from rdkit import Chem
 from rdkit import DataStructs
 from rdkit.Chem import AllChem
