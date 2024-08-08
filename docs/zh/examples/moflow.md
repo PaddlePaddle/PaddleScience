@@ -193,7 +193,7 @@ $$
 
 ``` py linenums="390" title="data/dataset/moflow_dataset.py"
 --8<--
-data/dataset/moflow_dataset.py:390:423
+ppsci/data/dataset/moflow_dataset.py:390:423
 --8<--
 ```
 
@@ -221,7 +221,7 @@ examples/moflow/train_moflow.py:168:178
 
 ### 3.3 模型构建
 
-在该案例中，海面温度模型基于 MoFlowNet 网络模型实现，结合 PaddleScience 代码标准格式，对于模型进行分装，单独对flow，grow等模模型进行调用，其中模型构成的代码表示如下：
+在该案例中，药物分子预测生成模型基于 MoFlowNet 网络模型实现，结合 PaddleScience 代码标准格式，对于模型进行分装，单独对flow，grow等模模型进行调用，其中模型构成的代码表示如下：
 
 ``` py linenums="163" title="examples/moflow/train_moflow.py"
 --8<--
