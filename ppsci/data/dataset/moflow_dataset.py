@@ -26,12 +26,14 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from paddle import io
-from rdkit import Chem
-from rdkit.Chem import rdmolops
 from tqdm import tqdm
-
 from ppsci.utils import logger
 
+try:
+    from rdkit import Chem
+    from rdkit.Chem import rdmolops
+except ModuleNotFoundError:
+    pass
 
 class MolGraph:
     """
