@@ -2,13 +2,10 @@ import os
 import re
 
 import h5py
-import matplotlib
 import numpy as np
 import paddle
 import pgl
 from utils.knn import k_hop_subgraph
-
-matplotlib.use("Agg")
 
 
 def trans_edge_index(edge_index):

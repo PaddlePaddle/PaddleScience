@@ -8,7 +8,6 @@ import sys
 import threading
 
 import h5py
-import matplotlib
 import numpy as np
 import paddle
 import trimesh
@@ -23,7 +22,6 @@ sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 )
 
-matplotlib.use("Agg")
 
 sys.stdout.flush()
 lock = threading.Lock()
@@ -47,7 +45,7 @@ class Basemanager:
         )
         return cells_face_node.numpy()
 
-    def position_relative_to_line_pytorch(A, B, angle_c):
+    def position_relative_to_line_paddle(A, B, angle_c):
         A = paddle.to_tensor(data=A, dtype="float64")
         B = paddle.to_tensor(data=B, dtype="float64")
         angle_c = paddle.to_tensor(data=angle_c, dtype="float64")
@@ -332,7 +330,7 @@ class PlyMesh(Basemanager):
 
     def extract_mesh_A(self, data_index=None):
         """
-        all input dataset values should be pytorch tensor object
+        all input dataset values should be paddle tensor object
         """
         dataset = self.convert_to_tensors(self.mesh_info)
         cells_node = dataset["cells_node"][:, 0]
@@ -454,7 +452,7 @@ class PlyMesh(Basemanager):
 
     def extract_mesh_B(self, data_index=None):
         """
-        all input dataset values should be pytorch tensor object
+        all input dataset values should be paddle tensor object
         """
         dataset = self.convert_to_tensors(self.mesh_info)
         car_model = trimesh.load(self.path["mesh_file_path"], force="mesh")
@@ -601,7 +599,7 @@ def run_command(tfrecord_file, idx_file):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="train / test a pytorch model to predict frames"
+        description="train / test a paddle model to predict frames"
     )
     parser.add_argument(
         "--msh_dir",

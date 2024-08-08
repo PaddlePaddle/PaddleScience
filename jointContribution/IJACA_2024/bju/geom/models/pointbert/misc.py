@@ -137,7 +137,7 @@ class BNMomentumScheduler(object):
     def __init__(self, model, bn_lambda, last_epoch=-1, setter=set_bn_momentum_default):
         if not isinstance(model, paddle.nn.Layer):
             raise RuntimeError(
-                "Class '{}' is not a PyTorch nn Module".format(type(model).__name__)
+                "Class '{}' is not a Paddle nn Layer".format(type(model).__name__)
             )
         self.model = model
         self.setter = setter

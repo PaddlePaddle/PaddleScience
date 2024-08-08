@@ -8,7 +8,8 @@ from utils.get_param import get_hyperparam
 from utils.Logger import Logger
 
 params, git_info = get_param.params()
-params.load_index = "90"
+if params.load_index is None:
+    params.load_index = "90"
 device = str("cuda" if paddle.device.cuda.device_count() >= 1 else "cpu").replace(
     "cuda", "gpu"
 )

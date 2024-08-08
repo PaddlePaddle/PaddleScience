@@ -17,7 +17,7 @@ def str2bool(v):
 def params(load=None):
     if load is not None:
         parser = argparse.ArgumentParser(
-            description="train / test a pytorch model to predict frames"
+            description="train / test a paddle model to predict frames"
         )
         params = vars(parser.parse_args([]))
         with open(load + "/commandline_args.json", "rt") as f:
@@ -32,7 +32,7 @@ def params(load=None):
         :return: parameter-Namespace
         """
         parser = argparse.ArgumentParser(
-            description="train / test a pytorch model to predict frames"
+            description="train / test a paddle model to predict frames"
         )
         parser.add_argument(
             "--net",

@@ -96,7 +96,7 @@ def merge_h5_files(fileA_path, fileB_path, merged_file_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="train / test a pytorch model to predict frames"
+        description="train / test a paddle model to predict frames"
     )
     parser.add_argument(
         "--A_dir",

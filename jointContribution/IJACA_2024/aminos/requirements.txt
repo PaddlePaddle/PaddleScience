@@ -1,8 +1,7 @@
 h5py
-matplotlib
 natsort
-numpy
-paddlepaddle_gpu
+numpy < 2
+paddlepaddle_gpu <= 2.5.2
 pgl
 pyvista
 scipy

@@ -10,7 +10,7 @@ class Normalizer(paddle.nn.Layer):
         size: feature dimension
         max_accumulation: maximum number of batches
         epsilon: std cutoff for constant variable
-        device: pytorch device
+        device: device
         """
         super(Normalizer, self).__init__()
         self.max_accumulations = max_accumulations

@@ -7,22 +7,63 @@ Inference codes only now.
 Please refer to the .ipynb files in each directory to download the data and set the corresponding parameters.
 
 ## Checkpoint
-Download all checkpoints from https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+Donwload checkpoints:
+``` sh
+cd PaddleScience/jointContribution/IJACA_2024
+# linux
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+# windows
+# curl https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+```
 
-Please refer to the address loaded by `paddle.load()` in the code to find where the checkpoints are placed.
+Unzip the checkpoints and move them to the corresponding directory:
+``` sh
+tar -xvzf IJACA_2024_ckpts.tar.gz
 
-## Inference commands
+# aminos
+mkdir -p ./aminos/Logger/states/
+mv ./ckpts/aminos/90.pdparams ./aminos/Logger/states/90.pdparams
+
+# tenfeng
+mkdir -p ./results/
+mv ./ckpts/tenfeng/checkpoint.pdparams ./tenfeng/results/checkpoint.pdparams
+
+# leejt
+mv ./ckpts/leejt/model.pdparams ./leejt/model.pdparams
+
+# bju
+mv ./ckpts/bju/geom/ckpt ./bju/geom/
+mv ./ckpts/bju/pretrained_checkpoint.pdparams ./bju/pretrained_checkpoint.pdparams
+
+# zhongzaicanyu
+# No pretrained checkpoint yet.
+```
+
+## Inference
+First enter the corresponding directory. For example "aminos":
+``` sh
+cd aminos
+```
+
+Install requirements:
+``` sh
+pip install -r requirements.txt
+```
+
+Run Inference:
+``` py
 ### aminos
-python infer.py --dataset_dir /your_path/Datasets
+python infer.py --dataset_dir "./Datasets" --load_index="90"
 
 ### tenfeng
-python infer.py --epochs 69 --milestones 40 50 60 65 68 --gpu_id 0  --depth 5 --hidden_dim 256 --num_slices 32 --batch_size 4 --loss_type 'rl2' --submit --log_dir your_path --training_data_dir /your_path/Dataset/train_track_B_e --testing_data_dir /your_path/Dataset/Testset_track_B_e
+python infer.py --epochs 69 --milestones 40 50 60 65 68 --gpu_id 0  --depth 5 --hidden_dim 256 --num_slices 32 --batch_size 4 --loss_type 'rl2' --submit --log_dir "./results" --training_data_dir "./Dataset/train_track_B_e" --testing_data_dir "./Dataset/Testset_track_B_e"
 
 ### leejt
 python infer.py
 
 ### bju
-python infer.py
+python infer.py --train_data_dir "./Dataset/Trainset_track_B" --test_data_dir "./Dataset/Testset_track_B/Inference" --info_dir "./Dataset/Testset_track_B/Auxiliary" --ulip_ckpt "./geom/ckpt/checkpoint_pointbert.pdparams"
 
 ### zhongzaicanyu
-python infer.py
+python infer.py # not work yet.
+```
