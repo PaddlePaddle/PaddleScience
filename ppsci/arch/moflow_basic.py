@@ -28,23 +28,15 @@ def logabs(x):
 class ActNorm(nn.Layer):
     def __init__(self, in_channel, logdet=True):
         super().__init__()
-        self.loc = paddle.create_parameter(
-            shape=paddle.zeros(shape=[1, in_channel, 1, 1]).shape,
-            dtype=paddle.zeros(shape=[1, in_channel, 1, 1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(
-                paddle.zeros(shape=[1, in_channel, 1, 1])
-            ),
+        self.loc = self.create_parameter(
+            [1, in_channel, 1, 1],
+            default_initializer=nn.initializer.ConstantInitializer(value=0.0)
         )
-        self.loc.stop_gradient = False
 
-        self.scale = paddle.create_parameter(
-            shape=paddle.ones(shape=[1, in_channel, 1, 1]).shape,
-            dtype=paddle.ones(shape=[1, in_channel, 1, 1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(
-                paddle.ones(shape=[1, in_channel, 1, 1])
-            ),
+        self.scale = self.create_parameter(
+            [1, in_channel, 1, 1],
+            default_initializer=nn.initializer.ConstantInitializer(value=1.0)
         )
-        self.scale.stop_gradient = False
 
         self.register_buffer(
             name="initialized", tensor=paddle.to_tensor(data=0, dtype="uint8")
@@ -92,23 +84,15 @@ class ActNorm(nn.Layer):
 class ActNorm2D(nn.Layer):
     def __init__(self, in_dim, logdet=True):
         super().__init__()
-        self.loc = paddle.create_parameter(
-            shape=paddle.zeros(shape=[1, in_dim, 1]).shape,
-            dtype=paddle.zeros(shape=[1, in_dim, 1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(
-                paddle.zeros(shape=[1, in_dim, 1])
-            ),
+        self.loc = self.create_parameter(
+            [1, in_dim, 1],
+            default_initializer=nn.initializer.ConstantInitializer(value=0.0)
         )
-        self.loc.stop_gradient = False
    
-        self.scale = paddle.create_parameter(
-            shape=paddle.ones(shape=[1, in_dim, 1]).shape,
-            dtype=paddle.ones(shape=[1, in_dim, 1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(
-                paddle.ones(shape=[1, in_dim, 1])
-            ),
+        self.scale = self.create_parameter(
+            [1, in_dim, 1],
+            default_initializer=nn.initializer.ConstantInitializer(value=1.0)
         )
-        self.scale.stop_gradient = False
       
         self.register_buffer(
             name="initialized", tensor=paddle.to_tensor(data=0, dtype="uint8")
@@ -154,15 +138,13 @@ class ActNorm2D(nn.Layer):
 class InvConv2d(nn.Layer):
     def __init__(self, in_channel):
         super().__init__()
-        weight = paddle.randn(shape=[in_channel, in_channel])
-        q, _ = paddle.linalg.qr(x=weight)
-        weight = q.unsqueeze(axis=2).unsqueeze(axis=3)
+        weight = paddle.randn([in_channel, in_channel])
+        q, _ = paddle.linalg.qr(weight)
+        weight = q.unsqueeze(2).unsqueeze(3)
         self.weight = paddle.create_parameter(
-            shape=weight.shape,
-            dtype=weight.numpy().dtype,
+            weight,
             default_initializer=nn.initializer.Assign(weight),
         )
-        self.weight.stop_gradient = False
 
     def forward(self, input):
         _, _, height, width = tuple(input.shape)
@@ -200,25 +182,19 @@ class InvConv2dLU(nn.Layer):
             name="l_eye", tensor=paddle.eye(num_rows=tuple(l_mask.shape)[0])
         )
         self.w_l = paddle.create_parameter(
-            shape=w_l.shape,
-            dtype=w_l.numpy().dtype,
+            w_l,
             default_initializer=nn.initializer.Assign(w_l),
         )
-        self.w_l.stop_gradient = False
        
         self.w_s = paddle.create_parameter(
-            shape=logabs(w_s).shape,
-            dtype=logabs(w_s).numpy().dtype,
+            logabs(w_s),
             default_initializer=nn.initializer.Assign(logabs(w_s)),
         )
-        self.w_s.stop_gradient = False
 
         self.w_u = paddle.create_parameter(
-            shape=w_u.shape,
-            dtype=w_u.numpy().dtype,
+            w_u,
             default_initializer=nn.initializer.Assign(w_u),
         )
-        self.w_u.stop_gradient = False
 
     def forward(self, input):
         _, _, height, width = tuple(input.shape)
@@ -276,7 +252,7 @@ class GraphLinear(nn.Layer):
                 of molecules.
 
         Returns:
-            :class:`chainer.Variable`:
+            class:`chainer.Variable`:
                 A 3-dimeisional array.
 
         """

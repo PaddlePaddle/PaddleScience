@@ -20,6 +20,7 @@ from ppsci.data.dataset.array_dataset import ChipHeatDataset
 from ppsci.data.dataset.array_dataset import ContinuousNamedArrayDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
+from ppsci.data.dataset.atmospheric_dataset import GridMeshAtmosphericDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.csv_dataset import IterableCSVDataset
 from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
@@ -28,9 +29,9 @@ from ppsci.data.dataset.dgmr_dataset import DGMRDataset
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
+from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
-from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
 from ppsci.data.dataset.mrms_dataset import MRMSDataset
 from ppsci.data.dataset.mrms_dataset import MRMSSampledDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
@@ -42,6 +43,7 @@ from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
+from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
@@ -57,9 +59,9 @@ __all__ = [
     "IterableCSVDataset",
     "ERA5Dataset",
     "ERA5SampledDataset",
+    "GridMeshAtmosphericDataset",
     "IterableMatDataset",
     "MatDataset",
-    "MOlFLOWDataset",
     "MRMSDataset",
     "MRMSSampledDataset",
     "IterableNPZDataset",
@@ -75,7 +77,9 @@ __all__ = [
     "DarcyFlowDataset",
     "SphericalSWEDataset",
     "ENSODataset",
+    "ExtMoEENSODataset",
     "SEVIRDataset",
+    "MOlFLOWDataset",
     "build_dataset",
 ]
 
@@ -84,7 +88,7 @@ def build_dataset(cfg) -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (List[DictConfig]): dataset config list.
+        cfg (List[DictConfig]): Dataset config list.
 
     Returns:
         Dict[str, io.Dataset]: dataset.

@@ -99,7 +99,7 @@ class MoFlowNet(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("nodes","edges",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output","sum_log_det").
-        hyper_params :More parameters derived from hyper_params for easy use
+        hyper_params (object): More parameters derived from hyper_params for easy use.
     """
 
     def __init__(
@@ -120,13 +120,10 @@ class MoFlowNet(base.Arch):
         self.noise_scale = hyper_params.noise_scale
         if hyper_params.learn_dist:
             self.ln_var = paddle.create_parameter(
-                shape=paddle.zeros(shape=[1]).shape,
-                dtype=paddle.zeros(shape=[1]).numpy().dtype,
-                default_initializer=paddle.nn.initializer.Assign(
-                    paddle.zeros(shape=[1])
-                ),
-            )
-            self.ln_var.stop_gradient = False
+                paddle.zeros(shape=[1]).shape,
+                paddle.zeros(shape=[1]).numpy().dtype,
+                default_initializer=paddle.nn.initializer.Assign(paddle.
+                zeros(shape=[1])))
          
         else:
             self.register_buffer(name="ln_var", tensor=paddle.zeros(shape=[1]))
@@ -232,10 +229,8 @@ class MoFlowNet(base.Arch):
         logdet = output_dict[self.output_keys[1]]
         z[0] = z[0].reshape([tuple(z[0].shape)[0], -1])
         z[1] = z[1].reshape([tuple(z[1].shape)[0], -1])
-        z[1].stop_gradient = True
         logdet[0] = logdet[0] - self.a_size * math.log(2.0)
         logdet[1] = logdet[1] - self.b_size * math.log(2.0)
-        logdet[1].stop_gradient = True
         if len(self.ln_var) == 1:
             ln_var_adj = self.ln_var * paddle.ones(shape=[self.b_size]).to(z[0])
             ln_var_x = self.ln_var * paddle.ones(shape=[self.a_size]).to(z[0])
@@ -282,8 +277,8 @@ class MoFlowProp(base.Arch):
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("nodes","edges",).
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output","sum_log_det").
-        model (MoFlowNet): pre-trained model
-        hidden_size (int): Hidden dimension list for output regression
+        model (MoFlowNet): pre-trained model. 
+        hidden_size (int): Hidden dimension list for output regression.
     """
 
     def __init__(

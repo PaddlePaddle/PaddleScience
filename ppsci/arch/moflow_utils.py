@@ -14,22 +14,22 @@ from rdkit.six import iteritems
 
 from ppsci.utils import logger
 
-atom_decoder_m = {(0): 6, (1): 7, (2): 8, (3): 9}
+atom_decoder_m = {0: 6, 1: 7, 2: 8, 3: 9}
 bond_decoder_m = {
-    (1): Chem.rdchem.BondType.SINGLE,
-    (2): Chem.rdchem.BondType.DOUBLE,
-    (3): Chem.rdchem.BondType.TRIPLE,
+    1: Chem.rdchem.BondType.SINGLE,
+    2: Chem.rdchem.BondType.DOUBLE,
+    3: Chem.rdchem.BondType.TRIPLE,
 }
 ATOM_VALENCY = {
-    (6): 4,
-    (7): 3,
-    (8): 2,
-    (9): 1,
-    (15): 3,
-    (16): 2,
-    (17): 1,
-    (35): 1,
-    (53): 1,
+    6: 4,
+    7: 3,
+    8: 2,
+    9: 1,
+    15: 3,
+    16: 2,
+    17: 1,
+    35: 1,
+    53: 1,
 }
 
 _fscores = None
@@ -59,27 +59,29 @@ class Hyperparameters:
         seed=1,
         noise_scale=0.6,
     ):
-        """
+        """ Model Hyperparameters
+        Args:
+            b_n_type (int, optional): Number of bond types/channels.
+            b_n_flow (int, optional): Number of masked glow coupling layers per block for bond tensor.
+            b_n_block (int, optional): Number of glow blocks for bond tensor.
+            b_n_squeeze (int, optional):  Squeeze divisor, 3 for qm9, 2 for zinc250k.
+            b_hidden_ch (list[int,...], optional): Hidden channel list for bonds tensor, delimited list input.
+            b_affine (bool, optional): Using affine coupling layers for bonds glow.
+            b_conv_lu (int, optional): Using L-U decomposition trick for 1-1 conv in bonds glow.
+            a_n_node (int, optional): _Maximum number of atoms in a molecule.
+            a_n_type (int, optional): _Number of atom types.
+            a_hidden_gnn (object, optional): Hidden dimension list for graph convolution for atoms matrix, delimited list input.
+            a_hidden_lin (object, optional): Hidden dimension list for linear transformation for atoms, delimited list input.
+            a_n_flow (int, optional): _dNumber of masked flow coupling layers per block for atom matrix.
+            a_n_block (int, optional): Number of flow blocks for atom matrix.
+            mask_row_size_list (list[int,...], optional): Mask row list for atom matrix, delimited list input.
+            mask_row_stride_list (list[int,...], optional): _Mask row stride  list for atom matrix, delimited list input.
+            a_affine (bool, optional): Using affine coupling layers for atom conditional graph flow.
+            path (str, optional): Hyperparameters save path.
+            learn_dist (bool, optional): learn the distribution of feature matrix.
+            seed (int, optional): Random seed to use.
+            noise_scale (float, optional): x + torch.rand(x.shape) * noise_scale.
 
-        :param b_n_type: Number of bond types/channels
-        :param b_n_flow: Number of masked glow coupling layers per block for bond tensor
-        :param b_n_block: Number of glow blocks for bond tensor
-        :param b_n_squeeze:  Squeeze divisor, 3 for qm9, 2 for zinc250k
-        :param b_hidden_ch:Hidden channel list for bonds tensor, delimited list input
-        :param b_affine:Using affine coupling layers for bonds glow
-        :param b_conv_lu: Using L-U decomposition trick for 1-1 conv in bonds glow
-        :param a_n_node: Maximum number of atoms in a molecule
-        :param a_n_type: Number of atom types
-        :param a_hidden_gnn:Hidden dimension list for graph convolution for atoms matrix, delimited list input
-        :param a_hidden_lin:Hidden dimension list for linear transformation for atoms, delimited list input
-        :param a_n_flow:Number of masked flow coupling layers per block for atom matrix
-        :param a_n_block:Number of flow blocks for atom matrix
-        :param mask_row_size_list: Mask row list for atom matrix, delimited list input
-        :param mask_row_stride_list: Mask row stride  list for atom matrix, delimited list input
-        :param a_affine: Using affine coupling layers for atom conditional graph flow
-        :param path:
-        :param learn_dist: learn the distribution of feature matrix
-        :param noise_scale:
         """
         self.b_n_type = b_n_type
         self.b_n_flow = b_n_flow
@@ -144,15 +146,18 @@ def split_channel(x):
 
 
 def get_graph_data(x, num_nodes, num_relations, num_features):
-    """
-    Converts a vector of shape [b, num_nodes, m] to Adjacency matrix
+    """Converts a vector of shape [b, num_nodes, m] to Adjacency matrix
     of shape [b, num_relations, num_nodes, num_nodes]
     and a feature matrix of shape [b, num_nodes, num_features].
-    :param x:
-    :param num_nodes:
-    :param num_relations:
-    :param num_features:
-    :return:
+
+    Args:
+        x (paddle.Tensor): Adjacency.
+        num_nodes (int): nodes number.
+        num_relations (int): relations number.
+        num_features (int): features number.
+
+    Returns:
+        Tuple[paddle.Tensor, ...]: Adjacency and A feature matrix.
     """
     adj = x[:, : num_nodes * num_nodes * num_relations].reshape(
         [-1, num_relations, num_nodes, num_nodes]
@@ -183,12 +188,15 @@ def Tensor2Mol(A, x):
 
 
 def construct_mol(x, A, atomic_num_list):
-    """
+    """ 
 
-    :param x:  (9,5)
-    :param A:  (4,9,9)
-    :param atomic_num_list: [6,7,8,9,0]
-    :return:
+    Args:
+        x (paddle.Tensor): nodes.
+        A (paddle.Tensor): Adjacency.
+        atomic_num_list (list): atomic list number.
+    Returns:
+        rdkit mol object
+
     """
     mol = Chem.RWMol()
     atoms = np.argmax(x, axis=1)
@@ -218,12 +226,15 @@ def construct_mol(x, A, atomic_num_list):
 
 
 def construct_mol_with_validation(x, A, atomic_num_list):
-    """
+    """ 
+    Args:
+        x (paddle.Tensor): nodes.
+        A (paddle.Tensor): Adjacency.
+        atomic_num_list (list): atomic list number.
 
-    :param x:  (9,5)
-    :param A:  (4,9,9)
-    :param atomic_num_list: [6,7,8,9,0]
-    :return:
+    Returns:
+        rdkit mol object
+
     """
     mol = Chem.RWMol()
     atoms = np.argmax(x, axis=1)
@@ -274,8 +285,11 @@ def valid_mol_can_with_seg(x, largest_connected_comp=True):
 def check_valency(mol):
     """
     Checks that no atoms in the mol have exceeded their possible
-    valency
-    :return: True if no valency issues, False otherwise
+    valency.
+    Args:
+        mol (object): rdkit mol object.
+    Returns: 
+        True if no valency issues, False otherwise.
     """
     try:
         Chem.SanitizeMol(mol, sanitizeOps=Chem.SanitizeFlags.SANITIZE_PROPERTIES)
@@ -343,13 +357,17 @@ def check_validity(
     largest_connected_comp=True,
     debug=False,
 ):
-    """
+    """ 
 
-    :param adj:  (100,4,9,9)
-    :param x: (100.9,5)
-    :param atomic_num_list: [6,7,8,9,0]
-    :param return_unique:
-    :return:
+    Args:
+        adj (paddle.Tensor): Adjacency.
+        x (paddle.Tensor): nodes.
+        atomic_num_list (list): atomic list number.
+        return_unique (bool): if return unique
+        correct_validity (bool): if apply validity correction after the generation.
+        largest_connected_comp (bool): largest connected compare.
+        debug (bool): To run with more information.
+
     """
     adj = _to_numpy_array(adj)
     x = _to_numpy_array(x)
@@ -498,12 +516,15 @@ def calculateScore(m):
 
 
 def penalized_logp(mol):
-    """
-    Reward that consists of log p penalized by SA and # long cycles,
+    """Reward that consists of log p penalized by SA and # long cycles,
     as described in (Kusner et al. 2017). Scores are normalized based on the
-    statistics of 250k_rndm_zinc_drugs_clean.smi dataset
-    :param mol: rdkit mol object
-    :return: float
+    statistics of 250k_rndm_zinc_drugs_clean.smi dataset.
+
+    Args:
+        mol (object): rdkit mol object.
+
+    Returns:
+        float: Scores are normalized based on the statistics.
     """
     logP_mean = 2.4570953396190123
     logP_std = 1.434324401111988

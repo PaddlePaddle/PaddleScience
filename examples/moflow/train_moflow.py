@@ -28,12 +28,17 @@ from ppsci.utils import logger
 
 
 def infer(model, batch_size=20, temp=0.7, z_mu=None, true_adj=None):
-    """
+    """generate mols
+
     Args:
-    model: Moflow model
-    z_mu: latent vector of a molecule
-    batch_size:
-    true_adj:
+        model (object): Generated eval Moflownet model
+        batch_size (int, optional): Batch size during evaling per GPU. Defaults to 20.
+        temp (float, optional): temperature of the gaussian distribution. Defaults to 0.7.
+        z_mu (int, optional): latent vector of a molecule. Defaults to None.
+        true_adj (paddle.Tensor, optional): True Adjacency. Defaults to None.
+
+    Returns:
+        Tuple(paddle.Tensor, paddle.Tensor): Adjacency and nodes
     """
     z_dim = model.b_size + model.a_size
     mu = np.zeros(z_dim)

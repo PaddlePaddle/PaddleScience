@@ -130,13 +130,12 @@ class GraphAffineCoupling(nn.Layer):
             self.net_lin.append(GraphLinear(last_dim, in_dim * 2))
         else:
             self.net_lin.append(GraphLinear(last_dim, in_dim))
-        out_17 = paddle.create_parameter(
-            shape=paddle.zeros(shape=[1]).shape,
-            dtype=paddle.zeros(shape=[1]).numpy().dtype,
-            default_initializer=nn.initializer.Assign(paddle.zeros(shape=[1])),
-        )
-        out_17.stop_gradient = not True
-        self.scale = out_17
+        self.scale = paddle.create_parameter(
+            paddle.zeros(shape=[1]).shape, 
+            paddle.zeros(shape=[1]).numpy().dtype,
+            default_initializer=nn.initializer.Assign(paddle.zeros(
+            shape=[1])))
+            
         mask = paddle.ones(shape=[n_node, in_dim])
         mask[masked_row, :] = 0
         self.register_buffer(name="mask", tensor=mask)
@@ -312,11 +311,11 @@ class Block(nn.Layer):
         assert len(tuple(x.shape)) == 4
         b_size, n_channel, height, width = tuple(x.shape)
         fold = self.squeeze_fold
-        squeezed = x.view(
+        squeezed = x.reshape(
             [b_size, n_channel, height // fold, fold, width // fold, fold]
         )
         squeezed = squeezed.transpose(perm=[0, 1, 3, 5, 2, 4]).contiguous()
-        out = squeezed.view(
+        out = squeezed.reshape(
             [b_size, n_channel * fold * fold, height // fold, width // fold]
         )
         return out
@@ -325,11 +324,11 @@ class Block(nn.Layer):
         assert len(tuple(x.shape)) == 4
         b_size, n_channel, height, width = tuple(x.shape)
         fold = self.squeeze_fold
-        unsqueezed = x.view(
+        unsqueezed = x.reshape(
             [b_size, n_channel // (fold * fold), fold, fold, height, width]
         )
         unsqueezed = unsqueezed.transpose(perm=[0, 1, 4, 2, 5, 3]).contiguous()
-        out = unsqueezed.view(
+        out = unsqueezed.reshape(
             [b_size, n_channel // (fold * fold), height * fold, width * fold]
         )
         return out
