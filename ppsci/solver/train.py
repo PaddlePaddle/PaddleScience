@@ -37,6 +37,9 @@ def _compute_batch_size(
 ) -> int:
     """Compute batch size from given input dict.
 
+    NOTE: Returned `batch_size` might be inaccurate, but it won't affect the correctness
+    of the training results because `batch_size` is now only used for timing.
+
     Args:
         input_dict (Dict[str, Union[paddle.Tensor, Sequence[paddle.Tensor]]]): Given input dict.
 
@@ -46,8 +49,8 @@ def _compute_batch_size(
     sample = next(iter(input_dict.values()))
     if hasattr(sample, "shape"):
         return sample.shape[0]
-    elif isinstance(sample, (tuple, list)):
-        return sample[0].shape[0]
+    elif hasattr(sample, "__len__"):  # Might be inaccurate here.
+        return len(sample)
     else:
         raise ValueError("Unsupported type of input dict value.")
 
