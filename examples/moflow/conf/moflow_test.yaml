@@ -10,7 +10,7 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_moflow_optimize/${data_name}
+    dir: outputs_moflow_test/${data_name}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
