@@ -44,20 +44,20 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
 
 7. 安装 pre-commit[重要]
 
-PaddleScience 是一个开源的代码库，由多人共同参与开发，因此为了保持最终合入的代码风格整洁、一致，
-PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
-让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
+    PaddleScience 是一个开源的代码库，由多人共同参与开发，因此为了保持最终合入的代码风格整洁、一致，
+    PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
+    让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
 
-因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
+    因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
 
-``` sh
-pip install pre-commit
-pre-commit install
-```
+    ``` sh
+    pip install pre-commit
+    pre-commit install
+    ```
 
-如果已经将代码进行了 commit，则可以在安装上述 pre-commit 之后，手动执行 pre-commit 命令，对代码进行格式化：`pre-commit run --files 你提交的代码文件/文件夹`，然后手动 `git add` 被修改了的文件，再 `git commit` 即可。
+    如果已经将代码进行了 commit，则可以在安装上述 pre-commit 之后，手动执行 pre-commit 命令，对代码进行格式化：`pre-commit run --files 你提交的代码文件/文件夹`，然后手动 `git add` 被修改了的文件，再 `git commit` 即可。
 
-关于 pre-commit 的详情请参考 [Paddle 代码风格检查指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/dev_guides/git_guides/codestyle_check_guide_cn.html)
+    关于 pre-commit 的详情请参考 [Paddle 代码风格检查指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/dev_guides/git_guides/codestyle_check_guide_cn.html)
 
 ## 2. 编写代码
 
@@ -940,9 +940,21 @@ mkdocs serve
 ### 4.1 整理代码
 
 在完成范例编写与训练后，确认结果无误，就可以整理代码。
-使用 git 命令将所有新增、修改的代码文件以及必要的文档、图片等一并上传到自己仓库的 `dev_model` 分支上。
+使用 git 命令将所有新增、修改的代码文件以及必要的文档、图片等一并提交到本地 `dev_model` 分支上。
 
-### 4.2 提交 pull request
+### 4.2 同步上游代码
+
+在开发过程中，上游代码可能经过更新，因此需要执行以下命令，先将上游的最新代码拉取下来，合并到当前代码中，与上游最新代码进行同步。
+
+``` sh
+git remote add upstream https://github.com/PaddlePaddle/PaddleScience.git
+git fetch upstream upstream_develop
+git merge upstream_develop
+```
+
+如果出现 conflict，则需要解决冲突，再使用 `git add` 和 `git commit -m "merge code of upstream"` 命令将代码提交到本地仓库，最后执行 `git push origin dev_model`，将代码推送到你的远程仓库中。
+
+### 4.3 提交 pull request
 
 在 github 网页端切换到 `dev_model` 分支，并点击 "Contribute"，再点击 "Open pull request" 按钮，
 将含有您的代码、文档、图片等内容的 `dev_model` 分支作为合入请求贡献到 PaddleScience。
