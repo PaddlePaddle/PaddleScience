@@ -909,7 +909,18 @@ PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-
 
 ### 3.4 预览文档
 
-在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
+假设撰写好的文档位置为 `PaddleScience/docs/zh/examples/your_exmaple.md`，为了让其在 PaddleScience 官网 [经典案例](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/allen_cahn/) 左侧目录中展示，需要修改 `PaddleScience/mkdocs.yml`。将 `your_exmaple.md` 的相对路径仿照其他案例，添加到 `- 经典案例:` 下的列表中，如下高亮行所示。
+
+``` yaml hl_lines="23" title="PaddleScience/mkdocs.yml"
+...
+--8<--
+mkdocs.yml:38:58
+--8<--
+        - EXAMPLE_NAME: docs/zh/examples/your_exmaple.md
+...
+```
+
+然后在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
 
 ``` sh
 mkdocs serve
@@ -944,11 +955,11 @@ mkdocs serve
 
 ### 4.2 同步上游代码
 
-在开发过程中，上游代码可能经过更新，因此需要执行以下命令，先将上游的最新代码拉取下来，合并到当前代码中，与上游最新代码进行同步。
+在开发过程中，上游代码可能经过更新，因此需要执行以下命令，将上游的最新代码拉取下来，合并到当前代码中，与上游最新代码进行同步。
 
 ``` sh
 git remote add upstream https://github.com/PaddlePaddle/PaddleScience.git
-git fetch upstream upstream_develop
+git fetch upstream develop:upstream_develop
 git merge upstream_develop
 ```
 
