@@ -97,7 +97,7 @@ P_\mathcal{M}(M) = P_{\mathcal{M}}((A, B)) ≈ P_{\mathcal{A|B}}(A|B; θ_{\mathc
 \end{aligned}
 $$
 
-其中$P_{\mathcal{M}}$是分子图的分布，$P_\mathcal{B}$是键（边）的分布，类似于对多通道图像建模，而$ P_{\mathcal{A|B}}$是给定键的条件下的原子（节点）的条件分布，通过利用图卷积操作进行建模。$θ_\mathcal{B}$和$θ_{\mathcal{A|B}}$是可学习的建模参数。该模型的目标函数如下：
+其中$P_{\mathcal{M}}$是分子图的分布，$P_\mathcal{B}$是键（边）的分布，类似于对多通道图像建模，而$P_{\mathcal{A|B}}$是给定键的条件下的原子（节点）的条件分布，通过利用图卷积操作进行建模。$θ_\mathcal{B}$和$θ_{\mathcal{A|B}}$是可学习的建模参数。该模型的目标函数如下：
 
 $$
 \begin{aligned}
