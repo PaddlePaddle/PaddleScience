@@ -254,7 +254,7 @@ examples/moflow/conf/moflow_train.yaml:22:79
 
 ``` py linenums="181" title="examples/moflow/train_moflow.py"
 --8<--
-examples/moflow/train_moflow.py:181:184
+examples/moflow/train_moflow.py:181:183
 --8<--
 ```
 
@@ -304,9 +304,9 @@ examples/moflow/test_generate.py:368:529
 
 在模型完成训练后，进行分子优化和约束优化，训练一个额外的MLP模型，从潜空间到QED属性或者plogp属性，得到优化后的分子属性，并进行评估，受到与属性相似性的约束，代码如下：
 
-``` py linenums="473" title="examples/moflow/optimize_moflow.py"
+``` py linenums="470" title="examples/moflow/optimize_moflow.py"
 --8<--
-examples/moflow/optimize_moflow.py:473:289
+examples/moflow/optimize_moflow.py:470:586
 --8<--
 ```
 
