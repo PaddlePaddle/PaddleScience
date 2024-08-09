@@ -101,7 +101,7 @@ OPTIMIZE:
   max_epochs: 3
   learning_rate: 0.001
   weight_decay: 1e-2
-  hidden: 16 # Hidden dimension list for output regression
+  hidden: [16] # Hidden dimension list for output regression
   temperature: 1.0
   consopt: true
   sim_cutoff: 0.0
