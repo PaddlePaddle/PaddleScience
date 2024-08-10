@@ -1,24 +1,29 @@
-# IJACA_Code
-The paddle version of the top three in each track of the IJACA 2024 competition.
+# IJCAI_Code
+
+The paddle version of the top three in each track of the IJCAI 2024 competition.
 
 Inference codes only now.
 
 ## Dataset
+
 Please refer to the .ipynb files in each directory to download the data and set the corresponding parameters.
 
 ## Checkpoint
+
 Donwload checkpoints:
+
 ``` sh
-cd PaddleScience/jointContribution/IJACA_2024
+cd PaddleScience/jointContribution/IJCAI_2024
 # linux
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJCAI_2024_ckpts.tar.gz
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJACA_2024_ckpts.tar.gz
+# curl https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJCAI_2024_ckpts.tar.gz
 ```
 
 Unzip the checkpoints and move them to the corresponding directory:
+
 ``` sh
-tar -xvzf IJACA_2024_ckpts.tar.gz
+tar -xvzf IJCAI_2024_ckpts.tar.gz
 
 # aminos
 mkdir -p ./aminos/Logger/states/
@@ -40,17 +45,21 @@ mv ./ckpts/bju/pretrained_checkpoint.pdparams ./bju/pretrained_checkpoint.pdpara
 ```
 
 ## Inference
+
 First enter the corresponding directory. For example "aminos":
+
 ``` sh
 cd aminos
 ```
 
 Install requirements:
+
 ``` sh
 pip install -r requirements.txt
 ```
 
 Run Inference:
+
 ``` py
 ### aminos
 python infer.py --dataset_dir "./Datasets" --load_index="90"
