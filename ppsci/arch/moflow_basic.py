@@ -30,12 +30,12 @@ class ActNorm(nn.Layer):
         super().__init__()
         self.loc = self.create_parameter(
             [1, in_channel, 1, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=0.0),
+            default_initializer=nn.initializer.Constant(value=0.0),
         )
 
         self.scale = self.create_parameter(
             [1, in_channel, 1, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=1.0),
+            default_initializer=nn.initializer.Constant(value=1.0),
         )
 
         self.register_buffer(
@@ -86,12 +86,12 @@ class ActNorm2D(nn.Layer):
         super().__init__()
         self.loc = self.create_parameter(
             [1, in_dim, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=0.0),
+            default_initializer=nn.initializer.Constant(value=0.0),
         )
 
         self.scale = self.create_parameter(
             [1, in_dim, 1],
-            default_initializer=nn.initializer.ConstantInitializer(value=1.0),
+            default_initializer=nn.initializer.Constant(value=1.0),
         )
 
         self.register_buffer(
