@@ -161,7 +161,7 @@
 === "方式2: pip安装"
 
     ``` sh
-    pip install paddlesci
+    pip install -U paddlesci
     ```
 
 **完整安装流程**：[安装与使用](./zh/install_setup.md)

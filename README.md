@@ -171,13 +171,13 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - pip 安装
 
-        执行以下命令以 pip 的方式安装 nightly build / release 版本的 PaddleScience。
+        执行以下命令以 pip 的方式安装 release / nightly build 版本的 PaddleScience。
         <!-- --8<-- [start:pip_install] -->
         ``` shell
-        # nightly build
-        pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         # release
-        # pip install -U paddlesci
+        pip install -U paddlesci
+        # nightly build
+        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         ```
         <!-- --8<-- [end:pip_install] -->
 
