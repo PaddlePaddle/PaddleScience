@@ -55,7 +55,7 @@ from ppsci.utils import logger  # isort:skip
 
 from ppsci.arch.xg_optuna import MyPaddleScienceXGBoostModel
 from .xg_optuna import MyPaddleScienceXGBoostModel
-
+from .MLPModel import MLPModel
 
 __all__ = [
     "AFNONet",
@@ -97,7 +97,8 @@ __all__ = [
     "UNONet",
     "USCNN",
 
-    "MyPaddleScienceXGBoostModel"
+    "MyPaddleScienceXGBoostModel",
+    "MLPModel",
 
 ]
 
