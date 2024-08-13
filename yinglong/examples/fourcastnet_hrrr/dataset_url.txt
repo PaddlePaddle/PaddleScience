@@ -1,0 +1,12 @@
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2015.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2016.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2017.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2018.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2019.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2020.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2020.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2021.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/2022.tar
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/mean_crop.npy
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/std_crop.npy
+https://paddle-org.bj.bcebos.com/hrrr_h5_crop/time_mean_crop.npy

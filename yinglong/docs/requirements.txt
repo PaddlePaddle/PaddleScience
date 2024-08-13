@@ -1,0 +1,15 @@
+numpy
+sympy
+matplotlib
+scipy
+pyyaml
+Jinja2==3.0.3
+mkdocs-material
+mkdocs==1.4.2
+mkdocs-autorefs
+mkdocs-include-markdown-plugin
+mkdocs-material
+mkdocs-material-extensions
+mkdocstrings
+mkdocstrings-python
+mkdocs-glightbox
