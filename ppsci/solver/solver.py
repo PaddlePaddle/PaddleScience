@@ -69,7 +69,9 @@ class Solver:
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
         epochs (int, optional): Training epoch(s). Defaults to 5.
-        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. If set to -1,
+            than will be automatically set to the length of dataloader of given constraint.
+            Defaults to 20.
         update_freq (int, optional): Update frequency of parameters. Defaults to 1.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
         log_freq (int, optional): Logging frequency. Defaults to 10.
@@ -214,6 +216,18 @@ class Solver:
             self.eval_during_train = eval_during_train
             self.start_eval_epoch = start_eval_epoch
             self.eval_freq = eval_freq
+
+        if self.iters_per_epoch == -1 and self.constraint is not None:
+            if len(self.constraint) != 1:
+                raise NotImplementedError(
+                    f"Multiple({len(self.constraint)}) constraints are detected, "
+                    "which is not supported yet, when 'iters_per_epoch' is set to -1."
+                )
+            self.iters_per_epoch = len(next(iter(self.constraint.values())).data_loader)
+            logger.message(
+                "Detected 'iters_per_epoch' is set to -1, 'iters_per_epoch' is now "
+                f"reset to the length of dataloader({self.iters_per_epoch}) of given constraint."
+            )
 
         # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}

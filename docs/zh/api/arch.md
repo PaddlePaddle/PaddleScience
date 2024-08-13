@@ -25,6 +25,7 @@
         - ModifiedMLP
         - NowcastNet
         - SFNONet
+        - SPINN
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet

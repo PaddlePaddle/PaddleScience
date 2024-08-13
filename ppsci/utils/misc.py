@@ -638,7 +638,7 @@ def check_flag_enabled(flag_name: str) -> bool:
     """Check whether the flag is enabled.
 
     Args:
-        flag_name(str): Flag name to be checked whether enabled or disabled.
+        flag_name (str): Flag name to be checked whether enabled or disabled.
 
     Returns:
         bool: Whether given flag name is enabled in environment.

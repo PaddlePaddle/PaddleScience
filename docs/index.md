@@ -4,7 +4,10 @@
 ./README.md:status
 --8<--
 
-🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，欢迎报名参赛。
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码：
+
+- [paddle实现](../jointContribution/IJCAI_2024/README.md)
+- [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
 
 <style>
     .container {
@@ -72,7 +75,7 @@
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
-| 三维亥姆霍兹方程 | [SPINN(Helmholtz3D)](./zh/examples/spinn.md) | 机理驱动 | ModifiedMLP | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
+| 亥姆霍兹方程 | [SPINN(Helmholtz3D)](./zh/examples/spinn.md) | 机理驱动 | SPINN | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
 | 相场方程 | [Allen-Cahn](./zh/examples/allen_cahn.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](./zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](./zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
@@ -158,7 +161,7 @@
 === "方式2: pip安装"
 
     ``` sh
-    pip install paddlesci
+    pip install -U paddlesci
     ```
 
 **完整安装流程**：[安装与使用](./zh/install_setup.md)
@@ -173,7 +176,9 @@
 
 ## 🎈其他领域支持
 
-除 PaddleScience 套件外，Paddle 框架还支持了 DeepXDE 的所有案例，分子动力学套件 DeepMD-kit 部分案例和功能，以及正在适配中的 Modulus 。
+--8<--
+./README.md:adaptation
+--8<--
 
 <div class="container">
     <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
