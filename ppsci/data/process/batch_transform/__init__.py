@@ -118,7 +118,7 @@ def build_transforms(cfg):
     return transform.Compose(transform_list)
 
 
-def build_batch_transforms(cfg):
+def build_batch_transforms(cfg, collate_fn: Callable = default_collate_fn):
     cfg = copy.deepcopy(cfg)
     batch_transforms: Callable[[List[Any]], List[Any]] = build_transforms(cfg)
 
@@ -127,6 +127,6 @@ def build_batch_transforms(cfg):
         batch = batch_transforms(batch)
 
         # then collate separate samples into batched data
-        return default_collate_fn(batch)
+        return collate_fn(batch)
 
     return collate_fn_batch_transforms
