@@ -41,7 +41,7 @@ mv ./ckpts/bju/geom/ckpt ./bju/geom/
 mv ./ckpts/bju/pretrained_checkpoint.pdparams ./bju/pretrained_checkpoint.pdparams
 
 # zhongzaicanyu
-# No pretrained checkpoint yet.
+mv ./ckpts/zhongzaicanyu/pretrained_checkpoint.pdparams ./zhongzaicanyu/pretrained_checkpoint.pdparams
 ```
 
 ## Inference
