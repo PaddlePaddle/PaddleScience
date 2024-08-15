@@ -210,16 +210,16 @@ def _eval_by_batch(
         num_samples = _get_dataset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
+        metric = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
-            input_dict, label_dict, weight_dict = batch
+            input_dict, label_dict, weight_dict,input_time = batch
             reader_cost = time.perf_counter() - reader_tic
 
             batch_size = next(iter(input_dict.values())).shape[0]
             for v in input_dict.values():
-                if hasattr(v, "stop_gradient"):
-                    v.stop_gradient = False
+                v.stop_gradient = False
 
             # forward
             with solver.autocast_context_manager(
@@ -232,6 +232,7 @@ def _eval_by_batch(
                     _validator,
                     label_dict,
                     weight_dict,
+                    input_time,
                 )
 
             loss_dict[f"{_validator.name}/loss"] = float(
