@@ -1,0 +1,6 @@
+einops
+numpy
+paddlepaddle_gpu
+scikit_learn
+tqdm
+vtk
