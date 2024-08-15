@@ -14,40 +14,32 @@
 
 import copy
 
-from ppsci.loss import mtl
+from ppsci.loss.anomaly_coef_loss import ACCLoss
 from ppsci.loss.base import Loss
-from ppsci.loss.chamfer import ChamferLoss
-from ppsci.loss.func import FunctionalLoss
 from ppsci.loss.integral import IntegralLoss
-from ppsci.loss.kl import KLLoss
 from ppsci.loss.l1 import L1Loss
 from ppsci.loss.l1 import PeriodicL1Loss
 from ppsci.loss.l2 import L2Loss
 from ppsci.loss.l2 import L2RelLoss
 from ppsci.loss.l2 import PeriodicL2Loss
-from ppsci.loss.mae import MAELoss
-from ppsci.loss.mse import CausalMSELoss
 from ppsci.loss.mse import MSELoss
 from ppsci.loss.mse import MSELossWithL2Decay
 from ppsci.loss.mse import PeriodicMSELoss
+from ppsci.loss.multi_loss import MultiLoss
 
 __all__ = [
     "Loss",
-    "FunctionalLoss",
     "IntegralLoss",
     "L1Loss",
     "PeriodicL1Loss",
     "L2Loss",
     "L2RelLoss",
     "PeriodicL2Loss",
-    "MAELoss",
-    "CausalMSELoss",
-    "ChamferLoss",
     "MSELoss",
     "MSELossWithL2Decay",
     "PeriodicMSELoss",
-    "KLLoss",
-    "mtl",
+    "ACCLoss",
+    "MultiLoss",
 ]
 
 
@@ -55,8 +47,7 @@ def build_loss(cfg):
     """Build loss.
 
     Args:
-        cfg (DictConfig): Loss config.
-
+        cfg (AttrDict): Loss config.
     Returns:
         Loss: Callable loss object.
     """

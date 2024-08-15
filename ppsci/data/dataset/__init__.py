@@ -45,6 +45,8 @@ from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
+from ppsci.data.dataset.hrrr_dataset import HRRRDataset
+from ppsci.data.dataset.hrrr_dataset import HRRRDatasetMultiInput
 
 if TYPE_CHECKING:
     from paddle import io
@@ -79,6 +81,8 @@ __all__ = [
     "ExtMoEENSODataset",
     "SEVIRDataset",
     "build_dataset",
+    "HRRRDataset",
+    "HRRRDatasetMultiInput",
 ]
 
 
