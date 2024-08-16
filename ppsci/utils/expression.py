@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
@@ -22,19 +20,13 @@ from typing import Tuple
 
 from paddle import jit
 from paddle import nn
-from paddle.framework import core
 
 if TYPE_CHECKING:
     import paddle
     from ppsci import constraint
     from ppsci import validate
-    from ppsci import arch
 
 from ppsci.autodiff import clear
-
-__all__ = [
-    "ExpressionSolver",
-]
 
 
 class ExpressionSolver(nn.Layer):
@@ -47,14 +39,12 @@ class ExpressionSolver(nn.Layer):
         >>> expr_solver = ExpressionSolver()
     """
 
-    nvtx_flag: bool  # only for nsight analysis
-
     def __init__(self):
         super().__init__()
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError(
-            "Use train_forward/eval_forward/visu_forward instead of forward."
+            f"Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
     @jit.to_static
@@ -62,128 +52,118 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
         input_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-        model: arch.Arch,
+        model: nn.Layer,
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-    ) -> Tuple[Dict[str, "paddle.Tensor"], Dict[str, float]]:
+        input_time
+        
+    ) -> Tuple["paddle.Tensor", ...]:
         """Forward computation for training, including model forward and equation
         forward.
 
         Args:
             expr_dicts (Tuple[Dict[str, Callable], ...]): Tuple of expression dicts.
             input_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of input dicts.
-            model (arch.Arch): NN model.
+            model (nn.Layer): NN model.
             constraint (Dict[str, "constraint.Constraint"]): Constraint dict.
             label_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of label dicts.
             weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
 
         Returns:
-            Tuple[Dict[str, "paddle.Tensor"], Dict[str, float]]:
-                all_losses: A loss dictionary containing the output terms of all constraints,
-                constraint_losses: The loss values of all constraints.
+            Tuple[paddle.Tensor, ...]: Tuple of losses for each constraint.
         """
-        losses_all: Dict[str, "paddle.Tensor"] = {}
-        losses_constraint: Dict[str, float] = {}
-
-        for i, cst_name in enumerate(constraint):
-            cst_obj = constraint[cst_name]
-
+        output_dicts = []
+        for i, expr_dict in enumerate(expr_dicts):
             # model forward
-            if self.nvtx_flag:  # only for nsight analysis
-                core.nvprof_nvtx_push(f"Constraint {cst_name}")
-
-            output_dict = model(input_dicts[i])
+            if callable(next(iter(expr_dict.values()))):
+                output_dict = model(input_dicts[i],input_time)
 
             # equation forward
-            data_dict = {k: v for k, v in input_dicts[i].items()}
-            data_dict.update(output_dict)
-            for name, expr in expr_dicts[i].items():
-                output_dict[name] = expr(data_dict)
+            for name, expr in expr_dict.items():
+                if name not in label_dicts[i]:
+                    continue
+                if callable(expr):
+                    output_dict[name] = expr({**output_dict, **input_dicts[i]})
+                else:
+                    raise TypeError(f"expr type({type(expr)}) is invalid")
 
             # put field 'area' into output_dict
             if "area" in input_dicts[i]:
                 output_dict["area"] = input_dicts[i]["area"]
 
+            output_dicts.append(output_dict)
+
             # clear differentiation cache
             clear()
 
-            # compute loss for each constraint according to its' own output, label and weight
-            losses: Dict[str, "paddle.Tensor"] = cst_obj.loss(
-                output_dict,
+        # compute loss for each constraint according to its' own output, label and weight
+        constraint_losses = []
+        for i, _constraint in enumerate(constraint.values()):
+            constraint_loss = _constraint.loss(
+                output_dicts[i],
                 label_dicts[i],
                 weight_dicts[i],
             )
-            # update losses into 'losses_all' and 'losses_constraint'
-            # 'losses_all': Will be send to loss aggregator for further computing final loss(scalar)
-            # 'losses_constraint': Will be used in logging
-            losses_constraint[cst_name] = 0.0
-            for key in losses:
-                losses_constraint[cst_name] += losses[key].item()
-                if key in losses_all:
-                    losses_all[key] += losses[key]
-                else:
-                    losses_all[key] = losses[key]
-
-            if self.nvtx_flag:  # only for nsight analysis
-                core.nvprof_nvtx_pop()
-
-        return losses_all, losses_constraint
+            constraint_losses.append(constraint_loss)
+        return constraint_losses
 
     @jit.to_static
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: arch.Arch,
+        model: nn.Layer,
         validator: "validate.Validator",
         label_dict: Dict[str, "paddle.Tensor"],
         weight_dict: Dict[str, "paddle.Tensor"],
-    ) -> Tuple[Dict[str, "paddle.Tensor"], Dict[str, "paddle.Tensor"]]:
+        input_time
+  
+    ) -> Tuple[Dict[str, "paddle.Tensor"], "paddle.Tensor"]:
         """Forward computation for evaluation, including model forward and equation
         forward.
 
         Args:
             expr_dict (Dict[str, Callable]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (arch.Arch): NN model.
+            model (nn.Layer): NN model.
             validator (validate.Validator): Validator.
             label_dict (Dict[str, paddle.Tensor]): Label dict.
             weight_dict (Dict[str, paddle.Tensor]): Weight dict.
 
         Returns:
-            Tuple[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]]: Result dict and loss for
+            Tuple[Dict[str, paddle.Tensor], paddle.Tensor]: Result dict and loss for
                 given validator.
         """
         # model forward
-        output_dict = model(input_dict)
+        if callable(next(iter(expr_dict.values()))):
+            output_dict = model(input_dict,input_time)
 
         # equation forward
-        data_dict = {k: v for k, v in input_dict.items()}
-        data_dict.update(output_dict)
         for name, expr in expr_dict.items():
-            output_dict[name] = expr(data_dict)
-
-        # put field 'area' into output_dict
-        if "area" in input_dict:
-            output_dict["area"] = input_dict["area"]
+            if name not in label_dict:
+                continue
+            if callable(expr):
+                output_dict[name] = expr({**output_dict, **input_dict})
+            else:
+                raise TypeError(f"expr type({type(expr)}) is invalid")
 
         # clear differentiation cache
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_losses = validator.loss(
+        validator_loss = validator.loss(
             output_dict,
             label_dict,
             weight_dict,
         )
-        return output_dict, validator_losses
+        return output_dict, validator_loss
 
     def visu_forward(
         self,
         expr_dict: Optional[Dict[str, Callable]],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: arch.Arch,
+        model: nn.Layer,
     ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for visualization, including model forward and equation
         forward.
@@ -191,7 +171,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dict (Optional[Dict[str, Callable]]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (arch.Arch): NN model.
+            model (nn.Layer): NN model.
 
         Returns:
             Dict[str, paddle.Tensor]: Result dict for given expression dict.
@@ -201,12 +181,13 @@ class ExpressionSolver(nn.Layer):
 
         if isinstance(expr_dict, dict):
             # equation forward
-            data_dict = {k: v for k, v in input_dict.items()}
-            data_dict.update(output_dict)
             for name, expr in expr_dict.items():
-                output_dict[name] = expr(data_dict)
+                if callable(expr):
+                    output_dict[name] = expr({**output_dict, **input_dict})
+                else:
+                    raise TypeError(f"expr type({type(expr)}) is invalid")
 
-        # clear differentiation cache
-        clear()
+            # clear differentiation cache
+            clear()
 
         return output_dict

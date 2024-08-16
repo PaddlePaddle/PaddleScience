@@ -51,6 +51,18 @@ from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.model_list import ModelList  # isort:skip
+from ppsci.arch.afno import AFNONet  # isort:skip
+from ppsci.arch.afno import AFNOUNet  # isort:skip
+from ppsci.arch.afno import AFNOAttnNet  # isort:skip
+from ppsci.arch.afno import AFNOUNetWithAttn  # isort:skip
+from ppsci.arch.afno import AFNONetMultiInput  # isort:skip
+from ppsci.arch.afno import AFNOUNetMultiInput  # isort:skip
+from ppsci.arch.afno_attn_parallel import AFNOAttnParallelNet  # isort:skip
+from ppsci.arch.afno_attn_parallel import AFNOAttnParallelNetV2  # isort:skip
+from ppsci.arch.afno_attn_parallel import AFNOAttnParallelNetV3  # isort:skip
+from ppsci.arch.afno_attn_parallel import AFNOAttnParallelUNet  # isort:skip
+from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -83,6 +95,20 @@ __all__ = [
     "PhyCRNet",
     "PhysformerGPT2",
     "PirateNet",
+    "PhysformerGPT2",
+    "ModelList",
+    "AFNONet",
+    "AFNOUNet",
+    "AFNOAttnNet",
+    "AFNOUNetWithAttn",
+    "AFNONetMultiInput",
+    "AFNOUNetMultiInput",
+    "AFNOAttnParallelNet",
+    "AFNOAttnParallelNetV2",
+    "AFNOAttnParallelNetV3",
+    "AFNOAttnParallelUNet",
+    "PrecipNet",
+    "build_model",
     "PrecipNet",
     "RosslerEmbedding",
     "SFNONet",
@@ -93,6 +119,7 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
+    "convert_linear_layer_to_lora",
 ]
 
 
