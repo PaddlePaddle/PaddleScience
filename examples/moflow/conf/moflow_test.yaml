@@ -95,12 +95,12 @@ EVAL:
 
 EVAL_mode: Intergrid #select EVAL_mode: Reconstruct/Random/Inter2point/Intergrid
 
-Reconstruct:
+Reconstruct: #重建生成，针对不同数据集的分子进行重建生成
   batch_size: 256
   reconstruct: true
   n_experiments: 0
 
-Random:
+Random: #随机生成，针对不同的数据集从潜在空间进行随机生成，10000个样本生成5次
   batch_size: 10000
   temperature: 0.85
   delta: 0.05
@@ -108,7 +108,7 @@ Random:
   save_fig: false
   correct_validity: true
 
-Inter2point:
+Inter2point: #在潜在空间进行插值，两个分子之间插值可视化生成分子图
   batch_size: 1000
   int2point: true
   temperature: 0.65
@@ -116,7 +116,7 @@ Inter2point:
   correct_validity: true
   n_experiments: 0
 
-Intergrid:
+Intergrid: #在潜在空间进行插值，分子网格进行可视化生成分子图
   batch_size: 1000
   temperature: 0.65
   delta: 5
