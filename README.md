@@ -13,7 +13,10 @@
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/)
 
-🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，欢迎报名参赛。
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码：
+
+- [paddle实现](../jointContribution/IJCAI_2024/README.md)
+- [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
 
 <!-- --8<-- [start:description] -->
 ## 👀简介
@@ -168,13 +171,13 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - pip 安装
 
-        执行以下命令以 pip 的方式安装 nightly build / release 版本的 PaddleScience。
+        执行以下命令以 pip 的方式安装 release / nightly build 版本的 PaddleScience。
         <!-- --8<-- [start:pip_install] -->
         ``` shell
-        # nightly build
-        pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         # release
-        # pip install -U paddlesci
+        pip install -U paddlesci
+        # nightly build
+        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         ```
         <!-- --8<-- [end:pip_install] -->
 
