@@ -23,11 +23,7 @@ for line in open('D://resources//machine learning//paddle//2024-08//Est//smis.tx
 	smis.append(line.strip())
 vectors = []
 del_mol = []
-"""
-files = [int(os.path.splitext(i)[0]) for i in os.listdir('F://pypython_py//paddle//data//log//') if
-		 os.path.splitext(i)[-1] == '.log']
-files.sort()
-"""
+
 for num in smis:
 	mol = Chem.MolFromSmiles(num)
 	try:
