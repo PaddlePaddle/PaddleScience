@@ -26,11 +26,7 @@ for line in open('D://resources//machine learning//paddle//2024-08//angle//smis.
 	smis.append(line.strip())
 vectors = []
 del_mol = []
-"""
-files = [int(os.path.splitext(i)[0]) for i in os.listdir('F://pypython_py//paddle//data//log//') if
-		 os.path.splitext(i)[-1] == '.log']
-files.sort()
-"""
+
 for num in smis:
 	mol = Chem.MolFromSmiles(num)
 	try:
@@ -41,71 +37,20 @@ for num in smis:
 		del_mol.append(num)
 pca = PCA(n_components=0.99)
 pca.fit(vectors)
-# pca2 = PCA(n_components=2)
-# pca2.fit(vectors)
 Xlist = pca.transform(vectors)
-#Xlist = paddle.reshape(Xlist, shape=[:,2])
 print(np.array(Xlist).shape)
 
 
-class Mydataset(Dataset):
-
-    def __init__(self, x, y):
-        super().__init__()
-        self.x = x
-        self.y = y
-        self.src, self.trg = [], []
-        for i in range(len(self.x)):
-            self.src.append(self.x[i])
-            self.trg.append(self.y[i])
-
-    def __getitem__(self, index):
-        return self.src[index], self.trg[index]
-
-    def __len__(self):
-        return len(self.src)
-
-
-
-
-
-# def k_fold(k, i, X, Y):
-#     fold_size = tuple(X.shape)[0] // k
-#     val_start = i * fold_size
-#     if i != k - 1:
-#         val_end = (i + 1) * fold_size
-#         x_val, y_val = X[val_start:val_end], Y[val_start:val_end]
-#         # x_train = paddle.concat(x=(X[0:val_start], X[val_end:]), axis=0)
-#         # y_train = paddle.concat(x=(Y[0:val_start], Y[val_end:]), axis=0)
-#         x_train = np.concatenate((X[0:val_start], X[val_end:]), axis=0)
-#         y_train = np.concatenate((Y[0:val_start], Y[val_end:]), axis=0)
-#     else:
-#         x_val, y_val = X[val_start:], Y[val_start:]
-#         x_train = X[0:val_start]
-#         y_train = Y[0:val_start]
-#     return x_train, y_train, x_val, y_val
-# for i in range(9):
-# 	# model.initialize()
-# 	xtrain,ytrain,xtest,ytest=k_fold(9, i,Xlist , data)
-
 xtrain, xtest, ytrain, ytest = train_test_split(Xlist, data, test_size=0.1)
 x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtest[:, i],"float32"), axis=1) for i in range(xtest.shape[1])}
-# model = ppsci.arch.MLP(tuple(x.keys()), ("u",), 1, 256,
-# 					   "relu")
 model = ppsci.arch.DNN(tuple(x.keys()), ("u",), None, [587,256],
 					   "relu", dropout=0.5)
 optimizer = ppsci.optimizer.Adam(0.0001, beta1=(0.9, 0.99)[0], beta2=(0.9, 0.99)[1], weight_decay=1e-5)(model)
 ppsci.utils.save_load.load_checkpoint(r"D:\resources\machine learning\paddle\2024-08\angle\output\checkpoints\latest",model,optimizer)
-# xtest=paddle.to_tensor(xtest,dtype="float32")
-# x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtest[:, i]), axis=1) for i in range(xtest.shape[1])}
 ytest=paddle.unsqueeze(paddle.to_tensor(ytest,dtype="float32"),axis=1)
 
-# a=paddle.unsqueeze(xtest[:,0],axis=1)
-# b=paddle.unsqueeze(xtest[:,1],axis=1)
 ypred = model(x)
 ytest = {"u":ytest}
-#l2_err = np.linalg.norm(ypred - ytest, ord=2) / np.linalg.norm(ytest, ord=2)
-#loss = ppsci.metric.RMSE()
 loss=ppsci.metric.MAE()
 MAE = loss(ypred, ytest).get("u").numpy()
 loss = ppsci.metric.RMSE()

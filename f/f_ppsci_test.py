@@ -27,11 +27,7 @@ for line in open('D://resources//machine learning//paddle//2024-08//f//smis.txt'
 	smis.append(line.strip())
 vectors = []
 del_mol = []
-"""
-files = [int(os.path.splitext(i)[0]) for i in os.listdir('F://pypython_py//paddle//data//log//') if
-		 os.path.splitext(i)[-1] == '.log']
-files.sort()
-"""
+
 for num in smis:
 	mol = Chem.MolFromSmiles(num)
 	try:
@@ -42,8 +38,6 @@ for num in smis:
 		del_mol.append(num)
 pca = PCA(n_components=0.99)
 pca.fit(vectors)
-# pca = PCA(n_components=2)
-# pca.fit(vectors)
 Xlist = paddle.to_tensor(pca.transform(vectors))
 Xlist = pca.transform(vectors)
 f_05_index=[index for index,i in enumerate(data) if float(i) >= 0 ]
@@ -67,11 +61,7 @@ random.shuffle(index)
 xtrain = [xtrain[i] for i in index]
 ytrain = [ytrain[i] for i in index]
 xtrain, xtest, ytrain, ytest = train_test_split(Xlist, data, test_size=0.1, random_state=40)
-# xtrain=paddle.to_tensor(xtrain,dtype="float32")
-# ytrain=paddle.to_tensor(ytrain,dtype="float32")
-# x=paddle.unsqueeze(xtrain[:,0],axis=1)
-# y=paddle.unsqueeze(xtrain[:,1],axis=1)
-# u=paddle.unsqueeze(ytrain,axis=1)
+
 
 
 xtrain=paddle.to_tensor(xtrain,dtype="float32")
@@ -79,9 +69,7 @@ x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtrain[:, i]), axis=1
 ytrain=paddle.to_tensor(ytrain,dtype="float32")
 ytrain=paddle.unsqueeze(ytrain,axis=1)
 
-#x=paddle.unsqueeze(x,axis=1)
-#y=paddle.unsqueeze(xtrain[:,1],axis=1)
-#u=paddle.unsqueeze(ytrain,axis=1)
+
 
 param = paddle.empty((len(x["key_0"]), len(x)), "float32")
 param = ppsci.utils.initializer.xavier_normal_(param)
@@ -105,12 +93,10 @@ optimizer = ppsci.optimizer.optimizer.Adam(0.0001, beta1=(0.9, 0.99)[0], beta2=(
 ppsci.utils.save_load.load_checkpoint(r"D:\resources\machine learning\paddle\2024-08\f\output\checkpoints\latest",model,optimizer)
 ytest=paddle.unsqueeze(paddle.to_tensor(ytest,dtype="float32"),axis=1)
 x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtest[:, i],"float32"), axis=1) for i in range(xtest.shape[1])}
-# a=paddle.unsqueeze(xtest[:,0],axis=1)
-# b=paddle.unsqueeze(xtest[:,1],axis=1)
+
 ypred = model(x)
 ytest = {"u":ytest}
-#l2_err = np.linalg.norm(ypred - ytest, ord=2) / np.linalg.norm(ytest, ord=2)
-#loss = ppsci.metric.RMSE()
+
 loss=ppsci.metric.MAE()
 MAE = loss(ypred, ytest).get("u").numpy()
 loss = ppsci.metric.RMSE()
