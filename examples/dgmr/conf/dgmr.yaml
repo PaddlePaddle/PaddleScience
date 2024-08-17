@@ -1,0 +1,59 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_dgmr/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+
+# dataset settings
+DATASET:
+  input_keys: ['input_frames']
+  label_keys: ['target_frames']
+  split: validation # train or validation
+  num_input_frames: 4
+  num_target_frames: 18
+  dataset_path: openclimatefix/nimrod-uk-1km
+
+# model settings
+MODEL:
+  input_keys: ['input_frames']
+  output_keys: ['future_images']
+  forecast_steps: 18
+  input_channels: 1
+  output_shape: 256
+  gen_lr: 5e-05
+  disc_lr: 0.0002
+  conv_type: 'standard'
+  num_samples: 6
+  grid_lambda: 20.0
+  beta1: 0.0
+  beta2: 0.999
+  latent_channels: 768
+  context_channels: 384
+  generation_steps: 6
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams

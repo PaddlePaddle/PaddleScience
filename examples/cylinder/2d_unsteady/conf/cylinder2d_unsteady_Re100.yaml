@@ -1,0 +1,90 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_cylinder2d_unsteady/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# set constraint data path
+DOMAIN_TRAIN_PATH: ./datasets/domain_train.csv
+DOMAIN_INLET_CYLINDER_PATH: ./datasets/domain_inlet_cylinder.csv
+DOMAIN_OUTLET_PATH: ./datasets/domain_outlet.csv
+IC0_1_PATH: ./datasets/initial/ic0.1.csv
+PROBE1_50_PATH: ./datasets/probe/probe1_50.csv
+
+# set validator data path
+DOMAIN_EVAL_PATH: ./datasets/domain_eval.csv
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set working condition
+VISCOSITY: 0.02
+DENSITY: 1.0
+
+# timestamps
+TIME_START: 1
+TIME_END: 50
+NUM_TIMESTAMPS: 50
+TRAIN_NUM_TIMESTAMPS: 30
+
+NPOINT_PDE: 9420
+NPOINT_INLET_CYLINDER: 161
+NPOINT_OUTLET: 81
+
+# model settings
+MODEL:
+  input_keys: ["t", "x", "y"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 5
+  hidden_size: 50
+  activation: "tanh"
+
+# training settings
+TRAIN:
+  iters_per_epoch: 1
+  epochs: 40000
+  eval_freq: 400
+  learning_rate: 0.001
+  eval_during_train: true
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 10240
+  pretrained_model_path: null
+
+# inference settings
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrained.pdparams
+  export_path: ./inference/cylinder2d_unsteady_Re100
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 10240
+  num_cpu_threads: 10
+  batch_size: 10240

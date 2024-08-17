@@ -1,0 +1,153 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_earthformer_pretrain
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval/export/infer
+seed: 0
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set train and evaluate data path
+FILE_PATH: ./datasets/enso/enso_round1_train_20210201
+
+# dataset setting
+DATASET:
+  label_keys: ["sst_target","nino_target"]
+  in_len: 12
+  out_len: 14
+  nino_window_t: 3
+  in_stride: 1
+  out_stride: 1
+  train_samples_gap: 2
+  eval_samples_gap: 1
+  normalize_sst: true
+
+# model settings
+MODEL:
+  input_keys: ["sst_data"]
+  output_keys: ["sst_target","nino_target"]
+  input_shape: [12, 24, 48, 1]
+  target_shape: [14, 24, 48, 1]
+  base_units: 64
+  scale_alpha: 1.0
+
+  enc_depth: [1, 1]
+  dec_depth: [1, 1]
+  enc_use_inter_ffn: true
+  dec_use_inter_ffn: true
+  dec_hierarchical_pos_embed: false
+
+  downsample: 2
+  downsample_type: "patch_merge"
+  upsample_type: "upsample"
+
+  num_global_vectors: 0
+  use_dec_self_global: false
+  dec_self_update_global: true
+  use_dec_cross_global: false
+  use_global_vector_ffn: false
+  use_global_self_attn: false
+  separate_global_qkv: false
+  global_dim_ratio: 1
+
+  self_pattern: "axial"
+  cross_self_pattern: "axial"
+  cross_pattern: "cross_1x1"
+  dec_cross_last_n_frames: null
+
+  attn_drop: 0.1
+  proj_drop: 0.1
+  ffn_drop: 0.1
+  num_heads: 4
+
+  ffn_activation: "gelu"
+  gated_ffn: false
+  norm_layer: "layer_norm"
+  padding_type: "zeros"
+  pos_embed_type: "t+h+w"
+  use_relative_pos: true
+  self_attn_use_final_proj: true
+  dec_use_first_self_attn: false
+
+  z_init_method: "zeros"
+  initial_downsample_type: "conv"
+  initial_downsample_activation: "leaky_relu"
+  initial_downsample_scale: [1, 1, 2]
+  initial_downsample_conv_layers: 2
+  final_upsample_conv_layers: 1
+  checkpoint_level: 2
+
+  attn_linear_init_mode: "0"
+  ffn_linear_init_mode: "0"
+  conv_init_mode: "0"
+  down_up_linear_init_mode: "0"
+  norm_init_mode: "0"
+
+
+# training settings
+TRAIN:
+  epochs: 100
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 10
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 0.0002
+    by_epoch: true
+  min_lr_ratio: 1.0e-3
+  wd: 1.0e-5
+  batch_size: 16
+  pretrained_model_path: null
+  checkpoint_path: null
+
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
+  compute_metric_by_batch: false
+  eval_with_no_grad: true
+  batch_size: 1
+
+INFER:
+  pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
+  export_path: ./inference/earthformer/enso
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 16
+  num_cpu_threads: 4
+  batch_size: 1
+  data_path: ./datasets/enso/infer/SODA_train.nc
+  in_len: 12
+  in_stride: 1
+  out_len: 14
+  out_stride: 1
+  samples_gap: 1

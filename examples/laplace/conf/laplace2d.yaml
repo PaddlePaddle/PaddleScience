@@ -1,0 +1,73 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: output_laplace2d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2024
+log_freq: 20
+output_dir: ${hydra:run.dir}
+NPOINT_INTERIOR: 9801
+NPOINT_BC: 400
+
+# set geometry
+DIAGONAL_COORD:
+  xmin: [0.0, 0.0]
+  xmax: [1.0, 1.0]
+
+# model settings
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["u"]
+  num_layers: 5
+  hidden_size: 20
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 200
+  learning_rate: 0.001
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams
+  export_path: ./inference/laplace2d
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 64
+  num_cpu_threads: 4
+  batch_size: 64

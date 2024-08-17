@@ -1,0 +1,185 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_earthformer_pretrain
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval/export/infer
+seed: 0
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set train and evaluate data path
+FILE_PATH: ./datasets/sevir/sevir_data
+
+# SEVIR dataset:raw_seq_len: 49,interval_real_time:5, img_height = 384,img_width = 384
+# SEVIR_lr dataset:raw_seq_len: 25,interval_real_time:10, img_height = 128,img_width = 128
+
+# dataset setting
+DATASET:
+  label_keys: ["vil"]
+  data_types: ["vil"]
+  seq_len: 25
+  raw_seq_len: 49
+  sample_mode: "sequent"
+  stride: 12
+  batch_size: 2
+  layout: "NTHWC"
+  in_len: 13
+  out_len: 12
+  split_mode: "uneven"
+
+  shuffle_seed: 1
+  rescale_method: "01"
+  downsample_dict: null
+  verbose: false
+  preprocess: true
+
+# model settings
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["vil"]
+  input_shape: [13, 384, 384, 1]
+  target_shape: [12, 384, 384, 1]
+  base_units: 128
+  scale_alpha: 1.0
+
+  enc_depth: [1, 1]
+  dec_depth: [1, 1]
+  enc_use_inter_ffn: true
+  dec_use_inter_ffn: true
+  dec_hierarchical_pos_embed: false
+
+  downsample: 2
+  downsample_type: "patch_merge"
+  upsample_type: "upsample"
+
+  num_global_vectors: 8
+  use_dec_self_global: false
+  dec_self_update_global: true
+  use_dec_cross_global: false
+  use_global_vector_ffn: false
+  use_global_self_attn: true
+  separate_global_qkv: true
+  global_dim_ratio: 1
+
+  self_pattern: "axial"
+  cross_self_pattern: "axial"
+  cross_pattern: "cross_1x1"
+  dec_cross_last_n_frames: null
+
+  attn_drop: 0.1
+  proj_drop: 0.1
+  ffn_drop: 0.1
+  num_heads: 4
+
+  ffn_activation: "gelu"
+  gated_ffn: false
+  norm_layer: "layer_norm"
+  padding_type: "zeros"
+  pos_embed_type: "t+h+w"
+  use_relative_pos: true
+  self_attn_use_final_proj: true
+  dec_use_first_self_attn: false
+
+  z_init_method: "zeros"
+  initial_downsample_type: "stack_conv"
+  initial_downsample_activation: "leaky_relu"
+  initial_downsample_stack_conv_num_layers: 3
+  initial_downsample_stack_conv_dim_list: [16, 64, 128]
+  initial_downsample_stack_conv_downscale_list: [3, 2, 2]
+  initial_downsample_stack_conv_num_conv_list: [2, 2, 2]
+  checkpoint_level: 2
+
+  attn_linear_init_mode: "0"
+  ffn_linear_init_mode: "0"
+  conv_init_mode: "0"
+  down_up_linear_init_mode: "0"
+  norm_init_mode: "0"
+
+
+# training settings
+TRAIN:
+  epochs: 100
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 10
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 0.001
+    by_epoch: true
+  min_lr_ratio: 1.0e-3
+  wd: 0.0
+  batch_size: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+  start_date: null
+  end_date: [2019, 1, 1]
+
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
+  compute_metric_by_batch: false
+  eval_with_no_grad: true
+  batch_size: 1
+  end_date: [2019, 6, 1]
+
+  metrics_mode: "0"
+  metrics_list: ["csi", "pod", "sucr", "bias"]
+  threshold_list: [16, 74, 133, 160, 181, 219]
+
+
+TEST:
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
+  compute_metric_by_batch: true
+  eval_with_no_grad: true
+  batch_size: 1
+  start_date: [2019, 6, 1]
+  end_date: null
+
+INFER:
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
+  export_path: ./inference/earthformer/sevir
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 16
+  num_cpu_threads: 4
+  batch_size: 1
+  data_path: ./datasets/sevir/vil/2019/SEVIR_VIL_STORMEVENTS_2019_0701_1231.h5
+  in_len: 13
+  out_len: 12
+  sevir_vis_save: ./inference/earthformer/sevir/vis
+  layout: "NTHWC"
+  plot_stride: 2
+  logging_prefix: "Cuboid_SEVIR"
+  interval_real_time: 5
+  data_type: "vil"
+  rescale_method: "01"

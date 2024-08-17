@@ -1,0 +1,97 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_allen_cahn_default/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+use_tbd: true
+
+DATA_PATH: ./dataset/allen_cahn.mat
+
+# model settings
+MODEL:
+  input_keys: [t, x]
+  output_keys: [u]
+  num_layers: 4
+  hidden_size: 256
+  activation: tanh
+  periods:
+    x: [2.0, false]
+  fourier:
+    dim: 256
+    scale: 1.0
+  random_weight:
+    mean: 0.5
+    std: 0.1
+
+# training settings
+TRAIN:
+  epochs: 200
+  iters_per_epoch: 1000
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 2000
+    by_epoch: false
+  batch_size: 4096
+  pretrained_model_path: null
+  checkpoint_path: null
+  causal:
+    n_chunks: 32
+    tol: 1.0
+  grad_norm:
+    update_freq: 1000
+    momentum: 0.9
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size: 4096
+
+# inference settings
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_plain_pretrained.pdparams
+  export_path: ./inference/allen_cahn
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 1024

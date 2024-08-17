@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paddlesci"
+dynamic = ["version", "dependencies"]
+description = "A library for scientific machine learning"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "PaddlePaddle" }]
+requires-python = ">=3.8"
+keywords = [
+    "Machine learning",
+    "Deep learning",
+    "Differential equations",
+    "AI4Science",
+    "Physics-informed neural networks",
+    "PaddlePaddle",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.urls]
+Homepage = "https://github.com/PaddlePaddle/PaddleScience"
+"Bug Tracker" = "https://github.com/PaddlePaddle/PaddleScience/issues"
+Changelog = "https://github.com/PaddlePaddle/PaddleScience/releases"
+Documentation = "https://paddlescience-docs.readthedocs.io/zh/latest/"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = [
+    "docs*",
+    "examples*",
+    "jointContribution*",
+    "test_tipc*",
+    "test*",
+    "tools*",
+]
+
+[tool.ruff]
+line-length = 88
+ignore = ["E501", "E741", "E731"]
+extend-exclude = [
+    "./ppsci/geometry/inflation.py",
+    "./ppsci/autodiff/__init__.py",
+]
+
+[tool.setuptools_scm]
+version_file = "ppsci/_version.py"
+tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
+fallback_version = "0.0.0"
+version_scheme = "post-release"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.isort]
+profile = "black"

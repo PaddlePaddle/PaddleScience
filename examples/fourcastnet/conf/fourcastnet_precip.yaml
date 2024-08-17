@@ -1,0 +1,87 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_fourcastnet_precip/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 1024
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set training hyper-parameters
+IMG_H: 720
+IMG_W: 1440
+# FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
+# The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
+# 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
+# You can obtain detailed information about each variable from
+# https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
+VARS_CHANNEL: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+# set train data path
+WIND_TRAIN_FILE_PATH: ./datasets/era5/train
+WIND_MEAN_PATH: ./datasets/era5/stat/global_means.npy
+WIND_STD_PATH: ./datasets/era5/stat/global_stds.npy
+WIND_TIME_MEAN_PATH: ./datasets/era5/stat/time_means.npy
+
+TRAIN_FILE_PATH: ./datasets/era5/precip/train
+TIME_MEAN_PATH: ./datasets/era5/stat/precip/time_means.npy
+
+# set evaluate data path
+WIND_VALID_FILE_PATH: ./datasets/era5/test
+VALID_FILE_PATH: ./datasets/era5/precip/test
+
+# set test data path
+WIND_TEST_FILE_PATH: ./datasets/era5/out_of_sample/2018.h5
+TEST_FILE_PATH: ./datasets/era5/precip/out_of_sample/2018.h5
+
+# set wind model path
+WIND_MODEL_PATH: outputs_fourcastnet_finetune/checkpoints/latest
+
+# model settings
+MODEL:
+  afno:
+    input_keys: ["input"]
+    output_keys: ["output"]
+  precip:
+    input_keys: ["input"]
+    output_keys: ["output"]
+
+# training settings
+TRAIN:
+  epochs: 25
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 20
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 2.5e-4
+    by_epoch: true
+  batch_size: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  num_timestamps: 6
+  pretrained_model_path: null
+  compute_metric_by_batch: true
+  eval_with_no_grad: true
+  batch_size: 1
