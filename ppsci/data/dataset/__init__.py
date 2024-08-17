@@ -46,7 +46,7 @@ from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
-from ppsci.data.dataset.perovskite_dataset import PerovskiteDataset
+
 
 
 

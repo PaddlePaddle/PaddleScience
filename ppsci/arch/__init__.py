@@ -53,9 +53,7 @@ from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
-from ppsci.arch.xg_optuna import MyPaddleScienceXGBoostModel
-from .xg_optuna import MyPaddleScienceXGBoostModel
-from .MLPModel import MLPModel
+
 
 __all__ = [
     "AFNONet",
@@ -96,9 +94,6 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
-
-    "MyPaddleScienceXGBoostModel",
-    "MLPModel",
 
 ]
 
