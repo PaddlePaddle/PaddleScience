@@ -1,0 +1,52 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_poisson_1d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+
+# set working condition
+NPOINT_PDE: 15
+NPOINT_PDE_EVAL: 100
+
+# model settings
+MODEL:
+  input_keys: ["x"]
+  output_keys: ["u"]
+  num_layers: 3
+  hidden_size: 20
+  activation: "tanh"
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_freq: 1000
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size:
+    l2rel_validator: ${NPOINT_PDE_EVAL}
+  pretrained_model_path: null

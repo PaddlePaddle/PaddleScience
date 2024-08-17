@@ -1,0 +1,88 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_ldc_2d_Re1000_plain/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+use_tbd: false
+
+# working conditions
+Re: [100, 400, 1000]
+epochs: [20, 40, 140]
+EVAL_DATA_PATH: ./data/ldc_Re1000.mat
+
+# model settings
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 4
+  hidden_size: 256
+  activation: tanh
+
+# training settings
+TRAIN:
+  epochs: 20
+  iters_per_epoch: 1000
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 1
+  lr_scheduler:
+    epochs: ${sum:${epochs}}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 2000
+    by_epoch: false
+  batch_size:
+    pde: 1024
+    bc: 256
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size: 4096
+
+# inference settings
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/ldc_2d_re3200
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 1024

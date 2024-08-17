@@ -1,0 +1,17 @@
+Jinja2~=3.1
+matplotlib
+mike
+mkdocs
+mkdocs-autorefs
+mkdocs-git-revision-date-localized-plugin
+mkdocs-glightbox
+mkdocs-include-markdown-plugin
+mkdocs-material
+mkdocs-material-extensions
+mkdocs-video
+mkdocstrings
+mkdocstrings-python
+numpy<=1.23.1
+pyyaml
+scipy
+sympy

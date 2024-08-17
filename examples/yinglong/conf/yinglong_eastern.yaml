@@ -1,0 +1,56 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    # dir: outputs_yinglong/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: ./outputs_yinglong_eastern
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: infer # running mode: infer
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# inference settings
+INFER:
+  pretrained_model_path: null
+  export_path: inference/yinglong_eastern
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: false
+  min_subgraph_size: 30
+  gpu_mem: 100
+  gpu_id: 3
+  max_batch_size: 1
+  num_cpu_threads: 10
+  batch_size: 1
+  mean_path: ./eastern_valid_data/stat/mean_crop.npy
+  std_path: ./eastern_valid_data/stat/std_crop.npy
+  input_file: [./eastern_valid_data/valid/2022/01/01.h5, ./eastern_valid_data/valid/2022/01/02.h5, ./eastern_valid_data/valid/2022/01/03.h5]
+  init_time: 2022/01/01/00
+  nwp_file: [./eastern_valid_data/hrrr_nwp_h5/2022/01/01.h5, ./eastern_valid_data/hrrr_nwp_h5/2022/01/02.h5, ./eastern_valid_data/hrrr_nwp_h5/2022/01/03.h5]
+  geo_file: ./eastern_valid_data/geo.h5
+  num_timestamps: 48

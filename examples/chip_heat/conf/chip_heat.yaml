@@ -1,0 +1,79 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_chip_heat/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set working condition
+DL: 1.0  # lenth of the domain
+DW: 1.0  # width of the domain
+NL: 20  # number of length
+NW: 20  # number of width
+NU: 500 # number of heat source
+NBC: 500 # number of BC
+
+# gaussian random field settings
+GRF:
+  alpha: 4.0
+  flag_normalize: true
+
+# model settings
+MODEL:
+  branch_input_keys: ['u']
+  BCtype_input_keys: ['bc']
+  BC_input_keys: ['bc_data']
+  trunk_input_keys: ["x", "y"]
+  output_keys: ["T"]
+  num_loc: 324 # 18*18
+  bctype_loc: 1
+  BC_num_loc: 76
+  num_features: 400
+  branch_num_layers: 9
+  BC_num_layers: 9
+  trunk_num_layers: 6
+  branch_hidden_size: 256
+  BC_hidden_size: 256
+  trunk_hidden_size: 128
+  branch_activation: "swish"
+  BC_activation: "swish"
+  trunk_activation: "swish"
+  use_bias: true
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 1000
+  learning_rate: 0.001
+  batch_size: 1000
+  weight: 500
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  bc_type: 0 # 0: Dirichlet, 1: Neumann, 2: convection，3: heat radiation

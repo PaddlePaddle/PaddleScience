@@ -1,0 +1,67 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_graphcast_small/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+seed: 2024
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+DATA:
+  data_path: "data/dataset/source-era5_date-2022-01-01_res-1.0_levels-13_steps-01.nc"
+  mean_path: "data/stats/mean_by_level.nc"
+  stddev_diffs_path: "data/stats/diffs_stddev_by_level.nc"
+  stddev_path: "data/stats/stddev_by_level.nc"
+  type: "graphcast_small"
+  mesh_size: 5
+  mesh2grid_edge_normalization_factor: 0.6180338738074472
+  radius_query_fraction_edge_length: 0.6
+  resolution: 1.0
+
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["pred"]
+  grid_node_dim: 186
+  grid_node_num: 65160
+  grid_node_emb_dim: 512
+  mesh_node_dim: 186
+  mesh_node_num: 10242
+  mesh_edge_dim: 4
+  mesh_node_emb_dim: 512
+  mesh_edge_emb_dim: 512
+  mesh2grid_edge_dim: 4
+  mesh2grid_edge_emb_dim: 512
+  grid2mesh_edge_dim: 4
+  grid2mesh_edge_emb_dim: 512
+  gnn_msg_steps: 16
+  node_output_dim: 83
+
+TRAIN:
+  epochs: 1
+
+EVAL:
+  batch_size: 1
+  pretrained_model_path: null
+  eval_with_no_grad: true
