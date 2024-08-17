@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-version https://git-lfs.github.com/spec/v1
-oid sha256:7469d94c41fe78478147424b8b61e44681540f3123e1b6a62d14ede3dca82b08
-size 36663
-=======
 params:grid2mesh_gnn/~_networks_builder/encoder_edges_grid2mesh_layer_norm:offset,graphcast.encoder.embedding.grid2mesh_edge_embedding.layer_norm.bias
 params:grid2mesh_gnn/~_networks_builder/encoder_edges_grid2mesh_layer_norm:scale,graphcast.encoder.embedding.grid2mesh_edge_embedding.layer_norm.weight
 params:grid2mesh_gnn/~_networks_builder/encoder_edges_grid2mesh_mlp/~/linear_0:b,graphcast.encoder.embedding.grid2mesh_edge_embedding.mlp.0.bias
@@ -265,4 +260,3 @@ params:mesh_gnn/~_networks_builder/processor_nodes_15_mesh_nodes_mlp/~/linear_0:
 params:mesh_gnn/~_networks_builder/processor_nodes_15_mesh_nodes_mlp/~/linear_0:w,graphcast.processor.processor.15.node_layer.mlp.0.weight
 params:mesh_gnn/~_networks_builder/processor_nodes_15_mesh_nodes_mlp/~/linear_1:b,graphcast.processor.processor.15.node_layer.mlp.2.bias
 params:mesh_gnn/~_networks_builder/processor_nodes_15_mesh_nodes_mlp/~/linear_1:w,graphcast.processor.processor.15.node_layer.mlp.2.weight
->>>>>>> upstream/develop
