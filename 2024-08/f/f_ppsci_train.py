@@ -41,8 +41,7 @@ for num in smis:
 		del_mol.append(num)
 pca = PCA(n_components=0.99)
 pca.fit(vectors)
-# pca = PCA(n_components=2)
-# pca.fit(vectors)
+
 Xlist = paddle.to_tensor(pca.transform(vectors))
 Xlist = pca.transform(vectors)
 f_05_index=[index for index,i in enumerate(data) if float(i) >= 0 ]
@@ -65,12 +64,7 @@ index = [i for i in range(len(xtrain))]
 random.shuffle(index)
 xtrain = [xtrain[i] for i in index]
 ytrain = [ytrain[i] for i in index]
-# xtrain, xtest, ytrain, ytest = train_test_split(Xlist, data, test_size=0.1, random_state=40)
-# xtrain=paddle.to_tensor(xtrain,dtype="float32")
-# ytrain=paddle.to_tensor(ytrain,dtype="float32")
-# x=paddle.unsqueeze(xtrain[:,0],axis=1)
-# y=paddle.unsqueeze(xtrain[:,1],axis=1)
-# u=paddle.unsqueeze(ytrain,axis=1)
+
 
 def k_fold(k, i, X, Y):
     fold_size = tuple(X.shape)[0] // k
@@ -78,8 +72,6 @@ def k_fold(k, i, X, Y):
     if i != k - 1:
         val_end = (i + 1) * fold_size
         x_val, y_val = X[val_start:val_end], Y[val_start:val_end]
-        # x_train = paddle.concat(x=(X[0:val_start], X[val_end:]), axis=0)
-        # y_train = paddle.concat(x=(Y[0:val_start], Y[val_end:]), axis=0)
         x_train = np.concatenate((X[0:val_start], X[val_end:]), axis=0)
         y_train = np.concatenate((Y[0:val_start], Y[val_end:]), axis=0)
     else:
@@ -97,9 +89,6 @@ x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtrain[:, i]), axis=1
 ytrain=paddle.to_tensor(ytrain,dtype="float32")
 ytrain=paddle.unsqueeze(ytrain,axis=1)
 
-#x=paddle.unsqueeze(x,axis=1)
-#y=paddle.unsqueeze(xtrain[:,1],axis=1)
-#u=paddle.unsqueeze(ytrain,axis=1)
 
 param = paddle.empty((len(x["key_0"]), len(x)), "float32")
 param = ppsci.utils.initializer.xavier_normal_(param)
@@ -120,25 +109,7 @@ constraint = { "bc_sup": bc_sup,}
 model = ppsci.arch.DNN(tuple(x.keys()), ("u",), None, [587,256],
 					   "relu", dropout=0.5)
 optimizer = ppsci.optimizer.optimizer.Adam(0.0001, beta1=(0.9, 0.99)[0], beta2=(0.9, 0.99)[1], weight_decay=1e-5)(model)
-#optimizer = ppsci.optimizer.optimizer.Adam(0.0001)(model)
-# xtest=paddle.to_tensor(xtest,dtype="float32")
-# ytest=paddle.to_tensor(ytest,dtype="float32")
-# a=paddle.unsqueeze(xtest[:,0],axis=1)
-# b=paddle.unsqueeze(xtest[:,1],axis=1)
-# bc_validator = ppsci.validate.Validator(
-# 	{
-# 		"dataset":{
-# 			"input":{"a":a, "b":b},
-#             "label":{"u":ytest},
-# 			"name":"IterableNameArrayDataset",},
-# 	},
-# 	dataloader_cfg={"batchsize":2},
-#     loss=ppsci.loss.MSELoss("mean"),
-# 	{"metric":}
-# 	name="bc_validator",
-# )
-# manually collate input data for visualization,
-# interior+boundary
+
 
 solver = ppsci.solver.Solver(
 	model,
@@ -148,22 +119,18 @@ solver = ppsci.solver.Solver(
 	eval_during_train=False,
 	iters_per_epoch=20,
 	seed=42,
-	#checkpoint_path=r'D:\resources\machine learning\paddle\2024-08\output\checkpoints',
 	device="cpu"
 )
 try:
     solver.train()
 except Exception as ex:
     print(ex)
-# xtest=paddle.to_tensor(xtest,dtype="float32")
+
 ytest=paddle.to_tensor(ytest,dtype="float32")
-# x = {i: xtest[:, i].tolist() for i in range(xtest.shape[1])}
-# a=paddle.unsqueeze(xtest[:,0],axis=1)
-# b=paddle.unsqueeze(xtest[:,1],axis=1)
+
 x = {"key_{}".format(i): paddle.unsqueeze(paddle.to_tensor(xtest[:, i], dtype="float32"), axis=1) for i in range(xtest.shape[1])}
 ypred = solver.predict(x)
 ytest = {"u":ytest}
-#l2_err = np.linalg.norm(ypred - ytest, ord=2) / np.linalg.norm(ytest, ord=2)
 loss = ppsci.metric.RMSE()
 RMSE = loss(ypred, ytest).get("u").numpy()
 print('RMSE', RMSE)
@@ -181,10 +148,4 @@ plt.xlabel('Test')
 plt.ylabel('Prediction')
 plt.show()
 
-#RMSE=np.sqrt(np.mean(ypred-ytest)**2)
-#logger.message(f"l2_err = {l2_err:.4f}, rmse = {RMSE:.4f}")
 output_dir = 'D://resources//machine learning//paddle//2024-08//f'
-#save_result(osp.join(output_dir, "result.vtu"), x, y, ypred, ytest)
-
-# valid = { "bc_validator": bc_validator,}
-# solver.eval()
