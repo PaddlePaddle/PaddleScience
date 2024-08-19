@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.crystalgraphconvnet import CrystalGraphConvNet
+
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
@@ -52,7 +54,6 @@ from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
-
 
 __all__ = [
     "AFNONet",
@@ -93,6 +94,7 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
+    "CrystalGraphConvNet",
 ]
 
 
