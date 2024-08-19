@@ -9,8 +9,7 @@ import ppsci.constraint.supervised_constraint
 import ppsci.optimizer as optim
 from ppsci.arch import CrystalGraphConvNet
 from ppsci.data.dataset import CGCNNDataset
-from ppsci.data.process import batch_transform
-
+import ppsci.data.dataset.cgcnn_dataset.collate_pool
 warnings.filterwarnings("ignore")
 paddle.device.set_device("cpu")
 
@@ -43,7 +42,7 @@ def evaluate(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.EVAL.batch_size,
-            "collate_fn": batch_transform.collate_pool,
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
@@ -87,7 +86,7 @@ def train(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "collate_fn": batch_transform.collate_pool,
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
@@ -106,7 +105,7 @@ def train(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "collate_fn": batch_transform.collate_pool,
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
