@@ -87,6 +87,7 @@ nav:
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
         - EarthFormer: zh/examples/earthformer.md
+        - Preformer: zh/examples/preformer.md
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
