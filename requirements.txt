@@ -5,7 +5,7 @@ hydra-core
 imageio
 matplotlib
 meshio==5.3.4
-numpy>=1.20.0,<=1.23.1
+numpy>=1.20.0,<2.0.0
 pydantic>=2.5.0
 pyevtk
 pyyaml
