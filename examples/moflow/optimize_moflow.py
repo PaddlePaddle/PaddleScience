@@ -493,7 +493,7 @@ def optimize(cfg: DictConfig):
     model_cfg = dict(cfg.MODEL)
     model_cfg.update({"hyper_params": model_params})
     model = ppsci.arch.MoFlowNet(**model_cfg)
-    ppsci.utils.save_load.load_pretrain(model, path=cfg.EVAL.pretrained_model_path)
+    ppsci.utils.save_load.load_pretrain(model, path=cfg.TRAIN.pretrained_model_path)
 
     model_prop_cfg = dict(cfg.MODEL_Prop)
     model_prop_cfg.update(
