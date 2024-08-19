@@ -517,10 +517,11 @@ class Solver:
                     for name in container.output_expr:
                         if isinstance(container.output_expr[name], sp.Basic):
                             container.output_expr[name] = funcs[ind]
-                            if self.world_size > 1:
-                                container.output_expr[name] = dist_wrapper(
-                                    container.output_expr[name]
-                                )
+                            # FIXME: Equation with parameter not support yet.
+                            # if self.world_size > 1:
+                            #     container.output_expr[name] = dist_wrapper(
+                            #         container.output_expr[name]
+                            #     )
                             ind += 1
 
         if self.constraint:
