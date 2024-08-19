@@ -6,10 +6,11 @@ from omegaconf import DictConfig
 
 import ppsci
 import ppsci.constraint.supervised_constraint
+import ppsci.data.dataset.cgcnn_dataset.collate_pool
 import ppsci.optimizer as optim
 from ppsci.arch import CrystalGraphConvNet
 from ppsci.data.dataset import CGCNNDataset
-import ppsci.data.dataset.cgcnn_dataset.collate_pool
+
 warnings.filterwarnings("ignore")
 paddle.device.set_device("cpu")
 
