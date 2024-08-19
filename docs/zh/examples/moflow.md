@@ -26,7 +26,7 @@
 === "模型优化评估命令"
 
     ``` sh
-    python optimize_moflow.py data_name=zinc250k  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
+    python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
     ```
 
 | 预训练模型  | 指标 |
