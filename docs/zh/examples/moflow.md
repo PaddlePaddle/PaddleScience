@@ -13,26 +13,55 @@
 === "模型训练命令"
 
     ``` sh
-    python train_moflow.py
+    # qm9 数据集模型训练
+    python train_moflow.py data_name=qm9
+
+    # zinc250k 数据集模型训练
+    python train_moflow.py data_name=zinc250k
     ```
 
 === "模型推理评估命令"
 
     ``` sh
-    python test_generate.py data_name=qm9 EVAL_mode=Reconstruct EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_pretrained.pdparams
+    # qm9 数据集预训练模型生成评估， 其中EVAL_mode=Reconstruct为重构生成， EVAL_mode=Random为随机生成，EVAL_mode=Inter2point为分子间插值生成，EVAL_mode=Intergrid为分子网格插值生成，详细说明参考3.7模型的生成评估构建
+    python test_generate.py data_name=qm9 EVAL_mode=Reconstruct EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams
+    
+    # zinc250k 数据集预训练模型生成评估，其中EVAL_mode=Reconstruct为重构生成， EVAL_mode=Random为随机生成，EVAL_mode=Inter2point为分子间插值生成，EVAL_mode=Intergrid为分子网格插值生成，详细说明参考3.7模型的生成评估构建
     python test_generate.py data_name=zinc250k EVAL_mode=Reconstruct EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
     ```
 
 === "模型优化评估命令"
 
     ``` sh
-    python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams
+    # 方式一：不采用预训练模型，第一次运行为模型训练，第二次运行为预测生成结果输出
+    # qm9 数据集预训练模型优化，其中OPTIMIZE.property_name=qed为潜空间到QED属性，OPTIMIZE.property_name=plogp从潜空间到plogp属性，详细说明参考3.8模型的优化构建
+    python optimize_moflow.py data_name=qm9  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams  OPTIMIZE.property_name=qed
+
+    # zinc250k 数据集预训练模型优化，其中OPTIMIZE.property_name=qed为潜空间到QED属性，OPTIMIZE.property_name=plogp从潜空间到plogp属性，详细说明参考3.8模型的优化构建
+    python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams OPTIMIZE.property_name=qed
+
+    # 方式二：采用提供预训模型，下载优化后的模型进行预测结果生成输出
+    # qm9 数据集预训练模型优化
+    mkdir -p ./outputs_moflow_optimize/qm9/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/qed_model.pdparams
+    python optimize_moflow.py data_name=qm9  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams  OPTIMIZE.property_name=qed
+
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/plogp_model.pdparams
+    python optimize_moflow.py data_name=qm9  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams  OPTIMIZE.property_name=plogp
+
+    # zinc250k 数据集预训练模型优化
+    mkdir -p ./outputs_moflow_optimize/zinc250k/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/qed_model.pdparams
+    python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams OPTIMIZE.property_name=qed
+
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/plogp_model.pdparams
+    python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams OPTIMIZE.property_name=plogp
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [qm9](https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_pretrained.pdparams)|  loss(Residual): <br> 0.00300 |
-| [zinc250k](https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams)|  loss(Residual):: <br> 0.00500 |
+| [qm9](https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams)|  loss(Residual): <br> 1.09976 |
+| [zinc250k](https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams)|  loss(Residual):: <br> 1.12570 |
 
 ## 1. 背景简介
 
