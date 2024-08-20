@@ -136,10 +136,10 @@ def train(model,X_train,Y_train,X_val,Y_val,batchsize,lr,epochs):
         model.train()
         train_loss = 0.
         print(epoch)
-        for i,data in enumerate(train_loader):
+        for i, data in enumerate(train_loader):
             input_,tar = data
             output = model(input_)
-            loss = loss_func(output,tar)
+            loss = loss_func(output, tar)
             rmse = paddle.sqrt(loss)
             optimizer.clear_grad()
             rmse.backward()
@@ -151,41 +151,44 @@ def train(model,X_train,Y_train,X_val,Y_val,batchsize,lr,epochs):
         
         with paddle.no_grad():
             val_pre = model(paddle.to_tensor(X_val))
-            #val_pre = val_pre*std+mean
+            # val_pre = val_pre*std+mean
             val_loss = loss_func(val_pre, paddle.to_tensor(Y_val))
             val_loss = paddle.sqrt(val_loss)
             val_loss = val_loss.detach().numpy()
         val_Loss.append(val_loss)
     
-    return train_Loss,val_Loss
- 
-def k_train(model,k,X,Y,batch_size,lr,epochs):
+    return train_Loss, val_Loss
+
+
+def k_train(model, k, X, Y, batch_size, lr, epochs):
     train_Loss=[]
     val_Loss=[]
     for i in range(k):
         model.initialize()
-        x_train,y_train,x_val,y_val=k_fold(k, i, X, Y)
+        x_train, y_train, x_val, y_val = k_fold(k, i, X, Y)
         
-        train_loss,val_loss = train(model,x_train,y_train,x_val,y_val,batch_size,lr,epochs)
+        train_loss, val_loss = train(
+            model, x_train, y_train, x_val, y_val, batch_size, lr, epochs
+        )
         
         train_Loss.append(train_loss[-1])
         val_Loss.append(val_loss[-1])
         
     return train_Loss,val_Loss
 
-model = Net().astype(dtype='float64')
-train_losses,val_losses =k_train(model,9, xtrain, ytrain, 32, 0.01, 200) #选择最优验分组
+model = Net().astype(dtype="float64")
+train_losses, val_losses = k_train(model, 9, xtrain, ytrain, 32, 0.01, 200)  # 选择最优验分组
 train_i = val_losses.index(min(val_losses))
 model.initialize()
-x_train,y_train,x_val,y_val=k_fold(9,train_i,xtrain,ytrain) #以最优分组进行划分
-train_loss,val_loss = train(model,x_train,y_train,x_val,y_val,BATCH,LR,EPOCHS) #训练模型
+x_train, y_train, x_val, y_val = k_fold(9, train_i, xtrain, ytrain) # 以最优分组进行划分
+train_loss, val_loss = train(model, x_train, y_train, x_val, y_val, BATCH, LR, EPOCHS) # 训练模型
 model.eval()
 paddle.save(model.state_dict(), "D://FILE_YFBU//paddle//model//f.pdparams")
 ytest_pre = model(paddle.to_tensor(xtest))
 ytest_pre = ytest_pre.detach().numpy()
-with open("D://FILE_YFBU//paddle//train//f.txt", 'w') as j:
+with open("D://FILE_YFBU//paddle//train//f.txt", "w") as j:
     for num in ytest:
-        j.write(str(num) + '\n')
-with open("D://FILE_YFBU//paddle//train//fpre.txt", 'w') as k:
+        j.write(str(num) + "\n")
+with open("D://FILE_YFBU//paddle//train//fpre.txt", "w") as k:
     for num in ytest_pre:
-        k.write(str(num)+'\n')
+        k.write(str(num)+"\n")
