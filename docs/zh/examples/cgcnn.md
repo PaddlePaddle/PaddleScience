@@ -68,7 +68,7 @@ CGCNN 需要通过所使用的数据进行模型构造，因此需要先实例�
 
 ``` py linenums="68" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:68:77
+examples/cgcnn/CGCNN.py:68:78
 --8<--
 ```
 
@@ -83,9 +83,9 @@ examples/cgcnn/conf/CGCNN_Demo.yaml:35:40
 ### 3.3 优化器构建
 
 训练时使用`SGD`优化器进行训练，相关代码如下：
-``` py linenums="121" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="118" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:121:125
+examples/cgcnn/CGCNN.py:118:122
 --8<--
 ```
 
@@ -100,9 +100,9 @@ examples/cgcnn/conf/CGCNN_Demo.yaml:42:52
 
 本问题模型为回归模型，采用监督学习方式进行训练，因此可以使用PaddleScience内置监督约束`SupervisedConstraint`构建监督约束。代码如下：
 
-``` py linenums="81" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="80" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:81:99
+examples/cgcnn/CGCNN.py:80:97
 --8<--
 ```
 
@@ -118,17 +118,17 @@ examples/cgcnn/CGCNN.py:81:99
 
 为了实时监测模型的训练情况，我们将在每轮训练后对上一轮训练完毕的模型进行评估。与训练过程保持一致，我们使用PaddleScience内置的`SupervisedValidator`函数构建监督数据评估器。具体代码如下：
 
-``` py linenums="101" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="99" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:101:119
+examples/cgcnn/CGCNN.py:99:116
 --8<--
 ```
 
 ### 3.6 模型训练
 由于本问题被建模为回归问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。并且将训练过程封装至PaddleScience内置的`Solver`中，具体代码如下：
-``` py linenums="121" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="124" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:121:141
+examples/cgcnn/CGCNN.py:124:134
 --8<--
 ```
 
@@ -137,6 +137,6 @@ examples/cgcnn/CGCNN.py:121:141
 
 ``` py linenums="1" title="PaddleScience/examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:1:155
+examples/cgcnn/CGCNN.py:1:152
 --8<--
 ```
