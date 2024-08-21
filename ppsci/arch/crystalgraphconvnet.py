@@ -51,7 +51,6 @@ class CrystalGraphConvNet(base.Arch):
     Create a crystal graph convolutional neural network for predicting total
     material properties.
 
-
     Args:
         orig_atom_fea_len (int): Number of atom features in the input.
         nbr_fea_len (int): Number of bond features.
