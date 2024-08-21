@@ -89,16 +89,15 @@ def collate_pool(dataset_list):
 class GaussianDistance(object):
     """
     Expands the distance by Gaussian basis.
+    
+    Args:
+            dmin (float): Minimum interatomic distance.
+            dmax (float): Maximum interatomic distance.
+            step (float): Step size for the Gaussian filter.
 
     """
 
     def __init__(self, dmin, dmax, step, var=None):
-        """
-        Args:
-            dmin (float): Minimum interatomic distance.
-            dmax (float): Maximum interatomic distance.
-            step (float): Step size for the Gaussian filter.
-        """
         assert dmin < dmax
         assert dmax - dmin > step
         self.filter = np.arange(dmin, dmax + step, step)
@@ -248,7 +247,7 @@ class CIFData(io.Dataset):
         random.seed(random_seed)
         random.shuffle(self.id_prop_data)
         atom_init_file = os.path.join(self.root_dir, "atom_init.json")
-        assert os.path.exists(atom_init_file), "atom_init.json does not exist!"
+        assert os.path.exists(atom_init_file), f"{atom_init_file} does not exist!"
         self.ari = AtomCustomJSONInitializer(atom_init_file)
         self.gdf = GaussianDistance(dmin=dmin, dmax=self.radius, step=step)
         self.raw_data = [self.get(i) for i in range(len(self))]
@@ -296,8 +295,8 @@ class CIFData(io.Dataset):
                 nbr_fea.append(list(map(lambda x: x[1], nbr[: self.max_num_nbr])))
         nbr_fea_idx, nbr_fea = np.array(nbr_fea_idx), np.array(nbr_fea)
         nbr_fea = self.gdf.expand(nbr_fea)
-        atom_fea = paddle.Tensor(atom_fea)
-        nbr_fea = paddle.Tensor(nbr_fea)
-        nbr_fea_idx = paddle.Tensor(nbr_fea_idx, dtype="int64")
+        atom_fea = paddle.to_tensor(atom_fea)
+        nbr_fea = paddle.to_tensor(nbr_fea)
+        nbr_fea_idx = paddle.to_tensor(nbr_fea_idx, dtype="int64")
         target = paddle.to_tensor([float(target)])
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
