@@ -18,7 +18,7 @@ paddle.device.set_device("cpu")
 def evaluate(cfg: DictConfig):
 
     dataset = CGCNNDataset(
-        cfg.EVALUATE_DIR, input_keys="i", label_keys="l", id_keys="c"
+        cfg.TEST_DIR, input_keys="i", label_keys="l", id_keys="c"
     )
 
     structures, _, _ = dataset.raw_data[0]
