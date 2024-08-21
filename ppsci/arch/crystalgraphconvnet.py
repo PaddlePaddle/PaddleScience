@@ -60,29 +60,29 @@ class CrystalGraphConvNet(base.Arch):
         n_h (int): Number of hidden layers after pooling.
 
     Examples:
-        >>> import paddle
-        >>> import ppsci
-        >>> model = ppsci.arch.CrystalGraphConvNet(
-        ...     orig_atom_fea_len=92,
-        ...     nbr_fea_len=41,
-        ...     atom_fea_len=64,
-        ...     n_conv=3,
-        ...     h_fea_len=128,
-        ...     n_h=1,
-        ... )
-        >>> input_dict = {
-        ...     "i": [
-        ...         paddle.rand(shape=[45, 92]), paddle.rand(shape=[45, 12, 41]),
-        ...         paddle.randint(high=45, shape=[45, 12]),
-        ...         [
-        ...             paddle.randint(high=32, shape=[32]), paddle.randint(high=8, shape=[8]),
-        ...             paddle.randint(high=2, shape=[2]), paddle.randint(high=3, shape=[3])
-        ...         ]
-        ...     ]
-        ... }
-        >>> output_dict = model(input_dict)
-        >>> print(output_dict["out"].shape)
-        [4, 1]
+         >>> import paddle
+         >>> import ppsci
+         >>> model = ppsci.arch.CrystalGraphConvNet(
+         ...     orig_atom_fea_len=92,
+         ...     nbr_fea_len=41,
+         ...     atom_fea_len=64,
+         ...     n_conv=3,
+         ...     h_fea_len=128,
+         ...     n_h=1,
+         ... )
+         >>> input_dict = {
+         ...     "i": [
+         ...         paddle.rand(shape=[45, 92]), paddle.rand(shape=[45, 12, 41]),
+         ...         paddle.randint(high=45, shape=[45, 12]),
+         ...         [
+         ...             paddle.randint(high=32, shape=[32]), paddle.randint(high=8, shape=[8]),
+         ...             paddle.randint(high=2, shape=[2]), paddle.randint(high=3, shape=[3])
+         ...         ]
+         ...     ]
+         ... }
+         >>> output_dict = model(input_dict)
+         >>> print(output_dict["out"].shape)
+         [4, 1]
     """
     
     def __init__(
