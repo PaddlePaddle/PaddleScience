@@ -138,7 +138,7 @@ def train(cfg: DictConfig):
     solver.eval()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="CGCNN_Demo.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="CGCNN.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
