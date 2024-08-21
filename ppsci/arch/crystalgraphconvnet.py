@@ -148,7 +148,7 @@ class CrystalGraphConvNet(base.Arch):
 
         Args:
             atom_fea (paddle.Tensor): Shape (N, atom_fea_len). Atom feature vectors of the batch.
-            crystal_atom_idx (ist of paddle.Tensor): Length N0. Mapping from the crystal idx to atom idx
+            crystal_atom_idx (list of paddle.Tensor): Length N0. Mapping from the crystal idx to atom idx
         """
         assert (
             sum([len(idx_map) for idx_map in crystal_atom_idx])
