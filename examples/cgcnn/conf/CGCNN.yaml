@@ -22,6 +22,7 @@ hydra:
     subdir: ./
 
 # general settings
+device: cpu
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
