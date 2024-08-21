@@ -23,10 +23,11 @@ from paddle import nn
 
 if TYPE_CHECKING:
     import paddle
+
     from ppsci import constraint
     from ppsci import validate
 
-from ppsci.autodiff import clear
+# from ppsci.autodiff import clear
 
 
 class ExpressionSolver(nn.Layer):
@@ -44,7 +45,7 @@ class ExpressionSolver(nn.Layer):
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError(
-            f"Use train_forward/eval_forward/visu_forward instead of forward."
+            "Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
     @jit.to_static
@@ -56,8 +57,7 @@ class ExpressionSolver(nn.Layer):
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-        input_time
-        
+        input_time,
     ) -> Tuple["paddle.Tensor", ...]:
         """Forward computation for training, including model forward and equation
         forward.
@@ -77,7 +77,7 @@ class ExpressionSolver(nn.Layer):
         for i, expr_dict in enumerate(expr_dicts):
             # model forward
             if callable(next(iter(expr_dict.values()))):
-                output_dict = model(input_dicts[i],input_time)
+                output_dict = model(input_dicts[i], input_time)
 
             # equation forward
             for name, expr in expr_dict.items():
@@ -95,7 +95,7 @@ class ExpressionSolver(nn.Layer):
             output_dicts.append(output_dict)
 
             # clear differentiation cache
-            clear()
+            # clear()
 
         # compute loss for each constraint according to its' own output, label and weight
         constraint_losses = []
@@ -117,8 +117,7 @@ class ExpressionSolver(nn.Layer):
         validator: "validate.Validator",
         label_dict: Dict[str, "paddle.Tensor"],
         weight_dict: Dict[str, "paddle.Tensor"],
-        input_time
-  
+        input_time,
     ) -> Tuple[Dict[str, "paddle.Tensor"], "paddle.Tensor"]:
         """Forward computation for evaluation, including model forward and equation
         forward.
@@ -137,7 +136,7 @@ class ExpressionSolver(nn.Layer):
         """
         # model forward
         if callable(next(iter(expr_dict.values()))):
-            output_dict = model(input_dict,input_time)
+            output_dict = model(input_dict, input_time)
 
         # equation forward
         for name, expr in expr_dict.items():
@@ -149,7 +148,7 @@ class ExpressionSolver(nn.Layer):
                 raise TypeError(f"expr type({type(expr)}) is invalid")
 
         # clear differentiation cache
-        clear()
+        # clear()
 
         # compute loss for each validator according to its' own output, label and weight
         validator_loss = validator.loss(
@@ -188,6 +187,6 @@ class ExpressionSolver(nn.Layer):
                     raise TypeError(f"expr type({type(expr)}) is invalid")
 
             # clear differentiation cache
-            clear()
+            # clear()
 
         return output_dict

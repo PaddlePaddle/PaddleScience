@@ -40,7 +40,7 @@ def get_vis_datas(
     _file = h5py.File(file_path, "r")["fields"]
     data = []
     for date_str in date_strings:
-        hours_since_jan_01_epoch = fourcast_utils.date_to_hours(date_str)
+        hours_since_jan_01_epoch = local_utils.date_to_hours(date_str)
         ic = int(hours_since_jan_01_epoch / 6)
         data.append(_file[ic : ic + num_timestamps + 1, vars_channel, 0:img_h])
     data = np.asarray(data)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         "t50": 4,
         "t500": 5,
         "t850": 6,
-        "z1000": 7,
+        "t1000": 7,
         "s50": 8,
         "s500": 9,
         "s850": 10,

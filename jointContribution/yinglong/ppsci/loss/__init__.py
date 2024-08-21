@@ -14,32 +14,34 @@
 
 import copy
 
-from ppsci.loss.anomaly_coef_loss import ACCLoss
+# from ppsci.loss.anomaly_coef_loss import ACCLoss
 from ppsci.loss.base import Loss
-from ppsci.loss.integral import IntegralLoss
-from ppsci.loss.l1 import L1Loss
-from ppsci.loss.l1 import PeriodicL1Loss
+
+# from ppsci.loss.integral import IntegralLoss
+# from ppsci.loss.l1 import L1Loss
+# from ppsci.loss.l1 import PeriodicL1Loss
 from ppsci.loss.l2 import L2Loss
 from ppsci.loss.l2 import L2RelLoss
 from ppsci.loss.l2 import PeriodicL2Loss
-from ppsci.loss.mse import MSELoss
-from ppsci.loss.mse import MSELossWithL2Decay
-from ppsci.loss.mse import PeriodicMSELoss
-from ppsci.loss.multi_loss import MultiLoss
+
+# from ppsci.loss.mse import MSELoss
+# from ppsci.loss.mse import MSELossWithL2Decay
+# from ppsci.loss.mse import PeriodicMSELoss
+# from ppsci.loss.multi_loss import MultiLoss
 
 __all__ = [
     "Loss",
-    "IntegralLoss",
-    "L1Loss",
-    "PeriodicL1Loss",
+    # "IntegralLoss",
+    # "L1Loss",
+    # "PeriodicL1Loss",
     "L2Loss",
     "L2RelLoss",
     "PeriodicL2Loss",
-    "MSELoss",
-    "MSELossWithL2Decay",
-    "PeriodicMSELoss",
-    "ACCLoss",
-    "MultiLoss",
+    # "MSELoss",
+    # "MSELossWithL2Decay",
+    # "PeriodicMSELoss",
+    # "ACCLoss",
+    # "MultiLoss",
 ]
 
 

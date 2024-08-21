@@ -58,10 +58,14 @@ tar -xvf inference.tar
 The following code runs the YingLong model, and the model output will be saved in `outputs_yinglong_eastern(western)/result.npy`.
 
 ``` shell
-# yinglong_eastern
-python predict.py -cn=yinglong_eastern.yaml
-# yinglong_western
-python predict.py -cn=yinglong_western.yaml
+model pretrain
+python -m paddle.distributed.launch --log_dir=./debug/ --gpus '0,1' /examples/train_pretrain_parallel.py
+
+model finetune
+python -m paddle.distributed.launch --log_dir=./debug/ --gpus '0,1' /examples/train_finetune_parallel.py
+
+model inference
+python /examples/inference.py
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022. Click [eastern](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result_eastern.gif)/[western](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result_western.gif) to view the prediction results.

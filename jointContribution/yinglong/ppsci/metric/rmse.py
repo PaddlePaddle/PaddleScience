@@ -24,40 +24,6 @@ import paddle.nn.functional as F
 from ppsci.metric import base
 
 
-class RMSE(base.Metric):
-    r"""Root mean square error
-
-    $$
-    metric = \sqrt{\dfrac{1}{N} \Vert \mathbf{x} - \mathbf{y} \Vert_2^2}
-    $$
-
-    $$
-    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
-    $$
-
-    Args:
-        keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
-
-    Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.RMSE()
-    """
-
-    def __init__(self, keep_batch: bool = False):
-        if keep_batch:
-            raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
-        super().__init__(keep_batch)
-
-    @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
-        metric_dict = {}
-        for key in label_dict:
-            rmse = F.mse_loss(output_dict[key], label_dict[key], "mean") ** 0.5
-            metric_dict[key] = rmse
-
-        return metric_dict
-
-
 class LatitudeWeightedRMSE(base.Metric):
     r"""Latitude weighted root mean square error.
 
