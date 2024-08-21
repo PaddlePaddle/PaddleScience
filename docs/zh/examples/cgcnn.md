@@ -15,7 +15,7 @@
 === "模型评估命令"
 
     ``` sh
-    python CGCNN.py mode=eval EVAL.pretrained_model_path="Your pretrained model path" TEST_DIR="Your test dataset path"
+    python CGCNN.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/CGCNN/cgcnn_pretrained.pdparams" TEST_DIR="Your test dataset path"
     ```
 
 
