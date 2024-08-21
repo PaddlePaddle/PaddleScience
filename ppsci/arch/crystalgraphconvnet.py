@@ -84,7 +84,7 @@ class CrystalGraphConvNet(base.Arch):
          >>> print(output_dict["out"].shape)
          [4, 1]
     """
-    
+
     def __init__(
         self,
         orig_atom_fea_len: int,
