@@ -210,64 +210,14 @@ if __name__ == "__main__":
     )
     validator = {sup_validator.name: sup_validator}
 
-    # set visualizer datas
-    # DATE_STRINGS = ("2018-09-08 00:00:00",)
-    # vis_datas = get_vis_datas(
-    #     VALID_FILE_PATH,
-    #     DATE_STRINGS,
-    #     NUM_TIMESTAMPS,
-    #     VARS_CHANNEL,
-    #     IMG_H,
-    #     data_mean,
-    #     data_std,
-    # )
-
-    # def output_wind_func(d, var_name, data_mean, data_std):
-    #     output = (d[var_name] * data_std) + data_mean
-    #     wind_data = []
-    #     for i in range(output.shape[0]):
-    #         wind_data.append((output[i][0] ** 2 + output[i][1] ** 2) ** 0.5)
-    #     return paddle.to_tensor(wind_data, paddle.get_default_dtype())
-
-    # vis_output_expr = {}
-    # for i in range(NUM_TIMESTAMPS):
-    #     hour = (i + 1) * 6
-    #     vis_output_expr[f"output_{hour}h"] = functools.partial(
-    #         output_wind_func,
-    #         var_name=f"output_{i}",
-    #         data_mean=paddle.to_tensor(data_mean, paddle.get_default_dtype()),
-    #         data_std=paddle.to_tensor(data_std, paddle.get_default_dtype()),
-    #     )
-    #     vis_output_expr[f"target_{hour}h"] = lambda d, hour=hour: d[f"target_{hour}h"]
-    # # set visualizer
-    # visualizer = {
-    #     "visulize_wind": ppsci.visualize.VisualizerWeather(
-    #         vis_datas,
-    #         vis_output_expr,
-    #         xticks=np.linspace(0, 1439, 13),
-    #         xticklabels=[str(i) for i in range(360, -1, -30)],
-    #         yticks=np.linspace(0, 719, 7),
-    #         yticklabels=[str(i) for i in range(90, -91, -30)],
-    #         vmin=0,
-    #         vmax=25,
-    #         colorbar_label="m\s",
-    #         batch_size=1,
-    #         num_timestamps=NUM_TIMESTAMPS,
-    #         prefix="wind",
-    #     )
-    # }
-
     # directly evaluate pretrained model
     solver = ppsci.solver.Solver(
         model,
         output_dir=OUTPUT_DIR,
         validator=validator,
-        # visualizer=visualizer,
-        # pretrained_model_path=PRETRAINED_MODEL_PATH,
+        pretrained_model_path=PRETRAINED_MODEL_PATH,
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
         vdl_writer=vdl_writer,
     )
     solver.eval()
-    # visualize prediction from pretrained_model_path
-    # solver.visualize()

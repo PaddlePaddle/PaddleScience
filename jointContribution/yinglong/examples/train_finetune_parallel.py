@@ -92,7 +92,6 @@ if __name__ == "__main__":
     # 'mslp', 'u10', 'v10', 't2m'.
     VARS_CHANNEL = list(range(24))
     # set output directory
-    # if NUM_TIMESTAMPS == 2:
     OUTPUT_DIR = (
         f"../output/hrrr_time_embedding_merge_train_finetune_{NUM_TIMESTAMPS}"
         if not args.output_dir
@@ -101,15 +100,7 @@ if __name__ == "__main__":
     PRETRAINED_MODEL_PATH = (
         "../output/hrrr_time_embedding_merge_train/checkpoints/latest"
     )
-    # else:
-    #     OUTPUT_DIR = (
-    #         f"../output/hrrr_time_embedding_merge_train_finetune_{NUM_TIMESTAMPS}"
-    #         if not args.output_dir
-    #         else args.output_dir
-    #     )
-    #     PRETRAINED_MODEL_PATH = (
-    #         f"../output/hrrr_time_embedding_merge_train_finetune_{NUM_TIMESTAMPS-1}/checkpoints/best_model"
-    #     )
+
     copy_cur_file(OUTPUT_DIR)
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -162,48 +153,48 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # set eval dataloader config
-    # eval_dataloader_cfg = {
-    #     "dataset": {
-    #         "name": "HRRRDataset",
-    #         "file_path": VALID_FILE_PATH,
-    #         "input_keys": input_keys,
-    #         "label_keys": output_keys,
-    #         "vars_channel": VARS_CHANNEL,
-    #         "transforms": transforms,
-    #         "num_label_timestamps": NUM_TIMESTAMPS,
-    #         "training": False,
-    #     },
-    #     "sampler": {
-    #         "name": "BatchSampler",
-    #         "drop_last": False,
-    #         "shuffle": False,
-    #     },
-    #     "batch_size": 8,
-    # }
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "HRRRDataset",
+            "file_path": VALID_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "vars_channel": VARS_CHANNEL,
+            "transforms": transforms,
+            "num_label_timestamps": NUM_TIMESTAMPS,
+            "training": False,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 8,
+    }
 
     # # set metirc
-    # metric = {
-    #     "MAE": ppsci.metric.MAE(keep_batch=True),
-    #     "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-    #         std=data_std,
-    #         keep_batch=True,
-    #         variable_dict={"u10": 20, "v10": 21},
-    #     ),
-    #     "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-    #         mean=data_time_mean_normalize,
-    #         keep_batch=True,
-    #         variable_dict={"u10": 20, "v10": 21},
-    #     ),
-    # }
+    metric = {
+        "MAE": ppsci.metric.MAE(keep_batch=True),
+        "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
+            std=data_std,
+            keep_batch=True,
+            variable_dict={"u10": 20, "v10": 21},
+        ),
+        "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
+            mean=data_time_mean_normalize,
+            keep_batch=True,
+            variable_dict={"u10": 20, "v10": 21},
+        ),
+    }
 
     # # set validator
-    # sup_validator = ppsci.validate.SupervisedValidator(
-    #     eval_dataloader_cfg,
-    #     ppsci.loss.L2RelLoss(),
-    #     metric=metric,
-    #     name="Sup_Validator",
-    # )
-    # validator = {sup_validator.name: sup_validator}
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.L2RelLoss(),
+        metric=metric,
+        name="Sup_Validator",
+    )
+    validator = {sup_validator.name: sup_validator}
 
     # set model
     model = ppsci.arch.AFNOAttnParallelNet(
@@ -238,14 +229,11 @@ if __name__ == "__main__":
         lr_scheduler,
         EPOCHS,
         ITERS_PER_EPOCH,
-        # eval_during_train=True,
-        # validator=validator,
+        eval_during_train=True,
+        validator=validator,
         pretrained_model_path=PRETRAINED_MODEL_PATH,
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
     )
     # solver.model = ppsci.arch.convert_linear_layer_to_lora(solver.model, r=128)
-    # train model
     solver.train()
-    # evaluate after finished training
-    # solver.eval()

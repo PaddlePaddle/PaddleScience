@@ -142,53 +142,53 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # set eval dataloader config
-    # eval_dataloader_cfg = {
-    #     "dataset": {
-    #         "name": "HRRRDataset",
-    #         "file_path": VALID_FILE_PATH,
-    #         "input_keys": input_keys,
-    #         "label_keys": output_keys,
-    #         "vars_channel": VARS_CHANNEL,
-    #         "transforms": transforms,
-    #     },
-    #     "sampler": {
-    #         "name": "BatchSampler",
-    #         "drop_last": False,
-    #         "shuffle": False,
-    #     },
-    #     "batch_size": 8,
-    # }
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "HRRRDataset",
+            "file_path": VALID_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "vars_channel": VARS_CHANNEL,
+            "transforms": transforms,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 8,
+    }
 
     # set validator
-    # sup_validator = ppsci.validate.SupervisedValidator(
-    #     eval_dataloader_cfg,
-    #     ppsci.loss.L2RelLoss(),
-    #     metric={
-    #         "MAE": ppsci.metric.MAE(keep_batch=True),
-    #         "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-    #             std=data_std,
-    #             keep_batch=True,
-    #             variable_dict={"u10": 21, "v10": 22},
-    #         ),
-    #         "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-    #             mean=data_time_mean_normalize,
-    #             keep_batch=True,
-    #             variable_dict={"u10": 21, "v10": 22},
-    #         ),
-    #     },
-    #     name="Sup_Validator",
-    # )
-    # validator = {sup_validator.name: sup_validator}
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.L2RelLoss(),
+        metric={
+            "MAE": ppsci.metric.MAE(keep_batch=True),
+            "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
+                std=data_std,
+                keep_batch=True,
+                variable_dict={"u10": 21, "v10": 22},
+            ),
+            "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
+                mean=data_time_mean_normalize,
+                keep_batch=True,
+                variable_dict={"u10": 21, "v10": 22},
+            ),
+        },
+        name="Sup_Validator",
+    )
+    validator = {sup_validator.name: sup_validator}
 
     # set model
-    # model = ppsci.arch.AFNOAttnParallelUNet(
-    #     input_keys,
-    #     output_keys,
-    #     img_size=(IMG_H, IMG_W),
-    #     in_channels=len(VARS_CHANNEL),
-    #     out_channels=len(VARS_CHANNEL),
-    #     attn_channel_ratio=[0.25] * 4 + [0.5] * 4 + [0.25] * 4,
-    # )
+    model = ppsci.arch.AFNOAttnParallelUNet(
+        input_keys,
+        output_keys,
+        img_size=(IMG_H, IMG_W),
+        in_channels=len(VARS_CHANNEL),
+        out_channels=len(VARS_CHANNEL),
+        attn_channel_ratio=[0.25] * 4 + [0.5] * 4 + [0.25] * 4,
+    )
 
     model = ppsci.arch.AFNOAttnParallelNet(
         input_keys,
@@ -228,5 +228,3 @@ if __name__ == "__main__":
     )
     # train model
     solver.train()
-    # evaluate after finished training
-    # solver.eval()
