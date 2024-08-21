@@ -16,14 +16,13 @@ from __future__ import annotations
 
 import copy
 
-
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
-from ppsci.arch.crystalgraphconvnet import CrystalGraphConvNet # isort:skip
+from ppsci.arch.crystalgraphconvnet import CrystalGraphConvNet  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
 from ppsci.arch.cvit import CVit  # isort:skip
 from ppsci.arch.cvit import CVit1D  # isort:skip
