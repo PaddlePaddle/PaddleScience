@@ -39,7 +39,7 @@ def evaluate(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.EVAL.batch_size,
-            "batch_transforms": {"collate_fn": collate_pool},
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
@@ -83,7 +83,7 @@ def train(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "batch_transforms": {"collate_fn": collate_pool},
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
@@ -102,7 +102,7 @@ def train(cfg: DictConfig):
                 "id_keys": "c",
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "batch_transforms": {"collate_fn": collate_pool},
+            "collate_fn": collate_pool,
         },
         loss=ppsci.loss.MAELoss("mean"),
         output_expr={"l": lambda out: out["out"]},
@@ -134,7 +134,7 @@ def train(cfg: DictConfig):
     solver.eval()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="CGCNN_Demo.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="CGCNN.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
