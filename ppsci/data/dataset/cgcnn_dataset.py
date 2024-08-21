@@ -89,7 +89,7 @@ def collate_pool(dataset_list):
 class GaussianDistance(object):
     """
     Expands the distance by Gaussian basis.
-    
+
     Args:
         dmin (float): Minimum interatomic distance.
         dmax (float): Maximum interatomic distance.
