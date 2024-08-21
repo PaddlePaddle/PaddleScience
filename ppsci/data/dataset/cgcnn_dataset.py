@@ -94,7 +94,6 @@ class GaussianDistance(object):
             dmin (float): Minimum interatomic distance.
             dmax (float): Maximum interatomic distance.
             step (float): Step size for the Gaussian filter.
-
     """
 
     def __init__(self, dmin, dmax, step, var=None):
