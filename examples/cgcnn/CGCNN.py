@@ -17,9 +17,7 @@ paddle.device.set_device("cpu")
 
 def evaluate(cfg: DictConfig):
 
-    dataset = CGCNNDataset(
-        cfg.TEST_DIR, input_keys="i", label_keys="l", id_keys="c"
-    )
+    dataset = CGCNNDataset(cfg.TEST_DIR, input_keys="i", label_keys="l", id_keys="c")
 
     structures, _, _ = dataset.raw_data[0]
     orig_atom_fea_len = structures[0].shape[-1]
