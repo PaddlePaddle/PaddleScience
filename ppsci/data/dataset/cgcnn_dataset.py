@@ -46,7 +46,7 @@ def collate_pool(dataset_list):
     batch_cif_ids = []
     base_idx = 0
     for i, item in enumerate(dataset_list):
-        input = item[0]["i"]
+        input: Tuple[np.ndarray, np.ndarray, np.ndarray] = item[0]["i"]
         label = item[1]["l"]
         id = item[2]["c"]
         atom_fea, nbr_fea, nbr_fea_idx = input
@@ -56,32 +56,29 @@ def collate_pool(dataset_list):
         batch_atom_fea.append(atom_fea)
         batch_nbr_fea.append(nbr_fea)
         batch_nbr_fea_idx.append(nbr_fea_idx + base_idx)
-        new_idx = paddle.to_tensor(np.arange(n_i) + int(base_idx), dtype="int64")
+        new_idx = np.arange(n_i, dtype="int64") + int(base_idx)
         crystal_atom_idx.append(new_idx)
         batch_target.append(target)
         batch_cif_ids.append(cif_id)
         base_idx += n_i
-
     # Debugging: print shapes of the tensors to ensure they are consistent
     # print("Shapes of batch_atom_fea:", [x.shape for x in batch_atom_fea])
     # print("Shapes of batch_nbr_fea:", [x.shape for x in batch_nbr_fea])
     # print("Shapes of batch_nbr_fea_idx:", [x.shape for x in batch_nbr_fea_idx])
-
     # Ensure all tensors in the lists have consistent shapes before concatenation
-    batch_atom_fea = paddle.concat(batch_atom_fea, axis=0)
-    batch_nbr_fea = paddle.concat(batch_nbr_fea, axis=0)
-    batch_nbr_fea_idx = paddle.concat(batch_nbr_fea_idx, axis=0)
-
+    batch_atom_fea = np.concatenate(batch_atom_fea, axis=0)
+    batch_nbr_fea = np.concatenate(batch_nbr_fea, axis=0)
+    batch_nbr_fea_idx = np.concatenate(batch_nbr_fea_idx, axis=0)
     return (
         {
             "i": (
-                paddle.to_tensor(batch_atom_fea, dtype="float32"),
-                paddle.to_tensor(batch_nbr_fea, dtype="float32"),
-                paddle.to_tensor(batch_nbr_fea_idx),
-                [paddle.to_tensor(crys_idx) for crys_idx in crystal_atom_idx],
+                np.array(batch_atom_fea, dtype="float32"),
+                np.array(batch_nbr_fea, dtype="float32"),
+                np.array(batch_nbr_fea_idx),
+                [np.array(crys_idx) for crys_idx in crystal_atom_idx],
             )
         },
-        {"l": paddle.to_tensor(paddle.stack(batch_target, axis=0))},
+        {"l": np.array(np.stack(batch_target, axis=0))},
         {"c": batch_cif_ids},
     )
 
@@ -294,8 +291,8 @@ class CIFData(io.Dataset):
                 nbr_fea.append(list(map(lambda x: x[1], nbr[: self.max_num_nbr])))
         nbr_fea_idx, nbr_fea = np.array(nbr_fea_idx), np.array(nbr_fea)
         nbr_fea = self.gdf.expand(nbr_fea)
-        atom_fea = paddle.to_tensor(atom_fea)
-        nbr_fea = paddle.to_tensor(nbr_fea)
-        nbr_fea_idx = paddle.to_tensor(nbr_fea_idx, dtype="int64")
-        target = paddle.to_tensor([float(target)])
+        atom_fea = np.array(atom_fea)
+        nbr_fea = np.array(nbr_fea)
+        nbr_fea_idx = np.array(nbr_fea_idx, dtype="int64")
+        target = np.array([float(target)], dtype="float32")
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
