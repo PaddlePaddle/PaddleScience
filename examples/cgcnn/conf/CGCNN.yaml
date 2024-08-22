@@ -31,7 +31,7 @@ use_tbd: false
 
 TRAIN_DIR: "./data/train/"
 VALID_DIR: "./data/valid/"
-TEST_DIR : null
+TEST_DIR: null
 
 # model settings
 MODEL:
