@@ -9,6 +9,7 @@
         - Arch
         - AutoEncoder
         - ChipDeepONets
+        - CrystalGraphConvNet
         - CuboidTransformer
         - CVit1D
         - CylinderEmbedding
