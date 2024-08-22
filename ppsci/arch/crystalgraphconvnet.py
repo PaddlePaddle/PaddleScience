@@ -113,7 +113,7 @@ class CrystalGraphConvNet(base.Arch):
 
         self.fc_out = nn.Linear(h_fea_len, 1)
 
-    def forward(self, input):
+    def forward(self, input) -> paddle.Tensor:
         """
         Forward pass.
 
@@ -121,7 +121,8 @@ class CrystalGraphConvNet(base.Arch):
         M: Max number of neighbors.
         N0: Total number of crystals in the batch.
 
-        Args: input["i"] (list): List of input, which includes the following elements:
+        Args:
+            input (list): List of input, which includes the following elements:
                 atom_fea (paddle.Tensor): Shape (N, orig_atom_fea_len). Atom features from atom type.
                 nbr_fea (paddle.Tensor): Shape (N, M, nbr_fea_len). Bond features of each atom's M neighbors.
                 nbr_fea_idx (paddle.Tensor): Shape (N, M). Indices of M neighbors of each atom.
@@ -153,7 +154,7 @@ class CrystalGraphConvNet(base.Arch):
 
         Args:
             atom_fea (paddle.Tensor): Shape (N, atom_fea_len). Atom feature vectors of the batch.
-            crystal_atom_idx (list of paddle.Tensor): Length N0. Mapping from the crystal idx to atom idx
+            crystal_atom_idx (List[paddle.Tensor]): Length N0. Mapping from the crystal idx to atom idx
         """
         assert (
             sum([len(idx_map) for idx_map in crystal_atom_idx])

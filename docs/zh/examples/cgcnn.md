@@ -1,11 +1,10 @@
 # CGCNN (Crystal Graph Convolutional Neural Networks for an Accurate and Interpretable Prediction of Material Properties)
 
-开始训练、评估前，请先下载[数据集](https://cmr.fysik.dtu.dk/c2db/c2db.html)并进行划分。数据读取需要额外安装依赖`pymatgen`,请额外运行命令`pip install pymatgen`。
+开始训练、评估前，请先下载[数据集](https://cmr.fysik.dtu.dk/c2db/c2db.html)并进行划分。数据读取需要额外安装依赖 `pymatgen`，请运行安装命令 `pip install pymatgen`。
 
 | 预训练模型  | 指标 |
 |:--| :--|
 | [cgcnn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/CGCNN/cgcnn_pretrained.pdparams) | loss(MAE): 0.4195 |
-
 
 === "模型训练命令"
 
@@ -17,7 +16,6 @@
     ``` sh
     python CGCNN.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/CGCNN/cgcnn_pretrained.pdparams" TEST_DIR="Your test dataset path"
     ```
-
 
 ## 1. 背景简介
 
@@ -32,7 +30,6 @@
 模型的总体结构如图所示：
 
 ![CGCNN_overview](https://paddle-org.bj.bcebos.com/paddlescience/docs/CGCNN/CGCNN.png)
-
 
 CGCNN 论文中预测了七种不同性质，接下来将介绍如何使用 PaddleScience 代码实现 CGCNN 网络预测二维半导体间隙性质
 
@@ -53,7 +50,7 @@ CGCNN 原文中使用的是 数据集 (<https://next-gen.materialsproject.org/>)
 
 `root_dir`的结构应该是(`root_dir`泛指训练/评估/测试数据文件夹):
 
-```
+``` log
 root_dir
 ├── id_prop.csv
 ├── atom_init.json
@@ -64,79 +61,86 @@ root_dir
 
 ### 3.2 模型构建
 
-CGCNN 需要通过所使用的数据进行模型构造，因此需要先实例化`CGCNNDataset` 。在实例化`CGCNNDataset`后可以得到训练样本的长度和输入维度等信息，根据此信息和设定的模型超参数`cfg.MODEL.atom_fea_len`、`cfg.MODEL.n_conv`、`cfg.MODEL.h_fea_len`、`cfg.MODEL.n_h`完成`CrystalGraphConvNet`的实例化。
+CGCNN 需要通过所使用的数据进行模型构造，因此需要先实例化`CGCNNDataset`。在实例化`CGCNNDataset`后可以得到训练样本的长度和输入维度等信息，根据此信息和设定的模型超参数`cfg.MODEL.atom_fea_len`、`cfg.MODEL.n_conv`、`cfg.MODEL.h_fea_len`、`cfg.MODEL.n_h`完成`CrystalGraphConvNet`的实例化。
 
-``` py linenums="68" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="18" title="examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:68:78
+examples/cgcnn/CGCNN.py:18:32
 --8<--
 ```
 
 其中超参数`cfg.MODEL.atom_fea_len`、`cfg.MODEL.n_conv`、`cfg.MODEL.h_fea_len`、`cfg.MODEL.n_h`默认设定如下：
 
-``` yaml linenums="35" title="PaddleScience/examples/cgcnn/conf/CGCNN_Demo.yaml"
+``` yaml linenums="36" title="examples/cgcnn/conf/CGCNN.yaml"
 --8<--
-examples/cgcnn/conf/CGCNN_Demo.yaml:35:40
---8<--
-```
-
-### 3.3 优化器构建
-
-训练时使用`SGD`优化器进行训练，相关代码如下：
-``` py linenums="118" title="PaddleScience/examples/cgcnn/CGCNN.py"
---8<--
-examples/cgcnn/CGCNN.py:118:122
+examples/cgcnn/conf/CGCNN.yaml:36:41
 --8<--
 ```
 
-训练超参数`cfg.TRAIN.lr`、`cfg.TRAIN.momentum`、`cfg.TRAIN.weight_decay`等默认设定如下：
-``` yaml linenums="42" title="PaddleScience/examples/cgcnn/conf/CGCNN_Demo.yaml"
---8<--
-examples/cgcnn/conf/CGCNN_Demo.yaml:42:52
---8<--
-```
-
-### 3.4 约束构建
+### 3.3 约束构建
 
 本问题模型为回归模型，采用监督学习方式进行训练，因此可以使用PaddleScience内置监督约束`SupervisedConstraint`构建监督约束。代码如下：
 
-``` py linenums="80" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="34" title="examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:80:97
+examples/cgcnn/CGCNN.py:34:51
 --8<--
 ```
 
 其中`root_dir`为训练集路径，`batch_size`为批训练大小。为了能够正常的批次训练，`collate_fn`需要根据模型进行重新设计。`collate_pool`代码如下：
 
-``` py linenums="19" title="PaddleScience/ppsci/data/dataset/cgcnn_dataset.py"
+``` py linenums="33" title="ppsci/data/dataset/cgcnn_dataset.py"
 --8<--
-/ppsci/data/dataset/cgcnn_dataset.py:19:86
+ppsci/data/dataset/cgcnn_dataset.py:33:97
 --8<--
 ```
 
-### 3.5 评估器构建
+### 3.4 评估器构建
 
 为了实时监测模型的训练情况，我们将在每轮训练后对上一轮训练完毕的模型进行评估。与训练过程保持一致，我们使用PaddleScience内置的`SupervisedValidator`函数构建监督数据评估器。具体代码如下：
 
-``` py linenums="99" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="53" title="examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:99:116
+examples/cgcnn/CGCNN.py:53:70
+--8<--
+```
+
+### 3.5 优化器构建
+
+训练时使用`SGD`优化器进行训练，相关代码如下：
+
+``` py linenums="72" title="examples/cgcnn/CGCNN.py"
+--8<--
+examples/cgcnn/CGCNN.py:72:76
+--8<--
+```
+
+训练超参数`cfg.TRAIN.lr`、`cfg.TRAIN.momentum`、`cfg.TRAIN.weight_decay`等默认设定如下：
+
+``` yaml linenums="49" title="examples/cgcnn/conf/CGCNN.yaml"
+--8<--
+examples/cgcnn/conf/CGCNN.yaml:49:51
 --8<--
 ```
 
 ### 3.6 模型训练
+
 由于本问题被建模为回归问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。并且将训练过程封装至PaddleScience内置的`Solver`中，具体代码如下：
-``` py linenums="124" title="PaddleScience/examples/cgcnn/CGCNN.py"
+
+``` py linenums="78" title="examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:124:134
+examples/cgcnn/CGCNN.py:78:86
 --8<--
 ```
-
 
 ## 4. 完整代码
 
-``` py linenums="1" title="PaddleScience/examples/cgcnn/CGCNN.py"
+``` py linenums="1" title="examples/cgcnn/CGCNN.py"
 --8<--
-examples/cgcnn/CGCNN.py:1:152
+examples/cgcnn/CGCNN.py
 --8<--
 ```
+
+## 5. 参考资料
+
+- [Crystal Graph Convolutional Neural Networks for an Accurate and Interpretable Prediction of Material Properties](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301)

@@ -5,6 +5,7 @@ from typing import Dict
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Union
 
 import h5py
 import numpy as np
@@ -590,7 +591,9 @@ class SEVIRDataset(io.Dataset):
         return self
 
     @staticmethod
-    def preprocess_data_dict(data_dict, data_types=None, layout="NHWT", rescale="01"):
+    def preprocess_data_dict(
+        data_dict, data_types=None, layout="NHWT", rescale="01"
+    ) -> Dict[str, Union[np.ndarray, paddle.Tensor]]:
         """The preprocess of data dict.
 
         Args:
@@ -602,7 +605,7 @@ class SEVIRDataset(io.Dataset):
                 '01': scale all values to range 0 to 1, currently only supports 'vil'.
 
         Returns:
-            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]) : preprocessed data.
+            data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): preprocessed data.
         """
 
         if rescale == "sevir":
@@ -675,17 +678,17 @@ class SEVIRDataset(io.Dataset):
     @staticmethod
     def downsample_data_dict(
         data_dict, data_types=None, factors_dict=None, layout="NHWT"
-    ):
+    ) -> Dict[str, paddle.Tensor]:
         """The downsample of data.
 
         Args:
             data_dict (Dict[str, Union[np.array, paddle.Tensor]]): The dict of data.
-            factors_dict ( Optional[Dict[str, Sequence[int]]]):each element `factors` is a Sequence of int, representing (t_factor,
-                  h_factor, w_factor)
+            factors_dict (Optional[Dict[str, Sequence[int]]]):each element `factors` is
+                a Sequence of int, representing (t_factor, h_factor, w_factor).
 
         Returns:
-            downsampled_data_dict (Dict[str, paddle.Tensor]): Modify on a deep copy of data_dict instead of directly modifying the original
-              data_dict
+            downsampled_data_dict (Dict[str, paddle.Tensor]): Modify on a deep copy of
+                data_dict instead of directly modifying the original data_dict.
         """
 
         if factors_dict is None:
