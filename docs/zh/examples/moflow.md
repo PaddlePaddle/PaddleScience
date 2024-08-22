@@ -14,10 +14,10 @@
 
     ``` sh
     # qm9 数据集模型训练
-    python train_moflow.py data_name=qm9
+    python moflow_train.py data_name=qm9
 
     # zinc250k 数据集模型训练
-    python train_moflow.py data_name=zinc250k
+    python moflow_train.py data_name=zinc250k
     ```
 
 === "模型推理评估命令"
@@ -233,9 +233,9 @@ ppsci/data/dataset/moflow_dataset.py:394:427
 
 本案例基于数据从中学习化学键约束的方法求解问题，因此按照 PaddleScience 的API结构说明，采用内置的 SupervisedConstraint 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数。
 
-``` py linenums="140" title="examples/moflow/train_moflow.py"
+``` py linenums="140" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:140:161
+examples/moflow/moflow_train.py:140:161
 --8<--
 ```
 
@@ -243,9 +243,9 @@ examples/moflow/train_moflow.py:140:161
 
 定义监督约束的代码如下：
 
-``` py linenums="167" title="examples/moflow/train_moflow.py"
+``` py linenums="167" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:167:177
+examples/moflow/moflow_train.py:167:177
 --8<--
 ```
 
@@ -253,17 +253,17 @@ examples/moflow/train_moflow.py:167:177
 
 在该案例中，药物分子预测生成模型基于 MoFlowNet 网络模型实现，结合 PaddleScience 代码标准格式，对于模型进行分装，单独对flow，grow等模模型进行调用，其中模型构成的代码表示如下：
 
-``` py linenums="162" title="examples/moflow/train_moflow.py"
+``` py linenums="162" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:162:166
+examples/moflow/moflow_train.py:162:166
 --8<--
 ```
 
 模型网络参数配置如下：
 
-``` py linenums="97" title="examples/moflow/train_moflow.py"
+``` py linenums="97" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:97:128
+examples/moflow/moflow_train.py:97:128
 --8<--
 ```
 
@@ -281,9 +281,9 @@ examples/moflow/conf/moflow_train.yaml:22:79
 
 本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`,用 PaddleScience 代码表示如下：
 
-``` py linenums="181" title="examples/moflow/train_moflow.py"
+``` py linenums="181" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:181:183
+examples/moflow/moflow_train.py:181:183
 --8<--
 ```
 
@@ -291,9 +291,9 @@ examples/moflow/train_moflow.py:181:183
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="184" title="examples/moflow/train_moflow.py"
+``` py linenums="184" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:184:213
+examples/moflow/moflow_train.py:184:213
 --8<--
 ```
 
@@ -303,9 +303,9 @@ examples/moflow/train_moflow.py:184:213
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 ppsci.solver.Solver，然后启动训练、评估
 
-``` py linenums="214" title="examples/moflow/train_moflow.py"
+``` py linenums="214" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py:214:236
+examples/moflow/moflow_train.py:214:236
 --8<--
 ```
 
@@ -349,9 +349,9 @@ examples/moflow/conf/moflow_optimize.yaml:94:107
 
 ## 4. 训练完整代码
 
-``` py linenums="1" title="examples/moflow/train_moflow.py"
+``` py linenums="1" title="examples/moflow/moflow_train.py"
 --8<--
-examples/moflow/train_moflow.py
+examples/moflow/moflow_train.py
 --8<--
 ```
 
