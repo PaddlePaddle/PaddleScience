@@ -13,9 +13,11 @@
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/)
 
+🔥 [CIKM 2024: AI辅助的先进空气动力学-优化汽车设计以实现最佳性能](https://competition.atomgit.com/competitionInfo?id=cda4e961b0c25858ca0fd2a4bdf87520)，火热报名中。
+
 🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码：
 
-- [paddle实现](../jointContribution/IJCAI_2024/README.md)
+- [paddle实现](./jointContribution/IJCAI_2024/README.md)
 - [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
 
 <!-- --8<-- [start:description] -->
@@ -108,6 +110,8 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
 
+- 添加 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 的 paddle/pytorch 代码链接。
+- 添加 SPINN(基于 Helmholtz3D 方程求解) [helmholtz3d](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/spinn/)。
 - 添加 CVit(基于 Advection 方程和 N-S 方程求解) [CVit(Navier-Stokes)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ns_cvit/)、[CVit(Advection)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/adv_cvit/)。
 - 添加 PirateNet(基于 Allen-cahn 方程和 N-S 方程求解) [Allen-Cahn](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/allen_cahn/)、[LDC2D(Re3200)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ldc2d_steady/)。
 - 基于 PaddleScience 的快速热仿真方法 [A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network](https://pubs.aip.org/aip/pof/article-abstract/36/3/037142/3277890/A-fast-general-thermal-simulation-model-based-on?redirectedFrom=fulltext) 被 Physics of Fluids 2024 接受。
