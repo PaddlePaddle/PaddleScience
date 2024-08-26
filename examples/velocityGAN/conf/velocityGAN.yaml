@@ -1,0 +1,74 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} #
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval #
+seed: 42 #
+output_dir: ${hydra:run.dir} #
+log_freq: 20 #
+DATASET: "flatvel-a"
+DATASET_CONFIG: './dataset_config.json'
+k: 1
+ANNO_PATH_TRAIN: "./flatvel_a_train.txt"
+ANNO_PATH_VAL: "./flatvel_a_val.txt"
+file_size: null
+
+
+WEIGHT_DICT:
+  lambda_g1v: 100.0
+  lambda_g2v: 0.0
+  lambda_adv: 1.0
+  lambda_gp: 10.0
+
+
+# model settings
+MODEL: #
+  gen_net:
+    input_keys: ["data"] #
+    output_keys: ["fake_image"] #
+    dim1: 32
+    dim2: 64
+    dim3: 128
+    dim4: 256
+    dim5: 512
+    sample_spatial: 1.0
+  dis_net:
+    input_keys: ["image"]
+    output_keys: ["score"]
+    dim1: 32
+    dim2: 64
+    dim3: 128
+    dim4: 256
+
+
+VIS:
+  vis: true
+  vis_suffix: null
+  vb: 10
+  vsa: 2
+
+# training settings
+TRAIN: #
+  epochs: 60000 #
+  epochs_dis: 1
+  iters_per_epoch_dis: 3
+  epochs_gen: 1
+  iters_per_epoch_gen: 1
+  batch_size: 64 #
+  learning_rate: 0.0001 #
+  weight_decay: 0.0001
+
+
+# evaluation settings
+EVAL: #
+  batch_size: 50 #
+  pretrained_model_path: "./generator_40.pdparams"

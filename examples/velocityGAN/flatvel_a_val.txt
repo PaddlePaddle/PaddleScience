@@ -1,0 +1,12 @@
+/pwd/hn_home/data/FlatVel_A/data/data49.npy	/pwd/hn_home/data/FlatVel_A/model/model49.npy
+/pwd/hn_home/data/FlatVel_A/data/data50.npy	/pwd/hn_home/data/FlatVel_A/model/model50.npy
+/pwd/hn_home/data/FlatVel_A/data/data51.npy	/pwd/hn_home/data/FlatVel_A/model/model51.npy
+/pwd/hn_home/data/FlatVel_A/data/data52.npy	/pwd/hn_home/data/FlatVel_A/model/model52.npy
+/pwd/hn_home/data/FlatVel_A/data/data53.npy	/pwd/hn_home/data/FlatVel_A/model/model53.npy
+/pwd/hn_home/data/FlatVel_A/data/data54.npy	/pwd/hn_home/data/FlatVel_A/model/model54.npy
+/pwd/hn_home/data/FlatVel_A/data/data55.npy	/pwd/hn_home/data/FlatVel_A/model/model55.npy
+/pwd/hn_home/data/FlatVel_A/data/data56.npy	/pwd/hn_home/data/FlatVel_A/model/model56.npy
+/pwd/hn_home/data/FlatVel_A/data/data57.npy	/pwd/hn_home/data/FlatVel_A/model/model57.npy
+/pwd/hn_home/data/FlatVel_A/data/data58.npy	/pwd/hn_home/data/FlatVel_A/model/model58.npy
+/pwd/hn_home/data/FlatVel_A/data/data59.npy	/pwd/hn_home/data/FlatVel_A/model/model59.npy
+/pwd/hn_home/data/FlatVel_A/data/data60.npy	/pwd/hn_home/data/FlatVel_A/model/model60.npy
