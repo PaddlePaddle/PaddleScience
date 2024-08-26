@@ -15,6 +15,8 @@
 import copy
 import random
 from functools import partial
+from typing import Callable
+from typing import Optional
 
 import numpy as np
 import paddle.distributed as dist
@@ -101,9 +103,11 @@ def build_dataloader(_dataset, cfg):
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
-    collate_fn = None
+    collate_fn: Optional[Callable] = cfg.pop("collate_fn", None)
     if isinstance(batch_transforms_cfg, (list, tuple)):
-        collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
+        collate_fn = batch_transform.build_batch_transforms(
+            batch_transforms_cfg, collate_fn
+        )
 
     # build init function
     _DEFAULT_NUM_WORKERS = 1
