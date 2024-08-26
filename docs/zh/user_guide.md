@@ -1027,20 +1027,6 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
 
     ``` sh
     python example.py TRAIN.epochs=100 \  # (1)
-       TRAIN.swa.use_swa=True \  # (2)
-       TRAIN.swa.avg_freq=1 \  # (3)
-       TRAIN.swa.avg_range=[75, 100]  # (4)
-    ```
-
-    1. 假设训练轮数为 100
-    2. 开启 SWA 功能
-    3. 设置平均间隔为 1 个 epoch
-    4. 设置平均起始和终止 epoch
-
-=== "SWA"
-
-    ``` sh
-    python example.py TRAIN.epochs=100 \  # (1)
        TRAIN.ema.use_ema=True \  # (2)
        TRAIN.ema.decay=0.99 \  # (3)
        TRAIN.ema.avg_freq=1  # (4)
@@ -1050,6 +1036,20 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     2. 开启 EMA 功能
     3. 设置指数平均衰减系数为 0.99
     4. 设置平均间隔为 1 个 epoch
+
+=== "SWA"
+
+    ``` sh
+    python example.py TRAIN.epochs=100 \  # (1)
+       TRAIN.swa.use_swa=True \  # (2)
+       TRAIN.swa.avg_freq=1 \  # (3)
+       TRAIN.swa.avg_range=[75,100]  # (4)
+    ```
+
+    1. 假设训练轮数为 100
+    2. 开启 SWA 功能
+    3. 设置平均间隔为 1 个 epoch
+    4. 设置平均的起始和终止 epoch 为 75 至 100
 
 ## 3. 使用 Nsight 进行性能分析
 
