@@ -510,7 +510,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.checkpoint_path` 为 `latest.*` 的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.checkpoint_path` 为 `latest.*` 的所在路径（建议用`\'`包裹），再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.checkpoint_path=\'/path/to/latest\'++}
@@ -541,7 +541,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.pretrained_model_path` 为预训练权重的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.pretrained_model_path` 为预训练权重的所在路径（建议用`\'`包裹），再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.pretrained_model_path=\'/path/to/pretrain\'++}
@@ -633,7 +633,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_tbd` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_tbd`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_tbd=True++}
@@ -681,7 +681,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_vdl` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_vdl`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_vdl=True++}
@@ -735,7 +735,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_wandb` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_wandb`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_wandb=True++}
@@ -967,7 +967,7 @@ TODO -->
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.update_freq` 再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.update_freq` 再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.update_freq=2++}
@@ -1016,6 +1016,40 @@ TODO -->
     !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
+
+### 2.6 模型平均
+
+模型平均是一种成本较低的模型集成方法，主要原理是将训练过程中的多个模型权重快照进行加权平均，这一“平均模型”相比单个 epoch 训练得到的模型可能具有更好的泛化性。
+
+PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(SWA)](./api/utils/ema.md#ppsci.utils.ema.StochasticWeightAverage) 和 [Exponential moving average(EMA)](./api/utils/ema.md#ppsci.utils.ema.ExponentialMovingAverage)，若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.swa` 或 `TRAIN.ema` 相关的几个必要参数，再执行即可。
+
+=== "EMA"
+
+    ``` sh
+    python example.py TRAIN.epochs=100 \  # (1)
+       TRAIN.ema.use_ema=True \  # (2)
+       TRAIN.ema.decay=0.99 \  # (3)
+       TRAIN.ema.avg_freq=1  # (4)
+    ```
+
+    1. 假设训练轮数为 100
+    2. 开启 EMA 功能
+    3. 设置指数平均衰减系数为 0.99
+    4. 设置平均间隔为 1 个 epoch
+
+=== "SWA"
+
+    ``` sh
+    python example.py TRAIN.epochs=100 \  # (1)
+       TRAIN.swa.use_swa=True \  # (2)
+       TRAIN.swa.avg_freq=1 \  # (3)
+       TRAIN.swa.avg_range=[75,100]  # (4)
+    ```
+
+    1. 假设训练轮数为 100
+    2. 开启 SWA 功能
+    3. 设置平均间隔为 1 个 epoch
+    4. 设置平均的起始和终止 epoch 为 75 至 100
 
 ## 3. 使用 Nsight 进行性能分析
 
