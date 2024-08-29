@@ -108,6 +108,12 @@ tasks_dic = {'freesolv': ['activity'], 'esol': ['activity'], 'lipop': ['activity
 def standardize(col):
     return (col - np.mean(col)) / np.std(col)
 
+def get_pos_weight(Ys):
+    Ys = paddle.to_tensor(np.nan_to_num(Ys), dtype=paddle.float32)
+    num_pos = paddle.sum(Ys, axis=0)
+    num_indices = paddle.to_tensor(len(Ys))
+    return (num_indices - num_pos) / num_pos
+
 class IFMMoeDataset(io.Dataset):
     """Dataset for `MeshAirfoil`.
 
@@ -152,12 +158,12 @@ class IFMMoeDataset(io.Dataset):
         self.data_mode = data_mode
         
         if data_label == 'esol' or data_label == 'freesolv' or data_label == 'lipop':
-            task_type = 'reg'
-            reg = True
+            self.task_type = 'reg'
+            self.reg = True
             metric = 'rmse'
         else:
-            task_type = 'cla'
-            reg = False
+            self.task_type = 'cla'
+            self.reg = False
             metric = 'roc_auc'
         
         self.task_dict = tasks_dic
@@ -244,6 +250,8 @@ class IFMMoeDataset(io.Dataset):
             Xs, Ys = data_va_x, data_va_y
         elif self.data_mode == 'test':
             Xs, Ys = data_te_x, data_te_y
+        if not self.reg:
+            self.pos_weights = get_pos_weight(dataset[tasks].values)
 
         self.data_tr_x = data_tr_x
         self.Xs = Xs
@@ -264,11 +272,10 @@ class IFMMoeDataset(io.Dataset):
         return (
             {
                 self.input_keys[0]: paddle.to_tensor(self.Xs[idx], dtype='float32'),
-                self.input_keys[1]: paddle.to_tensor(self.mask[idx], dtype='float32')
             },
             {
                 self.label_keys[0]: paddle.to_tensor(self.Ys[idx], dtype='float32'),
-                self.input_keys[1]: paddle.to_tensor(self.mask[idx], dtype='float32')
+                self.label_keys[1]: paddle.to_tensor(self.mask[idx], dtype='float32')
             },
             None,
         )

@@ -5,14 +5,12 @@ import paddle.nn.functional as F
 import paddle.nn as nn
 import random
 
-
 from typing import Optional, Dict, Tuple, Union, List
 from ppsci.arch import base
 
 
-
-
-
+def init_parameter_uniform(parameter: paddle.base.framework.EagerParamBase, n: int) -> None:
+    nn.init.uniform_(parameter, -1/np.sqrt(n), 1/np.sqrt(n))
 
 # inputs, hidden_units, outputs, d_out, sigma, dp_ratio, first_omega_0, hidden_omega_0, reg
 class IFMMLP(base.Arch):
@@ -32,6 +30,8 @@ class IFMMLP(base.Arch):
         ):
         super().__init__()
         # hidden_units = [hyper_paras['hidden_unit1'], hyper_paras['hidden_unit2'], hyper_paras['hidden_unit3']]
+        self.input_keys = input_keys
+        self.output_keys = output_keys
 
         # initialization
         if embed_name == 'None':
@@ -53,15 +53,11 @@ class IFMMLP(base.Arch):
         self.model = my_model
 
     def forward(self, x):
-        pass
-        # forward
-        Xs, masks = x['x'], x['mask']
+        Xs = x[self.input_keys[0]]
         #Xs, masks = Xs.to(args.device), Ys.to(args.device), masks.to(args.device)
 
         ret = self.model(Xs)
-        return {'pred': ret}
-
-
+        return {self.output_keys[0] : ret}
 
 class MyDNN(nn.Layer):
     def __init__(self, inputs, hidden_units, outputs, dp_ratio, reg):
@@ -348,15 +344,15 @@ class IFM_DNN(nn.Layer):
 
         x = self.hidden1(x)
         x = F.relu(self.dropout1(x))
-        x = self.dropout1(x)
+        #x = self.dropout1(x)
 
         x = self.hidden2(x)
         x = F.relu(self.dropout2(x))
-        x = self.dropout2(x)
+        #x = self.dropout2(x)
 
         x = self.hidden3(x)
         x = F.relu(self.dropout3(x))
-        x = self.dropout3(x)
+        #x = self.dropout3(x)
 
         return self.output(x)
 
