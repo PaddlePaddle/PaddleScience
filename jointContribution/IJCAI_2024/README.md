@@ -41,7 +41,7 @@ mv ./ckpts/bju/geom/ckpt ./bju/geom/
 mv ./ckpts/bju/pretrained_checkpoint.pdparams ./bju/pretrained_checkpoint.pdparams
 
 # zhongzaicanyu
-# No pretrained checkpoint yet.
+mv ./ckpts/zhongzaicanyu/pretrained_checkpoint.pdparams ./zhongzaicanyu/pretrained_checkpoint.pdparams
 ```
 
 ## Inference
@@ -74,5 +74,5 @@ python infer.py
 python infer.py --train_data_dir "./Dataset/Trainset_track_B" --test_data_dir "./Dataset/Testset_track_B/Inference" --info_dir "./Dataset/Testset_track_B/Auxiliary" --ulip_ckpt "./geom/ckpt/checkpoint_pointbert.pdparams"
 
 ### zhongzaicanyu
-python infer.py # not work yet.
+python infer.py --data_dir "./Dataset/data_centroid_track_B_vtk" --test_data_dir "./Dataset/track_B_vtk" --save_dir "./Dataset/data_centroid_track_B_vtk_preprocessed_data"
 ```

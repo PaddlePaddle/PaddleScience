@@ -75,7 +75,7 @@ def reshape_input(input_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tens
 def dereshape_input(
     input_dict: Dict[str, paddle.Tensor], C: int
 ) -> Dict[str, paddle.Tensor]:
-    """Dereshape input data for temporally Discriminator. Deeshape data from N * C, 1, H, W to N, C, W, H.
+    """Dereshape input data for temporally Discriminator. Deeshape data from 1, N * C, H, W to N, C, W, H.
 
     Args:
         input_dict (Dict[str, paddle.Tensor]): input data dict.
@@ -86,7 +86,7 @@ def dereshape_input(
     """
     for key in input_dict:
         input = input_dict[key]
-        N, _, H, W = input.shape
+        _, N, H, W = input.shape
         if N < C:
             logger.warning(
                 f"batch_size is smaller than {C}! Tempo needs at least {C} frames, input will be copied."

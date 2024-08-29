@@ -22,6 +22,7 @@ from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
+from ppsci.arch.crystalgraphconvnet import CrystalGraphConvNet  # isort:skip
 from ppsci.arch.cuboid_transformer import CuboidTransformer  # isort:skip
 from ppsci.arch.cvit import CVit  # isort:skip
 from ppsci.arch.cvit import CVit1D  # isort:skip
@@ -51,11 +52,13 @@ from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP # isort:skip
 
-
 __all__ = [
+    "MoFlowNet",
+    "MoFlowProp",
     "AFNONet",
     "AMGNet",
     "Arch",
@@ -63,6 +66,7 @@ __all__ = [
     "build_model",
     "CFDGCN",
     "ChipDeepONets",
+    "CrystalGraphConvNet",
     "CuboidTransformer",
     "CVit",
     "CVit1D",
