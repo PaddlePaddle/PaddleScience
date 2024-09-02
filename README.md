@@ -161,7 +161,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
 1. 基础功能安装
 
-    **从以下三种安装方式中，任选一种均可安装。**
+    **从以下四种安装方式中，任选一种均可安装。**
 
     - git 源码安装[**推荐**]
 
@@ -190,6 +190,18 @@ python -c "import paddle; paddle.utils.run_check()"
         # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         ```
         <!-- --8<-- [end:pip_install] -->
+
+    - conda 安装
+
+        执行以下命令以 conda 的方式安装 release / nightly build 版本的 PaddleScience。
+        <!-- --8<-- [start:conda_install] -->
+        ``` shell
+        # release
+        conda install paddlescience::paddlescience=1.3.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        # nightly build
+        #  conda install paddlescience::paddlescience=0.0.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        ```
+        <!-- --8<-- [end:conda_install] -->
 
     - 设置 PYTHONPATH 并手动安装 requirements
 
