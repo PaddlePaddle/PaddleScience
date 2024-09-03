@@ -14,7 +14,6 @@ source:
 
 build:
   number: 0
-  script: build.sh
 
 requirements:
   host:
@@ -76,13 +75,14 @@ about:
   dev_url: https://paddlescience-docs.readthedocs.io/zh-cn/latest/
 
 outputs:
-  - name: {{ name }}
-    skip: true  # [osx or py<37 or py>310]
-    requirements:
-      host:
-        - python 3.8.*
-      run:
-        - python 3.8.*
+  ### Please annotate the other versions when building the package with certain python version.
+  # - name: {{ name }}
+  #   skip: true  # [osx or py<37 or py>310]
+  #   requirements:
+  #     host:
+  #       - python 3.8.*
+  #     run:
+  #       - python 3.8.*
 
   - name: {{ name }}
     skip: true  # [osx or py<37 or py>310]
@@ -92,13 +92,13 @@ outputs:
       run:
         - python 3.9.*
 
-  - name: {{ name }}
-    skip: true  # [osx or py<37 or py>310]
-    requirements:
-      host:
-        - python 3.10.*
-      run:
-        - python 3.10.*
+  # - name: {{ name }}
+  #   skip: true  # [osx or py<37 or py>310]
+  #   requirements:
+  #     host:
+  #       - python 3.10.*
+  #     run:
+  #       - python 3.10.*
 
 extra:
   recipe-maintainers:
