@@ -196,10 +196,10 @@ python -c "import paddle; paddle.utils.run_check()"
         执行以下命令以 conda 的方式安装 release / nightly build 版本的 PaddleScience。
         <!-- --8<-- [start:conda_install] -->
         ``` shell
-        # release
-        conda install paddlescience::paddlescience=1.3.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
         # nightly build
-        #  conda install paddlescience::paddlescience=0.0.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        conda install paddlescience::paddlesci -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        # release
+        # conda install paddlescience::paddlescience=1.3.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
         ```
         <!-- --8<-- [end:conda_install] -->
 
