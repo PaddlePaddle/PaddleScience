@@ -128,14 +128,14 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate, weight_decay=hyper_paras['l2'])(model)
 
     # set validator
-    """
+    
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
             "input_keys": ("x", ),
             "label_keys": ("y", "mask", ),
             "data_dir": cfg.data_dir,
-            "data_mode": 'test',
+            "data_mode": 'val',
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.EVAL.batch_size,
@@ -160,7 +160,7 @@ def train(cfg: DictConfig):
         # TODO: is this ok to replace loss func
 
     validator = {rmse_validator.name: rmse_validator}
-    """
+    
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -174,7 +174,7 @@ def train(cfg: DictConfig):
         save_freq=cfg.TRAIN.save_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        validator=None,
+        validator=validator,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
     )

@@ -1,4 +1,3 @@
-import paddle as torch
 import paddle
 import numpy as np
 import paddle.nn.functional as F
@@ -111,7 +110,7 @@ class LE(nn.Layer):
         init_parameter_uniform(self.weight, d_out)
         init_parameter_uniform(self.bias, d_out)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         """
         x: (n_batch, n_features, d_in)
         returns: (n_batch, n_features, d_out)
@@ -133,9 +132,9 @@ class PLE(nn.Layer):
     def reset_parameters(self) -> None:
         nn.init.normal_(self.coefficients, 0.0, self.sigma)
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         x = 2*np.pi*self.coefficients[None]*x[..., None]
-        return paddle.concat([torch.cos(x), torch.sin(x)], -1)
+        return paddle.concat([paddle.cos(x), paddle.sin(x)], -1)
 
 class LE_DNN(nn.Layer):
     def __init__(self, inputs, hidden_units, outputs, d_out, dp_ratio, reg):
@@ -215,16 +214,16 @@ class gaussian_encoding(nn.Layer):
         self.sigma = sigma
         self.n_num_features = n_num_features
         self.size = (d_out, n_num_features)
-        self.B = torch.randn(self.size) * sigma
+        self.B = paddle.randn(self.size) * sigma
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         """
         x: (n_batch, n_features)
         returns: (n_batch, n_features * 2 * d_out)
         """
         self.B = self.B.to(x.device)
         xp = 2 * np.pi * x @ self.B.T
-        return paddle.concat((torch.cos(xp), torch.sin(xp)), axis=-1)
+        return paddle.concat((paddle.cos(xp), paddle.sin(xp)), axis=-1)
     
 class GM_DNN(nn.Layer):
     def __init__(self, inputs, hidden_units, outputs, d_out, sigma, dp_ratio, reg):
@@ -291,7 +290,7 @@ class SineLayer(nn.Layer):
         self.init_weights()
     
     def init_weights(self):
-        with torch.no_grad():
+        with paddle.no_grad():
             if self.is_first:
                 self.linear.weight.uniform_(-1 / self.in_features, 
                                              1 / self.in_features)      
@@ -300,12 +299,12 @@ class SineLayer(nn.Layer):
                                              np.sqrt(6 / self.in_features) / self.omega_0)
         
     def forward(self, input):
-        return torch.sin(self.omega_0 * self.linear(input))
+        return paddle.sin(self.omega_0 * self.linear(input))
     
     def forward_with_intermediate(self, input): 
         # For visualization of activation distributions
         intermediate = self.omega_0 * self.linear(input)
-        return torch.sin(intermediate), intermediate
+        return paddle.sin(intermediate), intermediate
 
 class IFM_DNN(nn.Layer):
     def __init__(self, inputs, hidden_units, outputs, d_out, sigma, dp_ratio, first_omega_0, hidden_omega_0, reg):
@@ -331,12 +330,12 @@ class IFM_DNN(nn.Layer):
 
         if reg:
             self.output = nn.Linear(hidden_units[2], 1)
-            with torch.no_grad():
+            with paddle.no_grad():
                 self.output.weight.uniform_(-np.sqrt(6 / hidden_units[2]) / hidden_omega_0, 
                                               np.sqrt(6 / hidden_units[2]) / hidden_omega_0)
         else:
             self.output = nn.Linear(hidden_units[2], outputs)
-            with torch.no_grad():
+            with paddle.no_grad():
                 self.output.weight.uniform_(-np.sqrt(6 / hidden_units[2]) / hidden_omega_0, 
                                               np.sqrt(6 / hidden_units[2]) / hidden_omega_0)
 
@@ -362,15 +361,15 @@ class SIM_encoding(nn.Layer):
         self.d_out = d_out
         self.sigma = sigma
         self.n_num_features = n_num_features
-        self.coeffs = 2 * np.pi * sigma ** (torch.arange(d_out) / d_out)
+        self.coeffs = 2 * np.pi * sigma ** (paddle.arange(d_out) / d_out)
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         """
         x: (n_batch, n_features)
         returns: (n_batch, n_features * 2 * d_out)
         """
-        xp = self.coeffs.to(x.device) * torch.unsqueeze(x, -1)
-        xp_cat = paddle.concat((torch.cos(xp), torch.sin(xp)), axis=-1)
+        xp = self.coeffs.to(x.device) * paddle.unsqueeze(x, -1)
+        xp_cat = paddle.concat((paddle.cos(xp), paddle.sin(xp)), axis=-1)
         return xp_cat.flatten(-2, -1) 
 
 class SIM_DNN(nn.Layer):
@@ -419,15 +418,15 @@ class SIM_DNN(nn.Layer):
 def collate_fn(data_batch):
     Xs, Ys, masks = map(list, zip(*data_batch))
 
-    Xs = torch.stack(Xs, axis=0)
-    Ys = torch.stack(Ys, axis=0)
-    masks = torch.stack(masks, axis=0)
+    Xs = paddle.stack(Xs, axis=0)
+    Ys = paddle.stack(Ys, axis=0)
+    masks = paddle.stack(masks, axis=0)
 
     return Xs, Ys, masks
 
 def set_random_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)  # 为CPU设置种子用于生成随机数
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)  # 为当前GPU设置随机种子
+    paddle.manual_seed(seed)  # 为CPU设置种子用于生成随机数
+    if paddle.cuda.is_available():
+        paddle.cuda.manual_seed(seed)  # 为当前GPU设置随机种子

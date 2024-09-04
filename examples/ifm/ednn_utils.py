@@ -1,9 +1,8 @@
-import paddle as torch
 import paddle
 from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
 import numpy as np
-import paddle.nn.functional as F #import torch.nn.functional as F
-import paddle.nn as nn #import torch.nn as nn
+import paddle.nn.functional as F 
+import paddle.nn as nn
 import datetime
 import random
 from sklearn.metrics import roc_auc_score, confusion_matrix, precision_recall_curve, auc, \
@@ -216,10 +215,10 @@ class Meter(object):
 
 class MyDataset(object):
     def __init__(self, Xs, Ys):
-        self.Xs = paddle.to_tensor(Xs, dtype=torch.float32)
-        self.masks = paddle.to_tensor(~np.isnan(Ys) * 1.0, dtype=torch.float32)
+        self.Xs = paddle.to_tensor(Xs, dtype=paddle.float32)
+        self.masks = paddle.to_tensor(~np.isnan(Ys) * 1.0, dtype=paddle.float32)
         # convert np.nan to 0
-        self.Ys = paddle.to_tensor(np.nan_to_num(Ys), dtype=torch.float32)
+        self.Ys = paddle.to_tensor(np.nan_to_num(Ys), dtype=paddle.float32)
 
 
     def __len__(self):
@@ -278,24 +277,24 @@ class EarlyStopping(object):
 
     def save_checkpoint(self, model):
         '''Saves model when the metric on the validation set gets improved.'''
-        torch.save({'model_state_dict': model.state_dict()}, self.filename)
+        paddle.save({'model_state_dict': model.state_dict()}, self.filename)
 
     def load_checkpoint(self, model):
         '''Load model saved with early stopping.'''
-        model.set_state_dict(torch.load(self.filename)['model_state_dict'])
+        model.set_state_dict(paddle.load(self.filename)['model_state_dict'])
 
 def collate_fn(data_batch):
     Xs, Ys, masks = map(list, zip(*data_batch))
 
-    Xs = torch.stack(Xs, axis=0)
-    Ys = torch.stack(Ys, axis=0)
-    masks = torch.stack(masks, axis=0)
+    Xs = paddle.stack(Xs, axis=0)
+    Ys = paddle.stack(Ys, axis=0)
+    masks = paddle.stack(masks, axis=0)
 
     return Xs, Ys, masks
 
 def set_random_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)  # 为CPU设置种子用于生成随机数
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)  # 为当前GPU设置随机种子
+    paddle.manual_seed(seed)  # 为CPU设置种子用于生成随机数
+    if paddle.cuda.is_available():
+        paddle.cuda.manual_seed(seed)  # 为当前GPU设置随机种子
