@@ -4,21 +4,27 @@
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
 [![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Conda](https://anaconda.org/paddlescience/paddlescience/badges/version.svg)](https://anaconda.org/PaddleScience/paddlescience)
 [![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](https://pypi.org/project/paddlesci/)
 [![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/)
 [![Code Style](https://img.shields.io/badge/code_style-black-black)](https://github.com/psf/black)
 [![Hydra](https://img.shields.io/badge/config-hydra-89b8cd)](https://hydra.cc/)
 [![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
+[![Update](https://anaconda.org/paddlescience/paddlescience/badges/latest_release_date.svg)](https://anaconda.org/PaddleScience/paddlescience)
 <!-- --8<-- [end:status] -->
 
-[**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/)
+[📘 使用文档](https://paddlescience-docs.readthedocs.io/zh-cn/latest/) |
+[🛠️ 安装使用](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/) |
+[📘 快速开始](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/quickstart/) |
+[👀 案例列表](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/allen_cahn/) |
+[🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
+[🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
+
+🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
 
 🔥 [CIKM 2024: AI辅助的先进空气动力学-优化汽车设计以实现最佳性能](https://competition.atomgit.com/competitionInfo?id=cda4e961b0c25858ca0fd2a4bdf87520)，火热报名中。
 
-🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码：
-
-- [paddle实现](./jointContribution/IJCAI_2024/README.md)
-- [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码： [paddle实现](./jointContribution/IJCAI_2024/README.md) | [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
 
 <!-- --8<-- [start:description] -->
 ## 👀简介
@@ -155,7 +161,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
 1. 基础功能安装
 
-    **从以下三种安装方式中，任选一种均可安装。**
+    **从以下四种安装方式中，任选一种均可安装。**
 
     - git 源码安装[**推荐**]
 
@@ -184,6 +190,18 @@ python -c "import paddle; paddle.utils.run_check()"
         # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
         ```
         <!-- --8<-- [end:pip_install] -->
+
+    - conda 安装
+
+        执行以下命令以 conda 的方式安装 release / nightly build 版本的 PaddleScience。
+        <!-- --8<-- [start:conda_install] -->
+        ``` shell
+        # nightly build
+        conda install paddlescience::paddlesci -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        # release
+        # conda install paddlescience::paddlescience=1.3.0 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle -c conda-forge
+        ```
+        <!-- --8<-- [end:conda_install] -->
 
     - 设置 PYTHONPATH 并手动安装 requirements
 
@@ -237,14 +255,14 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
 
 > 在开源活动中如需使用 PaddleScience 进行开发，可参考 [**PaddleScience 开发与贡献指南**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/development/) 以提升开发效率和质量。
 
+- 🔥第七期黑客松
+
+    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目。活动进行中：[PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
+
 - 🎁快乐开源
 
     旨在鼓励更多的开发者参与到飞桨科学计算社区的开源建设中，帮助社区修复 bug 或贡献 feature，加入开源、共建飞桨。了解编程基本知识的入门用户即可参与，活动进行中：
     [PaddleScience 快乐开源活动表单](https://github.com/PaddlePaddle/PaddleScience/issues/379)
-
-<!-- - 🔥第六期黑客松
-
-    面向全球开发者的深度学习领域编程活动，鼓励开发者了解与参与飞桨深度学习开源项目与文心大模型开发实践。活动进行中：[【PaddlePaddle Hackathon 5th】开源贡献个人挑战赛](https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_6th/%E3%80%90Hackathon%206th%E3%80%91%E5%BC%80%E6%BA%90%E8%B4%A1%E7%8C%AE%E4%B8%AA%E4%BA%BA%E6%8C%91%E6%88%98%E8%B5%9B%E7%A7%91%E5%AD%A6%E8%AE%A1%E7%AE%97%E4%BB%BB%E5%8A%A1%E5%90%88%E9%9B%86.md) -->
 <!-- --8<-- [end:contribution] -->
 
 <!-- --8<-- [start:collaboration] -->

@@ -1,0 +1,105 @@
+{% set name = "paddlesci" %}
+{% set version = "0.0.0" %}
+
+package:
+  name: paddlesci
+  version: {{ version }}
+
+source:
+  path: ..
+  include:
+    - "ppsci/"
+    - "pyproject.toml"
+    - "LICENSE"
+
+build:
+  number: 0
+
+requirements:
+  host:
+    - python >=3.8,<=3.10
+    - pip
+    - colorlog
+    - einops
+    - h5py >3.9.0
+    - hydra-core >=1.3.2
+    - imageio
+    - matplotlib
+    - meshio ==5.3.4
+    - numpy
+    - pydantic >=2.5.0
+    - pyevtk
+    - pyyaml
+    - requests
+    - scikit-learn <1.5.0
+    - scikit-optimize
+    - scipy
+    - seaborn
+    - sympy
+    - tqdm
+    - typing-extensions
+    - wget
+  run:
+    - python >=3.8,<=3.10
+    - colorlog
+    - einops
+    - h5py >3.9.0
+    - hydra-core >=1.3.2
+    - imageio
+    - matplotlib
+    - meshio ==5.3.4
+    - numpy
+    - pydantic >=2.5.0
+    - pyevtk
+    - pyyaml
+    - requests
+    - scikit-learn <1.5.0
+    - scikit-optimize
+    - scipy
+    - seaborn
+    - sympy
+    - tqdm
+    - typing-extensions
+    - wget
+
+about:
+  home: https://paddlescience-docs.readthedocs.io/zh-cn/latest/
+  license: Apache-2.0
+  license_family: Apache
+  license_file: ../LICENSE
+  summary: 'PaddleScience is SDK and library for developing AI-driven scientific computing applications based on PaddlePaddle.'
+
+  description: |
+    PaddleScience is SDK and library for developing AI-driven scientific computing applications based on PaddlePaddle.
+  doc_url: https://paddlescience-docs.readthedocs.io/zh-cn/latest/
+  dev_url: https://paddlescience-docs.readthedocs.io/zh-cn/latest/
+
+outputs:
+  ### Please annotate the other versions when building the package with certain python version.
+  # - name: {{ name }}
+  #   skip: true  # [osx or py<37 or py>310]
+  #   requirements:
+  #     host:
+  #       - python 3.8.*
+  #     run:
+  #       - python 3.8.*
+
+  - name: {{ name }}
+    skip: true  # [osx or py<37 or py>310]
+    requirements:
+      host:
+        - python 3.9.*
+      run:
+        - python 3.9.*
+
+  # - name: {{ name }}
+  #   skip: true  # [osx or py<37 or py>310]
+  #   requirements:
+  #     host:
+  #       - python 3.10.*
+  #     run:
+  #       - python 3.10.*
+
+extra:
+  recipe-maintainers:
+    - HydrogenSulfate
