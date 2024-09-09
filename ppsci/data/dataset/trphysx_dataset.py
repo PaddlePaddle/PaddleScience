@@ -23,7 +23,10 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import h5py
+try:
+    import h5py
+except ModuleNotFoundError:
+    pass
 import numpy as np
 import paddle
 from paddle import io
