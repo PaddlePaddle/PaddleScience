@@ -20,9 +20,9 @@ import numpy as np
 import paddle
 from catheter import FNO1d
 from omegaconf import DictConfig
-from utilities3 import LpLoss
 
 import ppsci
+from ppsci.loss import L2RelLoss
 from ppsci.optimizer import Adam
 from ppsci.optimizer import lr_scheduler
 from ppsci.utils import logger
@@ -85,7 +85,7 @@ def train(cfg: DictConfig):
                 "shuffle": True,
             },
         },
-        ppsci.loss.FunctionalLoss(LpLoss(**cfg.TRAIN.LOSS, size_average=False)),
+        ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
         name="sup_constraint",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -114,7 +114,7 @@ def train(cfg: DictConfig):
             },
             "batch_size": cfg.TRAIN.batch_size,
         },
-        ppsci.loss.FunctionalLoss(LpLoss(**cfg.LOSS, size_average=False)),
+        ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
         metric={"L2Rel": ppsci.metric.L2Rel()},
         name="L2Rel_Validator",
     )
