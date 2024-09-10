@@ -29,29 +29,22 @@ from ppsci.utils import reader
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set equation
     E = paddle.create_parameter(
         shape=[],
         dtype=paddle.get_default_dtype(),
-        default_initializer=initializer.Constant(),
+        default_initializer=initializer.Constant(0.0),
     )
     equation = {"Hooke": eq_func.Hooke_Inverse(E=E, nu=cfg.nu, P=cfg.P, dim=3)}
 
     # set models
-    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)(
-        (disp_net,) + tuple(equation.values())
-    )
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set geometry
     heart = ppsci.geometry.Mesh(cfg.GEOM_PATH)
@@ -199,7 +192,6 @@ def train(cfg: DictConfig):
                 "label": {"E": E_label},
             },
             "batch_size": 1,
-            "sampler": {"name": "BatchSampler"},
             "num_workers": 1,
         },
         ppsci.loss.MSELoss("mean"),
@@ -231,25 +223,13 @@ def train(cfg: DictConfig):
 
     # initialize adam solver
     solver = ppsci.solver.Solver(
-        disp_net,
+        model,
         constraint,
-        cfg.output_dir,
         optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_freq=cfg.TRAIN.eval_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        seed=cfg.seed,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        cfg=cfg,
     )
 
     # train
@@ -266,13 +246,8 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set models
-    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set geometry
     heart = ppsci.geometry.Mesh(cfg.GEOM_PATH)
@@ -313,7 +288,6 @@ def evaluate(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {"name": "BatchSampler"},
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
@@ -332,7 +306,7 @@ def evaluate(cfg: DictConfig):
     # set visualizer(optional)
     # add inferencer data endo
     samples_endo = geom["endo"].sample_boundary(
-        cfg.EVAL.visualizer,
+        cfg.EVAL.num_vis,
         criteria=lambda x, y, z: (
             (BOUNDS_X[0] < x)
             & (x < BOUNDS_X[1])
@@ -358,7 +332,7 @@ def evaluate(cfg: DictConfig):
     )
     # add inferencer data epi
     samples_epi = geom["epi"].sample_boundary(
-        cfg.EVAL.visualizer,
+        cfg.EVAL.num_vis,
         criteria=lambda x, y, z: (
             (BOUNDS_X[0] < x)
             & (x < BOUNDS_X[1])
@@ -384,7 +358,7 @@ def evaluate(cfg: DictConfig):
     )
     # add inferencer data
     samples_geom = geom["geo"].sample_interior(
-        cfg.EVAL.visualizer,
+        cfg.EVAL.num_vis,
         criteria=lambda x, y, z: (
             (BOUNDS_X[0] < x)
             & (x < BOUNDS_X[1])
@@ -418,7 +392,7 @@ def evaluate(cfg: DictConfig):
 
     # load pretrained model
     solver = ppsci.solver.Solver(
-        model=disp_net,
+        model=model,
         output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,

@@ -1,3 +1,12 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -5,15 +14,6 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -39,13 +39,12 @@ P: 1.064 # kPa
 
 # model settings
 MODEL:
-  disp_net:
-    input_keys: ["x","y","z"]
-    output_keys: ["u","v","w"]
-    num_layers: 10
-    hidden_size: 20
-    activation: "silu"
-    weight_norm: true
+  input_keys: ["x","y","z"]
+  output_keys: ["u","v","w"]
+  num_layers: 10
+  hidden_size: 20
+  activation: "silu"
+  weight_norm: true
 
 # training settings
 TRAIN:
@@ -80,6 +79,6 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
   batch_size: 1000
-  visualizer: 100000
+  num_vis: 100000
   # path for saved param E
   param_E_path: null
