@@ -1,9 +1,11 @@
 """
-Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html
+Paper: https://arxiv.org/abs/2303.10528
+Reference: https://github.com/qianyingcao/Laplace-Neural-Operator/blob/main/3D_Brusselator/main.py
 """
 from os import path as osp
 from typing import List
 from typing import Literal
+from typing import Tuple
 
 import hydra
 import numpy as np
@@ -16,7 +18,16 @@ from ppsci.utils import reader
 
 
 class DataFuncs:
-    def __init__(self, orig_r, r, nt, nx, ny) -> None:
+    def __init__(self, orig_r: int, r: int, nt: int, nx: int, ny: int) -> None:
+        """Functions of data.
+
+        Args:
+            orig_r (int): Oringinal resolution of data.
+            r (int): Multiples of downsampling at resolution.
+            nt (int): The number of values to take on t.
+            nx (int): The number of values to take on x.
+            ny (int): The number of values to take on y.
+        """
         self.orig_r = orig_r
         self.r = r
         self.nt = nt
@@ -34,15 +45,15 @@ class DataFuncs:
         raw_data = reader.load_npz_file(data_path, keys)
         return [raw_data[key] for key in keys]
 
-    def get_mean_std(self, data: np.ndarray):
+    def get_mean_std(self, data: np.ndarray) -> Tuple[float, ...]:
         min_ = np.min(data)
         max_ = np.max(data)
         return (min_ + max_) / 2, (max_ - min_) / 2
 
-    def encode(self, data, mean, std):
+    def encode(self, data, mean, std) -> np.ndarray:
         return (data - mean) / std
 
-    def decode(self, data, mean, std):
+    def decode(self, data, mean, std) -> np.ndarray:
         return data * std + mean
 
     def gen_grid(self, grid, num) -> np.ndarray:
@@ -52,14 +63,18 @@ class DataFuncs:
         grid_reshape = np.reshape(grid_crop, (num, self.nt, self.s, self.s, 1))
         return grid_reshape
 
+    def cat_grid(self, data) -> np.ndarray:
+        grid_t = self.gen_grid(self.tt, data.shape[0])
+        grid_x = self.gen_grid(self.xx, data.shape[0])
+        grid_y = self.gen_grid(self.yy, data.shape[0])
+        return np.concatenate([data, grid_t, grid_x, grid_y], axis=-1).astype(
+            data.dtype
+        )
+
     def transform(
         self, data: np.ndarray, key: Literal["input", "label"] = "input"
     ) -> np.ndarray:
         if key == "input":
-            grid_t = self.gen_grid(self.tt, data.shape[0])
-            grid_x = self.gen_grid(self.xx, data.shape[0])
-            grid_y = self.gen_grid(self.yy, data.shape[0])
-
             data_expand = np.expand_dims(data, axis=0)
             data_tile = np.tile(data_expand, (self.orig_r, self.orig_r, 1, 1))
             data = np.transpose(data_tile, axes=(2, 3, 0, 1))
@@ -68,14 +83,9 @@ class DataFuncs:
         data_reshape = np.reshape(
             data_crop, (data.shape[0], self.nt, self.s, self.s, 1)
         )
-        if key == "input":
-            return np.concatenate(
-                [data_reshape, grid_t, grid_x, grid_y], axis=-1
-            ).astype(data_reshape.dtype)
-        else:
-            return data_reshape
+        return data_reshape
 
-    def draw_vtr(self, save_path, pred, truth):
+    def draw_vtr(self, save_path, pred, label) -> None:
         x = np.arange(0, pred.shape[0])
         y = np.arange(0, pred.shape[1])
         z = np.arange(0, pred.shape[2])
@@ -86,8 +96,8 @@ class DataFuncs:
             z,
             pointData={
                 "pred": pred,
-                "truth": truth,
-                "error": np.abs(pred - truth),
+                "label": label,
+                "error": np.abs(pred - label),
             },
         )
 
@@ -114,7 +124,7 @@ def train(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : data_funcs.s
     ]
-    model = ppsci.arch.LNOnD(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
@@ -128,7 +138,9 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": {
-                    "input": data_funcs.encode(in_train, in_train_mean, in_train_std)
+                    "input": data_funcs.cat_grid(
+                        data_funcs.encode(in_train, in_train_mean, in_train_std)
+                    )
                 },
                 "label": {
                     "output": data_funcs.encode(
@@ -157,7 +169,9 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": {
-                    "input": data_funcs.encode(in_val, in_train_mean, in_train_std)
+                    "input": data_funcs.cat_grid(
+                        data_funcs.encode(in_val, in_train_mean, in_train_std)
+                    )
                 },
                 "label": {"output": label_val},
             },
@@ -187,6 +201,7 @@ def train(cfg: DictConfig):
         validator=validator,
         cfg=cfg,
     )
+
     # train model
     solver.train()
 
@@ -216,7 +231,7 @@ def evaluate(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : data_funcs.s
     ]
-    model = ppsci.arch.LNOnD(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
 
     # set validator
     sup_validator = ppsci.validate.SupervisedValidator(
@@ -224,7 +239,9 @@ def evaluate(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": {
-                    "input": data_funcs.encode(in_val, in_train_mean, in_train_std)
+                    "input": data_funcs.cat_grid(
+                        data_funcs.encode(in_val, in_train_mean, in_train_std)
+                    )
                 },
                 "label": {"output": label_val},
             },
@@ -259,7 +276,9 @@ def evaluate(cfg: DictConfig):
     output_dict = model(
         {
             "input": paddle.to_tensor(
-                data_funcs.encode(in_val[0:1], in_train_mean, in_train_std)
+                data_funcs.cat_grid(
+                    data_funcs.encode(in_val[0:1], in_train_mean, in_train_std)
+                )
             )
         }
     )
@@ -267,10 +286,10 @@ def evaluate(cfg: DictConfig):
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
     ).numpy()
     pred = np.ascontiguousarray(pred.transpose(1, 2, 0))
-    truth = np.squeeze(label_val[0])
-    truth = np.ascontiguousarray(truth.transpose(1, 2, 0))
+    label = np.squeeze(label_val[0])
+    label = np.ascontiguousarray(label.transpose(1, 2, 0))
 
-    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, truth)
+    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, label)
 
 
 def export(cfg: DictConfig):
@@ -282,7 +301,7 @@ def export(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : int((cfg.ORIG_R - 1) / cfg.RESOLUTION + 1)
     ]
-    model = ppsci.arch.LNOnD(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -345,10 +364,10 @@ def inference(cfg: DictConfig):
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
     ).numpy()
     pred = np.ascontiguousarray(pred.transpose(1, 2, 0))
-    truth = np.squeeze(label_val[0])
-    truth = np.ascontiguousarray(truth.transpose(1, 2, 0))
+    label = np.squeeze(label_val[0])
+    label = np.ascontiguousarray(label.transpose(1, 2, 0))
 
-    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, truth)
+    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, label)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="brusselator3d.yaml")

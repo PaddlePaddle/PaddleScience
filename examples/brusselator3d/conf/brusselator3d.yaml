@@ -64,7 +64,7 @@ TRAIN:
     learning_rate: 0.005
     gamma: 0.5
     step_size: 100
-    by_epoch: false
+    by_epoch: true
   weight_decay: 1e-4
   save_freq: 20
   eval_freq: 20

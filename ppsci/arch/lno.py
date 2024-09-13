@@ -28,7 +28,7 @@ from ppsci.arch import base
 from ppsci.utils import initializer
 
 
-class PRnD(nn.Layer):
+class Laplace(nn.Layer):
     def __init__(
         self,
         in_channels: int,
@@ -37,6 +37,15 @@ class PRnD(nn.Layer):
         T: paddle.Tensor,
         Data: Tuple[paddle.Tensor, ...],
     ):
+        """Generic N-Dimensional Laplace Operator with Pole-Residue Method.
+
+        Args:
+            in_channels (int):  Number of input channels of the first layer.
+            out_channels (int): Number of output channels of the last layer.
+            modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
+            T (paddle.Tensor): Linspace of time dimension.
+            Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+        """
         super().__init__()
         self.char1 = "pqr"
         self.char2 = "mnk"
@@ -113,7 +122,7 @@ class PRnD(nn.Layer):
             + "".join(self.char2)
         )
         self.eq_x2 = (
-            "bo"
+            "bi"
             + "".join(self.char2)
             + ","
             + ",".join(terms_x2_eq)
@@ -175,7 +184,7 @@ class PRnD(nn.Layer):
         return x1 + x2
 
 
-class LNOnD(base.Arch):
+class LNO(base.Arch):
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -190,6 +199,21 @@ class LNOnD(base.Arch):
         use_norm: bool = True,
         use_grid: bool = False,
     ):
+        """Laplace Neural Operator net.
+
+        Args:
+            input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
+            output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
+            width (int): Tensor width of Laplace Layer.
+            modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
+            T (paddle.Tensor): Linspace of time dimension.
+            Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+            in_features (int, optional): Number of input channels of the first layer.. Defaults to 1.
+            hidden_features (int, optional): Number of channels of the fully-connected layer. Defaults to 64.
+            activation (str, optional): The activation function. Defaults to "sin".
+            use_norm (bool, optional): Whether to use normalization layers. Defaults to True.
+            use_grid (bool, optional): Whether to create grid. Defaults to False.
+        """
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
@@ -205,12 +229,12 @@ class LNOnD(base.Arch):
         ), f"Dims of modes is {self.dims} but only {len(Data)} dims(except T) of data received."
 
         self.fc0 = nn.Linear(in_features=in_features, out_features=self.width)
-        self.pr = PRnD(self.width, self.width, self.modes, T, Data)
+        self.laplace = Laplace(self.width, self.width, self.modes, T, Data)
         self.conv = getattr(nn, f"Conv{self.dims}D")(
             in_channels=self.width,
             out_channels=self.width,
             kernel_size=1,
-            data_format="NDHWC",
+            data_format="NCDHW",
         )
         if use_norm:
             self.norm = getattr(nn, f"InstanceNorm{self.dims}D")(
@@ -254,16 +278,17 @@ class LNOnD(base.Arch):
             grid = self.get_grid(x.shape)
             x = paddle.concat([x, grid], axis=-1)
         x = self.fc0(x)
-        x1 = self.transpoe_to_NCDHW(x)
+        x = self.transpoe_to_NCDHW(x)
 
         if self.use_norm:
-            x1 = self.norm(self.pr(self.norm(x1)))
+            x1 = self.norm(self.laplace(self.norm(x)))
         else:
-            x1 = self.pr(x1)
-        x1 = self.transpoe_to_NDHWC(x1)
+            x1 = self.laplace(x)
 
         x2 = self.conv(x)
         x = x1 + x2
+
+        x = self.transpoe_to_NDHWC(x)
 
         x = self.fc1(x)
         x = self.act(x)

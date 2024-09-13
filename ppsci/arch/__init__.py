@@ -37,7 +37,7 @@ from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
-from ppsci.arch.lno import LNOnD  # isort:skip
+from ppsci.arch.lno import LNO  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
 from ppsci.arch.mlp import PirateNet  # isort:skip
@@ -81,7 +81,7 @@ __all__ = [
     "GraphCastNet",
     "HEDeepONets",
     "LorenzEmbedding",
-    "LNOnD",
+    "LNO",
     "MLP",
     "ModelList",
     "ModifiedMLP",
