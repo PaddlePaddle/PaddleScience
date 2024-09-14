@@ -35,8 +35,6 @@ NUM_X: 28
 NUM_Y: 28
 ORIG_R: 28
 RESOLUTION: 2
-NUM_TRAIN: 800
-NUM_TEST: 200
 
 # set data path
 DATA_PATH: ./Data/Brusselator_force_train.npz
@@ -57,7 +55,7 @@ MODEL:
 TRAIN:
   epochs: 300
   batch_size: 50
-  iters_per_epoch: 160  # NUM_TRAIN // TRAIN.batch_size
+  iters_per_epoch: 16  # NUM_TRAIN // TRAIN.batch_size
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}

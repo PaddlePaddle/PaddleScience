@@ -1,6 +1,6 @@
 """
 Paper: https://arxiv.org/abs/2303.10528
-Reference: https://github.com/qianyingcao/Laplace-Neural-Operator/blob/main/3D_Brusselator/main.py
+Reference: https://github.com/qianyingcao/Laplace-Neural-Operator/tree/main/3D_Brusselator
 """
 from os import path as osp
 from typing import List
@@ -8,10 +8,10 @@ from typing import Literal
 from typing import Tuple
 
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from pyevtk import hl
 
 import ppsci
 from ppsci.utils import reader
@@ -85,21 +85,16 @@ class DataFuncs:
         )
         return data_reshape
 
-    def draw_vtr(self, save_path, pred, label) -> None:
-        x = np.arange(0, pred.shape[0])
-        y = np.arange(0, pred.shape[1])
-        z = np.arange(0, pred.shape[2])
-        hl.gridToVTK(
-            save_path,
-            x,
-            y,
-            z,
-            pointData={
-                "pred": pred,
-                "label": label,
-                "error": np.abs(pred - label),
-            },
-        )
+    def draw_plot(self, save_path, pred, label):
+        pred = np.mean(pred, axis=(1, 2))
+        label = np.mean(label, axis=(1, 2))
+        t = np.linspace(0, self.nt, self.nt)
+        plt.figure(figsize=(8, 6))
+        plt.plot(t, pred, label="pred(t)")
+        plt.plot(t, label, label="label(t)")
+        plt.xlabel("time steps")
+        plt.legend()
+        plt.savefig(save_path)
 
 
 def train(cfg: DictConfig):
@@ -285,11 +280,9 @@ def evaluate(cfg: DictConfig):
     pred = paddle.squeeze(
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
     ).numpy()
-    pred = np.ascontiguousarray(pred.transpose(1, 2, 0))
     label = np.squeeze(label_val[0])
-    label = np.ascontiguousarray(label.transpose(1, 2, 0))
 
-    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, label)
+    data_funcs.draw_plot(osp.join(cfg.output_dir, "result"), pred, label)
 
 
 def export(cfg: DictConfig):
@@ -363,11 +356,9 @@ def inference(cfg: DictConfig):
     pred = paddle.squeeze(
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
     ).numpy()
-    pred = np.ascontiguousarray(pred.transpose(1, 2, 0))
     label = np.squeeze(label_val[0])
-    label = np.ascontiguousarray(label.transpose(1, 2, 0))
 
-    data_funcs.draw_vtr(osp.join(cfg.output_dir, "result"), pred, label)
+    data_funcs.draw_plot(osp.join(cfg.output_dir, "result"), pred, label)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="brusselator3d.yaml")
