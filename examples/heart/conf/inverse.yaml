@@ -10,10 +10,13 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_heart/${now:%Y-%m-%d-now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_heart/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}

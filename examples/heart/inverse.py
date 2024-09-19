@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import os
 from os import path as osp
 
 import equation_inverse as eq_func
@@ -225,7 +224,7 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        optimizer,
+        optimizer=optimizer,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
@@ -393,10 +392,9 @@ def evaluate(cfg: DictConfig):
     # load pretrained model
     solver = ppsci.solver.Solver(
         model=model,
-        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        cfg=cfg,
     )
     # evaluate
     solver.eval()
