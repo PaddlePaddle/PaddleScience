@@ -51,6 +51,7 @@ nav:
         - SPINN: zh/examples/spinn.md
         - XPINN: zh/examples/xpinns.md
         - NeuralOperator: zh/examples/neuraloperator.md
+        - Brusselator3D: zh/examples/brusselator3d.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md
