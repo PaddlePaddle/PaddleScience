@@ -54,7 +54,10 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    # only run it first time
+    print(
+        "Attention: Please run and only run `data_process()` at first time in `infer.py`. "
+        "And change path in the file before run it."
+    )
     data_process()
 
     # load setting
@@ -126,8 +129,6 @@ if __name__ == "__main__":
                 print(f"Processing mesh index: {mesh_index}")
             else:
                 raise ValueError(f"Invalid mesh file format: {mesh_file}")
-            cfd_data = cfd_data.to(device)
-            geom = geom.to(device)
             tic = time.time()
             out = model((cfd_data, geom))
             toc = time.time()
@@ -138,12 +139,7 @@ if __name__ == "__main__":
                 press_output = press_output * std_out[-1] + mean_out[-1]
             press_output = press_output.detach().cpu().numpy()
             np.save(
-                "./results/"
-                + args.cfd_model
-                + "_B/"
-                + "press"
-                + "_"
-                + f"{mesh_index}.npy",
+                "./results/" + "press" + "_" + f"{mesh_index}.npy",
                 press_output,
             )
             times.append(toc - tic)

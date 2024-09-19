@@ -51,6 +51,7 @@ nav:
         - SPINN: zh/examples/spinn.md
         - XPINN: zh/examples/xpinns.md
         - NeuralOperator: zh/examples/neuraloperator.md
+        - Brusselator3D: zh/examples/brusselator3d.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md
@@ -86,6 +87,7 @@ nav:
           - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
+        - CGCNN: zh/examples/cgcnn.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
@@ -94,6 +96,9 @@ nav:
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
         - VelocityGAN: zh/examples/velocity_gan.md
+      - 化学科学(AI for Chemistry):
+        - Moflow: zh/examples/moflow.md
+
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md

@@ -19,6 +19,7 @@ from collections.abc import Sequence
 from typing import Any
 from typing import Callable
 from typing import List
+from typing import Optional
 
 import numpy as np
 import paddle
@@ -118,15 +119,17 @@ def build_transforms(cfg):
     return transform.Compose(transform_list)
 
 
-def build_batch_transforms(cfg):
+def build_batch_transforms(cfg, collate_fn: Optional[Callable]):
     cfg = copy.deepcopy(cfg)
     batch_transforms: Callable[[List[Any]], List[Any]] = build_transforms(cfg)
+    if collate_fn is None:
+        collate_fn = default_collate_fn
 
     def collate_fn_batch_transforms(batch: List[Any]):
         # apply batch transform on separate samples
         batch = batch_transforms(batch)
 
         # then collate separate samples into batched data
-        return default_collate_fn(batch)
+        return collate_fn(batch)
 
     return collate_fn_batch_transforms

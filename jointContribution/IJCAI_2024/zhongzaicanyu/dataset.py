@@ -457,6 +457,8 @@ class GraphDataset(paddle.io.Dataset):
     def collate_fn(self, batch):
         batch_data = [data for (data, _) in batch]
         batch_shape = paddle.stack([shape for (_, shape) in batch], axis=0)
+        if len(batch_data) == 1:
+            return batch_data[0], batch_shape
         return batch_data, batch_shape
 
 
