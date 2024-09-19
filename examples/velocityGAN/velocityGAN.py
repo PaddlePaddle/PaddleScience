@@ -9,10 +9,8 @@ from functions import plot_velocity
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.metric import FunctionalMetric
 from ppsci.utils import logger
 
-# 设置FLAGS来控制PaddlePaddle的行为
 os.environ["FLAGS_embedding_deterministic"] = "1"
 os.environ["FLAGS_cudnn_deterministic"] = "1"
 os.environ["NVIDIA_TF32_OVERRIDE"] = "0"
@@ -20,6 +18,7 @@ os.environ["NCCL_ALGO"] = "Tree"
 
 
 def evaluate(cfg: DictConfig):
+    # get dataset configuration information
     with open("dataset_config.json") as f:
         try:
             ctx = json.load(f)[cfg.DATASET]
@@ -30,6 +29,7 @@ def evaluate(cfg: DictConfig):
     if cfg.file_size is not None:
         ctx["file_size"] = cfg.file_size
 
+    # get data transformation
     transform_data, transform_label = func_module.create_transform(ctx, cfg.k)
 
     # set model
@@ -41,22 +41,21 @@ def evaluate(cfg: DictConfig):
             "name": "FWIDataset",
             "input_keys": ("data",),
             "label_keys": ("real_image",),
-            "weight_dict": {},
-            "anno": "flatvel_a_val.txt",
-            "preload": True,
-            "sample_ratio": 1,
+            "anno": cfg.EVAL.dataset.anno,
+            "preload": cfg.EVAL.dataset.preload,
+            "sample_ratio": cfg.EVAL.dataset.sample_ratio,
             "file_size": ctx["file_size"],
             "transform_data": transform_data,
             "transform_label": transform_label,
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": False,
-            "drop_last": False,
+            "shuffle": cfg.EVAL.sampler.shuffle,
+            "drop_last": cfg.EVAL.sampler.drop_last,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "use_shared_memory": True,  # True的时候出现错误
-        "num_workers": 16,
+        "use_shared_memory": cfg.EVAL.use_shared_memory,
+        "num_workers": cfg.EVAL.num_workers,
     }
 
     # set validator
@@ -67,20 +66,20 @@ def evaluate(cfg: DictConfig):
         metric={
             "MAE": ppsci.metric.MAE(),
             "RMSE": ppsci.metric.RMSE(),
-            "SSIM": FunctionalMetric(func_module.ssim_metirc),
+            "SSIM": ppsci.metric.FunctionalMetric(func_module.ssim_metirc),
         },
         name="val",
     )
-
     validator_dict = {validator.name: validator}
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model=model_gen,
         validator=validator_dict,
-        pretrained_model_path="model_gen.pdparams",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
+    # evaluation
     solver.eval()
 
     # visualization
@@ -101,11 +100,7 @@ def evaluate(cfg: DictConfig):
 
 
 def train(cfg: DictConfig):
-    # set random seed
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
-
+    # get dataset configuration information
     with open(cfg.DATASET_CONFIG) as f:
         try:
             ctx = json.load(f)[cfg.DATASET]
@@ -116,18 +111,16 @@ def train(cfg: DictConfig):
     if cfg.file_size is not None:
         ctx["file_size"] = cfg.file_size
 
+    # get data transformation
     transform_data, transform_label = func_module.create_transform(ctx, cfg.k)
 
     # set model
     model_gen = ppsci.arch.VelocityGenerator(**cfg.MODEL.gen_net)
-
     model_dis = ppsci.arch.VelocityDiscriminator(**cfg.MODEL.dis_net)
 
     # set class for loss function
-    gen_funcs = func_module.GenFuncs()
-    gen_funcs.model_dis = model_dis
-    dis_funcs = func_module.DisFuncs()
-    dis_funcs.model_dis = model_dis
+    gen_funcs = func_module.GenFuncs(model_dis, cfg.WEIGHT_DICT.gen)
+    dis_funcs = func_module.DisFuncs(model_dis, cfg.WEIGHT_DICT.dis)
 
     # set dataloader config
     dataloader_cfg = {
@@ -135,39 +128,39 @@ def train(cfg: DictConfig):
             "name": "FWIDataset",
             "input_keys": ("data",),
             "label_keys": ("real_image",),
-            "weight_dict": cfg.WEIGHT_DICT,
-            "anno": "flatvel_a_train.txt",
-            "preload": True,
-            "sample_ratio": 1,
+            "anno": cfg.TRAIN.dataset.anno,
+            "preload": cfg.TRAIN.dataset.preload,
+            "sample_ratio": cfg.TRAIN.dataset.sample_ratio,
             "file_size": ctx["file_size"],
             "transform_data": transform_data,
             "transform_label": transform_label,
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": False,
-            "drop_last": True,
+            "shuffle": cfg.TRAIN.sampler.shuffle,
+            "drop_last": cfg.TRAIN.sampler.drop_last,
         },
         "batch_size": cfg.TRAIN.batch_size,
-        "use_shared_memory": True,
-        "num_workers": 16,
+        "use_shared_memory": cfg.TRAIN.use_shared_memory,
+        "num_workers": cfg.TRAIN.num_workers,
     }
 
-    constraient_gen = ppsci.constraint.SupervisedConstraint(
+    # set constraint
+    constraint_gen = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg=dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(gen_funcs.loss_func_gen),
         output_expr={"fake_image": lambda out: out["fake_image"]},
         name="cst_gen",
     )
-    constraient_gen_dict = {constraient_gen.name: constraient_gen}
+    constraint_gen_dict = {constraint_gen.name: constraint_gen}
 
-    constraient_dis = ppsci.constraint.SupervisedConstraint(
+    constraint_dis = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg=dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(dis_funcs.loss_func_dis),
         output_expr={"fake_image": lambda out: out["fake_image"]},
         name="cst_dis",
     )
-    constraient_dis_dict = {constraient_dis.name: constraient_dis}
+    constraint_dis_dict = {constraint_dis.name: constraint_dis}
 
     # set optimizer
     optimizer = ppsci.optimizer.AdamW(
@@ -176,10 +169,11 @@ def train(cfg: DictConfig):
     optimizer_g = optimizer(model_gen)
     optimizer_d = optimizer(model_dis)
 
+    # initialize solver
     solver_gen = ppsci.solver.Solver(
         model=model_gen,
         output_dir=cfg.output_dir,
-        constraint=constraient_gen_dict,
+        constraint=constraint_gen_dict,
         optimizer=optimizer_g,
         epochs=cfg.TRAIN.epochs_gen,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch_gen,
@@ -188,18 +182,22 @@ def train(cfg: DictConfig):
     solver_dis = ppsci.solver.Solver(
         model=model_gen,
         output_dir=cfg.output_dir,
-        constraint=constraient_dis_dict,
+        constraint=constraint_dis_dict,
         optimizer=optimizer_d,
         epochs=cfg.TRAIN.epochs_dis,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch_dis,
     )
 
+    # training
     for i in range(cfg.TRAIN.epochs):
         logger.message(f"\nEpoch: {i + 1}\n")
         solver_dis.train()
         solver_gen.train()
 
-    paddle.save(model_gen.state_dict(), "model_gen.pdparams")
+    # save model weight
+    paddle.save(
+        model_gen.state_dict(), os.path.join(cfg.output_dir, "model_gen.pdparams")
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="demo.yaml")

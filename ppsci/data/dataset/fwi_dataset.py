@@ -15,27 +15,25 @@ class FWIDataset(io.Dataset):
     Args:
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
-        weight_dict: Define the weight dict for loss function.
-        anno: path to annotation file
-        preload: whether to load the whole dataset into memory
-        sample_ratio: downsample ratio for seismic data
-        file_size: # of samples in each npy file
-        transform_data|label: transformation applied to data or label
+        weight: Define the weight dict for loss function.
+        anno: Path to annotation file.
+        preload: Whether to load the whole dataset into memory.
+        sample_ratio: Downsample ratio for seismic data.
+        file_size: Number of samples in each npy file.
+        transform_data: Transformation applied to data.
+        transform_label: Transformation applied to label.
 
     Examples:
         >>> import ppsci
-        >>> input = {"x": np.random.randn(100, 1)}
-        >>> output = {"u": np.random.randn(100, 1)}
-        >>> weight = {"u": np.random.randn(100, 1)}
-        >>> dataset = ppsci.data.dataset.FWIDataset(input, output, weight, "path/to/anno_file") # doctest: +SKIP
+        >>> dataset = ppsci.data.dataset.FWIDataset(("input", ), ("label", ), "path/to/anno_file") # doctest: +SKIP
     """
 
     def __init__(
         self,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        weight_dict: Dict[str, np.ndarray],
         anno: str,
+        weight: Optional[Dict[str, np.ndarray]] = None,
         preload: bool = True,
         sample_ratio: int = 1,
         file_size: int = 500,
@@ -45,7 +43,7 @@ class FWIDataset(io.Dataset):
         super().__init__()
         self.input_keys = input_keys
         self.label_keys = label_keys
-        self.weight_dict = weight_dict
+        self.weight = {} if weight is None else weight
         if not os.path.exists(anno):
             print(f"Annotation file {anno} does not exists")
         self.preload = preload
@@ -97,8 +95,9 @@ class FWIDataset(io.Dataset):
 
         input_item = {self.input_keys[0]: data}
         label_item = {self.label_keys[0]: label if label is not None else np.array([])}
+        weight_item = self.weight
 
-        return (input_item, label_item, self.weight_dict)
+        return input_item, label_item, weight_item
 
     def __len__(self):
         return len(self.batches) * self.file_size

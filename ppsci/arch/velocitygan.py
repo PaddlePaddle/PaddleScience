@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from math import ceil
 from math import sqrt
 from typing import Tuple
@@ -33,7 +32,7 @@ class VelocityGenerator(base.Arch):
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         dim1 (int, optional): Number of channels in the outermost layers of both encoder and decoder segments. Default is 32.
         dim2 (int, optional): Number of channels in the second set of layers from the outermost in both encoder and decoder segments. Default is 64.
-        dim3 (int, optional): Number of channels in the intermediate layers, serving as mid-level features during encoding and decoding. Default is 128.
+        dim3 (int, optional): Number of channels in the intermediate layers. Default is 128.
         dim4 (int, optional): Number of channels near the bottleneck, just before and after the deepest layer. Default is 256.
         dim5 (int, optional): Number of channels at the bottleneck, the deepest layer in the network. Default is 512.
         sample_spatial (float, optional): Spatial sampling rate of the input, used to dynamically calculate the kernel size in the last encoder layer. Default is 1.0.
@@ -140,14 +139,12 @@ class Generator(paddle.nn.Layer):
     """The specific implementation of the generator, which is encapsulated in the VelocityGenerator class.
 
     Args:
-       input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-       output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-       dim1 (int, optional): Number of channels in the outermost layers of both encoder and decoder segments. Default is 32.
-       dim2 (int, optional): Number of channels in the second set of layers from the outermost in both encoder and decoder segments. Default is 64.
-       dim3 (int, optional): Number of channels in the intermediate layers, serving as mid-level features during encoding and decoding. Default is 128.
-       dim4 (int, optional): Number of channels near the bottleneck, just before and after the deepest layer. Default is 256.
-       dim5 (int, optional): Number of channels at the bottleneck, the deepest layer in the network. Default is 512.
-       sample_spatial (float, optional): Spatial sampling rate of the input, used to dynamically calculate the kernel size in the last encoder layer. Default is 1.0.
+        dim1 (int, optional): Number of channels in the outermost layers of both encoder and decoder segments. Default is 32.
+        dim2 (int, optional): Number of channels in the second set of layers from the outermost in both encoder and decoder segments. Default is 64.
+        dim3 (int, optional): Number of channels in the intermediate layers. Default is 128.
+        dim4 (int, optional): Number of channels near the bottleneck, just before and after the deepest layer. Default is 256.
+        dim5 (int, optional): Number of channels at the bottleneck, the deepest layer in the network. Default is 512.
+        sample_spatial (float, optional): Spatial sampling rate of the input, used to dynamically calculate the kernel size in the last encoder layer. Default is 1.0.
     """
 
     def __init__(
@@ -242,8 +239,6 @@ class Discriminator(paddle.nn.Layer):
     """The specific implementation of the discriminator, which is encapsulated in the VelocityDiscriminator class.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         dim1 (int, optional): The number of output channels for convblock1_1 and convblock1_2. Default is 32.
         dim2 (int, optional): The number of output channels for convblock2_1 and convblock2_2. Default is 64.
         dim3 (int, optional): The number of output channels for convblock3_1 and convblock3_2. Default is 128.
@@ -292,13 +287,7 @@ class ConvBlock(paddle.nn.Layer):
     """A convolution block, including Conv2D, BatchNorm2D, and LeakyReLU"""
 
     def __init__(
-        self,
-        in_fea: int,
-        out_fea: int,
-        kernel_size: int = 3,
-        stride: int = 1,
-        padding: int = 1,
-        relu_slop: float = 0.2,
+        self, in_fea, out_fea, kernel_size=3, stride=1, padding=1, relu_slop=0.2
     ):
         super(ConvBlock, self).__init__()
         layers = [
