@@ -13,7 +13,7 @@
 
 === "模型评估命令"
     ``` sh
-    python velocityGAN.py model=eval EVAL.pretrained_model_path=./velocitygan_pretrained.pdparams
+    python velocityGAN.py model=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/velocitygan/velocitygan_pretrained.pdparams
     ```
 
 | 预训练模型 | 指标                                        |
