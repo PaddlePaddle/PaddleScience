@@ -48,10 +48,8 @@ def evaluate(cfg: DictConfig):
             "transform_data": transform_data,
             "transform_label": transform_label,
         },
-        "sampler": {
-            "name": "BatchSampler",
-        },
         "batch_size": cfg.EVAL.batch_size,
+
         "use_shared_memory": cfg.EVAL.use_shared_memory,
         "num_workers": cfg.EVAL.num_workers,
     }
