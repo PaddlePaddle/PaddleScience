@@ -50,8 +50,6 @@ def evaluate(cfg: DictConfig):
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": cfg.EVAL.sampler.shuffle,
-            "drop_last": cfg.EVAL.sampler.drop_last,
         },
         "batch_size": cfg.EVAL.batch_size,
         "use_shared_memory": cfg.EVAL.use_shared_memory,

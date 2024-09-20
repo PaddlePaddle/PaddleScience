@@ -53,6 +53,8 @@ from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
+from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
@@ -99,6 +101,8 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
+    "VelocityDiscriminator",
+    "VelocityGenerator",
 ]
 
 

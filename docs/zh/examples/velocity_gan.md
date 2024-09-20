@@ -1,6 +1,5 @@
 # VelocityGAN
 
-<a href="https://aistudio.baidu.com/projectdetail/7927786" class="md-button md-button--primary" style>AI Studio快速体验</a>
 !!! note
 
     1. 运行之前，建议快速了解一下[数据集](#31)和[数据读取方式](#32-dataset-api)。
@@ -19,7 +18,7 @@
 
 | 预训练模型 | 指标                                        |
 | :--------- | :------------------------------------------ |
-|            | MAE: 0.0669<br>PSNR: 0.0947<br>SSIM: 0.8511 |
+|            | MAE: 0.0669<br>RMSE: 0.0947<br>SSIM: 0.8511 |
 
 ## 1. 背景简介
 

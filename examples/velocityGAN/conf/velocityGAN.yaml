@@ -90,9 +90,6 @@ EVAL:
     anno: "./anno_files/flatvel_a_val.txt"
     preload: true
     sample_ratio: 1
-  sampler:
-    shuffle: false
-    drop_last: false
   batch_size: 50
   use_shared_memory: true
   num_workers: 16
