@@ -18,7 +18,7 @@
 
 | 预训练模型 | 指标                                        |
 | :--------- | :------------------------------------------ |
-|            | MAE: 0.0669<br>RMSE: 0.0947<br>SSIM: 0.8511 |
+| [velocitygan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/velocitygan/velocitygan_pretrained.pdparams) | MAE: 0.0669<br>RMSE: 0.0947<br>SSIM: 0.8511 |
 
 ## 1. 背景简介
 
