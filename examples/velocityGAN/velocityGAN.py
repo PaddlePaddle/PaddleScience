@@ -195,7 +195,7 @@ def train(cfg: DictConfig):
     )
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="demo.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="velocityGAN.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
