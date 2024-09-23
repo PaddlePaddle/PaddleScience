@@ -34,7 +34,7 @@ VelocityGAN就是一个具体的例子。它是一个端到端的框架，能够
 
 VelocityGAN是一个条件对抗网络，包含了一个image-to-image的生成器和一个CNN的判别器。下图显示了模型的整体结构。
 
-![image-20240830104821259](velocity_gan.assets/velocityGAN.png)
+![velocityGAN](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/velocityGAN.png)
 
 - `Generator`是一种Encoder-Decoder结构的卷积神经网络。Encoder从地震波形数据中提取特征，并逐步将其压缩成潜在向量（latent vector）；Decoder则根据这个潜在向量推算出相应的速度图。
 
@@ -68,19 +68,19 @@ $$
 
 OpenFWI一共12份数据集，共分成了四类：Vel Family、Fault Family、Style Family和Kimberlina Family。本案例主要采用了前两类，其配置信息如下：
 
-![image-20240830153600238](velocity_gan.assets/vel_family.png)
+![image-20240830153600238](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/vel_family.png)
 
-![image-20240830153613634](velocity_gan.assets/fault_family.png)
+![image-20240830153613634](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/fault_family.png)
 
 其中，每份数据集都包含了波形数据和对应的速度图像。下图展示了每份数据集中速度图像的一个示例。
 
-![image-20240830154311787](velocity_gan.assets/data.png)
+![image-20240830154311787](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/data.png)
 
 可以看到，Vel Family包含了地质界面平直和弯曲的两种情况，而Fault Family在此基础上增加了一些地质断层。
 
 每个样本都包含了一张速度图像和五张波形数据，如下图所示。
 
-![image-20240830154807670](velocity_gan.assets/sample.png)
+![image-20240830154807670](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/sample.png)
 
 其中，5个红星排成一排代表地面上的五个震源，70个接收器也同样布置在地面上。地震波向下传播后会反弹回来，接收器每隔0.001秒记录一次数据，共计1000个。因此，生成了一个形状为（5，1000，70）的地震波形数据集。
 
@@ -91,9 +91,9 @@ OpenFWI一共12份数据集，共分成了四类：Vel Family、Fault Family、S
 由于一份数据集由120个数据文件组成，传入所有文件路径是很麻烦的。为了方便读取数据，可以将所有路径打包成一个文本文件。通过依次解析其中的路径，从而读取所有数据。由于这种特殊的读取方式，我们无法使用PaddleScience内置的dataset API，所以自定义了`ppsci.data.dataset.FWIDataset`。
 
 下面给出dataloader的配置代码：
-``` py linenums="117"
+``` py linenums="120"
 --8<--
-examples/velocityGAN/velocityGAN.py:117:137
+examples/velocityGAN/velocityGAN.py:120:141
 --8<--
 ```
 其中，`dataset`使用我们自定义的`FWIDataset`，`anno`传入的是文本文件的路径，它包含了所有数据文件的路径。
@@ -104,16 +104,16 @@ examples/velocityGAN/velocityGAN.py:117:137
 
 模型的构建代码如下：
 
-``` py linenums="109"
+``` py linenums="112"
 --8<--
-examples/velocityGAN/velocityGAN.py:109:110
+examples/velocityGAN/velocityGAN.py:112:114
 --8<--
 ```
 
 参数配置如下：
-``` yaml linenums="42"
+``` yaml linenums="41"
 --8<--
-examples/velocityGAN/velocityGAN.yaml:42:58
+examples/velocityGAN/conf/velocityGAN.yaml:41:58
 --8<--
 ```
 
@@ -125,26 +125,26 @@ VelocityGAN的损失函数有点复杂，需要我们自定义实现。PaddleSci
 
 Generator的loss包含了L1 loss 、L2 loss和对抗性损失。这三项loss都有对应的权重，如果某一项 loss 的权重为 0，则表示训练中不添加该 loss 项。
 
-``` py linenums="21"
+``` py linenums="24"
 --8<--
-examples/velocityGAN/functions.py:21:48
+examples/velocityGAN/functions.py:24:53
 --8<--
 ```
 
 #### 3.4.2 Discriminator的loss
 
 Discriminator的loss包含了Wasserstein损失和梯度惩罚。其中，只有梯度惩罚项有权重参数。
-``` py linenums="62"
+``` py linenums="68"
 --8<--
-docs/functions.py:62:113
+examples/velocityGAN/functions.py:68:119
 --8<--
 ```
 
 注意：
 
-``` py linenums="74"
+``` py linenums="80"
 --8<--
-examples/velocityGAN/functions.py:74:74
+examples/velocityGAN/functions.py:80:80
 --8<--
 ```
 
@@ -156,9 +156,9 @@ examples/velocityGAN/functions.py:74:74
 
 构建代码如下：
 
-``` py linenums="140"
+``` py linenums="143"
 --8<--
-examples/velocityGAN/velocityGAN.py:140:154
+examples/velocityGAN/velocityGAN.py:143:158
 --8<--
 ```
 
@@ -170,9 +170,9 @@ examples/velocityGAN/velocityGAN.py:140:154
 
 VelocityGAN使用AdamW优化器，可直接调用`ppsci.optimizer.AdamW`构建，代码如下：
 
-``` py linenums="157"
+``` py linenums="160"
 --8<--
-examples/velocityGAN/velocityGAN.py:157:159
+examples/velocityGAN/velocityGAN.py:160:165
 --8<--
 ```
 
@@ -180,17 +180,17 @@ examples/velocityGAN/velocityGAN.py:157:159
 
 将构建好的模型、约束、优化器和其它参数传递给 `ppsci.solver.Solver`。
 
-``` py linenums="162"
+``` py linenums="167"
 --8<--
-examples/velocityGAN/velocityGAN.py:162:178
+examples/velocityGAN/velocityGAN.py:167:184
 --8<--
 ```
 
 ### 3.8 模型训练
 
-``` py linenums="181"
+``` py linenums="186"
 --8<--
-examples/velocityGAN/velocityGAN.py:181:184
+examples/velocityGAN/velocityGAN.py:186:190
 --8<--
 ```
 
@@ -201,9 +201,9 @@ examples/velocityGAN/velocityGAN.py:181:184
 PaddleScience提供了用于自定metric函数的API——`ppsci.metric.FunctionalMetric`。方法为先定义metric函数，再将函数名作为参数传给 `FunctionalMetric`。需要注意，自定义metric函数的输入输出需要是字典的格式。
 
 SSIM的实现代码如下：
-``` py linenums="198"
+``` py linenums="199"
 --8<--
-examples/velocityGAN/functions.py:198:281
+examples/velocityGAN/functions.py:199:312
 --8<--
 ```
 
@@ -211,9 +211,9 @@ examples/velocityGAN/functions.py:198:281
 
 本案例使用`ppsci.validate.SupervisedValidator`构建评估器。
 
-``` py linenums="59"
+``` py linenums="56"
 --8<--
-examples/velocityGAN/velocityGAN.py:59:68
+examples/velocityGAN/velocityGAN.py:56:68
 --8<--
 ```
 
@@ -231,9 +231,9 @@ examples/velocityGAN/velocityGAN.py:70:78
 
 评估完成后，我们以图片的形式对结果进行可视化，代码如下：
 
-``` py linenums="116"
+``` py linenums="80"
 --8<--
-examples/velocityGAN/functions.py:116:145
+examples/velocityGAN/velocityGAN.py:80:94
 --8<--
 ```
 
@@ -253,9 +253,9 @@ examples/velocityGAN/velocityGAN.py
 | :----: | :----: | :----: |
 | 0.0669 | 0.0947 | 0.8511 |
 
-![image-20240914192445180](velocity_gan.assets/flatvel_a_1.png)
+![image-20240914192445180](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/flatvel_a_1.png)
 
-![image-20240914192456002](velocity_gan.assets/flatvel_a_2.png)
+![image-20240914192456002](https://paddle-org.bj.bcebos.com/paddlescience/docs/velocitygan/flatvel_a_2.png)
 
 ## 6. 参考文献
 
