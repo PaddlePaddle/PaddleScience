@@ -324,9 +324,8 @@ class Triangle(geometry.Geometry):
         # Check points on the vertexes
         if np.any(np.count_nonzero(np.hstack([on12, on23, on31]), axis=-1) > 1):
             raise ValueError(
-                "{}.boundary_normal do not accept points on the vertexes.".format(
-                    self.__class__.__name__
-                )
+                f"{self.__class__.__name__}.boundary_normal do not accept points "
+                "on the vertexes."
             )
         return self.n12_normal * on12 + self.n23_normal * on23 + self.n31_normal * on31
 

@@ -101,9 +101,7 @@ def get_norm_layer(
             assert axis == -1
             norm_layer = RMSNorm(d=in_channels, eps=epsilon, **kwargs)
         else:
-            raise NotImplementedError(
-                "normalization={} is not supported".format(normalization)
-            )
+            raise NotImplementedError(f"normalization={normalization} is not supported")
         return norm_layer
     elif normalization is None:
         return nn.Identity()
