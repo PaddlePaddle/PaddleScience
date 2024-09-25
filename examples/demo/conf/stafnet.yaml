@@ -1,0 +1,121 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_chip_heat/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+STAFNet_DATA_PATH: "/data4/home/hyin/workspace/SATFNet/data/2020-2023_new/train_data.pkl" # 
+STAFNet_DATA_args: {
+            "data_dir": "/data4/home/hyin/workspace/SATFNet/data/2020-2023_new/train_data.pkl",
+            "batch_size": 32,
+            "shuffle": True,
+            "num_workers": 0,
+            "training": True
+        }
+
+# "data_dir": "data/2020-2023_new/train_data.pkl",
+#             "batch_size": 32,
+#             "shuffle": True,
+#             "num_workers": 0,
+#             "training": True
+# model settings
+# MODEL: # 
+#   output_attention: True
+#   seq_len: 72
+#   label_len: 24
+#   pred_len: 48
+#   aq_gat_node_features: 7
+#   aq_gat_node_num: 35
+#   mete_gat_node_features: 7
+#   mete_gat_node_num: 18
+#   gat_hidden_dim: 32
+#   gat_edge_dim: 3
+#   gat_embed_dim: 32
+#   e_layers: 1
+#   enc_in: 32
+#   dec_in: 7
+#   c_out: 7
+#   d_model: 16
+#   embed: "fixed"
+#   freq: "t"
+#   dropout: 0.05
+#   factor: 3
+#   n_heads: 4
+#   d_ff: 32
+#   num_kernels: 6
+#   top_k: 4
+
+MODEL:
+       configs: {
+                "task_name": "forecast",
+                "output_attention": True,
+                "seq_len": 72,
+                "label_len": 24,
+                "pred_len": 48,
+
+                "aq_gat_node_features" : 7,
+                "aq_gat_node_num": 35,
+
+                "mete_gat_node_features" : 7,
+                "mete_gat_node_num": 18,
+
+                "gat_hidden_dim": 32,
+                "gat_edge_dim": 3,
+                "gat_embed_dim": 32,
+
+                "e_layers": 1,
+                "enc_in": 32,
+                "dec_in": 7,
+                "c_out": 7,
+                "d_model": 16 ,
+                "embed": "fixed",
+                "freq": "t",
+                "dropout": 0.05,
+                "factor": 3,
+                "n_heads": 4,
+
+                "d_ff": 32 ,
+                "num_kernels": 6,
+                "top_k": 4
+            }
+# training settings
+TRAIN: # 
+  epochs: 100 # 
+  iters_per_epoch: 1 # 
+  save_freq: 10 # 
+  eval_during_train: true # 
+  eval_freq: 1000 # 
+  batch_size: 100 # 
+  lr_scheduler: # 
+    epochs: ${TRAIN.epochs} # 
+    iters_per_epoch: ${TRAIN.iters_per_epoch} # 
+    learning_rate: 0.001 # 
+    step_size: 10 # 
+    gamma: 0.9 # 
+  pretrained_model_path: null # 
+  checkpoint_path: null # 
+
