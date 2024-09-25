@@ -30,7 +30,6 @@ from ppsci.geometry import geometry_3d
 from ppsci.geometry import sampler
 from ppsci.utils import checker
 from ppsci.utils import misc
-from ppsci.utils import sdf as sdf_module
 
 if TYPE_CHECKING:
     import pymesh
@@ -169,78 +168,16 @@ class Mesh(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        # if not checker.dynamic_import_to_globals(["pymesh"]):
-        #     raise ImportError(
-        #         "Could not import pymesh python package."
-        #         "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
-        #     )
-        # import pymesh
-        triangles_coords = self.vectors.reshape([-1, 3])
-        _, sdf_derivative = sdf_module.signed_distance_field(
-            triangles_coords,
-            np.arange(triangles_coords.shape[0]),
-            points,
-            include_hit_points=True,
-        )
-        # sdf_field = sdf_field.numpy()
-        sdf_derivative = sdf_derivative.numpy().reshape(-1, 1)
-
-        return sdf_derivative
-
-    def sdf_derivatives(self, x: np.ndarray, epsilon: float = 1e-4) -> np.ndarray:
-        """Compute derivatives of SDF function.
-
-        Args:
-            x (np.ndarray): Points for computing SDF derivatives using central
-                difference. The shape is [N, D], D is the number of dimension of
-                geometry.
-            epsilon (float): Derivative step. Defaults to 1e-4.
-
-        Returns:
-            np.ndarray: Derivatives of corresponding SDF function.
-                The shape is [N, D]. D is the number of dimension of geometry.
-
-        Examples:
-            >>> import numpy as np
-            >>> import ppsci
-            >>> interval = ppsci.geometry.Interval(0, 1)
-            >>> x = np.array([[0], [0.5], [1.5]])
-            >>> interval.sdf_derivatives(x)
-            array([[-1.],
-                   [ 0.],
-                   [ 1.]])
-            >>> rectangle = ppsci.geometry.Rectangle((0, 0), (1, 1))
-            >>> x = np.array([[0.0, 0.0], [0.5, 0.5], [1.5, 1.5]])
-            >>> rectangle.sdf_derivatives(x)
-            array([[-0.5       , -0.5       ],
-                   [ 0.        ,  0.        ],
-                   [ 0.70710678,  0.70710678]])
-            >>> cuboid = ppsci.geometry.Cuboid((0, 0, 0), (1, 1, 1))
-            >>> x = np.array([[0, 0, 0], [0.5, 0.5, 0.5], [1, 1, 1]])
-            >>> cuboid.sdf_derivatives(x)
-            array([[-0.5, -0.5, -0.5],
-                   [ 0. ,  0. ,  0. ],
-                   [ 0.5,  0.5,  0.5]])
-        """
-        if not hasattr(self, "sdf_func"):
-            raise NotImplementedError(
-                f"{misc.typename(self)}.sdf_func should be implemented "
-                "when using 'sdf_derivatives'."
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ImportError(
+                "Could not import pymesh python package."
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        # Only compute sdf derivatives for those already implement `sdf_func` method.
-        triangles_coords = self.vectors.reshape([-1, 3])
-        sdf_field, _ = sdf_module.signed_distance_field(
-            triangles_coords,
-            np.arange(triangles_coords.shape[0]),
-            x,
-            include_hit_points=True,
-        )
-        sdf_field = sdf_field.numpy()
-        # sdf_derivative = sdf_derivative.numpy().reshape(-1)
+        import pymesh
 
-        # sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
-        # sdf = sdf[..., np.newaxis].astype(paddle.get_default_dtype())
-        return sdf_field
+        sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
+        sdf = sdf[..., np.newaxis].astype(paddle.get_default_dtype())
+        return sdf
 
     def is_inside(self, x):
         # NOTE: point on boundary is included
