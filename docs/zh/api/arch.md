@@ -33,5 +33,6 @@
         - UNetEx
         - UNONet
         - USCNN
+        - LNO
       show_root_heading: true
       heading_level: 3
