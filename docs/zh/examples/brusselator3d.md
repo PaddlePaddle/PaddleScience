@@ -6,9 +6,9 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz
+    wget -P data -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz -o brusselator3d_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz --create-dirs -o data/brusselator3d_dataset.npz
     python brusselator3d.py
     ```
 
@@ -16,9 +16,9 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz
+    wget -P Data -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz -o brusselator3d_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/Brusselator3D/brusselator3d_dataset.npz --create-dirs -o data/brusselator3d_dataset.npz
     python brusselator3d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/Brusselator3D/brusselator3d_pretrained.pdparams
     ```
 
@@ -73,9 +73,17 @@ examples/brusselator3d/conf/brusselator3d.yaml:39:40
 
 在构建网络之前，需要根据参数设定，使用 `linespace` 明确各个维度长度，以便 LNO 网络进行 $\lambda$ 的初始化。用 PaddleScience 代码表示如下：
 
+``` py linenums="120"
+--8<--
+examples/brusselator3d/brusselator3d.py:120:128
+--8<--
+```
+
+另外，如果设置模型参数中 `use_grid` 为 `True`，不需要提前处理，模型会自动生成并添加网格，如果为 `False`，则需要在处理数据时，手动为数据添加网格，然后再输入模型：
+
 ``` py linenums="114"
 --8<--
-examples/brusselator3d/brusselator3d.py:114:122
+examples/brusselator3d/brusselator3d.py:114:118
 --8<--
 ```
 
@@ -103,9 +111,9 @@ examples/brusselator3d/conf/brusselator3d.yaml:54:58
 
 `AdamW` 优化器基于 `Adam` 优化器进行了改进，用来解决 `Adam` 优化器中 L2 正则化失效的问题。
 
-``` py linenums="124"
+``` py linenums="130"
 --8<--
-examples/brusselator3d/brusselator3d.py:124:128
+examples/brusselator3d/brusselator3d.py:130:134
 --8<--
 ```
 
@@ -113,9 +121,9 @@ examples/brusselator3d/brusselator3d.py:124:128
 
 本问题采用监督学习的方式进行训练，仅存在监督约束 `SupervisedConstraint`，代码如下：
 
-``` py linenums="130"
+``` py linenums="136"
 --8<--
-examples/brusselator3d/brusselator3d.py:130:156
+examples/brusselator3d/brusselator3d.py:136:160
 --8<--
 ```
 
@@ -139,9 +147,9 @@ examples/brusselator3d/brusselator3d.py:130:156
 
 第三个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。
 
-``` py linenums="158"
+``` py linenums="162"
 --8<--
-examples/brusselator3d/brusselator3d.py:158:159
+examples/brusselator3d/brusselator3d.py:162:163
 --8<--
 ```
 
@@ -149,9 +157,9 @@ examples/brusselator3d/brusselator3d.py:158:159
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此需要构建评估器：
 
-``` py linenums="161"
+``` py linenums="165"
 --8<--
-examples/brusselator3d/brusselator3d.py:161:189
+examples/brusselator3d/brusselator3d.py:165:191
 --8<--
 ```
 
@@ -166,9 +174,9 @@ examples/brusselator3d/brusselator3d.py:161:189
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="191"
+``` py linenums="193"
 --8<--
-examples/brusselator3d/brusselator3d.py:191:204
+examples/brusselator3d/brusselator3d.py:193:206
 --8<--
 ```
 
@@ -177,6 +185,12 @@ examples/brusselator3d/brusselator3d.py:191:204
 ``` py linenums="1" title="brusselator3d.py"
 --8<--
 examples/brusselator3d/brusselator3d.py
+--8<--
+```
+
+``` py linenums="1" title="lno.py"
+--8<--
+ppsci/arch/lno.py
 --8<--
 ```
 
