@@ -59,9 +59,7 @@ class MolGraph:
         self.kekulize = kekulize
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError(
-                "max_atoms {} must be less or equal to out_size {}".format(
-                    max_atoms, out_size
-                )
+                f"max_atoms {max_atoms} must be less or equal to out_size {out_size}"
             )
         self.max_atoms = max_atoms
         self.out_size = out_size
@@ -143,9 +141,7 @@ class MolGraph:
         num_atoms = mol.GetNumAtoms()
         if num_max_atoms >= 0 and num_atoms > num_max_atoms:
             raise MolGraphError(
-                "Number of atoms in mol {} exceeds num_max_atoms {}".format(
-                    num_atoms, num_max_atoms
-                )
+                f"Number of atoms in mol {num_atoms} exceeds num_max_atoms {num_max_atoms}"
             )
 
     def construct_atomic_number_array(self, mol, out_size=-1):
@@ -173,9 +169,8 @@ class MolGraph:
             return atom_array
         else:
             raise ValueError(
-                "`out_size` (={}) must be negative or larger than or equal to the number of atoms in the input molecules (={}).".format(
-                    out_size, n_atom
-                )
+                f"`out_size` (={out_size}) must be negative or larger than or equal to "
+                f"the number of atoms in the input molecules (={n_atom})."
             )
 
     def construct_adj_matrix(self, mol, out_size=-1, self_connection=True):
@@ -209,9 +204,8 @@ class MolGraph:
         s0, s1 = tuple(adj.shape)
         if s0 != s1:
             raise ValueError(
-                "The adjacent matrix of the input moleculehas an invalid shape: ({}, {}). It must be square.".format(
-                    s0, s1
-                )
+                f"The adjacent matrix of the input moleculehas an invalid shape: ({s0}, "
+                f"{s1}). It must be square."
             )
         if self_connection:
             adj = adj + np.eye(s0)
@@ -222,9 +216,8 @@ class MolGraph:
             adj_array[:s0, :s1] = adj
         else:
             raise ValueError(
-                "`out_size` (={}) must be negative or larger than or equal to the number of atoms in the input molecules (={}).".format(
-                    out_size, s0
-                )
+                f"`out_size` (={out_size}) must be negative or larger than or equal to "
+                f"the number of atoms in the input molecules (={s0})."
             )
         return adj_array
 
@@ -257,9 +250,7 @@ class MolGraph:
             size = out_size
         else:
             raise ValueError(
-                "out_size {} is smaller than number of atoms in mol {}".format(
-                    out_size, N
-                )
+                f"out_size {out_size} is smaller than number of atoms in mol {N}"
             )
         adjs = np.zeros((4, size, size), dtype=np.float32)
         bond_type_to_channel = {
@@ -355,11 +346,9 @@ class MOlFLOWDataset(io.Dataset):
         self.label = {"label": labels}
 
         self.logger.message(
-            "Dataload finished. MODE {}, inputs {}, labelS {}".format(
-                mode,
-                len(next(iter(self.input.values()))),
-                len(next(iter(self.label.values()))),
-            )
+            f"Dataload finished. MODE {mode}, "
+            f"inputs {len(next(iter(self.input.values())))}, "
+            f"labelS {len(next(iter(self.label.values())))}"
         )
 
         self._length = len(next(iter(self.input.values())))
@@ -403,14 +392,10 @@ class MOlFLOWDataset(io.Dataset):
 
                 except MolGraphError as e:
                     fail_count += 1
-                    self.logger.warning(
-                        "parse(), type: {}, {}".format(type(e).__name__, e.args)
-                    )
+                    self.logger.warning(f"parse(), type: {type(e).__name__}, {e.args}")
                     continue
                 except Exception as e:
-                    self.logger.warning(
-                        "parse(), type: {}, {}".format(type(e).__name__, e.args)
-                    )
+                    self.logger.warning(f"parse(), type: {type(e).__name__}, {e.args}")
                     fail_count += 1
                     continue
                 # raw_data = misc.convert_to_dict(np.array([nodes, edges]), self.input_keys)
@@ -426,9 +411,8 @@ class MOlFLOWDataset(io.Dataset):
             ).T
             result = [np.array(all_nodes), np.array(all_edges)], labels
             self.logger.message(
-                "Preprocess finished. FAIL {}, SUCCESS {}, TOTAL {}".format(
-                    fail_count, success_count, total_count
-                )
+                f"Preprocess finished. FAIL {fail_count}, "
+                f"SUCCESS {success_count}, TOTAL {total_count}"
             )
         else:
             raise NotImplementedError
