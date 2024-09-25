@@ -36,7 +36,7 @@ class Laplace(nn.Layer):
         out_channels (int): Number of output channels of the last layer.
         modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
         T (paddle.Tensor): Linspace of time dimension.
-        Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+        data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
     """
 
     def __init__(
@@ -45,7 +45,7 @@ class Laplace(nn.Layer):
         out_channels: int,
         modes: Tuple[int, ...],
         T: paddle.Tensor,
-        Data: Tuple[paddle.Tensor, ...],
+        data: Tuple[paddle.Tensor, ...],
     ):
         super().__init__()
         self.char1 = "pqr"
@@ -74,14 +74,14 @@ class Laplace(nn.Layer):
             self.create_parameter(residues_shape)
         )
 
-        self.initialize_lambdas(T, Data)
+        self.initialize_lambdas(T, data)
         self.get_einsum_eqs()
 
     def _init_weights(self, weight) -> paddle.Tensor:
         return initializer.uniform_(weight, a=0, b=self.scale)
 
-    def initialize_lambdas(self, T, Data) -> None:
-        self.t_lst = (T,) + Data
+    def initialize_lambdas(self, T, data) -> None:
+        self.t_lst = (T,) + data
         self.lambdas = []
         for i in range(self.dims):
             t_i = self.t_lst[i]
@@ -194,7 +194,7 @@ class LNO(base.Arch):
         width (int): Tensor width of Laplace Layer.
         modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
         T (paddle.Tensor): Linspace of time dimension.
-        Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+        data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
         in_features (int, optional): Number of input channels of the first layer.. Defaults to 1.
         hidden_features (int, optional): Number of channels of the fully-connected layer. Defaults to 64.
         activation (str, optional): The activation function. Defaults to "sin".
@@ -209,7 +209,7 @@ class LNO(base.Arch):
         width: int,
         modes: Tuple[int, ...],
         T: paddle.Tensor,
-        Data: Optional[Tuple[paddle.Tensor, ...]] = None,
+        data: Optional[Tuple[paddle.Tensor, ...]] = None,
         in_features: int = 1,
         hidden_features: int = 64,
         activation: str = "sin",
@@ -224,14 +224,14 @@ class LNO(base.Arch):
         self.dims = len(modes)
         assert self.dims <= 3, "Only 3 dims and lower of modes are supported now."
 
-        if Data is None:
-            Data = ()
+        if data is None:
+            data = ()
         assert (
-            self.dims == len(Data) + 1
-        ), f"Dims of modes is {self.dims} but only {len(Data)} dims(except T) of data received."
+            self.dims == len(data) + 1
+        ), f"Dims of modes is {self.dims} but only {len(data)} dims(except T) of data received."
 
         self.fc0 = nn.Linear(in_features=in_features, out_features=self.width)
-        self.laplace = Laplace(self.width, self.width, self.modes, T, Data)
+        self.laplace = Laplace(self.width, self.width, self.modes, T, data)
         self.conv = getattr(nn, f"Conv{self.dims}D")(
             in_channels=self.width,
             out_channels=self.width,
