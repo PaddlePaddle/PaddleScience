@@ -35,7 +35,7 @@ from ppsci.arch.epnn import Epnn  # isort:skip
 from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
-from ppsci.arch.geofno import FNO1d # isort:skip
+from ppsci.arch.geofno import FNO1d  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
