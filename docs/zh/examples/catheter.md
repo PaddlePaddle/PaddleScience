@@ -1,17 +1,17 @@
 # Catheter
 
-<a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio 快速体验</a>
+`<a href="https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=1727243697832" class="md-button md-button--primary" style>`AI Studio 快速体验 `</a>`
 
 === "模型训练命令"
 
-    ``sh     python geofno.py    ``
+    ``sh     python catheter.py    ``
 
 === "模型评估命令"
 
-    ``sh     python geofno.py mode=eval    ``
+    ``sh     python catheter.py mode=eval    ``
 
-| 预训练模型                                                                                                 |
-| :--------------------------------------------------------------------------------------------------------- |
+| 预训练模型                                                                                              |
+| :------------------------------------------------------------------------------------------------------ |
 | [GeoFno.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams) |
 
 ## 1. 背景简介
@@ -56,23 +56,23 @@ $$
 | :----------------------: | :----------------: |
 | x_1d_structured_mesh.npy | 形状为(2001, 3003) |
 | y_1d_structured_mesh.npy | 形状为(2001, 3003) |
-|      data_info.npy       |  形状为(7, 3003)   |
-|   density_1d_data.npy    | 形状为(2001, 3003) |
+|      data_info.npy      |  形状为(7, 3003)  |
+|   density_1d_data.npy   | 形状为(2001, 3003) |
 
 `./data.zip/test/`
 
-|          字段名          |       说明        |
+|          字段名          |       说明       |
 | :----------------------: | :---------------: |
 | x_1d_structured_mesh.npy | 形状为(2001, 300) |
 | y_1d_structured_mesh.npy | 形状为(2001, 300) |
-|      data_info.npy       |  形状为(7, 300)   |
-|   density_1d_data.npy    | 形状为(2001, 300) |
+|      data_info.npy      |  形状为(7, 300)  |
+|   density_1d_data.npy   | 形状为(2001, 300) |
 
 在加载数据之后，需要将 x、y 进行合并，同时对于合并后的训练数据重新 `reshape` 为 `(1000, 2001, 2)` 的格式，具体代码如下
 
 ```py
 --8<--
-examples/geofno/geofno.py:29:61
+examples/catheter/catheter.py:29:61
 --8<--
 ```
 
@@ -84,7 +84,7 @@ GeoFNO 是一种基于 **几何聚焦傅里叶神经算子 (Geo-FNO** ) 的机�
 
 ```py
 --8<--
-examples/geofno/catheter.py:64:146
+ppsci/arch/geofno.py:64:146
 --8<--
 ```
 
@@ -100,7 +100,7 @@ examples/geofno/catheter.py:64:146
 
 ```py
 --8<--
-examples/geofno/geofno.py:76:92
+examples/catheter/catheter.py:76:92
 --8<--
 ```
 
@@ -112,11 +112,11 @@ examples/geofno/geofno.py:76:92
 
 ### 3.4 优化器构建
 
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，同时使用 `PaddleScience` 中的 `Step` 生成动态学习率。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，同时使用 `PaddleScience` 中的 `MultiStepDecay` 生成动态学习率。
 
 ```py
 --8<--
-examples/geofno/geofno.py:100:102
+examples/catheter/catheter.py:100:102
 --8<--
 ```
 
@@ -126,7 +126,7 @@ examples/geofno/geofno.py:100:102
 
 ```py
 --8<--
-examples/geofno/geofno.py:110:127
+examples/catheter/catheter.py:110:127
 --8<--
 ```
 
@@ -140,33 +140,17 @@ examples/geofno/geofno.py:110:127
 
 ```py
 --8<--
-examples/geofno/geofno.py:130:141
+examples/catheter/catheter.py:130:141
 --8<--
 ```
 
 ## 4. 完整代码
 
-=== "geofno.py"
-
-```py
---8<--
-examples/geofno/geofno.py
---8<--
-```
-
 === "catheter.py"
 
 ```py
 --8<--
-examples/geofno/catheter.py
---8<--
-```
-
-=== "utilities3.py"
-
-```py
---8<--
-examples/geofno/utilities3.py
+examples/catheter/catheter.py
 --8<--
 ```
 

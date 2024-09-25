@@ -91,12 +91,12 @@ def train(cfg: DictConfig):
     constraint = {sup_constraint.name: sup_constraint}
 
     # set model
-    model = FNO1d(**cfg.MODEL)
+    model = ppsci.arch.FNO1d(**cfg.MODEL)
     model.set_state_dict(paddle.load(cfg.TRAIN.pretrained_model_path))
 
     # set optimizer
     ITERS_PER_EPOCH = int(cfg.TRAIN_DATA.n / cfg.TRAIN.batch_size)
-    scheduler = lr_scheduler.Step(
+    scheduler = lr_scheduler.MultiStepDecay(
         **cfg.TRAIN.lr_scheduler, iters_per_epoch=ITERS_PER_EPOCH
     )
     optimizer = Adam(scheduler, weight_decay=cfg.TRAIN.weight_decay)(model)
@@ -199,7 +199,6 @@ def evaluate(cfg: DictConfig):
 def export(cfg: DictConfig):
     # set model
     model = FNO1d(**cfg.MODEL)
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -217,7 +216,7 @@ def export(cfg: DictConfig):
     solver.export(input_spec, cfg.INFER.export_path)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="geofno.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="catheter.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

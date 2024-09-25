@@ -64,7 +64,7 @@ TRAIN:
   lr_scheduler:
     epochs: 2001
     learning_rate: 0.001
-    step_size: 20
+    milestones: [160, 400, 750, 1000, 1300, 1600, 1800]
     gamma: 0.25
   epochs: 1001
   weight_decay: 0.0001
