@@ -265,7 +265,7 @@ class MoFlowNet(base.Arch):
         )
         nll_x = nll_x / (self.a_size * math.log(2.0))
         if nll_x.item() < 0:
-            print("nll_x:{}".format(nll_x.item()))
+            print(f"nll_x: {nll_x.item()}")
         losses = nll_x + nll_adj
         return {"total_loss": losses}
 
