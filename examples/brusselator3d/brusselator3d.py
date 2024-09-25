@@ -111,6 +111,12 @@ def train(cfg: DictConfig):
     in_train_mean, in_train_std = data_funcs.get_mean_std(in_train)
     label_train_mean, label_train_std = data_funcs.get_mean_std(label_train)
 
+    input_constraint = data_funcs.encode(in_train, in_train_mean, in_train_std)
+    input_validator = data_funcs.encode(in_val, in_train_mean, in_train_std)
+    if not cfg.MODEL.use_grid:
+        input_constraint = data_funcs.cat_grid(input_constraint)
+        input_validator = data_funcs.cat_grid(input_validator)
+
     # set model
     T = paddle.linspace(start=0, stop=19, num=cfg.NUM_T).reshape([1, cfg.NUM_T])
     X = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
@@ -132,11 +138,7 @@ def train(cfg: DictConfig):
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": {
-                    "input": data_funcs.cat_grid(
-                        data_funcs.encode(in_train, in_train_mean, in_train_std)
-                    )
-                },
+                "input": {"input": input_constraint},
                 "label": {
                     "output": data_funcs.encode(
                         label_train, label_train_mean, label_train_std
@@ -163,11 +165,7 @@ def train(cfg: DictConfig):
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": {
-                    "input": data_funcs.cat_grid(
-                        data_funcs.encode(in_val, in_train_mean, in_train_std)
-                    )
-                },
+                "input": {"input": input_validator},
                 "label": {"output": label_val},
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -218,6 +216,10 @@ def evaluate(cfg: DictConfig):
     in_train_mean, in_train_std = data_funcs.get_mean_std(in_train)
     label_train_mean, label_train_std = data_funcs.get_mean_std(label_train)
 
+    input_validator = data_funcs.encode(in_val, in_train_mean, in_train_std)
+    if not cfg.MODEL.use_grid:
+        input_validator = data_funcs.cat_grid(input_validator)
+
     # set model
     T = paddle.linspace(start=0, stop=19, num=cfg.NUM_T).reshape([1, cfg.NUM_T])
     X = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
@@ -233,11 +235,7 @@ def evaluate(cfg: DictConfig):
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": {
-                    "input": data_funcs.cat_grid(
-                        data_funcs.encode(in_val, in_train_mean, in_train_std)
-                    )
-                },
+                "input": {"input": input_validator},
                 "label": {"output": label_val},
             },
             "batch_size": cfg.EVAL.batch_size,
@@ -268,15 +266,10 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
     # visualize prediction
-    output_dict = model(
-        {
-            "input": paddle.to_tensor(
-                data_funcs.cat_grid(
-                    data_funcs.encode(in_val[0:1], in_train_mean, in_train_std)
-                )
-            )
-        }
-    )
+    input_visualize = data_funcs.encode(in_val[0:1], in_train_mean, in_train_std)
+    if not cfg.MODEL.use_grid:
+        input_visualize = data_funcs.cat_grid(input_visualize)
+    output_dict = model({"input": paddle.to_tensor(input_visualize)})
     pred = paddle.squeeze(
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
     ).numpy()
@@ -341,9 +334,12 @@ def inference(cfg: DictConfig):
     label_val = data_funcs.transform(labels_val, "label")
     in_train_mean, in_train_std = data_funcs.get_mean_std(in_train)
     label_train_mean, label_train_std = data_funcs.get_mean_std(label_train)
+    input_infer = data_funcs.encode(in_val, in_train_mean, in_train_std)
+    if not cfg.MODEL.use_grid:
+        input_infer = data_funcs.cat_grid(input_infer)
 
     output_dict = predictor.predict(
-        {"input": data_funcs.encode(in_val, in_train_mean, in_train_std)},
+        {"input": input_infer},
         cfg.INFER.batch_size,
     )
 

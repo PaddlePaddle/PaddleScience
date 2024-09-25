@@ -29,6 +29,16 @@ from ppsci.utils import initializer
 
 
 class Laplace(nn.Layer):
+    """Generic N-Dimensional Laplace Operator with Pole-Residue Method.
+
+    Args:
+        in_channels (int):  Number of input channels of the first layer.
+        out_channels (int): Number of output channels of the last layer.
+        modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
+        T (paddle.Tensor): Linspace of time dimension.
+        Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+    """
+
     def __init__(
         self,
         in_channels: int,
@@ -37,15 +47,6 @@ class Laplace(nn.Layer):
         T: paddle.Tensor,
         Data: Tuple[paddle.Tensor, ...],
     ):
-        """Generic N-Dimensional Laplace Operator with Pole-Residue Method.
-
-        Args:
-            in_channels (int):  Number of input channels of the first layer.
-            out_channels (int): Number of output channels of the last layer.
-            modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
-            T (paddle.Tensor): Linspace of time dimension.
-            Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
-        """
         super().__init__()
         self.char1 = "pqr"
         self.char2 = "mnk"
@@ -185,6 +186,22 @@ class Laplace(nn.Layer):
 
 
 class LNO(base.Arch):
+    """Laplace Neural Operator net.
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
+        width (int): Tensor width of Laplace Layer.
+        modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
+        T (paddle.Tensor): Linspace of time dimension.
+        Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
+        in_features (int, optional): Number of input channels of the first layer.. Defaults to 1.
+        hidden_features (int, optional): Number of channels of the fully-connected layer. Defaults to 64.
+        activation (str, optional): The activation function. Defaults to "sin".
+        use_norm (bool, optional): Whether to use normalization layers. Defaults to True.
+        use_grid (bool, optional): Whether to create grid. Defaults to False.
+    """
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -199,21 +216,6 @@ class LNO(base.Arch):
         use_norm: bool = True,
         use_grid: bool = False,
     ):
-        """Laplace Neural Operator net.
-
-        Args:
-            input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
-            output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
-            width (int): Tensor width of Laplace Layer.
-            modes (Tuple[int, ...]): Number of modes to use for contraction in Laplace domain during training.
-            T (paddle.Tensor): Linspace of time dimension.
-            Data (Tuple[paddle.Tensor, ...]): Linspaces of other dimensions.
-            in_features (int, optional): Number of input channels of the first layer.. Defaults to 1.
-            hidden_features (int, optional): Number of channels of the fully-connected layer. Defaults to 64.
-            activation (str, optional): The activation function. Defaults to "sin".
-            use_norm (bool, optional): Whether to use normalization layers. Defaults to True.
-            use_grid (bool, optional): Whether to create grid. Defaults to False.
-        """
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
@@ -251,19 +253,19 @@ class LNO(base.Arch):
 
     def get_grid(self, shape):
         batchsize, size_t, size_x, size_y = shape[0], shape[1], shape[2], shape[3]
-        gridt = paddle.to_tensor(data=np.linspace(0, 1, size_t), dtype="float32")
-        gridt = gridt.reshape(1, size_t, 1, 1, 1).repeat(
+        gridt = paddle.linspace(0, 1, size_t)
+        gridt = gridt.reshape([1, size_t, 1, 1, 1]).tile(
             [batchsize, 1, size_x, size_y, 1]
         )
-        gridx = paddle.to_tensor(data=np.linspace(0, 1, size_x), dtype="float32")
-        gridx = gridx.reshape(1, 1, size_x, 1, 1).repeat(
+        gridx = paddle.linspace(0, 1, size_x)
+        gridx = gridx.reshape([1, 1, size_x, 1, 1]).tile(
             [batchsize, size_t, 1, size_y, 1]
         )
-        gridy = paddle.to_tensor(data=np.linspace(0, 1, size_y), dtype="float32")
-        gridy = gridy.reshape(1, 1, 1, size_y, 1).repeat(
+        gridy = paddle.linspace(0, 1, size_y)
+        gridy = gridy.reshape([1, 1, 1, size_y, 1]).tile(
             [batchsize, size_t, size_x, 1, 1]
         )
-        return paddle.concat(x=(gridt, gridx, gridy), axis=-1)
+        return paddle.concat([gridt, gridx, gridy], axis=-1)
 
     def transpoe_to_NCDHW(self, x):
         perm = [0, self.dims + 1] + list(range(1, self.dims + 1))
