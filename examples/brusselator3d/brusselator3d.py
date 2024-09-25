@@ -125,7 +125,7 @@ def train(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : data_funcs.s
     ]
-    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, data=(X, Y))
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
@@ -228,7 +228,7 @@ def evaluate(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : data_funcs.s
     ]
-    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, data=(X, Y))
 
     # set validator
     sup_validator = ppsci.validate.SupervisedValidator(
@@ -287,7 +287,7 @@ def export(cfg: DictConfig):
     Y = paddle.linspace(start=0, stop=1, num=cfg.ORIG_R).reshape([1, cfg.ORIG_R])[
         :, : int((cfg.ORIG_R - 1) / cfg.RESOLUTION + 1)
     ]
-    model = ppsci.arch.LNO(**cfg.MODEL, T=T, Data=(X, Y))
+    model = ppsci.arch.LNO(**cfg.MODEL, T=T, data=(X, Y))
 
     # initialize solver
     solver = ppsci.solver.Solver(
