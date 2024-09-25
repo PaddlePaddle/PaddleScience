@@ -20,7 +20,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: infer # running mode: train/eval/export/inference
 seed: 2023
 output_dir: ${hydra:run.dir}
 log_freq: 20
@@ -60,3 +60,50 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
   batch_size: 8
+
+INFER:
+  # 预训练模型的路径，加载预训练的模型参数
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/deepcfd/deepcfd_pretrained.pdparams"
+
+  # 导出的模型路径，用于保存推理所需的 .pdmodel 和 .pdparams 文件
+  export_path: ./inference/deepcfd
+
+  # 导出的模型文件路径，拼接后的文件路径包含 .pdmodel 和 .pdparams 文件
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+
+  # 推理使用的设备，这里指定为 GPU
+  device: gpu
+
+  # 使用的推理引擎，这里选择原生引擎
+  engine: native
+
+  # 推理的精度类型，fp32 为单精度浮点数
+  precision: fp32
+
+  # ONNX 导出的路径
+  onnx_path: ${INFER.export_path}.onnx
+
+  # 是否启用子图优化
+  ir_optim: true
+
+  # 子图优化的最小节点数
+  min_subgraph_size: 10
+
+  # 指定 GPU 可用内存大小，单位为 MB，这里设置为 6000 MB
+  gpu_mem: 6000
+
+  # 指定使用的 GPU ID
+  gpu_id: 0
+
+  # 批量推理时的最大批次大小
+  max_batch_size: 100
+
+  # 使用的 CPU 线程数
+  num_cpu_threads: 4
+
+  # 推理时输入数据的总大小，deepcfd 案例数据集的样本数为 981
+  total_size: 981
+
+  # 推理时每批次的数据大小，设置为 100，适用于 deepcfd 案例的批次处理
+  batch_size: 100
