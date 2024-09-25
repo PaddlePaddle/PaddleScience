@@ -451,19 +451,15 @@ def evaluate(cfg: DictConfig):
 
 
 def export(cfg: DictConfig):
-    # 设置模型，基于 UNetEx 网络
     model = ppsci.arch.UNetEx(**cfg.MODEL)
 
-    # 初始化 solver，传入模型和预训练模型路径
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
 
-    # 使用 input_keys 生成 input_spec，确保与 aneurysm 和 euler_beam 示例一致
     from paddle.static import InputSpec
 
-    # 构建 input_spec 为包含字典的列表
     input_spec = [
         {
             key: InputSpec(
@@ -473,7 +469,6 @@ def export(cfg: DictConfig):
         },
     ]
 
-    # 导出模型，保存到指定路径
     solver.export(input_spec, cfg.INFER.export_path)
     print(f"Model has been exported to {cfg.INFER.export_path}")
 
