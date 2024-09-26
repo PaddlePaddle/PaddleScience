@@ -76,5 +76,4 @@ INFER:
   gpu_id: 0
   max_batch_size: 100
   num_cpu_threads: 4
-  total_size: 981
   batch_size: 100

@@ -489,11 +489,8 @@ def predict_and_save_plot_infer(
         index (int): Index of data to visualize.
         plot_dir (str): Directory to save plot.
     """
-    import os
 
-    import matplotlib.pyplot as plt
-
-    # 提取各通道的真实值和预测值
+    # Extract the true and predicted values for each channel
     u_true = y[index, 0, :, :]
     v_true = y[index, 1, :, :]
     p_true = y[index, 2, :, :]
@@ -502,12 +499,12 @@ def predict_and_save_plot_infer(
     v_pred = pred_y[index, 1, :, :]
     p_pred = pred_y[index, 2, :, :]
 
-    # 计算误差
+    # Compute the absolute error between true and predicted values
     error_u = np.abs(u_true - u_pred)
     error_v = np.abs(v_true - v_pred)
     error_p = np.abs(p_true - p_pred)
 
-    # 计算各通道的最小和最大值
+    # Calculate the min and max values for each channel
     min_u, max_u = u_true.min(), u_true.max()
     min_v, max_v = v_true.min(), v_true.max()
     min_p, max_p = p_true.min(), p_true.max()
@@ -516,10 +513,10 @@ def predict_and_save_plot_infer(
     min_error_v, max_error_v = error_v.min(), error_v.max()
     min_error_p, max_error_p = error_p.min(), error_p.max()
 
-    # 开始绘图
+    # Start plotting
     plt.figure(figsize=(15, 10))
 
-    # 绘制 Ux
+    # Plot Ux channel (True, Predicted, and Error)
     plt.subplot(3, 3, 1)
     plt.title("OpenFOAM Ux", fontsize=18)
     plt.imshow(
@@ -557,7 +554,7 @@ def predict_and_save_plot_infer(
     )
     plt.colorbar(orientation="horizontal")
 
-    # 绘制 Uy
+    # Plot Uy channel (True, Predicted, and Error)
     plt.subplot(3, 3, 4)
     plt.imshow(
         np.transpose(v_true),
@@ -592,7 +589,7 @@ def predict_and_save_plot_infer(
     )
     plt.colorbar(orientation="horizontal")
 
-    # 绘制 p
+    # Plot pressure channel p (True, Predicted, and Error)
     plt.subplot(3, 3, 7)
     plt.imshow(
         np.transpose(p_true),
@@ -635,20 +632,25 @@ def predict_and_save_plot_infer(
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
 
+    # Load test dataset from serialized files
     with open(cfg.DATAX_PATH, "rb") as file:
         x = pickle.load(file)
     with open(cfg.DATAY_PATH, "rb") as file:
         y = pickle.load(file)
 
+    # Split data into training and test sets
     _, test_dataset = split_tensors(x, y, ratio=cfg.SLIPT_RATIO)
     test_x, test_y = test_dataset
 
     input_dict = {cfg.MODEL.input_key: test_x}
 
+    # Initialize the PINN predictor model
     predictor = pinn_predictor.PINNPredictor(cfg)
 
+    # Run inference and get predictions
     output_dict = predictor.predict(input_dict, batch_size=cfg.INFER.batch_size)
 
+    # Handle model's output key structure
     actual_output_key = cfg.MODEL.output_key
 
     output_keys = (
@@ -661,6 +663,7 @@ def inference(cfg: DictConfig):
             "The number of output_keys does not match the number of output_dict keys."
         )
 
+    # Map model output keys to values
     output_dict = {
         origin: value for origin, value in zip(output_keys, output_dict.values())
     }
@@ -673,6 +676,7 @@ def inference(cfg: DictConfig):
         )
 
     try:
+        # Extract Ux, Uy, and pressure from the predicted output
         u_pred = concat_output[:, 0, :, :]  # Ux
         v_pred = concat_output[:, 1, :, :]  # Uy
         p_pred = concat_output[:, 2, :, :]  # p
@@ -680,12 +684,13 @@ def inference(cfg: DictConfig):
         print(f"Error in splitting '{actual_output_key}': {e}")
         raise
 
+    # Combine the predictions into one array for further processing
     pred_y = np.stack([u_pred, v_pred, p_pred], axis=1)
 
     PLOT_DIR = os.path.join(cfg.output_dir, "infer_visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
 
-    # 绘制前五组数据的结果
+    # Visualize and save the first five predictions
     for index in range(min(5, pred_y.shape[0])):
         predict_and_save_plot_infer(test_x, test_y, pred_y, index, PLOT_DIR)
 
@@ -703,7 +708,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
