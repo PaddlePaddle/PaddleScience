@@ -37,7 +37,7 @@ ORIG_R: 28
 RESOLUTION: 2
 
 # set data path
-DATA_PATH: ./Data/Brusselator_force_train.npz
+DATA_PATH: ./data/brusselator3d_dataset.npz
 
 # model settings
 MODEL:
