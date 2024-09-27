@@ -37,6 +37,7 @@ from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
+from ppsci.arch.lno import LNO  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
 from ppsci.arch.mlp import PirateNet  # isort:skip
@@ -52,6 +53,8 @@ from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
+from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
+from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP # isort:skip
@@ -81,6 +84,7 @@ __all__ = [
     "GraphCastNet",
     "HEDeepONets",
     "LorenzEmbedding",
+    "LNO",
     "MLP",
     "ModelList",
     "ModifiedMLP",
@@ -98,7 +102,9 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
-    "IFMMLP"
+    "VelocityDiscriminator",
+    "VelocityGenerator",
+    "IFMMLP",
 ]
 
 
