@@ -7,7 +7,10 @@ from typing import Sequence
 from typing import Tuple
 from typing import Union
 
-import h5py
+try:
+    import h5py
+except ModuleNotFoundError:
+    pass
 import numpy as np
 import paddle
 import paddle.nn.functional as F
