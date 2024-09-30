@@ -181,27 +181,6 @@
 ./README.md:adaptation
 --8<--
 
-<div class="container">
-    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
-        <div class="card card-deepxde">
-            DeepXDE
-            <br><span class="text-large">全量支持</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
-        <div class="card card-deepmd">
-            Modulus-sym
-            <br><span class="text-large">全量支持</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
-        <div class="card card-modulus">
-            DeepMD
-            <br><span class="text-large">部分适配</span></br>
-        </div>
-    </a>
-</div>
-
 --8<--
 ./README.md:support
 --8<--

@@ -20,6 +20,8 @@
 [🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
+🔥 [飞桨科学计算工具组件开发大赛](https://competition.atomgit.com/competitionInfo?id=805ad94637707d062f24e54265d85731)
+
 🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
 
 🔥 [CIKM 2024: AI辅助的先进空气动力学-优化汽车设计以实现最佳性能](https://competition.atomgit.com/competitionInfo?id=cda4e961b0c25858ca0fd2a4bdf87520)，火热报名中。
@@ -239,7 +241,16 @@ python -c "import paddle; paddle.utils.run_check()"
 ## 🎈其他领域支持
 
 <!-- --8<-- [start:adaptation] -->
-除 PaddleScience 套件外，Paddle 框架还支持了 [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能。
+除 PaddleScience 外，Paddle 框架同时支持了科学计算领域相关的研发套件和基础工具：
+
+| 工具 | 领域方向 | 支持情况 |
+| -- | -- | -- |
+| [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend) | AI仿真套件 | 全量支持 |
+| [DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) | 方程求解套件 | 全量支持 |
+| [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) | 分子动力学套件 | 部分支持 |
+| [TensorLy](https://tensorly.org/dev/index.html) | 张量计算库 | 全量支持 |
+| [NVIDIA/warp](https://github.com/NVIDIA/warp) | 高性能仿真/图形库 | 全量支持 |
+| [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
 <!-- --8<-- [end:adaptation] -->
 
 <!-- --8<-- [start:support] -->
