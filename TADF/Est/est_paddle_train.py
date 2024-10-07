@@ -14,17 +14,12 @@ from rdkit.Chem import AllChem
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 
-paddle.device.set_device("cpu")
-EPOCHS = 200
-LR = 0.0001
-BATCH = 8
-
 data = []
-for line in open("D://resources//machine learning//paddle//2024-08//Est.dat"):
+for line in open("./data/Est.dat"):
     num = float(line.strip())
     data.append(num)
 smis = []
-for line in open("D://resources//machine learning//paddle//2024-08//smis.txt"):
+for line in open("./data/smis.txt"):
     smis.append(line.strip())
 vectors = []
 del_mol = []
@@ -175,12 +170,12 @@ train_loss, val_loss = train(
     model, x_train, y_train, x_val, y_val, BATCH, LR, EPOCHS
 )  # 训练模型
 model.eval()
-paddle.save(model.state_dict(), "F://pypython_py//paddle//model//est.pdparams")
+paddle.save(model.state_dict(), "./data/est.pdparams")
 ytest_pre = model(paddle.to_tensor(xtest))
 ytest_pre = ytest_pre.detach().numpy()
-with open("F://pypython_py//paddle//train//est.txt", "w") as j:
+with open("./data/est.txt", "w") as j:
     for num in ytest:
         j.write(str(num) + "\n")
-with open("F://pypython_py//paddle//train//estpre.txt", "w") as k:
+with open("./data/estpre.txt", "w") as k:
     for num in ytest_pre:
         k.write(str(num) + "\n")
