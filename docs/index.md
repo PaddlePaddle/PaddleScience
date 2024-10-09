@@ -92,7 +92,7 @@
 | 光孤子 | [Optical soliton](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
-| 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
+| 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator3d.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -177,32 +177,11 @@
 ./README.md:feature
 --8<--
 
-## 🎈其他领域支持
+## 🎈生态工具
 
 --8<--
 ./README.md:adaptation
 --8<--
-
-<div class="container">
-    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
-        <div class="card card-deepxde">
-            DeepXDE
-            <br><span class="text-large">全量支持</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
-        <div class="card card-deepmd">
-            Modulus-sym
-            <br><span class="text-large">全量支持</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
-        <div class="card card-modulus">
-            DeepMD
-            <br><span class="text-large">部分适配</span></br>
-        </div>
-    </a>
-</div>
 
 --8<--
 ./README.md:support
