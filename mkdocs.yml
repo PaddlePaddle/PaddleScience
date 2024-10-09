@@ -51,6 +51,7 @@ nav:
         - SPINN: zh/examples/spinn.md
         - XPINN: zh/examples/xpinns.md
         - NeuralOperator: zh/examples/neuraloperator.md
+        - Brusselator3D: zh/examples/brusselator3d.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md
@@ -86,6 +87,7 @@ nav:
           - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
+        - CGCNN: zh/examples/cgcnn.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
@@ -93,7 +95,10 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
-        - TGCN: zh/examples/tgcn.md
+        - VelocityGAN: zh/examples/velocity_gan.md
+      - 化学科学(AI for Chemistry):
+        - Moflow: zh/examples/moflow.md
+
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
@@ -134,6 +139,7 @@ nav:
   - 开发与复现指南:
     - 开发指南: zh/development.md
     - 复现指南: zh/reproduction.md
+  - 学术成果: zh/academic.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15

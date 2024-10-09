@@ -517,10 +517,11 @@ class Solver:
                     for name in container.output_expr:
                         if isinstance(container.output_expr[name], sp.Basic):
                             container.output_expr[name] = funcs[ind]
-                            if self.world_size > 1:
-                                container.output_expr[name] = dist_wrapper(
-                                    container.output_expr[name]
-                                )
+                            # FIXME: Equation with parameter not support yet.
+                            # if self.world_size > 1:
+                            #     container.output_expr[name] = dist_wrapper(
+                            #         container.output_expr[name]
+                            #     )
                             ind += 1
 
         if self.constraint:
@@ -929,7 +930,7 @@ class Solver:
             f"Inference model has been exported to: {export_path}, including "
             + (
                 "*.json, *.pdiparams files."
-                if misc.check_flag_enabled("FLAGS_enable_pir_api")
+                if paddle.framework.use_pir_api()
                 else "*.pdmodel, *.pdiparams and *.pdiparams.info files."
             )
         )
@@ -937,7 +938,7 @@ class Solver:
 
         if with_onnx:
             # TODO: support pir + onnx
-            if misc.check_flag_enabled("FLAGS_enable_pir_api"):
+            if paddle.framework.use_pir_api():
                 raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
