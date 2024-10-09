@@ -12,42 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import hydra
+import numpy as np
+from ednn_utils import Meter
+from omegaconf import DictConfig
+from paddle.nn import BCEWithLogitsLoss
+from paddle.nn import MSELoss
+
 import ppsci
 from ppsci.utils import logger
 
-import os
-import hydra
-import numpy as np
-import paddle
-from omegaconf import DictConfig
-from paddle.nn import BCEWithLogitsLoss, MSELoss
-from ednn_utils import Meter
 
-
-def get_train_loss_func(reg, pos_weights=None): #:paddle.Tensor=None):
+def get_train_loss_func(reg, pos_weights=None):  #:paddle.Tensor=None):
     def train_loss_func(output_dict, label_dict, weight_dict):
         if reg:
-            loss_func = MSELoss(reduction='none')
+            loss_func = MSELoss(reduction="none")
         else:
-            loss_func = BCEWithLogitsLoss(reduction='none', pos_weight=pos_weights)
-        return {"pred": (loss_func(output_dict["pred"], label_dict['y']) * (label_dict['mask'] != 0).astype('float32')).mean()}
+            loss_func = BCEWithLogitsLoss(reduction="none", pos_weight=pos_weights)
+        return {
+            "pred": (
+                loss_func(output_dict["pred"], label_dict["y"])
+                * (label_dict["mask"] != 0).astype("float32")
+            ).mean()
+        }
+
     return train_loss_func
+
 
 def get_val_loss_func(reg, metric):
     def val_loss_func(output_dict, label_dict):
-        eval_metric = Meter()  
-        eval_metric.update(output_dict["pred"], label_dict["y"], label_dict['mask'])
+        eval_metric = Meter()
+        eval_metric.update(output_dict["pred"], label_dict["y"], label_dict["mask"])
 
         if reg:
             rmse_score = np.mean(eval_metric.compute_metric(metric))
-            mae_score = np.mean(eval_metric.compute_metric('mae'))
-            r2_score = np.mean(eval_metric.compute_metric('r2'))
-            return {'rmse': rmse_score, 'mae': mae_score, 'r2': r2_score}
+            mae_score = np.mean(eval_metric.compute_metric("mae"))
+            r2_score = np.mean(eval_metric.compute_metric("r2"))
+            return {"rmse": rmse_score, "mae": mae_score, "r2": r2_score}
         else:
             roc_score = np.mean(eval_metric.compute_metric(metric))
-            prc_score = np.mean(eval_metric.compute_metric('prc_auc'))
-            return {'roc_auc': roc_score, 'prc_auc': prc_score}
+            prc_score = np.mean(eval_metric.compute_metric("prc_auc"))
+            return {"roc_auc": roc_score, "prc_auc": prc_score}
+
     return val_loss_func
+
 
 def train(cfg: DictConfig):
     # set random seed for reproducibility
@@ -55,23 +65,26 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
-    if cfg.data_label in ['esol', 'freesolv', 'lipop']:
-        task_type = 'reg'
+    if cfg.data_label in ["esol", "freesolv", "lipop"]:
+        # task_type = "reg"
         reg = True
-        metric = 'rmse'
+        metric = "rmse"
     else:
-        task_type = 'cla'
+        # task_type = "cla"
         reg = False
-        metric = 'roc_auc'
+        metric = "roc_auc"
 
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
-            "input_keys": ("x", ),
-            "label_keys": ("y", "mask", ),
+            "input_keys": ("x",),
+            "label_keys": (
+                "y",
+                "mask",
+            ),
             "data_dir": cfg.data_dir,
-            "data_mode": 'train',
+            "data_mode": "train",
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.TRAIN.batch_size,
@@ -95,47 +108,58 @@ def train(cfg: DictConfig):
     inputs = sup_constraint.data_loader.dataset.data_tr_x.shape[1]
     tasks = sup_constraint.data_loader.dataset.task_dict[cfg.data_label]
     iters_per_epoch = len(sup_constraint.data_loader)
-    print(f'inputs is: {inputs}, iters_per_epoch: {iters_per_epoch}')
+    print(f"inputs is: {inputs}, iters_per_epoch: {iters_per_epoch}")
     if not reg:
         pos_weights = sup_constraint.data_loader.dataset.pos_weights
-        sup_constraint.loss = ppsci.loss.FunctionalLoss(get_train_loss_func(reg, pos_weights))
+        sup_constraint.loss = ppsci.loss.FunctionalLoss(
+            get_train_loss_func(reg, pos_weights)
+        )
         # TODO: is this ok to replace loss func
 
     # wrap constraints together
     constraint = {sup_constraint.name: sup_constraint}
-    
+
     hyper_paras = cfg.HYPER_OPT[cfg.data_label]
-    
-    hidden_units = [hyper_paras['hidden_unit1'], hyper_paras['hidden_unit2'], hyper_paras['hidden_unit3']]
+
+    hidden_units = [
+        hyper_paras["hidden_unit1"],
+        hyper_paras["hidden_unit2"],
+        hyper_paras["hidden_unit3"],
+    ]
     # set model
     model = ppsci.arch.IFMMLP(
-        #**cfg.MODEL,
-        input_keys = ('x', ),
-        output_keys = ('pred', ),
-        hidden_units = hidden_units,
-        embed_name = cfg.MODEL.embed_name,
-        inputs = inputs,
-        outputs = len(tasks),
-        d_out = hyper_paras['d_out'],
-        sigma = hyper_paras["sigma"],
-        dp_ratio = hyper_paras["dropout"],
-        reg = reg,
-        first_omega_0 = hyper_paras['omega0'],
-        hidden_omega_0 = hyper_paras['omega1'],
+        # **cfg.MODEL,
+        input_keys=("x",),
+        output_keys=("pred",),
+        hidden_units=hidden_units,
+        embed_name=cfg.MODEL.embed_name,
+        inputs=inputs,
+        outputs=len(tasks),
+        d_out=hyper_paras["d_out"],
+        sigma=hyper_paras["sigma"],
+        dp_ratio=hyper_paras["dropout"],
+        reg=reg,
+        first_omega_0=hyper_paras["omega0"],
+        hidden_omega_0=hyper_paras["omega1"],
     )
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate, weight_decay=hyper_paras['l2'])(model)
+    optimizer = ppsci.optimizer.Adam(
+        learning_rate=cfg.TRAIN.learning_rate, weight_decay=hyper_paras["l2"]
+    )(model)
 
     # set validator
-    
+
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
-            "input_keys": ("x", ),
-            "label_keys": ("y", "mask", ),
+            "input_keys": ("x",),
+            "label_keys": (
+                "y",
+                "mask",
+            ),
             "data_dir": cfg.data_dir,
-            "data_mode": 'val',
+            "data_mode": "val",
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.EVAL.batch_size,
@@ -151,16 +175,19 @@ def train(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(get_train_loss_func(reg)),
         output_expr={"pred": lambda out: out["pred"]},
-        metric={"MyMeter": ppsci.metric.FunctionalMetric(get_val_loss_func(reg, metric))},
+        metric={
+            "MyMeter": ppsci.metric.FunctionalMetric(get_val_loss_func(reg, metric))
+        },
         name="MyMeter_validator",
     )
     if not reg:
         pos_weights = rmse_validator.data_loader.dataset.pos_weights
-        rmse_validator.loss = ppsci.loss.FunctionalLoss(get_train_loss_func(reg, pos_weights))
+        rmse_validator.loss = ppsci.loss.FunctionalLoss(
+            get_train_loss_func(reg, pos_weights)
+        )
         # TODO: is this ok to replace loss func
 
     validator = {rmse_validator.name: rmse_validator}
-    
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -169,7 +196,7 @@ def train(cfg: DictConfig):
         cfg.output_dir,
         optimizer,
         None,
-        cfg.HYPER_OPT[cfg.data_label].epoch, #cfg.TRAIN.epochs,
+        cfg.HYPER_OPT[cfg.data_label].epoch,  # cfg.TRAIN.epochs,
         iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
@@ -182,27 +209,31 @@ def train(cfg: DictConfig):
     # train model
     solver.train()
 
+
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
-    if cfg.data_label in ['esol', 'freesolv', 'lipop']:
-        task_type = 'reg'
+    if cfg.data_label in ["esol", "freesolv", "lipop"]:
+        # task_type = "reg"
         reg = True
-        metric = 'rmse'
+        metric = "rmse"
     else:
-        task_type = 'cla'
+        # task_type = "cla"
         reg = False
-        metric = 'roc_auc'
-    
+        metric = "roc_auc"
+
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
-            "input_keys": ("x",  ),
-            "label_keys": ("y", "mask", ),
+            "input_keys": ("x",),
+            "label_keys": (
+                "y",
+                "mask",
+            ),
             "data_dir": cfg.data_dir,
-            "data_mode": 'train',
+            "data_mode": "train",
             "data_label": cfg.data_label,
         },
         "batch_size": 128,
@@ -221,39 +252,46 @@ def evaluate(cfg: DictConfig):
         loss=ppsci.loss.FunctionalLoss(get_train_loss_func(reg)),
         name="Sup",
     )
-    
+
     inputs = sup_constraint.data_loader.dataset.data_tr_x.shape[1]
     tasks = sup_constraint.data_loader.dataset.task_dict[cfg.data_label]
 
     hyper_paras = cfg.HYPER_OPT[cfg.data_label]
-    hidden_units = [hyper_paras['hidden_unit1'], hyper_paras['hidden_unit2'], hyper_paras['hidden_unit3']]
-    print(f'hyper_params = {hyper_paras}')
-    
+    hidden_units = [
+        hyper_paras["hidden_unit1"],
+        hyper_paras["hidden_unit2"],
+        hyper_paras["hidden_unit3"],
+    ]
+    print(f"hyper_params = {hyper_paras}")
+
     # set model
     model = ppsci.arch.IFMMLP(
-        #**cfg.MODEL,
-        input_keys = ('x', ),
-        output_keys = ('pred', ),
-        hidden_units = hidden_units,
-        embed_name = cfg.MODEL.embed_name,
-        inputs = inputs,
-        outputs = len(tasks),
-        d_out = hyper_paras['d_out'],
-        sigma = hyper_paras["sigma"],
-        dp_ratio = hyper_paras["dropout"],
-        reg = reg,
-        first_omega_0 = hyper_paras['omega0'],
-        hidden_omega_0 = hyper_paras['omega1'],
+        # **cfg.MODEL,
+        input_keys=("x",),
+        output_keys=("pred",),
+        hidden_units=hidden_units,
+        embed_name=cfg.MODEL.embed_name,
+        inputs=inputs,
+        outputs=len(tasks),
+        d_out=hyper_paras["d_out"],
+        sigma=hyper_paras["sigma"],
+        dp_ratio=hyper_paras["dropout"],
+        reg=reg,
+        first_omega_0=hyper_paras["omega0"],
+        hidden_omega_0=hyper_paras["omega1"],
     )
 
     # set validator
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
-            "input_keys": ("x", ),
-            "label_keys": ("y", "mask", ),
+            "input_keys": ("x",),
+            "label_keys": (
+                "y",
+                "mask",
+            ),
             "data_dir": cfg.data_dir,
-            "data_mode": 'test',
+            "data_mode": "test",
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.EVAL.batch_size,
@@ -269,12 +307,16 @@ def evaluate(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(get_train_loss_func(reg)),
         output_expr={"pred": lambda out: out["pred"]},
-        metric={"MyMeter": ppsci.metric.FunctionalMetric(get_val_loss_func(reg, metric))},
+        metric={
+            "MyMeter": ppsci.metric.FunctionalMetric(get_val_loss_func(reg, metric))
+        },
         name="MyMeter_validator",
     )
     if not reg:
         pos_weights = rmse_validator.data_loader.dataset.pos_weights
-        rmse_validator.loss = ppsci.loss.FunctionalLoss(get_train_loss_func(reg, pos_weights))
+        rmse_validator.loss = ppsci.loss.FunctionalLoss(
+            get_train_loss_func(reg, pos_weights)
+        )
         # TODO: is this ok to replace loss func
 
     validator = {rmse_validator.name: rmse_validator}
@@ -284,7 +326,9 @@ def evaluate(cfg: DictConfig):
     else:
         t_epoch = cfg.HYPER_OPT[cfg.data_label].epoch
         load_epoch = t_epoch - t_epoch % cfg.TRAIN.save_freq
-        pretrained_model_path = os.path.join(cfg.output_dir, 'checkpoints', 'epoch_' + str(load_epoch) + '.pdparams')
+        pretrained_model_path = os.path.join(
+            cfg.output_dir, "checkpoints", "epoch_" + str(load_epoch) + ".pdparams"
+        )
 
     solver = ppsci.solver.Solver(
         model,
@@ -292,12 +336,13 @@ def evaluate(cfg: DictConfig):
         log_freq=cfg.log_freq,
         seed=cfg.seed,
         validator=validator,
-        pretrained_model_path= pretrained_model_path,
+        pretrained_model_path=pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
     # evaluate model
     solver.eval()
+
 
 @hydra.main(version_base=None, config_path="./conf", config_name="ifm.yaml")
 def main(cfg: DictConfig):
@@ -307,6 +352,7 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
 
 if __name__ == "__main__":
     main()
