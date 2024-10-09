@@ -238,12 +238,12 @@ python -c "import paddle; paddle.utils.run_check()"
 
 请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/quickstart/)
 
-## 🎈其他领域支持
+## 🎈生态工具
 
 <!-- --8<-- [start:adaptation] -->
 除 PaddleScience 外，Paddle 框架同时支持了科学计算领域相关的研发套件和基础工具：
 
-| 工具 | 领域方向 | 支持情况 |
+| 工具 | 简介 | 支持情况 |
 | -- | -- | -- |
 | [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend) | AI仿真套件 | 全量支持 |
 | [DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) | 方程求解套件 | 全量支持 |
