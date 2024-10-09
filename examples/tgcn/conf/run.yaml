@@ -1,21 +1,26 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: __exp__/${data_name}/${now:%Y_%m_%d_%H_%M_%S}
+    dir: outputs_tgcn/${now:%Y-%m-%d}/${now:%H-%M-%S}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
-    config:
-      override_dirname:
-        exclude_keys:
-          - mode
-          - output_dir
-          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
-
 
 # general settings
 device: gpu
@@ -34,9 +39,8 @@ reduce: mean
 
 # model settings
 MODEL:
-  afno:
-    input_keys: ['input']
-    label_keys: ['label']
+  input_keys: ['input']
+  label_keys: ['label']
 
 seed: 3407
 batch_size: 64
@@ -60,5 +64,5 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: ${data_name}_best.pdparams
+  pretrained_model_path: null
   batch_size: ${batch_size}

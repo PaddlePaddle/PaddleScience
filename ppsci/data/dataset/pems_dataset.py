@@ -1,10 +1,12 @@
 import os
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
-
 from paddle.io import Dataset
 from paddle.vision.transforms import Compose
-from typing import Tuple, Optional, Dict
 
 
 class StandardScaler:
@@ -25,14 +27,20 @@ def add_window_horizon(data, in_step=12, out_step=12):
     X = []
     Y = []
     for i in range(end_index + 1):
-        X.append(data[i:i + in_step])
-        Y.append(data[i + in_step:i + in_step + out_step])
+        X.append(data[i : i + in_step])
+        Y.append(data[i + in_step : i + in_step + out_step])
     return X, Y
 
 
-def get_edge_index(file_path, bi=True, reduce='mean'):
+def get_edge_index(file_path, bi=True, reduce="mean"):
     TYPE_DICT = {0: np.int64, 1: np.int64, 2: np.float32}
-    df = pd.read_csv(os.path.join(file_path, 'dist.csv'), skiprows=1, header=None, sep=',', dtype=TYPE_DICT)
+    df = pd.read_csv(
+        os.path.join(file_path, "dist.csv"),
+        skiprows=1,
+        header=None,
+        sep=",",
+        dtype=TYPE_DICT,
+    )
 
     edge_index = df.loc[:, [0, 1]].values.T
     edge_attr = df.loc[:, 2].values
@@ -45,9 +53,9 @@ def get_edge_index(file_path, bi=True, reduce='mean'):
     num = np.max(edge_index) + 1
     adj = np.zeros((num, num), dtype=np.float32)
 
-    if reduce == 'sum':
+    if reduce == "sum":
         adj[edge_index[0], edge_index[1]] = 1.0
-    elif reduce == 'mean':
+    elif reduce == "mean":
         adj[edge_index[0], edge_index[1]] = 1.0
         adj = adj / adj.sum(axis=-1)
     else:
@@ -57,17 +65,19 @@ def get_edge_index(file_path, bi=True, reduce='mean'):
 
 
 class PEMSDataset(Dataset):
-    def __init__(self,
-                 file_path: str,
-                 split: str,
-                 input_keys: Tuple[str, ...],
-                 label_keys: Tuple[str, ...],
-                 weight_dict: Optional[Dict[str, float]] = None,
-                 transforms: Optional[Compose] = None,
-                 norm_input: bool = True,
-                 norm_label: bool = False,
-                 input_len: int = 12,
-                 label_len: int = 12):
+    def __init__(
+        self,
+        file_path: str,
+        split: str,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        weight_dict: Optional[Dict[str, float]] = None,
+        transforms: Optional[Compose] = None,
+        norm_input: bool = True,
+        norm_label: bool = False,
+        input_len: int = 12,
+        label_len: int = 12,
+    ):
         super().__init__()
 
         self.input_keys = input_keys
@@ -78,10 +88,12 @@ class PEMSDataset(Dataset):
         self.norm_input = norm_input
         self.norm_label = norm_label
 
-        data = np.load(os.path.join(file_path, '{}.npy'.format(split))).astype(np.float32)
+        data = np.load(os.path.join(file_path, "{}.npy".format(split))).astype(
+            np.float32
+        )
 
-        self.mean = np.load(os.path.join(file_path, 'mean.npy')).astype(np.float32)
-        self.std = np.load(os.path.join(file_path, 'std.npy')).astype(np.float32)
+        self.mean = np.load(os.path.join(file_path, "mean.npy")).astype(np.float32)
+        self.std = np.load(os.path.join(file_path, "std.npy")).astype(np.float32)
         self.scaler = StandardScaler(self.mean, self.std)
 
         X, Y = add_window_horizon(data, input_len, label_len)

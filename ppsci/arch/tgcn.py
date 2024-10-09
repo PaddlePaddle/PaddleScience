@@ -1,15 +1,20 @@
 import paddle as pp
 import paddle.nn.functional as F
-
 from paddle import nn
-from ppsci.arch.base import Arch
 from paddle.nn.initializer import KaimingNormal
+
+from ppsci.arch.base import Arch
 
 
 class graph_conv(nn.Layer):
     def __init__(self, in_dim, out_dim, dropout, num_layer=2):
         super(graph_conv, self).__init__()
-        self.mlp = nn.Conv2D((num_layer + 1) * in_dim, out_dim, kernel_size=(1, 1), weight_attr=KaimingNormal())
+        self.mlp = nn.Conv2D(
+            (num_layer + 1) * in_dim,
+            out_dim,
+            kernel_size=(1, 1),
+            weight_attr=KaimingNormal(),
+        )
         self.dropout = dropout
         self.num_layer = num_layer
 
@@ -35,11 +40,23 @@ class tempol_conv(nn.Layer):
         self.num_layer = num_layer
         for i in range(num_layer):
             in_channels = in_dim if i == 0 else hidden
-            self.tc_convs.append(nn.Conv2D(in_channels=in_channels, out_channels=hidden,
-                                 kernel_size=(1, k_s), padding=(0, i + 1), dilation=i + 1, weight_attr=KaimingNormal()))
+            self.tc_convs.append(
+                nn.Conv2D(
+                    in_channels=in_channels,
+                    out_channels=hidden,
+                    kernel_size=(1, k_s),
+                    padding=(0, i + 1),
+                    dilation=i + 1,
+                    weight_attr=KaimingNormal(),
+                )
+            )
 
-        self.mlp = nn.Conv2D(in_channels=in_dim + hidden * num_layer, out_channels=out_dim,
-                             kernel_size=(1, 1), weight_attr=KaimingNormal())
+        self.mlp = nn.Conv2D(
+            in_channels=in_dim + hidden * num_layer,
+            out_channels=out_dim,
+            kernel_size=(1, 1),
+            weight_attr=KaimingNormal(),
+        )
 
     def forward(self, x):
         # B C N T
@@ -52,7 +69,7 @@ class tempol_conv(nn.Layer):
 
 
 class TGCN(Arch):
-    def __init__(self, cfg, edge_index, edge_attr, adj):
+    def __init__(self, cfg, adj):
         super(TGCN, self).__init__()
         # para
         in_dim = cfg.input_dim
@@ -64,27 +81,42 @@ class TGCN(Arch):
         dropout = cfg.dropout
         alpha = cfg.leakyrelu_alpha
 
-        self.input_keys = cfg.MODEL.afno.input_keys
-        self.output_keys = cfg.MODEL.afno.label_keys
+        self.input_keys = cfg.MODEL.input_keys
+        self.output_keys = cfg.MODEL.label_keys
 
-        self.edge_index = pp.to_tensor(data=edge_index, place=cfg.device)
-        self.edge_attr = pp.to_tensor(data=edge_attr, place=cfg.device)
-        self.adj = pp.to_tensor(data=adj, place=cfg.device)
+        self.register_buffer("adj", pp.to_tensor(data=adj))
 
-        self.emb_conv = nn.Conv2D(in_channels=in_dim, out_channels=emb_dim, kernel_size=(1, 1), weight_attr=KaimingNormal())
+        self.emb_conv = nn.Conv2D(
+            in_channels=in_dim,
+            out_channels=emb_dim,
+            kernel_size=(1, 1),
+            weight_attr=KaimingNormal(),
+        )
 
-        self.tc1_conv = tempol_conv(emb_dim, hidden, hidden, num_layer=tc_layer, k_s=k_s, alpha=alpha)
+        self.tc1_conv = tempol_conv(
+            emb_dim, hidden, hidden, num_layer=tc_layer, k_s=k_s, alpha=alpha
+        )
         self.sc1_conv = graph_conv(hidden, hidden, dropout, num_layer=gc_layer)
         self.bn1 = nn.BatchNorm2D(hidden)
 
-        self.tc2_conv = tempol_conv(hidden, hidden, hidden, num_layer=tc_layer, k_s=k_s, alpha=alpha)
+        self.tc2_conv = tempol_conv(
+            hidden, hidden, hidden, num_layer=tc_layer, k_s=k_s, alpha=alpha
+        )
         self.sc2_conv = graph_conv(hidden, hidden, dropout, num_layer=gc_layer)
         self.bn2 = nn.BatchNorm2D(hidden)
 
-        self.end_conv_1 = nn.Conv2D(in_channels=emb_dim + hidden + hidden, out_channels=2 *
-                                    hidden, kernel_size=(1, 1), weight_attr=KaimingNormal())
-        self.end_conv_2 = nn.Conv2D(in_channels=2 * hidden, out_channels=cfg.label_len,
-                                    kernel_size=(1, cfg.input_len), weight_attr=KaimingNormal())
+        self.end_conv_1 = nn.Conv2D(
+            in_channels=emb_dim + hidden + hidden,
+            out_channels=2 * hidden,
+            kernel_size=(1, 1),
+            weight_attr=KaimingNormal(),
+        )
+        self.end_conv_2 = nn.Conv2D(
+            in_channels=2 * hidden,
+            out_channels=cfg.label_len,
+            kernel_size=(1, cfg.input_len),
+            weight_attr=KaimingNormal(),
+        )
 
     def forward(self, raw):
         # emb block

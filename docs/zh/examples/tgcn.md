@@ -1,24 +1,32 @@
 # TGCN
 
-开始训练、评估前，请下载数据集：[PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip)。将解压后的数据集文件夹与 `PaddleScience` 文件夹放置于同一目录下。
-
-开始评估前，请下载或训练生成预训练模型：[PEMSD4](https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD4_pretrained_model.pdparams) & [PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD8_pretrained_model.pdparams)。将预训练模型文件与 `PaddleScience` 文件夹放置于同一目录下。
-
 === "模型训练命令"
 
     ``` sh
     # Train
-    python PaddleScience/examples/tgcn/run.py data_name=PEMSD8
-    # python PaddleScience/examples/tgcn/run.py data_name=PEMSD4
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip
+    unzip tgcn_data.zip
+    python run.py data_name=PEMSD8
+    # python run.py data_name=PEMSD4
     ```
 
 === "模型评估命令"
 
     ``` sh
     # Eval
-    python PaddleScience/examples/tgcn/run.py data_name=PEMSD8 mode=eval
-    # python PaddleScience/examples/tgcn/run.py data_name=PEMSD4 mode=eval
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip
+    unzip tgcn_data.zip
+    wget https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD8_pretrained_model.pdparams
+    python run.py data_name=PEMSD8 mode=eval
+    # wget https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD4_pretrained_model.pdparams
+    # python run.py data_name=PEMSD4 mode=eval
     ```
+
+| 预训练模型                                                   | 指标                    |
+| ------------------------------------------------------------ | ----------------------- |
+| [PEMSD4_pretrained_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD4_pretrained_model.pdparams) | MAE: 21.48; RMSE: 34.06 |
+| [PEMSD8_pretrained_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD8_pretrained_model.pdparams) | MAE: 15.57; RMSE: 24.52 |
+
 
 ## 1. 背景简介
 
@@ -292,4 +300,3 @@ examples/tgcn/conf/run.yaml
 | :----- | :---- | :---- |
 | PEMSD4 | 21.48 | 34.06 |
 | PEMSD8 | 15.57 | 24.52 |
-
