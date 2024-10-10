@@ -41,12 +41,6 @@ MODEL:
   input_keys: ["x", ]
   output_keys: ["pred", ]
   embed_name: 'IFM'
-  coarse_mesh: null #"./meshes/mesh_NACA0012_xcoarse.su2"
-  freeze_mesh: null #false
-  num_convs: null #6
-  num_end_convs: null #3
-  hidden_channel: null #512
-  out_channel: null #3
 
 # training settings
 TRAIN:
@@ -90,17 +84,6 @@ HYPER_OPT:
     'omega1': 0.6988619728428394
     'sigma': 0.028121178425104386
     'epoch': 20 #40 #20 #12 #169
-  #sider:
-  #  'd_out': 77
-  #  'dropout': 0.1374374038653395
-  #  'hidden_unit1': 64
-  #  'hidden_unit2': 128
-  #  'hidden_unit3': 256
-  #  'l2': 0.0005044209626022266
-  #  'omega0': 0.9330255227949226
-  #  'omega1': 0.6118550600278362
-  #  'sigma': 0.051819326808269284
-  #  'epoch': 12 #2 #60
   bace:
     'd_out': 38
     'dropout': 0.05495722504861231

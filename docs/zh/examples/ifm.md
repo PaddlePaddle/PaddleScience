@@ -2,16 +2,16 @@
 
 !!! note
 
-    1. 开始训练、评估前，请先下载 molecules 数据集 [Google Drive(原作者提供)](https://drive.google.com/drive/folders/1ZYdYQ0TtmShJC-z6dr4BU1aPfeQSE9gD?usp=sharing)，或[...(本仓库提供)](https://...) 并对应修改 yaml 配置文件中的 `data_dir` 为解压后的数据集路径。
-    2.如果需要使用预训练模型进行评估，请先下载预训练模型[...(本仓库提供)](https://...)并解压到例如pretrained路径
-    3. 开始训练、评估前，请安装 `rdkit` 和 `scikit-learn`等，相关依赖请执行`pip install requirements.txt`安装
+    1. 开始训练、评估前，请先下载 molecules 数据集 [dataset.zip](https://paddle-org.bj.bcebos.com/paddlescience/datasets/IFM/dataset.zip) ，或[Google Drive(作者原始链接)](https://drive.google.com/drive/folders/1ZYdYQ0TtmShJC-z6dr4BU1aPfeQSE9gD?usp=sharing)，并对应修改 yaml 配置文件中的 `data_dir` 为解压后的数据集路径。
+    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[pretrained.zip](https://paddle-org.bj.bcebos.com/paddlescience/models/IFM/pretrained.zip)并解压，例如pretrained路径。
+    3. 开始训练、评估前，请安装 `rdkit` 和 `scikit-learn`等，相关依赖请执行`pip install requirements.txt`安装。
 
 === "模型训练命令"
 
     ``` sh
     # 在tox21/sider/hiv/bace/bbbp等数据上训练模型MLP-IFM,embed_name可选IFM/None
-    python ifm.py mode=train data_label=tox21 MODEL.embed_name='IFM'
     # mode/data_label/MODEL.embed_name 等参数可在conf/ifm.yaml进行配置
+    python ifm.py mode=train data_label=tox21 MODEL.embed_name='IFM'
     ```
 
 === "模型评估命令"
@@ -24,7 +24,7 @@
 
 ## 1. 背景简介
 
-分子特性预测（MPP）是计算药物发现中的一项关键任务，旨在识别具有理想药理学和 ADMET（吸收、分布、代谢、排泄和毒性）特性。机器学习模型已被广泛应用在这个快速发展的领域，常用的模型有两种：传统的非深度模型和深度模型。在非深度模型中，分子被输入到传统机器学习模型，例如计算得到的或手动设计格式的分子指纹到随机森林和支持向量机等。另一类利用深度模型以数据驱动的方式来提取表征分子。具体来说，例如使用多层感知器（MLP）可应用于计算得到的或手动设计的分子指纹；基于序列的神经网络架构包括循环神经网络（RNN）、一维卷积神经网络(1D CNN) 和Transformers等可被用来编码表征的分子SMILES字符串。
+分子特性预测（MPP）是计算药物发现中的一项关键任务，旨在识别具有理想药理学和 ADMET（吸收、分布、代谢、排泄和毒性）特性。机器学习模型已被广泛应用在这个快速发展的领域，常用的模型有两种：传统的非深度模型和深度模型。在非深度模型中，分子被输入到传统机器学习模型，例如计算得到的或手动设计的分子指纹到随机森林和支持向量机等。另一类利用深度模型以数据驱动的方式来提取表征分子。具体来说，例如使用多层感知器（MLP）可应用于计算得到的或手动设计的分子指纹；基于序列的神经网络架构包括循环神经网络（RNN）、一维卷积神经网络(1D CNN) 和Transformers等可被用来编码表征的分子SMILES字符串。
 
 此外，分子可以自然地表示为以原子为节点、键为边的图结构，激发了一系列致力于利用这种结构化归纳偏差来获得更好的分子表示。这些方法的关键成果是图神经网络（GNN），它在学习过程中同时考虑图结构和属性特征。最近，研究人员将分子的3D构象纳入其表示中取得了更好的性能，然而基于现实的因素考虑，例如计算成本、对齐不变性，构象生成的不确定性以及目标分子不可用的构象限制了这些模型的实际适用性。作者总结了被广泛使用的分子的描述符及其相应的模型来做基准测试。之前的大量研究，观察到深度模型在分子数据集上很难超越非深度模型。但是这些研究并没有考虑新兴的深度模型（例如Transformer、SphereNet）等，也没有研究不同分子描述符（例如3D分子图）的影响，也没有研究模型经常在分子上效果不佳的深层次的原因。
 
@@ -104,7 +104,7 @@ $$
 
 ``` py linenums="25" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:54:71
+examples/ifm/ifm.py:77:97
 --8<--
 ```
 
@@ -114,7 +114,7 @@ examples/ifm/ifm.py:54:71
 
 ``` py linenums="49" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:73:79
+examples/ifm/ifm.py:99:105
 --8<--
 ```
 
@@ -130,7 +130,7 @@ examples/ifm/ifm.py:73:79
 
 ``` py linenums="88" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:106:121
+examples/ifm/ifm.py:265:280
 --8<--
 ```
 
@@ -138,11 +138,11 @@ examples/ifm/ifm.py:106:121
 
 ``` yaml linenums="47" title="examples/ifm/conf/ifm.yaml"
 --8<--
-examples/ifm/conf/ifm.yaml:47:129
+examples/ifm/conf/ifm.yaml:40:43
 --8<--
 ```
 
-其中，`input_keys` 和 `output_keys` 分别代表网络模型输入、输出变量的名称。
+其中，`input_keys` 和 `output_keys` 分别代表网络模型输入、输出变量的名称，具体超参数hyper_paras根据实验配置参考ifm.yaml中的`HYPER_OPT`字段。
 
 #### 3.2.3 学习率与优化器构建
 
@@ -150,7 +150,7 @@ examples/ifm/conf/ifm.yaml:47:129
 
 ``` py linenums="94" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:124:124
+examples/ifm/ifm.py:146:148
 --8<--
 ```
 
@@ -160,7 +160,7 @@ examples/ifm/ifm.py:124:124
 
 ``` py linenums="59" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:59:86
+examples/ifm/ifm.py:150:187
 --8<--
 ```
 
@@ -172,7 +172,7 @@ examples/ifm/ifm.py:59:86
 
 ``` py linenums="121" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:129:147
+examples/ifm/ifm.py:187:207
 --8<--
 ```
 
@@ -182,7 +182,7 @@ examples/ifm/ifm.py:129:147
 
 ``` py linenums="138" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:204:219
+examples/ifm/ifm.py:264:279
 --8<--
 ```
 
@@ -190,7 +190,7 @@ examples/ifm/ifm.py:204:219
 
 ``` py linenums="142" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:221:250
+examples/ifm/ifm.py:281:310
 --8<--
 ```
 
@@ -204,13 +204,12 @@ examples/ifm/ifm.py
 
 ## 5. 结果展示
 
-下表展示了MLP模型不嵌入与嵌入作者提出的IFM，在不同数据集上的AUC_ROC表现对比。可下载预训练模型进行评估[IFM-MLP](https://...pretrained.pdparams)
+下表展示了MLP模型不嵌入与嵌入作者提出的IFM，在不同数据集上的AUC_ROC表现对比。可下载预训练模型进行评估[IFM-MLP](https://paddle-org.bj.bcebos.com/paddlescience/models/IFM/pretrained.zip)
 
 |  | tox21 | sider | hiv | bace | bbbp |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | **MLP-None** | 0.82682 | 0.50039 | 0.71932 | 0.88891 | 0.66834 |
 | **MLP-IFM** | 0.84245 | 0.60289 | 0.74007 | 0.89553 | 0.84864 |
-| **At-Least** | 0.7578 | 0.5814 | 0.7344 | 0.8235 | 0.8433 |
 
 可以看到增加了IFM模块的模型可以取得更优的预测结果，符合作者的设计目的。
 

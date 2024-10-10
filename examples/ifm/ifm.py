@@ -114,7 +114,6 @@ def train(cfg: DictConfig):
         sup_constraint.loss = ppsci.loss.FunctionalLoss(
             get_train_loss_func(reg, pos_weights)
         )
-        # TODO: is this ok to replace loss func
 
     # wrap constraints together
     constraint = {sup_constraint.name: sup_constraint}
@@ -149,7 +148,6 @@ def train(cfg: DictConfig):
     )(model)
 
     # set validator
-
     eval_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
@@ -185,7 +183,6 @@ def train(cfg: DictConfig):
         rmse_validator.loss = ppsci.loss.FunctionalLoss(
             get_train_loss_func(reg, pos_weights)
         )
-        # TODO: is this ok to replace loss func
 
     validator = {rmse_validator.name: rmse_validator}
 
@@ -317,7 +314,6 @@ def evaluate(cfg: DictConfig):
         rmse_validator.loss = ppsci.loss.FunctionalLoss(
             get_train_loss_func(reg, pos_weights)
         )
-        # TODO: is this ok to replace loss func
 
     validator = {rmse_validator.name: rmse_validator}
 
