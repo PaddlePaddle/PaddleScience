@@ -1,0 +1,5 @@
+mdtraj
+numpy
+pandas
+rdkit==2022.09.5
+scikit-learn

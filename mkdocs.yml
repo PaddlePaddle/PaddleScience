@@ -98,6 +98,7 @@ nav:
         - VelocityGAN: zh/examples/velocity_gan.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
+        - IFM: zh/examples/ifm.md
 
   - API 文档:
     - ppsci:
