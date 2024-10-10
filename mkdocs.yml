@@ -96,6 +96,7 @@ nav:
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
         - VelocityGAN: zh/examples/velocity_gan.md
+        - TGCN: zh/examples/tgcn.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
 
