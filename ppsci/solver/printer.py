@@ -54,7 +54,7 @@ def log_train_info(
 
     metric_msg = ", ".join(
         [
-            f"{key}: {solver.train_output_info[key].avg:.5f}"
+            f"{key}: {solver.train_output_info[key].avg:.5e}"
             for key in solver.train_output_info
         ]
     )
