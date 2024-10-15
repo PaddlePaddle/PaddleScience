@@ -24,20 +24,9 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     data_mean, data_std = utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
-    # set train transforms
-    # transforms = [
-    #     {"SqueezeData": {}},
-    #     {"CropData": {"xmin": (0, 0), "xmax": (cfg.IMG_H, cfg.IMG_W)}},
-    #     {"Normalize": {"mean": data_mean, "std": data_std}},
-    # ]
 
     # set train dataloader config
     if not cfg.USE_SAMPLED_DATA:
@@ -70,12 +59,11 @@ def train(cfg: DictConfig):
                 "name": "DistributedBatchSampler",
                 "drop_last": True,
                 "shuffle": True,
-                "num_replicas": NUM_GPUS_PER_NODE,
-                "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
             },
             "batch_size": cfg.TRAIN.batch_size,
             "num_workers": 1,
         }
+        
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -97,11 +85,7 @@ def train(cfg: DictConfig):
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
+
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -117,7 +101,7 @@ def train(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     # set model
-    model = ppsci.arch.Preformer(**cfg.MODEL.afno)
+    model = ppsci.arch.Preformer(**cfg.MODEL)
 
     # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
@@ -132,10 +116,10 @@ def train(cfg: DictConfig):
         constraint,
         cfg.output_dir,
         optimizer,
-        lr_scheduler,
-        cfg.TRAIN.epochs,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
+        # lr_scheduler,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
+        eval_during_train=cfg.TRAIN.compute_metric_by_batch,
         seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
@@ -148,11 +132,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     data_mean, data_std = utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
@@ -167,11 +146,7 @@ def evaluate(cfg: DictConfig):
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
+
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -187,14 +162,13 @@ def evaluate(cfg: DictConfig):
     validator = {sup_validator.name: sup_validator}
 
     # set model
-    model = ppsci.arch.Preformer(**cfg.MODEL.afno)
+    model = ppsci.arch.Preformer(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
