@@ -105,16 +105,16 @@ class ERA5SQDataset(io.Dataset):
         return len(self.time_table) - 24
 
     def __getitem__(self, global_idx):
-        X, y = [], []
+        x, y = [], []
         for m in range(self.sq_length):
-            X.append(self.load_data(global_idx + m))
+            x.append(self.load_data(global_idx + m))
         for n in range(self.sq_length):
             # y.append(self.load_data(global_idx+n))
             y.append(self.precipitation["tp"][global_idx + self.sq_length + n])
-        # X = self.Normalize(X)
-        X, y = self.RandomCrop(X, y)
+        # x = self.Normalize(x)
+        x, y = self.RandomCrop(x, y)
 
-        input_item = {self.input_keys[0]: np.stack(X, axis=0)}
+        input_item = {self.input_keys[0]: np.stack(x, axis=0)}
         label_item = {self.label_keys[0]: np.stack(y, axis=0)}
 
         weight_shape = [1] * len(next(iter(label_item.values())).shape)
@@ -130,35 +130,35 @@ class ERA5SQDataset(io.Dataset):
 
         return input_item, label_item, weight_item
 
-    def load_data(self, idxs):
-        year = str(self.time_table[idxs].timetuple().tm_year)
-        mon = str(self.time_table[idxs].timetuple().tm_mon)
+    def load_data(self, indices):
+        year = str(self.time_table[indices].timetuple().tm_year)
+        mon = str(self.time_table[indices].timetuple().tm_mon)
         if len(mon) == 1:
-            mon = str("0") + mon
-        day = str(self.time_table[idxs].timetuple().tm_mday)
+            mon = "0" + mon
+        day = str(self.time_table[indices].timetuple().tm_mday)
         if len(day) == 1:
-            day = str("0") + day
-        hour = str(self.time_table[idxs].timetuple().tm_hour)
+            day = "0" + day
+        hour = str(self.time_table[indices].timetuple().tm_hour)
         if len(hour) == 1:
-            hour = str("0") + hour
+            hour = "0" + hour
         r_data = np.load(
-            os.path.join(self.file_path, year, "r_" + year + mon + day + hour + ".npy")
+            os.path.join(self.file_path, year, f"r_{year}{mon}{day}{hour}.npy")
         )
         t_data = np.load(
-            os.path.join(self.file_path, year, "t_" + year + mon + day + hour + ".npy")
+            os.path.join(self.file_path, year, f"t_{year}{mon}{day}{hour}.npy")
         )
         u_data = np.load(
-            os.path.join(self.file_path, year, "u_" + year + mon + day + hour + ".npy")
+            os.path.join(self.file_path, year, f"u_{year}{mon}{day}{hour}.npy")
         )
         v_data = np.load(
-            os.path.join(self.file_path, year, "v_" + year + mon + day + hour + ".npy")
+            os.path.join(self.file_path, year, f"v_{year}{mon}{day}{hour}.npy")
         )
 
         data = np.concatenate([r_data, t_data, u_data, v_data])
 
         return data
 
-    def RandomCrop(self, X, y):
+    def _random_crop(self, x, y):
         if isinstance(self.size, numbers.Number):
             self.size = (int(self.size), int(self.size))
         th, tw = self.size
@@ -166,12 +166,12 @@ class ERA5SQDataset(io.Dataset):
         x1 = random.randint(0, w - tw)
         y1 = random.randint(0, h - th)
 
-        for i in range(len(X)):
-            X[i] = self.crop(X[i], y1, x1, y1 + th, x1 + tw)
+        for i in range(len(x)):
+            x[i] = self.crop(x[i], y1, x1, y1 + th, x1 + tw)
         for i in range(len(y)):
             y[i] = self.crop(y[i], y1, x1, y1 + th, x1 + tw)
 
-        return X, y
+        return x, y
 
     def crop(self, im, x_start, y_start, x_end, y_end):
         if len(im.shape) == 3:
