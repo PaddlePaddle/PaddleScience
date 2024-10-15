@@ -33,7 +33,7 @@ class ERA5SQDataset(io.Dataset):
     """Class for ERA5 dataset.
 
     Args:
-        file_path (str): Data set path.
+        file_path (str): Dataset path.
         input_keys (Tuple[str, ...]): Input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
         precip_file_path (Optional[str]): Precipitation data set path. Defaults to None.
