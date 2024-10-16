@@ -278,23 +278,23 @@ def get_pos_weight(Ys):
 
 
 class IFMMoeDataset(io.Dataset):
-    """Dataset for `MeshAirfoil`.
+    """Dataset for `IFMMoe`.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input data.
         label_keys (Tuple[str, ...]): Name of label data.
-        data_dir (str): Directory of MeshAirfoil data.
-        mesh_graph_path (str): Path of mesh graph.
-        transpose_edges (bool, optional): Whether transpose the edges array from (2, num_edges) to (num_edges, 2) for convenient of slicing.
+        data_dir (str): Directory of IFMMoe data.
+        data_label (str): IFMMoe data label in tox21/esol/freesolv/lipop...
+        data_mode (str): train/val/test mode data.
 
     Examples:
         >>> import ppsci
-        >>> dataset = ppsci.data.dataset.MeshAirfoilDataset(
+        >>> dataset = ppsci.data.dataset.IFMMoeDataset(
         ...     "input_keys": ("input",),
         ...     "label_keys": ("output",),
-        ...     "data_dir": "/path/to/MeshAirfoilDataset",
-        ...     "mesh_graph_path": "/path/to/file.su2",
-        ...     "transpose_edges": False,
+        ...     "data_dir": "/path/to/IFMMoeDataset",
+        ...     "data_label": "tox21",
+        ...     "data_mode": "train",
         ... )  # doctest: +SKIP
     """
 
@@ -311,8 +311,6 @@ class IFMMoeDataset(io.Dataset):
         data_label: str,
         data_mode: str,
     ):
-        # super().__init__()
-        pass
         self.input_keys = input_keys
         self.label_keys = label_keys
 
@@ -436,23 +434,16 @@ class IFMMoeDataset(io.Dataset):
         self.mask = ~np.isnan(Ys) * 1.0
 
     def __len__(self):
-        pass
         return len(self.Ys)
 
     def __getitem__(self, idx):
-        pass
-        # X = self.Xs[idx]
-        # Y = self.Ys[idx]
-        # mask = self.masks[idx]
-        # return X, Y, mask
-
         return (
             {
-                self.input_keys[0]: paddle.to_tensor(self.Xs[idx], dtype="float32"),
+                self.input_keys[0]: self.Xs[idx],
             },
             {
-                self.label_keys[0]: paddle.to_tensor(self.Ys[idx], dtype="float32"),
-                self.label_keys[1]: paddle.to_tensor(self.mask[idx], dtype="float32"),
+                self.label_keys[0]: self.Ys[idx],
+                self.label_keys[1]: self.mask[idx],
             },
             None,
         )
