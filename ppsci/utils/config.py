@@ -71,11 +71,6 @@ if importlib.util.find_spec("pydantic") is not None:
                     "The start epoch of 'swa.avg_range' should be a non-negtive integer"
                     f" , but got {v[0]}."
                 )
-            if isinstance(v, tuple) and v[1] > info.data["epochs"]:
-                raise ValueError(
-                    "The end epoch of 'swa.avg_range' should not be lager than "
-                    f"'epochs'({info.data['epochs']}), but got {v[1]}."
-                )
             return v
 
         @field_validator("avg_freq")
@@ -172,6 +167,15 @@ if importlib.util.find_spec("pydantic") is not None:
                 raise ValueError(
                     "Cannot enable both EMA and SWA at the same time, "
                     "please disable at least one of them."
+                )
+            return self
+
+        @model_validator(mode="after")
+        def swa_avg_range_checker(self):
+            if self.swa and self.swa.use_swa and self.swa.avg_range[1] > self.epochs:
+                raise ValueError(
+                    "The end epoch of 'swa.avg_range' should not be lager than "
+                    f"'epochs'({self.epochs}), but got {self.swa.avg_range[1]}."
                 )
             return self
 
