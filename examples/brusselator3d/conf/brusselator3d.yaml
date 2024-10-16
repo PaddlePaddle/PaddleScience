@@ -1,0 +1,95 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_brusselator3d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2024
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set constant
+NUM_T: 39
+NUM_X: 28
+NUM_Y: 28
+ORIG_R: 28
+RESOLUTION: 2
+
+# set data path
+DATA_PATH: ./data/brusselator3d_dataset.npz
+
+# model settings
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["output"]
+  width: 8
+  modes: [4, 4, 4]
+  in_features: 4
+  hidden_features: 64
+  activation: "relu"
+  use_norm: true
+  use_grid: false
+
+# training settings
+TRAIN:
+  epochs: 300
+  batch_size: 50
+  iters_per_epoch: 16  # NUM_TRAIN // TRAIN.batch_size
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.005
+    gamma: 0.5
+    step_size: 100
+    by_epoch: true
+  weight_decay: 1e-4
+  save_freq: 20
+  eval_freq: 20
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size: 200
+
+# inference settings
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/brusselator3d
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 128
+  num_cpu_threads: 4
+  batch_size: 128
