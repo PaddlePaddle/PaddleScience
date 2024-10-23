@@ -28,14 +28,6 @@ log_freq: 20
 data_label: 'tox21' #'tox21'
 data_dir: './dataset/'
 
-# set training data path
-TRAIN_DATA_DIR: null #"./data/NACA0012_interpolate/outputs_train"
-TRAIN_MESH_GRAPH_PATH: null #"./data/NACA0012_interpolate/mesh_fine.su2"
-
-# set evaluate data path
-EVAL_DATA_DIR: null #"./data/NACA0012_interpolate/outputs_test"
-EVAL_MESH_GRAPH_PATH: null #"./data/NACA0012_interpolate/mesh_fine.su2"
-
 # model settings
 MODEL:
   input_keys: ["x", ]

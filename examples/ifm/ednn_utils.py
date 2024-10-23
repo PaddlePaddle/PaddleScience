@@ -1,8 +1,19 @@
-import random
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
 import paddle
-import paddle.nn as nn
 import paddle.nn.functional as F
 from sklearn.metrics import auc
 from sklearn.metrics import confusion_matrix
@@ -11,11 +22,13 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import r2_score
 from sklearn.metrics import roc_auc_score
 
+import ppsci
+
 
 def init_parameter_uniform(
     parameter: paddle.base.framework.EagerParamBase, n: int
 ) -> None:
-    nn.init.uniform_(parameter, -1 / np.sqrt(n), 1 / np.sqrt(n))
+    ppsci.utils.initializer.uniform_(parameter, -1 / np.sqrt(n), 1 / np.sqrt(n))
 
 
 def statistical(y_true, y_pred, y_pro):
@@ -35,7 +48,7 @@ def statistical(y_true, y_pred, y_pro):
     return tn, fp, fn, tp, se, sp, acc, mcc, auc_prc, auc_roc
 
 
-class Meter(object):
+class Meter:
     """Track and summarize model performance on a dataset for
     (multi-label) binary classification."""
 
@@ -238,40 +251,3 @@ class Meter(object):
             return self.r2()
         if metric_name == "mcc":
             return self.mcc()
-
-
-class MyDataset(object):
-    def __init__(self, Xs, Ys):
-        self.Xs = paddle.to_tensor(Xs, dtype=paddle.float32)
-        self.masks = paddle.to_tensor(~np.isnan(Ys) * 1.0, dtype=paddle.float32)
-        # convert np.nan to 0
-        self.Ys = paddle.to_tensor(np.nan_to_num(Ys), dtype=paddle.float32)
-
-    def __len__(self):
-        return len(self.Ys)
-
-    def __getitem__(self, idx):
-
-        X = self.Xs[idx]
-        Y = self.Ys[idx]
-        mask = self.masks[idx]
-
-        return X, Y, mask
-
-
-def collate_fn(data_batch):
-    Xs, Ys, masks = map(list, zip(*data_batch))
-
-    Xs = paddle.stack(Xs, axis=0)
-    Ys = paddle.stack(Ys, axis=0)
-    masks = paddle.stack(masks, axis=0)
-
-    return Xs, Ys, masks
-
-
-def set_random_seed(seed=0):
-    random.seed(seed)
-    np.random.seed(seed)
-    paddle.manual_seed(seed)  # 为CPU设置种子用于生成随机数
-    if paddle.cuda.is_available():
-        paddle.cuda.manual_seed(seed)  # 为当前GPU设置随机种子

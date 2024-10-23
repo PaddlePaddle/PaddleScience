@@ -1,4 +1,17 @@
-import random
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import List
 from typing import Tuple
 
@@ -7,17 +20,38 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
+import ppsci
 from ppsci.arch import base
 
 
 def init_parameter_uniform(
     parameter: paddle.base.framework.EagerParamBase, n: int
 ) -> None:
-    nn.init.uniform_(parameter, -1 / np.sqrt(n), 1 / np.sqrt(n))
+    ppsci.utils.initializer.uniform_(parameter, -1 / np.sqrt(n), 1 / np.sqrt(n))
 
 
 # inputs, hidden_units, outputs, d_out, sigma, dp_ratio, first_omega_0, hidden_omega_0, reg
 class IFMMLP(base.Arch):
+    """Understanding the limitations of deep models for molecular property prediction: Insights and solutions.
+    [Xia, Jun, et al. Advances in Neural Information Processing Systems 36 (2023): 64774-64792.]https://openreview.net/forum?id=NLFqlDeuzt)
+
+    Code reference: https://github.com/junxia97/IFM
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input", ).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("pred", ).
+        hidden_units (List[int]): Units num in hidden layers.
+        embed_name (str): Embed name used in arch, such as "IMF", "None".
+        inputs (int): Input dim.
+        outputs (int): Output dim.
+        d_out (int): Embedding output dim for some architechture.
+        sigma (float): Hyper parameter for some architechture.
+        dp_ratio (float): Dropout ratio.
+        reg (bool): Regularization flag.
+        first_omega_0 (float): Frequency factor used in first layer.
+        hidden_omega_0 (float): Frequency factor used in hidden layer.
+    """
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -29,12 +63,11 @@ class IFMMLP(base.Arch):
         d_out: int,
         sigma: float,
         dp_ratio: float,
-        reg,
-        first_omega_0,
-        hidden_omega_0,
+        reg: bool,
+        first_omega_0: float,
+        hidden_omega_0: float,
     ):
         super().__init__()
-        # hidden_units = [hyper_paras['hidden_unit1'], hyper_paras['hidden_unit2'], hyper_paras['hidden_unit3']]
         self.input_keys = input_keys
         self.output_keys = output_keys
 
@@ -105,21 +138,21 @@ class IFMMLP(base.Arch):
 
     def forward(self, x):
         Xs = x[self.input_keys[0]]
-        # Xs, masks = Xs.to(args.device), Ys.to(args.device), masks.to(args.device)
-
         ret = self.model(Xs)
         return {self.output_keys[0]: ret}
 
 
 class MyDNN(nn.Layer):
+    """
+    Args:
+        inputs (int): Input dim.
+        hidden_units (List[int]): Units num in hidden layers.
+        outputs (int): Output dim.
+        dp_ratio (float): Dropout ratio.
+        reg (bool): Regularization flag.
+    """
+
     def __init__(self, inputs, hidden_units, outputs, dp_ratio, reg):
-        """
-        :param inputs: number of inputs
-        :param hidden_units: [128, 256, 512]
-        :param out_puts: number of outputs
-        :param dp_ratio:
-        :param reg:
-        """
         super(MyDNN, self).__init__()
         # parameters
         self.reg = reg
@@ -153,10 +186,10 @@ class MyDNN(nn.Layer):
 
 
 class LE(nn.Layer):
-    def __init__(self, n_tokens: int, d_out: int) -> None:
+    def __init__(self, n_tokens: int, d_out: int):
         super().__init__()
-        self.weight = nn.Parameter(paddle.to_tensor(n_tokens, 1, d_out))
-        self.bias = nn.Parameter(paddle.to_tensor(n_tokens, d_out))
+        self.weight = self.create_parameter([n_tokens, 1, d_out])
+        self.bias = self.create_parameter([n_tokens, d_out])
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
@@ -176,16 +209,15 @@ class LE(nn.Layer):
 
 
 class PLE(nn.Layer):
-    def __init__(self, n_num_features: int, d_out: int, sigma: float) -> None:
+    def __init__(self, n_num_features: int, d_out: int, sigma: float):
         super().__init__()
         self.d_out = d_out
         self.sigma = sigma
-        coefficients = paddle.to_tensor(n_num_features, d_out)
-        self.coefficients = nn.Parameter(coefficients)
+        self.coefficients = self.create_parameter([n_num_features, d_out])
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
-        nn.init.normal_(self.coefficients, 0.0, self.sigma)
+        ppsci.utils.initializer.normal_(self.coefficients, 0.0, self.sigma)
 
     def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         x = 2 * np.pi * self.coefficients[None] * x[..., None]
@@ -214,8 +246,7 @@ class LE_DNN(nn.Layer):
         self.embedding = LE(inputs, d_out)
 
     def forward(self, x):
-
-        x = self.embedding(x).view(x.size(0), -1)
+        x = self.embedding(x).view([x.size(0), -1])
         x = self.hidden1(x)
         x = F.relu(self.dropout1(x))
 
@@ -265,7 +296,7 @@ class LSIM_DNN(nn.Layer):
         return self.output(x)
 
 
-class gaussian_encoding(nn.Layer):
+class GaussianEncoding(nn.Layer):
     def __init__(self, n_num_features: int, d_out: int, sigma: float) -> None:
         super().__init__()
         self.d_out = d_out
@@ -279,20 +310,24 @@ class gaussian_encoding(nn.Layer):
         x: (n_batch, n_features)
         returns: (n_batch, n_features * 2 * d_out)
         """
-        self.B = self.B.to(x.device)
+        self.B = self.B.to(x.place)
         xp = 2 * np.pi * x @ self.B.T
         return paddle.concat((paddle.cos(xp), paddle.sin(xp)), axis=-1)
 
 
 class GM_DNN(nn.Layer):
+    """
+    Args:
+        inputs (int): Input dim.
+        hidden_units (List[int]): Units num in hidden layers.
+        outputs (int): Output dim.
+        d_out (int): Embedding output dim for some architechture.
+        sigma (float): Hyper parameter for some architechture.
+        dp_ratio (float): Dropout ratio.
+        reg (bool): Regularization flag.
+    """
+
     def __init__(self, inputs, hidden_units, outputs, d_out, sigma, dp_ratio, reg):
-        """
-        :param inputs: number of inputs
-        :param hidden_units: [128, 256, 512]
-        :param out_puts: number of outputs
-        :param dp_ratio:
-        :param reg:
-        """
         super(GM_DNN, self).__init__()
         # parameters
         self.reg = reg
@@ -313,7 +348,7 @@ class GM_DNN(nn.Layer):
         else:
             self.output = nn.Linear(hidden_units[2], outputs)
 
-        self.embedding = gaussian_encoding(inputs, d_out, sigma)
+        self.embedding = GaussianEncoding(inputs, d_out, sigma)
 
     def forward(self, x):
         x = self.embedding(x)
@@ -369,25 +404,27 @@ class SineLayer(nn.Layer):
 
 
 class IFM_DNN(nn.Layer):
+    """
+    Args:
+    inputs (int): Input dim.
+    hidden_units (List[int]): Units num in hidden layers.
+    outputs (int): Output dim.
+    dp_ratio (float): Dropout ratio.
+    first_omega_0 (float): Frequency factor used in first layer.
+    hidden_omega_0 (float): Frequency factor used in hidden layer.
+    reg (bool): Regularization flag.
+    """
+
     def __init__(
         self,
         inputs,
         hidden_units,
         outputs,
-        d_out,
-        sigma,
         dp_ratio,
         first_omega_0,
         hidden_omega_0,
         reg,
     ):
-        """
-        :param inputs: number of inputs
-        :param hidden_units
-        :param out_puts: number of outputs
-        :param dp_ratio:
-        :param reg:
-        """
         super(IFM_DNN, self).__init__()
         # parameters
         self.reg = reg
@@ -440,7 +477,7 @@ class IFM_DNN(nn.Layer):
 
 
 class SIM_encoding(nn.Layer):
-    def __init__(self, n_num_features: int, d_out: int, sigma: float) -> None:
+    def __init__(self, n_num_features: int, d_out: int, sigma: float):
         super().__init__()
         self.d_out = d_out
         self.sigma = sigma
@@ -458,14 +495,18 @@ class SIM_encoding(nn.Layer):
 
 
 class SIM_DNN(nn.Layer):
+    """
+    Args:
+        inputs (int): Input dim.
+        hidden_units (List[int]): Units num in hidden layers.
+        outputs (int): Output dim.
+        d_out (int): Embedding output dim for some architechture.
+        sigma (float): Hyper parameter for some architechture.
+        dp_ratio (float): Dropout ratio.
+        reg (bool): Regularization flag.
+    """
+
     def __init__(self, inputs, hidden_units, outputs, d_out, sigma, dp_ratio, reg):
-        """
-        :param inputs: number of inputs
-        :param hidden_units
-        :param out_puts: number of outputs   m
-        :param dp_ratio:
-        :param reg:
-        """
         super(SIM_DNN, self).__init__()
         # parameters
         self.reg = reg
@@ -499,21 +540,3 @@ class SIM_DNN(nn.Layer):
         x = F.relu(self.dropout3(x))
 
         return self.output(x)
-
-
-def collate_fn(data_batch):
-    Xs, Ys, masks = map(list, zip(*data_batch))
-
-    Xs = paddle.stack(Xs, axis=0)
-    Ys = paddle.stack(Ys, axis=0)
-    masks = paddle.stack(masks, axis=0)
-
-    return Xs, Ys, masks
-
-
-def set_random_seed(seed=0):
-    random.seed(seed)
-    np.random.seed(seed)
-    paddle.manual_seed(seed)  # 为CPU设置种子用于生成随机数
-    if paddle.cuda.is_available():
-        paddle.cuda.manual_seed(seed)  # 为当前GPU设置随机种子

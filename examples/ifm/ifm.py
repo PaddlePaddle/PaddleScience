@@ -60,11 +60,6 @@ def get_val_loss_func(reg, metric):
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
-
     if cfg.data_label in ["esol", "freesolv", "lipop"]:
         # task_type = "reg"
         reg = True
@@ -108,7 +103,7 @@ def train(cfg: DictConfig):
     inputs = sup_constraint.data_loader.dataset.data_tr_x.shape[1]
     tasks = sup_constraint.data_loader.dataset.task_dict[cfg.data_label]
     iters_per_epoch = len(sup_constraint.data_loader)
-    print(f"inputs is: {inputs}, iters_per_epoch: {iters_per_epoch}")
+    logger.info(f"inputs is: {inputs}, iters_per_epoch: {iters_per_epoch}")
     if not reg:
         pos_weights = sup_constraint.data_loader.dataset.pos_weights
         sup_constraint.loss = ppsci.loss.FunctionalLoss(
@@ -161,11 +156,6 @@ def train(cfg: DictConfig):
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.EVAL.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": True,
-        },
         "num_workers": 1,
     }
 
@@ -208,9 +198,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     if cfg.data_label in ["esol", "freesolv", "lipop"]:
         # task_type = "reg"
         reg = True
@@ -221,7 +208,7 @@ def evaluate(cfg: DictConfig):
         metric = "roc_auc"
 
     # set dataloader config
-    train_dataloader_cfg = {
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "IFMMoeDataset",
             "input_keys": ("x",),
@@ -234,17 +221,12 @@ def evaluate(cfg: DictConfig):
             "data_label": cfg.data_label,
         },
         "batch_size": 128,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": True,
-        },
         "num_workers": 1,
     }
 
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg,
+        eval_dataloader_cfg,
         output_expr={"pred": lambda out: out["pred"]},
         loss=ppsci.loss.FunctionalLoss(get_train_loss_func(reg)),
         name="Sup",
@@ -330,7 +312,6 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         validator=validator,
         pretrained_model_path=pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
