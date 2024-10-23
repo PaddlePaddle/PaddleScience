@@ -1,7 +1,7 @@
 # PaddleScience
 
 <!-- --8<-- [start:status] -->
-> *PaddleScience is built on top of [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
+> *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
 [![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
 [![Conda](https://anaconda.org/paddlescience/paddlescience/badges/version.svg)](https://anaconda.org/PaddleScience/paddlescience)
