@@ -102,9 +102,9 @@ $$
 
 数据加载的代码如下:
 
-``` py linenums="25" title="examples/ifm/ifm.py"
+``` py linenums="72" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:77:97
+examples/ifm/ifm.py:72:92
 --8<--
 ```
 
@@ -112,9 +112,9 @@ examples/ifm/ifm.py:77:97
 
 定义监督约束的代码如下：
 
-``` py linenums="49" title="examples/ifm/ifm.py"
+``` py linenums="94" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:99:105
+examples/ifm/ifm.py:94:100
 --8<--
 ```
 
@@ -128,17 +128,17 @@ examples/ifm/ifm.py:99:105
 
 在该案例中，分子属性预测模型基于 MLP 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="88" title="examples/ifm/ifm.py"
+``` py linenums="246" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:265:280
+examples/ifm/ifm.py:246:261
 --8<--
 ```
 
 网络模型的参数通过配置文件进行设置如下：
 
-``` yaml linenums="47" title="examples/ifm/conf/ifm.yaml"
+``` yaml linenums="32" title="examples/ifm/conf/ifm.yaml"
 --8<--
-examples/ifm/conf/ifm.yaml:40:43
+examples/ifm/conf/ifm.yaml:32:35
 --8<--
 ```
 
@@ -148,9 +148,9 @@ examples/ifm/conf/ifm.yaml:40:43
 
 本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组，使用不同的`weight_decay`,用 PaddleScience 代码表示如下：
 
-``` py linenums="94" title="examples/ifm/ifm.py"
+``` py linenums="141" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:146:148
+examples/ifm/ifm.py:141:143
 --8<--
 ```
 
@@ -158,9 +158,9 @@ examples/ifm/ifm.py:146:148
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="59" title="examples/ifm/ifm.py"
+``` py linenums="145" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:150:187
+examples/ifm/ifm.py:145:177
 --8<--
 ```
 
@@ -170,9 +170,9 @@ examples/ifm/ifm.py:150:187
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="121" title="examples/ifm/ifm.py"
+``` py linenums="179" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:187:207
+examples/ifm/ifm.py:179:197
 --8<--
 ```
 
@@ -180,17 +180,17 @@ examples/ifm/ifm.py:187:207
 
 构建模型的代码为：
 
-``` py linenums="138" title="examples/ifm/ifm.py"
+``` py linenums="246" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:264:279
+examples/ifm/ifm.py:246:261
 --8<--
 ```
 
 构建评估器的代码为：
 
-``` py linenums="142" title="examples/ifm/ifm.py"
+``` py linenums="263" title="examples/ifm/ifm.py"
 --8<--
-examples/ifm/ifm.py:281:310
+examples/ifm/ifm.py:263:300
 --8<--
 ```
 
