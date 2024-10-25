@@ -22,14 +22,6 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import r2_score
 from sklearn.metrics import roc_auc_score
 
-import ppsci
-
-
-def init_parameter_uniform(
-    parameter: paddle.base.framework.EagerParamBase, n: int
-) -> None:
-    ppsci.utils.initializer.uniform_(parameter, -1 / np.sqrt(n), 1 / np.sqrt(n))
-
 
 def statistical(y_true, y_pred, y_pro):
     c_mat = confusion_matrix(y_true, y_pred)

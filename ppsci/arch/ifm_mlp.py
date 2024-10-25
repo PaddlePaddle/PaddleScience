@@ -406,13 +406,13 @@ class SineLayer(nn.Layer):
 class IFM_DNN(nn.Layer):
     """
     Args:
-    inputs (int): Input dim.
-    hidden_units (List[int]): Units num in hidden layers.
-    outputs (int): Output dim.
-    dp_ratio (float): Dropout ratio.
-    first_omega_0 (float): Frequency factor used in first layer.
-    hidden_omega_0 (float): Frequency factor used in hidden layer.
-    reg (bool): Regularization flag.
+        inputs (int): Input dim.
+        hidden_units (List[int]): Units num in hidden layers.
+        outputs (int): Output dim.
+        dp_ratio (float): Dropout ratio.
+        first_omega_0 (float): Frequency factor used in first layer.
+        hidden_omega_0 (float): Frequency factor used in hidden layer.
+        reg (bool): Regularization flag.
     """
 
     def __init__(
