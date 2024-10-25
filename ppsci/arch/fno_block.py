@@ -251,9 +251,13 @@ class AdaIN(nn.Layer):
             self.embedding is not None
         ), "AdaIN: update embeddding before running forward"
 
-        weight, bias = paddle.split(self.mlp(self.embedding), self.in_channels, dim=0)
+        weight, bias = paddle.split(
+            self.mlp(self.embedding),
+            self.embedding.shape[0] // self.in_channels,
+            axis=0,
+        )
 
-        return nn.functional.group_norm(x, self.in_channels, weight, bias, eps=self.eps)
+        return nn.functional.group_norm(x, self.in_channels, self.eps, weight, bias)
 
 
 class MLP(nn.Layer):
@@ -845,7 +849,7 @@ class FactorizedSpectralConv2d(FactorizedSpectralConv):
     def forward(self, x, indices=0):
         batchsize, channels, height, width = x.shape
 
-        x = paddle.fft.rfft2(x.float(), norm=self.fft_norm, dim=(-2, -1))
+        x = paddle.fft.rfft2(x.float(), norm=self.fft_norm, axes=(-2, -1))
 
         # The output will be of size (batch_size, self.out_channels,
         # x.size(-2), x.size(-1)//2 + 1)
@@ -924,7 +928,7 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
     def forward(self, x, indices=0):
         batchsize, channels, height, width, depth = x.shape
 
-        x = paddle.fft.rfftn(x.float(), norm=self.fft_norm, dim=[-3, -2, -1])
+        x = paddle.fft.rfftn(x.float(), norm=self.fft_norm, axes=[-3, -2, -1])
 
         out_fft = paddle.zeros(
             shape=[batchsize, self.out_channels, height, width, depth // 2 + 1],

@@ -25,6 +25,7 @@ import paddle
 from paddle import io
 
 from ppsci.solver import printer
+from ppsci.solver.train import _compute_batch_size
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
@@ -128,7 +129,7 @@ def _eval_by_dataset(
             batch_cost = time.perf_counter() - batch_tic
             solver.eval_time_info["reader_cost"].update(reader_cost)
             solver.eval_time_info["batch_cost"].update(batch_cost)
-            batch_size = next(iter(input_dict.values())).shape[0]
+            batch_size = _compute_batch_size(input_dict)
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if (
                 iter_id == 1
@@ -216,7 +217,7 @@ def _eval_by_batch(
             input_dict, label_dict, weight_dict = batch
             reader_cost = time.perf_counter() - reader_tic
 
-            batch_size = next(iter(input_dict.values())).shape[0]
+            batch_size = _compute_batch_size(input_dict)
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False

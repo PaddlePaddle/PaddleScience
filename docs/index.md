@@ -4,7 +4,13 @@
 ./README.md:status
 --8<--
 
-🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，欢迎报名参赛。
+🔥 [开放原子第二届开源大赛：飞桨科学计算工具组件开发大赛](https://competition.atomgit.com/competitionInfo?id=805ad94637707d062f24e54265d85731)，总奖金25万人民币，火热报名中。
+
+🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
+
+🔥 [CIKM 2024: AI辅助的先进空气动力学-优化汽车设计以实现最佳性能](https://competition.atomgit.com/competitionInfo?id=cda4e961b0c25858ca0fd2a4bdf87520)，已进入评奖阶段。
+
+🔥 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 代码：[paddle实现](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/IJCAI_2024) | [pytorch实现](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)(点击**排行榜**可查看各个赛道前10名的代码)
 
 <style>
     .container {
@@ -72,6 +78,7 @@
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 亥姆霍兹方程 | [SPINN(Helmholtz3D)](./zh/examples/spinn.md) | 机理驱动 | SPINN | 无监督学习 | - | [Paper](https://arxiv.org/pdf/2306.15969) |
 | 相场方程 | [Allen-Cahn](./zh/examples/allen_cahn.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat) | [Paper](https://arxiv.org/pdf/2402.00326) |
 | 微分方程 | [拉普拉斯方程](./zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](./zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
@@ -85,6 +92,7 @@
 | 光孤子 | [Optical soliton](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
+| 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator3d.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -109,11 +117,9 @@
 | 流固耦合 | [涡激振动](./zh/examples/viv.md) | 机理驱动 | MLP | 半监督学习 | [Data](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fsi/VIV_Training_Neta100.mat) | [Paper](https://arxiv.org/abs/2206.03864)|
 | 多相流 | [气液两相流](./zh/examples/bubble.md) | 机理驱动 | BubbleNet | 半监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat) | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 多相流 | [twophasePINN](https://aistudio.baidu.com/projectdetail/5379212) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1016/j.mlwa.2021.100029)|
-| 多相流 | 非高斯渗透率场估计<sup>coming soon</sup> | 机理驱动 | cINN | 监督学习 | - | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 流场高分辨率重构 | [2D 湍流流场重构](./zh/examples/tempoGAN.md) | 数据驱动 | tempoGAN | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat) | [Paper](https://dl.acm.org/doi/10.1145/3197517.3201304)|
 | 流场高分辨率重构 | [2D 湍流流场重构](https://aistudio.baidu.com/projectdetail/4493261?contributionType=1) | 数据驱动 | cycleGAN | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat) | [Paper](https://arxiv.org/abs/2007.15324)|
 | 流场高分辨率重构 | [基于Voronoi嵌入辅助深度学习的稀疏传感器全局场重建](https://aistudio.baidu.com/projectdetail/5807904) | 数据驱动 | CNN | 监督学习 | [Data1](https://drive.google.com/drive/folders/1K7upSyHAIVtsyNAqe6P8TY1nS5WpxJ2c)<br>[Data2](https://drive.google.com/drive/folders/1pVW4epkeHkT2WHZB7Dym5IURcfOP4cXu)<br>[Data3](https://drive.google.com/drive/folders/1xIY_jIu-hNcRY-TTf4oYX1Xg4_fx8ZvD) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
-| 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
 | 求解器耦合 | [CFD-GCN](./zh/examples/cfdgcn.md) | 数据驱动 | GCN | 监督学习 | [Data](https://aistudio.baidu.com/aistudio/datasetdetail/184778)<br>[Mesh](https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar) | [Paper](https://arxiv.org/abs/2007.04439)|
 | 受力分析 | [1D 欧拉梁变形](./zh/examples/euler_beam.md) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [2D 平板变形](./zh/examples/biharmonic2d.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2108.07243) |
@@ -132,7 +138,6 @@
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 材料设计 | [散射板设计(反问题)](./zh/examples/hpinns.md) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
-| 材料生成 | 面向对称感知的周期性材料生成<sup>coming soon</sup> | 数据驱动 | SyMat | 监督学习 | - | - |
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>
@@ -145,6 +150,7 @@
 | 天气预报 | [GraphCast 气象预报](./zh/examples/graphcast.md) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
 | 天气预报 | [DGMR 气象预报](./zh/examples/dgmr.md) | 数据驱动 | DGMR | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
+| 地震波形反演 | [VelocityGAN 地震波形反演](./zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
 
 ## 🚀快速安装
 
@@ -157,7 +163,7 @@
 === "方式2: pip安装"
 
     ``` sh
-    pip install paddlesci
+    pip install -U paddlesci
     ```
 
 **完整安装流程**：[安装与使用](./zh/install_setup.md)
@@ -170,30 +176,11 @@
 ./README.md:feature
 --8<--
 
-## 🎈其他领域支持
+## 🎈生态工具
 
-除 PaddleScience 套件外，Paddle 框架还支持了 DeepXDE 的所有案例，分子动力学套件 DeepMD-kit 部分案例和功能，以及正在适配中的 Modulus 。
-
-<div class="container">
-    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
-        <div class="card card-deepxde">
-            DeepXDE
-            <br><span class="text-large">全量支持</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
-        <div class="card card-modulus">
-            DeepMD
-            <br><span class="text-large">适配中</span></br>
-        </div>
-    </a>
-    <a href="https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend">
-        <div class="card card-deepmd">
-            Modulus
-            <br><span class="text-large">适配中</span></br>
-        </div>
-    </a>
-</div>
+--8<--
+./README.md:adaptation
+--8<--
 
 --8<--
 ./README.md:support

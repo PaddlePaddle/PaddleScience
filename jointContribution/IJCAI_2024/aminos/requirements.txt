@@ -1,0 +1,10 @@
+h5py
+natsort
+numpy < 2
+paddlepaddle_gpu <= 2.5.2
+pgl
+pyvista
+scipy
+trimesh
+visualdl
+vtk

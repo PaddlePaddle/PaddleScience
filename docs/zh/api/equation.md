@@ -9,6 +9,7 @@
         - Biharmonic
         - FractionalPoisson
         - HeatExchanger
+        - Helmholtz
         - Laplace
         - LinearElasticity
         - NavierStokes

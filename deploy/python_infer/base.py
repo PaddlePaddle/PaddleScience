@@ -21,11 +21,11 @@ from typing import TYPE_CHECKING
 from typing import Optional
 from typing import Tuple
 
+import paddle
 from paddle import inference as paddle_inference
 from typing_extensions import Literal
 
 from ppsci.utils import logger
-from ppsci.utils import misc
 
 if TYPE_CHECKING:
     import onnxruntime
@@ -102,7 +102,7 @@ class Predictor:
     def _create_paddle_predictor(
         self,
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
-        if misc.check_flag_enabled("FLAGS_enable_pir_api"):
+        if paddle.framework.use_pir_api():
             # NOTE: Using 'json' as suffix instead of 'pdmodel' in PIR mode
             self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json", 1)
 

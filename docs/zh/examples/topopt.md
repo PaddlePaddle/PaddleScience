@@ -190,7 +190,7 @@ examples/topopt/topopt.py:50:75
 
 读取配置中 `"batch_size"` 字段表示训练时指定的批大小，`"sampler"` 字段表示 dataloader 的相关采样配置。
 
-第二个参数是损失函数，这里使用[自定义损失](#381)，通过 `cfg.vol_coeff` 确定损失公式中 $\beta$ 对应的值。
+第二个参数是损失函数，这里使用[自定义损失](#381-loss)，通过 `cfg.vol_coeff` 确定损失公式中 $\beta$ 对应的值。
 
 第三个参数是约束条件的名字，方便后续对其索引。此次命名为 `"sup_constraint"`。
 

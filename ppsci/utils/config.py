@@ -71,11 +71,6 @@ if importlib.util.find_spec("pydantic") is not None:
                     "The start epoch of 'swa.avg_range' should be a non-negtive integer"
                     f" , but got {v[0]}."
                 )
-            if isinstance(v, tuple) and v[1] > info.data["epochs"]:
-                raise ValueError(
-                    "The end epoch of 'swa.avg_range' should not be lager than "
-                    f"'epochs'({info.data['epochs']}), but got {v[1]}."
-                )
             return v
 
         @field_validator("avg_freq")
@@ -116,10 +111,15 @@ if importlib.util.find_spec("pydantic") is not None:
 
         @field_validator("iters_per_epoch")
         def iters_per_epoch_check(cls, v):
-            if v <= 0:
+            if v <= 0 and v != -1:
                 raise ValueError(
-                    "'TRAIN.iters_per_epoch' should be a positive integer when is type of int"
-                    f", but got {v}"
+                    f"'TRAIN.iters_per_epoch' received an invalid value({v}), "
+                    "but is expected one of: \n"
+                    "* A positive integer, to manually specify the number of iterations per epoch, "
+                    "which is commonly used in PINN training.\n"
+                    "* -1, to automatically set the number of iterations per epoch to "
+                    "the length of dataloader of given constraint, which is commonly "
+                    f"used in data-driven training.\n"
                 )
             return v
 
@@ -167,6 +167,15 @@ if importlib.util.find_spec("pydantic") is not None:
                 raise ValueError(
                     "Cannot enable both EMA and SWA at the same time, "
                     "please disable at least one of them."
+                )
+            return self
+
+        @model_validator(mode="after")
+        def swa_avg_range_checker(self):
+            if self.swa and self.swa.use_swa and self.swa.avg_range[1] > self.epochs:
+                raise ValueError(
+                    "The end epoch of 'swa.avg_range' should not be lager than "
+                    f"'epochs'({self.epochs}), but got {self.swa.avg_range[1]}."
                 )
             return self
 

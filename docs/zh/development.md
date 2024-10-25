@@ -42,6 +42,23 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
 
     如果出现 PaddleScience is installed successfully.✨ 🍰 ✨，则说明安装验证成功。
 
+7. 安装 pre-commit[重要]
+
+    PaddleScience 是一个开源的代码库，由多人共同参与开发，因此为了保持最终合入的代码风格整洁、一致，
+    PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
+    让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
+
+    因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
+
+    ``` sh
+    pip install pre-commit
+    pre-commit install
+    ```
+
+    如果已经将代码进行了 commit，则可以在安装上述 pre-commit 之后，手动执行 pre-commit 命令，对代码进行格式化：`pre-commit run --files 你提交的代码文件/文件夹`，然后手动 `git add` 被修改了的文件，再 `git commit` 即可。
+
+    关于 pre-commit 的详情请参考 [Paddle 代码风格检查指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/dev_guides/git_guides/codestyle_check_guide_cn.html)
+
 ## 2. 编写代码
 
 完成上述准备工作后，就可以基于 PaddleScience 开始开发自己的案例或者功能了。
@@ -274,7 +291,7 @@ equation = {..., "newpde": new_pde}
 
 ### 2.5 构建几何模块[可选]
 
-模型训练、验证时所用的输入、标签数据的来源，根据具体案例场景的不同而变化。大部分基于 PINN 的案例，其数据来自几何形状内部、表面采样得到的坐标点、法向量、SDF 值；而基于数据驱动的方法，其输入、标签数据大多数来自于外部文件，或通过 numpy 等第三方库构造的存放在内存中的数据。本章节主要对第一种情况所需的几何模块进行介绍，第二种情况则不一定需要几何模块，其构造方式可以参考 [#2.6 构建约束条件](#2.6)。
+模型训练、验证时所用的输入、标签数据的来源，根据具体案例场景的不同而变化。大部分基于 PINN 的案例，其数据来自几何形状内部、表面采样得到的坐标点、法向量、SDF 值；而基于数据驱动的方法，其输入、标签数据大多数来自于外部文件，或通过 numpy 等第三方库构造的存放在内存中的数据。本章节主要对第一种情况所需的几何模块进行介绍，第二种情况则不一定需要几何模块，其构造方式可以参考 [#2.6 构建约束条件](#26)。
 
 #### 2.5.1 构建已有几何
 
@@ -892,7 +909,18 @@ PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-
 
 ### 3.4 预览文档
 
-在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
+假设撰写好的文档位置为 `PaddleScience/docs/zh/examples/your_exmaple.md`，为了让其在 PaddleScience 官网 [经典案例](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/allen_cahn/) 左侧目录中展示，需要修改 `PaddleScience/mkdocs.yml`。将 `your_exmaple.md` 的相对路径仿照其他案例，添加到 `- 经典案例:` 下的列表中，如下高亮行所示。
+
+``` yaml hl_lines="23" title="PaddleScience/mkdocs.yml"
+...
+--8<--
+mkdocs.yml:38:58
+--8<--
+        - EXAMPLE_NAME: docs/zh/examples/your_exmaple.md
+...
+```
+
+然后在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
 
 ``` sh
 mkdocs serve
@@ -920,25 +948,22 @@ mkdocs serve
 
 ## 4. 整理代码并提交
 
-### 4.1 安装 pre-commit
-
-PaddleScience 是一个开源的代码库，由多人共同参与开发，因此为了保持最终合入的代码风格整洁、一致，
-PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
-让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
-
-因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
-
-``` sh
-pip install pre-commit
-pre-commit install
-```
-
-关于 pre-commit 的详情请参考 [Paddle 代码风格检查指南](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/dev_guides/git_guides/codestyle_check_guide_cn.html)
-
-### 4.2 整理代码
+### 4.1 整理代码
 
 在完成范例编写与训练后，确认结果无误，就可以整理代码。
-使用 git 命令将所有新增、修改的代码文件以及必要的文档、图片等一并上传到自己仓库的 `dev_model` 分支上。
+使用 git 命令将所有新增、修改的代码文件以及必要的文档、图片等一并提交到本地 `dev_model` 分支上。
+
+### 4.2 同步上游代码
+
+在开发过程中，上游代码可能经过更新，因此需要执行以下命令，将上游的最新代码拉取下来，合并到当前代码中，与上游最新代码进行同步。
+
+``` sh
+git remote add upstream https://github.com/PaddlePaddle/PaddleScience.git
+git fetch upstream develop:upstream_develop
+git merge upstream_develop
+```
+
+如果出现 conflict，则需要解决冲突，再使用 `git add` 和 `git commit -m "merge code of upstream"` 命令将代码提交到本地仓库，最后执行 `git push origin dev_model`，将代码推送到你的远程仓库中。
 
 ### 4.3 提交 pull request
 

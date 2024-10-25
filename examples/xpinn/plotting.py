@@ -181,7 +181,7 @@ def log_image(
 
 PGF_WITH_LATEX = {  # setup matplotlib to use latex for output
     "pgf.texsystem": "pdflatex",  # change this if using xetex or latex
-    "text.usetex": True,  # use LaTeX to write all text
+    # "text.usetex": True,  # use LaTeX to write all text
     # "font.family": "serif",
     # "font.serif": [],  # blank entries should cause plots to inherit fonts from the document
     # "font.sans-serif": [],

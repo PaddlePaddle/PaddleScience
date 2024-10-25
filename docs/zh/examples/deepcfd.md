@@ -24,6 +24,24 @@
     python deepcfd.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deepcfd/deepcfd_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python deepcfd.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    # windows
+    # curl --create-dirs -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    # curl --create-dirs -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    python deepcfd.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [deepcfd_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/deepcfd/deepcfd_pretrained.pdparams) | MSE.Total_MSE(mse_validator): 1.92947<br>MSE.Ux_MSE(mse_validator): 0.70684<br>MSE.Uy_MSE(mse_validator): 0.21337<br>MSE.p_MSE(mse_validator): 1.00926 |

@@ -1,0 +1,8 @@
+easydict
+einops
+matplotlib
+numpy
+paddleclas
+paddlepaddle_gpu
+PyYAML
+termcolor

@@ -1,0 +1,99 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_moflow_train/${data_name}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+data_name: qm9 # data select:qm9/zinc250k
+seed: 1
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set training hyper-parameters
+qm9:
+  b_n_flow: 10
+  b_n_block: 1
+  b_hidden_ch: [128,128]
+  a_n_flow: 27
+  a_n_block: 1
+  a_hidden_gnn: [64]
+  a_hidden_lin: [128,64]
+  mask_row_size_list: [1]
+  mask_row_stride_list: [1]
+  learn_dist: True
+  noise_scale: 0.6
+  b_conv_lu: 1
+  atomic_num_list: [6, 7, 8, 9, 0]
+  b_n_type: 4
+  b_n_squeeze: 3
+  a_n_node: 9
+  valid_idx: valid_idx_qm9.json
+  label_keys: ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2', 'zpve', 'U0', 'U', 'H', 'G', 'Cv']
+  smiles_col: SMILES1
+
+zinc250k:
+  b_n_flow: 10
+  b_n_block: 1
+  b_hidden_ch: [512,512]
+  a_n_flow: 38
+  a_n_block: 1
+  a_hidden_gnn: [256]
+  a_hidden_lin: [512,64]
+  mask_row_size_list: [1]
+  mask_row_stride_list: [1]
+  learn_dist: True
+  noise_scale: 0.6
+  b_conv_lu: 2
+  atomic_num_list: [6, 7, 8, 9, 15, 16, 17, 35, 53, 0]
+  b_n_type: 4
+  b_n_squeeze: 19
+  a_n_node: 38
+  valid_idx: valid_idx_zinc.json
+  label_keys: ['logP', 'qed', 'SAS']
+  smiles_col: smiles
+
+# set data path
+FILE_PATH: ./datasets/moflow
+
+# model settings
+MODEL:
+  input_keys: ["nodes", "edges"]
+  output_keys: ["output", "sum_log_det"]
+  hyper_params: null
+
+# training settings
+TRAIN:
+  epochs: 200
+  save_freq: 50
+  eval_during_train: true
+  eval_freq: 20
+  learning_rate: 0.001
+  lr_decay: 0.999995
+  batch_size: 256
+  num_workers: 8
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  compute_metric_by_batch: false
+  eval_with_no_grad: true
+  batch_size: 100

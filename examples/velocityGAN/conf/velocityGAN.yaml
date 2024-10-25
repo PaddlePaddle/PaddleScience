@@ -1,0 +1,96 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+output_dir: ${hydra:run.dir}
+log_freq: 20
+DATASET: "flatvel-a"
+DATASET_CONFIG: './dataset_config.json'
+file_size: null
+k: 1
+
+# weight dict of loss value
+WEIGHT_DICT:
+  gen:
+    lambda_g1v: 100.0
+    lambda_g2v: 0.0
+    lambda_adv: 1.0
+  dis:
+    lambda_gp: 10.0
+
+# model settings
+MODEL:
+  gen_net:
+    input_keys: ["data"]
+    output_keys: ["fake_image"]
+    dim1: 32
+    dim2: 64
+    dim3: 128
+    dim4: 256
+    dim5: 512
+    sample_spatial: 1.0
+  dis_net:
+    input_keys: ["image"]
+    output_keys: ["score"]
+    dim1: 32
+    dim2: 64
+    dim3: 128
+    dim4: 256
+
+# visualization settings
+VIS:
+  vis: true
+  vis_suffix: null
+  vb: 10
+  vsa: 2
+
+# training settings
+TRAIN:
+  dataset:
+    anno: "./anno_files/flatvel_a_train.txt"
+    preload: true
+    sample_ratio: 1
+  sampler:
+    shuffle: false
+    drop_last: true
+  batch_size: 64
+  use_shared_memory: true
+  num_workers: 16
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  epochs: 60000
+  epochs_dis: 1
+  iters_per_epoch_dis: 3
+  epochs_gen: 1
+  iters_per_epoch_gen: 1
+
+# evaluation settings
+EVAL:
+  dataset:
+    anno: "./anno_files/flatvel_a_val.txt"
+    preload: true
+    sample_ratio: 1
+  batch_size: 50
+  use_shared_memory: true
+  num_workers: 16
+  pretrained_model_path: null

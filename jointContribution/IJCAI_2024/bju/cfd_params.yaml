@@ -1,0 +1,51 @@
+GraphSAGE:
+  encoder: [7, 32, 64]
+  decoder: [64, 32, 4]
+
+  nb_hidden_layers: 2
+  size_hidden_layers: 64
+  batch_size: 1
+  nb_epochs: 400
+  lr: 0.001
+  bn_bool: True
+  res_bool: False
+
+MLP:
+  encoder: [3, 64, 64, 32, 64]
+  decoder: [64, 32, 64, 64, 1]
+
+  nb_hidden_layers: 12
+  size_hidden_layers: 64
+  batch_size: 1
+  nb_epochs: 1000
+  lr: 0.001
+  bn_bool: True
+  res_bool: False
+  r: 0.02
+
+GAT:
+  encoder: [7, 32, 64]
+  decoder: [64, 32, 4]
+
+  nb_hidden_layers: 2
+  size_hidden_layers: 64
+  batch_size: 1
+  nb_epochs: 400
+  lr: 0.0001
+  bn_bool: True
+  nb_heads: 4
+  res_bool: False
+
+GNO:
+  encoder: [7, 32, 32]
+  decoder: [32, 32, 4]
+
+  nb_hidden_layers: 2
+  size_hidden_layers: 32
+  batch_size: 1
+  nb_epochs: 200
+  lr: 0.001
+  bn_bool: True
+  kernel: [11, 64, 256, 1024]
+  res_bool: False
+  r: 0.2

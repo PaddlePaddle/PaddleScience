@@ -79,6 +79,14 @@
     ./README.md:pip_install
     --8<--
 
+=== "conda 安装"
+
+    执行以下命令以 conda 的方式安装 release / nightly build 版本的 PaddleScience。
+
+    --8<--
+    ./README.md:conda_install
+    --8<--
+
 === "设置 PYTHONPATH"
 
     如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。

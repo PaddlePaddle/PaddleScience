@@ -28,4 +28,7 @@
         - DGMRDataset
         - DarcyFlowDataset
         - SphericalSWEDataset
+        - SEVIRDataset
+        - MOlFLOWDataset
+        - CGCNNDataset
       show_root_heading: true

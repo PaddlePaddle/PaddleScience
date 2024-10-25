@@ -1,0 +1,4 @@
+numpy
+paddlenlp
+paddlepaddle_gpu
+tqdm

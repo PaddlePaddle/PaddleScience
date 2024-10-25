@@ -17,6 +17,9 @@ from __future__ import annotations
 import sys
 import time
 from typing import TYPE_CHECKING
+from typing import Dict
+from typing import Sequence
+from typing import Union
 
 import paddle
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
@@ -27,6 +30,29 @@ from ppsci.utils import misc
 
 if TYPE_CHECKING:
     from ppsci import solver
+
+
+def _compute_batch_size(
+    input_dict: Dict[str, Union[paddle.Tensor, Sequence[paddle.Tensor]]]
+) -> int:
+    """Compute batch size from given input dict.
+
+    NOTE: Returned `batch_size` might be inaccurate, but it won't affect the correctness
+    of the training results because `batch_size` is now only used for timing.
+
+    Args:
+        input_dict (Dict[str, Union[paddle.Tensor, Sequence[paddle.Tensor]]]): Given input dict.
+
+    Returns:
+        int: Batch size of input dict.
+    """
+    sample = next(iter(input_dict.values()))
+    if hasattr(sample, "shape"):
+        return sample.shape[0]
+    elif hasattr(sample, "__len__"):  # Might be inaccurate here.
+        return len(sample)
+    else:
+        raise ValueError("Unsupported type of input dict value.")
 
 
 def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
@@ -77,7 +103,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             input_dicts.append(input_dict)
             label_dicts.append(label_dict)
             weight_dicts.append(weight_dict)
-            total_batch_size += next(iter(input_dict.values())).shape[0]
+            total_batch_size += _compute_batch_size(input_dict)
             reader_tic = time.perf_counter()
 
         loss_dict = misc.Prettydefaultdict(float)
@@ -227,7 +253,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             input_dicts.append(input_dict)
             label_dicts.append(label_dict)
             weight_dicts.append(weight_dict)
-            total_batch_size += next(iter(input_dict.values())).shape[0]
+            total_batch_size += _compute_batch_size(input_dict)
             reader_tic = time.perf_counter()
 
         def closure() -> paddle.Tensor:

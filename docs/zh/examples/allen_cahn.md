@@ -207,7 +207,7 @@ examples/allen_cahn/allen_cahn_piratenet.py:138:156
 --8<--
 ```
 
-### 3.9 模型训练、评估与可视化
+### 3.8 模型训练、评估与可视化
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
