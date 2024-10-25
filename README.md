@@ -187,9 +187,9 @@ python -c "import paddle; paddle.utils.run_check()"
         <!-- --8<-- [start:pip_install] -->
         ``` shell
         # release
-        pip install -U paddlesci
+        pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
         # nightly build
-        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
+        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:pip_install] -->
 
