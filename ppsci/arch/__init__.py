@@ -51,6 +51,7 @@ from ppsci.arch.unonet import UNONet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.new_model import DNN  # isort:skip
 
 
 __all__ = [
@@ -65,6 +66,7 @@ __all__ = [
     "CVit",
     "CVit1D",
     "CylinderEmbedding",
+    "DNN",
     "DeepONet",
     "DeepPhyLSTM",
     "DGMR",
