@@ -1,5 +1,8 @@
+from typing import Tuple
+
 import paddle as pp
 import paddle.nn.functional as F
+from numpy import ndarray
 from paddle import nn
 from paddle.nn.initializer import KaimingNormal
 
@@ -69,20 +72,68 @@ class tempol_conv(nn.Layer):
 
 
 class TGCN(Arch):
-    def __init__(self, cfg, adj):
-        super(TGCN, self).__init__()
-        # para
-        in_dim = cfg.input_dim
-        emb_dim = cfg.emb_dim
-        hidden = cfg.hidden
-        gc_layer = cfg.gc_layer
-        tc_layer = cfg.tc_layer
-        k_s = cfg.tc_kernel_size
-        dropout = cfg.dropout
-        alpha = cfg.leakyrelu_alpha
+    """
+    TGCN is a class that represents an Temporal Graph Convolutional Network model.
 
-        self.input_keys = cfg.MODEL.input_keys
-        self.output_keys = cfg.MODEL.label_keys
+    Args:
+        input_keys (Tuple[str, ...]): A tuple of input keys.
+        output_keys (Tuple[str, ...]): A tuple of output keys.
+        adj (ndarray): The adjacency matrix of the graph.
+        in_dim (int): The dimension of the input data.
+        emb_dim (int): The dimension of the embedded space.
+        hidden (int): The dimension of the latent space.
+        gc_layer (int): The number of the graph convolutional layer.
+        tc_layer (int): The number of the temporal convolutional layer.
+        k_s (int): The kernel size of the temporal convolutional layer.
+        dropout (float): The dropout rate.
+        alpha (float): The negative slope of LeakyReLU.
+        input_len (int): The input timesteps.
+        label_len (int): The output timesteps.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> model = ppsci.arch.TGCN(
+        ...    input_keys=("input",),
+        ...    output_keys=("label",),
+        ...    adj=numpy.ones((307, 307), dtype=numpy.float32),
+        ...    in_dim=1,
+        ...    emb_dim=32
+        ...    hidden=64,
+        ...    gc_layer=2,
+        ...    tc_layer=2
+        ...    k_s=3,
+        ...    dropout=0.25,
+        ...    alpha=0.1,
+        ...    input_len=12,
+        ...    label_len=12,
+        ... )
+        >>> input_dict = {"input": paddle.rand([64, 12, 307, 1]),}
+        >>> label_dict = model(input_dict)
+        >>> print(label_dict["label"].shape)
+        [64, 12, 307, 1]
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        adj: ndarray,
+        in_dim: int,
+        emb_dim: int,
+        hidden: int,
+        gc_layer: int,
+        tc_layer: int,
+        k_s: int,
+        dropout: float,
+        alpha: float,
+        input_len: int,
+        label_len: int,
+    ):
+        super(TGCN, self).__init__()
+
+        self.input_keys = input_keys
+        self.output_keys = output_keys
 
         self.register_buffer("adj", pp.to_tensor(data=adj))
 
@@ -113,8 +164,8 @@ class TGCN(Arch):
         )
         self.end_conv_2 = nn.Conv2D(
             in_channels=2 * hidden,
-            out_channels=cfg.label_len,
-            kernel_size=(1, cfg.input_len),
+            out_channels=label_len,
+            kernel_size=(1, input_len),
             weight_attr=KaimingNormal(),
         )
 

@@ -17,9 +17,9 @@
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip
     unzip tgcn_data.zip
     wget https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD8_pretrained_model.pdparams
-    python run.py data_name=PEMSD8 mode=eval
+    python run.py data_name=PEMSD8 mode=eval EVAL.pretrained_model_path=PEMSD8_pretrained_model.pdparams
     # wget https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD4_pretrained_model.pdparams
-    # python run.py data_name=PEMSD4 mode=eval
+    # python run.py data_name=PEMSD4 mode=eval EVAL.pretrained_model_path=PEMSD4_pretrained_model.pdparams
     ```
 
 | 预训练模型                                                   | 指标                    |

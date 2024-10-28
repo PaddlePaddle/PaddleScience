@@ -1,5 +1,3 @@
-import os
-
 import hydra
 from omegaconf import DictConfig
 
@@ -69,7 +67,21 @@ def train(cfg: DictConfig):
     # get adj
     _, _, adj = get_edge_index(cfg.data_path, reduce=cfg.reduce)
     # set model
-    model = TGCN(adj=adj, cfg=cfg)
+    model = TGCN(
+        input_keys=cfg.MODEL.input_keys,
+        output_keys=cfg.MODEL.label_keys,
+        adj=adj,
+        in_dim=cfg.input_dim,
+        emb_dim=cfg.emb_dim,
+        hidden=cfg.hidden,
+        gc_layer=cfg.gc_layer,
+        tc_layer=cfg.tc_layer,
+        k_s=cfg.tc_kernel_size,
+        dropout=cfg.dropout,
+        alpha=cfg.leakyrelu_alpha,
+        input_len=cfg.input_len,
+        label_len=cfg.label_len,
+    )
     # init optimizer
     optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate)(model)
     # set iters_per_epoch by dataloader length
@@ -81,26 +93,18 @@ def train(cfg: DictConfig):
         constraint=constraint,
         output_dir=cfg.output_dir,
         optimizer=optimizer,
-        # lr_scheduler=None,
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=iters_per_epoch,
-        # update_freq=1,
-        # save_freq=0,
         log_freq=cfg.log_freq,
         eval_during_train=True,
-        # eval_freq=1,
-        # start_eval_epoch=1,
         seed=cfg.seed,
         device=cfg.device,
         validator=validator,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-        # compute_metric_by_batch=False,
         eval_with_no_grad=True,
     )
     # train model
     solver.train()
-    # evaluate after training
-    eval(cfg)
 
 
 def eval(cfg: DictConfig):
@@ -137,35 +141,31 @@ def eval(cfg: DictConfig):
     # get adj
     _, _, adj = get_edge_index(cfg.data_path, reduce=cfg.reduce)
     # set model
-    model = TGCN(adj=adj, cfg=cfg)
-    # best model
-    if cfg.mode == "train":
-        best_model_path = os.path.join(
-            cfg.output_dir, "checkpoints", "best_model.pdparams"
-        )  # call in train()
-    else:
-        best_model_path = cfg.data_name + "_pretrained_model.pdparams"
+    model = TGCN(
+        input_keys=cfg.MODEL.input_keys,
+        output_keys=cfg.MODEL.label_keys,
+        adj=adj,
+        in_dim=cfg.input_dim,
+        emb_dim=cfg.emb_dim,
+        hidden=cfg.hidden,
+        gc_layer=cfg.gc_layer,
+        tc_layer=cfg.tc_layer,
+        k_s=cfg.tc_kernel_size,
+        dropout=cfg.dropout,
+        alpha=cfg.leakyrelu_alpha,
+        input_len=cfg.input_len,
+        label_len=cfg.label_len,
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model=model,
-        # constraint=None,
         output_dir=cfg.output_dir,
-        # optimizer=None,
-        # lr_scheduler=None,
-        # epochs=5,
-        # iters_per_epoch=20,
-        # update_freq=1,
-        # save_freq=0,
         log_freq=cfg.log_freq,
-        # eval_during_train=False,
-        # eval_freq=1,
-        # start_eval_epoch=1,
         seed=cfg.seed,
         device=cfg.device,
         validator=validator,
-        pretrained_model_path=best_model_path,
-        # compute_metric_by_batch=False,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=True,
     )
     # evaluate

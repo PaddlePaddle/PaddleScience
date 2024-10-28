@@ -65,6 +65,30 @@ def get_edge_index(file_path, bi=True, reduce="mean"):
 
 
 class PEMSDataset(Dataset):
+    """Dataset class for PEMSD4 and PEMSD8 dataset.
+
+    Args:
+        file_path (str): Dataset root path.
+        split (str): Dataset split label.
+        input_keys (Tuple[str, ...]): A tuple of input keys.
+        label_keys (Tuple[str, ...]): A tuple of label keys.
+        weight_dict (Optional[Dict[str, float]]): Define the weight of each constraint variable. Defaults to None.
+        transforms (Optional[Compose]): Compose object contains sample wise transform(s). Defaults to None.
+        norm_input (bool): Whether to normalize the input. Defaults to True.
+        norm_label (bool): Whether to normalize the output. Defaults to False.
+        input_len (int): The input timesteps. Defaults to 12.
+        label_len (int): The output timesteps. Defaults to 12.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.PEMSDataset(
+        ...     "./Data/PEMSD4",
+        ...     "train",
+        ...     ("input",),
+        ...     ("label",),
+        ... )  # doctest: +SKIP
+    """
+
     def __init__(
         self,
         file_path: str,
