@@ -1,0 +1,50 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: index
+parts:
+- caption: Basics
+  chapters:
+  - file: basics/installation
+- caption: Tutorials
+  chapters:
+  - file: tutorials/pairwise-registration-intro
+- caption: Reference
+  chapters:
+  - file: reference/core/index
+    sections:
+    - file: reference/core/domain
+    - file: reference/core/kernels
+    - file: reference/core/image
+    - file: reference/core/flow
+  - file: reference/data/index
+    sections:
+    - file: reference/data/tensor
+    - file: reference/data/dataset
+    - file: reference/data/sampler
+    - file: reference/data/transforms
+  - file: reference/losses/index
+  - file: reference/modules/index
+  - file: reference/networks/index
+  - file: reference/spatial/index
+    sections:
+    - file: reference/spatial/common
+    - file: reference/spatial/composite
+    - file: reference/spatial/transformer
+  - file: reference/utils/index
+- caption: API Reference
+  maxdepth: 1
+  chapters:
+  - file: reference/api/deepali/core/index
+  - file: reference/api/deepali/data/index
+  - file: reference/api/deepali/losses/index
+  - file: reference/api/deepali/modules/index
+  - file: reference/api/deepali/networks/index
+  - file: reference/api/deepali/spatial/index
+  - file: reference/api/deepali/utils/index
+- caption: Contributing
+  chapters:
+  - file: basics/example-page
+  - file: tutorials/example-notebook
+  - file: tutorials/example-myst-notebook

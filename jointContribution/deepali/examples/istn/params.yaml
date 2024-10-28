@@ -1,0 +1,78 @@
+dataset:
+  train:
+    table: /Users/aschuh/Projects/istn/data/synth2d/train.csv
+    prefix: /Users/aschuh/Data/ISTN/synth2d/train
+    images:
+      target_img: "{prefix}/V_square_target{index+1:d}.png"
+      target_seg: "{prefix}/V_square_target{index+1:d}_seg.png"
+      source_img: "{prefix}/V_square_source{index+1:d}.png"
+      source_seg: "{prefix}/V_square_source{index+1:d}_seg.png"
+    transforms:
+      target_img:
+        - normalize: {min: 0, max: 255, mode: unit}
+      target_seg:
+        - normalize: {min: 0, max: 255, mode: unit}
+      source_img:
+        - normalize: {min: 0, max: 255, mode: unit}
+      source_seg:
+        - normalize: {min: 0, max: 255, mode: unit}
+  valid:
+    table: /Users/aschuh/Projects/istn/data/synth2d/val.csv
+    prefix: /Users/aschuh/Data/ISTN/synth2d/train
+    images:
+      target_img:
+        path: "{prefix}/V_square_target{index+1:d}.png"
+        dtype: float32
+        device: cpu
+        transforms:
+          - normalize: {min: 0, max: 255, mode: unit}
+      target_seg:
+        path: "{prefix}/V_square_target{index+1:d}_seg.png"
+        transforms:
+          - normalize: {min: 0, max: 255, mode: unit}
+      source_img:
+        path: "{prefix}/V_square_source{index+1:d}.png"
+        transforms:
+          - normalize: {min: 0, max: 255, mode: unit}
+      source_seg:
+        path: "{prefix}/V_square_source{index+1:d}_seg.png"
+        transforms:
+          - normalize: {min: 0, max: 255, mode: unit}
+model:
+  input:
+    channels: 1
+    size: [128, 128]
+  itn: miccai2019
+train:
+  # Initialization
+  random_seed: 0
+  deterministic: true
+  # Data loading
+  batch_size: 10
+  num_workers_per_proc: 2
+  num_workers_per_node: 10
+  pin_memory: False
+  shuffle: True
+  # Optimization parameters
+  max_epochs: 100
+  max_iterations: 0
+  max_learning_rate: 0.001
+  min_learning_rate: 0.00001
+  learning_rate_decay_steps: 0
+  learning_rate_decay_rate: 0.9
+  # Logging settings
+  log_every: 1
+  checkpoint_every: 10
+  checkpoint_lastn: 10
+  checkpoint_score: neg_loss
+  summary_every: 1
+  summary_batches: false
+  summary_hists: false
+  summary_images: true
+  summary_graph: false
+  # Evaluation on validation set
+  eval_batch_size: -1
+  eval_every_steps: 10
+  eval_save_firstn: 5
+  eval_num_samples: -1
+  eval_num_workers: -1

@@ -1,0 +1,86 @@
+#######################################################################################
+# A default configuration that will be loaded for all jupyter books
+# See the documentation for help and more options:
+# https://jupyterbook.org/customize/config.html
+
+#######################################################################################
+# Book settings
+title: deepali
+author: HeartFlow-Imperial College London
+copyright: "2020-2023"
+logo: _images/logo.png
+
+# Force re-execution of notebooks on each build.
+# See https://jupyterbook.org/content/execute.html
+execute:
+  execute_notebooks: auto
+
+# Define the name of the latex output file for PDF builds
+latex:
+  latex_documents:
+    targetname: book.tex
+
+# Add a bibtex file so that we can create citations
+bibtex_bibfiles:
+  - _citations.bib
+
+# Information about where the book exists on the web
+repository:
+  url: https://github.com/BioMedIA/deepali  # Online location of your book
+  path_to_book: docs  # Optional path to your book, relative to the repository root
+  branch: main  # Which branch of the repository should be used when creating links (optional)
+
+# Add GitHub buttons to your book
+# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+html:
+  use_issues_button: true
+  use_repository_button: true
+
+# Add a Launch on Google Colab button
+launch_buttons:
+  colab_url: "https://colab.research.google.com"
+
+# By default MathJax version 2 is currently used. If you are using a lot of math,
+# you may want to try using version 3, which claims to improve load speeds by 60 - 80%.
+sphinx:
+  config:
+    add_module_names: false
+    autoapi_dirs:
+    - ../src/deepali
+    autoapi_add_toctree_entry: false
+    autoapi_generate_api_docs: true
+    autoapi_ignore:
+    - '*ignite*'  # deprecated
+    autoapi_keep_files: true
+    autoapi_member_order: bysource
+    autoapi_options:
+    - members
+    # - show-inheritance
+    - show-inheritance-diagram
+    - show-module-summary
+    autoapi_python_class_content: both
+    autoapi_python_use_implicit_namespaces: true
+    autoapi_root: reference/api
+    autoapi_type: python
+    autodoc_typehints: signature
+    autosummary_generate: true
+    bibtex_reference_style: author_year
+    mathjax_path: https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+    suppress_warnings:
+    - etoc.toctree
+  extra_extensions:
+  - autoapi.extension
+  - sphinx.ext.autodoc
+  - sphinx.ext.autosummary
+  - sphinx.ext.inheritance_diagram
+  - sphinx.ext.napoleon
+  - sphinx.ext.viewcode
+
+parse:
+  myst_enable_extensions:
+  - amsmath
+  - colon_fence
+  - dollarmath
+  - linkify
+  - substitution
+  - tasklist

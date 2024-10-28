@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hf-deepali"
+version = "0.1.0"
+description = "Image, point set, and surface registration library for PyTorch."
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {text = "Apache-2.0"}
+
+maintainers = [
+    {name = "Andreas Schuh", email = "andreas.schuh@imperial.ac.uk"}
+]
+
+classifiers=[
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Typing :: Typed",
+]
+
+keywords = [
+    "medical-imaging",
+    "image-registration",
+    "spatial-transformer-networks",
+]
+
+requires-python = ">=3.9"
+#dynamic = ["version"]
+
+dependencies = [
+    "dacite",
+    "deprecation",
+    "pandas",
+    "ruamel.yaml",
+    "typing-extensions",
+]
+
+[project.optional-dependencies]
+all = [
+    "hf-deepali[utils,tests]"
+]
+utils = [
+    "boto3",
+    "nibabel",
+    "numpy",
+    "scipy",
+    "SimpleITK>=2.0",
+    "vtk>=9.0",
+]
+tests = [
+    "pytest",
+]
+
+[project.urls]
+"Homepage" = "https://biomedia.github.io/deepali"
+"Repository" = "https://github.com/BioMedIA/deepali.git"
+"Bug Tracker" = "https://github.com/BioMedIA/deepali/issues"
+
+[tool.black]
+line-length = 100
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["deepali*"]
+exclude = ["conda*", "docs*", "examples*", "tests*"]
+
+[tool.setuptools_scm]
