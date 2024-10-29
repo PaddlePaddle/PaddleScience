@@ -112,7 +112,7 @@ class Grid(object):
     coordinates with respect to different axes: 1) (continuous) grid indices, 2) world space, and
     3) grid-aligned cube with side length 2. The latter, i.e., :attr:`.Axes.CUBE` or :attr:`.Axes.CUBE_CORNERS`
     makes coordinates independent of :meth:`.Grid.size` and :meth:`.Grid.spacing`. These normalized coordinates
-    are furthermore compatible with the ``grid`` argument of ``torch.nn.functional.grid_sample()``. Use
+    are furthermore compatible with the ``grid`` argument of ``paddle.nn.functional.grid_sample()``. Use
     :meth:`.Grid.cube` to obtain a :class:`.Cube` defining the data domain without spatial sampling attributes.
 
     """
@@ -1009,7 +1009,7 @@ class Grid(object):
                 should refer to the centers of the grid corner squares or their boundary.
                 Note that in both cases the returned normalized coordinates are associated
                 with the center points of the grid squares. When used as ``grid`` argument
-                of ``torch.nn.functional.grid_sample()``, the same ``align_corners`` value
+                of ``paddle.nn.functional.grid_sample()``, the same ``align_corners`` value
                 should be used for both ``Grid.coords()`` and ``grid_sample()`` calls.
                 If ``None``, use default ``self.align_corners()``.
             channels_last: Whether to place stacked coordinates at last (``True``) or first (``False``)
@@ -1017,9 +1017,9 @@ class Grid(object):
                 batch dimension, whereas point sets such as the sampling points passed to ``grid_sample``
                 are represented with point coordinates in the last tensor dimension.
             flip: Whether to return coordinates in the order (..., x) instead of (x, ...).
-            dtype: Data type of coordinates. If ``None``, uses ``torch.int32`` as data type
+            dtype: Data type of coordinates. If ``None``, uses ``paddle.int32`` as data type
                 for returned tensor if ``normalize=False``, and ``self.dtype`` otherwise.
-            device: Device on which to create PyTorch tensor. If ``None``, use ``self.device``.
+            device: Device on which to create paddle tensor. If ``None``, use ``self.device``.
 
         Returns:
             If ``dim`` is ``None``, returns a tensor of shape (...X, C) if ``channels_last=True`` (default)

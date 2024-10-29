@@ -18,7 +18,7 @@ from .layers import is_norm_layer
 def module_output_size(module: paddle.nn.Layer, in_size: ScalarOrTuple[int]) -> ScalarOrTuple[int]:
     r"""Calculate spatial size of output tensor after the given module is applied."""
     if not isinstance(module, paddle.nn.Layer):
-        raise TypeError("module_output_size() 'module' must be torch.nn.Module subclass")
+        raise TypeError("module_output_size() 'module' must be paddle.nn.Layer subclass")
     output_size = getattr(module, "output_size", None)
     if callable(output_size):
         return output_size(in_size)
@@ -185,7 +185,7 @@ def module_output_size(module: paddle.nn.Layer, in_size: ScalarOrTuple[int]) -> 
         )
     if isinstance(module, (paddle.nn.ParameterList)):
         raise TypeError(
-            "module_output_size() 'module' cannot be torch.nn.ParameterDict or torch.nn.ParameterList"
+            "module_output_size() 'module' cannot be paddle.nn.ParameterDict or paddle.nn.ParameterList"
         )
     raise NotImplementedError(
         f"module_output_size() not implemented for 'module' of type {type(module)}"

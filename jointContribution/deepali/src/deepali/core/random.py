@@ -96,7 +96,7 @@ def _multinomial(
 ) -> paddle.int64:
     r"""Sample from a multinomial probability distribution.
 
-    This function can be used for inputs of any size and is unlike ``torch.multinomial`` not limited
+    This function can be used for inputs of any size and is unlike ``paddle.multinomial`` not limited
     to 2**24 categories at the expense of a less efficient implementation.
 
     Args:

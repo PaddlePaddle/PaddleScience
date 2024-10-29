@@ -90,7 +90,7 @@ class Reshape(paddle.nn.Layer):
     r"""Reshape input tensor.
 
     This module provides a view of the input tensor without making a copy if possible.
-    Otherwise, a copy is made of the input data. See ``torch.reshape()`` for details.
+    Otherwise, a copy is made of the input data. See ``paddle.reshape()`` for details.
 
     """
 

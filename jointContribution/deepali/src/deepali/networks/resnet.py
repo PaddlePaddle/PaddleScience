@@ -18,12 +18,13 @@ from typing import Type
 from typing import Union
 
 import paddle
-import paddlenlp
 from deepali.core.config import DataclassConfig
 from deepali.core.enum import PaddingMode
 from deepali.core.itertools import zip_longest_repeat_last
 from deepali.core.typing import ScalarOrTuple
 from deepali.modules import ReprWithCrossReferences
+
+import ppsci
 
 from .blocks import ResidualUnit
 from .layers import ActivationArg
@@ -430,7 +431,7 @@ def init_conv_modules(network: paddle.nn.Layer, nonlinearity: str = "relu") -> p
     if nonlinearity in ("relu", "leaky_relu"):
         for module in network.sublayers():
             if is_convolution(module):
-                paddlenlp.utils.initializer.kaiming_normal_(
+                ppsci.utils.initializer.kaiming_normal_(
                     module.weight, mode="fan_out", nonlinearity=nonlinearity
                 )
                 if module.bias is not None:

@@ -29,7 +29,7 @@ class RegistrationLoss(paddle.nn.Layer, metaclass=ABCMeta):
 
     A registration loss function, also referred to as energy function, is an objective function
     to be minimized by an optimization routine. In particular, these energy functions are used inside
-    the main loop which performs individual gradient steps using an instance of ``torch.optim.Optimizer``.
+    the main loop which performs individual gradient steps using an instance of ``paddle.optimizer.Optimizer``.
 
     Registration loss consists of one or more loss terms, which may be either one of:
     - A pairwise data term measuring the alignment of a single input pair (e.g., images, point sets, surfaces).

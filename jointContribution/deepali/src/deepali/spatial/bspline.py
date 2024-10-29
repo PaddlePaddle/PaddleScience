@@ -46,7 +46,7 @@ class BSplineTransform(ParametricTransform, NonRigidTransform):
                 for group-wise or batched registration. The default is one transformation for all images
                 in the batch, or the batch length of the ``params`` tensor if provided.
             params: Initial parameters. If a tensor is given, it is only registered as optimizable module
-                parameters when of type ``torch.nn.Parameter``. When a callable is given instead, it will be
+                parameters when of type ``paddle.nn.Parameter``. When a callable is given instead, it will be
                 called by ``self.update()`` with arguments set and given by ``self.condition()``. When a boolean
                 argument is given, a new zero-initialized tensor is created. If ``True``, this tensor is registered
                 as optimizable module parameter.

@@ -51,7 +51,7 @@ def register_pairwise(
     debug: Union[bool, int] = False,
     device: Optional[Device] = None,
 ) -> SpatialTransform:
-    r"""Register pair of images using ``torch.autograd`` and ``torch.optim``."""
+    r"""Register pair of images using ``paddle.autograd`` and ``paddle.optimizer``."""
     if config is None:
         config = {}
     if outdir is not None:

@@ -83,7 +83,7 @@ def init(args: Args) -> int:
     configure_logging(log, args)
     if args.device == "cuda":
         if not paddle.device.cuda.device_count() >= 1:
-            log.error("Cannot use --device 'cuda' when torch.cuda.is_available() is False")
+            log.error("Cannot use --device 'cuda' when paddle.cuda.is_available() is False")
             return 1
         gpu_ids = cuda_visible_devices()
         if len(gpu_ids) != 1:

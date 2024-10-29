@@ -162,7 +162,7 @@ class EulerRotation(InvertibleParametricTransform, LinearTransform):
             params: Rotation angles in degrees. This parameterization is adopted from MIRTK
                 and ensures that rotation angles and scaling factors (percentage) are within
                 a similar range of magnitude which is useful for direct optimization of these
-                parameters. If parameters are predicted by a callable ``torch.nn.Module``,
+                parameters. If parameters are predicted by a callable ``paddle.nn.Layer``,
                 different output activations may be chosen before converting these to degrees.
             order: Order in which to compose elementary rotations. For example in 3D, "zxz" means
                 that the first rotation occurs about z, the second about x, and the third rotation
@@ -359,7 +359,7 @@ class IsotropicScaling(InvertibleParametricTransform, LinearTransform):
                 adopted from MIRTK and ensures that rotation angles in degrees and scaling
                 factors are within a similar range of magnitude which is useful for direct
                 optimization of these parameters. If parameters are predicted by a callable
-                ``torch.nn.Module``, different output activations may be chosen before
+                ``paddle.nn.Layer``, different output activations may be chosen before
                 converting these to percentages (i.e., multiplied by 100).
 
         """
@@ -446,7 +446,7 @@ class AnisotropicScaling(InvertibleParametricTransform, LinearTransform):
                 adopted from MIRTK and ensures that rotation angles in degrees and scaling
                 factors are within a similar range of magnitude which is useful for direct
                 optimization of these parameters. If parameters are predicted by a callable
-                ``torch.nn.Module``, different output activations may be chosen before
+                ``paddle.nn.Layer``, different output activations may be chosen before
                 converting these to percentages (i.e., multiplied by 100).
 
         """
@@ -532,7 +532,7 @@ class Shearing(InvertibleParametricTransform, LinearTransform):
             params: Shearing angles in degrees. This parameterization is adopted from MIRTK
                 and ensures that rotation angles and scaling factors (percentage) are within
                 a similar range of magnitude which is useful for direct optimization of these
-                parameters. If parameters are predicted by a callable ``torch.nn.Module``,
+                parameters. If parameters are predicted by a callable ``paddle.nn.Layer``,
                 different output activations may be chosen before converting these to degrees.
 
         """

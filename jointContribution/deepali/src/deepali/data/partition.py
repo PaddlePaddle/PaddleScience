@@ -34,11 +34,11 @@ def dataset_split_lengths(
 ) -> Tuple[int, int, int]:
     r"""Split dataset in training, validation, and test subset.
 
-    The output ``lengths`` of this function can be passed to ``torch.utils.data.random_split`` to obtain
-    the ``torch.utils.data.dataset.Subset`` for each split.
+    The output ``lengths`` of this function can be passed to ``paddle.io.random_split`` to obtain
+    the ``paddle.io.Subset`` for each split.
 
     See also:
-        https://pytorch.org/docs/stable/data.html#torch.utils.data.random_split
+        https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api/paddle/io/random_split_cn.html
 
     Args:
         total: Total number of samples in dataset.

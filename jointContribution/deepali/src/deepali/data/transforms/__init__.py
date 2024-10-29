@@ -10,7 +10,7 @@ and datasets defined in :mod:`.data.dataset`, which also use these transforms to
 and preprocess the loaded data.
 
 Following torchvision's lead, data transform classes which operate on tensors and do not require
-lambda functions are derived from ``torch.nn.Module``. Use ``torch.nn.Sequential`` to compose
+lambda functions are derived from ``paddle.nn.Layer``. Use ``paddle.nn.Sequential`` to compose
 transforms instead of ``torchvision.transforms.Compose``. This is to support ``torch.jit.script``.
 
 See also: https://github.com/pytorch/vision/blob/3852b41975702cb683a92c8e37f1ef74fd6a79b1/torchvision/transforms/transforms.py#L49.

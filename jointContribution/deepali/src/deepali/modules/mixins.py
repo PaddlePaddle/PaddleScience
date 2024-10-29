@@ -1,4 +1,4 @@
-r"""Mix-in classes for torch.nn.Module subclasses."""
+r"""Mix-in classes for paddle.nn.Layer subclasses."""
 
 from typing import Dict
 from typing import Optional
@@ -7,7 +7,7 @@ import paddle
 
 
 class DeviceProperty(object):
-    r"""Mixin for torch.nn.Module to provide 'device' property."""
+    r"""Mixin for paddle.nn.Layer to provide 'device' property."""
 
     @property
     def device(self) -> (paddle.CPUPlace, paddle.CUDAPlace, str):
@@ -22,7 +22,7 @@ class DeviceProperty(object):
 
 
 class ReprWithCrossReferences(object):
-    r"""Mixin of __repr__ for torch.nn.Module subclasses to include cross-references to reused modules."""
+    r"""Mixin of __repr__ for paddle.nn.Layer subclasses to include cross-references to reused modules."""
 
     def __repr__(self) -> str:
         return self._repr_impl()

@@ -79,7 +79,7 @@ def activation(
             tuple item when ``arg`` is a ``(name, kwargs)`` tuple instead of a string.
 
     Returns:
-        Given activation function when ``arg`` is a ``torch.nn.Module``, or a new activation module otherwise.
+        Given activation function when ``arg`` is a ``paddle.nn.Layer``, or a new activation module otherwise.
 
     """
     if isinstance(arg, paddle.nn.Layer) and not args and not kwargs:

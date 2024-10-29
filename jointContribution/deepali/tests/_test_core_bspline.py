@@ -11,7 +11,6 @@ from deepali.core.enum import SpatialDim
 from deepali.utils import paddle_aux  # noqa
 
 # %% Vector field control point coefficients
-# device = torch.device("cuda:0")
 device = paddle.CPUPlace()
 in_size = tuple((21,))  # (X, ...)
 stride = (5,) * len(in_size)

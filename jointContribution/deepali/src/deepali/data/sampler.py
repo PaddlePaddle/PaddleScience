@@ -1,4 +1,4 @@
-r"""Custom samplers for ``torch.utils.data.DataLoader``."""
+r"""Custom samplers for ``paddle.utils.data.DataLoader``."""
 import math
 import multiprocessing as mp
 from typing import Optional
@@ -24,9 +24,9 @@ class DistributedWeightedRandomSampler(paddle.io.Sampler):
         r"""Initialize map-style dataset index sampler.
 
         Sampler that restricts data loading to a subset of the random samples.
-        It is especially useful in conjunction with ``torch.nn.parallel.DistributedDataParallel``.
-        In such a case, each process can pass a ``torch.utils.data.DistributedWeightedRandomSampler``
-        instance as a ``torch.utils.data.DataLoader`` sampler, and load a subset of the
+        It is especially useful in conjunction with ``paddle.nn.parallel.DistributedDataParallel``.
+        In such a case, each process can pass a ``paddle.utils.data.DistributedWeightedRandomSampler``
+        instance as a ``paddle.utils.data.DataLoader`` sampler, and load a subset of the
         original dataset that is exclusive to it.
 
         .. note::
@@ -34,7 +34,7 @@ class DistributedWeightedRandomSampler(paddle.io.Sampler):
 
         Args:
             weights: Sampling weights for each of the ``len(weights)`` indices.
-                These are passed on to ``torch.multinomial()`` to sample indices.
+                These are passed on to ``paddle.multinomial()`` to sample indices.
             num_samples: Number of dataset indices to sample. If negative, use ``len(weights)``.
                 Note that using all samples would only result in shuffling the dataset if
                 ``replacement=False``, but no weighted sampling of a subset of it.

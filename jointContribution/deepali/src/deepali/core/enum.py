@@ -37,17 +37,17 @@ class Sampling(Enum):
         return cls(arg)
 
     def grid_sample_mode(self, num_spatial_dim: int) -> str:
-        r"""Interpolation mode argument for torch.nn.functional.grid_sample() for given number of spatial dimensions."""
+        r"""Interpolation mode argument for paddle.nn.functional.grid_sample() for given number of spatial dimensions."""
         if self == self.LINEAR:
             return "bilinear"
         if self == self.NEAREST:
             return "nearest"
         raise ValueError(
-            f"torch.nn.functional.grid_sample() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
+            f"paddle.nn.functional.grid_sample() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
         )
 
     def interpolate_mode(self, num_spatial_dim: int) -> str:
-        r"""Interpolation mode argument for torch.nn.functional.interpolate() for given number of spatial dimensions."""
+        r"""Interpolation mode argument for paddle.nn.functional.interpolate() for given number of spatial dimensions."""
         if self == self.AREA:
             return "area"
         if self == self.BICUBIC:
@@ -62,7 +62,7 @@ class Sampling(Enum):
         if self == self.NEAREST:
             return "nearest"
         raise ValueError(
-            f"torch.nn.functional.interpolate() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
+            f"paddle.nn.functional.interpolate() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
         )
 
 
@@ -90,7 +90,7 @@ class PaddingMode(Enum):
         return cls(arg)
 
     def conv_mode(self, num_spatial_dim: int = 3) -> str:
-        r"""Padding mode argument for torch.nn.ConvNd()."""
+        r"""Padding mode argument for paddle.nn.ConvNd()."""
         if self in (self.CONSTANT, self.ZEROS):
             return "zeros"
         elif self == self.REFLECT:
@@ -98,11 +98,11 @@ class PaddingMode(Enum):
         elif self == self.REPLICATE:
             return "replicate"
         raise ValueError(
-            f"torch.nn.Conv{num_spatial_dim}d() does not support padding mode '{self.value}'"
+            f"paddle.nn.Conv{num_spatial_dim}d() does not support padding mode '{self.value}'"
         )
 
     def grid_sample_mode(self, num_spatial_dim: int) -> str:
-        r"""Padding mode argument for torch.nn.functional.grid_sample()."""
+        r"""Padding mode argument for paddle.nn.functional.grid_sample()."""
         if 2 <= num_spatial_dim <= 3:
             if self in (self.CONSTANT, self.ZEROS):
                 return "zeros"
@@ -111,11 +111,11 @@ class PaddingMode(Enum):
             if self == self.REFLECT:
                 return "reflection"
         raise ValueError(
-            f"torch.nn.functional.grid_sample() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
+            f"paddle.nn.functional.grid_sample() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
         )
 
     def pad_mode(self, num_spatial_dim: int) -> str:
-        r"""Padding mode argument for torch.nn.functional.pad() for given number of spatial dimensions."""
+        r"""Padding mode argument for paddle.nn.functional.pad() for given number of spatial dimensions."""
         if self == self.CONSTANT:
             return "constant"
         elif self == self.REFLECT:
@@ -125,7 +125,7 @@ class PaddingMode(Enum):
             if 1 <= num_spatial_dim <= 3:
                 return "replicate"
         raise ValueError(
-            f"torch.nn.functional.pad() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
+            f"paddle.nn.functional.pad() does not support padding mode '{self.value}' for {num_spatial_dim}-dimensional images"
         )
 
 

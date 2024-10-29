@@ -1,4 +1,4 @@
-r"""Type annotations for torch functions."""
+r"""Type annotations for paddle functions."""
 from dataclasses import Field
 from pathlib import Path
 from typing import Any
@@ -27,7 +27,7 @@ ScalarOrTuple4d = Union[T, Tuple[T, T, T, T]]
 ScalarOrTuple5d = Union[T, Tuple[T, T, T, T, T]]
 ScalarOrTuple6d = Union[T, Tuple[T, T, T, T, T, T]]
 
-# Cannot use Sequence type annotation when using torch.jit.ScriptModule
+# Cannot use Sequence type annotation when using paddle
 ListOrTuple = Union[List[T], Tuple[T, ...]]
 
 Device = paddle.any

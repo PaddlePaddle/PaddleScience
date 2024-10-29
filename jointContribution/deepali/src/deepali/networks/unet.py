@@ -156,9 +156,9 @@ class UNetEncoderConfig(DataclassConfig):
     downsample: Union[str, UNetDownsampleConfig] = field(default_factory=UNetDownsampleConfig)
     residual: bool = False
 
-    # When torch.backends.cudnn.deterministic == True, then a dilated convolution at layer_1_2
+    # When paddle.backends.cudnn.deterministic == True, then a dilated convolution at layer_1_2
     # causes a "CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`".
-    # This can be resolved by either setting torch.backends.cudnn.deterministic = False, or
+    # This can be resolved by either setting paddle.backends.cudnn.deterministic = False, or
     # by not using a dilated convolution for layer_1_2. See also related GitHub issue reported
     # at https://github.com/pytorch/pytorch/issues/32035.
 

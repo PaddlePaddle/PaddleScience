@@ -2,9 +2,9 @@ r"""Common types and functions that operate on tensors representing different ty
 
 Besides defining common types and auxiliary functions extending the standard library,
 this core library in particular defines functions which operate on objects of type ``paddle.Tensor``.
-This functional API defines a set of reusable state-less functions similar to ``torch.nn.functional``.
+This functional API defines a set of reusable state-less functions similar to ``paddle.nn.functional``.
 Object-oriented APIs use this functional API to realize their functionality. In particular, the
-``forward()`` method of ``torch.nn.Module`` subclasses, such as for example data transformations
+``forward()`` method of ``paddle.nn.Layer`` subclasses, such as for example data transformations
 (cf. :mod:`.data.transforms`) and neural network components (cf. :mod:`.modules` and :mod:`.networks`)
 are implemented using these functional building blocks.
 

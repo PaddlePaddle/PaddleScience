@@ -11,7 +11,7 @@ from deepali.core.nnutils import as_immutable_container
 class ToImmutableOutput(paddle.nn.Layer):
     r"""Convert input to immutable output container.
 
-    For use with ``torch.utils.tensorboard.SummaryWriter.add_graph`` when model output is list or dict.
+    For use with ``paddle.utils.tensorboard.SummaryWriter.add_graph`` when model output is list or dict.
     See error message: "Encountering a dict at the output of the tracer might cause the trace to be incorrect,
     this is only valid if the container structure does not change based on the module's inputs. Consider using
     a constant container instead (e.g. for `list`, use a `tuple` instead. for `dict`, use a `NamedTuple` instead).

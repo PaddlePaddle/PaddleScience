@@ -33,7 +33,7 @@ class Cube(object):
     Coordinates of points within this domain can be either with respect to the world coordinate
     system or the cube defined by the bounding box where coordinate axes are parallel to the
     cube edges and have a uniform side length of 2. The latter are the normalized coordinates
-    used by ``torch.nn.functional.grid_sample()``, in particular. In terms of the coordinate
+    used by ``paddle.nn.functional.grid_sample()``, in particular. In terms of the coordinate
     transformations, a :class:`.Cube` is thus equivalent to a :class:`.Grid` with three points
     along each dimension and ``align_corners=True``.
 

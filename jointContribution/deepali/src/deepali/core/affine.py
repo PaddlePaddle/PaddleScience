@@ -155,7 +155,7 @@ def euler_rotation_matrix(
             and Z occurs exactly once, the angles are referred to as Tait-Bryan angles.
         homogeneous: Whether to return homogeneous transformation matrices.
         dtype: Data type of rotation matrix. If ``None``, use ``angles.dtype`` if it is
-            a floating point type, and ``torch.float`` otherwise.
+            a floating point type, and ``paddle.float32`` otherwise.
         device: Device on which to create rotation matrix. If ``None``, use ``angles.device``.
 
     Returns:
@@ -363,7 +363,7 @@ def scaling_transform(
         scales: Tensor of anisotropic scaling factors of shape ``(..., D)``.
         homogeneous: Whether to return homogeneous transformation matrices.
         dtype: Data type of output matrix. If ``None``, use ``scales.dtype`` if it is
-            a floating point type, and ``torch.float`` otherwise.
+            a floating point type, and ``paddle.float32`` otherwise.
         device: Device on which to create matrix. If ``None``, use ``scales.device``.
 
     Returns:
@@ -395,7 +395,7 @@ def shear_matrix(
             where ``N=(D * (D - 1)) / 2`` with ``D`` denoting the number of spatial dimensions.
         homogeneous: Whether to return homogeneous transformation matrices.
         dtype: Data type of output matrix. If ``None``, use ``angles.dtype`` if it is
-            a floating point type, and ``torch.float`` otherwise.
+            a floating point type, and ``paddle.float32`` otherwise.
         device: Device on which to create matrix. If ``None``, use ``angles.device``.
 
     Returns:
@@ -438,7 +438,7 @@ def translation(
         offset: Translation vectors of shape ``(..., D)`` or ``(..., D, 1)``.
         homogeneous: Whether to return homogeneous transformation matrices.
         dtype: Data type of output matrix. If ``None``, use ``offset.dtype`` if it is
-            a floating point type, and ``torch.float`` otherwise.
+            a floating point type, and ``paddle.float32`` otherwise.
         device: Device on which to create matrix. If ``None``, use ``offset.device``.
 
     Returns:

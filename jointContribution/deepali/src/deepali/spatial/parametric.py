@@ -13,11 +13,11 @@ setter and getter functions are added, which check the type and shape of its arg
 - ``Tensor``: Tensor of fixed non-optimizable parameters.
     These parameters are not returned by :meth:`.SpatialTransform.parameters`. This could be a
     tensor of spatial transformation parameters inferred by a neural network.
-- ``Callable``: A callable such as a function or ``torch.nn.Module``.
+- ``Callable``: A callable such as a function or ``paddle.nn.Layer``.
     Method :meth:`.SpatialTransform.update`, which is registered as pre-forward hook for any spatial
     transformation, invokes this callable to obtain the current transformation parameters with arguments
     set and obtained by :meth:`.SpatialTransform.condition`. For example, an input batch of a neural
-    network can be passed to a ``torch.nn.Module`` this way to infer parameters from this input.
+    network can be passed to a ``paddle.nn.Layer`` this way to infer parameters from this input.
 
 """
 from __future__ import annotations  # noqa
@@ -54,7 +54,7 @@ class ParametricTransform:
                 for group-wise or batched registration. The default is one transformation for all images
                 in the batch, or the batch length of the ``params`` tensor if provided.
             params: Initial parameters. If a tensor is given, it is only registered as optimizable module
-                parameters when of type ``torch.nn.Parameter``. When a callable is given instead, it will be
+                parameters when of type ``paddle.nn.Parameter``. When a callable is given instead, it will be
                 called by ``self.update()`` with ``SpatialTransform.condition()`` arguments. When a boolean
                 argument is given, a new zero-initialized tensor is created. If ``True``, this tensor is
                 registered as optimizable module parameter. If ``None``, parameters must be set using
@@ -321,7 +321,7 @@ class InvertibleParametricTransform(ParametricTransform):
                 for group-wise or batched registration. The default is one transformation for all images
                 in the batch, or the batch length of the ``params`` tensor if provided.
             params: Initial parameters. If a tensor is given, it is only registered as optimizable module
-                parameters when of type ``torch.nn.Parameter``. When a callable is given instead, it will be
+                parameters when of type ``paddle.nn.Parameter``. When a callable is given instead, it will be
                 called by ``self.update()`` with ``self.condition()`` arguments. When a boolean argument is
                 given, a new zero-initialized tensor is created. If ``True``, this tensor is registered as
                 optimizable module parameter.

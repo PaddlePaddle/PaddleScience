@@ -1,6 +1,6 @@
 r"""Losses for image, point set, and/or surface registration.
 
-Classes representing loss terms defined by this package are derived from ``torch.nn.Module``
+Classes representing loss terms defined by this package are derived from ``paddle.nn.Layer``
 and follow a stateful object oriented design. The underlying functions implementing these loss
 terms are defined in the :mod:`.functional` module following a stateless functional API.
 
@@ -174,7 +174,7 @@ def new_loss(name: str, *args, **kwargs) -> paddle.nn.Layer:
     if cls is None:
         raise ValueError(f"new_loss() unknown loss {name}")
     if cls is Layer or not issubclass(cls, Layer):
-        raise TypeError(f"new_loss() '{name}' is not a subclass of torch.nn.Module")
+        raise TypeError(f"new_loss() '{name}' is not a subclass of paddle.nn.Layer")
     return cls(*args, **kwargs)
 
 

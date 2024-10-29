@@ -1,4 +1,4 @@
-r"""Wrap any function in a torch.nn.Module."""
+r"""Wrap any function in a paddle.nn.Layer."""
 
 from typing import Callable
 
@@ -15,7 +15,7 @@ class LambdaLayer(paddle.nn.Layer):
         r"""Set callable tensor operation.
 
         Args:
-            func: Callable tensor operation. Must be instance of ``torch.nn.Module``
+            func: Callable tensor operation. Must be instance of ``paddle.nn.Layer``
                 if it contains learnable parameters. In this case, however, the
                 ``LambdaLayer`` wrapper becomes redundant. Main use is to wrap
                 non-learnable Python functions.

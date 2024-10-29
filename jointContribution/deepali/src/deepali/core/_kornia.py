@@ -52,7 +52,7 @@ def angle_axis_to_rotation_matrix(angle_axis: paddle.Tensor) -> paddle.Tensor:
         - Output: :math:`(N, 3, 3)`
 
     Example:
-        >>> input = torch.rand(1, 3)  # Nx3
+        >>> input = paddle.rand(1, 3)  # Nx3
         >>> output = angle_axis_to_rotation_matrix(input)  # Nx3x3
     """
     if not isinstance(angle_axis, paddle.Tensor):
@@ -136,7 +136,7 @@ def rotation_matrix_to_angle_axis(rotation_matrix: paddle.Tensor) -> paddle.Tens
         - Output: :math:`(N, 3)`
 
     Example:
-        >>> input = torch.rand(2, 3, 3)  # Nx3x3
+        >>> input = paddle.rand(2, 3, 3)  # Nx3x3
         >>> output = rotation_matrix_to_angle_axis(input)  # Nx3
     """
     if not isinstance(rotation_matrix, paddle.Tensor):
@@ -174,8 +174,8 @@ def rotation_matrix_to_quaternion(
         - Output: :math:`(*, 4)`
 
     Example:
-        >>> input = torch.rand(4, 3, 3)  # Nx3x3
-        >>> output = rotation_matrix_to_quaternion(input, eps=torch.finfo(input.dtype).eps,
+        >>> input = paddle.rand(4, 3, 3)  # Nx3x3
+        >>> output = rotation_matrix_to_quaternion(input, eps=paddle.finfo(input.dtype).eps,
         ...                                        order=QuaternionCoeffOrder.WXYZ)  # Nx4
     """
     if not isinstance(rotation_matrix, paddle.Tensor):
@@ -254,7 +254,7 @@ def normalize_quaternion(quaternion: paddle.Tensor, eps: float = 1e-12) -> paddl
         paddle.Tensor: the normalized quaternion of shape :math:`(*, 4)`.
 
     Example:
-        >>> quaternion = torch.tensor((1., 0., 1., 0.))
+        >>> quaternion = paddle.to_tensor((1., 0., 1., 0.))
         >>> normalize_quaternion(quaternion)
         tensor([0.7071, 0.0000, 0.7071, 0.0000])
     """
@@ -287,7 +287,7 @@ def quaternion_to_rotation_matrix(quaternion: paddle.Tensor) -> paddle.Tensor:
         paddle.Tensor: the rotation matrix of shape :math:`(*, 3, 3)`.
 
     Example:
-        >>> quaternion = torch.tensor((0., 0., 0., 1.))
+        >>> quaternion = paddle.to_tensor((0., 0., 0., 1.))
         >>> quaternion_to_rotation_matrix(quaternion, order=QuaternionCoeffOrder.WXYZ)
         tensor([[-1.,  0.,  0.],
                 [ 0., -1.,  0.],
@@ -358,7 +358,7 @@ def quaternion_to_angle_axis(quaternion: paddle.Tensor) -> paddle.Tensor:
         - Output: :math:`(*, 3)`
 
     Example:
-        >>> quaternion = torch.rand(2, 4)  # Nx4
+        >>> quaternion = paddle.rand(2, 4)  # Nx4
         >>> angle_axis = quaternion_to_angle_axis(quaternion)  # Nx3
     """
     if not paddle.is_tensor(x=quaternion):
@@ -413,8 +413,8 @@ def quaternion_log_to_exp(quaternion: paddle.Tensor, eps: float = 1e-08) -> padd
         paddle.Tensor: the quaternion exponential map of shape :math:`(*, 4)`.
 
     Example:
-        >>> quaternion = torch.tensor((0., 0., 0.))
-        >>> quaternion_log_to_exp(quaternion, eps=torch.finfo(quaternion.dtype).eps,
+        >>> quaternion = paddle.to_tensor((0., 0., 0.))
+        >>> quaternion_log_to_exp(quaternion, eps=paddle.finfo(quaternion.dtype).eps,
         ...                       order=QuaternionCoeffOrder.WXYZ)
         tensor([1., 0., 0., 0.])
     """
@@ -456,8 +456,8 @@ def quaternion_exp_to_log(quaternion: paddle.Tensor, eps: float = 1e-08) -> padd
         paddle.Tensor: the quaternion log map of shape :math:`(*, 3)`.
 
     Example:
-        >>> quaternion = torch.tensor((1., 0., 0., 0.))
-        >>> quaternion_exp_to_log(quaternion, eps=torch.finfo(quaternion.dtype).eps,
+        >>> quaternion = paddle.to_tensor((1., 0., 0., 0.))
+        >>> quaternion_exp_to_log(quaternion, eps=paddle.finfo(quaternion.dtype).eps,
         ...                       order=QuaternionCoeffOrder.WXYZ)
         tensor([0., 0., 0.])
     """
@@ -512,7 +512,7 @@ def angle_axis_to_quaternion(angle_axis: paddle.Tensor) -> paddle.Tensor:
         - Output: :math:`(*, 4)`
 
     Example:
-        >>> angle_axis = torch.rand(2, 3)  # Nx3
+        >>> angle_axis = paddle.rand(2, 3)  # Nx3
         >>> quaternion = angle_axis_to_quaternion(angle_axis, order=QuaternionCoeffOrder.WXYZ)  # Nx4
     """
     if not paddle.is_tensor(x=angle_axis):

@@ -36,7 +36,7 @@ def normalization(
             tuple item when ``arg`` is a ``(name, kwargs)`` tuple instead of a string.
 
     Returns:
-        Given normalization function when ``arg`` is a ``torch.nn.Module``, or a new normalization layer otherwise.
+        Given normalization function when ``arg`` is a ``paddle.nn.Layer``, or a new normalization layer otherwise.
 
     """
     if isinstance(arg, paddle.nn.Layer) and not args and not kwargs:

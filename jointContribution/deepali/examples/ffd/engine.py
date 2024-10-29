@@ -137,9 +137,10 @@ class RegistrationEngine(object):
             A handle that can be used to remove the added hook by calling ``handle.remove()``
 
         """
-        import torch
+        raise NotImplementedError("register_eval_hook")
+        import paddle
 
-        handle = torch.utils.hooks.RemovableHandle(self._eval_hooks)
+        handle = paddle.utils.hooks.RemovableHandle(self._eval_hooks)
         self._eval_hooks[handle.id] = hook
         return handle
 
@@ -154,8 +155,9 @@ class RegistrationEngine(object):
             A handle that can be used to remove the added hook by calling ``handle.remove()``
 
         """
-        import torch
+        raise NotImplementedError("register_step_hook")
+        import paddle
 
-        handle = torch.utils.hooks.RemovableHandle(self._step_hooks)
+        handle = paddle.utils.hooks.RemovableHandle(self._step_hooks)
         self._step_hooks[handle.id] = hook
         return handle

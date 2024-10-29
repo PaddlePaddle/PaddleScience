@@ -53,8 +53,8 @@ def pooling(
 
     Args:
         arg: Custom pooling function or module, or name of pooling layer with optional keyword arguments.
-            When ``arg`` is a callable but not of type ``torch.nn.Module``, it is wrapped in a ``PoolLayer``.
-            If ``None`` or 'identity', an instance of ``torch.nn.Identity`` is returned.
+            When ``arg`` is a callable but not of type ``paddle.nn.Layer``, it is wrapped in a ``PoolLayer``.
+            If ``None`` or 'identity', an instance of ``paddle.nn.Identity`` is returned.
         spatial_dims: Number of spatial dimensions of input tensors.
         args: Arguments to pass to init function of pooling layer. If ``arg`` is a callable, the given arguments
             are passed to the function each time it is called as arguments.

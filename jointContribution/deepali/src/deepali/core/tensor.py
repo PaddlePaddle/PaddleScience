@@ -21,7 +21,7 @@ def as_tensor(
 ) -> paddle.Tensor:
     r"""Create tensor from array if argument is not of type paddle.Tensor.
 
-    Unlike ``torch.as_tensor()``, this function preserves the tensor device if ``device: Optional[DeviceStr]=None``.
+    Unlike ``paddle.to_tensor()``, this function preserves the tensor device if ``device: Optional[DeviceStr]=None``.
 
     """
     if device is None and isinstance(arg, paddle.Tensor):
@@ -64,7 +64,7 @@ def as_one_hot_tensor(
             value in the GT image is stored in the corresponding locations across all channels so
             that this location can be ignored across all channels later e.g. in Dice computation.
             This argument must be ``None`` if ``tensor`` has ``C == num_channels``.
-        dtype: Data type of output tensor. Default is ``torch.float``.
+        dtype: Data type of output tensor. Default is ``paddle.float32``.
 
     Returns:
         Output tensor of shape ``(N, C, ..., X)``.
@@ -165,7 +165,7 @@ def cat_scalars(
 
 
 def batched_index_select(input: paddle.Tensor, dim: int, index: paddle.Tensor) -> paddle.Tensor:
-    r"""Batched version of torch.index_select().
+    r"""Batched version of paddle.index_select().
 
     See https://discuss.pytorch.org/t/batched-index-select/9115/9.
 
@@ -224,7 +224,7 @@ def unravel_coords(indices: paddle.Tensor, size: Tuple[int, ...]) -> paddle.Tens
 def unravel_index(indices: paddle.Tensor, shape: Tuple[int, ...]) -> paddle.Tensor:
     r"""Converts flat indices into unraveled coordinates in a target shape.
 
-    This is a `torch` implementation of `numpy.unravel_index`, but returning a
+    This is a `paddle` implementation of `numpy.unravel_index`, but returning a
     tensor of shape (..., N, D) rather than a D-dimensional tuple. See also
     https://github.com/pytorch/pytorch/issues/35674#issuecomment-739492875.
 

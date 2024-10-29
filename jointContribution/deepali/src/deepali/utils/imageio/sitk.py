@@ -6,8 +6,8 @@ from deepali.core.grid import Grid
 from deepali.core.pathlib import PathUri
 from deepali.utils.simpleitk.imageio import read_image as _read_image
 from deepali.utils.simpleitk.imageio import write_image as _write_image
-from deepali.utils.simpleitk.torch import image_from_tensor
-from deepali.utils.simpleitk.torch import tensor_from_image
+from deepali.utils.simpleitk.paddle import image_from_tensor
+from deepali.utils.simpleitk.paddle import tensor_from_image
 
 
 def read_sitk_image(path: PathUri) -> Tuple[paddle.Tensor, Grid]:

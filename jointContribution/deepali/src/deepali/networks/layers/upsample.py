@@ -47,7 +47,7 @@ class Upsample(paddle.nn.Sequential):
     This module is adapted from the MONAI project. Supported modes are:
 
         - "deconv": uses a transposed convolution.
-        - "interpolate": uses :py:class:`torch.nn.Upsample`.
+        - "interpolate": uses :py:class:`paddle.nn.Upsample`.
         - "pixelshuffle": uses :py:class:`monai.networks.blocks.SubpixelUpsample`.
 
     This module can optionally apply a convolution prior to upsampling interpolation
@@ -84,8 +84,8 @@ class Upsample(paddle.nn.Sequential):
             mode: Upsampling mode: "deconv", "interpolate", or "pixelshuffle".
             pre_conv: A conv block applied before upsampling. When ``conv_block`` is ``"default"``, one reserved
                 conv layer will be utilized. This argument is only used for "interpolate" or "pixelshuffle" mode.
-            sampling: Interpolation mode used for ``torch.nn.Upsample`` in "interpolate" mode.
-            align_corners: See `torch.nn.Upsample`.
+            sampling: Interpolation mode used for ``paddle.nn.Upsample`` in "interpolate" mode.
+            align_corners: See `paddle.nn.Upsample`.
             apply_pad_pool: If True the upsampled tensor is padded then average pooling is applied with a kernel the
                 size of `scale_factor` with a stride of 1. Only used in the pixelshuffle mode.
             padding_mode: Padding mode to use for default ``pre_conv`` and pixelshuffle ``apply_pad_pool``.
@@ -280,7 +280,7 @@ class SubpixelUpsample(paddle.nn.Layer):
             conv_block: A conv block to extract feature maps before upsampling.
 
                 - When ``"default"``, one reserved conv layer will be utilized.
-                - When ``torch..nn.Module``, the output number of channels must be divisible by ``(scale_factor ** spatial_dims)``.
+                - When ``paddle.nn.Layer``, the output number of channels must be divisible by ``(scale_factor ** spatial_dims)``.
 
             apply_pad_pool: If True the upsampled tensor is padded then average pooling is applied with a kernel the
                 size of `scale_factor` with a stride of 1. This implements the nearest neighbour resize convolution

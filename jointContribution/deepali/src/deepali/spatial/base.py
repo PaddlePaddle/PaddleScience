@@ -484,7 +484,7 @@ class NonRigidTransform(SpatialTransform):
     parameters. The flow vectors must be with respect to the grid ``Axes.CUBE``, i.e., where coordinate
     -1 corresponds to the left edge of the unit cube with side length 2, and coordinate 1 the right edge of
     this unit cube, respectively. Note that this corresponds to option ``align_corners=False`` of
-    ``torch.nn.functional.grid_sample``.
+    ``paddle.nn.functional.grid_sample``.
 
     """
 

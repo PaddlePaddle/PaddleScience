@@ -54,7 +54,7 @@ class Dataset(paddle.io.Dataset, metaclass=ABCMeta):
 
     This map-style dataset base class is convenient for attaching data transformations to
     a given dataset. Otherwise, datasets may also derive directly from the respective
-    ``torch.utils.data`` dataset classes or simply implement the expected interfaces.
+    ``paddle.io.Dataset`` dataset classes or simply implement the expected interfaces.
 
     See also: https://pytorch.org/docs/stable/data.html
 
@@ -65,7 +65,7 @@ class Dataset(paddle.io.Dataset, metaclass=ABCMeta):
 
         If a dataset produces samples (i.e., a dictionary, named tuple, or custom dataclass)
         which contain fields with ``None`` values, ``collate_fn=collate_samples`` must be
-        passed to ``torch.utils.data.DataLoader``. This custom collate function will ignore
+        passed to ``paddle.utils.data.DataLoader``. This custom collate function will ignore
         ``None`` values and pass these on to the respective batch entry. Auxiliary function
         ``prepare_batch()`` can be used to transfer the batch data retrieved by the data
         loader to the execution device.
@@ -75,7 +75,7 @@ class Dataset(paddle.io.Dataset, metaclass=ABCMeta):
                 If more than one transformation is given, these will be composed
                 in the given order, where the first transformation in the sequence
                 is applied first. When the data samples are passed directly to
-                ``torch.utils.data.DataLoader``, the transformed sample data must
+                ``paddle.utils.data.DataLoader``, the transformed sample data must
                 be of type ``np.ndarray``, ``paddle.Tensor``, or ``None``.
 
         """

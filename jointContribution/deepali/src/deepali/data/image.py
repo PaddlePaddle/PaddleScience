@@ -797,7 +797,7 @@ class ImageBatch(DataTensor):
                 are cropped to this maximum size. If the length of size
                 is less than the spatial dimensions of the ``data`` tensor,
                 then only the last ``len(size)`` dimensions are modified.
-            mode: Padding mode (cf. ``torch.nn.functional.pad()``).
+            mode: Padding mode (cf. ``paddle.nn.functional.pad()``).
             value: Value for padding mode "constant".
 
         Returns:
@@ -1158,7 +1158,7 @@ class Image(DataTensor):
     ) -> TImage:
         r"""Create image from ``SimpleITK.Image`` instance."""
         try:
-            from deepali.utils.simpleitk.torch import tensor_from_image
+            from deepali.utils.simpleitk.paddle import tensor_from_image
         except ImportError:
             raise RuntimeError(f"{cls.__name__}.from_sitk() requires SimpleITK")
         data = tensor_from_image(image, dtype=dtype, device=device)
@@ -1168,7 +1168,7 @@ class Image(DataTensor):
     def sitk(self: TImage) -> "sitk.Image":
         r"""Create ``SimpleITK.Image`` from this image."""
         try:
-            from deepali.utils.simpleitk.torch import image_from_tensor
+            from deepali.utils.simpleitk.paddle import image_from_tensor
         except ImportError:
             raise RuntimeError(f"{type(self).__name__}.sitk() requires SimpleITK")
         grid = self._grid

@@ -1,4 +1,4 @@
-r"""Auxiliary functions for torch.nn.Module instances."""
+r"""Auxiliary functions for paddle.nn.Layer instances."""
 from collections import OrderedDict
 from collections import defaultdict
 from typing import Any

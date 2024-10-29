@@ -1,4 +1,4 @@
-r"""Auxiliary functions for conversion between SimpleITK and Pypaddle."""
+r"""Auxiliary functions for conversion between SimpleITK and paddle."""
 
 from typing import Optional
 from typing import Sequence

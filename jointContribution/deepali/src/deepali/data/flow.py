@@ -362,7 +362,7 @@ class FlowField(Image):
     Orientation and scale of the vectors are defined with respect to a specified regular grid domain, which either
     coincides with the sampling grid, the world coordinate system, or the unit cube with side length 2 centered at
     the center of the sampling grid with axes parallel to the sampling grid. This unit cube domain is used by the
-    ``torch.nn.functional.grid_sample()`` and ``torch.nn.functional.interpolate()`` functions.
+    ``paddle.nn.functional.grid_sample()`` and ``paddle.nn.functional.interpolate()`` functions.
 
     When a flow field is convert to a ``SimpleITK.Image``, the vectors are by default reoriented and rescaled such
     that these are with respect to the world coordinate system, a format common to ITK functions and other toolkits.

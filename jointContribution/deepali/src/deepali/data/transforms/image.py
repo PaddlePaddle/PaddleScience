@@ -90,12 +90,14 @@ class CastImage(ItemwiseTransform, paddle.nn.Layer):
             dtype = getattr(paddle, attr, None)
             if dtype is None:
                 raise ValueError(
-                    f"{type(self).__name__}() module torch has no 'dtype' named torch.{attr}"
+                    f"{type(self).__name__}() module paddle has no 'dtype' named paddle.{attr}"
                 )
             if not isinstance(dtype, paddle.dtype):
-                raise ValueError(f"{type(self).__name__}() torch.{attr} is not a torch.dtype name")
+                raise ValueError(
+                    f"{type(self).__name__}() paddle.{attr} is not a paddle.dtype name"
+                )
         elif not isinstance(dtype, paddle.dtype):
-            raise TypeError(f"{type(self).__name__}() 'dtype' must by dtype name or torch.dtype")
+            raise TypeError(f"{type(self).__name__}() 'dtype' must by dtype name or paddle.dtype")
         self.dtype = dtype
 
     def forward(self, image: Image) -> Image:

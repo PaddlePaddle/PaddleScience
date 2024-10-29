@@ -200,11 +200,12 @@ def train_local(
     logging.getLogger("ignite").setLevel(logging.WARNING)
     manual_seed(seed)
 
-    import torch
+    raise NotImplementedError("train_local")
+    import paddle
 
-    torch.autograd.set_detect_anomaly(detect_anomaly)
+    paddle.autograd.set_detect_anomaly(detect_anomaly)
     if rank == 0 and log_dir:
-        writer_cm = contextlib.closing(torch.utils.tensorboard.SummaryWriter(str(log_dir)))
+        writer_cm = contextlib.closing(paddle.utils.tensorboard.SummaryWriter(str(log_dir)))
     else:
         writer_cm = contextlib.nullcontext()
     with writer_cm as writer:

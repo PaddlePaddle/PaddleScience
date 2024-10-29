@@ -77,12 +77,12 @@ class PairwiseImageRegistrationLoss(RegistrationLoss):
             target_landmarks: Landmark points defined with respect to target image grid.
             losses: Dictionary of named loss terms. Loss terms must be either a subclass of
                 ``PairwiseImageLoss``, ``DisplacementLoss``, ``PointSetDistance``, ``ParamsLoss``,
-                or ``torch.nn.Module``. In case of a ``PairwiseImageLoss``, the key (name) of the
+                or ``paddle.nn.Layer``. In case of a ``PairwiseImageLoss``, the key (name) of the
                 loss term must be found in ``channels`` which identifies the corresponding ``target``
                 and ``source`` data channels that this loss term relates to. If the name is not found
                 in the ``channels`` mapping, the loss term is called with all image channels as input.
                 If a loss term is not an instance of a known registration loss type, it is assumed to be a
-                regularization term without arguments, e.g., a ``torch.nn.Module`` which itself has a reference
+                regularization term without arguments, e.g., a ``paddle.nn.Layer`` which itself has a reference
                 to the parameters of the transformation that it is based on.
             weights: Scalar weights of loss terms or name of channel with locally adaptive weights.
             transform: Spatial transformation to apply to ``source`` image.

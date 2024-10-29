@@ -16,13 +16,13 @@ def new_optimizer(name: str, model: paddle.nn.Layer, **kwargs) -> paddle.optimiz
         New optimizer instance.
 
     """
-    import torch
+    import paddle
 
-    cls = getattr(torch.optim, name, None)
+    cls = getattr(paddle.optim, name, None)
     if cls is None:
         raise ValueError(f"Unknown optimizer: {name}")
     if not issubclass(cls, Optimizer):
-        raise TypeError(f"Requested type '{name}' is not a subclass of torch.optim.Optimizer")
+        raise TypeError(f"Requested type '{name}' is not a subclass of paddle.optimizer.Optimizer")
     if "learning_rate" in kwargs:
         if "lr" in kwargs:
             raise ValueError("new_optimizer() 'lr' and 'learning_rate' are mutually exclusive")

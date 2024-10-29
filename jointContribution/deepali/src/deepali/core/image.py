@@ -821,7 +821,7 @@ def center_pad(
             are cropped or padded to this size. If the length of size
             is less than the spatial dimensions of the ``data`` tensor,
             then only the last ``len(size)`` dimensions are modified.
-        mode: PaddingMode mode (cf. ``torch.nn.functional.pad()``).
+        mode: PaddingMode mode (cf. ``paddle.nn.functional.pad()``).
         value: Value for padding mode "constant".
 
     Returns:
@@ -1147,7 +1147,6 @@ def grid_sample(
         padding_value = float(padding or 0)
     out = data.astype(dtype=grid.dtype)
     if padding_value != 0:
-        r"""Class Method: *.data_ptr, can not convert, please check whether it is paddle.Tensor.*/Optimizer.*/nn.Module.*/torch.distributions.Distribution.*/torch.autograd.function.FunctionCtx.*/torch.profiler.profile.*/torch.autograd.profiler.profile.*, and convert manually"""
         if out.data_ptr() == data.data_ptr():
             out = out.sub(padding_value)
         else:
@@ -1393,7 +1392,7 @@ def rescale(
         data_min: Minimum value of input ``data``. Use ``data.min()`` if ``None``.
         data_max: Maximum value of input ``data``. Use ``data.max()`` if ``None``.
         dtype: Cast rescaled values to specified output data type. If ``None``,
-            use ``data.dtype`` if it is a floating point type, otherwise ``torch.float``.
+            use ``data.dtype`` if it is a floating point type, otherwise ``paddle.float32``.
 
     Returns:
         Tensor of same shape as ``data`` with specified ``dtype`` and values in closed interval ``[min, max]``.
@@ -1835,7 +1834,7 @@ def circle_image(
         sigma: Standard deviation of isotropic Gaussian blurring kernel in pixel units.
         x_max: Maximum ``x`` pixel index at which to clamp image to zero.
             This can be used to create partial circles such as a half circle.
-        dtype: Data type of output tensor. Use ``torch.uint8`` if ``None``.
+        dtype: Data type of output tensor. Use ``paddle.uint8`` if ``None``.
             When the output data type is a floating point type, the output tensor
             values are in the interval ``[0, 1]``. Otherwise, the output values are
             in the interval ``[0, 255]``.
@@ -1908,7 +1907,7 @@ def cshape_image(
         x_max: Maximum ``x`` pixel index at which to clamp image to zero. This is used to create
             partial circles with an opening for the "C" shape to the right. If ``None``, a default
             value equal to 75% of the inner circle radius is chosen.
-        dtype: Data type of output tensor. Use ``torch.uint8`` if ``None``.
+        dtype: Data type of output tensor. Use ``paddle.uint8`` if ``None``.
             When the output data type is a floating point type, the output tensor
             values are in the interval ``[0, 1]``. Otherwise, the output values are
             in the interval ``[0, 255]``.

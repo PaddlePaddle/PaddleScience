@@ -1,4 +1,3 @@
-# from torchinfo import summary
 from deepali.networks.resnet import ResNet
 
 
