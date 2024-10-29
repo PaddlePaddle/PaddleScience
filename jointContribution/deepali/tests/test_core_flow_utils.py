@@ -53,7 +53,7 @@ def periodic_flow_dv_dx(p: paddle.Tensor) -> paddle.Tensor:
 
 def periodic_flow_dv_dy(p: paddle.Tensor) -> paddle.Tensor:
     start_4 = p.shape[1] + 1 if 1 < 0 else 1
-    g = paddle.slice(p, [1], [start_4], [start_4 + 1]).mul(PERIODIC_FLOW_X_SCALE).sin()
+    g = paddle.slice(p, [1], [start_4], [start_4 + 1]).multiply(PERIODIC_FLOW_X_SCALE).sin()
     g = g.multiply_(y=paddle.to_tensor(-PERIODIC_FLOW_X_SCALE * PERIODIC_FLOW_U_SCALE))
     return g
 
@@ -104,26 +104,41 @@ def difference(a: paddle.Tensor, b: paddle.Tensor, margin: int = 0) -> paddle.Te
         (slice(0, n, 1) if dim < 2 else slice(margin, n - margin, 1))
         for dim, n in enumerate(tuple(a.shape))
     ]
+
     # paddle need to set the corresponding elements.
     shape = a.shape
     if len(shape) == 4:
         n1, n2, n3, n4 = shape
         if b.shape == shape:
-            return a[slice(0, n1, 1), slice(0, n2, 1), slice(0, n3, 1), slice(0, n4, 1)].sub(
-                b[slice(0, n1, 1), slice(0, n2, 1), slice(0, n3, 1), slice(0, n4, 1)]
+            return a[
+                slice(0, n1, 1),
+                slice(0, n2, 1),
+                slice(margin, n3 - margin, 1),
+                slice(margin, n4 - margin, 1),
+            ].sub(
+                b[
+                    slice(0, n1, 1),
+                    slice(0, n2, 1),
+                    slice(margin, n3 - margin, 1),
+                    slice(margin, n4 - margin, 1),
+                ]
             )
     if len(shape) == 5:
         n1, n2, n3, n4, n5 = shape
         if b.shape == shape:
             return a[
-                slice(0, n1, 1), slice(0, n2, 1), slice(0, n3, 1), slice(0, n4, 1), slice(0, n5, 1)
+                slice(0, n1, 1),
+                slice(0, n2, 1),
+                slice(margin, n3 - margin, 1),
+                slice(margin, n4 - margin, 1),
+                slice(margin, n5 - margin, 1),
             ].sub(
                 b[
                     slice(0, n1, 1),
                     slice(0, n2, 1),
-                    slice(0, n3, 1),
-                    slice(0, n4, 1),
-                    slice(0, n5, 1),
+                    slice(margin, n3 - margin, 1),
+                    slice(margin, n4 - margin, 1),
+                    slice(margin, n5 - margin, 1),
                 ]
             )
     raise AssertionError(f"Unsupported shape {a.shape} slice {i}")
