@@ -253,9 +253,9 @@ class ReadImage(ItemwiseTransform, paddle.nn.Layer):
             attr = dtype
             dtype = getattr(paddle, attr, None)
             if dtype is None:
-                raise ValueError(f"ReadImage() module torch has no 'dtype' named torch.{attr}")
+                raise ValueError(f"ReadImage() module paddle has no 'dtype' named paddle.{attr}")
         if dtype is not None and not isinstance(dtype, paddle.dtype):
-            raise TypeError("ReadImage() 'dtype' must by None or torch.dtype")
+            raise TypeError("ReadImage() 'dtype' must by None or paddle.dtype")
         self.dtype = dtype
         self.device = device or paddle.CPUPlace()
 
