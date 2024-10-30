@@ -116,10 +116,10 @@ class ImageBatch(DataTensor):
         return result
 
     @staticmethod
-    def _torch_function_grid(
+    def _paddle_function_grid(
         func, args, kwargs: Dict[str, Any]
     ) -> Optional[Union[Sequence[Grid], Sequence[Sequence[Grid]]]]:
-        r"""Get spatial sampling grids from args passed to __torch_function__."""
+        r"""Get spatial sampling grids from args passed to __paddle_function__."""
         if not args:
             return None
         if isinstance(args[0], (tuple, list)):
@@ -166,7 +166,7 @@ class ImageBatch(DataTensor):
         return grids[0]
 
     @classmethod
-    def _torch_function_result(cls, func, data, grid: Optional[Sequence[Grid]]) -> Any:
+    def _paddle_function_result(cls, func, data, grid: Optional[Sequence[Grid]]) -> Any:
         if not isinstance(data, paddle.Tensor):
             return data
         if (
@@ -190,19 +190,19 @@ class ImageBatch(DataTensor):
         return data
 
     @classmethod
-    def __torch_function__(cls, func, types, args=(), kwargs=None):
+    def __paddle_function__(cls, func, types, args=(), kwargs=None):
         if kwargs is None:
             kwargs = {}
         args = tuple(arg.batch() if isinstance(arg, Image) else arg for arg in args)
         # fargs = [arg.as_subclass(Tensor) if isinstance(arg, Tensor) else arg for arg in args]
-        data = paddle.Tensor.__torch_function__(func, (paddle.Tensor,), args, kwargs)
-        grid = cls._torch_function_grid(func, args, kwargs)
+        data = paddle.Tensor.__paddle_function__(func, (paddle.Tensor,), args, kwargs)
+        grid = cls._paddle_function_grid(func, args, kwargs)
         if func in (paddle.nn.functional.grid_sample,):
             grid = None
         elif func in (
             paddle.split,
             paddle.Tensor.split,
-            # torch.split_with_sizes,
+            # paddle.split_with_sizes,
             # paddle.Tensor.split_with_sizes,
             paddle.tensor_split,
             paddle.Tensor.tensor_split,
@@ -218,8 +218,8 @@ class ImageBatch(DataTensor):
             assert all(isinstance(d, paddle.Tensor) for d in data)
             assert all(isinstance(g, (tuple, list)) for g in grid)
             assert all(len(d) == len(g) for d, g in zip(data, grid))
-            return tuple(cls._torch_function_result(func, d, g) for d, g in zip(data, grid))
-        return cls._torch_function_result(func, data, grid)
+            return tuple(cls._paddle_function_result(func, d, g) for d, g in zip(data, grid))
+        return cls._paddle_function_result(func, data, grid)
 
     @classmethod
     def from_images(cls: Type[TImageBatch], images: Sequence[Image]) -> TImageBatch:
@@ -368,7 +368,7 @@ class ImageBatch(DataTensor):
         elif isinstance(index, (np.ndarray, slice, Sequence, Tensor)):
             # - batch[[0, 2, 4]]
             # - batch[np.array([0, 2, 4])]
-            # - batch[torch.tensor([0, 2, 4])]
+            # - batch[paddle.tensor([0, 2, 4])]
             index = (index,)
             is_multi_index = True
         else:
@@ -687,10 +687,10 @@ class ImageBatch(DataTensor):
                 )
             grids = tuple(grid.resample(spacing) for grid in grids)
         grids = tuple(grid.pyramid(levels, dims=dims, min_size=min_size)[0] for grid in grids)
-        assert all(tuple(grid.shape) == tuple(grids[0].shape) for grid in grids)
+        assert all(grid.size() == grids[0].size() for grid in grids)
         # Resize image to match finest resolution grid
         if paddle.allclose(x=grids[0].cube_extent(), y=self._grid[0].cube_extent()).item():
-            size = tuple(grids[0].shape)
+            size = grids[0].size()
             data = U.grid_resize(self, size, mode=mode, align_corners=align_corners)
         else:
             points = grids[0].coords(device=self.device)
@@ -1019,8 +1019,8 @@ class Image(DataTensor):
         return result
 
     @staticmethod
-    def _torch_function_grid(args) -> Optional[Grid]:
-        r"""Get spatial sampling grid from args passed to __torch_function__."""
+    def _paddle_function_grid(args) -> Optional[Grid]:
+        r"""Get spatial sampling grid from args passed to __paddle_function__."""
         if not args:
             return None
         if isinstance(args[0], (tuple, list)):
@@ -1032,7 +1032,7 @@ class Image(DataTensor):
         return grids[0]
 
     @classmethod
-    def _torch_function_result(cls, func, data, grid: Optional[Grid]) -> Any:
+    def _paddle_function_result(cls, func, data, grid: Optional[Grid]) -> Any:
         if not isinstance(data, paddle.Tensor):
             return data
         if (
@@ -1051,21 +1051,21 @@ class Image(DataTensor):
         return data
 
     @classmethod
-    def __torch_function__(cls, func, types, args=(), kwargs=None):
+    def __paddle_function__(cls, func, types, args=(), kwargs=None):
         if func == paddle.nn.functional.grid_sample:
             raise ValueError("Argument of F.grid_sample() must be a batch, not a single image")
-        data = paddle.Tensor.__torch_function__(func, (paddle.Tensor,), args, kwargs)
-        grid = cls._torch_function_grid(args)
+        data = paddle.Tensor.__paddle_function__(func, (paddle.Tensor,), args, kwargs)
+        grid = cls._paddle_function_grid(args)
         if func in (
             paddle.split,
             paddle.Tensor.split,
-            # torch.split_with_sizes,
+            # paddle.split_with_sizes,
             # paddle.Tensor.split_with_sizes,
             paddle.tensor_split,
             paddle.Tensor.tensor_split,
         ):
-            return tuple(cls._torch_function_result(func, sub, grid) for sub in data)
-        return cls._torch_function_result(func, data, grid)
+            return tuple(cls._paddle_function_result(func, sub, grid) for sub in data)
+        return cls._paddle_function_result(func, data, grid)
 
     def batch(self: TImage) -> ImageBatch:
         r"""Image batch consisting of this image only.

@@ -131,7 +131,7 @@ def test_image_deepcopy(zeros: paddle.Tensor, grid: Grid) -> None:
 
 
 @pytest.mark.parametrize("zeros,grid", [(d, d) for d in (3,)], indirect=True)
-def _test_image_torch_function(zeros: paddle.Tensor, grid: Grid) -> None:
+def _test_image_paddle_function(zeros: paddle.Tensor, grid: Grid) -> None:
     data = zeros
 
     image = Image(data, grid)

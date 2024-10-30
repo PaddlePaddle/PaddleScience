@@ -155,9 +155,9 @@ def input_layer(
 class ResNet(ReprWithCrossReferences, paddle.nn.Sequential):
     r"""Residual network.
 
-    Note that unlike ``torchvision.models.ResNet``, the ``__init__`` function of this class
+    Note that unlike ``ResNet``, the ``__init__`` function of this class
     does not initialize the parameters of the model, other than the standard initialization
-    for each module type. In order to apply the initialization of the torchvision ResNet, call
+    for each module type. In order to apply the initialization of the ResNet, call
     functions ``init_conv_modules()``, ``init_norm_layers()``, and ``zero_init_residuals()``
     (in this order!) after constructing the ResNet model.
 

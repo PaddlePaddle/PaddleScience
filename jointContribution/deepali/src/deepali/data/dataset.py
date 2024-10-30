@@ -56,7 +56,7 @@ class Dataset(paddle.io.Dataset, metaclass=ABCMeta):
     a given dataset. Otherwise, datasets may also derive directly from the respective
     ``paddle.io.Dataset`` dataset classes or simply implement the expected interfaces.
 
-    See also: https://pytorch.org/docs/stable/data.html
+    See also: https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api/paddle/io/Dataset_cn.html
 
     """
 

@@ -98,7 +98,7 @@ def normalization(
     elif norm_name in ("layer", "layernorm"):
         if num_features is None:
             raise ValueError("normalization() 'num_features' required for 'layer' norm")
-        # See examples at https://pytorch.org/docs/stable/generated/torch.nn.GroupNorm.html
+        # See examples at https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api/paddle/nn/GroupNorm_cn.html#groupnorm
         # and Figure 2 of "Group Normalization" paper (https://arxiv.org/abs/1803.08494).
         norm = paddle.nn.GroupNorm(1, num_features, *args, **norm_args)
     elif norm_name in ("instance", "instancenorm"):

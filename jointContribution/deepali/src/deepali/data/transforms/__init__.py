@@ -9,11 +9,7 @@ imports between modules defining specialized tensor types such as :mod:`.data.im
 and datasets defined in :mod:`.data.dataset`, which also use these transforms to read
 and preprocess the loaded data.
 
-Following torchvision's lead, data transform classes which operate on tensors and do not require
-lambda functions are derived from ``paddle.nn.Layer``. Use ``paddle.nn.Sequential`` to compose
-transforms instead of ``torchvision.transforms.Compose``. This is to support ``torch.jit.script``.
-
-See also: https://github.com/pytorch/vision/blob/3852b41975702cb683a92c8e37f1ef74fd6a79b1/torchvision/transforms/transforms.py#L49.
+See also: https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api/paddle/nn/Transformer_cn.html#transformer.
 
 """
 

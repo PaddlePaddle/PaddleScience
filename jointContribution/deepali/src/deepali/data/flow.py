@@ -116,8 +116,8 @@ class FlowFields(ImageBatch):
         return super()._make_subitem(data, grid)
 
     @staticmethod
-    def _torch_function_axes(args) -> Optional[Axes]:
-        r"""Get flow field Axes from args passed to __torch_function__."""
+    def _paddle_function_axes(args) -> Optional[Axes]:
+        r"""Get flow field Axes from args passed to __paddle_function__."""
         if not args:
             return None
         if isinstance(args[0], (tuple, list)):
@@ -127,11 +127,13 @@ class FlowFields(ImageBatch):
         if not axes:
             return None
         if any(ax != axes[0] for ax in axes[1:]):
-            raise ValueError("Cannot apply __torch_function__ to flow fields with mismatching axes")
+            raise ValueError(
+                "Cannot apply __paddle_function__ to flow fields with mismatching axes"
+            )
         return axes[0]
 
     @classmethod
-    def _torch_function_result(
+    def _paddle_function_result(
         cls, func, data, grid: Optional[Sequence[Grid]], axes: Optional[Axes]
     ) -> Any:
         if not isinstance(data, paddle.Tensor):
@@ -155,16 +157,16 @@ class FlowFields(ImageBatch):
             else:
                 data = cls(data, grid, axes)
         else:
-            data = ImageBatch._torch_function_result(func, data, grid)
+            data = ImageBatch._paddle_function_result(func, data, grid)
         return data
 
     @classmethod
-    def __torch_function__(cls, func, types, args=(), kwargs=None):
+    def __paddle_function__(cls, func, types, args=(), kwargs=None):
         if kwargs is None:
             kwargs = {}
-        data = paddle.Tensor.__torch_function__(func, (Tensor,), args, kwargs)
-        grid = cls._torch_function_grid(func, args, kwargs)
-        axes = cls._torch_function_axes(args)
+        data = paddle.Tensor.__paddle_function__(func, (Tensor,), args, kwargs)
+        grid = cls._paddle_function_grid(func, args, kwargs)
+        axes = cls._paddle_function_axes(args)
         if func in (
             paddle.split,
             paddle.Tensor.split,
@@ -173,8 +175,8 @@ class FlowFields(ImageBatch):
             paddle.tensor_split,
             paddle.Tensor.tensor_split,
         ):
-            return tuple(cls._torch_function_result(func, res, grid, axes) for res in data)
-        return cls._torch_function_result(func, data, grid, axes)
+            return tuple(cls._paddle_function_result(func, res, grid, axes) for res in data)
+        return cls._paddle_function_result(func, data, grid, axes)
 
     @overload
     def __getitem__(self: TFlowFields, index: int) -> FlowField:
@@ -431,8 +433,8 @@ class FlowField(Image):
         return super()._make_instance(data, grid, **kwargs)
 
     @staticmethod
-    def _torch_function_axes(args) -> Optional[Axes]:
-        r"""Get flow field Axes from args passed to __torch_function__."""
+    def _paddle_function_axes(args) -> Optional[Axes]:
+        r"""Get flow field Axes from args passed to __paddle_function__."""
         if not args:
             return None
         if isinstance(args[0], (tuple, list)):
@@ -442,11 +444,13 @@ class FlowField(Image):
         if not axes:
             return None
         if any(ax != axes[0] for ax in axes[1:]):
-            raise ValueError("Cannot apply __torch_function__ to flow fields with mismatching axes")
+            raise ValueError(
+                "Cannot apply __paddle_function__ to flow fields with mismatching axes"
+            )
         return axes[0]
 
     @classmethod
-    def _torch_function_result(cls, func, data, grid: Optional[Grid], axes: Optional[Axes]) -> Any:
+    def _paddle_function_result(cls, func, data, grid: Optional[Grid], axes: Optional[Axes]) -> Any:
         if not isinstance(data, paddle.Tensor):
             return data
         if (
@@ -464,18 +468,18 @@ class FlowField(Image):
             else:
                 data = cls(data, grid, axes)
         else:
-            data = Image._torch_function_result(func, data, grid)
+            data = Image._paddle_function_result(func, data, grid)
         return data
 
     @classmethod
-    def __torch_function__(cls, func, types, args=(), kwargs=None):
+    def __paddle_function__(cls, func, types, args=(), kwargs=None):
         if func == paddle.nn.functional.grid_sample:
             raise ValueError("Argument of F.grid_sample() must be a batch, not a single image")
         if kwargs is None:
             kwargs = {}
-        data = paddle.Tensor.__torch_function__(func, (Tensor,), args, kwargs)
-        grid = cls._torch_function_grid(args)
-        axes = cls._torch_function_axes(args)
+        data = paddle.Tensor.__paddle_function__(func, (Tensor,), args, kwargs)
+        grid = cls._paddle_function_grid(args)
+        axes = cls._paddle_function_axes(args)
         if func in (
             paddle.split,
             paddle.Tensor.split,
@@ -483,8 +487,8 @@ class FlowField(Image):
             paddle.tensor_split,
             paddle.Tensor.tensor_split,
         ):
-            return tuple(cls._torch_function_result(func, res, grid, axes) for res in data)
-        return cls._torch_function_result(func, data, grid, axes)
+            return tuple(cls._paddle_function_result(func, res, grid, axes) for res in data)
+        return cls._paddle_function_result(func, data, grid, axes)
 
     @classmethod
     def from_image(cls: Type[TFlowField], image: Image, axes: Optional[Axes] = None) -> TFlowField:

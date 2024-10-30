@@ -46,7 +46,7 @@ def zeros(request) -> paddle.Tensor:
 
 
 @pytest.mark.parametrize("zeros,grid", [(d, d) for d in (3,)], indirect=True)
-def _test_flowfield_torch_function(zeros: paddle.Tensor, grid: Grid) -> None:
+def _test_flowfield_paddle_function(zeros: paddle.Tensor, grid: Grid) -> None:
     data = zeros
     axes = Axes.WORLD  # different from default to check if attribute is preserved
 
@@ -148,7 +148,7 @@ def _test_flowfield_torch_function(zeros: paddle.Tensor, grid: Grid) -> None:
 
 
 @pytest.mark.parametrize("zeros,grid", [(d, d) for d in (3,)], indirect=True)
-def _test_flowfields_torch_function(zeros: paddle.Tensor, grid: Grid) -> None:
+def _test_flowfields_paddle_function(zeros: paddle.Tensor, grid: Grid) -> None:
     data = zeros
 
     batch = FlowFields(data.unsqueeze(axis=0), grid, Axes.WORLD)

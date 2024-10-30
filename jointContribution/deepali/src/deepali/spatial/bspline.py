@@ -125,8 +125,8 @@ class BSplineTransform(ParametricTransform, NonRigidTransform):
                 raise ValueError(
                     f"{type(self).__name__}.grid_() argument must define same grid domain as current grid"
                 )
-            new_size = tuple(grid.shape)
-            current_size = tuple(current_grid.shape)
+            new_size = grid.size()
+            current_size = current_grid.size()
             for i in range(grid.ndim):
                 if new_size[i] == 2 * current_size[i] - 1:
                     subdivide_dims.append(SpatialDim(i))
