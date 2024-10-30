@@ -55,7 +55,6 @@ def atlas_selection(
         seg_EDES = refineFusionResults(seg_EDES, 2)
         nib.save(nib.Nifti1Image(seg_EDES, np.eye(4)), target_img_atlas)
         atlas_top_list.append(target_img_atlas)
-        # exit()
     return atlas_top_list
 
 
@@ -66,13 +65,6 @@ def crop_data_into_atlas_size(seg_nib, img_nib, atlas_size):
     img_data = img_nib.get_fdata().squeeze()
     seg_data[seg_data == 1] = 0
     seg_data[seg_data == 3] = 1
-    # heart_mask_lv = (seg_data == 1).astype(np.uint8)
-    # heart_mask_rv = (seg_data == 4).astype(np.uint8)
-    ## check data
-    # if seg_data.sum() == 0 or heart_mask_lv.sum() == 0 or heart_mask_rv.sum() == 0:
-    #     return None, None
-    # if seg_data.shape[2] < 4:
-    #     return None, None
 
     affine_sa = seg_nib.affine
     new_affine = affine_sa.copy()
@@ -130,7 +122,7 @@ if __name__ == "__main__":
     atlas_path = "./Hammersmith_myo2"
     parameter_file = "./ffd/params"
     atlas_img_type = "image_space_crop"
-    atlas_nums_top = 3  # try 5, 7
+    atlas_nums_top = 3
     atlas_list = sorted(os.listdir(atlas_path))
 
     device = "gpu"
@@ -159,12 +151,12 @@ if __name__ == "__main__":
                 key, value = line.strip().split(":", 1)
                 config[key.strip()] = value.strip()
         ED = int(config.get("ED", 0))
-        ED = str(ED).zfill(2)  # '01'
+        ED = str(ED).zfill(2)
         ES = int(config.get("ES", 0))
-        ES = str(ES).zfill(2)  # '12' et al
+        ES = str(ES).zfill(2)
 
-        sa_ED_path = f"{img_path}/{subid}_frame{ED}.nii.gz"  # './data/patient001/patient001_frame01.nii.gz'
-        seg_sa_ED_path = f"{img_path}/{subid}_frame{ED}_gt.nii.gz"  # './data/patient001/patient001_frame01_gt.nii.gz'
+        sa_ED_path = f"{img_path}/{subid}_frame{ED}.nii.gz"
+        seg_sa_ED_path = f"{img_path}/{subid}_frame{ED}_gt.nii.gz"
         sa_ED_nib = nib.load(sa_ED_path)
         seg_ED_nib = nib.load(seg_sa_ED_path)
         crop_seg_ED, crop_sa_ED, new_affine_ED = crop_data_into_atlas_size(
@@ -200,7 +192,7 @@ if __name__ == "__main__":
                 seg_flip_time = crop_seg_ES
                 sa_flip_time = crop_sa_ES
 
-            target_img = f"{target_path}/seg_sa_{frame}.nii.gz"  # './data/patient001/image_space_pipemesh/seg_sa_ED.nii.gz'
+            target_img = f"{target_path}/seg_sa_{frame}.nii.gz"
             nib.save(nib.Nifti1Image(seg_flip_time, np.eye(4)), target_img)
             util.setup_dir(f"{target_path}/tmps")
 

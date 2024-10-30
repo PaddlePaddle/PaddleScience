@@ -115,7 +115,6 @@ def combine_labels(input_paths, pad=-1, seed=None):
     output_image = nib.load(input_paths[0])
     output_data = output_image.get_fdata().astype(np.uint8)
     output_shape = tuple(output_data.shape)
-    # output_affine = output_image.affine
     unanimous_mask = np.ones(output_shape, dtype=np.uint8)
     output = output_data.copy()
     counts = calculate_counts(input_paths, output_shape)
@@ -171,15 +170,14 @@ def padding(imageA, imageB, threshold, padding, invert=False):
 
 def refineFusionResults(data, alfa):
     data = np.round(data)
-    ##########################################
+
     hrt = threshold_image(blur_image(binarize_image(data, 1, 4), alfa), 130)
     rvendo = threshold_image(blur_image(binarize_image(data, 4, 4), alfa), 130)
     lvepi = threshold_image(blur_image(binarize_image(data, 1, 2), alfa), 115)
     lvendo = threshold_image(blur_image(binarize_image(data, 1, 1), alfa), 130)
-    ##########################################
+
     hrt = padding(hrt, hrt, 1, 4)
     rvendo = padding(hrt, rvendo, 1, 4)
     lvepi = padding(rvendo, lvepi, 1, 2)
     data_final = padding(lvepi, lvendo, 1, 1)
-    # data_final[data_final == 3] = 4
     return data_final
