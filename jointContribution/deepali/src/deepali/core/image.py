@@ -496,7 +496,7 @@ def downsample(
         kernels_ = {}
         for i in range(grid.ndim):
             std = float(sigma[i] if i < len(sigma) else 0)
-            if std > 0 and tuple(grid.shape)[i] != tuple(data.shape)[grid.ndim - i + 1]:
+            if std > 0 and grid.size()[i] != data.shape[grid.ndim - i + 1]:
                 kernel = kernels_.get(std)
                 if kernel is None:
                     kernel = gaussian1d(std, dtype="float32", device=data.place)
@@ -1797,7 +1797,7 @@ def _image_size(
     if size is None and shape is None:
         raise AssertionError(f"{fn_name}() 'size' or 'shape' required")
     if isinstance(size, Grid):
-        size = tuple(size.shape)
+        size = size.size()
     if size is not None and shape is not None and size != tuple(reversed(shape)):
         raise AssertionError(f"{fn_name}() mismatch between 'size' and 'shape'")
     if size is None:

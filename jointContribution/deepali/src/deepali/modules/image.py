@@ -99,7 +99,7 @@ class GaussianConv(paddle.nn.Layer):
         # Make sure sum of values in gaussian kernel equals 1.
         kernel = kernel.divide_(y=paddle.to_tensor(kernel.sum()))
         # Reshape to depthwise convolutional weight
-        kernel = kernel.view(1, 1, *tuple(kernel.shape))
+        kernel = kernel.view(1, 1, *kernel.size())
         kernel = kernel.tile(repeat_times=[channels, *((1,) * (kernel.dim() - 1))])
         self.register_buffer(name="kernel", tensor=kernel, persistable=True)
         self.groups = channels

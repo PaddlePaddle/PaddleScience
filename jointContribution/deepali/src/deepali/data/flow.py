@@ -236,9 +236,9 @@ class FlowFields(ImageBatch):
             elif self.axes() is Axes.WORLD:
                 spacing = self.spacing()
             elif self.axes() is Axes.CUBE:
-                spacing = tuple(2 / n for n in tuple(self.grid().shape))
+                spacing = tuple(2 / n for n in self.grid().size())
             else:
-                spacing = tuple(2 / (n - 1) for n in tuple(self.grid().shape))
+                spacing = tuple(2 / (n - 1) for n in self.grid().size())
         data = U.curl(self.tensor(), mode=mode, sigma=sigma, spacing=spacing, stride=stride)
         return ImageBatch(data, self._grid)
 

@@ -1669,13 +1669,13 @@ def inverse_consistency_loss(
                 raise ValueError(
                     f"inverse_consistency_loss() 'margin' must be in [0, 1), got {margin}"
                 )
-            m = [int(margin * n) for n in tuple(grid.shape)]
+            m = [int(margin * n) for n in grid.size()]
         else:
             m = [max(0, int(margin))] * grid.ndim
-        subgrid = tuple(reversed([slice(i, n - i) for i, n in zip(m, tuple(grid.shape))]))
+        subgrid = tuple(reversed([slice(i, n - i) for i, n in zip(m, grid.size())]))
         error = error[(slice(0, tuple(error.shape)[0]),) + subgrid + (slice(0, grid.ndim),)]
     if units in ("voxel", "world"):
-        error = denormalize_flow(error, size=tuple(grid.shape), channels_last=True)
+        error = denormalize_flow(error, size=grid.size(), channels_last=True)
         if units == "world":
             error *= grid.spacing().to(error)
     error: Tensor = error.norm(p=2, axis=-1)

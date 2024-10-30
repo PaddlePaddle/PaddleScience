@@ -80,7 +80,7 @@ def cubic_bspline_control_point_grid_size(
 
 def cubic_bspline_control_point_grid(grid: Grid, stride: ScalarOrTuple[int]) -> Grid:
     r"""Get control point grid for given image grid and control point stride."""
-    size = cubic_bspline_control_point_grid_size(tuple(grid.shape), stride)
+    size = cubic_bspline_control_point_grid_size(grid.size(), stride)
     s: Tensor = paddle.atleast_1d(paddle.to_tensor(data=stride, dtype="int32", place=grid.place))
     s = s.expand(shape=grid.ndim)
     return Grid(

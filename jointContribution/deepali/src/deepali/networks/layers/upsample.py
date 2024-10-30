@@ -410,7 +410,7 @@ def pixelshuffle(x: paddle.Tensor, spatial_dims: int, scale_factor: int) -> padd
     """
 
     dim, factor = spatial_dims, scale_factor
-    input_size = list(tuple(x.shape))
+    input_size = list(x.size())
     batch_size, channels = input_size[:2]
     scale_divisor = factor**dim
 
