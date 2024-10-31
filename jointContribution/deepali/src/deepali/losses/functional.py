@@ -1751,10 +1751,15 @@ def masked_loss(
         raise ValueError(f"{name}() 'mask' must have same number of channels as 'target' or only 1")
     if tuple(mask.shape)[2:] != tuple(loss.shape)[2:]:
         raise ValueError(f"{name}() 'mask' must have same spatial shape as 'target'")
-    if inplace:
-        loss = loss.multiply_(y=paddle.to_tensor(mask))
+
+    if mask.dtype == paddle.bool:
+        mask2 = mask.astype(loss.dtype)
     else:
-        loss = loss.mul(mask)
+        mask2 = mask
+    if inplace:
+        loss = loss.multiply_(y=paddle.to_tensor(mask2))
+    else:
+        loss = loss.mul(mask2)
     return loss
 
 
@@ -1771,5 +1776,5 @@ def reduce_loss(
     value = loss.sum()
     if reduction == "mean":
         numel = mask.expand_as(y=loss).sum()
-        value = value.divide_(y=paddle.to_tensor(numel))
+        value = value.divide_(y=paddle.to_tensor(numel).astype(value.dtype))
     return value

@@ -98,7 +98,7 @@ class ParametricTransform:
 
     def has_parameters(self) -> bool:
         r"""Whether this transformation has optimizable parameters."""
-        return isinstance(self.params, paddle.base.framework.EagerParamBase.from_tensor)
+        return isinstance(self.params, paddle.base.framework.EagerParamBase)
 
     @paddle.no_grad()
     def reset_parameters(self: Union[TSpatialTransform, ParametricTransform]) -> None:

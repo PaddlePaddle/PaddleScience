@@ -378,7 +378,9 @@ def scaling_transform(
     matrix = paddle.zeros(
         shape=tuple(scales_.shape)[:-1] + (D, D + 1 if homogeneous else D), dtype=scales_.dtype
     )
-    matrix[..., J, J] = scales_
+    # matrix[..., J, J] = scales_
+    for j in J:
+        matrix[..., j, j] = scales_[..., j]
     return matrix
 
 
@@ -422,7 +424,10 @@ def shear_matrix(
         shape=tuple(angles_.shape)[:-1] + (D, D + 1 if homogeneous else D), dtype=angles_.dtype
     )
     matrix[..., J, J] = 1
-    matrix[..., K[0], K[1]] = paddle.tan(x=angles_)
+    # matrix[..., K[0], K[1]] = paddle.tan(x=angles_)
+    tan_values = paddle.tan(x=angles_)
+    for i in range(len(K[0])):
+        matrix[..., K[0][i], K[1][i]] = tan_values[..., i]
     return matrix
 
 
