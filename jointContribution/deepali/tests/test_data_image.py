@@ -611,7 +611,7 @@ def test_image_sample() -> None:
     assert coords.is_floating_point()
     assert tuple(coords.shape) == (len(indices), grid.ndim)
     assert coords.min().greater_equal(y=paddle.to_tensor(-1))
-    # assert coords.max().less_equal(y=paddle.to_tensor(1))
+    assert coords.max().less_equal(y=paddle.to_tensor(1))
 
     result = image.sample(coords, mode="nearest")
     expected = data.flatten(start_axis=1).index_select(axis=1, index=indices)
@@ -619,7 +619,7 @@ def test_image_sample() -> None:
     assert result.dtype == image.dtype
     assert tuple(result.shape) == (image.nchannels, *tuple(coords.shape)[:-1])
     assert tuple(result.shape) == tuple(expected.shape)
-    # assert result.equal(y=expected).astype("bool").all()
+    assert result.equal(y=expected).astype("bool").all()
 
     result = image.sample(coords, mode="linear")
     assert type(result) is Tensor
@@ -635,7 +635,7 @@ def test_image_sample() -> None:
     assert paddle_aux.is_eq_place(result.place, image.place)
     assert tuple(result.shape)[0] == image.nchannels
     assert tuple(result.shape)[1:] == tuple(grid.shape)
-    # assert paddle.allclose(x=result, y=image._data).item()
+    assert paddle_aux.allclose_int(x=result, y=image).item()
 
     # Batch of grid points
     coords = grid.coords()
