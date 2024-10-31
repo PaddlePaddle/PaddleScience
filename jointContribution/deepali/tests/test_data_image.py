@@ -75,9 +75,8 @@ def test_image_init(zeros: paddle.Tensor, grid: Grid) -> None:
     assert image.dtype == data.dtype
     assert image.data_ptr() == data.data_ptr()
 
-    data = data.to(device=paddle.CPUPlace())
     if paddle.device.cuda.device_count() >= 1:
-        device = paddle.CUDAPlace(int("cuda:0".replace("cuda:", "")))
+        device = paddle.CUDAPlace(0)
         image = Image(data, grid, device=device)
         assert type(image) is Image
         assert image._grid is grid

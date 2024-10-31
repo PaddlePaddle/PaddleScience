@@ -32,7 +32,7 @@ def as_tensor(
         if (dtype is not None and arg.dtype != dtype) or (
             device is not None and not paddle_aux.is_eq_place(arg.place, device)
         ):
-            arg = paddle.to_tensor(arg, dtype=dtype, place=device)
+            arg = arg.clone().to(dtype=dtype, device=device)
         return arg
 
 
