@@ -25,7 +25,7 @@ def test_cube_is_grid_with_three_points(default_cube: Cube) -> None:
     assert type(grid) is Grid
     assert grid.ndim == cube.ndim
     assert paddle_aux.is_eq_place(grid.device, cube.device)
-    assert tuple(grid.shape) == (3,) * grid.ndim
+    assert grid.size() == (3,) * grid.ndim
     assert grid.align_corners() is True
     assert paddle.allclose(x=grid.cube_extent(), y=cube.extent()).item()
     assert paddle.allclose(x=grid.affine(), y=cube.affine()).item()

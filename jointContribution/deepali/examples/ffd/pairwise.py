@@ -811,7 +811,7 @@ def print_pyramid_info(pyramid: Dict[str, Image]) -> None:
     levels = sorted(pyramid.keys())
     for level in reversed(levels):
         grid = pyramid[level].grid()
-        size = ", ".join([f"{n:>3d}" for n in tuple(grid.shape)])
+        size = ", ".join([f"{n:>3d}" for n in grid.size()])
         origin = ", ".join([f"{n:.2f}" for n in grid.origin()])
         extent = ", ".join([f"{n:.2f}" for n in grid.extent()])
         domain = ", ".join([f"{n:.2f}" for n in grid.cube_extent()])

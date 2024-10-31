@@ -605,7 +605,7 @@ def test_image_sample() -> None:
     image = Image(data, grid)
 
     indices = paddle.arange(start=0, end=np.prod(grid.size()), step=10)
-    voxels = U.unravel_coords(indices, tuple(grid.shape))
+    voxels = U.unravel_coords(indices, grid.size())
     coords = grid.index_to_cube(voxels)
     assert coords.dtype == grid.dtype
     assert coords.is_floating_point()

@@ -34,9 +34,9 @@ def flow_derivatives(
     axes = to_axes
     if "spacing" not in kwargs:
         if axes == Axes.CUBE:
-            spacing = tuple(2 / n for n in tuple(grid.shape))
+            spacing = tuple(2 / n for n in grid.size())
         elif axes == Axes.CUBE_CORNERS:
-            spacing = tuple(2 / (n - 1) for n in tuple(grid.shape))
+            spacing = tuple(2 / (n - 1) for n in grid.size())
         elif axes == Axes.GRID:
             spacing = 1
         elif axes == Axes.WORLD:
@@ -80,9 +80,7 @@ def visualize_flow(
 # Random velocity fields
 generator = paddle.framework.core.default_cpu_generator().manual_seed(42)
 grid = Grid(size=(128, 128, 64), spacing=(0.5, 0.5, 1.0))
-flow = random_svf(tuple(grid.shape), stride=8, generator=generator).multiply_(
-    y=paddle.to_tensor(0.1)
-)
+flow = random_svf(grid.size(), stride=8, generator=generator).multiply_(y=paddle.to_tensor(0.1))
 fig, axes = plt.subplots(1, 1, figsize=(4, 4))
 ax = axes
 ax.set_title("v", fontsize=24, pad=20)
