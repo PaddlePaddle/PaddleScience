@@ -75,3 +75,7 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+
+# inference settings
+INFER:
+  export_path: ./inference/catheter

@@ -18,7 +18,6 @@ import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
-from catheter import FNO1d
 from omegaconf import DictConfig
 
 import ppsci
@@ -140,7 +139,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set model
-    model = FNO1d(**cfg.MODEL)
+    model = ppsci.arch.FNO1d(**cfg.MODEL)
     model.set_state_dict(paddle.load(cfg.TRAIN.model_path))
 
     # set data
@@ -198,7 +197,7 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    model = FNO1d(**cfg.MODEL)
+    model = ppsci.arch.FNO1d(**cfg.MODEL)
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -213,7 +212,7 @@ def export(cfg: DictConfig):
             for key in model.input_keys
         },
     ]
-    solver.export(input_spec, cfg.INFER.export_path)
+    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="catheter.yaml")

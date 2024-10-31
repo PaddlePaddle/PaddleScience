@@ -101,7 +101,7 @@ class FNO1d(nn.Layer):
         input_channel=2,
         output_np=2001,
     ):
-        super().__init__(input_keys=input_key, output_keys=output_key)
+        super().__init__()
         """
         The overall network. It contains 4 layers of the Fourier layer.
         1. Lift the input to the desire channel dimension by self.fc0 .
@@ -114,6 +114,9 @@ class FNO1d(nn.Layer):
         output: the solution of a later timestep
         output shape: (batchsize, x=s, c=1)
         """
+        self.input_keys = input_key
+        self.output_keys = output_key
+
         self.output_np = output_np
         self.modes1 = modes
         self.width = width
