@@ -47,7 +47,7 @@ def zeros(request) -> paddle.Tensor:
 @pytest.mark.parametrize("zeros,grid", [(d, d) for d in (2, 3)], indirect=True)
 def test_image_init(zeros: paddle.Tensor, grid: Grid) -> None:
     data = zeros
-    data.to(device=paddle.CPUPlace())  # convert from torch, in torch CPUPlace is default.
+    data = data.to(device=paddle.CPUPlace())  # convert from torch, in torch CPUPlace is default.
 
     image = Image(data)
     assert type(image) is Image
@@ -75,6 +75,7 @@ def test_image_init(zeros: paddle.Tensor, grid: Grid) -> None:
     assert image.dtype == data.dtype
     assert image.data_ptr() == data.data_ptr()
 
+    data = data.to(device=paddle.CPUPlace())
     if paddle.device.cuda.device_count() >= 1:
         device = paddle.CUDAPlace(int("cuda:0".replace("cuda:", "")))
         image = Image(data, grid, device=device)
