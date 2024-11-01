@@ -331,6 +331,6 @@ def allclose_int(x, y):
         x = x.astype(paddle.float64)
     if y.dtype == paddle.int64:
         y = y.astype(paddle.float64)
-    if y.shape == []:
+    if tuple(y.shape) == ():
         x = x.mean()
     return paddle.allclose(x, y)
