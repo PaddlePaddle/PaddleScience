@@ -74,7 +74,12 @@ class ParametricTransform:
         elif isinstance(params, bool):
             data = paddle.empty(shape=shape, dtype="float32")
             if params:
-                self.params = paddle.base.framework.EagerParamBase.from_tensor(tensor=data)
+                self.params = paddle.create_parameter(
+                    shape=data.shape,
+                    dtype=data.dtype,
+                    default_initializer=paddle.nn.initializer.Assign(data),
+                )
+                self.params.stop_gradient = False
             else:
                 self.register_buffer(name="params", tensor=data, persistable=True)
             self.reset_parameters()
@@ -146,17 +151,20 @@ class ParametricTransform:
                 f"{type(self).__name__}.data() 'arg' must be {len(shape) + 1}-dimensional tensor"
             )
         shape = (arg.shape[0],) + shape
-        if arg.shape != shape:
+        if tuple(arg.shape) != tuple(shape):
             raise ValueError(f"{type(self).__name__}.data() 'arg' must have shape {shape!r}")
         copy = shallow_copy(self)
         if callable(params):
             delattr(copy, "p")
-        if isinstance(params, paddle.base.framework.EagerParamBase.from_tensor) and not isinstance(
-            arg, paddle.base.framework.EagerParamBase.from_tensor
+        if isinstance(params, paddle.base.framework.EagerParamBase) and not isinstance(
+            arg, paddle.base.framework.EagerParamBase
         ):
-            copy.params = paddle.base.framework.EagerParamBase.from_tensor(
-                tensor=arg, trainable=not params.stop_gradient
+            copy.params = paddle.create_parameter(
+                shape=arg.shape,
+                dtype=arg.dtype,
+                default_initializer=paddle.nn.initializer.Assign(arg),
             )
+            copy.params.stop_gradient = params.stop_gradient
         else:
             copy.params = arg
         copy.clear_buffers()
@@ -195,12 +203,15 @@ class ParametricTransform:
             raise ValueError(
                 f"{type(self).__name__}.data_() 'arg' must have shape {shape!r}, not {arg.shape!r}"
             )
-        if isinstance(params, paddle.base.framework.EagerParamBase.from_tensor) and not isinstance(
-            arg, paddle.base.framework.EagerParamBase.from_tensor
+        if isinstance(params, paddle.base.framework.EagerParamBase) and not isinstance(
+            arg, paddle.base.framework.EagerParamBase
         ):
-            self.params = paddle.base.framework.EagerParamBase.from_tensor(
-                tensor=arg, trainable=not params.stop_gradient
+            self.params = paddle.create_parameter(
+                shape=arg.shape,
+                dtype=arg.dtype,
+                default_initializer=paddle.nn.initializer.Assign(arg),
             )
+            self.params.stop_gradient = params.stop_gradient
         else:
             self.params = arg
         self.clear_buffers()

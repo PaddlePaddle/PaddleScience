@@ -30,16 +30,28 @@ from deepali.core.typing import Array
 from deepali.core.typing import Device
 from deepali.core.typing import DType
 from deepali.core.typing import EllipsisType
+from deepali.core.typing import PathStr
 from deepali.core.typing import PathUri
 from deepali.core.typing import Scalar
 from deepali.core.typing import ScalarOrTuple
 from deepali.core.typing import Size
 from deepali.utils import paddle_aux
-from deepali.utils.imageio import read_image
-from deepali.utils.imageio import write_image
+
+# from deepali.utils.imageio import read_image
+# from deepali.utils.imageio import write_image
 from paddle import Tensor
 
 from .tensor import DataTensor
+
+try:
+    import SimpleITK as sitk
+
+    from ..utils.simpleitk.imageio import read_image
+    from ..utils.simpleitk.paddle import image_from_tensor  # noqa
+    from ..utils.simpleitk.paddle import tensor_from_image  # noqa
+except ImportError:
+    sitk = None
+from deepali.core.pathlib import unlink_or_mkdir
 
 Domain = Cube
 
@@ -1158,7 +1170,7 @@ class Image(DataTensor):
     ) -> TImage:
         r"""Create image from ``SimpleITK.Image`` instance."""
         try:
-            from deepali.utils.simpleitk.paddle import tensor_from_image
+            from deepali.utils.simpleitk.paddle import tensor_from_image  # noqa
         except ImportError:
             raise RuntimeError(f"{cls.__name__}.from_sitk() requires SimpleITK")
         data = tensor_from_image(image, dtype=dtype, device=device)
@@ -1168,7 +1180,7 @@ class Image(DataTensor):
     def sitk(self: TImage) -> "sitk.Image":
         r"""Create ``SimpleITK.Image`` from this image."""
         try:
-            from deepali.utils.simpleitk.paddle import image_from_tensor
+            from deepali.utils.simpleitk.paddle import image_from_tensor  # noqa
         except ImportError:
             raise RuntimeError(f"{type(self).__name__}.sitk() requires SimpleITK")
         grid = self._grid
@@ -1205,9 +1217,16 @@ class Image(DataTensor):
         grid = grid.align_corners_(align_corners)
         return cls(data, grid, dtype=dtype, device=device)
 
-    def write(self: TImage, path: PathUri, compress: bool = True) -> None:
-        r"""Write image data to file."""
-        write_image(self.tensor(), self.grid(), path, compress=compress)
+    # def write(self: TImage, path: PathUri, compress: bool = True) -> None:
+    #     r"""Write image data to file."""
+    #     write_image(self.tensor(), self.grid(), path, compress=compress)
+    def write(self: TImage, path: PathStr, compress: bool = True) -> None:
+        """Write image data to file."""
+        if sitk is None:
+            raise RuntimeError(f"{type(self).__name__}.write() requires SimpleITK")
+        image = self.sitk()
+        path = unlink_or_mkdir(path)
+        sitk.WriteImage(image, str(path), compress)
 
     def normalize(
         self: TImage, mode: str = "unit", min: Optional[float] = None, max: Optional[float] = None

@@ -42,7 +42,7 @@ def image_from_tensor(
 
 
 def tensor_from_image(
-    image: sitk.Image, dtype: Optional[paddle.dtype] = None, device: Optional[paddle.device] = None
+    image: sitk.Image, dtype: Optional[paddle.dtype] = None, device: Optional[str] = None
 ) -> paddle.Tensor:
     r"""Create image data tensor from ``SimpleITK.Image``."""
     if image.GetPixelID() == sitk.sitkUInt16:

@@ -466,10 +466,10 @@ def subdivide_cubic_bspline(
         # Evaluate coefficients at original control point positions
         indices = [slice(0, n) for n in shape]
         indices[dim] = slice(0, shape[dim], 2)
-        temp[indices] = conv1d(output, kernel_1, dim=dim, padding=1)
+        temp[tuple(indices)] = conv1d(output, kernel_1, dim=dim, padding=1)
         # Evaluate coefficients at subdivided intermediate positions
         indices = [slice(0, n) for n in shape]
         indices[dim] = slice(1, shape[dim], 2)
-        temp[indices] = conv1d(output, kernel_2, dim=dim, padding=0)
+        temp[tuple(indices)] = conv1d(output, kernel_2, dim=dim, padding=0)
         output = temp
     return output
