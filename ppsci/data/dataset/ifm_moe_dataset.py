@@ -315,8 +315,6 @@ class IFMMoeDataset(io.Dataset):
     # Whether support batch indexing for speeding up fetching process.
     batch_index: bool = False
 
-    use_pgl: bool = True
-
     def __init__(
         self,
         input_keys: Tuple[str, ...],
