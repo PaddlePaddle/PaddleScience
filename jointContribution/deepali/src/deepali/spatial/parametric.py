@@ -199,7 +199,7 @@ class ParametricTransform:
                 f"{type(self).__name__}.data_() 'arg' must be {len(shape) + 1}-dimensional tensor, but arg.ndim={arg.ndim}"
             )
         shape = (arg.shape[0],) + shape
-        if arg.shape != shape:
+        if tuple(arg.shape) != tuple(shape):
             raise ValueError(
                 f"{type(self).__name__}.data_() 'arg' must have shape {shape!r}, not {arg.shape!r}"
             )

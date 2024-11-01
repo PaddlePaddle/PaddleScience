@@ -36,8 +36,8 @@ from deepali.core.typing import Scalar
 from deepali.core.typing import ScalarOrTuple
 from deepali.core.typing import Size
 from deepali.utils import paddle_aux
+from deepali.utils.imageio import read_image
 
-# from deepali.utils.imageio import read_image
 # from deepali.utils.imageio import write_image
 from paddle import Tensor
 
@@ -46,9 +46,9 @@ from .tensor import DataTensor
 try:
     import SimpleITK as sitk
 
-    from ..utils.simpleitk.imageio import read_image
-    from ..utils.simpleitk.paddle import image_from_tensor  # noqa
-    from ..utils.simpleitk.paddle import tensor_from_image  # noqa
+    # from ..utils.simpleitk.imageio import read_image
+    # from ..utils.simpleitk.paddle import image_from_tensor  # noqa
+    # from ..utils.simpleitk.paddle import tensor_from_image  # noqa
 except ImportError:
     sitk = None
 from deepali.core.pathlib import unlink_or_mkdir
