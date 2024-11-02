@@ -19,7 +19,7 @@ hydra:
       _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
-    dir: ${geofno.run.dir}
+    dir: ${hydra.run.dir}
     subdir: ./
 
 # general settings
@@ -27,21 +27,22 @@ mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 100
+data_path: ./data
 
 TRAIN_DATA:
-  x_path: "./data/training/x_1d_structured_mesh.npy"
-  y_path: "./data/training/y_1d_structured_mesh.npy"
-  para_path: "./data/training/data_info.npy"
-  output_path: "./data/training/density_1d_data.npy"
+  x_path: "${data_path}/training/x_1d_structured_mesh.npy"
+  y_path: "${data_path}/training/y_1d_structured_mesh.npy"
+  para_path: "${data_path}/training/data_info.npy"
+  output_path: "${data_path}/training/density_1d_data.npy"
   n_data: 3000
   n: 1000
   s: 2001
 
 TEST_DATA:
-  x_path: "./data/test/x_1d_structured_mesh.npy"
-  y_path: "./data/test/y_1d_structured_mesh.npy"
-  para_path: "./data/test/data_info.npy"
-  output_path: "./data/test/density_1d_data.npy"
+  x_path: "${data_path}/test/x_1d_structured_mesh.npy"
+  y_path: "${data_path}/test/y_1d_structured_mesh.npy"
+  para_path: "${data_path}/test/data_info.npy"
+  output_path: "${data_path}/test/density_1d_data.npy"
   n_data: 100
   n: 100
   s: 2001
