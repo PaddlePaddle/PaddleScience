@@ -34,7 +34,6 @@ class SpectralConv1d(nn.Layer):
         self.out_channels = out_channels
         # Number of Fourier modes to multiply, at most floor(N/2) + 1
         self.modes1 = modes1
-
         self.scale = 1 / (in_channels * out_channels)
 
         real = paddle.rand(shape=[in_channels, out_channels, modes1])
