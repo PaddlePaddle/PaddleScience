@@ -43,5 +43,4 @@ class ComplexCPTensorized(ComplexHandler, CPTensorized, name='ComplexCP'):
 
     @classmethod
     def new(cls, tensorized_shape, rank=None, device=None, dtype=paddle.complex64, **kwargs):
-        print(">>>>>>>> apslpxw ComplexCPTensorized")
         return super().new(tensorized_shape, rank, device=device, dtype=dtype, **kwargs)

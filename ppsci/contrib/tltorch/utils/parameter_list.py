@@ -20,12 +20,8 @@ class FactorList(nn.Layer):
         key = self._unique_key()
         if paddle.is_tensor(element):
             if isinstance(element, paddle.base.framework.EagerParamBase):
-                print(f">>>>> kkk add_parameter key: {key}")
-                print(f">>>>> kkk add_parameter key: {element.shape}")
                 self.add_parameter(key, element)
             else:
-                print(f">>>>> kkk add_parameter key: {key}")
-                print(f">>>>> kkk add_parameter key: {element.shape}")
                 self.register_buffer(key, element)
         else:
             setattr(self, key, self.__class__(element))
@@ -77,9 +73,7 @@ class FactorList(nn.Layer):
     def extra_repr(self) -> str:
         child_lines = []
         for k, p in self._parameters.items():
-            print(f"p: {p.shape}")
             size_str = 'x'.join(str(size) for size in p.shape)
-            print(f"size_str: {size_str}")
             device_str = '' if not "gpu" in str(p.place) else ' (GPU {})'.format(p.get_device())
             parastr = 'Parameter containing: [{} of size {}{}]'.format(
                 type(p), size_str, device_str)

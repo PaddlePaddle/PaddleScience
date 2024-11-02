@@ -192,7 +192,6 @@ class FNOBlocks(nn.Layer):
         if self.preactivation:
             return self.forward_with_preactivation(x, index, output_shape)
         else:
-            print(f">>>>>>> x: {x.shape}")
             return self.forward_with_postactivation(x, index, output_shape)
 
     def forward_with_postactivation(self, x, index=0, output_shape=None):
@@ -206,9 +205,6 @@ class FNOBlocks(nn.Layer):
         if self.stabilizer == "tanh":
             x = paddle.tanh(x)
 
-        print(f"1>>>>>>>>>.. x: {x.shape}")
-        print(f"1>>>>>>>>>.. index: {index}")
-        print(f"1>>>>>>>>>.. output_shape: {output_shape}")
         x_fno = self.convs(x, index, output_shape=output_shape)
 
         if self.norm is not None:

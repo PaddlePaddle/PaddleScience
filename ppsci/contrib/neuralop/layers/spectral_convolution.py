@@ -340,7 +340,6 @@ class SpectralConv(BaseSpectralConv):
 
         tensor_kwargs = decomposition_kwargs if decomposition_kwargs is not None else {}
         if joint_factorization:
-            print(">>>>>>>>>>>>>>> joint_factorization")
             self.weight = FactorizedTensor.new(
                 (n_layers, *weight_shape),
                 rank=self.rank,
@@ -350,12 +349,6 @@ class SpectralConv(BaseSpectralConv):
             )
             self.weight.normal_(0, init_std)
         else:
-            print(">>>>>>>>>>>>>>> no joint_factorization")
-            print(f"weight_shape: {weight_shape}")
-            print(f"self.rank: {self.rank}")
-            print(f"factorization: {factorization}")
-            print(f"fixed_rank_modes: {fixed_rank_modes}")
-            print(f"tensor_kwargs: {tensor_kwargs}")
             self.weight = nn.LayerList(
                 [
                     FactorizedTensor.new(
@@ -368,9 +361,7 @@ class SpectralConv(BaseSpectralConv):
                     for _ in range(n_layers)
                 ]
             )
-            # print(f"self.weight: {self.weight}")
             for w in self.weight:
-                print(f"type of w: {type(w)}]")
                 w.normal_(0, init_std)
         self._contract = get_contract_fun(
             self.weight[0], implementation=implementation, separable=separable
@@ -379,11 +370,6 @@ class SpectralConv(BaseSpectralConv):
         if bias:
             # https://github.com/PaddlePaddle/docs/blob/develop/docs/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.md
             # https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.html
-            print(">>>>>>>>>>>>>>>>> test!!!!!!")
-            print(f"self.out_channels: {self.out_channels}")
-            print(f"self.order: {self.order}")
-            print(f"init_std: {init_std}")
-            # print(f"*(tuple([self.out_channels]) + (1,) * self.order): {*(tuple([self.out_channels]) + (1,) * self.order)}")
             self.bias = paddle.base.framework.EagerParamBase.from_tensor(
                 init_std
                 * paddle.randn((tuple([self.out_channels]) + (1,) * self.order))
@@ -392,7 +378,6 @@ class SpectralConv(BaseSpectralConv):
             self.bias = None
 
     def _get_weight(self, index):
-        print(f"111>>>>111self.weight: {self.weight[0]}")
         return self.weight[index]
 
     def transform(self, x, layer_index=0, output_shape=None):
@@ -452,7 +437,6 @@ class SpectralConv(BaseSpectralConv):
         tensorized_spectral_conv(x)
         """
         batchsize, channels, *mode_sizes = x.shape
-        print(f"x origin: {x.shape}")
 
         fft_size = list(mode_sizes)
         fft_size[-1] = fft_size[-1] // 2 + 1  # Redundant last coefficient
@@ -483,29 +467,10 @@ class SpectralConv(BaseSpectralConv):
         slices_w = [slice(None), slice(None)]  # Batch_size, channels
         slices_w += [slice(start//2, -start//2) if start else slice(start, None) for start in starts[:-1]]
         slices_w += [slice(None, -starts[-1]) if starts[-1] else slice(None)]  # The last mode already has redundant half removed
-        print(f"self.weight: {self.weight}")
-        print(f"indices: {indices}")
-        print(f"slices_w: {slices_w}")
 
-        # torch implementation
         weight = self._get_weight(indices)[slices_w]
 
-        # paddle implementation
-        # print(">>>>>>>>>>>>>>>>>> weight doing")
-        # weight_temp = self._get_weight(indices)
-        # axes = [i for i in range(len(slices_w))]
-        # print(f"axes: {axes}")
-        # starts = [0 if i.start is None else i.start for i in slices_w]
-        # print(f"starts: {starts}")
-        # ends = [weight_temp.shape[i] if slices_w[i].stop is None else slices_w[i].stop for i in range(len(slices_w))]
-        # print(f"ends: {ends}")
-        # print(f"weight_temp: {type(weight_temp)}")
-        # weight = paddle.slice(weight_temp, axes=axes, starts=starts, ends=ends)
-        # print(">>>>>>>>>>>>>>>>>> weight done")
-
         starts = [(size - min(size, n_mode)) for (size, n_mode) in zip(list(x.shape[2:]), list(weight.shape[2:]))]
-        print(f"starts: {starts}")
-
         slices_x = [slice(None), slice(None)]  # Batch_size, channels
         slices_x += [slice(start//2, -start//2) if start else slice(start, None) for start in starts[:-1]]
         slices_x += [slice(None, -starts[-1]) if starts[-1] else slice(None)]  # The last mode already has redundant half removed
@@ -652,7 +617,6 @@ class SpectralConv2d(SpectralConv):
             slice(-self.n_modes[0] // 2, None),  # -half_n_modes[0]:,
             slice(self.n_modes[1]),  # ......      :half_n_modes[1]]
         )
-        print(f'2D: {x[slices0].shape=}, {self._get_weight(indices)[slices0].shape=}, {self._get_weight(indices).shape=}')
 
         """Upper block (truncate high frequencies)."""
         out_fft[slices0] = self._contract(

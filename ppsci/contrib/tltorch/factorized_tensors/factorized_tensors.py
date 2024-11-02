@@ -197,7 +197,6 @@ class CPTensor(FactorizedTensor, name='CP'):
         -------
         self
         """
-        print(">>>>>>>>>>> transduct")
         factors = self.factors
         # Important: don't increment the order before accessing factors which uses order!
         self.order += 1

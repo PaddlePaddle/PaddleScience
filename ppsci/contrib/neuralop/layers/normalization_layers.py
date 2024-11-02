@@ -20,11 +20,14 @@ class AdaIN(nn.Layer):
         self.embedding = None
 
     def set_embedding(self, x):
-        self.embedding = x.reshape(self.embed_dim,)
+        self.embedding = x.reshape([self.embed_dim,])
 
     def forward(self, x):
         assert self.embedding is not None, "AdaIN: update embeddding before running forward"
 
-        weight, bias = paddle.split(self.mlp(self.embedding), self.in_channels, dim=0)
+        mlp = self.mlp(self.embedding)
+        # torch.split and paddle.split are different, as following:
+        # https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/model_convert/convert_from_pytorch/api_difference/Tensor/torch.Tensor.permute.html
+        weight, bias = paddle.split(mlp, (mlp.shape[0])//self.in_channels, axis=0)
 
-        return nn.functional.group_norm(x, self.in_channels, weight, bias, eps=self.eps)
+        return nn.functional.group_norm(x, self.in_channels, weight=weight, bias=bias, epsilon=self.eps)

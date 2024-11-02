@@ -124,13 +124,13 @@ class MetaFactorizedTensor(type):
         kwargs.pop('factorization', None)
 
         instance.__init__(*args, **kwargs)
-        print(f">> instanceinstance : {instance}")
         return instance
+
 
 def _format_factorization(factorization):
     """Small utility function to make sure factorization names 
     are dealt with the same whether using capital letters or not.
-    
+
     factorization=None is remapped to 'Dense'.
     """
     if factorization is None:
@@ -365,7 +365,6 @@ class FactorizedTensor(nn.Layer, metaclass=MetaFactorizedTensor):
         -------
         self
         """
-        print(">>>>>.aaa asssdsdnormal")
         if mean != 0:
             raise ValueError(f'Currently only mean=0 is supported, but got mean={mean}')
 
