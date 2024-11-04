@@ -1,5 +1,5 @@
 import paddle
-from ppsci.contrib.neuralop.models.fnogno import FNOGNO
+from ppsci.contrib.neuralop.models import FNOGNO
 import pytest
 from tensorly import tenalg
 tenalg.set_backend('einsum')
