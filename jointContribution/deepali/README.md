@@ -17,3 +17,17 @@ pip install .
 
 # test
 pytest tests/
+
+# example code
+``` python
+import paddle
+from deepali.core import bspline as B
+
+kernel = B.cubic_bspline_interpolation_weights(5)
+assert isinstance(kernel, paddle.Tensor)
+assert tuple(kernel.shape) == (5, 4)
+
+assert paddle.allclose(
+        x=kernel, y=B.cubic_bspline_interpolation_weights(5, derivative=0)
+    ).item()
+```
