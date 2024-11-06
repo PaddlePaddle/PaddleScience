@@ -749,8 +749,8 @@ class SDFMesh(geometry.Geometry):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["stl"]):
             raise ImportError(
-                "Could not import stl python package."
-                "Please install it as https://github.com/WoLpH/numpy-stl"
+                "Could not import stl python package. "
+                "Please install numpy-stl with: pip install 'numpy-stl>=2.16,<2.17'"
             )
 
         np_mesh_obj = np_mesh_module.Mesh.from_file(mesh_file)
@@ -845,7 +845,6 @@ class SDFMesh(geometry.Geometry):
         Args:
             translation (np.ndarray): Translation offsets, numpy array of shape (3,):
                 [offset_x, offset_y, offset_z].
-            relative (bool, optional): Whether translate relatively. Defaults to True.
 
         Returns:
             Mesh: Translated Mesh object.

@@ -116,7 +116,7 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 | API 名称 | 支持文件类型 | 安装方式 | 使用方式 |
 | -- | -- | -- | -- |
 |[`ppsci.geometry.Mesh`](./api/geometry.md#ppsci.geometry.Mesh) | `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh`| 参考下方的 "PyMesh 安装命令"| `ppsci.geometry.Mesh(mesh_path)`|
-|[`ppsci.geometry.SDFMesh`](./api/geometry.md#ppsci.geometry.SDFMesh "实验性功能") | `.stl` | `pip install warp-lang` | `ppsci.geometry.SDFMesh.from_stl(stl_path)` |
+|[`ppsci.geometry.SDFMesh`](./api/geometry.md#ppsci.geometry.SDFMesh "实验性功能") | `.stl` | `pip install warp-lang 'numpy-stl>=2.16,<2.17'` | `ppsci.geometry.SDFMesh.from_stl(stl_path)` |
 
 !!! warning "相关案例运行说明"
 

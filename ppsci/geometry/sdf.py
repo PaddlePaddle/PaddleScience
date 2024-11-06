@@ -160,9 +160,7 @@ def signed_distance_field(
         array([0.5], dtype=float32)
     """
     if not importlib.util.find_spec("warp"):
-        raise ModuleNotFoundError(
-            "Please install warp-lang first with: pip install warp-lang"
-        )
+        raise ModuleNotFoundError("Please install warp with: pip install warp-lang")
 
     wp.init()
     mesh = wp.Mesh(
