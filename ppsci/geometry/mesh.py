@@ -28,6 +28,8 @@ try:
     from stl import mesh as np_mesh_module
 except ModuleNotFoundError:
     pass
+except ImportError:
+    pass
 
 from typing_extensions import Literal
 
