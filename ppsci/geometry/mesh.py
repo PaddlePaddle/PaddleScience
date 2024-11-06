@@ -186,7 +186,7 @@ class Mesh(geometry.Geometry):
         return self.pysdf.contains(x)
 
     def on_boundary(self, x):
-        return np.isclose(self.sdf_func(x), 0.0).flatten()
+        return np.isclose(self.sdf_func(x), 0.0).ravel()
 
     def translate(self, translation: np.ndarray, relative: bool = True) -> "Mesh":
         """Translate by given offsets.
@@ -367,7 +367,7 @@ class Mesh(geometry.Geometry):
             n_appr (int): Number of points for approximating area. Defaults to 10000.
 
         Returns:
-            np.ndarray: Approximated areas with shape of [n_faces, ].
+            float: Approximation area with given criteria.
         """
         triangle_areas = area_of_triangles(self.v0, self.v1, self.v2)
         triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
@@ -500,7 +500,7 @@ class Mesh(geometry.Geometry):
                 if criteria is not None:
                     criteria_mask = criteria(
                         *np.split(points, self.ndim, axis=1)
-                    ).flatten()
+                    ).ravel()
                     points = points[criteria_mask]
                     normal = normal[criteria_mask]
 
@@ -549,7 +549,7 @@ class Mesh(geometry.Geometry):
             if criteria:
                 valid_mask &= criteria(
                     *np.split(random_points, self.ndim, axis=1)
-                ).flatten()
+                ).ravel()
             valid_points = random_points[valid_mask]
             _nvalid += len(valid_points)
 
@@ -668,15 +668,17 @@ class SDFMesh(geometry.Geometry):
     """Class for SDF geometry, a kind of implicit surface mesh.
 
     Args:
-        vectors (np.ndarray): Vectors of triangle mesh.
-        normals (np.ndarray): Unit normals of each triangle face.
+        vectors (np.ndarray): Vectors of triangles of mesh with shape [M, 3, 3].
+        normals (np.ndarray): Unit normals of each triangle face with shape [M, 3].
         sdf_func (Callable[[np.ndarray, bool], np.ndarray]): Signed distance function
             of the triangle mesh.
 
     Examples:
         >>> import ppsci
-        >>> geom = ppsci.geometry.SDFMesh.from_file("/path/to/mesh.stl")  # doctest: +SKIP
+        >>> geom = ppsci.geometry.SDFMesh.from_stl("/path/to/mesh.stl")  # doctest: +SKIP
     """
+
+    eps = 1e-6
 
     def __init__(
         self,
@@ -684,9 +686,17 @@ class SDFMesh(geometry.Geometry):
         normals: np.ndarray,
         sdf_func: Callable[[np.ndarray, bool], np.ndarray],
     ):
+        if vectors.shape[1:] != (3, 3):
+            raise ValueError(
+                f"The shape of `vectors` must be [M, 3, 3], but got {vectors.shape}"
+            )
+        if normals.shape[1] != 3:
+            raise ValueError(
+                f"The shape of `normals` must be [M, 3], but got {normals.shape}"
+            )
         self.vectors = vectors
         self.face_normal = normals
-        self.sdf_func = sdf_func
+        self.sdf_func = sdf_func  # overwrite sdf_func
         self.bounds = (
             ((np.min(self.vectors[:, :, 0])), np.max(self.vectors[:, :, 0])),
             ((np.min(self.vectors[:, :, 1])), np.max(self.vectors[:, :, 1])),
@@ -695,7 +705,7 @@ class SDFMesh(geometry.Geometry):
         self.ndim = 3
         super().__init__(
             self.vectors.shape[-1],
-            (np.amin(self.vertices, axis=(0, 1)), np.amax(self.vertices, axis=(0, 1))),
+            (np.amin(self.vectors, axis=(0, 1)), np.amax(self.vectors, axis=(0, 1))),
             np.inf,
         )
 
@@ -712,7 +722,7 @@ class SDFMesh(geometry.Geometry):
         return self.vectors[:, 2]
 
     @classmethod
-    def from_file(cls, mesh_file: str) -> "SDFMesh":
+    def from_stl(cls, mesh_file: str) -> "SDFMesh":
         """Instantiate SDFMesh from given mesh file.
 
         Args:
@@ -726,16 +736,10 @@ class SDFMesh(geometry.Geometry):
             >>> import pymesh  # doctest: +SKIP
             >>> import numpy as np  # doctest: +SKIP
             >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
-            >>> mesh = ppsci.geometry.SDFMesh.from_pymesh(box)  # doctest: +SKIP
-            >>> print(mesh.vectors)  # doctest: +SKIP
-            [[0. 0. 0.]
-             [1. 0. 0.]
-             [1. 1. 0.]
-             [0. 1. 0.]
-             [0. 0. 1.]
-             [1. 0. 1.]
-             [1. 1. 1.]
-             [0. 1. 1.]]
+            >>> pymesh.save_mesh("box.stl", box)  # doctest: +SKIP
+            >>> mesh = ppsci.geometry.SDFMesh.from_stl("box.stl")  # doctest: +SKIP
+            >>> print(sdfmesh.vectors.shape)  # doctest: +SKIP
+            (12, 3, 3)
         """
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["stl"]):
@@ -759,10 +763,13 @@ class SDFMesh(geometry.Geometry):
         Args:
             points (np.ndarray): The coordinate points used to calculate the SDF value,
                 the shape is [N, 3]
-            compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
+            compute_sdf_derivatives (bool): Whether to compute SDF derivatives.
+                Defaults to False.
 
         Returns:
-            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+            If compute_sdf_derivatives is True, then return both SDF values([N, 1])
+                and their derivatives([N, 3]); otherwise only return SDF values([N, 1]).
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -770,13 +777,7 @@ class SDFMesh(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        if not checker.dynamic_import_to_globals(["warp"]):
-            raise ImportError(
-                "Could not import warp python package."
-                "Please install it as https://nvidia.github.io/warp/"
-            )
-
-        points = points.copy()
+        # normalize triangles
         x_min, y_min, z_min = np.min(points, axis=0)
         x_max, y_max, z_max = np.max(points, axis=0)
         max_dis = max(max((x_max - x_min), (y_max - y_min)), (z_max - z_min))
@@ -786,13 +787,16 @@ class SDFMesh(geometry.Geometry):
         store_triangles[:, :, 2] -= z_min
         store_triangles *= 1 / max_dis
         store_triangles = store_triangles.reshape([-1, 3])
+
+        # normalize query points
+        points = points.copy()
         points[:, 0] -= x_min
         points[:, 1] -= y_min
         points[:, 2] -= z_min
         points *= 1 / max_dis
         points = points.astype(np.float64).ravel()
 
-        # compute sdf values
+        # compute sdf values for query points
         sdf = sdf_module.signed_distance_field(
             store_triangles,
             np.arange((store_triangles.shape[0])),
@@ -800,18 +804,16 @@ class SDFMesh(geometry.Geometry):
             include_hit_points=compute_sdf_derivatives,
         )
         if compute_sdf_derivatives:
-            sdf, sdf_derives = sdf
+            sdf, hit_points = sdf
 
-        sdf = sdf.numpy()
-        sdf = np.expand_dims(max_dis * sdf, axis=1)
+        sdf = sdf.numpy()  # [N]
+        sdf = np.expand_dims(max_dis * sdf, axis=1)  # [N, 1]
 
         if compute_sdf_derivatives:
-            sdf_derives = sdf_derives.numpy().reshape(-1)
-            sdf_derives = -(sdf_derives - points)
-            sdf_derives = np.reshape(sdf_derives, (sdf_derives.shape[0] // 3, 3))
-            sdf_derives = sdf_derives / np.linalg.norm(
-                sdf_derives, axis=1, keepdims=True
-            )
+            hit_points = hit_points.numpy()  # [N, 3]
+            # Gradient of SDF is the unit vector from the query point to the hit point.
+            sdf_derives = hit_points - points
+            sdf_derives /= np.linalg.norm(sdf_derives, axis=1, keepdims=True)
             return sdf, sdf_derives
 
         return sdf
@@ -820,10 +822,16 @@ class SDFMesh(geometry.Geometry):
         # NOTE: point on boundary is included
         return np.less(self.sdf_func(x), 0.0).ravel()
 
-    def on_boundary(self, x):
-        return np.isclose(self.sdf_func(x), 0.0).ravel()
+    def on_boundary(self, x: np.ndarray, normal: np.ndarray) -> np.ndarray:
+        x_plus = x + self.eps * normal
+        x_minus = x - self.eps * normal
 
-    def translate(self, translation: np.ndarray) -> "Mesh":
+        sdf_x_plus = self.sdf_func(x_plus)
+        sdf_x_minus = self.sdf_func(x_minus)
+        mask_on_boundary = np.less_equal(sdf_x_plus * sdf_x_minus, 0)
+        return mask_on_boundary.ravel()
+
+    def translate(self, translation: np.ndarray) -> "SDFMesh":
         """Translate by given offsets.
 
         NOTE: This API generate a completely new Mesh object with translated geometry,
@@ -840,36 +848,8 @@ class SDFMesh(geometry.Geometry):
         Examples:
             >>> import ppsci
             >>> import pymesh  # doctest: +SKIP
-            >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
-            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
-            >>> print(mesh.vertices)  # doctest: +SKIP
-            [[0. 0. 0.]
-             [1. 0. 0.]
-             [1. 1. 0.]
-             [0. 1. 0.]
-             [0. 0. 1.]
-             [1. 0. 1.]
-             [1. 1. 1.]
-             [0. 1. 1.]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.  # doctest: +SKIP
-            [[-1.  -0.5  0. ]
-             [ 0.  -0.5  0. ]
-             [ 0.   0.5  0. ]
-             [-1.   0.5  0. ]
-             [-1.  -0.5  1. ]
-             [ 0.  -0.5  1. ]
-             [ 0.   0.5  1. ]
-             [-1.   0.5  1. ]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates  # doctest: +SKIP
-            [[-0.5  0.   0.5]
-             [ 0.5  0.   0.5]
-             [ 0.5  1.   0.5]
-             [-0.5  1.   0.5]
-             [-0.5  0.   1.5]
-             [ 0.5  0.   1.5]
-             [ 0.5  1.   1.5]
-             [-0.5  1.   1.5]]
+            >>> mesh = ppsci.geometry.SDFMesh.from_stl('/path/to/mesh.stl')  # doctest: +SKIP
+            >>> mesh = mesh.translate(np.array([1, -1, 2]))  # doctest: +SKIP
         """
         new_vectors = self.vectors + translation.reshape([1, 1, 3])
 
@@ -879,7 +859,7 @@ class SDFMesh(geometry.Geometry):
             make_sdf(new_vectors),
         )
 
-    def scale(self, scale: float) -> "Mesh":
+    def scale(self, scale: float) -> "SDFMesh":
         """Scale by given scale coefficient and center coordinate.
 
         NOTE: This API generate a completely new Mesh object with scaled geometry,
@@ -894,28 +874,8 @@ class SDFMesh(geometry.Geometry):
         Examples:
             >>> import ppsci
             >>> import pymesh  # doctest: +SKIP
-            >>> import numpy as np
-            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))  # doctest: +SKIP
-            >>> mesh = ppsci.geometry.Mesh(box)  # doctest: +SKIP
-            >>> print(mesh.vertices)  # doctest: +SKIP
-            [[0. 0. 0.]
-             [1. 0. 0.]
-             [1. 1. 0.]
-             [0. 1. 0.]
-             [0. 0. 1.]
-             [1. 0. 1.]
-             [1. 1. 1.]
-             [0. 1. 1.]]
-            >>> mesh = mesh.scale(2, (0.25, 0.5, 0.75))  # doctest: +SKIP
-            >>> print(mesh.vertices)  # doctest: +SKIP
-            [[-0.25 -0.5  -0.75]
-             [ 1.75 -0.5  -0.75]
-             [ 1.75  1.5  -0.75]
-             [-0.25  1.5  -0.75]
-             [-0.25 -0.5   1.25]
-             [ 1.75 -0.5   1.25]
-             [ 1.75  1.5   1.25]
-             [-0.25  1.5   1.25]]
+            >>> mesh = ppsci.geometry.SDFMesh.from_stl('/path/to/mesh.stl')  # doctest: +SKIP
+            >>> mesh = mesh.scale(np.array([1.3, 1.5, 2.0]))  # doctest: +SKIP
         """
         new_vectors = self.vectors * scale
         return SDFMesh(
@@ -926,10 +886,14 @@ class SDFMesh(geometry.Geometry):
 
     def uniform_boundary_points(self, n: int):
         """Compute the equi-spaced points on the boundary."""
-        return self.pysdf.sample_surface(n)
+        raise NotImplementedError(
+            "'uniform_boundary_points' is not available in SDFMesh."
+        )
 
     def inflated_random_points(self, n, distance, random="pseudo", criteria=None):
-        raise NotImplementedError("Not implemented yet")
+        raise NotImplementedError(
+            "'inflated_random_points' is not available in SDFMesh."
+        )
 
     def _approximate_area(
         self,
@@ -946,7 +910,7 @@ class SDFMesh(geometry.Geometry):
             n_appr (int): Number of points for approximating area. Defaults to 10000.
 
         Returns:
-            np.ndarray: Approximated areas with shape of [n_faces, ].
+            float: Approximation area with given criteria.
         """
         triangle_areas = area_of_triangles(self.v0, self.v1, self.v2)
         triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
@@ -959,35 +923,45 @@ class SDFMesh(geometry.Geometry):
             np.arange(triangle_probabilities.shape[0] + 1) - 0.5,
         )
 
+        aux_points = []
+        aux_normals = []
         appr_areas = []
-        if criteria is not None:
-            aux_points = []
 
         for i, npoint in enumerate(npoint_per_triangle):
             if npoint == 0:
                 continue
             # sample points for computing criteria mask if criteria is given
-            if criteria is not None:
-                points_at_triangle_i = sample_in_triangle(
-                    self.v0[i], self.v1[i], self.v2[i], npoint, random
-                )
-                aux_points.append(points_at_triangle_i)
-
+            points_at_triangle_i = sample_in_triangle(
+                self.v0[i], self.v1[i], self.v2[i], npoint, random
+            )
+            normal_at_triangle_i = np.tile(
+                self.face_normal[i].reshape(1, 3), (npoint, 1)
+            )
+            aux_points.append(points_at_triangle_i)
+            aux_normals.append(normal_at_triangle_i)
             appr_areas.append(
                 np.full(
                     (npoint, 1), triangle_areas[i] / npoint, paddle.get_default_dtype()
                 )
             )
-        appr_areas = np.concatenate(appr_areas, axis=0)  # [n_appr, 1]
 
+        aux_points = np.concatenate(aux_points, axis=0)  # [n_appr, 3]
+        aux_normals = np.concatenate(aux_normals, axis=0)  # [n_appr, 3]
+        appr_areas = np.concatenate(appr_areas, axis=0)  # [n_appr, 1]
+        valid_mask = self.on_boundary(aux_points, aux_normals)[:, None]
         # set invalid area to 0 by computing criteria mask with auxiliary points
         if criteria is not None:
-            aux_points = np.concatenate(aux_points, axis=0)  # [n_appr, 3]
             criteria_mask = criteria(*np.split(aux_points, self.ndim, 1))
-            appr_areas *= criteria_mask
+            assert valid_mask.shape == criteria_mask.shape
+            valid_mask = np.logical_and(valid_mask, criteria_mask)
+
+        appr_areas *= valid_mask
+
         return appr_areas.sum()
 
-    def random_boundary_points(self, n, random="pseudo"):
+    def random_boundary_points(
+        self, n, random="pseudo"
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         triangle_area = area_of_triangles(self.v0, self.v1, self.v2)
         triangle_prob = triangle_area / np.linalg.norm(triangle_area, ord=1)
         npoint_per_triangle = np.random.choice(
@@ -1046,12 +1020,17 @@ class SDFMesh(geometry.Geometry):
             all_normal = []
             while _size < n:
                 points, normal, _ = self.random_boundary_points(n, random)
+                valid_mask = self.on_boundary(points, normal)
+
                 if criteria is not None:
                     criteria_mask = criteria(
                         *np.split(points, self.ndim, axis=1)
-                    ).flatten()
-                    points = points[criteria_mask]
-                    normal = normal[criteria_mask]
+                    ).ravel()
+                    assert valid_mask.shape == criteria_mask.shape
+                    valid_mask = np.logical_and(valid_mask, criteria_mask)
+
+                points = points[valid_mask]
+                normal = normal[valid_mask]
 
                 if len(points) > n - _size:
                     points = points[: n - _size]
@@ -1073,8 +1052,8 @@ class SDFMesh(geometry.Geometry):
 
             all_points = np.concatenate(all_points, axis=0)
             all_normal = np.concatenate(all_normal, axis=0)
-            appr_area = self._approximate_area(random, criteria)
-            all_areas = np.full((n, 1), appr_area / n, paddle.get_default_dtype())
+            _appr_area = self._approximate_area(random, criteria)
+            all_areas = np.full((n, 1), _appr_area / n, paddle.get_default_dtype())
 
         x_dict = misc.convert_to_dict(all_points, self.dim_keys)
         normal_dict = misc.convert_to_dict(
@@ -1096,9 +1075,12 @@ class SDFMesh(geometry.Geometry):
             valid_mask = self.is_inside(random_points)
 
             if criteria:
-                valid_mask &= criteria(
+                criteria_mask = criteria(
                     *np.split(random_points, self.ndim, axis=1)
-                ).flatten()
+                ).ravel()
+                assert valid_mask.shape == criteria_mask.shape
+                valid_mask = np.logical_and(valid_mask, criteria_mask)
+
             valid_points = random_points[valid_mask]
             _nvalid += len(valid_points)
 
@@ -1121,16 +1103,9 @@ class SDFMesh(geometry.Geometry):
         n: int,
         random: Literal["pseudo"] = "pseudo",
         criteria: Optional[Callable[..., np.ndarray]] = None,
-        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria."""
-        if evenly:
-            # TODO(sensen): Implement uniform sample for mesh interior.
-            raise NotImplementedError(
-                "uniformly sample for interior in mesh is not support yet, "
-                "you may need to set evenly=False in config dict of constraint"
-            )
         points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
@@ -1141,8 +1116,7 @@ class SDFMesh(geometry.Geometry):
             sdf, sdf_derives = sdf
 
         # NOTE: add negative to the sdf values because weight should be positive.
-        sdf = -sdf
-        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        sdf_dict = misc.convert_to_dict(-sdf, ("sdf",))
 
         sdf_derives_dict = {}
         if compute_sdf_derivatives:
@@ -1156,11 +1130,26 @@ class SDFMesh(geometry.Geometry):
         new_vectors = np.concatenate([self.vectors, other.vectors], axis=0)
         new_normals = np.concatenate([self.face_normal, other.face_normal], axis=0)
 
-        def make_new_sdf(sdf_func1, sdf_func2):
-            def new_sdf_func(points: np.ndarray):
-                sdf_self = sdf_func1(points)
-                sdf_other = sdf_func2(points)
-                computed_sdf = np.minimum(sdf_self["sdf"], sdf_other["sdf"])
+        def make_union_new_sdf(sdf_func1, sdf_func2):
+            def new_sdf_func(points: np.ndarray, compute_sdf_derivatives: bool = False):
+                # Invert definition of sdf to make boolean operation accurate
+                # see: https://iquilezles.org/articles/interiordistance/
+                sdf_self = sdf_func1(points, compute_sdf_derivatives)
+                sdf_other = sdf_func2(points, compute_sdf_derivatives)
+                if compute_sdf_derivatives:
+                    sdf_self, sdf_derives_self = sdf_self
+                    sdf_other, sdf_derives_other = sdf_other
+
+                computed_sdf = -np.maximum(-sdf_self, -sdf_other)
+
+                if compute_sdf_derivatives:
+                    computed_sdf_derives = np.where(
+                        sdf_self < sdf_other,
+                        sdf_derives_self,
+                        sdf_derives_other,
+                    )
+                    return computed_sdf, computed_sdf_derives
+
                 return computed_sdf
 
             return new_sdf_func
@@ -1168,7 +1157,7 @@ class SDFMesh(geometry.Geometry):
         return SDFMesh(
             new_vectors,
             new_normals,
-            make_new_sdf(self.sdf_func, other.sdf_func),
+            make_union_new_sdf(self.sdf_func, other.sdf_func),
         )
 
     def __or__(self, other: "SDFMesh"):
@@ -1179,13 +1168,28 @@ class SDFMesh(geometry.Geometry):
 
     def difference(self, other: "SDFMesh"):
         new_vectors = np.concatenate([self.vectors, other.vectors], axis=0)
-        new_normals = np.concatenate([self.face_normal, other.face_normal], axis=0)
+        new_normals = np.concatenate([self.face_normal, -other.face_normal], axis=0)
 
-        def make_new_sdf(sdf_func1, sdf_func2):
-            def new_sdf_func(points: np.ndarray):
-                sdf_self = sdf_func1(points)
-                sdf_other = sdf_func2(points)
-                computed_sdf = np.maximum(-sdf_self["sdf"], sdf_other["sdf"])
+        def make_difference_new_sdf(sdf_func1, sdf_func2):
+            def new_sdf_func(points: np.ndarray, compute_sdf_derivatives: bool = False):
+                # Invert definition of sdf to make boolean operation accurate
+                # see: https://iquilezles.org/articles/interiordistance/
+                sdf_self = sdf_func1(points, compute_sdf_derivatives)
+                sdf_other = sdf_func2(points, compute_sdf_derivatives)
+                if compute_sdf_derivatives:
+                    sdf_self, sdf_derives_self = sdf_self
+                    sdf_other, sdf_derives_other = sdf_other
+
+                computed_sdf = -np.minimum(-sdf_self, sdf_other)
+
+                if compute_sdf_derivatives:
+                    computed_sdf_derives = np.where(
+                        -sdf_self < sdf_other,
+                        sdf_derives_self,
+                        sdf_derives_other,
+                    )
+                    return computed_sdf, computed_sdf_derives
+
                 return computed_sdf
 
             return new_sdf_func
@@ -1193,7 +1197,7 @@ class SDFMesh(geometry.Geometry):
         return SDFMesh(
             new_vectors,
             new_normals,
-            make_new_sdf(self.sdf_func, other.sdf_func),
+            make_difference_new_sdf(self.sdf_func, other.sdf_func),
         )
 
     def __sub__(self, other: "SDFMesh"):
@@ -1203,14 +1207,26 @@ class SDFMesh(geometry.Geometry):
         new_vectors = np.concatenate([self.vectors, other.vectors], axis=0)
         new_normals = np.concatenate([self.face_normal, other.face_normal], axis=0)
 
-        def make_new_sdf(sdf_func1, sdf_func2):
-            def new_sdf_func(points: np.ndarray):
-                sdf_self = sdf_func1(points)
-                sdf_other = sdf_func2(points)
-                computed_sdf = np.maximum(
-                    np.minimum(sdf_self, sdf_other),
-                    -np.maximum(sdf_self, sdf_other),
-                )
+        def make_intersection_new_sdf(sdf_func1, sdf_func2):
+            def new_sdf_func(points: np.ndarray, compute_sdf_derivatives: bool = False):
+                # Invert definition of sdf to make boolean operation accurate
+                # see: https://iquilezles.org/articles/interiordistance/
+                sdf_self = sdf_func1(points, compute_sdf_derivatives)
+                sdf_other = sdf_func2(points, compute_sdf_derivatives)
+                if compute_sdf_derivatives:
+                    sdf_self, sdf_derives_self = sdf_self
+                    sdf_other, sdf_derives_other = sdf_other
+
+                computed_sdf = -np.minimum(-sdf_self, -sdf_other)
+
+                if compute_sdf_derivatives:
+                    computed_sdf_derives = np.where(
+                        sdf_self > sdf_other,
+                        sdf_derives_self,
+                        sdf_derives_other,
+                    )
+                    return computed_sdf, computed_sdf_derives
+
                 return computed_sdf
 
             return new_sdf_func
@@ -1218,7 +1234,7 @@ class SDFMesh(geometry.Geometry):
         return SDFMesh(
             new_vectors,
             new_normals,
-            make_new_sdf(self.sdf_func, other.sdf_func),
+            make_intersection_new_sdf(self.sdf_func, other.sdf_func),
         )
 
     def __and__(self, other: "SDFMesh"):
@@ -1229,7 +1245,7 @@ class SDFMesh(geometry.Geometry):
         return ", ".join(
             [
                 self.__class__.__name__,
-                f"num_faces = {self.num_faces}",
+                f"num_faces = {self.vectors.shape[0]}",
                 f"bounds = {self.bounds}",
                 f"dim_keys = {self.dim_keys}",
             ]
@@ -1287,15 +1303,15 @@ def sample_in_triangle(v0, v1, v2, n, random="pseudo", criteria=None):
     xs, ys, zs = [], [], []
     _size = 0
     while _size < n:
-        r1 = sampler.sample(n, 1, random).flatten()
-        r2 = sampler.sample(n, 1, random).flatten()
+        r1 = sampler.sample(n, 1, random).ravel()
+        r2 = sampler.sample(n, 1, random).ravel()
         s1 = np.sqrt(r1)
         x = v0[0] * (1.0 - s1) + v1[0] * (1.0 - r2) * s1 + v2[0] * r2 * s1
         y = v0[1] * (1.0 - s1) + v1[1] * (1.0 - r2) * s1 + v2[1] * r2 * s1
         z = v0[2] * (1.0 - s1) + v1[2] * (1.0 - r2) * s1 + v2[2] * r2 * s1
 
         if criteria is not None:
-            criteria_mask = criteria(x, y, z).flatten()
+            criteria_mask = criteria(x, y, z).ravel()
             x = x[criteria_mask]
             y = y[criteria_mask]
             z = z[criteria_mask]
@@ -1360,49 +1376,3 @@ def make_sdf(vectors: np.ndarray):
         return sdf
 
     return sdf_func
-
-
-if __name__ == "__main__":
-    import ppsci
-
-    # set geometry
-    support = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/support.stl"
-    )
-    bracket = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/bracket.stl"
-    )
-    aux_lower = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/aux_lower.stl"
-    )
-    aux_upper = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/aux_upper.stl"
-    )
-    cylinder_hole = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/cylinder_hole.stl"
-    )
-    cylinder_lower = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/cylinder_lower.stl"
-    )
-    cylinder_upper = ppsci.geometry.Mesh(
-        "/workspace/hesensen/PaddleScience_setup/examples/bracket/stl/cylinder_upper.stl"
-    )
-    # geometry bool operation
-    curve_lower = aux_lower - cylinder_lower
-    curve_upper = aux_upper - cylinder_upper
-    geo = support + bracket + curve_lower + curve_upper - cylinder_hole
-
-    interior_points = geo.sample_interior(10000)
-    boundary_points = geo.sample_boundary(10000)
-    ppsci.visualize.save_vtu_from_dict(
-        "./geo_interior",
-        interior_points,
-        ("x", "y", "z"),
-        ("x", "y", "z", "sdf", "area"),
-    )
-    ppsci.visualize.save_vtu_from_dict(
-        "./geo_boundary",
-        boundary_points,
-        ("x", "y", "z"),
-        ("x", "y", "z", "area"),
-    )

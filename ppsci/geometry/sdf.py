@@ -19,6 +19,7 @@
 
 # modified from: https://github.com/NVIDIA/modulus/blob/main/modulus/utils/sdf.py
 
+import importlib.util
 from typing import Tuple
 from typing import overload
 
@@ -71,117 +72,128 @@ try:
         sdf_hit_point[tid] = p_closest
         sdf_hit_point_id[tid] = res.face
 
-    @overload
-    def signed_distance_field(
-        mesh_vertices: list[tuple[float, float, float]],
-        mesh_indices: ndarray,
-        input_points: list[tuple[float, float, float]],
-        max_dist: float = 1e8,
-        include_hit_points: bool = False,
-        include_hit_points_id: bool = False,
-    ) -> wp.array:
-        ...
-
-    @overload
-    def signed_distance_field(
-        mesh_vertices: list[tuple[float, float, float]],
-        mesh_indices: ndarray,
-        input_points: list[tuple[float, float, float]],
-        max_dist: float = 1e8,
-        include_hit_points: bool = True,
-        include_hit_points_id: bool = False,
-    ) -> Tuple[wp.array, wp.array]:
-        ...
-
-    @overload
-    def signed_distance_field(
-        mesh_vertices: list[tuple[float, float, float]],
-        mesh_indices: ndarray,
-        input_points: list[tuple[float, float, float]],
-        max_dist: float = 1e8,
-        include_hit_points: bool = False,
-        include_hit_points_id: bool = True,
-    ) -> Tuple[wp.array, wp.array]:
-        ...
-
-    @overload
-    def signed_distance_field(
-        mesh_vertices: list[tuple[float, float, float]],
-        mesh_indices: ndarray,
-        input_points: list[tuple[float, float, float]],
-        max_dist: float = 1e8,
-        include_hit_points: bool = True,
-        include_hit_points_id: bool = True,
-    ) -> Tuple[wp.array, wp.array, wp.array]:
-        ...
-
-    def signed_distance_field(
-        mesh_vertices: list[tuple[float, float, float]],
-        mesh_indices: ndarray,
-        input_points: list[tuple[float, float, float]],
-        max_dist: float = 1e8,
-        include_hit_points: bool = False,
-        include_hit_points_id: bool = False,
-    ) -> wp.array:
-        """
-        Computes the signed distance field (SDF) for a given mesh and input points.
-
-        Args:
-            mesh_vertices (list[tuple[float, float, float]]): List of vertices defining the mesh.
-            mesh_indices (list[tuple[int, int, int]]): List of indices defining the triangles of the mesh.
-            input_points (list[tuple[float, float, float]]): List of input points for which to compute the SDF.
-            max_dist (float, optional): Maximum distance within which to search for
-                the closest point on the mesh. Default is 1e8.
-            include_hit_points (bool, optional): Whether to include hit points in
-                the output. Default is False.
-            include_hit_points_id (bool, optional): Whether to include hit point
-                IDs in the output. Default is False.
-
-        Returns:
-            wp.array: An array containing the computed signed distance field.
-
-        Example:
-            >>> mesh_vertices = [(0, 0, 0), (1, 0, 0), (0, 1, 0)]
-            >>> mesh_indices = np.array((0, 1, 2))
-            >>> input_points = [(0.5, 0.5, 0.5)]
-            >>> signed_distance_field(mesh_vertices, mesh_indices, input_points).numpy()
-            Module modulus.utils.sdf load on device 'cuda:0' took ...
-            array([0.5], dtype=float32)
-        """
-
-        wp.init()
-        mesh = wp.Mesh(
-            wp.array(mesh_vertices, dtype=wp.vec3),
-            wp.array(mesh_indices, dtype=wp.int32),
-        )
-
-        sdf_points = wp.array(input_points, dtype=wp.vec3)
-
-        sdf = wp.zeros(shape=sdf_points.shape, dtype=wp.float32)
-        sdf_hit_point = wp.zeros(shape=sdf_points.shape, dtype=wp.vec3f)
-        sdf_hit_point_id = wp.zeros(shape=sdf_points.shape, dtype=wp.int32)
-
-        wp.launch(
-            kernel=_bvh_query_distance,
-            dim=len(sdf_points),
-            inputs=[
-                mesh.id,
-                sdf_points,
-                max_dist,
-                sdf,
-                sdf_hit_point,
-                sdf_hit_point_id,
-            ],
-        )
-
-        if include_hit_points and include_hit_points_id:
-            return (sdf, sdf_hit_point, sdf_hit_point_id)
-        elif include_hit_points:
-            return (sdf, sdf_hit_point)
-        elif include_hit_points_id:
-            return (sdf, sdf_hit_point_id)
-        else:
-            return sdf
-
 except ModuleNotFoundError:
     pass
+except Exception:
+    raise
+
+
+@overload
+def signed_distance_field(
+    mesh_vertices: list[tuple[float, float, float]],
+    mesh_indices: ndarray,
+    input_points: list[tuple[float, float, float]],
+    max_dist: float = 1e8,
+    include_hit_points: bool = False,
+    include_hit_points_id: bool = False,
+) -> wp.array:
+    ...
+
+
+@overload
+def signed_distance_field(
+    mesh_vertices: list[tuple[float, float, float]],
+    mesh_indices: ndarray,
+    input_points: list[tuple[float, float, float]],
+    max_dist: float = 1e8,
+    include_hit_points: bool = True,
+    include_hit_points_id: bool = False,
+) -> Tuple[wp.array, wp.array]:
+    ...
+
+
+@overload
+def signed_distance_field(
+    mesh_vertices: list[tuple[float, float, float]],
+    mesh_indices: ndarray,
+    input_points: list[tuple[float, float, float]],
+    max_dist: float = 1e8,
+    include_hit_points: bool = False,
+    include_hit_points_id: bool = True,
+) -> Tuple[wp.array, wp.array]:
+    ...
+
+
+@overload
+def signed_distance_field(
+    mesh_vertices: list[tuple[float, float, float]],
+    mesh_indices: ndarray,
+    input_points: list[tuple[float, float, float]],
+    max_dist: float = 1e8,
+    include_hit_points: bool = True,
+    include_hit_points_id: bool = True,
+) -> Tuple[wp.array, wp.array, wp.array]:
+    ...
+
+
+def signed_distance_field(
+    mesh_vertices: list[tuple[float, float, float]],
+    mesh_indices: ndarray,
+    input_points: list[tuple[float, float, float]],
+    max_dist: float = 1e8,
+    include_hit_points: bool = False,
+    include_hit_points_id: bool = False,
+) -> wp.array:
+    """
+    Computes the signed distance field (SDF) for a given mesh and input points.
+
+    Args:
+        mesh_vertices (list[tuple[float, float, float]]): List of vertices defining the mesh.
+        mesh_indices (list[tuple[int, int, int]]): List of indices defining the triangles of the mesh.
+        input_points (list[tuple[float, float, float]]): List of input points for which to compute the SDF.
+        max_dist (float, optional): Maximum distance within which to search for
+            the closest point on the mesh. Default is 1e8.
+        include_hit_points (bool, optional): Whether to include hit points in
+            the output. Default is False.
+        include_hit_points_id (bool, optional): Whether to include hit point
+            IDs in the output. Default is False.
+
+    Returns:
+        wp.array: An array containing the computed signed distance field.
+
+    Example:
+        >>> mesh_vertices = [(0, 0, 0), (1, 0, 0), (0, 1, 0)]
+        >>> mesh_indices = np.array((0, 1, 2))
+        >>> input_points = [(0.5, 0.5, 0.5)]
+        >>> signed_distance_field(mesh_vertices, mesh_indices, input_points).numpy()
+        Module modulus.utils.sdf load on device 'cuda:0' took ...
+        array([0.5], dtype=float32)
+    """
+    if not importlib.util.find_spec("warp"):
+        raise ModuleNotFoundError(
+            "Please install warp-lang first with: pip install warp-lang"
+        )
+
+    wp.init()
+    mesh = wp.Mesh(
+        wp.array(mesh_vertices, dtype=wp.vec3),
+        wp.array(mesh_indices, dtype=wp.int32),
+    )
+
+    sdf_points = wp.array(input_points, dtype=wp.vec3)
+
+    sdf = wp.zeros(shape=sdf_points.shape, dtype=wp.float32)
+    sdf_hit_point = wp.zeros(shape=sdf_points.shape, dtype=wp.vec3f)
+    sdf_hit_point_id = wp.zeros(shape=sdf_points.shape, dtype=wp.int32)
+
+    wp.launch(
+        kernel=_bvh_query_distance,
+        dim=len(sdf_points),
+        inputs=[
+            mesh.id,
+            sdf_points,
+            max_dist,
+            sdf,
+            sdf_hit_point,
+            sdf_hit_point_id,
+        ],
+    )
+
+    if include_hit_points and include_hit_points_id:
+        return (sdf, sdf_hit_point, sdf_hit_point_id)
+    elif include_hit_points:
+        return (sdf, sdf_hit_point)
+    elif include_hit_points_id:
+        return (sdf, sdf_hit_point_id)
+    else:
+        return sdf
