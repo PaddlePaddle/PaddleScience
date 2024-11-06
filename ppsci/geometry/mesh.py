@@ -1115,13 +1115,14 @@ class SDFMesh(geometry.Geometry):
         if compute_sdf_derivatives:
             sdf, sdf_derives = sdf
 
-        # NOTE: add negative to the sdf values because weight should be positive.
+        # NOTE: Negate sdf because weight should be positive.
         sdf_dict = misc.convert_to_dict(-sdf, ("sdf",))
 
         sdf_derives_dict = {}
         if compute_sdf_derivatives:
+            # NOTE: Negate sdf derivatives
             sdf_derives_dict = misc.convert_to_dict(
-                sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
+                -sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
             )
 
         return {**x_dict, **area_dict, **sdf_dict, **sdf_derives_dict}
@@ -1143,7 +1144,7 @@ class SDFMesh(geometry.Geometry):
                 computed_sdf = -np.maximum(-sdf_self, -sdf_other)
 
                 if compute_sdf_derivatives:
-                    computed_sdf_derives = np.where(
+                    computed_sdf_derives = -np.where(
                         sdf_self < sdf_other,
                         sdf_derives_self,
                         sdf_derives_other,
@@ -1185,7 +1186,7 @@ class SDFMesh(geometry.Geometry):
                 if compute_sdf_derivatives:
                     computed_sdf_derives = np.where(
                         -sdf_self < sdf_other,
-                        sdf_derives_self,
+                        -sdf_derives_self,
                         sdf_derives_other,
                     )
                     return computed_sdf, computed_sdf_derives
@@ -1222,8 +1223,8 @@ class SDFMesh(geometry.Geometry):
                 if compute_sdf_derivatives:
                     computed_sdf_derives = np.where(
                         sdf_self > sdf_other,
-                        sdf_derives_self,
-                        sdf_derives_other,
+                        -sdf_derives_self,
+                        -sdf_derives_other,
                     )
                     return computed_sdf, computed_sdf_derives
 
