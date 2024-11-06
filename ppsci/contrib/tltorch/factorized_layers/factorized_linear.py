@@ -1,8 +1,9 @@
 import math
 import numpy as np
-from torch import nn
-import torch
-from torch.utils import checkpoint
+from paddle import nn
+import paddle
+import paddle.utils
+import ppsci.utils.initializer
 
 from ..functional import factorized_linear
 from ..factorized_tensors import TensorizedTensor
@@ -12,12 +13,12 @@ from ..utils import get_tensorized_shape
 # License: BSD 3 clause
 
 
-class FactorizedLinear(nn.Module):
+class FactorizedLinear(nn.Layer):
     """Tensorized Fully-Connected Layers
 
     The weight matrice is tensorized to a tensor of size `(*in_tensorized_features, *out_tensorized_features)`.
     That tensor is expressed as a low-rank tensor.
-    
+
     During inference, the full tensor is reconstructed, and unfolded back into a matrix, 
     used for the forward pass in a regular linear layer.
 
@@ -62,10 +63,10 @@ class FactorizedLinear(nn.Module):
 
         if bias:
             if n_layers == 1:
-                self.bias = nn.Parameter(torch.empty(self.out_features, device=device, dtype=dtype))
+                self.bias = paddle.base.framework.EagerParamBase.from_tensor(paddle.empty(self.out_features, dtype=dtype))
                 self.has_bias = True
             else:
-                self.bias = nn.Parameter(torch.empty((n_layers, self.out_features), device=device, dtype=dtype))
+                self.bias = paddle.base.framework.EagerParamBase.from_tensor(paddle.empty((n_layers, self.out_features), dtype=dtype))
                 self.has_bias = np.zeros(n_layers)
         else:
             self.register_parameter('bias', None)
@@ -76,7 +77,7 @@ class FactorizedLinear(nn.Module):
             tensor_shape = (n_layers, out_tensorized_features, in_tensorized_features)
         else:
             tensor_shape = (out_tensorized_features, in_tensorized_features)
-        
+
         if isinstance(factorization, TensorizedTensor):
             self.weight = factorization.to(device).to(dtype)
         else:
@@ -86,12 +87,13 @@ class FactorizedLinear(nn.Module):
         self.rank = self.weight.rank
 
     def reset_parameters(self):
-        with torch.no_grad():
+        with paddle.no_grad():
             self.weight.normal_(0, math.sqrt(5)/math.sqrt(self.in_features))
             if self.bias is not None:
-                fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(self.weight)
+                fan_in, _ = ppsci.utils.initializer._calculate_fan_in_and_fan_out(self.weight)
                 bound = 1 / math.sqrt(fan_in)
-                torch.nn.init.uniform_(self.bias, -bound, bound)
+                init_uniform = paddle.nn.initializer.Uniform(low=-bound, high=bound)
+                init_uniform(self.bias)
 
     def forward(self, x, indices=0):
         if self.n_layers == 1:
@@ -103,7 +105,7 @@ class FactorizedLinear(nn.Module):
         elif isinstance(self.n_layers, int):
             if not isinstance(indices, int):
                 raise ValueError(f'Expected indices to be in int but got indices={indices}'
-                                f', but this conv was created with n_layers={self.n_layers}.')
+                                 f', but this conv was created with n_layers={self.n_layers}.')
             weight = self.weight(indices)
             bias = self.bias[indices] if self.bias is not None else None
         elif len(indices) != len(self.n_layers):
@@ -111,13 +113,14 @@ class FactorizedLinear(nn.Module):
         else:
             weight = self.weight(indices)
             bias = self.bias[indices] if self.bias is not None else None
-            
-        def _inner_forward(x): # move weight() out to avoid register_hooks from being executed twice during recomputation
+
+        def _inner_forward(x):  # move weight() out to avoid register_hooks from being executed twice during recomputation
             return factorized_linear(x, weight, bias=bias, in_features=self.in_features,
-                                        implementation=self.implementation)
-        
+                                     implementation=self.implementation)
+
         if self.checkpointing and x.requires_grad:
-            x = checkpoint.checkpoint(_inner_forward, x)
+            # x = checkpoint.checkpoint(_inner_forward, x)
+            x = paddle.distributed.fleet.utils.recompute(_inner_forward, x)
         else:
             x = _inner_forward(x)
         return x
@@ -219,7 +222,7 @@ class FactorizedLinear(nn.Module):
         instance = cls(in_tensorized_features, out_tensorized_features, bias=bias,
                        factorization=factorization, rank=rank, implementation=implementation, 
                        n_layers=len(linear_list), checkpointing=checkpointing, device=linear.weight.device, dtype=linear.weight.dtype)
-        weight_tensor = torch.stack([layer.weight.data for layer in linear_list])
+        weight_tensor = paddle.stack([layer.weight.data for layer in linear_list])
         instance.weight.init_from_matrix(weight_tensor, **decomposition_kwargs)
 
         if bias:
@@ -235,7 +238,7 @@ class FactorizedLinear(nn.Module):
                f' weight of size ({self.out_features}, {self.in_features}) tensorized to ({self.out_tensorized_features}, {self.in_tensorized_features}),'
                f'factorization={self.weight._name}, rank={self.rank}, implementation={self.implementation}')
         if self.bias is None:
-            msg += f', bias=False'
+            msg += ', bias=False'
 
         if self.n_layers == 1:
             msg += ', with a single layer parametrized, '
@@ -246,7 +249,7 @@ class FactorizedLinear(nn.Module):
         return msg
 
 
-class SubFactorizedLinear(nn.Module):
+class SubFactorizedLinear(nn.Layer):
     """Class representing one of the convolutions from the mother joint factorized convolution
 
     Parameters

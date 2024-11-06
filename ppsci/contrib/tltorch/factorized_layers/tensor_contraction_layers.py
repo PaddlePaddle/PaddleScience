@@ -6,17 +6,17 @@ Tensor Contraction Layers
 # License: BSD 3 clause
 
 from tensorly import tenalg
-import torch
-import torch.nn as nn
-from torch.nn import init
+import paddle
+import paddle.nn as nn
+from paddle.nn import initializer
 
 import math
 
 import tensorly as tl
-tl.set_backend('pytorch')
+tl.set_backend('paddle')
 
 
-class TCL(nn.Module):
+class TCL(nn.Layer):
     """Tensor Contraction Layer [1]_
 
     Parameters
@@ -35,7 +35,7 @@ class TCL(nn.Module):
             "Tensor Contraction Layers for Parsimonious Deep Nets," 2017 IEEE Conference on Computer Vision and Pattern Recognition Workshops (CVPRW),
             Honolulu, HI, 2017, pp. 1940-1946, doi: 10.1109/CVPRW.2017.243.
     """
-    def __init__(self, input_shape, rank, verbose=0, bias=False, 
+    def __init__(self, input_shape, rank, verbose=0, bias=False,
                  device=None, dtype=None, **kwargs):
         super().__init__(**kwargs)
         self.verbose = verbose
@@ -55,12 +55,12 @@ class TCL(nn.Module):
         # Start at 1 as the batch-size is not projected
         self.contraction_modes = list(range(1, self.order + 1))
         for i, (s, r) in enumerate(zip(self.input_shape, self.rank)):
-            self.register_parameter(f'factor_{i}', nn.Parameter(torch.empty((r, s), device=device, dtype=dtype)))
-        
+            self.register_parameter(f'factor_{i}', paddle.base.framework.EagerParamBase.from_tensor(paddle.empty((r, s), dtype=dtype)))
+
         # self.factors = ParameterList(parameters=factors)
         if bias:
-            self.bias = nn.Parameter(
-                torch.empty(self.output_shape, device=device, dtype=dtype), requires_grad=True)
+            self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+                paddle.empty(self.output_shape, dtype=dtype), requires_grad=True)
         else:
             self.register_parameter('bias', None)
 
@@ -88,7 +88,9 @@ class TCL(nn.Module):
         This may be renamed to init_from_random for consistency with TensorModules
         """
         for i in range(self.order):
-            init.kaiming_uniform_(getattr(self, f'factor_{i}'), a=math.sqrt(5))
+            init_kaimingUniform = paddle.nn.initializer.KaimingUniform(negative_slope=math.sqrt(5), nonlinearity='leaky_relu')
+            init_kaimingUniform(getattr(self, f'factor_{i}'))
         if self.bias is not None:
             bound = 1 / math.sqrt(self.input_shape[0])
-            init.uniform_(self.bias, -bound, bound)
+            init_uniform = paddle.nn.initializer.Uniform(low=-bound, high=bound)
+            init_uniform(self.bias)

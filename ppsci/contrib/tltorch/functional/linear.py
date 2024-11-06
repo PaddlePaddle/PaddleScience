@@ -1,12 +1,12 @@
 import numpy as np
-import torch
-import torch.nn.functional as F
+import paddle
+import paddle.nn.functional as F
 from ..factorized_tensors import TensorizedTensor
 from ..factorized_tensors.tensorized_matrices import CPTensorized, TuckerTensorized, BlockTT
 from .factorized_linear import linear_blocktt, linear_cp, linear_tucker
 
 import tensorly as tl
-tl.set_backend('pytorch')
+tl.set_backend('paddle')
 
 # Author: Jean Kossaifi
 # License: BSD 3 clause
@@ -16,11 +16,11 @@ def factorized_linear(x, weight, bias=None, in_features=None, implementation="fa
     """Linear layer with a dense input x and factorized weight
     """
     assert implementation in {"factorized", "reconstructed"}, f"Expect implementation from [factorized, reconstructed], but got {implementation}"
-    
+
     if in_features is None:
         in_features = np.prod(x.shape[-1])
 
-    if not torch.is_tensor(weight):
+    if not paddle.is_tensor(weight):
         # Weights are in the form (out_features, in_features) 
         # PyTorch's linear returns dot(x, weight.T)!
         if isinstance(weight, TensorizedTensor):
@@ -46,5 +46,5 @@ def factorized_linear(x, weight, bias=None, in_features=None, implementation="fa
             weight = weight.to_matrix()
         else:
             weight = weight.to_tensor()
-        
-    return F.linear(x, torch.reshape(weight, (-1, in_features)), bias=bias)
+
+    return F.linear(x, paddle.reshape(weight, (-1, in_features)), bias=bias)

@@ -1,13 +1,14 @@
-import torch
+import paddle
 import numpy as np
-from torch import nn
-from ..factorized_tensors import TensorizedTensor,tensor_init
+from paddle import nn
+from ..factorized_tensors import TensorizedTensor, tensor_init
 from ..utils import get_tensorized_shape
 
-# Authors: Cole Hawkins 
+# Authors: Cole Hawkins
 #          Jean Kossaifi
 
-class FactorizedEmbedding(nn.Module):
+
+class FactorizedEmbedding(nn.Layer):
     """
     Tensorized Embedding Layers For Efficient Model Compression
     Tensorized drop-in replacement for `torch.nn.Embedding`
@@ -55,13 +56,13 @@ class FactorizedEmbedding(nn.Module):
             tensorized_num_embeddings, tensorized_embedding_dim = get_tensorized_shape(in_features=num_embeddings, out_features=embedding_dim, order=n_tensorized_modes, min_dim=2, verbose=False)
 
         else:
-            #check that dimensions match factorization
+            # check that dimensions match factorization
             computed_num_embeddings = np.prod(tensorized_num_embeddings)
             computed_embedding_dim = np.prod(tensorized_embedding_dim)
 
-            if computed_num_embeddings!=num_embeddings:
+            if computed_num_embeddings != num_embeddings:
                 raise ValueError("Tensorized embeddding number {} does not match num_embeddings argument {}".format(computed_num_embeddings,num_embeddings))
-            if computed_embedding_dim!=embedding_dim:
+            if computed_embedding_dim != embedding_dim:
                 raise ValueError("Tensorized embeddding dimension {} does not match embedding_dim argument {}".format(computed_embedding_dim,embedding_dim))
 
         self.num_embeddings = num_embeddings
@@ -87,14 +88,14 @@ class FactorizedEmbedding(nn.Module):
         self.rank = self.weight.rank
 
     def reset_parameters(self):
-        #Parameter initialization from Yin et al.
-        #TT-Rec: Tensor Train Compression for Deep Learning Recommendation Model Embeddings
+        # Parameter initialization from Yin et al.
+        # TT-Rec: Tensor Train Compression for Deep Learning Recommendation Model Embeddings
         target_stddev = 1 / np.sqrt(3 * self.num_embeddings)
-        with torch.no_grad():
-            tensor_init(self.weight,std=target_stddev)
+        with paddle.no_grad():
+            tensor_init(self.weight, std=target_stddev)
 
     def forward(self, input, indices=0):
-        #to handle case where input is not 1-D
+        # to handle case where input is not 1-D
         output_shape = (*input.shape, self.embedding_dim)
 
         flattened_input = input.reshape(-1)
@@ -105,11 +106,11 @@ class FactorizedEmbedding(nn.Module):
         else:
             embeddings = self.weight[indices, flattened_input, :]
 
-        #CPTensorized returns CPTensorized when indexing
+        # CPTensorized returns CPTensorized when indexing
         if self.factorization.lower() == 'cp':
             embeddings = embeddings.to_matrix()
 
-        #TuckerTensorized returns tensor not matrix,
+        # TuckerTensorized returns tensor not matrix,
         # and requires reshape not view for contiguous
         elif self.factorization.lower() == 'tucker':
             embeddings = embeddings.reshape(input.shape[0], -1)
@@ -154,7 +155,7 @@ class FactorizedEmbedding(nn.Module):
                        **kwargs)
 
         if decompose_weights:
-            with torch.no_grad():
+            with paddle.no_grad():
                 instance.weight.init_from_matrix(embedding_layer.weight.data,
                                                  **decomposition_kwargs)
 
@@ -165,14 +166,14 @@ class FactorizedEmbedding(nn.Module):
 
     @classmethod
     def from_embedding_list(cls,
-                       embedding_layer_list,
-                       rank=8,
-                       factorization='blocktt',
-                       n_tensorized_modes=2,
-                       decompose_weights=True,
-                       auto_tensorize=True,
-                       decomposition_kwargs=dict(),
-                       **kwargs):
+                            embedding_layer_list,
+                            rank=8,
+                            factorization='blocktt',
+                            n_tensorized_modes=2,
+                            decompose_weights=True,
+                            auto_tensorize=True,
+                            decomposition_kwargs=dict(),
+                            **kwargs):
         """
         Create a tensorized embedding layer from a regular embedding layer
 
@@ -218,8 +219,8 @@ class FactorizedEmbedding(nn.Module):
                        **kwargs)
 
         if decompose_weights:
-            weight_tensor = torch.stack([layer.weight.data for layer in embedding_layer_list])
-            with torch.no_grad():
+            weight_tensor = paddle.stack([layer.weight.data for layer in embedding_layer_list])
+            with paddle.no_grad():
                 instance.weight.init_from_matrix(weight_tensor,
                                                  **decomposition_kwargs)
 
@@ -228,7 +229,6 @@ class FactorizedEmbedding(nn.Module):
 
         return instance
 
-
     def get_embedding(self, indices):
         if self.n_layers == 1:
             raise ValueError('A single linear is parametrized, directly use the main class.')
@@ -236,7 +236,7 @@ class FactorizedEmbedding(nn.Module):
         return SubFactorizedEmbedding(self, indices)
 
 
-class SubFactorizedEmbedding(nn.Module):
+class SubFactorizedEmbedding(nn.Layer):
     """Class representing one of the embeddings from the mother joint factorized embedding layer
 
     Parameters
@@ -245,7 +245,7 @@ class SubFactorizedEmbedding(nn.Module):
     Notes
     -----
     This relies on the fact that nn.Parameters are not duplicated:
-    if the same nn.Parameter is assigned to multiple modules, they all point to the same data, 
+    if the same nn.Parameter is assigned to multiple modules, they all point to the same data,
     which is shared.
     """
     def __init__(self, main_layer, indices):

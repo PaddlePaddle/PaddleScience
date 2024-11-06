@@ -1,7 +1,7 @@
 from ..factorized_tensors import FactorizedTensor, TuckerTensor
 
 import tensorly as tl
-tl.set_backend('pytorch')
+tl.set_backend('paddle')
 from tensorly import tenalg
 
 # Author: Jean Kossaifi
@@ -35,16 +35,15 @@ def trl(x, weight, bias=None, **kwargs):
 
 
 def tucker_trl(x, weight, project_input=False, bias=None):
-        n_input = tl.ndim(x) - 1
-        if project_input:
-            x = tenalg.multi_mode_dot(x, weight.factors[:n_input], modes=range(1, n_input+1), transpose=True)
-            regression_weights = tenalg.multi_mode_dot(weight.core, weight.factors[n_input:], 
-                                                       modes=range(n_input, weight.order))
-        else:
-            regression_weights = weight.to_tensor()
+    n_input = tl.ndim(x) - 1
+    if project_input:
+        x = tenalg.multi_mode_dot(x, weight.factors[:n_input], modes=range(1, n_input+1), transpose=True)
+        regression_weights = tenalg.multi_mode_dot(weight.core, weight.factors[n_input:],
+                                                   modes=range(n_input, weight.order))
+    else:
+        regression_weights = weight.to_tensor()
 
-        if bias is None:
-            return tenalg.inner(x, regression_weights, n_modes=tl.ndim(x)-1)
-        else:
-            return tenalg.inner(x, regression_weights, n_modes=tl.ndim(x)-1) + bias
-
+    if bias is None:
+        return tenalg.inner(x, regression_weights, n_modes=tl.ndim(x)-1)
+    else:
+        return tenalg.inner(x, regression_weights, n_modes=tl.ndim(x)-1) + bias

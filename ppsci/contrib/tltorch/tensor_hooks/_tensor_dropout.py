@@ -4,8 +4,8 @@
 # License: BSD 3 clause
 
 import tensorly as tl
-tl.set_backend('pytorch')
-import torch
+tl.set_backend('paddle')
+import paddle
 from ..factorized_tensors import TuckerTensor, CPTensor, TTTensor
 
 
@@ -63,25 +63,25 @@ class TuckerDropout(TensorDropout, factorization=TuckerTensor):
 
         sampled_indices = []
         for rank in tucker_rank:
-            idx = tl.arange(rank, device=core.device, dtype=torch.int64)
+            idx = tl.arange(rank, device=core.device, dtype=paddle.int64)
             if rank > self.min_dim:
-                idx = idx[torch.bernoulli(torch.ones(rank, device=core.device)*(1 - self.proba),
-                                      out=torch.empty(rank, device=core.device, dtype=torch.bool))]
+                idx = idx[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
+                                           out=paddle.empty([rank], dtype=paddle.bool))]
                 if len(idx) == 0:
-                    idx = torch.randint(0, rank, size=(self.min_values, ), device=core.device, dtype=torch.int64)
+                    idx = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
 
             sampled_indices.append(idx)
-        
-        if training:
-            core = core[torch.meshgrid(*sampled_indices)]*(1/((1 - self.proba)**core.ndim))
-        else:
-            core = core[torch.meshgrid(*sampled_indices)]
 
-        factors = [factor[:, idx]  for (factor, idx) in zip(factors, sampled_indices)]
+        if training:
+            core = core[paddle.meshgrid(*sampled_indices)]*(1/((1 - self.proba)**core.ndim))
+        else:
+            core = core[paddle.meshgrid(*sampled_indices)]
+
+        factors = [factor[:, idx] for (factor, idx) in zip(factors, sampled_indices)]
 
         return TuckerTensor(core, factors)
 
- 
+
 class CPDropout(TensorDropout, factorization=CPTensor):
     def _apply_tensor_dropout(self, cp_tensor, training=True):
         if (not self.proba) or ((not training) and (not self.drop_test)):
@@ -89,13 +89,13 @@ class CPDropout(TensorDropout, factorization=CPTensor):
 
         rank = cp_tensor.rank
         device = cp_tensor.factors[0].device
-        
+
         if rank > self.min_dim:
-            sampled_indices = tl.arange(rank, device=device, dtype=torch.int64)
-            sampled_indices = sampled_indices[torch.bernoulli(torch.ones(rank, device=device)*(1 - self.proba),
-                                  out=torch.empty(rank, device=device, dtype=torch.bool))]
+            sampled_indices = tl.arange(rank, device=device, dtype=paddle.int64)
+            sampled_indices = sampled_indices[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
+                                                               out=paddle.empty([rank], dtype=paddle.bool))]
             if len(sampled_indices) == 0:
-                sampled_indices = torch.randint(0, rank, size=(self.min_values, ), device=device, dtype=torch.int64)
+                sampled_indices = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
 
             factors = [factor[:, sampled_indices] for factor in cp_tensor.factors]
             if training:
@@ -116,13 +116,13 @@ class TTDropout(TensorDropout, factorization=TTTensor):
         sampled_indices = []
         for i, rank in enumerate(tt_tensor.rank[1:]):
             if rank > self.min_dim:
-                idx = tl.arange(rank, device=device, dtype=torch.int64)
-                idx = idx[torch.bernoulli(torch.ones(rank, device=device)*(1 - self.proba),
-                                      out=torch.empty(rank, device=device, dtype=torch.bool))]
+                idx = tl.arange(rank, device=device, dtype=paddle.int64)
+                idx = idx[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
+                                           out=paddle.empty([rank], dtype=paddle.bool))]
                 if len(idx) == 0:
-                    idx = torch.randint(0, rank, size=(self.min_values, ), device=device, dtype=torch.int64)
+                    idx = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
             else:
-                idx = tl.arange(rank, device=device, dtype=torch.int64).tolist()
+                idx = tl.arange(rank, device=device, dtype=paddle.int64).tolist()
 
             sampled_indices.append(idx)
 
@@ -175,13 +175,13 @@ def tensor_dropout(factorized_tensor, p=0, min_dim=3, min_values=1, drop_test=Fa
 
 
 def remove_tensor_dropout(factorized_tensor):
-    """Removes the tensor dropout from a TensorModule 
+    """Removes the tensor dropout from a TensorModule
 
     Parameters
     ----------
     factorized_tensor : tltorch.FactorizedTensor
         the tensor module parametrized by the tensor decomposition to which to apply tensor dropout
-    
+
     Examples
     --------
     >>> tensor = FactorizedTensor.new((3, 4, 2), rank=0.5, factorization='CP').normal_()

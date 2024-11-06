@@ -1,4 +1,4 @@
-from tltorch.factorized_tensors.init import tensor_init
+from ...tltorch.factorized_tensors.init import tensor_init
 import warnings
 
 import tensorly as tl

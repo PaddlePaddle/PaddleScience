@@ -1,8 +1,8 @@
-import torch
-import torch.nn.functional as F
+import paddle
+import paddle.nn.functional as F
 
 import tensorly as tl
-tl.set_backend('pytorch')
+tl.set_backend('paddle')
 from tensorly import tenalg
 
 from ..factorized_tensors import CPTensor, TTTensor, TuckerTensor, DenseTensor
@@ -12,6 +12,7 @@ from ..factorized_tensors import CPTensor, TTTensor, TuckerTensor, DenseTensor
 
 
 _CONVOLUTION = {1: F.conv1d, 2: F.conv2d, 3: F.conv3d}
+
 
 def convolve(x, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
     """Convolution of any specified order, wrapper on torch's F.convNd
@@ -39,15 +40,15 @@ def convolve(x, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
         `x` convolved with `weight`
     """
     try:
-        if torch.is_tensor(weight):
-            return _CONVOLUTION[weight.ndim - 2](x, weight, bias=bias, stride=stride, padding=padding, 
+        if paddle.is_tensor(weight):
+            return _CONVOLUTION[weight.ndim - 2](x, weight, bias=bias, stride=stride, padding=padding,
                                                  dilation=dilation, groups=groups)
         else:
             if isinstance(weight, TTTensor):
                 weight = tl.moveaxis(weight.to_tensor(), -1, 0)
             else:
                 weight = weight.to_tensor()
-            return _CONVOLUTION[weight.ndim - 2](x, weight, bias=bias, stride=stride, padding=padding, 
+            return _CONVOLUTION[weight.ndim - 2](x, weight, bias=bias, stride=stride, padding=padding,
                                                  dilation=dilation, groups=groups)
     except KeyError:
         raise ValueError(f'Got tensor of order={weight.ndim} but pytorch only supports up to 3rd order (3D) Convs.')
@@ -92,7 +93,7 @@ def general_conv1d_(x, kernel, mode, bias=None, stride=1, padding=0, groups=1, d
     permutation.insert(1, n_dim - 2)
     permutation.insert(mode, n_dim - 1)
     x = tl.transpose(x, permutation)
-    
+
     return x
 
 
@@ -130,10 +131,10 @@ def general_conv1d(x, kernel, mode, bias=None, stride=1, padding=0, groups=1, di
         if i != mode:
             kernel = kernel.unsqueeze(i)
 
-    return _CONVOLUTION[order](x, kernel, bias=bias, 
+    return _CONVOLUTION[order](x, kernel, bias=bias,
                                stride=_pad_value(stride, mode, order),
-                               padding=_pad_value(padding, mode, order, padding=0), 
-                               dilation=_pad_value(dilation, mode, order), 
+                               padding=_pad_value(padding, mode, order, padding=0),
+                               dilation=_pad_value(dilation, mode, order),
                                groups=groups)
 
 
@@ -206,7 +207,7 @@ def tt_conv(x, tt_tensor, bias=None, stride=1, padding=0, dilation=1):
     # from (1, in_channels, rank) to (rank == out_channels, in_channels, 1)
     x = F.conv1d(x, tl.transpose(tt_tensor.factors[0], [2, 1, 0]))
 
-    x_shape[1] = x.shape[1]#rank[1]
+    x_shape[1] = x.shape[1] #rank[1]
     x = x.reshape(x_shape)
 
     # convolve over non-channels
@@ -267,17 +268,17 @@ def cp_conv(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
     # convolve over non-channels
     for i in range(order):
         # From (kernel_size, rank) to (rank, 1, kernel_size)
-        kernel = tl.transpose(cp_tensor.factors[i+2]).unsqueeze(1)             
+        kernel = tl.transpose(cp_tensor.factors[i+2]).unsqueeze(1)
         x = general_conv1d(x.contiguous(), kernel, i+2, stride=stride[i], padding=padding[i], dilation=dilation[i], groups=rank)
 
     # Revert back number of channels from rank to output_channels
     x_shape = list(x.shape)
-    x = x.reshape((batch_size, x_shape[1], -1))                
+    x = x.reshape((batch_size, x_shape[1], -1))
     # Last conv == tensor contraction
     # From (out_channels, rank) to (out_channels, in_channels == rank, 1)
     x = F.conv1d(x*cp_tensor.weights.unsqueeze(1).unsqueeze(0), cp_tensor.factors[0].unsqueeze(2), bias=bias)
 
-    x_shape[1] = x.shape[1] # = out_channels
+    x_shape[1] = x.shape[1]  # = out_channels
     x = x.reshape(x_shape)
 
     return x
@@ -320,12 +321,12 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
         weight = tl.transpose(factors[2]).unsqueeze(1)
         x = F.conv1d(x.contiguous(), weight, stride=stride, padding=padding, dilation=dilation, groups=rank)
     elif order == 2:
-        weight = tenalg.tensordot(tl.transpose(factors[2]), 
+        weight = tenalg.tensordot(tl.transpose(factors[2]),
                                   tl.transpose(factors[3]), modes=(), batched_modes=0
                                   ).unsqueeze(1)
         x = F.conv2d(x.contiguous(), weight, stride=stride, padding=padding, dilation=dilation, groups=rank)
     elif order == 3:
-        weight = tenalg.tensordot(tl.transpose(factors[2]), 
+        weight = tenalg.tensordot(tl.transpose(factors[2]),
                                   tenalg.tensordot(tl.transpose(factors[3]), tl.transpose(factors[4]), modes=(), batched_modes=0),
                                   modes=(), batched_modes=0
                                   ).unsqueeze(1)
@@ -339,7 +340,7 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
     # From (out_channels, rank) to (out_channels, in_channels == rank, 1)
     x = F.conv1d(x*cp_tensor.weights.unsqueeze(1).unsqueeze(0), factors[0].unsqueeze(2), bias=bias)
 
-    x_shape[1] = x.shape[1] # = out_channels
+    x_shape[1] = x.shape[1]  # = out_channels
     x = x.reshape(x_shape)
 
     return x
@@ -361,15 +362,15 @@ def _get_factorized_conv(factorization, implementation='factorized'):
 
 
 def convNd(x, weight, bias=None, stride=1, padding=0, dilation=1, implementation='factorized'):
-    if implementation=='reconstructed':
+    if implementation == 'reconstructed':
         weight = weight.to_tensor()
 
     if isinstance(weight, DenseTensor):
         return convolve(x, weight.tensor, bias=bias, stride=stride, padding=padding, dilation=dilation)
 
-    if torch.is_tensor(weight):
+    if paddle.is_tensor(weight):
         return convolve(x, weight, bias=bias, stride=stride, padding=padding, dilation=dilation)
-    
+
     if isinstance(weight, CPTensor):
         if implementation == 'factorized':
             return cp_conv(x, weight, bias=bias, stride=stride, padding=padding, dilation=dilation)

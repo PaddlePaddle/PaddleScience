@@ -1,8 +1,9 @@
 from .factorized_tensordot import tensor_dot_tucker, tensor_dot_cp
 import tensorly as tl
-tl.set_backend('pytorch')
+tl.set_backend('paddle')
 
 # Author: Jean Kossaifi
+
 
 def linear_tucker(tensor, tucker_matrix, transpose=True, channels_first=True):
     if transpose:
@@ -19,6 +20,7 @@ def linear_tucker(tensor, tucker_matrix, transpose=True, channels_first=True):
         modes_tucker = list(range(n_rows))
 
     return tensor_dot_tucker(tensor, tucker_matrix, (modes_tensor, modes_tucker))
+
 
 def linear_cp(tensor, cp_matrix, transpose=True):
     if transpose:
