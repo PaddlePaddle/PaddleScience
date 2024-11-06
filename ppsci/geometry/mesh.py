@@ -23,7 +23,12 @@ from typing import Union
 
 import numpy as np
 import paddle
-from stl import mesh as np_mesh_module
+
+try:
+    from stl import mesh as np_mesh_module
+except ModuleNotFoundError:
+    pass
+
 from typing_extensions import Literal
 
 from ppsci.geometry import geometry
