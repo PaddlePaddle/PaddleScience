@@ -16,8 +16,9 @@
 
 # ruff: noqa: F401
 
-
 # modified from: https://github.com/NVIDIA/modulus/blob/main/modulus/utils/sdf.py
+
+from __future__ import annotations
 
 import importlib.util
 from typing import Tuple
