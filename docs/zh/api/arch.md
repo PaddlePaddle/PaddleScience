@@ -18,6 +18,7 @@
         - DGMR
         - Discriminator
         - ExtFormerMoECuboid
+        - FNO1d
         - Generator
         - HEDeepONets
         - LorenzEmbedding

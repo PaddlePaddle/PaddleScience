@@ -4,11 +4,15 @@
 
 === "模型训练命令"
 
-    ``sh     python catheter.py    ``
+    ``` sh
+    python catheter.py
+    ```
 
 === "模型评估命令"
 
-    ``sh     python catheter.py mode=eval    ``
+    ``` sh
+    python catheter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams
+    ```
 
 | 预训练模型                                                                                              |
 | :------------------------------------------------------------------------------------------------------ |
@@ -35,7 +39,7 @@ $$
 其中
 
 - `dt(q)` 代表细菌方向变化率
-- `ω ⃗ ` 代表流体涡量
+- `ω` 代表流体涡量
 - `η(t)` 代表高斯噪声
 - `q` 代表细菌方向向量
 
@@ -160,15 +164,15 @@ examples/catheter/catheter.py
 
 === "第一次预测结果"
 
-![1725427977357](image/catheter/1725427977357.png)
+![1725427977357](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725427977357.png)
 
 === "最后一次预测结果"
 
-![1725428017615](image/catheter/1725428017615.png)
+![1725428017615](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725428017615.png)
 
 === "训练测试损失"
 
-![1725894134717](image/catheter/1725894134717.png)
+![1725894134717](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725894134717.png)
 
 可以看到模型预测结果与真实结果基本一致，模型泛化效果良好。
 

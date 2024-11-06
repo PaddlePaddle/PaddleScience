@@ -90,10 +90,26 @@ class SpectralConv1d(nn.Layer):
 
 
 class FNO1d(nn.Layer):
+    """The overall network. It contains 4 layers of the Fourier layer.
+    1. Lift the input to the desire channel dimension by self.fc0 .
+    2. 4 layers of the integral operators u' = (W + K)(u).
+         W defined by self.w; K defined by self.conv .
+    3. Project from the channel space to the output space by self.fc1 and self.fc2 .
+
+    Args:
+        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
+        output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
+        modes (int, optional, optional): Number of Fourier modes to compute, it should be the same as
+            that in fft part of the code below. Defaults to 64.
+        width (int, optional, optional): Number of channels in each Fourier layer. Defaults to 64.
+        padding (int, optional, optional): How many zeros to pad to the input Tensor. Defaults to 100.
+        input_channel (int, optional, optional): Number of channels of the input tensor. Defaults to 2.
+        output_np (int, optional, optional): Number of points to sample the solution. Defaults to 2001.
+    """
     def __init__(
         self,
-        input_key="input",
-        output_key="output",
+        input_key=("input",),
+        output_key=("output",),
         modes=64,
         width=64,
         padding=100,
@@ -101,18 +117,6 @@ class FNO1d(nn.Layer):
         output_np=2001,
     ):
         super().__init__()
-        """
-        The overall network. It contains 4 layers of the Fourier layer.
-        1. Lift the input to the desire channel dimension by self.fc0 .
-        2. 4 layers of the integral operators u' = (W + K)(u).
-            W defined by self.w; K defined by self.conv .
-        3. Project from the channel space to the output space by self.fc1 and self.fc2 .
-
-        input: the solution of the initial condition and location (a(x), x)
-        input shape: (batchsize, x=s, c=2)
-        output: the solution of a later timestep
-        output shape: (batchsize, x=s, c=1)
-        """
         self.input_keys = input_key
         self.output_keys = output_key
 
@@ -136,7 +140,7 @@ class FNO1d(nn.Layer):
         self.fc1 = nn.Linear(self.width, 128)
         self.fc2 = nn.Linear(128, 1)
 
-    def _FUNCTIONAL_PAD(self, x, pad, mode="constant", value=0.0, data_format="NCL"):
+    def _functional_pad(self, x, pad, mode="constant", value=0.0, data_format="NCL"):
         if len(x.shape) * 2 == len(pad) and mode == "constant":
             pad = (
                 paddle.to_tensor(pad, dtype="float32")
@@ -153,7 +157,7 @@ class FNO1d(nn.Layer):
         x = self.fc0(x)
         x = paddle.transpose(x, perm=[0, 2, 1])
         # pad the domain if input is non-periodic
-        x = self._FUNCTIONAL_PAD(x, [0, self.padding])
+        x = self._functional_pad(x, [0, self.padding])
 
         x1 = self.conv0(x)
         x2 = self.w0(x)

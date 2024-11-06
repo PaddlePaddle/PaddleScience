@@ -29,7 +29,6 @@ from ppsci.utils import logger
 
 # build data
 def getdata(x_path, y_path, para_path, output_path, n_data, n, s, is_train=True):
-
     # load data
     inputX_raw = np.load(x_path)[:, 0:n_data]
     inputY_raw = np.load(y_path)[:, 0:n_data]
@@ -61,11 +60,6 @@ def getdata(x_path, y_path, para_path, output_path, n_data, n, s, is_train=True)
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # generate training dataset
     inputs_train, labels_train, _ = getdata(**cfg.TRAIN_DATA, is_train=True)
 
@@ -84,7 +78,7 @@ def train(cfg: DictConfig):
                 "shuffle": True,
             },
         },
-        ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
+        L2RelLoss(reduction="sum"),
         name="sup_constraint",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -140,11 +134,14 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # set model
     model = ppsci.arch.FNO1d(**cfg.MODEL)
-    model.set_state_dict(paddle.load(cfg.TRAIN.model_path))
+    ppsci.utils.save_load.load_pretrain(
+        model,
+        cfg.EVAL.pretrained_model_path,
+    )
 
     # set data
     x_test, y_test, para = getdata(**cfg.TEST_DATA, is_train=False)
-    y_test = y_test.detach().cpu().numpy().flatten()
+    y_test = y_test.numpy().flatten()
 
     for sample_id in [0, 8]:
         sample, uf, L_p, x1, x2, x3, h = para[:, sample_id]
@@ -154,8 +151,6 @@ def evaluate(cfg: DictConfig):
             paddle.exp(
                 model({"input": x_test[sample_id : sample_id + 1, :, :]})["output"]
             )
-            .detach()
-            .cpu()
             .numpy()
             .flatten()
         )
@@ -215,6 +210,10 @@ def export(cfg: DictConfig):
     solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
 
 
+def inference(cfg: DictConfig):
+    pass
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="catheter.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
@@ -223,9 +222,11 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     elif cfg.mode == "export":
         export(cfg)
+    elif cfg.mode == "inference":
+        inference(cfg)
     else:
         raise ValueError(
-            f"cfg.mode should in ['train', 'eval', 'export'], but got '{cfg.mode}'"
+            f"cfg.mode should in ['train', 'eval', 'export', 'inference], but got '{cfg.mode}'"
         )
 
 
