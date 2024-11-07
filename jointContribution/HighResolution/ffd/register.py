@@ -11,15 +11,16 @@ import paddle
 import yaml
 from deepali.core import Grid
 from deepali.core import PathStr
-from deepali.core import unlink_or_mkdir
+
+# from deepali.utils.cli import filter_warning_of_experimental_named_tensors_feature
+from deepali.core.argparse import Args
+from deepali.core.argparse import ArgumentParser
+from deepali.core.argparse import main_func
+from deepali.core.environ import cuda_visible_devices
+from deepali.core.logging import configure_logging
+from deepali.core.pathlib import unlink_or_mkdir
 from deepali.data import Image
 from deepali.modules import TransformImage
-from deepali.utils.cli import Args
-from deepali.utils.cli import ArgumentParser
-from deepali.utils.cli import configure_logging
-from deepali.utils.cli import cuda_visible_devices
-from deepali.utils.cli import filter_warning_of_experimental_named_tensors_feature
-from deepali.utils.cli import main_func
 from paddle import Tensor
 
 from .pairwise import register_pairwise
@@ -100,7 +101,7 @@ def init(args: Args) -> int:
         if len(gpu_ids) != 1:
             log.error("CUDA_VISIBLE_DEVICES must be set to one GPU")
             return 1
-    filter_warning_of_experimental_named_tensors_feature()
+    # filter_warning_of_experimental_named_tensors_feature()
     return 0
 
 

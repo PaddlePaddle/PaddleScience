@@ -15,7 +15,7 @@ from deepali.core import Device
 from deepali.core import Grid
 from deepali.core import PathStr
 from deepali.core import functional as U
-from deepali.core import join_kwargs_in_sequence
+from deepali.core.config import join_kwargs_in_sequence
 from deepali.data import FlowField
 from deepali.data import Image
 from deepali.losses import RegistrationResult
