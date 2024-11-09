@@ -44,7 +44,7 @@ TGCN，一种用于交通流量预测的时空图卷积网络（Temporal Graph C
 
 ``` py linenums="9" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:9:27
+ppsci/arch/tgcn.py:12:35
 --8<--
 ```
 
@@ -54,7 +54,7 @@ ppsci/arch/tgcn.py:9:27
 
 ``` py linenums="30" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:30:51
+ppsci/arch/tgcn.py:38:71
 --8<--
 ```
 
@@ -64,13 +64,13 @@ TGCN 模型首先使用特征嵌入层对输入信号（即交通节点在过去
 
 ``` py linenums="74" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:74:74
+ppsci/arch/tgcn.py:140:145
 --8<--
 ```
 
 ``` py linenums="93" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:93:93
+ppsci/arch/tgcn.py:176:176
 --8<--
 ```
 
@@ -78,13 +78,13 @@ ppsci/arch/tgcn.py:93:93
 
 ``` py linenums="76" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:76:82
+ppsci/arch/tgcn.py:147:157
 --8<--
 ```
 
 ``` py linenums="95" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:95:109
+ppsci/arch/tgcn.py:178:192
 --8<--
 ```
 
@@ -92,13 +92,13 @@ ppsci/arch/tgcn.py:95:109
 
 ``` py linenums="84" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:84:87
+ppsci/arch/tgcn.py:159:170
 --8<--
 ```
 
 ``` py linenums="111" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:111:115
+ppsci/arch/tgcn.py:194:198
 --8<--
 ```
 
@@ -118,15 +118,7 @@ ppsci/arch/tgcn.py:111:115
 
 ``` py linenums="77" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:77:80
---8<--
-```
-
-其中，`edge_index`、`edge_attr`，`edge_attr` 分别代表静态的边索引、边属性，和邻接矩阵。其他定义模型的参数通过配置进行设置，如下：
-
-``` yaml linenums="44" title="examples/tgcn/conf/run.yaml"
---8<--
-examples/tgcn/conf/run.yaml:44:52
+examples/tgcn/run.py:67:84
 --8<--
 ```
 
@@ -138,7 +130,7 @@ examples/tgcn/conf/run.yaml:44:52
 
 ``` py linenums="19" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:19:38
+examples/tgcn/run.py:10:29
 --8<--
 ```
 
@@ -146,7 +138,7 @@ examples/tgcn/run.py:19:38
 
 ``` py linenums="40" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:40:42
+examples/tgcn/run.py:31:35
 --8<--
 ```
 
@@ -164,7 +156,7 @@ examples/tgcn/run.py:40:42
 
 ``` py linenums="44" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:44:63
+examples/tgcn/run.py:37:56
 --8<--
 ```
 
@@ -172,7 +164,7 @@ examples/tgcn/run.py:44:63
 
 ``` py linenums="65" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:65:75
+examples/tgcn/run.py:58:65
 --8<--
 ```
 
@@ -184,7 +176,7 @@ examples/tgcn/run.py:65:75
 
 ``` py linenums="81" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:81:82
+examples/tgcn/run.py:85:86
 --8<--
 ```
 
@@ -194,27 +186,17 @@ examples/tgcn/run.py:81:82
 
 ``` py linenums="86" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:86:109
+examples/tgcn/run.py:90:107
 --8<--
 ```
 
 #### 3.2.6 模型导出
 
-通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 和 `eval_freq` 参数，可以自动保存在验证集上效果最优的模型参数。
+通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 参数，可以自动保存在验证集上效果最优的模型参数。
 
 ``` py linenums="98" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:98:99
---8<--
-```
-
-#### 3.2.7 测试集上评估模型
-
-训练完成后，启动评估流程在测试集上评估模型。
-
-``` py linenums="110" title="examples/tgcn/run.py"
---8<--
-examples/tgcn/run.py:110:111
+examples/tgcn/run.py:99:99
 --8<--
 ```
 
@@ -226,7 +208,7 @@ examples/tgcn/run.py:110:111
 
 ``` py linenums="122" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:122:141
+examples/tgcn/run.py:111:130
 --8<--
 ```
 
@@ -234,7 +216,7 @@ examples/tgcn/run.py:122:141
 
 ``` py linenums="143" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:143:153
+examples/tgcn/run.py:132:139
 --8<--
 ```
 
@@ -242,11 +224,11 @@ examples/tgcn/run.py:143:153
 
 #### 3.3.2 加载模型并进行评估
 
-设置预训练模型参数的加载路径，可以是前置训练流程中的保存路径，也可以是配置文件中设置的路径。
+设置预训练模型参数的加载路径并加载模型。
 
 ``` py linenums="159" title="examples//tgcn/run.py"
 --8<--
-examples/tgcn/run.py:159:163
+examples/tgcn/run.py:141:158
 --8<--
 ```
 
@@ -254,7 +236,7 @@ examples/tgcn/run.py:159:163
 
 ``` py linenums="165" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:165:188
+examples/tgcn/run.py:160:172
 --8<--
 ```
 
