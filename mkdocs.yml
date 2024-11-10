@@ -88,6 +88,7 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - Battery_LI: zh/examples/MLP_LI.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
