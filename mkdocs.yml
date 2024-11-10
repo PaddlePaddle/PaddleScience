@@ -170,6 +170,7 @@ theme:
     - content.tabs.link
     - content.action.edit
     - content.action.view
+    - content.tooltips
   icon:
     edit: material/pencil
     view: material/eye
@@ -210,6 +211,7 @@ plugins:
 
 # Extensions
 markdown_extensions:
+  - abbr
   - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true

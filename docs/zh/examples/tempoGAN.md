@@ -191,7 +191,7 @@ examples/tempoGAN/tempoGAN.py:98:127
 1. `name`： 数据集类型，此处 `NamedArrayDataset` 表示从 Array 中读取的 `.mat` 类型的数据集；
 2. `input`： Array 类型的输入数据；
 3. `label`： Array 类型的标签数据；
-4. `transforms`： 所有数据 transform 方法，此处 `FunctionalTransform` 为PaddleScience 预留的自定义数据 transform 类，该类支持编写代码时自定义输入数据的 transform，具体代码请参考 [自定义 loss 和 data transform](#38)；
+4. `transforms`： 所有数据 transform 方法，此处 `FunctionalTransform` 为PaddleScience 预留的自定义数据 transform 类，该类支持编写代码时自定义输入数据的 transform，具体代码请参考 [自定义 loss 和 data transform](#38-loss-data-transform)；
 
 `batch_size` 字段表示 batch的大小；
 
@@ -201,7 +201,7 @@ examples/tempoGAN/tempoGAN.py:98:127
 2. `drop_last`： 是否需要丢弃最后无法凑整一个 mini-batch 的样本，默认值为 False；
 3. `shuffle`： 是否需要在生成样本下标时打乱顺序，默认值为 False；
 
-第二个参数是损失函数，此处的 `FunctionalLoss` 为 PaddleScience 预留的自定义 loss 函数类，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法，具体代码请参考 [自定义 loss 和 data transform](#38)。
+第二个参数是损失函数，此处的 `FunctionalLoss` 为 PaddleScience 预留的自定义 loss 函数类，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法，具体代码请参考 [自定义 loss 和 data transform](#38-loss-data-transform)。
 
 第三个参数是约束条件的 `output_expr`，如上所述，是为了让程序可以将输入数据作为 `label`。
 

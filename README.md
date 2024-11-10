@@ -54,7 +54,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 光孤子 | [Optical soliton](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 光纤怪波 | [Optical rogue wave](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 域分解 | [XPINN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/xpinns) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
-| 布鲁塞尔扩散系统 | [3D-Brusselator](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/brusselator.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
+| 布鲁塞尔扩散系统 | [3D-Brusselator](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/brusselator3d) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -187,9 +187,9 @@ python -c "import paddle; paddle.utils.run_check()"
         <!-- --8<-- [start:pip_install] -->
         ``` shell
         # release
-        pip install -U paddlesci
+        pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
         # nightly build
-        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl
+        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:pip_install] -->
 
@@ -238,10 +238,19 @@ python -c "import paddle; paddle.utils.run_check()"
 
 请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/quickstart/)
 
-## 🎈其他领域支持
+## 🎈生态工具
 
 <!-- --8<-- [start:adaptation] -->
-除 PaddleScience 套件外，Paddle 框架还支持了 [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能。
+除 PaddleScience 外，Paddle 框架同时支持了科学计算领域相关的研发套件和基础工具：
+
+| 工具 | 简介 | 支持情况 |
+| -- | -- | -- |
+| [Modulus-sym](https://github.com/PaddlePaddle/modulus-sym/tree/paddle?tab=readme-ov-file#modulus-symbolic-betapaddle-backend) | AI仿真套件 | 全量支持 |
+| [DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) | 方程求解套件 | 全量支持 |
+| [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle#deepmd-kitpaddlepaddle-backend) | 分子动力学套件 | 部分支持 |
+| [TensorLy](https://tensorly.org/dev/index.html) | 张量计算库 | 全量支持 |
+| [NVIDIA/warp](https://github.com/NVIDIA/warp) | 高性能仿真/图形库 | 全量支持 |
+| [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
 <!-- --8<-- [end:adaptation] -->
 
 <!-- --8<-- [start:support] -->
@@ -278,7 +287,7 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 
 - PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
 <!-- --8<-- [end:thanks] -->
-- PaddleScience 的部分案例和代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
+- PaddleScience 的部分案例和代码由以下优秀社区开发者贡献，（完整的贡献者请参考: [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors)）：
     [Asthestarsfalll](https://github.com/Asthestarsfalll)，
     [co63oc](https://github.com/co63oc)，
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
@@ -305,6 +314,7 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [ccsuzzh](https://github.com/ccsuzzh)，
     [enkilee](https://github.com/enkilee)，
     [GreatV](https://github.com/GreatV)
+    ...
 
 ## 🤝合作单位
 

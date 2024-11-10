@@ -11,6 +11,7 @@
         - Hypersphere
         - Interval
         - Mesh
+        - SDFMesh
         - PointCloud
         - Polygon
         - Rectangle
