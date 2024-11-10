@@ -1,0 +1,7 @@
+cartopy
+matplotlib
+pandas
+parameterized
+tqdm
+triton
+wandb

@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paddle_harmonics"
+version = "0.1.0"
+description = "A differentiable spherical harmonic transform for PaddlePaddle."
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {text = "Modified BSD"}
+
+maintainers = [
+    {name = "author", email = "author@email.com"}
+]
+
+classifiers=[
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3"
+]
+
+keywords = [
+]
+
+requires-python = ">=3.9"
+
+dependencies = [
+    "numpy",
+    "tensorly",
+]
+
+[project.optional-dependencies]
+all = [
+]
+utils = [
+]
+tests = [
+    "pytest",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/NVIDIA/torch-harmonics"
+"Repository" = "https://github.com/NVIDIA/torch-harmonics"
+"Bug Tracker" = "https://github.com/NVIDIA/torch-harmonics"
+
+[tool.black]
+line-length = 100
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["paddle_harmonics"]
+include = ["*"]
+exclude = ["conda*", "docs*", "examples*", "tests*"]
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+line-length = 88
+ignore = ["E501", "E741", "E731"]
+extend-exclude = [
+]
+
+[tool.isort]
+profile = "black"
