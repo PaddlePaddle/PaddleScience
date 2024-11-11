@@ -1,3 +1,11 @@
+## Install deepali
+
+``` sh
+# get deepali(with paddle backend)
+git clone https://github.com/PFCCLab/deepali.git
+# add temporary path
+export PYTHONPATH="/path_to_deepali/src/:$PYTHONPATH"
+```
 
 ## Dataset
 
