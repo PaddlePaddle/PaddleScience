@@ -38,14 +38,14 @@ from paddle import amp
 
 from paddle_harmonics import *  # noqa
 
+from .activations import *  # noqa
+from .contractions import *  # noqa
+
 # # import FactorizedTensor from tensorly for tensorized operations
 # import tensorly as tl
 # from tensorly.plugins import use_opt_einsum
 # use_opt_einsum("optimal")
-from paddle_harmonics.utils.factorized_tensor import FactorizedTensor
-
-from .activations import *  # noqa
-from .contractions import *  # noqa
+# from paddle_harmonics.utils.factorized_tensor import FactorizedTensor
 
 
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
@@ -386,13 +386,14 @@ class FactorizedSpectralConvS2(nn.Layer):
             raise NotImplementedError(f"Unkonw operator type f{self.operator_type}")
 
         # form weight tensors
-        self.weight = FactorizedTensor.new(
-            weight_shape,
-            rank=self.rank,
-            factorization=factorization,
-            fixed_rank_modes=False,
-            **decomposition_kwargs,
-        )
+        # self.weight = FactorizedTensor.new(
+        #     weight_shape,
+        #     rank=self.rank,
+        #     factorization=factorization,
+        #     fixed_rank_modes=False,
+        #     **decomposition_kwargs,
+        # )
+        self.weight = paddle.randn(shape=weight_shape)  # FactorizedTensor Not used
 
         # initialization of weights
         scale = math.sqrt(gain / in_channels)
