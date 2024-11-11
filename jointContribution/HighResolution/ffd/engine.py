@@ -17,7 +17,7 @@ from .optim import slope_of_least_squares_fit
 PROFILING = False
 
 
-class RegistrationEngine(object):
+class RegistrationEngine:
     """Minimize registration loss until convergence."""
 
     def __init__(
