@@ -81,8 +81,8 @@ paddle-harmonics has been used to implement a variety of differentiable PDE solv
 Build in your environment using the Python package:
 
 ```bash
-git clone git@github.com:PFCCLab/paddle_harmonics.git
-cd paddle-harmonics
+git clone https://github.com/PaddlePaddle/PaddleScience.git
+cd jointContribution/paddle-harmonics
 pip install -e .
 ```
 

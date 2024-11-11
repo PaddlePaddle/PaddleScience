@@ -82,7 +82,6 @@ config = {
     "description": "A differentiable spherical harmonic transform for Paddle.",
     "long_description": README,
     "long_description_content_type": "text/markdown",
-    "url": "https://github.com/PFCCLab/paddle-harmonics.git",
     "author": "Ruibin Cheung",
     "version": VERSION,
     "license": "Modified BSD",
