@@ -8,6 +8,12 @@
 
 要查看该模型的具体实现，请参考以下代码文件：`MLP_LI.py`
 
+## 训练好的模型权重文件
+
+| 预训练模型                        |
+|-----------------------------------|
+| [MLP_LI_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams) |
+
 
 ## 模型性能
 
