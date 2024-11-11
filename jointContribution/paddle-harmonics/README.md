@@ -80,6 +80,27 @@ paddle-harmonics has been used to implement a variety of differentiable PDE solv
 ## Installation
 Build in your environment using the Python package:
 
+install dependencies
+```bash
+# install paddle nightly
+python -m pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu123/
+
+# install cartopy
+sudo apt install libgeos-dev -y
+pip install shapely==1.8.0 pyshp==2.3.0 pyproj==3.3.1
+pip install cartopy
+
+# instal other dependencies
+pip install parameterized
+pip install imageio
+
+# install tensorly
+git clone https://github.com/tensorly/tensorly
+cd tensorly
+pip install -e .
+```
+
+install paddle-harmonics
 ```bash
 git clone https://github.com/PaddlePaddle/PaddleScience.git
 cd jointContribution/paddle-harmonics
