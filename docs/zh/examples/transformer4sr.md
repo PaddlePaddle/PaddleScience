@@ -26,7 +26,7 @@
 === "模型导出命令"
 
     ``` sh
-    python transformer4sr.py mode=export INFER.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/transformer4sr/transformer4sr_pretrained.pdparams
+    python transformer4sr.py mode=export
     ```
 
 === "模型推理命令"
