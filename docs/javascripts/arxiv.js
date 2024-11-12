@@ -1,4 +1,100 @@
-// 假设这是从某个地方获取的 arXiv 搜索结果，通常你会通过 AJAX 请求或者 fetch API 获取这个数据
+/* Copyright (c) 2016 Frase
+ *
+ * Distributed under MIT license (see LICENSE).
+ *
+ *
+ * Search arXiv via its HTTP API
+ *
+ * can search the following 1 or more fields:
+ *   - author
+ *   - title
+ *   - abstract
+ *   - journal reference
+ *   - All fields
+ *   journal's referenced, as well as all fields.
+ */
+
+
+
+/**
+ * Searches arXiv for papers/documents that match the supplied parameters
+ * @param {string} all
+ * @param {string} author
+ * @param {string} title
+ * @param {string} abstrct
+ * @param {string} journal_ref
+ * @returns {Promise}
+ */
+function arxiv_search({all, author, title, abstrct, journal_ref}) {
+    var baseUrl = "http://export.arxiv.org/api/query?search_query=";
+    var first = true;
+    
+    if (author) {
+	if (!first) {
+	    baseUrl += '+AND+';
+	}
+	baseUrl += "au:" + author;
+	first = false;
+    }
+    
+    if (title) {
+	if (!first) {
+	    baseUrl += '+AND+';
+	}
+	baseUrl += "ti:" + title;
+	first = false;
+    }
+    
+    if (abstrct) {
+	if (!first) {
+	    baseUrl += '+AND+';
+	}
+	baseUrl += "abs:" + abstrct;
+	first = false;
+    }
+    
+    if (all) {
+	if (!first) {
+	    baseUrl += '+AND+';
+	}
+	baseUrl += "all:" + all;
+    }
+
+    var deferred = $.Deferred();
+    $.ajax({
+        url: baseUrl,
+        type: "get",
+        dataType: "xml",
+        success: function(xml) {
+	    var entry = [];
+	    $(xml).find('entry').each(function (index) {
+		var id = $(this).find('id').text();
+		var pub_date = $(this).find('published').text();
+		var title = $(this).find('title').text();
+		var summary = $(this).find('summary').text();
+		var authors = [];
+		$(this).find('author').each(function (index) {
+		    authors.push($(this).text());
+		});
+		
+		entry.push({'title': title,
+			    'link': id,
+			    'summary': summary,
+			    'date': pub_date,
+			    'authors': authors
+			   });
+	    });
+	    
+	    deferred.resolve(entry);
+        },
+        error: function(status) {
+            console.log("request error " + status + " for url: "+baseUrl);
+        }
+    });
+    return deferred.promise();
+}
+
+
 const arxivResults = [
     {
         title: 'Example Paper Title 1',
@@ -12,34 +108,4 @@ const arxivResults = [
         abstract: 'This is the abstract of the second example paper.',
         link: 'https://arxiv.org/abs/example2'
     }
-    // ... more results
 ];
- 
-// 获取页面上的某个元素来展示搜索结果
-const resultsDiv = document.getElementById('arxiv-papers');
- 
-// 遍历搜索结果，并为每个结果创建一个展示元素
-arxivResults.forEach(result => {
-    const articleDiv = document.createElement('div');
-    articleDiv.classList.add('article');
- 
-    const title = document.createElement('h3');
-    title.textContent = result.title;
-    articleDiv.appendChild(title);
- 
-    const authors = document.createElement('p');
-    authors.textContent = `Authors: ${result.authors.join(', ')}`;
-    articleDiv.appendChild(authors);
- 
-    const abstract = document.createElement('p');
-    abstract.textContent = `Abstract: ${result.abstract}`;
-    articleDiv.appendChild(abstract);
- 
-    const link = document.createElement('a');
-    link.href = result.link;
-    link.textContent = 'View on arXiv';
-    articleDiv.appendChild(link);
- 
-    // 将创建好的元素添加到页面上
-    resultsDiv.appendChild(articleDiv);
-});
