@@ -215,7 +215,7 @@ def generate_data(cfg: DictConfig):
             print(e)
             continue
     print(f"=> Number of unique expressions = {len(expr_uniq_seq)}")
-    print(f"=> NUMBER OF DATASETS CREATED = {count_datasets}")
+    print(f"=> Number of datasets created = {count_datasets}")
     print("Finish!")
 
 

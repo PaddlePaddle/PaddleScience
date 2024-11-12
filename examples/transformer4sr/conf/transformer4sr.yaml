@@ -92,7 +92,7 @@ EVAL:
 
 # inference settings
 INFER:
-  pretrained_model_path: null
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/transformer4sr/transformer4sr_pretrained.pdparams"
   export_path: ./inference/transformer4sr
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
