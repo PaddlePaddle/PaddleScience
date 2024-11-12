@@ -3,7 +3,7 @@
 飞桨团队致力于与国内外高校、科研院所、企业等机构开展深度合作，共同推动飞桨生态在科学计算领域的应用和发展。
 
 以下是飞桨 PaddleScience 团队近几年在科学计算相关领域内的学术成果：
-1. Deng, J., Li, X., Xiong, H., Hu, X., & Ma, J. [Geometry-Guided Conditional Adaption for Surrogate Models of Large-Scale 3D PDEs on Arbitrary Geometries](https://ijcai24.org/main-track-accepted-papers/) International Joint Conference on Artificial Intelligence.
+1. Deng, J., Li, X., Xiong, H., Hu, X., & Ma, J. [Geometry-Guided Conditional Adaption for Surrogate Models of Large-Scale 3D PDEs on Arbitrary Geometries](https://ijcai24.org/main-track-accepted-papers/). International Joint Conference on Artificial Intelligence.
 2. Xu, P., Gao, T., Wang, Y., Yin, J., Zhang, J., Zheng, X., ... & Chen, X. (2024). [YingLong: Skillful High Resolution Regional Short Term Forecasting with Boundary Smoothing](https://arxiv.org/abs/2401.16254). arXiv preprint arXiv:2401.16254.
 3. Chu, X., Guo, W., Wu, T., Zhou, Y., Zhang, Y., Cai, S., & Yang, G. (2024). [Flow reconstruction over a SUBOFF model based on LBM-generated data and physics-informed neural networks](https://www.sciencedirect.com/science/article/pii/S0029801824015889). Ocean Engineering, 308, 118250.
 4. Huang, B., Hua, H., Han, H., He, S., Zhou, Y., Liu, S., & Zuo, Z. (2024). [Physics-informed neural networks for advection–diffusion–Langmuir adsorption processes](https://pubs.aip.org/aip/pof/article/36/8/081906/3308081). Physics of Fluids, 36(8).
