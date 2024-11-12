@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import abc
 import math
+from typing import Callable
 from typing import List
 from typing import Tuple
 from typing import Union
@@ -33,6 +34,7 @@ __all__ = [
     "ExponentialDecay",
     "CosineWarmRestarts",
     "OneCycleLR",
+    "LambdaDecay",
 ]
 
 
@@ -728,6 +730,69 @@ class OneCycleLR(LRBase):
             phase_pct=self.phase_pct,
             anneal_strategy=self.anneal_strategy,
             three_phase=self.three_phase,
+            last_epoch=self.last_epoch,
+            verbose=self.verbose,
+        )
+
+        if self.warmup_steps > 0:
+            learning_rate = self.linear_warmup(learning_rate)
+
+        setattr(learning_rate, "by_epoch", self.by_epoch)
+        return learning_rate
+
+
+class LambdaDecay(LRBase):
+    """This interface provides a lambda function to set the learning rate strategy.
+
+    Args:
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        learning_rate (float): Learning rate.
+        lr_lambda (Callable): A lambda function that calculates a factor through epoch, which is multiplied by the initial learning rate.
+        warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True,
+            else by iter. Defaults to False.
+        verbose (bool, optional): If True, prints a message to stdout for each update. Defaults to False.
+
+    Examples:
+        >>> import ppsci
+        >>> lr = ppsci.optimizer.lr_scheduler.LambdaDecay(0.5, lr_lambda=lambda x:0.95**x, verbose=True)()
+    """
+
+    def __init__(
+        self,
+        epochs: int,
+        iters_per_epoch: int,
+        learning_rate: float,
+        lr_lambda: Callable,
+        warmup_epoch: int = 0,
+        warmup_start_lr: float = 0.0,
+        last_epoch: int = -1,
+        by_epoch: bool = False,
+        verbose: bool = False,
+    ):
+        super().__init__(
+            epochs,
+            iters_per_epoch,
+            learning_rate,
+            warmup_epoch,
+            warmup_start_lr,
+            last_epoch,
+            by_epoch,
+            verbose,
+        )
+        self.learning_rate = learning_rate
+        self.lr_lambda = lr_lambda
+        self.last_epoch = last_epoch
+        self.verbose = verbose
+        self.by_epoch = by_epoch
+
+    def __call__(self):
+        learning_rate = lr.LambdaDecay(
+            learning_rate=self.learning_rate,
+            lr_lambda=self.lr_lambda,
             last_epoch=self.last_epoch,
             verbose=self.verbose,
         )
