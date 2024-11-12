@@ -56,7 +56,7 @@ DATA:
 # model settings
 MODEL:
   input_keys: ["input", "target_seq"]
-  output_keys: ["output",]
+  output_keys: ["output"]
   d_model: 256  # the innermost dimension of model
   heads: 4
   num_layers_enc: 4
