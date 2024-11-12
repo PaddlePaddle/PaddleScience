@@ -53,8 +53,6 @@ DATA:
   seq_length_max: 30  # ${DATA_GENERATE.seq_length_max}
   response_variable: ["y", "x1", "x2", "x3", "x4", "x5", "x6"]  # maximum number of variables is len(response_variable)=7
   vocab_library: ["add","mul","sin","cos","log","exp","neg","inv","sqrt","sq","cb","C","x1","x2","x3","x4","x5","x6"]  # vocab_size=len(vocab_library)+2(because add and mul are binary operators)
-
-
 # model settings
 MODEL:
   input_keys: ["input", "target_seq"]
