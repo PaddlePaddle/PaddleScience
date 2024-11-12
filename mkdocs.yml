@@ -13,8 +13,7 @@
 # limitations under the License.
 
 # Project information
-site_name: PaddleScience Docs
-site_description: An out-of-the-box open source library for scientific computing based on deep learning.
+site_name: 科研工作站
 site_author: PaddlePaddle
 site_url: "https://github.com/PaddlePaddle/PaddleScience"
 edit_uri: edit/develop/docs/
@@ -29,12 +28,12 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - PaddleScience:
-      - 主页: index.md
-      - 功能介绍: zh/overview.md
-      - 安装使用: zh/install_setup.md
-      - 快速开始: zh/quickstart.md
-      - 学习资料: zh/tutorials.md
+  - 科研工作站:
+    - " ":
+      - 论文检索: index.md
+      - Notebooks: zh/notebooks.md
+      - 比赛: zh/competition.md
+      - 课程: zh/tutorials.md
   - 经典案例:
     - " ":
       - 数学(AI for Math):
@@ -98,51 +97,8 @@ nav:
         - VelocityGAN: zh/examples/velocity_gan.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
-
-  - API 文档:
-    - ppsci:
-      - ppsci.arch: zh/api/arch.md
-      - ppsci.autodiff: zh/api/autodiff.md
-      - ppsci.constraint: zh/api/constraint.md
-      - ppsci.data:
-        - ppsci.data.dataset: zh/api/data/dataset.md
-        - ppsci.data.transform: zh/api/data/process/transform.md
-        - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
-      - ppsci.equation: zh/api/equation.md
-      - ppsci.geometry: zh/api/geometry.md
-      - ppsci.loss:
-        - ppsci.loss.loss: zh/api/loss/loss.md
-        - ppsci.loss.mtl: zh/api/loss/mtl.md
-      - ppsci.metric: zh/api/metric.md
-      - ppsci.optimizer:
-        - ppsci.optimizer.optimizer: zh/api/optimizer.md
-        - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
-      - ppsci.solver: zh/api/solver.md
-      - ppsci.utils:
-        - ppsci.utils.checker: zh/api/utils/checker.md
-        - ppsci.utils.expression: zh/api/utils/expression.md
-        - ppsci.utils.initializer: zh/api/utils/initializer.md
-        - ppsci.utils.logger: zh/api/utils/logger.md
-        - ppsci.utils.misc: zh/api/utils/misc.md
-        - ppsci.utils.ema: zh/api/utils/ema.md
-        - ppsci.utils.reader: zh/api/utils/reader.md
-        - ppsci.utils.writer: zh/api/utils/writer.md
-        - ppsci.utils.save_load: zh/api/utils/save_load.md
-        - ppsci.utils.symbolic: zh/api/utils/symbolic.md
-      - ppsci.validate: zh/api/validate.md
-      - ppsci.visualize: zh/api/visualize.md
-      - ppsci.experimental: zh/api/experimental.md
-      - ppsci.probability: zh/api/probability.md
-    - deploy:
-      - deploy.python_infer: zh/api/depoly/python_infer.md
-  - 使用指南: zh/user_guide.md
-  - 开发与复现指南:
-    - 开发指南: zh/development.md
-    - 复现指南: zh/reproduction.md
   - 学术成果: zh/academic.md
-  - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
-  - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
 
 # Configuration
 theme:
@@ -240,6 +196,7 @@ extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
   - javascripts/contributors.js
+  - javascripts/arxiv.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
