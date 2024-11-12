@@ -45,8 +45,6 @@ DATA_GENERATE:
   sampling_times: 50  # the number of observations
   var_type: 'normal' # variable representation, 'normal' is (y, x1, x2, ...), 'log' is log(abs(y, x1, x2, ...)), or 'both'
   num_zfill: 8
-
-
 DATA:
   data_path: "./data_generated/" # ${DATA_GENERATE.data_path}
   data_path_srsd: ["./srsd-feynman_easy/", "./srsd-feynman_medium/", "./srsd-feynman_hard/"]
