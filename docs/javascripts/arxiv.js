@@ -26,7 +26,7 @@
  * @returns {Promise}
  */
 function arxiv_search({all, author, title, abstrct, journal_ref}) {
-    var baseUrl = "http://export.arxiv.org/api/query?search_query=";
+    var baseUrl = "https://export.arxiv.org/api/query?search_query=";
     var first = true;
     
     if (author) {
@@ -93,19 +93,3 @@ function arxiv_search({all, author, title, abstrct, journal_ref}) {
     });
     return deferred.promise();
 }
-
-
-const arxivResults = [
-    {
-        title: 'Example Paper Title 1',
-        authors: ['Author1', 'Author2'],
-        abstract: 'This is the abstract of the first example paper.',
-        link: 'https://arxiv.org/abs/example1'
-    },
-    {
-        title: 'Example Paper Title 2',
-        authors: ['Author3', 'Author4'],
-        abstract: 'This is the abstract of the second example paper.',
-        link: 'https://arxiv.org/abs/example2'
-    }
-];
