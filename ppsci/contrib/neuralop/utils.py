@@ -176,7 +176,7 @@ def spectrum_2d(signal, n_observations, normalize=True):
         ),
         0,
     ).tile([n_observations, 1])
-    k_x = wavenumers.transpose([0, 1])
+    k_x = wavenumers.transpose([1, 0])
     k_y = wavenumers
 
     # Sum wavenumbers
@@ -193,7 +193,7 @@ def spectrum_2d(signal, n_observations, normalize=True):
         ind = paddle.where(index == j)
         # [TODO]: paddle is not align for torch of usage of signal[:, ind[0], ind[1]],
         # which ind[0] and ind[1] is tensor
-        spectrum[:, j - 1] = (signal[:, ind[0], ind[1]].sum(axis=1)).abs() ** 2
+        spectrum[:, j - 1] = (signal[:, ind[0].squeeze(-1), ind[1].squeeze(-1)].sum(axis=1)).abs() ** 2
 
     spectrum = spectrum.mean(axis=0)
     return spectrum

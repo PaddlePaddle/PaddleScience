@@ -60,7 +60,6 @@ dataset_pred = train_loader.dataset[:samples]['x'].squeeze()  # squeeze the data
 
 # Shape of the dataset
 shape = dataset_pred.shape
-print(f"dataset_pred: {dataset_pred}")
 
 # Define the grid size - in our case its a 2d Grid repeating, for higher dimensions this will change
 # Example for 3d grid
@@ -99,7 +98,9 @@ ax.set_yscale('log')
 length = 16  # typically till the resolution length of the dataset
 buffer = 10  # just add a buffer to the plot
 k = np.arange(length + buffer) * 1.0
-ax.plot(truth_sp, 'k', linestyle=":", label="NS", linewidth=4)
+
+# paddle tensor doesn't support plot
+ax.plot(truth_sp.numpy(), 'k', linestyle=":", label="NS", linewidth=4)
 
 ax.set_xlim(1, length+buffer)
 ax.set_ylim(10, 10 ^ 10)
@@ -114,5 +115,3 @@ leg = plt.legend(loc='best')
 leg.get_frame().set_alpha(0.5)
 plt.show()
 # %%
-
-plt.savefig('paddle_spectrum.png')
