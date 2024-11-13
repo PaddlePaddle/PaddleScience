@@ -30,7 +30,7 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 nav:
   - 科研工作站:
     - " ":
-      - 论文检索: arxiv.md
+      - 论文检索: index.md
       - Notebooks: zh/notebooks.md
       - 比赛: zh/competition.md
       - 课程: zh/tutorials.md
