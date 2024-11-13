@@ -262,7 +262,8 @@ class Trainer:
         with paddle.no_grad():
             for idx, sample in enumerate(data_loader):
 
-                n_samples += sample['y'].size(0)
+                n_samples += sample['y'].shape[0]
+
                 if self.callbacks:
                     self.callbacks.on_val_batch_start(idx=idx, sample=sample)
 

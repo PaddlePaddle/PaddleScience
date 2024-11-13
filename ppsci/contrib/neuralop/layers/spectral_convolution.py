@@ -475,22 +475,10 @@ class SpectralConv(BaseSpectralConv):
         slices_x += [slice(start//2, -start//2) if start else slice(start, None) for start in starts[:-1]]
         slices_x += [slice(None, -starts[-1]) if starts[-1] else slice(None)]  # The last mode already has redundant half removed
 
-        # torch implementationm support slice(None, None)
-        # x_temp = x[slices_x]
-        # out_fft[slices_x] = self._contract(x_temp, weight, separable=False)
-
-        # paddle implementaion
-        # [TODO] slice(None, None) is not supported on Paddle, how to opt this loop
-        axes = [i for i in range(len(slices_x))]
-        starts = [0 if i.start is None else i.start for i in slices_x]
-        ends = [x.shape[i] if slices_x[i].stop is None else slices_x[i].stop for i in range(len(slices_x))]
-        x_temp = paddle.slice(x, axes=axes, starts=starts, ends=ends)
-        out_fft_slice_temp = self._contract(x_temp, weight, separable=False)
-        out_fft_slice_temp_indices = paddle.nonzero(paddle.ones_like(out_fft_slice_temp, dtype=paddle.int64), as_tuple=False)
-        for idx in out_fft_slice_temp_indices:
-            index = idx.tolist()
-            target_index = tuple([a + b for a, b in zip(index, starts)])
-            out_fft[target_index] = out_fft_slice_temp[tuple(index)]
+        # paddle must use tuple
+        slices_x = tuple(slices_x)
+        x_temp = x[slices_x]
+        out_fft[slices_x] = self._contract(x_temp, weight, separable=False)
 
         if self.output_scaling_factor is not None and output_shape is None:
             mode_sizes = tuple([round(s * r) for (s, r) in zip(mode_sizes, self.output_scaling_factor[indices])])

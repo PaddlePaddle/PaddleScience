@@ -158,7 +158,7 @@ def spectrum_2d(signal, n_observations, normalize=True):
         A 1D tensor of shape (s,) representing the computed spectrum.
     """
     T = signal.shape[0]
-    signal = signal.view(T, n_observations, n_observations)
+    signal = signal.view([T, n_observations, n_observations])
 
     if normalize:
         signal = paddle.fft.fft2(signal)
@@ -169,14 +169,14 @@ def spectrum_2d(signal, n_observations, normalize=True):
 
     # 2d wavenumbers following PyTorch fft convention
     k_max = n_observations // 2
-    wavenumers = paddle.cat(
+    wavenumers = paddle.concat(
         (
             paddle.arange(start=0, end=k_max, step=1),
             paddle.arange(start=-k_max, end=0, step=1),
         ),
         0,
-    ).repeat(n_observations, 1)
-    k_x = wavenumers.transpose(0, 1)
+    ).tile([n_observations, 1])
+    k_x = wavenumers.transpose([0, 1])
     k_y = wavenumers
 
     # Sum wavenumbers
@@ -191,9 +191,11 @@ def spectrum_2d(signal, n_observations, normalize=True):
     spectrum = paddle.zeros((T, n_observations))
     for j in range(1, n_observations + 1):
         ind = paddle.where(index == j)
-        spectrum[:, j - 1] = (signal[:, ind[0], ind[1]].sum(dim=1)).abs() ** 2
+        # [TODO]: paddle is not align for torch of usage of signal[:, ind[0], ind[1]],
+        # which ind[0] and ind[1] is tensor
+        spectrum[:, j - 1] = (signal[:, ind[0], ind[1]].sum(axis=1)).abs() ** 2
 
-    spectrum = spectrum.mean(dim=0)
+    spectrum = spectrum.mean(axis=0)
     return spectrum
 
 

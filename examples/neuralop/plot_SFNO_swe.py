@@ -1,9 +1,9 @@
 """
-Training a TFNO on Darcy-Flow
-=============================
+Training a SFNO on the spherical Shallow Water equations
+==========================================================
 
-In this example, we demonstrate how to use the small Darcy-Flow example we ship with the package
-to train a Tensorized Fourier-Neural Operator
+In this example, we demonstrate how to use the small Spherical Shallow Water Equations example we ship with the package
+to train a Spherical Fourier-Neural Operator
 """
 
 # %%
@@ -13,11 +13,12 @@ to train a Tensorized Fourier-Neural Operator
 import paddle
 import matplotlib.pyplot as plt
 import sys
-from ppsci.contrib.neuralop.models import TFNO
+from ppsci.contrib.neuralop.models import SFNO
 from ppsci.contrib.neuralop import Trainer
-from ppsci.contrib.neuralop.datasets import load_darcy_flow_small
+from ppsci.contrib.neuralop.datasets import load_spherical_swe
 from ppsci.contrib.neuralop.utils import count_model_params
 from ppsci.contrib.neuralop import LpLoss, H1Loss
+
 
 if paddle.device.cuda.device_count() >= 1:
     paddle.device.set_device('gpu')
@@ -26,19 +27,14 @@ else:
 
 # %%
 # Loading the Navier-Stokes dataset in 128x128 resolution
-train_loader, test_loaders, data_processor = load_darcy_flow_small(
-        n_train=1000, batch_size=32,
-        test_resolutions=[16, 32], n_tests=[100, 50],
-        test_batch_sizes=[32, 32],
-        positional_encoding=True
-)
-data_processor = data_processor
+train_loader, test_loaders = load_spherical_swe(n_train=200, batch_size=4, train_resolution=(32, 64),
+                                                test_resolutions=[(32, 64), (64, 128)], n_tests=[50, 50], test_batch_sizes=[10, 10],)
 
 
 # %%
 # We create a tensorized FNO model
 
-model = TFNO(n_modes=(16, 16), hidden_channels=32, projection_channels=64, factorization='tucker', rank=0.42)
+model = SFNO(n_modes=(32, 32), in_channels=3, out_channels=3, hidden_channels=32, projection_channels=64, factorization='dense')
 model = model
 
 n_params = count_model_params(model)
@@ -49,20 +45,21 @@ sys.stdout.flush()
 # %%
 # Create the optimizer
 optimizer = paddle.optimizer.Adam(
-    learning_rate=8e-3,
+    learning_rate=8e-4,
     parameters=model.parameters(),
     weight_decay=1e-4
 )
 scheduler = paddle.optimizer.lr.CosineAnnealingDecay(learning_rate=optimizer.get_lr(), T_max=30)
 optimizer.set_lr_scheduler(scheduler=scheduler)
 
+
 # %%
 # Creating the losses
-l2loss = LpLoss(d=2, p=2)
-h1loss = H1Loss(d=2)
+l2loss = LpLoss(d=2, p=2, reduce_dims=(0, 1))
+# h1loss = H1Loss(d=2, reduce_dims=(0,1))
 
-train_loss = h1loss
-eval_losses = {'h1': h1loss, 'l2': l2loss}
+train_loss = l2loss
+eval_losses = {'l2': l2loss}  # 'h1': h1loss,
 
 
 # %%
@@ -80,7 +77,6 @@ sys.stdout.flush()
 # %%
 # Create the trainer
 trainer = Trainer(model=model, n_epochs=20,
-                  data_processor=data_processor,
                   wandb_log=False,
                   log_test_interval=3,
                   use_distributed=False,
@@ -111,37 +107,34 @@ trainer.train(train_loader=train_loader,
 #
 # In practice we would train a Neural Operator on one or multiple GPUs
 
-test_samples = test_loaders[32].dataset
-
 fig = plt.figure(figsize=(7, 7))
-for index in range(3):
-    data = test_samples[index]
-    data = data_processor.preprocess(data, batched=False)
+for index, resolution in enumerate([(32, 64), (64, 128)]):
+    test_samples = test_loaders[resolution].dataset
+    data = test_samples[0]
     # Input x
     x = data['x']
     # Ground-truth
-    y = data['y']
+    y = data['y'][0, ...].numpy()
     # Model prediction
-    out = model(x.unsqueeze(0))
+    x_in = x.unsqueeze(0)
+    out = model(x_in).squeeze()[0, ...].detach().cpu().numpy()
+    x = x[0, ...].detach().numpy()
 
-    ax = fig.add_subplot(3, 3, index*3 + 1)
-    ax.imshow(x[0], cmap='gray')
-    if index == 0:
-        ax.set_title('Input x')
+    ax = fig.add_subplot(2, 3, index*3 + 1)
+    ax.imshow(x)
+    ax.set_title(f'Input x {resolution}')
     plt.xticks([], [])
     plt.yticks([], [])
 
-    ax = fig.add_subplot(3, 3, index*3 + 2)
-    ax.imshow(y.squeeze())
-    if index == 0:
-        ax.set_title('Ground-truth y')
+    ax = fig.add_subplot(2, 3, index*3 + 2)
+    ax.imshow(y)
+    ax.set_title('Ground-truth y')
     plt.xticks([], [])
     plt.yticks([], [])
 
-    ax = fig.add_subplot(3, 3, index*3 + 3)
-    ax.imshow(out.squeeze().detach().numpy())
-    if index == 0:
-        ax.set_title('Model prediction')
+    ax = fig.add_subplot(2, 3, index*3 + 3)
+    ax.imshow(out)
+    ax.set_title('Model prediction')
     plt.xticks([], [])
     plt.yticks([], [])
 
