@@ -47,7 +47,7 @@ DATA_GENERATE:
   num_zfill: 8
 DATA:
   data_path: "./data_generated/" # ${DATA_GENERATE.data_path}
-  data_path_srsd: ["./srsd-feynman_easy/", "./srsd-feynman_medium/", "./srsd-feynman_hard/"]
+  data_path_srsd: ["./srsd-feynman_easy/"]
   ratio: [0.8,0.1,0.1]
   sampling_times: ${DATA_GENERATE.sampling_times}
   seq_length_max: 30  # ${DATA_GENERATE.seq_length_max}
