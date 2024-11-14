@@ -150,8 +150,7 @@ def evaluate(cfg: DictConfig):
         vocab_size=vocab_size,
         seq_length=data_funcs.seq_length_max,
     )
-    param_dict = paddle.load(cfg.EVAL.pretrained_model_path)
-    model.set_state_dict(param_dict)
+    ppsci.utils.save_load.load_pretrain(model, path=cfg.EVAL.pretrained_model_path)
     model.eval()
 
     # evaluate

@@ -331,7 +331,6 @@ class Transformer(base.Arch):
         self.act = act
         self.dropout = dropout
 
-        super().__init__()
         self.encoder = Encoder(
             num_layers_enc, num_var_max, d_model, heads, act="relu", dropout=dropout
         )
