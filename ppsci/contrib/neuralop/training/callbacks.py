@@ -341,7 +341,7 @@ class CheckpointCallback(Callback):
         """
 
         super().__init__()
-        if isinstance(save_dir, str): 
+        if isinstance(save_dir, str):
             save_dir = Path(save_dir)
         if not save_dir.exists():
             save_dir.mkdir(parents=True)
@@ -376,7 +376,7 @@ class CheckpointCallback(Callback):
 
         # load state dict if resume_from_dir is given
         if self.resume_from_dir:
-            saved_modules = [x.stem for x in self.resume_from_dir.glob('*.pdparams')]
+            saved_modules = [x.stem for x in self.resume_from_dir.glob('*')]
 
             assert 'best_model_state_dict' in saved_modules or 'model_state_dict' in saved_modules, "Error: CheckpointCallback expects a model state dict named model.pdparams or best_model.pdparams."
 
@@ -385,25 +385,26 @@ class CheckpointCallback(Callback):
                 if hasattr(self.state_dict['model'], 'load_checkpoint'):
                     self.state_dict['model'].load_checkpoint(save_folder=self.resume_from_dir, save_name='best_model')
                 else:
-                    self.state_dict['model'].load_state_dict(paddle.load(self.resume_from_dir / 'best_model.pdparams'))
+                    self.state_dict['model'].set_state_dict(paddle.load(self.resume_from_dir / 'best_model.pdparams'))
                 if verbose:
                     print("Loading model state from best_model_state_dict.pdparams")
             else:
                 if hasattr(self.state_dict['model'], 'load_checkpoint'):
                     self.state_dict['model'].load_checkpoint(save_folder=self.resume_from_dir, save_name='model')
                 else:
-                    self.state_dict['model'].load_state_dict(paddle.load(self.resume_from_dir / 'model.pdparams'))
+                    self.state_dict['model'].set_state_dict(paddle.load(self.resume_from_dir / 'model.pdparams'))
                 if verbose:
                     print("Loading model state from model.pdparams")
 
             # load all of optimizer, scheduler, regularizer if they exist
             for module in ['optimizer', 'scheduler', 'regularizer']:
                 if module in saved_modules:
-                    self.state_dict[module].load_state_dict(paddle.load(self.resume_from_dir / f"{module}.pdparams"))
+                    load_path = str(self.resume_from_dir / f"{module}.pdopt")
+                    self.state_dict[module].set_state_dict(paddle.load(load_path))
 
     def on_epoch_start(self, *args, **kwargs):
         self._update_state_dict(**kwargs)
-    
+
     def on_val_epoch_start(self, *args, **kwargs):
         self._update_state_dict(**kwargs)
 
@@ -442,13 +443,13 @@ class CheckpointCallback(Callback):
 
             # save optimizer, scheduler, regularizer according to flags
             if self.save_optimizer:
-                save_path = self.save_dir / "optimizer.pdopt"
+                save_path = str(self.save_dir / "optimizer.pdopt")
                 paddle.save(self.state_dict['optimizer'].state_dict(), save_path)
             if self.save_scheduler:
-                save_path = self.save_dir / "scheduler.pdopt"
+                save_path = str(self.save_dir / "scheduler.pdopt")
                 paddle.save(self.state_dict['scheduler'].state_dict(), save_path)
             if self.save_regularizer:
-                save_path = self.save_dir / "regularizer.pdopt"
+                save_path = str(self.save_dir / "regularizer.pdopt")
                 paddle.save(self.state_dict['regularizer'].state_dict(), save_path)
 
             if self.state_dict['verbose']:

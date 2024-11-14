@@ -10,7 +10,7 @@ class BaseModel(paddle.nn.Layer):
     """Based class for all Models
 
     This class has two main functionalities:
-    * It monitors the creation of subclass, that are automatically registered 
+    * It monitors the creation of subclass, that are automatically registered
       for users to use by name using the library's config system
     * When a new instance of this class is created, the init call is intercepted
       so we can store the parameters used to create the instance.
@@ -19,8 +19,8 @@ class BaseModel(paddle.nn.Layer):
 
     Notes
     -----
-    Model can be versioned using the _version class attribute. 
-    This can be used for sanity check when loading models from checkpoints to verify the 
+    Model can be versioned using the _version class attribute.
+    This can be used for sanity check when loading models from checkpoints to verify the
     model hasn't been updated since.
     """
     _models = dict()
@@ -43,8 +43,8 @@ class BaseModel(paddle.nn.Layer):
     def __new__(cls, *args, **kwargs):
         """Verify arguments and save init kwargs for loading/saving
 
-        We inspect the class' signature and check for unused parameters, or 
-        parameters not passed. 
+        We inspect the class' signature and check for unused parameters, or
+        parameters not passed.
 
         We store all the args and kwargs given so we can duplicate the instance transparently.
         """
@@ -77,13 +77,13 @@ class BaseModel(paddle.nn.Layer):
         instance._init_kwargs = kwargs
 
         return instance
-    
+
     def save_checkpoint(self, save_folder, save_name):
         """Saves the model state and init param in the given folder under the given name
         """
         save_folder = Path(save_folder)
 
-        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pt').as_posix()
+        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pdmodel').as_posix()
         paddle.save(self.state_dict(), state_dict_filepath)
         metadata_filepath = save_folder.joinpath(f'{save_name}_metadata.pkl').as_posix()
         # Objects (e.g. GeLU) are not serializable by json - find a better solution in the future
@@ -93,9 +93,9 @@ class BaseModel(paddle.nn.Layer):
 
     def load_checkpoint(self, save_folder, save_name):
         save_folder = Path(save_folder)
-        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pt').as_posix()
-        self.load_state_dict(paddle.load(state_dict_filepath))
-    
+        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pdmodel').as_posix()
+        self.set_state_dict(paddle.load(state_dict_filepath))
+
     @classmethod
     def from_checkpoint(cls, save_folder, save_name):
         save_folder = Path(save_folder)
@@ -104,12 +104,12 @@ class BaseModel(paddle.nn.Layer):
         init_kwargs = paddle.load(metadata_filepath)
         # with open(metadata_filepath, 'r') as f:
         #     init_kwargs = json.load(f)
-        
+
         version = init_kwargs.pop('_version')
         if hasattr(cls, '_version') and version != cls._version:
             print(version)
             warnings.warn(f'Checkpoing saved for version {version} of model {cls._name} but current code is version {cls._version}')
-        
+
         if 'args' in init_kwargs:
             init_args = init_kwargs.pop('args')
         else:
