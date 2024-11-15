@@ -4,6 +4,8 @@
 ./README.md:status
 --8<--
 
+🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中 ](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+
 🔥 [开放原子第二届开源大赛：飞桨科学计算工具组件开发大赛](https://competition.atomgit.com/competitionInfo?id=805ad94637707d062f24e54265d85731)，总奖金25万人民币，火热报名中。
 
 🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
@@ -93,6 +95,7 @@
 | 光纤怪波 | [Optical rogue wave](./zh/examples/nlsmb.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 | 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator3d.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
+| 符号回归 | [Transformer4SR](./zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
