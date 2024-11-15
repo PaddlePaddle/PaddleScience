@@ -35,14 +35,14 @@ import paddle.fft
 import paddle.nn as nn
 import paddle.nn.functional as F  # noqa
 
-from paddle_harmonics.distributed import azimuth_group_rank
-from paddle_harmonics.distributed import azimuth_group_size
-from paddle_harmonics.distributed import compute_split_shapes
-from paddle_harmonics.distributed import distributed_transpose_azimuth
-from paddle_harmonics.distributed import distributed_transpose_polar
-from paddle_harmonics.distributed import polar_group_rank
-from paddle_harmonics.distributed import polar_group_size
-from paddle_harmonics.distributed import split_tensor_along_dim
+from .primitives import compute_split_shapes
+from .primitives import distributed_transpose_azimuth
+from .primitives import distributed_transpose_polar
+from .primitives import split_tensor_along_dim
+from .utils import azimuth_group_rank
+from .utils import azimuth_group_size
+from .utils import polar_group_rank
+from .utils import polar_group_size
 from paddle_harmonics.legendre import _precompute_dlegpoly
 from paddle_harmonics.legendre import _precompute_legpoly
 from paddle_harmonics.quadrature import clenshaw_curtiss_weights
