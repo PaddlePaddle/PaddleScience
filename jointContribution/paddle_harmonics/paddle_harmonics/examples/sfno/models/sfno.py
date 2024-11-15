@@ -357,7 +357,9 @@ class SphericalFourierNeuralOperatorNet(nn.Layer):
         # pick norm layer
         if self.normalization_layer == "layer_norm":
             norm_layer0 = partial(
-                nn.LayerNorm, normalized_shape=(self.img_size[0], self.img_size[1]), eps=1e-6
+                nn.LayerNorm,
+                normalized_shape=(self.img_size[0], self.img_size[1]),
+                eps=1e-6,
             )
             norm_layer1 = partial(nn.LayerNorm, normalized_shape=(self.h, self.w), eps=1e-6)
         elif self.normalization_layer == "instance_norm":

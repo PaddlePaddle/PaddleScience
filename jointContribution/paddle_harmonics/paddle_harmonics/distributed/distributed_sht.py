@@ -35,6 +35,12 @@ import paddle.fft
 import paddle.nn as nn
 import paddle.nn.functional as F  # noqa
 
+from paddle_harmonics.legendre import _precompute_dlegpoly
+from paddle_harmonics.legendre import _precompute_legpoly
+from paddle_harmonics.quadrature import clenshaw_curtiss_weights
+from paddle_harmonics.quadrature import legendre_gauss_weights
+from paddle_harmonics.quadrature import lobatto_weights
+
 from .primitives import compute_split_shapes
 from .primitives import distributed_transpose_azimuth
 from .primitives import distributed_transpose_polar
@@ -43,11 +49,6 @@ from .utils import azimuth_group_rank
 from .utils import azimuth_group_size
 from .utils import polar_group_rank
 from .utils import polar_group_size
-from paddle_harmonics.legendre import _precompute_dlegpoly
-from paddle_harmonics.legendre import _precompute_legpoly
-from paddle_harmonics.quadrature import clenshaw_curtiss_weights
-from paddle_harmonics.quadrature import legendre_gauss_weights
-from paddle_harmonics.quadrature import lobatto_weights
 
 
 class DistributedRealSHT(nn.Layer):
@@ -61,7 +62,14 @@ class DistributedRealSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
         """
         Initializes the SHT Layer, precomputing the necessary quadrature weights
@@ -187,7 +195,14 @@ class DistributedInverseRealSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()
@@ -300,7 +315,14 @@ class DistributedRealVectorSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
         """
         Initializes the vector SHT Layer, precomputing the necessary quadrature weights
@@ -451,7 +473,14 @@ class DistributedInverseRealVectorSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()

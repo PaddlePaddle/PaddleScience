@@ -90,7 +90,12 @@ def _compute_support_vals_isotropic(
 
 
 def _compute_support_vals_anisotropic(
-    r: paddle.Tensor, phi: paddle.Tensor, nr: int, nphi: int, r_cutoff: float, norm: str = "s2"
+    r: paddle.Tensor,
+    phi: paddle.Tensor,
+    nr: int,
+    nphi: int,
+    r_cutoff: float,
+    norm: str = "s2",
 ):
     """
     Computes the index set that falls into the anisotropic kernel's support and returns both indices and values.
@@ -178,7 +183,10 @@ def _precompute_convolution_tensor_s2(
 
     if len(kernel_shape) == 1:
         kernel_handle = partial(
-            _compute_support_vals_isotropic, nr=kernel_shape[0], r_cutoff=theta_cutoff, norm="s2"
+            _compute_support_vals_isotropic,
+            nr=kernel_shape[0],
+            r_cutoff=theta_cutoff,
+            norm="s2",
         )
     elif len(kernel_shape) == 2:
         kernel_handle = partial(
@@ -240,7 +248,11 @@ def _precompute_convolution_tensor_s2(
 
         # add the output latitude and reshape such that psi has dimensions kernel_shape x nlat_out x (nlat_in*nlon_in)
         idx = paddle.stack(
-            [iidx[:, 0], t * paddle.ones_like(iidx[:, 0]), iidx[:, 1] * nlon_in + iidx[:, 2]],
+            [
+                iidx[:, 0],
+                t * paddle.ones_like(iidx[:, 0]),
+                iidx[:, 1] * nlon_in + iidx[:, 2],
+            ],
             axis=0,
         )
 
@@ -270,7 +282,10 @@ def _precompute_convolution_tensor_2d(
 
     if len(kernel_shape) == 1:
         kernel_handle = partial(
-            _compute_support_vals_isotropic, nr=kernel_shape[0], r_cutoff=radius_cutoff, norm="2d"
+            _compute_support_vals_isotropic,
+            nr=kernel_shape[0],
+            r_cutoff=radius_cutoff,
+            norm="2d",
         )
     elif len(kernel_shape) == 2:
         kernel_handle = partial(

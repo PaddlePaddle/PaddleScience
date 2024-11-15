@@ -228,7 +228,9 @@ class ShallowWaterSolver(nn.Layer):
 
         u1 = (umax / en) * paddle.exp(1.0 / ((lats - phi0) * (lats - phi1)))
         ugrid = paddle.where(
-            paddle.logical_and(lats < phi1, lats > phi0), u1, paddle.zeros([self.nlat, self.nlon])
+            paddle.logical_and(lats < phi1, lats > phi0),
+            u1,
+            paddle.zeros([self.nlat, self.nlon]),
         )
         vgrid = paddle.zeros((self.nlat, self.nlon))
         hbump = (

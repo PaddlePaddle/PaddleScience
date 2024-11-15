@@ -229,7 +229,9 @@ def _combine_jacobian_cols(
 
 
 def _prepare_input(
-    input: paddle.Tensor, maybe_perturbed_input: Optional[paddle.Tensor], fast_mode=False
+    input: paddle.Tensor,
+    maybe_perturbed_input: Optional[paddle.Tensor],
+    fast_mode=False,
 ) -> paddle.Tensor:
     return input
 

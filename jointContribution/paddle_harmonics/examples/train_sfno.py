@@ -152,7 +152,14 @@ def fluct_l2loss_sphere(solver, prd, tar, inp, relative=False, polar_opt=0):
 
 # rolls out the FNO and compares to the classical solver
 def autoregressive_inference(
-    model, dataset, path_root, nsteps, autoreg_steps=10, nskip=1, plot_channel=0, nics=20
+    model,
+    dataset,
+    path_root,
+    nsteps,
+    autoreg_steps=10,
+    nskip=1,
+    plot_channel=0,
+    nics=20,
 ):
 
     model.eval()
@@ -331,7 +338,11 @@ def train_model(
         if wandb.run is not None:
             current_lr = optimizer.get_lr()
             wandb.log(
-                {"loss": acc_loss, "validation loss": valid_loss, "learning rate": current_lr}
+                {
+                    "loss": acc_loss,
+                    "validation loss": valid_loss,
+                    "learning rate": current_lr,
+                }
             )
 
     train_time = time.time() - train_start
@@ -483,7 +494,8 @@ def main(train=True, load_checkpoint=False, enable_amp=False, log_grads=0):
             run.finish()
 
             paddle.save(
-                obj=model.state_dict(), path=os.path.join(root_path, "checkpoints/" + model_name)
+                obj=model.state_dict(),
+                path=os.path.join(root_path, "checkpoints/" + model_name),
             )
 
         # set seed

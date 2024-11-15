@@ -72,7 +72,10 @@ def plot_sphere(
     )
     if coastlines:
         ax.add_feature(
-            cartopy.feature.COASTLINE, edgecolor="white", facecolor="none", linewidth=1.5
+            cartopy.feature.COASTLINE,
+            edgecolor="white",
+            facecolor="none",
+            linewidth=1.5,
         )
     if colorbar:
         plt.colorbar(im)

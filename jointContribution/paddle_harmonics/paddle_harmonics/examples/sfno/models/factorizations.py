@@ -118,7 +118,10 @@ def _contract_tucker(x, tucker_weight, separable=False, operator_type="diagonal"
     else:
         core_syms = einsum_symbols[order + 1 : 2 * order + 1]
         out_syms[1] = out_sym
-        factor_syms = [einsum_symbols[1] + core_syms[0], out_sym + core_syms[1]]  # out, in
+        factor_syms = [
+            einsum_symbols[1] + core_syms[0],
+            out_sym + core_syms[1],
+        ]  # out, in
         factor_syms += [xs + rs for (xs, rs) in zip(x_syms[2:], core_syms[2:])]  # x, y, ...
 
     if operator_type == "diagonal":

@@ -67,7 +67,12 @@ class PdeDataset(paddle.io.Dataset):
             mmax = lmax
             dt_solver = dt / float(self.nsteps)
             self.solver = ShallowWaterSolver(
-                self.nlat, self.nlon, dt_solver, lmax=lmax, mmax=mmax, grid="equiangular"
+                self.nlat,
+                self.nlon,
+                dt_solver,
+                lmax=lmax,
+                mmax=mmax,
+                grid="equiangular",
             ).to(device=self.device, dtype=paddle.float32)
         else:
             raise NotImplementedError

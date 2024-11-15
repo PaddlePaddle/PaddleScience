@@ -52,7 +52,14 @@ class RealSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
         r"""
         Initializes the SHT Layer, precomputing the necessary quadrature weights
@@ -149,7 +156,14 @@ class InverseRealSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()
@@ -223,7 +237,14 @@ class RealVectorSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
         r"""
         Initializes the vector SHT Layer, precomputing the necessary quadrature weights
@@ -302,30 +323,46 @@ class RealVectorSHT(nn.Layer):
         # contraction - spheroidal component
         # real component
         xout[..., 0, :, :, 0] = paddle.einsum(
-            "...km,mlk->...lm", x[..., 0, :, : self.mmax, 0], self.weights[0].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 0, :, : self.mmax, 0],
+            self.weights[0].to(x.dtype),
         ) - paddle.einsum(
-            "...km,mlk->...lm", x[..., 1, :, : self.mmax, 1], self.weights[1].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 1, :, : self.mmax, 1],
+            self.weights[1].to(x.dtype),
         )
 
         # iamg component
         xout[..., 0, :, :, 1] = paddle.einsum(
-            "...km,mlk->...lm", x[..., 0, :, : self.mmax, 1], self.weights[0].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 0, :, : self.mmax, 1],
+            self.weights[0].to(x.dtype),
         ) + paddle.einsum(
-            "...km,mlk->...lm", x[..., 1, :, : self.mmax, 0], self.weights[1].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 1, :, : self.mmax, 0],
+            self.weights[1].to(x.dtype),
         )
 
         # contraction - toroidal component
         # real component
         xout[..., 1, :, :, 0] = -paddle.einsum(
-            "...km,mlk->...lm", x[..., 0, :, : self.mmax, 1], self.weights[1].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 0, :, : self.mmax, 1],
+            self.weights[1].to(x.dtype),
         ) - paddle.einsum(
-            "...km,mlk->...lm", x[..., 1, :, : self.mmax, 0], self.weights[0].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 1, :, : self.mmax, 0],
+            self.weights[0].to(x.dtype),
         )
         # imag component
         xout[..., 1, :, :, 1] = paddle.einsum(
-            "...km,mlk->...lm", x[..., 0, :, : self.mmax, 0], self.weights[1].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 0, :, : self.mmax, 0],
+            self.weights[1].to(x.dtype),
         ) - paddle.einsum(
-            "...km,mlk->...lm", x[..., 1, :, : self.mmax, 1], self.weights[0].to(x.dtype)
+            "...km,mlk->...lm",
+            x[..., 1, :, : self.mmax, 1],
+            self.weights[0].to(x.dtype),
         )
 
         return paddle.as_complex(xout)
@@ -341,7 +378,14 @@ class InverseRealVectorSHT(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, lmax=None, mmax=None, grid="lobatto", norm="ortho", csphase=True
+        self,
+        nlat,
+        nlon,
+        lmax=None,
+        mmax=None,
+        grid="lobatto",
+        norm="ortho",
+        csphase=True,
     ):
 
         super().__init__()

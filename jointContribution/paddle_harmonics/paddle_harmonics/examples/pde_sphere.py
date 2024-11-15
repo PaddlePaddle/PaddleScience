@@ -44,7 +44,15 @@ class SphereSolver(nn.Layer):
     """
 
     def __init__(
-        self, nlat, nlon, dt, lmax=None, mmax=None, grid="legendre-gauss", radius=1.0, coeff=0.001
+        self,
+        nlat,
+        nlon,
+        dt,
+        lmax=None,
+        mmax=None,
+        grid="legendre-gauss",
+        radius=1.0,
+        coeff=0.001,
     ):
         super().__init__()
 
