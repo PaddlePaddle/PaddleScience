@@ -20,6 +20,8 @@
 [🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
+🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中 ](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+
 🔥 [开放原子第二届开源大赛：飞桨科学计算工具组件开发大赛](https://competition.atomgit.com/competitionInfo?id=805ad94637707d062f24e54265d85731)，总奖金25万人民币，火热报名中
 
 🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
