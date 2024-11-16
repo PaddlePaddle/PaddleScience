@@ -75,7 +75,6 @@ TRAIN:
   weight:
     bc_base: {"u": 0.2, "v": 0.2, "w": 0.2}
     bc_endo: {"traction_x": 0.1, "traction_y": 0.1, "traction_z": 0.1}
-    # bc_endo: {"traction": 1.0}
     bc_epi: {"traction": 0.2}
     interior: {"hooke_x": 0.2, "hooke_y": 0.2, "hooke_z": 0.2}
   save_freq: 20
