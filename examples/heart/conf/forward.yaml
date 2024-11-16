@@ -45,7 +45,7 @@ EPI_PATH: ./stl/epi.stl
 # set working condition
 E: 9 # kPa
 nu: 0.45
-P: 1.064 # kPa  P_ENDO
+P: 1.064 # kPa
 
 # model settings
 MODEL:
