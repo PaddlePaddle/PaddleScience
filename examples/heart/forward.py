@@ -282,7 +282,7 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="heart.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="forward.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
