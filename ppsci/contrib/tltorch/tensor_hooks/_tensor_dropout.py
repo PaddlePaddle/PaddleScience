@@ -3,13 +3,17 @@
 # Author: Jean Kossaifi
 # License: BSD 3 clause
 
-import tensorly as tl
-tl.set_backend('paddle')
 import paddle
-from ..factorized_tensors import TuckerTensor, CPTensor, TTTensor
+import tensorly as tl
+
+from ..factorized_tensors import CPTensor
+from ..factorized_tensors import TTTensor
+from ..factorized_tensors import TuckerTensor
+
+tl.set_backend("paddle")
 
 
-class TensorDropout():
+class TensorDropout:
     """Decomposition Hook for Tensor Dropout on FactorizedTensor
 
     Parameters
@@ -21,6 +25,7 @@ class TensorDropout():
         For instance, if a tensor if of shape (32, 32, 3, 3) and min_dim = 4
         then dropout will *not* be applied to the last two modes.
     """
+
     _factorizations = dict()
 
     def __init_subclass__(cls, factorization, **kwargs):
@@ -28,7 +33,9 @@ class TensorDropout():
         cls._factorizations[factorization.__name__] = cls
 
     def __init__(self, proba, min_dim=1, min_values=1, drop_test=False):
-        assert 0 <= proba < 1, f'Got prob={proba} but tensor dropout is defined for 0 <= proba < 1.'
+        assert (
+            0 <= proba < 1
+        ), f"Got prob={proba} but tensor dropout is defined for 0 <= proba < 1."
         self.proba = proba
         self.min_dim = min_dim
         self.min_values = min_values
@@ -45,10 +52,13 @@ class TensorDropout():
         cls = cls._factorizations[module.__class__.__name__]
         for k, hook in module._forward_hooks.items():
             if isinstance(hook, cls):
-                raise RuntimeError("Cannot register two weight_norm hooks on "
-                                   "the same parameter")
+                raise RuntimeError(
+                    "Cannot register two weight_norm hooks on " "the same parameter"
+                )
 
-        dropout = cls(proba, min_dim=min_dim, min_values=min_values, drop_test=drop_test)
+        dropout = cls(
+            proba, min_dim=min_dim, min_values=min_values, drop_test=drop_test
+        )
         handle = module.register_forward_hook(dropout)
         return handle
 
@@ -65,15 +75,28 @@ class TuckerDropout(TensorDropout, factorization=TuckerTensor):
         for rank in tucker_rank:
             idx = tl.arange(rank, device=core.device, dtype=paddle.int64)
             if rank > self.min_dim:
-                idx = idx[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
-                                           out=paddle.empty([rank], dtype=paddle.bool))]
+                idx = idx[
+                    paddle.bernoulli(
+                        paddle.ones([rank]) * (1 - self.proba),
+                        out=paddle.empty([rank], dtype=paddle.bool),
+                    )
+                ]
                 if len(idx) == 0:
-                    idx = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
+                    idx = paddle.randint(
+                        0,
+                        rank,
+                        size=[
+                            self.min_values,
+                        ],
+                        dtype=paddle.int64,
+                    )
 
             sampled_indices.append(idx)
 
         if training:
-            core = core[paddle.meshgrid(*sampled_indices)]*(1/((1 - self.proba)**core.ndim))
+            core = core[paddle.meshgrid(*sampled_indices)] * (
+                1 / ((1 - self.proba) ** core.ndim)
+            )
         else:
             core = core[paddle.meshgrid(*sampled_indices)]
 
@@ -92,14 +115,25 @@ class CPDropout(TensorDropout, factorization=CPTensor):
 
         if rank > self.min_dim:
             sampled_indices = tl.arange(rank, device=device, dtype=paddle.int64)
-            sampled_indices = sampled_indices[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
-                                                               out=paddle.empty([rank], dtype=paddle.bool))]
+            sampled_indices = sampled_indices[
+                paddle.bernoulli(
+                    paddle.ones([rank]) * (1 - self.proba),
+                    out=paddle.empty([rank], dtype=paddle.bool),
+                )
+            ]
             if len(sampled_indices) == 0:
-                sampled_indices = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
+                sampled_indices = paddle.randint(
+                    0,
+                    rank,
+                    size=[
+                        self.min_values,
+                    ],
+                    dtype=paddle.int64,
+                )
 
             factors = [factor[:, sampled_indices] for factor in cp_tensor.factors]
             if training:
-                weights = cp_tensor.weights[sampled_indices]*(1/(1 - self.proba))
+                weights = cp_tensor.weights[sampled_indices] * (1 / (1 - self.proba))
             else:
                 weights = cp_tensor.weights[sampled_indices]
 
@@ -117,10 +151,21 @@ class TTDropout(TensorDropout, factorization=TTTensor):
         for i, rank in enumerate(tt_tensor.rank[1:]):
             if rank > self.min_dim:
                 idx = tl.arange(rank, device=device, dtype=paddle.int64)
-                idx = idx[paddle.bernoulli(paddle.ones([rank])*(1 - self.proba),
-                                           out=paddle.empty([rank], dtype=paddle.bool))]
+                idx = idx[
+                    paddle.bernoulli(
+                        paddle.ones([rank]) * (1 - self.proba),
+                        out=paddle.empty([rank], dtype=paddle.bool),
+                    )
+                ]
                 if len(idx) == 0:
-                    idx = paddle.randint(0, rank, size=[self.min_values, ], dtype=paddle.int64)
+                    idx = paddle.randint(
+                        0,
+                        rank,
+                        size=[
+                            self.min_values,
+                        ],
+                        dtype=paddle.int64,
+                    )
             else:
                 idx = tl.arange(rank, device=device, dtype=paddle.int64).tolist()
 
@@ -128,16 +173,18 @@ class TTDropout(TensorDropout, factorization=TTTensor):
 
         sampled_factors = []
         if training:
-            scaling = 1/(1 - self.proba)
+            scaling = 1 / (1 - self.proba)
         else:
             scaling = 1
         for i, f in enumerate(tt_tensor.factors):
             if i == 0:
-                sampled_factors.append(f[..., sampled_indices[i]]*scaling)
+                sampled_factors.append(f[..., sampled_indices[i]] * scaling)
             elif i == (tt_tensor.order - 1):
-                sampled_factors.append(f[sampled_indices[i-1], ...])
+                sampled_factors.append(f[sampled_indices[i - 1], ...])
             else:
-                sampled_factors.append(f[sampled_indices[i-1], ...][..., sampled_indices[i]]*scaling)
+                sampled_factors.append(
+                    f[sampled_indices[i - 1], ...][..., sampled_indices[i]] * scaling
+                )
 
         return TTTensor(sampled_factors)
 
@@ -169,7 +216,13 @@ def tensor_dropout(factorized_tensor, p=0, min_dim=3, min_values=1, drop_test=Fa
     >>> tensor = tensor_dropout(tensor, p=0.5)
     >>> remove_tensor_dropout(tensor)
     """
-    TensorDropout.apply(factorized_tensor, p, min_dim=min_dim, min_values=min_values, drop_test=drop_test)
+    TensorDropout.apply(
+        factorized_tensor,
+        p,
+        min_dim=min_dim,
+        min_values=min_values,
+        drop_test=drop_test,
+    )
 
     return factorized_tensor
 
@@ -193,4 +246,4 @@ def remove_tensor_dropout(factorized_tensor):
             del factorized_tensor._forward_hooks[key]
             return factorized_tensor
 
-    raise ValueError(f'TensorLasso not found in factorized tensor {factorized_tensor}')
+    raise ValueError(f"TensorLasso not found in factorized tensor {factorized_tensor}")

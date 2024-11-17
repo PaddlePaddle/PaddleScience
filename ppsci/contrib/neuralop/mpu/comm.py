@@ -14,11 +14,11 @@
 # limitations under the License.
 
 
-import os
 import logging
+import os
+
 import paddle
 import paddle.distributed as dist
-import datetime as dt
 
 
 class disable_logging(object):
@@ -105,26 +105,27 @@ def init(config, verbose=False):
     # set up global and local communicator
     if config.distributed == "env":
 
-        world_size = int(os.getenv('WORLD_SIZE', 1))
-        world_rank = int(os.getenv('WORLD_RANK', 0))
-        port = int(os.getenv('MASTER_PORT', 0))
-        master_address = os.getenv('MASTER_ADDRESS')
+        world_size = int(os.getenv("WORLD_SIZE", 1))
+        world_rank = int(os.getenv("WORLD_RANK", 0))
+        port = int(os.getenv("MASTER_PORT", 0))
+        master_address = os.getenv("MASTER_ADDRESS")
     elif config.distributed.wireup_info == "mpi":
 
-        import socket
         from mpi4py import MPI
 
         mpi_comm = MPI.COMM_WORLD.Dup()
         world_size = mpi_comm.Get_size()
         world_rank = mpi_comm.Get_rank()
-        my_host = '127.0.0.1'
+        my_host = "127.0.0.1"
         port = 29500
         master_address = mpi_comm.bcast(my_host, root=0)
         os.environ["MASTER_ADDRESS"] = master_address
         os.environ["MASTER_PORT"] = str(port)
 
     else:
-        raise ValueError(f"Error, wireup-info {config.distributed.wireup_info} not supported")
+        raise ValueError(
+            f"Error, wireup-info {config.distributed.wireup_info} not supported"
+        )
 
     # set local rank to 0 for now
     local_rank = 0
@@ -156,7 +157,7 @@ def init(config, verbose=False):
             dist.barrier(device_ids=[local_rank])
 
     # process 0 is logger
-    is_logger = (get_world_rank() == 0)
+    is_logger = get_world_rank() == 0
 
     # get model groups
     model_group_size = config.distributed.model_parallel_size
@@ -165,10 +166,13 @@ def init(config, verbose=False):
     data_group_size = world_size // model_group_size
 
     if is_logger:
-        print(f"Using {world_size} in {model_group_size} x {data_group_size} decomposition (#model-ranks x #data-ranks)")
+        print(
+            f"Using {world_size} in {model_group_size} x {data_group_size} decomposition (#model-ranks x #data-ranks)"
+        )
 
-    assert ((model_group_size <= world_size) and (world_size % model_group_size == 0)), \
-        "Error, please make sure matmul_parallel_size * spatial_parallel_size <= world size and that world size is evenly divisible by matmul_parallel_size * spatial_parallel_size"
+    assert (model_group_size <= world_size) and (
+        world_size % model_group_size == 0
+    ), "Error, please make sure matmul_parallel_size * spatial_parallel_size <= world size and that world size is evenly divisible by matmul_parallel_size * spatial_parallel_size"
 
     # number of model groups
     num_model_groups = world_size // model_group_size
@@ -183,7 +187,7 @@ def init(config, verbose=False):
         if model_group_size > 1:
             model_groups = []
             for i in range(num_model_groups):
-                start = i*model_group_size
+                start = i * model_group_size
                 end = start + model_group_size
                 model_groups.append(list(range(start, end)))
 

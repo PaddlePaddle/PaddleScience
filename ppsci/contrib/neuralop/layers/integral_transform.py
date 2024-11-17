@@ -1,6 +1,6 @@
 import paddle
-from paddle import nn
 import paddle.nn.functional as F
+from paddle import nn
 
 from .mlp import MLPLinear
 from .segment_csr import segment_csr

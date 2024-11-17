@@ -4,10 +4,8 @@ import paddle
 from paddle import nn
 
 import ppsci.contrib.neuralop.mpu.comm as comm
-from ppsci.contrib.neuralop.mpu.mappings import (
-    gather_from_model_parallel_region,
-    scatter_to_model_parallel_region,
-)
+from ppsci.contrib.neuralop.mpu.mappings import gather_from_model_parallel_region
+from ppsci.contrib.neuralop.mpu.mappings import scatter_to_model_parallel_region
 
 
 class MultigridPatching2D(nn.Layer):
@@ -207,8 +205,8 @@ class MultigridPatching2D(nn.Layer):
     def _unpad(self, x):
         return x[
             ...,
-            self.padding_height: -self.padding_height,
-            self.padding_width: -self.padding_width,
+            self.padding_height : -self.padding_height,
+            self.padding_width : -self.padding_width,
         ].contiguous()
 
 

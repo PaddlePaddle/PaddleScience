@@ -3,7 +3,7 @@ from paddle.io import Dataset
 
 class TensorDataset(Dataset):
     def __init__(self, x, y, transform_x=None, transform_y=None):
-        assert (x.shape[0] == y.shape[0]), "Size mismatch between tensors"
+        assert x.shape[0] == y.shape[0], "Size mismatch between tensors"
         self.x = x
         self.y = y
         self.transform_x = transform_x
@@ -19,7 +19,7 @@ class TensorDataset(Dataset):
         if self.transform_y is not None:
             y = self.transform_y(y)
 
-        return {'x': x, 'y': y}
+        return {"x": x, "y": y}
 
     def __len__(self):
         return self.x.shape[0]
@@ -27,11 +27,15 @@ class TensorDataset(Dataset):
 
 class GeneralTensorDataset(Dataset):
     def __init__(self, sets, transforms):
-        assert len(sets) == len(transforms), "Size mismatch between number of tensors and transforms"
+        assert len(sets) == len(
+            transforms
+        ), "Size mismatch between number of tensors and transforms"
         self.n = len(sets)
         if self.n > 1:
             for j in range(1, self.n):
-                assert sets[j].size(0) == sets[0].size(0), "Size mismatch between tensors"
+                assert sets[j].size(0) == sets[0].size(
+                    0
+                ), "Size mismatch between tensors"
 
         self.sets = sets
         self.transforms = transforms

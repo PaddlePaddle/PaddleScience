@@ -1,12 +1,13 @@
+import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-import paddle
-from ..layers.mlp import MLP
-from ..layers.spectral_convolution import SpectralConv
-from ..layers.skip_connections import skip_connection
-from ..layers.padding import DomainPadding
+
 from ..layers.fno_block import FNOBlocks
+from ..layers.mlp import MLP
+from ..layers.padding import DomainPadding
 from ..layers.resample import resample
+from ..layers.skip_connections import skip_connection
+from ..layers.spectral_convolution import SpectralConv
 
 
 class UNO(nn.Layer):
@@ -285,7 +286,7 @@ class UNO(nn.Layer):
             x = self.domain_padding.pad(x)
         output_shape = [
             int(round(i * j))
-            for (i, j) in zip(x.shape[-self.n_dim:], self.end_to_end_scaling_factor)
+            for (i, j) in zip(x.shape[-self.n_dim :], self.end_to_end_scaling_factor)
         ]
 
         skip_outputs = {}
@@ -297,7 +298,7 @@ class UNO(nn.Layer):
                 output_scaling_factors = [
                     m / n for (m, n) in zip(x.shape, skip_val.shape)
                 ]
-                output_scaling_factors = output_scaling_factors[-1 * self.n_dim:]
+                output_scaling_factors = output_scaling_factors[-1 * self.n_dim :]
                 t = resample(
                     skip_val, output_scaling_factors, list(range(-self.n_dim, 0))
                 )

@@ -1,15 +1,16 @@
-from typing import List, Optional, Union
+from typing import List
+from typing import Optional
+from typing import Union
 
 import paddle
-from paddle import nn
 import paddle.nn.functional as F
+from paddle import nn
 
+from ..utils import validate_scaling_factor
 from .mlp import MLP
 from .normalization_layers import AdaIN
 from .skip_connections import skip_connection
 from .spectral_convolution import SpectralConv
-from ..utils import validate_scaling_factor
-
 
 Number = Union[int, float]
 
@@ -200,7 +201,9 @@ class FNOBlocks(nn.Layer):
 
         if self.mlp is not None:
             x_skip_mlp = self.mlp_skips[index](x)
-            x_skip_mlp = self.convs[index].transform(x_skip_mlp, output_shape=output_shape)
+            x_skip_mlp = self.convs[index].transform(
+                x_skip_mlp, output_shape=output_shape
+            )
 
         if self.stabilizer == "tanh":
             x = paddle.tanh(x)
@@ -239,7 +242,9 @@ class FNOBlocks(nn.Layer):
 
         if self.mlp is not None:
             x_skip_mlp = self.mlp_skips[index](x)
-            x_skip_mlp = self.convs[index].transform(x_skip_mlp, output_shape=output_shape)
+            x_skip_mlp = self.convs[index].transform(
+                x_skip_mlp, output_shape=output_shape
+            )
 
         if self.stabilizer == "tanh":
             x = paddle.tanh(x)

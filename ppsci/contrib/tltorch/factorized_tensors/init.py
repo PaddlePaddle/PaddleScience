@@ -4,12 +4,13 @@
 # Author: Jean Kossaifi
 # License: BSD 3 clause
 
-import paddle
 import math
-import numpy as np
 
+import numpy as np
+import paddle
 import tensorly as tl
-tl.set_backend('paddle')
+
+tl.set_backend("paddle")
 
 
 def tensor_init(tensor, std=0.02):
@@ -28,7 +29,9 @@ def tensor_init(tensor, std=0.02):
     elif paddle.is_tensor(tensor):
         tensor.normal_(0, std)
     else:
-        raise ValueError(f'Got tensor of class {tensor.__class__.__name__} but expected torch.Tensor or FactorizedWeight.')
+        raise ValueError(
+            f"Got tensor of class {tensor.__class__.__name__} but expected torch.Tensor or FactorizedWeight."
+        )
 
 
 def cp_init(cp_tensor, std=0.02):
@@ -44,9 +47,9 @@ def cp_init(cp_tensor, std=0.02):
     -----
     We assume the given (weights, factors) form a correct CP decomposition, no checks are done here.
     """
-    rank = cp_tensor.rank  # We assume we are given a valid CP 
+    rank = cp_tensor.rank  # We assume we are given a valid CP
     order = cp_tensor.orders
-    std_factors = (std/math.sqrt(rank))**(1/order)
+    std_factors = (std / math.sqrt(rank)) ** (1 / order)
 
     with paddle.no_grad():
         cp_tensor.weights.fill_(1)
@@ -63,7 +66,7 @@ def tucker_init(tucker_tensor, std=0.02):
     tucker_tensor : TuckerTensor
     std : float, default is 0.02
         the desired standard deviation of the full (reconstructed) tensor
-    
+
     Notes
     -----
     We assume the given (core, factors) form a correct Tucker decomposition, no checks are done here.
@@ -71,12 +74,13 @@ def tucker_init(tucker_tensor, std=0.02):
     order = tucker_tensor.order
     rank = tucker_tensor.rank
     r = np.prod([math.sqrt(r) for r in rank])
-    std_factors = (std/r)**(1/(order+1))
+    std_factors = (std / r) ** (1 / (order + 1))
     with paddle.no_grad():
         tucker_tensor.core.normal_(0, std_factors)
         for factor in tucker_tensor.factors:
             factor.normal_(0, std_factors)
     return tucker_tensor
+
 
 def tt_init(tt_tensor, std=0.02):
     """Initializes directly the weights and factors of a TT decomposition so the reconstruction has the specified std and 0 mean
@@ -86,15 +90,15 @@ def tt_init(tt_tensor, std=0.02):
     tt_tensor : TTTensor
     std : float, default is 0.02
         the desired standard deviation of the full (reconstructed) tensor
-    
+
     Notes
     -----
     We assume the given factors form a correct TT decomposition, no checks are done here.
     """
     order = tt_tensor.order
     r = np.prod(tt_tensor.rank)
-    std_factors = (std/r)**(1/order)
-    with torch.no_grad():
+    std_factors = (std / r) ** (1 / order)
+    with paddle.no_grad():
         for factor in tt_tensor.factors:
             factor.normal_(0, std_factors)
     return tt_tensor
@@ -108,7 +112,7 @@ def block_tt_init(block_tt, std=0.02):
     block_tt : Matrix in the tensor-train format
     std : float, default is 0.02
         the desired standard deviation of the full (reconstructed) tensor
-    
+
     Notes
     -----
     We assume the given factors form a correct Block-TT decomposition, no checks are done here.

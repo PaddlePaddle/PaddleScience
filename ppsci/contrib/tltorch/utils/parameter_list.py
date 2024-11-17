@@ -1,5 +1,5 @@
-from paddle import nn
 import paddle
+from paddle import nn
 
 
 class FactorList(nn.Layer):
@@ -12,7 +12,7 @@ class FactorList(nn.Layer):
 
     def _unique_key(self):
         """Creates a new unique key"""
-        key = f'factor_{self.counter}'
+        key = f"factor_{self.counter}"
         self.counter += 1
         return key
 
@@ -73,12 +73,15 @@ class FactorList(nn.Layer):
     def extra_repr(self) -> str:
         child_lines = []
         for k, p in self._parameters.items():
-            size_str = 'x'.join(str(size) for size in p.shape)
-            device_str = '' if not "gpu" in str(p.place) else ' (GPU {})'.format(p.get_device())
-            parastr = 'Parameter containing: [{} of size {}{}]'.format(
-                type(p), size_str, device_str)
-            child_lines.append('  (' + str(k) + '): ' + parastr)
-        tmpstr = '\n'.join(child_lines)
+            size_str = "x".join(str(size) for size in p.shape)
+            device_str = (
+                "" if "gpu" not in str(p.place) else " (GPU {})".format(p.get_device())
+            )
+            parastr = "Parameter containing: [{} of size {}{}]".format(
+                type(p), size_str, device_str
+            )
+            child_lines.append("  (" + str(k) + "): " + parastr)
+        tmpstr = "\n".join(child_lines)
         return tmpstr
 
 
@@ -91,7 +94,9 @@ class ComplexFactorList(FactorList):
             return value
         else:
             keys = self.keys[index]
-            return self.__class__([paddle.as_complex(getattr(self, key)) for key in keys])
+            return self.__class__(
+                [paddle.as_complex(getattr(self, key)) for key in keys]
+            )
 
     def __setitem__(self, index, value):
         if paddle.is_tensor(value):
@@ -117,7 +122,7 @@ class ParameterList(nn.Layer):
 
     def _unique_key(self):
         """Creates a new unique key"""
-        key = f'param_{self.counter}'
+        key = f"param_{self.counter}"
         self.counter += 1
         return key
 
@@ -164,10 +169,11 @@ class ParameterList(nn.Layer):
     def extra_repr(self) -> str:
         child_lines = []
         for k, p in self._parameters.items():
-            size_str = 'x'.join(str(size) for size in p.size())
-            device_str = '' if not p.is_cuda else ' (GPU {})'.format(p.get_device())
-            parastr = 'Parameter containing: [{} of size {}{}]'.format(
-                paddle.typename(p), size_str, device_str)
-            child_lines.append('  (' + str(k) + '): ' + parastr)
-        tmpstr = '\n'.join(child_lines)
+            size_str = "x".join(str(size) for size in p.size())
+            device_str = "" if not p.is_cuda else " (GPU {})".format(p.get_device())
+            parastr = "Parameter containing: [{} of size {}{}]".format(
+                paddle.typename(p), size_str, device_str
+            )
+            child_lines.append("  (" + str(k) + "): " + parastr)
+        tmpstr = "\n".join(child_lines)
         return tmpstr

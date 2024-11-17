@@ -2,15 +2,15 @@ from functools import partialmethod
 
 import paddle.nn.functional as F
 
-from ..layers.spectral_convolution import SpectralConv
-from ..layers.spherical_convolution import SphericalConv
-from ..layers.padding import DomainPadding
 from ..layers.fno_block import FNOBlocks
 from ..layers.mlp import MLP
+from ..layers.padding import DomainPadding
+from ..layers.spectral_convolution import SpectralConv
+from ..layers.spherical_convolution import SphericalConv
 from .base_model import BaseModel
 
 
-class FNO(BaseModel, name='FNO'):
+class FNO(BaseModel, name="FNO"):
     """N-Dimensional Fourier Neural Operator
 
     Parameters
@@ -240,9 +240,9 @@ class FNO(BaseModel, name='FNO'):
         """
 
         if output_shape is None:
-            output_shape = [None]*self.n_layers
+            output_shape = [None] * self.n_layers
         elif isinstance(output_shape, tuple):
-            output_shape = [None]*(self.n_layers - 1) + [output_shape]
+            output_shape = [None] * (self.n_layers - 1) + [output_shape]
 
         x = self.lifting(x)
 

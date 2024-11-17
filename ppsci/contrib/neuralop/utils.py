@@ -1,8 +1,11 @@
-from typing import List, Optional, Union
+import warnings
 from math import prod
+from typing import List
+from typing import Optional
+from typing import Union
+
 import paddle
 import wandb
-import warnings
 
 
 # normalization, pointwise gaussian
@@ -10,8 +13,10 @@ class UnitGaussianNormalizer:
     def __init__(self, x, eps=0.00001, reduce_dim=[0], verbose=True):
         super().__init__()
 
-        msg = ("neuralop.utils.UnitGaussianNormalizer has been deprecated. "
-               "Please use the newer neuralop.datasets.UnitGaussianNormalizer instead.")
+        msg = (
+            "neuralop.utils.UnitGaussianNormalizer has been deprecated. "
+            "Please use the newer neuralop.datasets.UnitGaussianNormalizer instead."
+        )
         warnings.warn(msg, DeprecationWarning)
         n_samples, *shape = x.shape
         self.sample_shape = shape
@@ -74,7 +79,7 @@ class UnitGaussianNormalizer:
 
 def count_model_params(model):
     """Returns the total number of parameters of a PyTorch model
-    
+
     Notes
     -----
     One complex number is counted as two parameters (we count real and imaginary parts)'
@@ -103,7 +108,7 @@ def count_tensor_params(tensor, dims=None):
         dims = [tensor.shape[d] for d in dims]
     n_params = prod(dims)
     if tensor.is_complex():
-        return 2*n_params
+        return 2 * n_params
     return n_params
 
 
@@ -193,7 +198,9 @@ def spectrum_2d(signal, n_observations, normalize=True):
         ind = paddle.where(index == j)
         # [TODO]: paddle is not align for torch of usage of signal[:, ind[0], ind[1]],
         # which ind[0] and ind[1] is tensor
-        spectrum[:, j - 1] = (signal[:, ind[0].squeeze(-1), ind[1].squeeze(-1)].sum(axis=1)).abs() ** 2
+        spectrum[:, j - 1] = (
+            signal[:, ind[0].squeeze(-1), ind[1].squeeze(-1)].sum(axis=1)
+        ).abs() ** 2
 
     spectrum = spectrum.mean(axis=0)
     return spectrum

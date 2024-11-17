@@ -1,10 +1,11 @@
 from pathlib import Path
+
 import paddle
 
+from .data_transforms import DefaultDataProcessor
 from .output_encoder import UnitGaussianNormalizer
 from .tensor_dataset import TensorDataset
 from .transforms import PositionalEmbedding2D
-from .data_transforms import DefaultDataProcessor
 
 
 def load_darcy_flow_small(
@@ -105,7 +106,10 @@ def load_darcy_pt(
     # paddle.save(data_paddle_list, Path(data_path).joinpath(f"darcy_train_{train_resolution}.pdtensor").as_posix())
 
     x_train = (
-        data["x"][0:n_train, :, :].unsqueeze(channel_dim).to(dtype=paddle.float32).clone()
+        data["x"][0:n_train, :, :]
+        .unsqueeze(channel_dim)
+        .to(dtype=paddle.float32)
+        .clone()
     )
     y_train = data["y"][0:n_train, :, :].unsqueeze(channel_dim).clone()
     del data
@@ -180,7 +184,9 @@ def load_darcy_pt(
             f"and batch-size={test_batch_size}"
         )
 
-        data = paddle.load(Path(data_path).joinpath(f"darcy_test_{res}.pdtensor").as_posix())
+        data = paddle.load(
+            Path(data_path).joinpath(f"darcy_test_{res}.pdtensor").as_posix()
+        )
 
         x_test = (
             data["x"][:n_test, :, :].unsqueeze(channel_dim).to(paddle.float32).clone()
@@ -210,6 +216,6 @@ def load_darcy_pt(
     data_processor = DefaultDataProcessor(
         in_normalizer=input_encoder,
         out_normalizer=output_encoder,
-        positional_encoding=pos_encoding
+        positional_encoding=pos_encoding,
     )
     return train_loader, test_loaders, data_processor

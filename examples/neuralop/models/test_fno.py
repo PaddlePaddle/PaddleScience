@@ -1,12 +1,12 @@
 from math import prod
 
-import pytest
 import paddle
-from tensorly import tenalg
+import pytest
 from configmypy import Bunch
+from tensorly import tenalg
 
-from ppsci.contrib.neuralop.models import TFNO
 from ppsci.contrib.neuralop.models import FNO
+from ppsci.contrib.neuralop.models import TFNO
 
 tenalg.set_backend("einsum")
 
@@ -103,7 +103,7 @@ def test_tfno(
     ],
 )
 def test_fno_superresolution(output_scaling_factor):
-    paddle.set_device('cpu')
+    paddle.set_device("cpu")
     s = 16
     modes = 5
     hidden_channels = 15

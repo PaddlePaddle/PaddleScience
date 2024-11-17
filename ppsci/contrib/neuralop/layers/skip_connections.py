@@ -77,9 +77,13 @@ class SoftGating(nn.Layer):
             )
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = paddle.base.framework.EagerParamBase.from_tensor(paddle.ones([1, self.in_features, *(1,) * n_dim]))
+        self.weight = paddle.base.framework.EagerParamBase.from_tensor(
+            paddle.ones([1, self.in_features, *(1,) * n_dim])
+        )
         if bias:
-            self.bias = paddle.base.framework.EagerParamBase.from_tensor(paddle.ones([1, self.in_features, *(1,) * n_dim]))
+            self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+                paddle.ones([1, self.in_features, *(1,) * n_dim])
+            )
         else:
             self.bias = None
 

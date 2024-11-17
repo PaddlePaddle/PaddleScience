@@ -1,11 +1,12 @@
 import paddle
+
 from ppsci.contrib.neuralop.training.patching import MultigridPatching2D
 
 
 class DefaultDataProcessor(paddle.nn.Layer):
-    def __init__(self,
-                 in_normalizer=None, out_normalizer=None,
-                 positional_encoding=None):
+    def __init__(
+        self, in_normalizer=None, out_normalizer=None, positional_encoding=None
+    ):
         """A simple processor to pre/post process data before training/inferencing a model
 
         Parameters
@@ -21,7 +22,7 @@ class DefaultDataProcessor(paddle.nn.Layer):
         self.in_normalizer = in_normalizer
         self.out_normalizer = out_normalizer
         self.positional_encoding = positional_encoding
-        self.device = 'cpu'
+        self.device = "cpu"
 
     def wrap(self, model):
         self.model = model
@@ -36,8 +37,8 @@ class DefaultDataProcessor(paddle.nn.Layer):
         return self
 
     def preprocess(self, data_dict, batched=True):
-        x = data_dict['x']
-        y = data_dict['y']
+        x = data_dict["x"]
+        y = data_dict["y"]
 
         if self.in_normalizer is not None:
             x = self.in_normalizer.transform(x)
@@ -46,33 +47,40 @@ class DefaultDataProcessor(paddle.nn.Layer):
         if self.out_normalizer is not None and self.train:
             y = self.out_normalizer.transform(y)
 
-        data_dict['x'] = x
-        data_dict['y'] = y
+        data_dict["x"] = x
+        data_dict["y"] = y
 
         return data_dict
 
     def postprocess(self, output, data_dict):
-        y = data_dict['y']
+        y = data_dict["y"]
         if self.out_normalizer and not self.train:
             output = self.out_normalizer.inverse_transform(output)
             y = self.out_normalizer.inverse_transform(y)
-        data_dict['y'] = y
+        data_dict["y"] = y
         return output, data_dict
 
     def forward(self, **data_dict):
         data_dict = self.preprocess(data_dict)
-        output = self.model(data_dict['x'])
+        output = self.model(data_dict["x"])
         output = self.postprocess(output)
         return output, data_dict
 
 
 class MGPatchingDataProcessor(paddle.nn.Layer):
-    def __init__(self, model: paddle.nn.Layer, levels: int,
-                 padding_fraction: float, stitching: float,
-                 device: str = 'cpu', in_normalizer=None, out_normalizer=None,
-                 positional_encoding=None):
+    def __init__(
+        self,
+        model: paddle.nn.Layer,
+        levels: int,
+        padding_fraction: float,
+        stitching: float,
+        device: str = "cpu",
+        in_normalizer=None,
+        out_normalizer=None,
+        positional_encoding=None,
+    ):
         """MGPatchingDataProcessor
-        Applies multigrid patching to inputs out-of-place 
+        Applies multigrid patching to inputs out-of-place
         with an optional output encoder/other data transform
 
         Parameters
@@ -100,9 +108,10 @@ class MGPatchingDataProcessor(paddle.nn.Layer):
         self.padding_fraction = padding_fraction
         self.stitching = stitching
         self.patcher = MultigridPatching2D(
-            model=model, levels=self.levels,
+            model=model,
+            levels=self.levels,
             padding_fraction=self.padding_fraction,
-            stitching=self.stitching
+            stitching=self.stitching,
         )
         self.device = device
 
@@ -141,13 +150,13 @@ class MGPatchingDataProcessor(paddle.nn.Layer):
             whether the first dimension of 'x', 'y' represents batching
         """
         data_dict = {k: v for k, v in data_dict.items() if paddle.is_tensor(v)}
-        x, y = data_dict['x'], data_dict['y']
+        x, y = data_dict["x"], data_dict["y"]
         if self.in_normalizer:
             x = self.in_normalizer.transform(x)
             y = self.out_normalizer.transform(y)
         if self.positional_encoding is not None:
             x = self.positional_encoding(x, batched=batched)
-        data_dict['x'], data_dict['y'] = self.patcher.patch(x, y)
+        data_dict["x"], data_dict["y"] = self.patcher.patch(x, y)
         return data_dict
 
     def postprocess(self, out, data_dict):
@@ -161,17 +170,17 @@ class MGPatchingDataProcessor(paddle.nn.Layer):
         data_dict: dict
             dictionary keyed with 'x', 'y' etc
             represents one batch of data input to a model
-        out: torch.Tensor 
+        out: torch.Tensor
             model output predictions
         """
-        y = data_dict['y']
+        y = data_dict["y"]
         out, y = self.patcher.unpatch(out, y)
 
         if self.out_normalizer:
             y = self.out_normalizer.inverse_transform(y)
             out = self.out_normalizer.inverse_transform(out)
 
-        data_dict['y'] = y
+        data_dict["y"] = y
 
         return out, data_dict
 

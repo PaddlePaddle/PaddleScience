@@ -6,12 +6,12 @@
 
 import paddle
 import paddle.nn as nn
-
 import tensorly as tl
-tl.set_backend('paddle')
-from ..functional.tensor_regression import trl
 
 from ..factorized_tensors import FactorizedTensor
+from ..functional.tensor_regression import trl
+
+tl.set_backend("paddle")
 
 
 class TRL(nn.Layer):
@@ -31,19 +31,30 @@ class TRL(nn.Layer):
     .. [1] Tensor Regression Networks, Jean Kossaifi, Zachary C. Lipton, Arinbjorn Kolbeinsson,
         Aran Khanna, Tommaso Furlanello, Anima Anandkumar, JMLR, 2020.
     """
-    def __init__(self, input_shape, output_shape, bias=False, verbose=0,
-                 factorization='cp', rank='same', n_layers=1,
-                 device=None, dtype=None, **kwargs):
+
+    def __init__(
+        self,
+        input_shape,
+        output_shape,
+        bias=False,
+        verbose=0,
+        factorization="cp",
+        rank="same",
+        n_layers=1,
+        device=None,
+        dtype=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.verbose = verbose
 
         if isinstance(input_shape, int):
-            self.input_shape = (input_shape, )
+            self.input_shape = (input_shape,)
         else:
             self.input_shape = tuple(input_shape)
 
         if isinstance(output_shape, int):
-            self.output_shape = (output_shape, )
+            self.output_shape = (output_shape,)
         else:
             self.output_shape = tuple(output_shape)
 
@@ -53,22 +64,29 @@ class TRL(nn.Layer):
         self.order = len(self.weight_shape)
 
         if bias:
-            self.bias = paddle.base.framework.EagerParamBase.from_tensor(paddle.empty(self.output_shape, dtype=dtype))
+            self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+                paddle.empty(self.output_shape, dtype=dtype)
+            )
         else:
             self.bias = None
 
         if n_layers == 1:
             factorization_shape = self.weight_shape
         elif isinstance(n_layers, int):
-            factorization_shape = (n_layers, ) + self.weight_shape
+            factorization_shape = (n_layers,) + self.weight_shape
         elif isinstance(n_layers, tuple):
             factorization_shape = n_layers + self.weight_shape
 
         if isinstance(factorization, FactorizedTensor):
             self.weight = factorization.to(device).to(dtype)
         else:
-            self.weight = FactorizedTensor.new(factorization_shape, rank=rank, factorization=factorization,
-                                               device=device, dtype=dtype)
+            self.weight = FactorizedTensor.new(
+                factorization_shape,
+                rank=rank,
+                factorization=factorization,
+                device=device,
+                dtype=dtype,
+            )
             self.init_from_random()
 
         self.factorization = self.weight.name
@@ -84,7 +102,7 @@ class TRL(nn.Layer):
         ----------
         decompose_full_weight : bool, default is False
             if True, constructs a full weight tensor and decomposes it to initialize the factors
-            otherwise, the factors are directly initialized randomlys        
+            otherwise, the factors are directly initialized randomlys
         """
         with paddle.no_grad():
             if decompose_full_weight:
@@ -95,33 +113,35 @@ class TRL(nn.Layer):
             if self.bias is not None:
                 self.bias.uniform_(-1, 1)
 
-    def init_from_linear(self, linear, unsqueezed_modes=None, **kwargs):                                                                                                                                                                                                                                                                       
+    def init_from_linear(self, linear, unsqueezed_modes=None, **kwargs):
         """Initialise the TRL from the weights of a fully connected layer
 
         Parameters
         ----------
         linear : torch.nn.Linear
         unsqueezed_modes : int list or None
-            For Tucker factorization, this allows to replace pooling layers and instead 
+            For Tucker factorization, this allows to replace pooling layers and instead
             learn the average pooling for the specified modes ("unsqueezed_modes").
             **for factorization='Tucker' only**
         """
         if unsqueezed_modes is not None:
-            if self.factorization != 'Tucker':
-                raise ValueError(f'unsqueezed_modes is only supported for factorization="tucker" but factorization is {self.factorization}.')
+            if self.factorization != "Tucker":
+                raise ValueError(
+                    f'unsqueezed_modes is only supported for factorization="tucker" but factorization is {self.factorization}.'
+                )
 
             unsqueezed_modes = sorted(unsqueezed_modes)
             weight_shape = list(self.weight_shape)
             for mode in unsqueezed_modes[::-1]:
                 if mode == 0:
-                    raise ValueError('Cannot learn pooling for mode-0 (channels).')
+                    raise ValueError("Cannot learn pooling for mode-0 (channels).")
                 if mode > self.n_input:
-                    msg = 'Can only learn pooling for the input tensor. '
-                    msg += f'The input has only {self.n_input} modes, yet got a unsqueezed_mode for mode {mode}.'
+                    msg = "Can only learn pooling for the input tensor. "
+                    msg += f"The input has only {self.n_input} modes, yet got a unsqueezed_mode for mode {mode}."
                     raise ValueError(msg)
 
                 weight_shape.pop(mode)
-                kwargs['unsqueezed_modes'] = unsqueezed_modes
+                kwargs["unsqueezed_modes"] = unsqueezed_modes
         else:
             weight_shape = self.weight_shape
 

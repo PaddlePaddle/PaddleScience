@@ -1,26 +1,29 @@
+from timeit import default_timer
+
 import paddle
 from paddle import amp
-from timeit import default_timer
-import pathlib
+
+from ppsci.contrib.neuralop.losses import LpLoss
 
 from .callbacks import PipelineCallback
-import ppsci.contrib.neuralop.mpu.comm as comm
-from ppsci.contrib.neuralop.losses import LpLoss
 
 
 class Trainer:
-    def __init__(self, *,
-                 model,
-                 n_epochs,
-                 wandb_log=True,
-                 device=None,
-                 amp_autocast=False,
-                 data_processor=None,
-                 callbacks=None,
-                 log_test_interval=1,
-                 log_output=False,
-                 use_distributed=False,
-                 verbose=False):
+    def __init__(
+        self,
+        *,
+        model,
+        n_epochs,
+        wandb_log=True,
+        device=None,
+        amp_autocast=False,
+        data_processor=None,
+        callbacks=None,
+        log_test_interval=1,
+        log_output=False,
+        use_distributed=False,
+        verbose=False,
+    ):
         """
         A general Trainer class to train neural-operators on given datasets
 
@@ -44,9 +47,13 @@ class Trainer:
         """
 
         if callbacks:
-            assert type(callbacks) == list, "Callbacks must be a list of Callback objects"
+            assert (
+                type(callbacks) == list
+            ), "Callbacks must be a list of Callback objects"
             self.callbacks = PipelineCallback(callbacks=callbacks)
-            self.override_load_to_device = (self.callbacks.device_load_callback_idx is not None)
+            self.override_load_to_device = (
+                self.callbacks.device_load_callback_idx is not None
+            )
             self.overrides_loss = self.callbacks.overrides_loss
         else:
             self.callbacks = []
@@ -67,7 +74,7 @@ class Trainer:
                 log_test_interval=log_test_interval,
                 log_output=log_output,
                 use_distributed=use_distributed,
-                verbose=verbose
+                verbose=verbose,
             )
 
         self.model = model
@@ -92,10 +99,19 @@ class Trainer:
                 log_test_interval=log_test_interval,
                 log_output=log_output,
                 use_distributed=use_distributed,
-                verbose=verbose
+                verbose=verbose,
             )
 
-    def train(self, train_loader, test_loaders, optimizer, scheduler, regularizer, training_loss=None, eval_losses=None):
+    def train(
+        self,
+        train_loader,
+        test_loaders,
+        optimizer,
+        scheduler,
+        regularizer,
+        training_loss=None,
+        eval_losses=None,
+    ):
 
         """Trains the given model on the given datasets.
         params:
@@ -115,10 +131,13 @@ class Trainer:
 
         if self.callbacks:
             self.callbacks.on_train_start(
-                train_loader=train_loader, test_loaders=test_loaders,
-                optimizer=optimizer, scheduler=scheduler,
-                regularizer=regularizer, training_loss=training_loss,
-                eval_losses=eval_losses
+                train_loader=train_loader,
+                test_loaders=test_loaders,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                regularizer=regularizer,
+                training_loss=training_loss,
+                eval_losses=eval_losses,
             )
 
         if training_loss is None:
@@ -167,13 +186,19 @@ class Trainer:
                 if self.callbacks:
                     self.callbacks.on_before_loss(out=out)
 
-                loss = 0.
+                loss = 0.0
 
                 if self.overrides_loss:
                     if isinstance(out, paddle.Tensor):
-                        loss += self.callbacks.compute_training_loss(out=out.to(paddle.float32), **sample, amp_autocast=self.amp_autocast)
+                        loss += self.callbacks.compute_training_loss(
+                            out=out.to(paddle.float32),
+                            **sample,
+                            amp_autocast=self.amp_autocast,
+                        )
                     elif isinstance(out, dict):
-                        loss += self.callbacks.compute_training_loss(**out, **sample, amp_autocast=self.amp_autocast)
+                        loss += self.callbacks.compute_training_loss(
+                            **out, **sample, amp_autocast=self.amp_autocast
+                        )
                 else:
                     if self.amp_autocast:
                         with amp.autocast(enabled=True):
@@ -218,7 +243,11 @@ class Trainer:
 
                 if self.callbacks:
                     self.callbacks.on_before_val(
-                        epoch=epoch, train_err=train_err, time=epoch_train_time, avg_loss=avg_loss, avg_lasso_loss=avg_lasso_loss
+                        epoch=epoch,
+                        train_err=train_err,
+                        time=epoch_train_time,
+                        avg_loss=avg_loss,
+                        avg_lasso_loss=avg_lasso_loss,
                     )
 
                 for loader_name, loader in test_loaders.items():
@@ -228,17 +257,18 @@ class Trainer:
                     self.callbacks.on_val_end()
 
             if self.callbacks:
-                self.callbacks.on_epoch_end(epoch=epoch, train_err=train_err, avg_loss=avg_loss)
+                self.callbacks.on_epoch_end(
+                    epoch=epoch, train_err=train_err, avg_loss=avg_loss
+                )
 
         return errors
 
-    def evaluate(self, loss_dict, data_loader,
-                 log_prefix=''):
+    def evaluate(self, loss_dict, data_loader, log_prefix=""):
         """Evaluates the model on a dictionary of losses
 
         Parameters
         ----------
-        loss_dict : dict of functions 
+        loss_dict : dict of functions
           each function takes as input a tuple (prediction, ground_truth)
           and returns the corresponding loss
         data_loader : data_loader to evaluate on
@@ -252,17 +282,19 @@ class Trainer:
         """
 
         if self.callbacks:
-            self.callbacks.on_val_epoch_start(log_prefix=log_prefix, loss_dict=loss_dict, data_loader=data_loader)
+            self.callbacks.on_val_epoch_start(
+                log_prefix=log_prefix, loss_dict=loss_dict, data_loader=data_loader
+            )
 
         self.model.eval()
 
-        errors = {f'{log_prefix}_{loss_name}': 0 for loss_name in loss_dict.keys()}
+        errors = {f"{log_prefix}_{loss_name}": 0 for loss_name in loss_dict.keys()}
 
         n_samples = 0
         with paddle.no_grad():
             for idx, sample in enumerate(data_loader):
 
-                n_samples += sample['y'].shape[0]
+                n_samples += sample["y"].shape[0]
 
                 if self.callbacks:
                     self.callbacks.on_val_batch_start(idx=idx, sample=sample)
@@ -284,9 +316,13 @@ class Trainer:
                 for loss_name, loss in loss_dict.items():
                     if self.overrides_loss:
                         if isinstance(out, paddle.Tensor):
-                            val_loss = self.callbacks.compute_training_loss(out.float(), **sample)
+                            val_loss = self.callbacks.compute_training_loss(
+                                out.float(), **sample
+                            )
                         elif isinstance(out, dict):
-                            val_loss = self.callbacks.compute_training_loss(**out, **sample)
+                            val_loss = self.callbacks.compute_training_loss(
+                                **out, **sample
+                            )
                     else:
                         if isinstance(out, paddle.Tensor):
                             val_loss = loss(out, **sample)
@@ -295,7 +331,7 @@ class Trainer:
                         if val_loss.shape == ():
                             val_loss = val_loss.item()
 
-                    errors[f'{log_prefix}_{loss_name}'] += val_loss
+                    errors[f"{log_prefix}_{loss_name}"] += val_loss
 
                 if self.callbacks:
                     self.callbacks.on_val_batch_end()

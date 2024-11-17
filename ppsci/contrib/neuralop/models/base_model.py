@@ -1,7 +1,8 @@
 import inspect
-import paddle
 import warnings
 from pathlib import Path
+
+import paddle
 
 # Author: Jean Kossaifi
 
@@ -23,12 +24,13 @@ class BaseModel(paddle.nn.Layer):
     This can be used for sanity check when loading models from checkpoints to verify the
     model hasn't been updated since.
     """
+
     _models = dict()
-    _version = '0.1.0'
+    _version = "0.1.0"
 
     def __init_subclass__(cls, name=None, **kwargs):
         """When a subclass is created, register it in _models
-        We look for an existing name attribute. 
+        We look for an existing name attribute.
         If not give, then we use the class' name.
         """
         super().__init_subclass__(**kwargs)
@@ -51,13 +53,15 @@ class BaseModel(paddle.nn.Layer):
         sig = inspect.signature(cls)
         model_name = cls.__name__
 
-        verbose = kwargs.get('verbose', False)
+        verbose = kwargs.get("verbose", False)
         # Verify that given parameters are actually arguments of the model
         for key in kwargs:
             if key not in sig.parameters:
                 if verbose:
-                    print(f"Given argument key={key} "
-                          f"that is not in {model_name}'s signature.")
+                    print(
+                        f"Given argument key={key} "
+                        f"that is not in {model_name}'s signature."
+                    )
 
         # Check for model arguments not specified in the configuration
         for key, value in sig.parameters.items():
@@ -69,23 +73,24 @@ class BaseModel(paddle.nn.Layer):
                     )
                 kwargs[key] = value.default
 
-        if hasattr(cls, '_version'):
-            kwargs['_version'] = cls._version
-        kwargs['args'] = args
-        kwargs['_name'] = cls._name
+        if hasattr(cls, "_version"):
+            kwargs["_version"] = cls._version
+        kwargs["args"] = args
+        kwargs["_name"] = cls._name
         instance = super().__new__(cls)
         instance._init_kwargs = kwargs
 
         return instance
 
     def save_checkpoint(self, save_folder, save_name):
-        """Saves the model state and init param in the given folder under the given name
-        """
+        """Saves the model state and init param in the given folder under the given name"""
         save_folder = Path(save_folder)
 
-        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pdmodel').as_posix()
+        state_dict_filepath = save_folder.joinpath(
+            f"{save_name}_state_dict.pdmodel"
+        ).as_posix()
         paddle.save(self.state_dict(), state_dict_filepath)
-        metadata_filepath = save_folder.joinpath(f'{save_name}_metadata.pkl').as_posix()
+        metadata_filepath = save_folder.joinpath(f"{save_name}_metadata.pkl").as_posix()
         # Objects (e.g. GeLU) are not serializable by json - find a better solution in the future
         paddle.save(self._init_kwargs, metadata_filepath)
         # with open(metadata_filepath, 'w') as f:
@@ -93,25 +98,29 @@ class BaseModel(paddle.nn.Layer):
 
     def load_checkpoint(self, save_folder, save_name):
         save_folder = Path(save_folder)
-        state_dict_filepath = save_folder.joinpath(f'{save_name}_state_dict.pdmodel').as_posix()
+        state_dict_filepath = save_folder.joinpath(
+            f"{save_name}_state_dict.pdmodel"
+        ).as_posix()
         self.set_state_dict(paddle.load(state_dict_filepath))
 
     @classmethod
     def from_checkpoint(cls, save_folder, save_name):
         save_folder = Path(save_folder)
 
-        metadata_filepath = save_folder.joinpath(f'{save_name}_metadata.pkl').as_posix()
+        metadata_filepath = save_folder.joinpath(f"{save_name}_metadata.pkl").as_posix()
         init_kwargs = paddle.load(metadata_filepath)
         # with open(metadata_filepath, 'r') as f:
         #     init_kwargs = json.load(f)
 
-        version = init_kwargs.pop('_version')
-        if hasattr(cls, '_version') and version != cls._version:
+        version = init_kwargs.pop("_version")
+        if hasattr(cls, "_version") and version != cls._version:
             print(version)
-            warnings.warn(f'Checkpoing saved for version {version} of model {cls._name} but current code is version {cls._version}')
+            warnings.warn(
+                f"Checkpoing saved for version {version} of model {cls._name} but current code is version {cls._version}"
+            )
 
-        if 'args' in init_kwargs:
-            init_args = init_kwargs.pop('args')
+        if "args" in init_kwargs:
+            init_args = init_kwargs.pop("args")
         else:
             init_args = []
         instance = cls(*init_args, **init_kwargs)
@@ -164,4 +173,6 @@ def get_model(config):
     try:
         return BaseModel._models[arch](**config_arch)
     except KeyError:
-        raise ValueError(f"Got config.arch={arch}, expected one of {available_models()}.")
+        raise ValueError(
+            f"Got config.arch={arch}, expected one of {available_models()}."
+        )

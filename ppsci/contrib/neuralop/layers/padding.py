@@ -1,4 +1,5 @@
-from typing import List, Union
+from typing import List
+from typing import Union
 
 from paddle import nn
 from paddle.nn import functional as F

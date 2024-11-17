@@ -1,14 +1,16 @@
+from abc import abstractmethod
+
+import paddle
+
 from ..utils import count_tensor_params
 from .transforms import Transform
-from abc import abstractmethod
-from collections.abc import Iterable
-import paddle
 
 
 class OutputEncoder(paddle.nn.Layer):
     """OutputEncoder: converts the output of a model
-        into a form usable by some cost function.
+    into a form usable by some cost function.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -50,6 +52,7 @@ class MultipleFieldOutputEncoder(OutputEncoder):
         same as above. if only certain indices
         of encoder output are important, this indexes those.
     """
+
     def __init__(self, encoder_dict, input_mappings, return_mappings=None):
         self.encoders = encoder_dict
         self.output_fields = encoder_dict.keys()
@@ -105,8 +108,8 @@ class MultipleFieldOutputEncoder(OutputEncoder):
 
 
 class DictTransform(Transform):
-    """When a model has multiple input and output fields, 
-        apply a different transform to each field, 
+    """When a model has multiple input and output fields,
+        apply a different transform to each field,
         tries to apply the inverse_transform to each output
 
     Parameters
@@ -122,6 +125,7 @@ class DictTransform(Transform):
         same as above. if only certain indices
         of encoder output are important, this indexes those.
     """
+
     def __init__(self, transform_dict, input_mappings, return_mappings=None):
         self.transforms = transform_dict
         self.output_fields = transform_dict.keys()
@@ -178,8 +182,9 @@ class DictTransform(Transform):
 
 class UnitGaussianNormalizer(Transform):
     """
-    UnitGaussianNormalizer normalizes data to be zero mean and unit std. 
+    UnitGaussianNormalizer normalizes data to be zero mean and unit std.
     """
+
     def __init__(self, mean=None, std=None, eps=1e-7, dim=None, mask=None):
         """
         mean : torch.tensor or None
@@ -199,7 +204,7 @@ class UnitGaussianNormalizer(Transform):
                 along batch-size, height and width, pass ``dim=[0, 2, 3]``
 
         mask : torch.Tensor or None, default is None
-            If not None, a tensor with the same size as a sample, 
+            If not None, a tensor with the same size as a sample,
             with value 0 where the data should be ignored and 1 everywhere else
 
         Notes
@@ -213,9 +218,9 @@ class UnitGaussianNormalizer(Transform):
         """
         super().__init__()
 
-        self.register_buffer('mean', mean)
-        self.register_buffer('std', std)
-        self.register_buffer('mask', mask)
+        self.register_buffer("mean", mean)
+        self.register_buffer("std", std)
+        self.register_buffer("mask", mask)
 
         self.eps = eps
         if mean is not None:
@@ -234,7 +239,7 @@ class UnitGaussianNormalizer(Transform):
         count = 0
         n_samples = len(data_batch)
         while count < n_samples:
-            samples = data_batch[count:count+batch_size]
+            samples = data_batch[count : count + batch_size]
             # print(samples.shape)
             # if batch_size == 1:
             #     samples = samples.unsqueeze(0)
@@ -249,19 +254,25 @@ class UnitGaussianNormalizer(Transform):
         if self.mask is None:
             self.n_elements = count_tensor_params(data_batch, self.dim)
             self.mean = paddle.mean(data_batch, axis=self.dim, keepdim=True)
-            self.squared_mean = paddle.mean(data_batch**2, axis=self.dim, keepdim=True)
+            self.squared_mean = paddle.mean(
+                data_batch**2, axis=self.dim, keepdim=True
+            )
             self.std = paddle.sqrt(self.squared_mean - self.mean**2)
         else:
             batch_size = data_batch.shape[0]
             dim = [i - 1 for i in self.dim if i]
             shape = [s for i, s in enumerate(self.mask.shape) if i not in dim]
-            self.n_elements = paddle.count_nonzero(self.mask, axis=dim)*batch_size
+            self.n_elements = paddle.count_nonzero(self.mask, axis=dim) * batch_size
             self.mean = paddle.zeros(shape)
             self.std = paddle.zeros(shape)
             self.squared_mean = paddle.zeros(shape)
             data_batch[:, self.mask == 1] = 0
-            self.mean[self.mask == 1] = paddle.sum(data_batch, axis=dim, keepdim=True) / self.n_elements
-            self.squared_mean = paddle.sum(data_batch**2, axis=dim, keepdim=True) / self.n_elements
+            self.mean[self.mask == 1] = (
+                paddle.sum(data_batch, axis=dim, keepdim=True) / self.n_elements
+            )
+            self.squared_mean = (
+                paddle.sum(data_batch**2, axis=dim, keepdim=True) / self.n_elements
+            )
             self.std = paddle.sqrt(self.squared_mean - self.mean**2)
 
     def incremental_update_mean_std(self, data_batch):
@@ -270,22 +281,25 @@ class UnitGaussianNormalizer(Transform):
             dim = self.dim
         else:
             dim = [i - 1 for i in self.dim if i]
-            n_elements = paddle.count_nonzero(self.mask, axis=dim)*data_batch.shape[0]
+            n_elements = paddle.count_nonzero(self.mask, axis=dim) * data_batch.shape[0]
             data_batch[:, self.mask == 1] = 0
 
-        self.mean = (1.0/(self.n_elements + n_elements))*(
-            self.n_elements*self.mean + paddle.sum(data_batch, axis=dim, keepdim=True))
-        self.squared_mean = (1.0/(self.n_elements + n_elements - 1))*(
-            self.n_elements*self.squared_mean + paddle.sum(data_batch**2, axis=dim, keepdim=True))
+        self.mean = (1.0 / (self.n_elements + n_elements)) * (
+            self.n_elements * self.mean + paddle.sum(data_batch, axis=dim, keepdim=True)
+        )
+        self.squared_mean = (1.0 / (self.n_elements + n_elements - 1)) * (
+            self.n_elements * self.squared_mean
+            + paddle.sum(data_batch**2, axis=dim, keepdim=True)
+        )
         self.n_elements += n_elements
 
         self.std = paddle.sqrt(self.squared_mean - self.mean**2)
 
     def transform(self, x):
-        return (x - self.mean)/(self.std + self.eps)
+        return (x - self.mean) / (self.std + self.eps)
 
     def inverse_transform(self, x):
-        return (x*(self.std + self.eps) + self.mean)
+        return x * (self.std + self.eps) + self.mean
 
     def forward(self, x):
         return self.transform(x)
@@ -304,11 +318,11 @@ class UnitGaussianNormalizer(Transform):
         self.mean = self.mean.to(device)
         self.std = self.std.to(device)
         return self
-    
+
     @classmethod
     def from_dataset(cls, dataset, dim=None, keys=None, mask=None):
         """Return a dictionary of normalizer instances, fitted on the given dataset
-        
+
         Parameters
         ----------
         dataset : pytorch dataset

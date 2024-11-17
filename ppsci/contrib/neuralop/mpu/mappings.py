@@ -13,21 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
-from typing import Any
-
 import paddle
-import paddle.distributed as dist
+
 from .comm import get_model_parallel_group
+
+# helper functions
+from .helpers import _gather
+from .helpers import _reduce
+from .helpers import _split
 
 # torch utils
 # from paddle._utils import _flatten_dense_tensors, _unflatten_dense_tensors
-
-# helper functions
-from .helpers import split_tensor_along_dim
-from .helpers import _reduce
-from .helpers import _split
-from .helpers import _gather
 
 
 # model parallel

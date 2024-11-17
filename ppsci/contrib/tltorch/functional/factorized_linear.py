@@ -1,6 +1,9 @@
-from .factorized_tensordot import tensor_dot_tucker, tensor_dot_cp
 import tensorly as tl
-tl.set_backend('paddle')
+
+from .factorized_tensordot import tensor_dot_cp
+from .factorized_tensordot import tensor_dot_tucker
+
+tl.set_backend("paddle")
 
 # Author: Jean Kossaifi
 
@@ -24,11 +27,15 @@ def linear_tucker(tensor, tucker_matrix, transpose=True, channels_first=True):
 
 def linear_cp(tensor, cp_matrix, transpose=True):
     if transpose:
-        out_features, in_features = len(cp_matrix.tensorized_shape[0]), len(cp_matrix.tensorized_shape[1])
+        out_features, in_features = len(cp_matrix.tensorized_shape[0]), len(
+            cp_matrix.tensorized_shape[1]
+        )
         in_shape = cp_matrix.tensorized_shape[1]
         modes_cp = list(range(out_features, cp_matrix.order))
     else:
-        in_features, out_features = len(cp_matrix.tensorized_shape[0]), len(cp_matrix.tensorized_shape[1])
+        in_features, out_features = len(cp_matrix.tensorized_shape[0]), len(
+            cp_matrix.tensorized_shape[1]
+        )
         in_shape = cp_matrix.tensorized_shape[0]
         modes_cp = list(range(in_features))
     tensor = tensor.reshape(-1, *in_shape)
@@ -46,18 +53,27 @@ def linear_blocktt(tensor, tt_matrix, transpose=True):
     ndim = len(tt_matrix.tensorized_shape[contraction_axis])
     tensor = tensor.reshape(-1, *tt_matrix.tensorized_shape[contraction_axis])
 
-    bs = 'a'
+    bs = "a"
     start = ord(bs) + 1
-    in_idx = bs + ''.join(chr(i) for i in [start+i for i in range(ndim)])
+    in_idx = bs + "".join(chr(i) for i in [start + i for i in range(ndim)])
     factors_idx = []
     for i in range(ndim):
         if transpose:
-            idx = [start+ndim*2+i, start+ndim+i, start+i, start+ndim*2+i+1]
+            idx = [
+                start + ndim * 2 + i,
+                start + ndim + i,
+                start + i,
+                start + ndim * 2 + i + 1,
+            ]
         else:
-            idx = [start+ndim*2+i, start+i, start+ndim+i, start+ndim*2+i+1]
-        factors_idx.append(''.join(chr(j) for j in idx))
-    out_idx = bs + ''.join(chr(i) for i in [start + ndim + i for i in range(ndim)])
-    eq = in_idx + ',' + ','.join(i for i in factors_idx) + '->' + out_idx
+            idx = [
+                start + ndim * 2 + i,
+                start + i,
+                start + ndim + i,
+                start + ndim * 2 + i + 1,
+            ]
+        factors_idx.append("".join(chr(j) for j in idx))
+    out_idx = bs + "".join(chr(i) for i in [start + ndim + i for i in range(ndim)])
+    eq = in_idx + "," + ",".join(i for i in factors_idx) + "->" + out_idx
     res = tl.einsum(eq, tensor, *tt_matrix.factors)
     return tl.reshape(res, (tl.shape(res)[0], -1))
-

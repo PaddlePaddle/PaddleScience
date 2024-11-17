@@ -1,33 +1,32 @@
 """
 Callbacks store all non-essential logic
-required to run specific training scripts. 
+required to run specific training scripts.
 
-The callbacks in this module follow the form and 
+The callbacks in this module follow the form and
 logic of callbacks in Pytorch-Lightning (https://lightning.ai/docs/pytorch/stable)
 """
 
-import os
-from pathlib import Path
 import sys
-from typing import List, Union, Literal
+from pathlib import Path
+from typing import List
+from typing import Union
 
 import paddle
 import wandb
-
-from ppsci.contrib.neuralop.training.patching import MultigridPatching2D
 
 
 class Callback(object):
     """
     Base callback class. Each abstract method is called in the trainer's
-    training loop at the appropriate time. 
+    training loop at the appropriate time.
 
-    Callbacks are stateful, meaning they keep track of a state and 
+    Callbacks are stateful, meaning they keep track of a state and
         update it throughout the lifetime of a Trainer class.
         Storing the state as a dict enables the Callback to keep track of
-        references to underlying parts of the Trainer's process, such as 
+        references to underlying parts of the Trainer's process, such as
         models, cost functions and output encoders
     """
+
     def __init__(self):
         self.state_dict = {}
 
@@ -99,7 +98,6 @@ class Callback(object):
 
 
 class PipelineCallback(Callback):
-
     def __init__(self, callbacks: List[Callback]):
         """
         PipelineCallback handles logic for the case in which
@@ -112,9 +110,13 @@ class PipelineCallback(Callback):
         """
         self.callbacks = callbacks
 
-        overrides_device_load = ["on_load_to_device" in c.__class__.__dict__.keys() for c in callbacks]
+        overrides_device_load = [
+            "on_load_to_device" in c.__class__.__dict__.keys() for c in callbacks
+        ]
 
-        assert sum(overrides_device_load) < 2, "More than one callback cannot override device loading"
+        assert (
+            sum(overrides_device_load) < 2
+        ), "More than one callback cannot override device loading"
         if sum(overrides_device_load) == 1:
             self.device_load_callback_idx = overrides_device_load.index(True)
             print("using custom callback to load data to device.")
@@ -123,7 +125,9 @@ class PipelineCallback(Callback):
             print("using standard method to load data to device.")
 
         # unless loss computation is overriden, call a basic loss function calculation
-        overrides_loss = ["compute_training_loss" in c.__class__.__dict__.keys() for c in callbacks]
+        overrides_loss = [
+            "compute_training_loss" in c.__class__.__dict__.keys() for c in callbacks
+        ]
 
         if sum(overrides_loss) >= 1:
             self.overrides_loss = True
@@ -162,7 +166,9 @@ class PipelineCallback(Callback):
 
     def on_load_to_device(self, *args, **kwargs):
         if self.device_load_callback_idx:
-            self.callbacks[self.device_load_callback_idx].on_load_to_device(*args, *kwargs)
+            self.callbacks[self.device_load_callback_idx].on_load_to_device(
+                *args, *kwargs
+            )
 
     def on_before_forward(self, *args, **kwargs):
         for c in self.callbacks:
@@ -229,7 +235,7 @@ class PipelineCallback(Callback):
 
 class BasicLoggerCallback(Callback):
     """
-    Callback that implements simple logging functionality 
+    Callback that implements simple logging functionality
     expected when passing verbose to a Trainer
     """
 
@@ -244,9 +250,9 @@ class BasicLoggerCallback(Callback):
     def on_train_start(self, **kwargs):
         self._update_state_dict(**kwargs)
 
-        train_loader = self.state_dict['train_loader']
-        test_loaders = self.state_dict['test_loaders']
-        verbose = self.state_dict['verbose']
+        train_loader = self.state_dict["train_loader"]
+        test_loaders = self.state_dict["test_loaders"]
+        verbose = self.state_dict["verbose"]
 
         n_train = len(train_loader.dataset)
         self._update_state_dict(n_train=n_train)
@@ -255,9 +261,11 @@ class BasicLoggerCallback(Callback):
             test_loaders = dict(test=test_loaders)
 
         if verbose:
-            print(f'Training on {n_train} samples')
-            print(f'Testing on {[len(loader.dataset) for loader in test_loaders.values()]} samples'
-                  f'         on resolutions {[name for name in test_loaders]}.')
+            print(f"Training on {n_train} samples")
+            print(
+                f"Testing on {[len(loader.dataset) for loader in test_loaders.values()]} samples"
+                f"         on resolutions {[name for name in test_loaders]}."
+            )
             sys.stdout.flush()
 
     def on_epoch_start(self, epoch):
@@ -267,13 +275,21 @@ class BasicLoggerCallback(Callback):
         self._update_state_dict(idx=idx)
 
     def on_before_loss(self, out, **kwargs):
-        if self.state_dict['epoch'] == 0 and self.state_dict['idx'] == 0 and self.state_dict['verbose']:
-            print(f'Raw outputs of size {out.shape=}')
+        if (
+            self.state_dict["epoch"] == 0
+            and self.state_dict["idx"] == 0
+            and self.state_dict["verbose"]
+        ):
+            print(f"Raw outputs of size {out.shape=}")
 
     def on_before_val(self, epoch, train_err, time, avg_loss, avg_lasso_loss, **kwargs):
         # track training err and val losses to print at interval epochs
-        msg = f'[{epoch}] time={time:.2f}, avg_loss={avg_loss:.4f}, train_err={train_err:.4f}'
-        values_to_log = dict(train_err=train_err / self.state_dict['n_train'], time=time, avg_loss=avg_loss)
+        msg = f"[{epoch}] time={time:.2f}, avg_loss={avg_loss:.4f}, train_err={train_err:.4f}"
+        values_to_log = dict(
+            train_err=train_err / self.state_dict["n_train"],
+            time=time,
+            avg_loss=avg_loss,
+        )
 
         self._update_state_dict(msg=msg, values_to_log=values_to_log)
         self._update_state_dict(avg_lasso_loss=avg_lasso_loss)
@@ -281,41 +297,45 @@ class BasicLoggerCallback(Callback):
     def on_val_epoch_end(self, errors, **kwargs):
         for loss_name, loss_value in errors.items():
             if isinstance(loss_value, float):
-                self.state_dict['msg'] += f', {loss_name}={loss_value:.4f}'
+                self.state_dict["msg"] += f", {loss_name}={loss_value:.4f}"
             else:
                 loss_value = {i: e.item() for (i, e) in enumerate(loss_value)}
-                self.state_dict['msg'] += f', {loss_name}={loss_value}'
-            self.state_dict['values_to_log'][loss_name] = loss_value
+                self.state_dict["msg"] += f", {loss_name}={loss_value}"
+            self.state_dict["values_to_log"][loss_name] = loss_value
 
     def on_val_end(self, *args, **kwargs):
-        if self.state_dict.get('regularizer', False):
-            avg_lasso = self.state_dict.get('avg_lasso_loss', 0.)
-            avg_lasso /= self.state_dict.get('n_epochs')
-            self.state_dict['msg'] += f', avg_lasso={avg_lasso:.5f}'
+        if self.state_dict.get("regularizer", False):
+            avg_lasso = self.state_dict.get("avg_lasso_loss", 0.0)
+            avg_lasso /= self.state_dict.get("n_epochs")
+            self.state_dict["msg"] += f", avg_lasso={avg_lasso:.5f}"
 
-        print(self.state_dict['msg'])
+        print(self.state_dict["msg"])
         sys.stdout.flush()
 
-        if self.state_dict.get('wandb_log', False):
-            for pg in self.state_dict['optimizer'].param_groups:
-                lr = pg['lr']
-                self.state_dict['values_to_log']['lr'] = lr
-            wandb.log(self.state_dict['values_to_log'], step=self.state_dict['epoch'] + 1, commit=True)
+        if self.state_dict.get("wandb_log", False):
+            for pg in self.state_dict["optimizer"].param_groups:
+                lr = pg["lr"]
+                self.state_dict["values_to_log"]["lr"] = lr
+            wandb.log(
+                self.state_dict["values_to_log"],
+                step=self.state_dict["epoch"] + 1,
+                commit=True,
+            )
 
 
 class CheckpointCallback(Callback):
-
-    def __init__(self,
-                 save_dir: Union[Path, str],
-                 save_best: str = None,
-                 save_interval: int = 1,
-                 save_optimizer: bool = False,
-                 save_scheduler: bool = False,
-                 save_regularizer: bool = False,
-                 resume_from_dir: Union[Path, str] = None
-                 ):
-        """CheckpointCallback handles saving and resuming 
-        training state from checkpoint .pdparams save files. 
+    def __init__(
+        self,
+        save_dir: Union[Path, str],
+        save_best: str = None,
+        save_interval: int = 1,
+        save_optimizer: bool = False,
+        save_scheduler: bool = False,
+        save_regularizer: bool = False,
+        resume_from_dir: Union[Path, str] = None,
+    ):
+        """CheckpointCallback handles saving and resuming
+        training state from checkpoint .pdparams save files.
 
         Parameters
         ----------
@@ -366,38 +386,53 @@ class CheckpointCallback(Callback):
     def on_train_start(self, *args, **kwargs):
         self._update_state_dict(**kwargs)
 
-        verbose = self.state_dict.get('verbose', False)
+        verbose = self.state_dict.get("verbose", False)
         if self.save_best:
-            assert self.state_dict['eval_losses'], "Error: cannot monitor a metric if no validation metrics exist."
-            assert self.save_best in self.state_dict['eval_losses'].keys(), "Error: cannot monitor a metric outside of eval_losses."
-            self.best_metric_value = float('inf')
+            assert self.state_dict[
+                "eval_losses"
+            ], "Error: cannot monitor a metric if no validation metrics exist."
+            assert (
+                self.save_best in self.state_dict["eval_losses"].keys()
+            ), "Error: cannot monitor a metric outside of eval_losses."
+            self.best_metric_value = float("inf")
         else:
             self.best_metric_value = None
 
         # load state dict if resume_from_dir is given
         if self.resume_from_dir:
-            saved_modules = [x.stem for x in self.resume_from_dir.glob('*')]
+            saved_modules = [x.stem for x in self.resume_from_dir.glob("*")]
 
-            assert 'best_model_state_dict' in saved_modules or 'model_state_dict' in saved_modules, "Error: CheckpointCallback expects a model state dict named model.pdparams or best_model.pdparams."
+            assert (
+                "best_model_state_dict" in saved_modules
+                or "model_state_dict" in saved_modules
+            ), "Error: CheckpointCallback expects a model state dict named model.pdparams or best_model.pdparams."
 
             # no need to handle exceptions if assertion that either model file exists passes
-            if 'best_model_state_dict' in saved_modules:
-                if hasattr(self.state_dict['model'], 'load_checkpoint'):
-                    self.state_dict['model'].load_checkpoint(save_folder=self.resume_from_dir, save_name='best_model')
+            if "best_model_state_dict" in saved_modules:
+                if hasattr(self.state_dict["model"], "load_checkpoint"):
+                    self.state_dict["model"].load_checkpoint(
+                        save_folder=self.resume_from_dir, save_name="best_model"
+                    )
                 else:
-                    self.state_dict['model'].set_state_dict(paddle.load(self.resume_from_dir / 'best_model.pdparams'))
+                    self.state_dict["model"].set_state_dict(
+                        paddle.load(self.resume_from_dir / "best_model.pdparams")
+                    )
                 if verbose:
                     print("Loading model state from best_model_state_dict.pdparams")
             else:
-                if hasattr(self.state_dict['model'], 'load_checkpoint'):
-                    self.state_dict['model'].load_checkpoint(save_folder=self.resume_from_dir, save_name='model')
+                if hasattr(self.state_dict["model"], "load_checkpoint"):
+                    self.state_dict["model"].load_checkpoint(
+                        save_folder=self.resume_from_dir, save_name="model"
+                    )
                 else:
-                    self.state_dict['model'].set_state_dict(paddle.load(self.resume_from_dir / 'model.pdparams'))
+                    self.state_dict["model"].set_state_dict(
+                        paddle.load(self.resume_from_dir / "model.pdparams")
+                    )
                 if verbose:
                     print("Loading model state from model.pdparams")
 
             # load all of optimizer, scheduler, regularizer if they exist
-            for module in ['optimizer', 'scheduler', 'regularizer']:
+            for module in ["optimizer", "scheduler", "regularizer"]:
                 if module in saved_modules:
                     load_path = str(self.resume_from_dir / f"{module}.pdopt")
                     self.state_dict[module].set_state_dict(paddle.load(load_path))
@@ -419,8 +454,11 @@ class CheckpointCallback(Callback):
         Save state to dir if all conditions are met
         """
         if self.save_best:
-            log_prefix = self.state_dict['log_prefix']
-            if self.state_dict['errors'][f"{log_prefix}_{self.save_best}"] < self.best_metric_value:
+            log_prefix = self.state_dict["log_prefix"]
+            if (
+                self.state_dict["errors"][f"{log_prefix}_{self.save_best}"]
+                < self.best_metric_value
+            ):
                 metric_cond = True
             else:
                 metric_cond = False
@@ -428,29 +466,29 @@ class CheckpointCallback(Callback):
             metric_cond = True
 
         # Save states to save_dir
-        if self.state_dict['epoch'] % self.save_interval == 0 and metric_cond:
+        if self.state_dict["epoch"] % self.save_interval == 0 and metric_cond:
             # save model or best_model.pdparams no matter what
             if self.save_best:
-                model_name = 'best_model'
+                model_name = "best_model"
             else:
-                model_name = 'model'
+                model_name = "model"
 
             save_path = self.save_dir / f"{model_name}.pdparams"
-            if hasattr(self.state_dict['model'], 'save_checkpoint'):
-                self.state_dict['model'].save_checkpoint(self.save_dir, model_name)
+            if hasattr(self.state_dict["model"], "save_checkpoint"):
+                self.state_dict["model"].save_checkpoint(self.save_dir, model_name)
             else:
-                paddle.save(self.state_dict['model'].state_dict(), save_path)
+                paddle.save(self.state_dict["model"].state_dict(), save_path)
 
             # save optimizer, scheduler, regularizer according to flags
             if self.save_optimizer:
                 save_path = str(self.save_dir / "optimizer.pdopt")
-                paddle.save(self.state_dict['optimizer'].state_dict(), save_path)
+                paddle.save(self.state_dict["optimizer"].state_dict(), save_path)
             if self.save_scheduler:
                 save_path = str(self.save_dir / "scheduler.pdopt")
-                paddle.save(self.state_dict['scheduler'].state_dict(), save_path)
+                paddle.save(self.state_dict["scheduler"].state_dict(), save_path)
             if self.save_regularizer:
                 save_path = str(self.save_dir / "regularizer.pdopt")
-                paddle.save(self.state_dict['regularizer'].state_dict(), save_path)
+                paddle.save(self.state_dict["regularizer"].state_dict(), save_path)
 
-            if self.state_dict['verbose']:
+            if self.state_dict["verbose"]:
                 print(f"Saved training state to {save_path}")

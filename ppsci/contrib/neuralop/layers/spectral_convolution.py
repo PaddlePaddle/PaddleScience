@@ -1,13 +1,15 @@
-from typing import List, Optional, Tuple, Union
-
-from ..utils import validate_scaling_factor
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import paddle
-from paddle import nn
-
 import tensorly as tl
+from paddle import nn
 from tensorly.plugins import use_opt_einsum
+
 from ...tltorch.factorized_tensors.core import FactorizedTensor
+from ..utils import validate_scaling_factor
 
 # from .einsum_utils import einsum_complexhalf
 from .base_spectral_conv import BaseSpectralConv
@@ -86,13 +88,13 @@ def _contract_tucker(x, tucker_weight, separable=False):
     out_sym = einsum_symbols[order]
     out_syms = list(x_syms)
     if separable:
-        core_syms = einsum_symbols[order + 1: 2 * order]
+        core_syms = einsum_symbols[order + 1 : 2 * order]
         # factor_syms = [einsum_symbols[1]+core_syms[0]] #in only
         # x, y, ...
         factor_syms = [xs + rs for (xs, rs) in zip(x_syms[1:], core_syms)]
 
     else:
-        core_syms = einsum_symbols[order + 1: 2 * order + 1]
+        core_syms = einsum_symbols[order + 1 : 2 * order + 1]
         out_syms[1] = out_sym
         factor_syms = [
             einsum_symbols[1] + core_syms[0],
@@ -123,7 +125,7 @@ def _contract_tt(x, tt_weight, separable=False):
         out_syms[0] = x_syms[0]
     else:
         out_syms = list(x_syms)
-    rank_syms = list(einsum_symbols[order + 1:])
+    rank_syms = list(einsum_symbols[order + 1 :])
     tt_syms = []
     for i, s in enumerate(weight_syms):
         tt_syms.append([rank_syms[i], s, rank_syms[i + 1]])
@@ -308,7 +310,7 @@ class SpectralConv(BaseSpectralConv):
         ] = validate_scaling_factor(output_scaling_factor, self.order, n_layers)
 
         if init_std == "auto":
-            init_std = (2 / (in_channels + out_channels))**0.5
+            init_std = (2 / (in_channels + out_channels)) ** 0.5
         else:
             init_std = init_std
 
@@ -372,7 +374,9 @@ class SpectralConv(BaseSpectralConv):
             # https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.html
             self.bias = paddle.base.framework.EagerParamBase.from_tensor(
                 init_std
-                * paddle.randn((tuple([n_layers, self.out_channels]) + (1,) * self.order))
+                * paddle.randn(
+                    (tuple([n_layers, self.out_channels]) + (1,) * self.order)
+                )
             )
         else:
             self.bias = None
@@ -420,9 +424,7 @@ class SpectralConv(BaseSpectralConv):
         n_modes[-1] = n_modes[-1] // 2 + 1
         self._n_modes = n_modes
 
-    def forward(
-        self, x, indices=0, output_shape: Optional[Tuple[int]] = None
-    ):
+    def forward(self, x, indices=0, output_shape: Optional[Tuple[int]] = None):
         """Generic forward pass for the Factorized Spectral Conv
 
         Parameters
@@ -462,18 +464,38 @@ class SpectralConv(BaseSpectralConv):
             raise NotImplementedError("Complex32 is not supported in Paddle.")
         else:
             out_dtype = paddle.complex64
-        out_fft = paddle.zeros([batchsize, self.out_channels, *fft_size], dtype=out_dtype)
-        starts = [(max_modes - min(size, n_mode)) for (size, n_mode, max_modes) in zip(fft_size, self.n_modes, self.max_n_modes)]
+        out_fft = paddle.zeros(
+            [batchsize, self.out_channels, *fft_size], dtype=out_dtype
+        )
+        starts = [
+            (max_modes - min(size, n_mode))
+            for (size, n_mode, max_modes) in zip(
+                fft_size, self.n_modes, self.max_n_modes
+            )
+        ]
         slices_w = [slice(None), slice(None)]  # Batch_size, channels
-        slices_w += [slice(start//2, -start//2) if start else slice(start, None) for start in starts[:-1]]
-        slices_w += [slice(None, -starts[-1]) if starts[-1] else slice(None)]  # The last mode already has redundant half removed
+        slices_w += [
+            slice(start // 2, -start // 2) if start else slice(start, None)
+            for start in starts[:-1]
+        ]
+        slices_w += [
+            slice(None, -starts[-1]) if starts[-1] else slice(None)
+        ]  # The last mode already has redundant half removed
 
         weight = self._get_weight(indices)[slices_w]
 
-        starts = [(size - min(size, n_mode)) for (size, n_mode) in zip(list(x.shape[2:]), list(weight.shape[2:]))]
+        starts = [
+            (size - min(size, n_mode))
+            for (size, n_mode) in zip(list(x.shape[2:]), list(weight.shape[2:]))
+        ]
         slices_x = [slice(None), slice(None)]  # Batch_size, channels
-        slices_x += [slice(start//2, -start//2) if start else slice(start, None) for start in starts[:-1]]
-        slices_x += [slice(None, -starts[-1]) if starts[-1] else slice(None)]  # The last mode already has redundant half removed
+        slices_x += [
+            slice(start // 2, -start // 2) if start else slice(start, None)
+            for start in starts[:-1]
+        ]
+        slices_x += [
+            slice(None, -starts[-1]) if starts[-1] else slice(None)
+        ]  # The last mode already has redundant half removed
 
         # paddle must use tuple
         slices_x = tuple(slices_x)
@@ -481,7 +503,12 @@ class SpectralConv(BaseSpectralConv):
         out_fft[slices_x] = self._contract(x_temp, weight, separable=False)
 
         if self.output_scaling_factor is not None and output_shape is None:
-            mode_sizes = tuple([round(s * r) for (s, r) in zip(mode_sizes, self.output_scaling_factor[indices])])
+            mode_sizes = tuple(
+                [
+                    round(s * r)
+                    for (s, r) in zip(mode_sizes, self.output_scaling_factor[indices])
+                ]
+            )
 
         if output_shape is not None:
             mode_sizes = output_shape
@@ -501,7 +528,9 @@ class SpectralConv(BaseSpectralConv):
         The parametrization of sub-convolutional layers is shared with the main one.
         """
         if self.n_layers == 1:
-            Warning("A single convolution is parametrized, directly use the main class.")
+            Warning(
+                "A single convolution is parametrized, directly use the main class."
+            )
 
         return SubConv(self, indices)
 
@@ -597,7 +626,7 @@ class SpectralConv2d(SpectralConv):
             slice(None),  # Equivalent to: [:,
             slice(None),  # ............... :,
             slice(self.n_modes[0] // 2),  # :half_n_modes[0],
-            slice(self.n_modes[1]),       # :half_n_modes[1]]
+            slice(self.n_modes[1]),  # :half_n_modes[1]]
         )
         slices1 = (
             slice(None),  # Equivalent to:        [:,
@@ -703,7 +732,9 @@ class SpectralConv3d(SpectralConv):
             height = round(height * self.output_scaling_factor[1])
             depth = round(depth * self.output_scaling_factor[2])
 
-        x = paddle.fft.irfftn(out_fft, s=(height, width, depth), dim=[-3, -2, -1], norm=self.fft_norm)
+        x = paddle.fft.irfftn(
+            out_fft, s=(height, width, depth), dim=[-3, -2, -1], norm=self.fft_norm
+        )
 
         if self.bias is not None:
             x = x + self.bias[indices, ...]

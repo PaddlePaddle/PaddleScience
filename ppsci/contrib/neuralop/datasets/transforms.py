@@ -3,14 +3,16 @@ from typing import List
 
 import paddle
 from paddle.io import Dataset
+
 from ppsci.contrib.neuralop.training.patching import MultigridPatching2D
 
 
 class Transform(paddle.nn.Layer):
     """
-    Applies transforms or inverse transforms to 
+    Applies transforms or inverse transforms to
     model inputs or outputs, respectively
     """
+
     def __init__(self):
         super().__init__()
 
@@ -35,14 +37,14 @@ class Transform(paddle.nn.Layer):
         pass
 
 
-class Normalizer():
+class Normalizer:
     def __init__(self, mean, std, eps=1e-6):
         self.mean = mean
         self.std = std
         self.eps = eps
 
     def __call__(self, data):
-        return (data - self.mean)/(self.std + self.eps)
+        return (data - self.mean) / (self.std + self.eps)
 
 
 class Composite(Transform):
@@ -73,13 +75,18 @@ class Composite(Transform):
 
     def to(self, device):
         # all Transforms are required to implement .to()
-        self.transforms = [t.to(device) for t in self.transforms if hasattr(t, 'to')]
+        self.transforms = [t.to(device) for t in self.transforms if hasattr(t, "to")]
         return self
 
 
 class MGPatchingTransform(Transform):
-    def __init__(self, model: paddle.nn.Layer, levels: int,
-                 padding_fraction: float, stitching: float):
+    def __init__(
+        self,
+        model: paddle.nn.Layer,
+        levels: int,
+        padding_fraction: float,
+        stitching: float,
+    ):
         """Wraps MultigridPatching2D to expose canonical
         transform .transform() and .inverse_transform() API
 
@@ -100,30 +107,31 @@ class MGPatchingTransform(Transform):
         self.padding_fraction = padding_fraction
         self.stitching = stitching
         self.patcher = MultigridPatching2D(
-            model=model, levels=self.levels,
+            model=model,
+            levels=self.levels,
             padding_fraction=self.padding_fraction,
-            stitching=self.stitching
+            stitching=self.stitching,
         )
 
     def transform(self, data_dict):
 
-        x = data_dict['x']
-        y = data_dict['y']
+        x = data_dict["x"]
+        y = data_dict["y"]
 
         x, y = self.patcher.patch(x, y)
 
-        data_dict['x'] = x
-        data_dict['y'] = y
+        data_dict["x"] = x
+        data_dict["y"] = y
         return data_dict
 
     def inverse_transform(self, data_dict):
-        x = data_dict['x']
-        y = data_dict['y']
+        x = data_dict["x"]
+        y = data_dict["y"]
 
         x, y = self.patcher.unpatch(x, y)
 
-        data_dict['x'] = x
-        data_dict['y'] = y
+        data_dict["x"] = x
+        data_dict["y"] = y
         return data_dict
 
     def to(self, _):
@@ -131,34 +139,37 @@ class MGPatchingTransform(Transform):
         return self
 
 
-class RandomMGPatch():
+class RandomMGPatch:
     def __init__(self, levels=2):
         self.levels = levels
         self.step = 2**levels
 
     def __call__(self, data):
-
         def _get_patches(shifted_image, step, height, width):
-            """Take as input an image and return multi-grid patches centered around the middle of the image
-            """
+            """Take as input an image and return multi-grid patches centered around the middle of the image"""
             if step == 1:
-                return (shifted_image, )
+                return (shifted_image,)
             else:
                 # Notice that we need to stat cropping at start_h = (height - patch_size)//2
                 # (//2 as we pad both sides)
                 # Here, the extracted patch-size is half the size so patch-size = height//2
                 # Hence the values height//4 and width // 4
-                start_h = height//4
-                start_w = width//4
+                start_h = height // 4
+                start_w = width // 4
 
-                patches = _get_patches(shifted_image[:, start_h:-start_h, start_w:-start_w], step//2, height//2, width//2)
+                patches = _get_patches(
+                    shifted_image[:, start_h:-start_h, start_w:-start_w],
+                    step // 2,
+                    height // 2,
+                    width // 2,
+                )
 
                 return (shifted_image[:, ::step, ::step], *patches)
 
         x, y = data
         channels, height, width = x.shape
-        center_h = height//2
-        center_w = width//2
+        center_h = height // 2
+        center_w = width // 2
 
         # Sample a random patching position
         pos_h = paddle.randint(low=0, high=height, shape=(1,))[0]
@@ -177,7 +188,7 @@ class RandomMGPatch():
 
 class MGPTensorDataset(Dataset):
     def __init__(self, x, y, levels=2):
-        assert (x.size(0) == y.size(0)), "Size mismatch between tensors"
+        assert x.size(0) == y.size(0), "Size mismatch between tensors"
         self.x = x
         self.y = y
         self.levels = 2
@@ -196,10 +207,8 @@ def regular_grid(spatial_dims, grid_boundaries=[[0, 1], [0, 1]]):
     """
     height, width = spatial_dims
 
-    xt = paddle.linspace(grid_boundaries[0][0], grid_boundaries[0][1],
-                         height + 1)[:-1]
-    yt = paddle.linspace(grid_boundaries[1][0], grid_boundaries[1][1],
-                         width + 1)[:-1]
+    xt = paddle.linspace(grid_boundaries[0][0], grid_boundaries[0][1], height + 1)[:-1]
+    yt = paddle.linspace(grid_boundaries[1][0], grid_boundaries[1][1], width + 1)[:-1]
 
     grid_x, grid_y = paddle.meshgrid(xt, yt)
 
@@ -209,11 +218,11 @@ def regular_grid(spatial_dims, grid_boundaries=[[0, 1], [0, 1]]):
     return grid_x, grid_y
 
 
-class PositionalEmbedding2D():
-    """A simple positional embedding as a regular 2D grid
-    """
+class PositionalEmbedding2D:
+    """A simple positional embedding as a regular 2D grid"""
+
     def __init__(self, grid_boundaries=[[0, 1], [0, 1]]):
-        """PositionalEmbedding2D applies a simple positional 
+        """PositionalEmbedding2D applies a simple positional
         embedding as a regular 2D grid
 
         Parameters
@@ -241,11 +250,13 @@ class PositionalEmbedding2D():
         Returns
         -------
         torch.tensor
-            output grids to concatenate 
+            output grids to concatenate
         """
         # handle case of multiple train resolutions
         if self._grid is None or self._res != spatial_dims:
-            grid_x, grid_y = regular_grid(spatial_dims, grid_boundaries=self.grid_boundaries)
+            grid_x, grid_y = regular_grid(
+                spatial_dims, grid_boundaries=self.grid_boundaries
+            )
             grid_x = grid_x.to(device).to(dtype).unsqueeze(0).unsqueeze(0)
             grid_y = grid_y.to(device).to(dtype).unsqueeze(0).unsqueeze(0)
             self._grid = grid_x, grid_y
@@ -260,8 +271,12 @@ class PositionalEmbedding2D():
         batch_size = data.shape[0]
         x, y = self.grid(data.shape[-2:], data.place, data.dtype)
         out = paddle.concat(
-            (data, x.expand([batch_size, -1, -1, -1]), y.expand([batch_size, -1, -1, -1])),
-            axis=1
+            (
+                data,
+                x.expand([batch_size, -1, -1, -1]),
+                y.expand([batch_size, -1, -1, -1]),
+            ),
+            axis=1,
         )
         # in the unbatched case, the dataloader will stack N
         # examples with no batch dim to create one

@@ -11,6 +11,9 @@ Spectral analysis is useful because it allows researchers to study the distribut
 
 """
 
+import matplotlib
+import matplotlib.pyplot as plt
+
 # Original Author: Zongyi Li
 # Modified by: Robert Joseph George
 # %%
@@ -19,13 +22,12 @@ Spectral analysis is useful because it allows researchers to study the distribut
 # We first import our `neuralop` library and required dependencies.
 import numpy as np
 import paddle
-import matplotlib
-import matplotlib.pyplot as plt
-from ppsci.contrib.neuralop.utils import spectrum_2d
-from ppsci.contrib.neuralop.datasets import load_darcy_flow_small
 
-font = {'size': 28}
-matplotlib.rc('font', **font)
+from ppsci.contrib.neuralop.datasets import load_darcy_flow_small
+from ppsci.contrib.neuralop.utils import spectrum_2d
+
+font = {"size": 28}
+matplotlib.rc("font", **font)
 
 paddle.seed(0)
 np.random.seed(0)
@@ -45,18 +47,25 @@ dataset_name = "Darcy Flow"
 # %%
 # Loading the Navier-Stokes dataset in 128x128 resolution
 train_loader, test_loaders, data_processor = load_darcy_flow_small(
-        n_train=50, batch_size=50,
-        test_resolutions=[16, 32], n_tests=[50],
-        test_batch_sizes=[32], positional_encoding=False,
-        encode_output=False
+    n_train=50,
+    batch_size=50,
+    test_resolutions=[16, 32],
+    n_tests=[50],
+    test_batch_sizes=[32],
+    positional_encoding=False,
+    encode_output=False,
 )
 
 # This is highly depending on your dataset and its structure ['x', 'y'] (In Darcy flow)
-print("Original dataset shape", train_loader.dataset[:samples]['x'].shape)  # check the shape
+print(
+    "Original dataset shape", train_loader.dataset[:samples]["x"].shape
+)  # check the shape
 
 # It is important to note that we want the last two dimensions to represent the spatial dimensions
 # So in some cases one might have to permute the dataset after squeezing the initial dimensions as well
-dataset_pred = train_loader.dataset[:samples]['x'].squeeze()  # squeeze the dataset to remove the batch dimension or other dimensions
+dataset_pred = train_loader.dataset[:samples][
+    "x"
+].squeeze()  # squeeze the dataset to remove the batch dimension or other dimensions
 
 # Shape of the dataset
 shape = dataset_pred.shape
@@ -93,25 +102,25 @@ truth_sp = spectrum_2d(dataset_pred.reshape([samples * batchsize, s, s]), s)
 fig, ax = plt.subplots(figsize=(10, 10))
 
 linewidth = 3
-ax.set_yscale('log')
+ax.set_yscale("log")
 
 length = 16  # typically till the resolution length of the dataset
 buffer = 10  # just add a buffer to the plot
 k = np.arange(length + buffer) * 1.0
 
 # paddle tensor doesn't support plot
-ax.plot(truth_sp.numpy(), 'k', linestyle=":", label="NS", linewidth=4)
+ax.plot(truth_sp.numpy(), "k", linestyle=":", label="NS", linewidth=4)
 
-ax.set_xlim(1, length+buffer)
+ax.set_xlim(1, length + buffer)
 ax.set_ylim(10, 10 ^ 10)
-plt.legend(prop={'size': 20})
-plt.title('Spectrum of {} Datset'.format(dataset_name))
+plt.legend(prop={"size": 20})
+plt.title("Spectrum of {} Datset".format(dataset_name))
 
-plt.xlabel('wavenumber')
-plt.ylabel('energy')
+plt.xlabel("wavenumber")
+plt.ylabel("energy")
 
 # show the figure
-leg = plt.legend(loc='best')
+leg = plt.legend(loc="best")
 leg.get_frame().set_alpha(0.5)
 plt.show()
 # %%

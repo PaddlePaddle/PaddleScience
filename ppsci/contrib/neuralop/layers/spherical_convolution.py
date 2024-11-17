@@ -1,16 +1,19 @@
-from typing import List, Optional, Union
+from typing import List
+from typing import Optional
+from typing import Union
 
 import paddle
-from paddle import nn
-# from torch_harmonics import RealSHT, InverseRealSHT # [TODO] use paddle_harmonics to replace
-
 import tensorly as tl
-from tensorly.plugins import use_opt_einsum
+from paddle import nn
 from tensorly._factorized_tensor import FactorizedTensor
+from tensorly.plugins import use_opt_einsum
 
 from ..utils import validate_scaling_factor
 from .base_spectral_conv import BaseSpectralConv
 from .spectral_convolution import SubConv
+
+# from torch_harmonics import RealSHT, InverseRealSHT # [TODO] use paddle_harmonics to replace
+
 
 tl.set_backend("paddle")
 use_opt_einsum("optimal")
@@ -85,12 +88,12 @@ def _contract_tucker(x, tucker_weight, separable=False, dhconv=False):
     out_sym = einsum_symbols[order]
     out_syms = list(x_syms)
     if separable:
-        core_syms = einsum_symbols[order + 1: 2 * order]
+        core_syms = einsum_symbols[order + 1 : 2 * order]
         # factor_syms = [einsum_symbols[1]+core_syms[0]] #in only
         factor_syms = [xs + rs for (xs, rs) in zip(x_syms[1:], core_syms)]  # x, y, ...
 
     elif dhconv:
-        core_syms = einsum_symbols[order + 1: 2 * order]
+        core_syms = einsum_symbols[order + 1 : 2 * order]
         out_syms[1] = out_sym
         factor_syms = [
             einsum_symbols[1] + core_syms[0],
@@ -100,7 +103,7 @@ def _contract_tucker(x, tucker_weight, separable=False, dhconv=False):
             xs + rs for (xs, rs) in zip(x_syms[2:], core_syms[2:])
         ]  # x, y, ...
     else:
-        core_syms = einsum_symbols[order + 1: 2 * order + 1]
+        core_syms = einsum_symbols[order + 1 : 2 * order + 1]
         out_syms[1] = out_sym
         factor_syms = [
             einsum_symbols[1] + core_syms[0],
@@ -138,7 +141,7 @@ def _contract_tt(x, tt_weight, separable=False, dhconv=False):
     if dhconv:
         weight_syms = weight_syms[:-1]  # no batch-size, no y dim
 
-    rank_syms = list(einsum_symbols[order + 1:])
+    rank_syms = list(einsum_symbols[order + 1 :])
     tt_syms = []
     for i, s in enumerate(weight_syms):
         tt_syms.append([rank_syms[i], s, rank_syms[i + 1]])
@@ -210,6 +213,7 @@ class SHT(nn.Layer):
 
     Allows to call it with an interface similar to that of FFT
     """
+
     def __init__(self, dtype=paddle.float32, device=None):
         super().__init__()
         self.device = device
@@ -254,7 +258,7 @@ class SHT(nn.Layer):
         *_, modes_height, modes_width = x.shape  # height = latitude, width = longitude
         if s is None:
             if grid == "equiangular":
-                width = modes_width*2
+                width = modes_width * 2
             else:
                 width = modes_width
             height = modes_height
@@ -303,6 +307,7 @@ class SphericalConv(BaseSpectralConv):
            Boris Bonev, Thorsten Kurth, Christian Hundt, Jaideep Pathak, Maximilian Baust, Karthik Kashinath, Anima Anandkumar,
            ICML 2023.
     """
+
     def __init__(
         self,
         in_channels,
@@ -353,7 +358,7 @@ class SphericalConv(BaseSpectralConv):
         ] = validate_scaling_factor(output_scaling_factor, self.order, n_layers)
 
         if init_std == "auto":
-            init_std = (2 / (in_channels + out_channels))**0.5
+            init_std = (2 / (in_channels + out_channels)) ** 0.5
         else:
             init_std = init_std
 
@@ -423,7 +428,7 @@ class SphericalConv(BaseSpectralConv):
 
         self.sht_norm = sht_norm
         if isinstance(sht_grids, str):
-            sht_grids = [sht_grids]*(self.n_layers + 1)
+            sht_grids = [sht_grids] * (self.n_layers + 1)
         self.sht_grids = sht_grids
         self.sht_handle = SHT(dtype=self.dtype, device=self.device)
 
@@ -442,11 +447,20 @@ class SphericalConv(BaseSpectralConv):
             height, width = in_height, in_width
 
         # Return the identity if the resolution and grid of the input and output are the same
-        if ((in_height, in_width) == (height, width)) and (self.sht_grids[layer_index] == self.sht_grids[layer_index+1]):
+        if ((in_height, in_width) == (height, width)) and (
+            self.sht_grids[layer_index] == self.sht_grids[layer_index + 1]
+        ):
             return x
         else:
-            coefs = self.sht_handle.sht(x, s=self.n_modes, norm=self.sht_norm, grid=self.sht_grids[layer_index])
-            return self.sht_handle.isht(coefs, s=(height, width), norm=self.sht_norm, grid=self.sht_grids[layer_index + 1])
+            coefs = self.sht_handle.sht(
+                x, s=self.n_modes, norm=self.sht_norm, grid=self.sht_grids[layer_index]
+            )
+            return self.sht_handle.isht(
+                coefs,
+                s=(height, width),
+                norm=self.sht_norm,
+                grid=self.sht_grids[layer_index + 1],
+            )
 
     def forward(self, x, indices=0, output_shape=None):
         """Generic forward pass for the Factorized Spectral Conv
@@ -471,18 +485,26 @@ class SphericalConv(BaseSpectralConv):
         elif output_shape is not None:
             height, width = output_shape[0], output_shape[1]
 
-        out_fft = self.sht_handle.sht(x, s=(self.n_modes[0], self.n_modes[1]//2),
-                                      norm=self.sht_norm, grid=self.sht_grids[indices])
+        out_fft = self.sht_handle.sht(
+            x,
+            s=(self.n_modes[0], self.n_modes[1] // 2),
+            norm=self.sht_norm,
+            grid=self.sht_grids[indices],
+        )
 
         out_fft = self._contract(
-            out_fft[:, :, :self.n_modes[0], :self.n_modes[1]//2],
-            self._get_weight(indices)[:, :, :self.n_modes[0]],
+            out_fft[:, :, : self.n_modes[0], : self.n_modes[1] // 2],
+            self._get_weight(indices)[:, :, : self.n_modes[0]],
             separable=self.separable,
             dhconv=True,
         )
 
-        x = self.sht_handle.isht(out_fft, s=(height, width), norm=self.sht_norm,
-                                 grid=self.sht_grids[indices+1])
+        x = self.sht_handle.isht(
+            out_fft,
+            s=(height, width),
+            norm=self.sht_norm,
+            grid=self.sht_grids[indices + 1],
+        )
 
         if self.bias is not None:
             x = x + self.bias[indices, ...]

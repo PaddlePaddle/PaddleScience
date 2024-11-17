@@ -14,9 +14,8 @@
 # limitations under the License.
 
 import paddle
-import paddle.nn.functional as F
 import paddle.distributed as dist
-
+import paddle.nn.functional as F
 
 # Not support layout on Paddle
 # def get_memory_format(tensor):
@@ -30,15 +29,23 @@ def pad_helper(tensor, dim, new_size, mode="zero"):
     ndim = tensor.ndim
     dim = (dim + ndim) % ndim
     ndim_pad = ndim - dim
-    output_shape = [0 for _ in range(2*ndim_pad)]
+    output_shape = [0 for _ in range(2 * ndim_pad)]
     orig_size = tensor.shape[dim]
     output_shape[1] = new_size - orig_size
-    tensor_pad = F.pad(tensor, output_shape, mode='constant', value=0.)
+    tensor_pad = F.pad(tensor, output_shape, mode="constant", value=0.0)
 
     if mode == "conj":
-        lhs_slice = [slice(0, x) if idx != dim else slice(orig_size, new_size) for idx, x in enumerate(tensor.shape)]
-        rhs_slice = [slice(0, x) if idx != dim else slice(1, output_shape[1]+1) for idx, x in enumerate(tensor.shape)]
-        tensor_pad[lhs_slice] = paddle.flip(paddle.conj(tensor_pad[rhs_slice]), axis=[dim])
+        lhs_slice = [
+            slice(0, x) if idx != dim else slice(orig_size, new_size)
+            for idx, x in enumerate(tensor.shape)
+        ]
+        rhs_slice = [
+            slice(0, x) if idx != dim else slice(1, output_shape[1] + 1)
+            for idx, x in enumerate(tensor.shape)
+        ]
+        tensor_pad[lhs_slice] = paddle.flip(
+            paddle.conj(tensor_pad[rhs_slice]), axis=[dim]
+        )
 
     return tensor_pad
 
@@ -55,8 +62,12 @@ def pad_helper(tensor, dim, new_size, mode="zero"):
 
 
 def split_tensor_along_dim(tensor, dim, num_chunks):
-    assert dim < tensor.dim(), f"Error, tensor dimension is {tensor.dim()} which cannot be split along {dim}"
-    assert (tensor.shape[dim] % num_chunks == 0), f"Error, cannot split dim {dim} evenly. Dim size is \
+    assert (
+        dim < tensor.dim()
+    ), f"Error, tensor dimension is {tensor.dim()} which cannot be split along {dim}"
+    assert (
+        tensor.shape[dim] % num_chunks == 0
+    ), f"Error, cannot split dim {dim} evenly. Dim size is \
                                                   {tensor.shape[dim]} and requested numnber of splits is {num_chunks}"
     # chunk_size = tensor.shape[dim] // num_chunks
     tensor_list = paddle.split(tensor, num_chunks, axis=dim)
@@ -125,7 +136,7 @@ def _split(input_, dim_, group=None):
 def _gather(input_, dim_, group=None):
     """Gather tensors and concatinate along the last dimension."""
     # get input format
-    # input_format = get_memory_format(input_) 
+    # input_format = get_memory_format(input_)
 
     comm_size = dist.get_world_size(group=group)
     # Bypass the function if we are using only 1 GPU.
@@ -133,7 +144,9 @@ def _gather(input_, dim_, group=None):
         return input_
 
     # sanity checks
-    assert(dim_ < input_.dim()), f"Error, cannot gather along {dim_} for tensor with {input_.dim()} dimensions."
+    assert (
+        dim_ < input_.dim()
+    ), f"Error, cannot gather along {dim_} for tensor with {input_.dim()} dimensions."
 
     # Size and dimension.
     comm_rank = dist.get_rank(group=group)
