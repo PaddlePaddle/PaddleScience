@@ -13,3 +13,5 @@
 # limitations under the License.
 
 from ppsci.contrib import neuralop
+
+__all__ = ["neuralop"]
