@@ -372,7 +372,7 @@ class SpectralConv(BaseSpectralConv):
             # https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.html
             self.bias = paddle.base.framework.EagerParamBase.from_tensor(
                 init_std
-                * paddle.randn((tuple([self.out_channels]) + (1,) * self.order))
+                * paddle.randn((tuple([n_layers, self.out_channels]) + (1,) * self.order))
             )
         else:
             self.bias = None
