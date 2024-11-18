@@ -30,6 +30,7 @@
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - Transformer
         - UNetEx
         - UNONet
         - USCNN
