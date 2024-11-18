@@ -49,12 +49,12 @@ P: 1.064 # kPa
 
 # model settings
 MODEL:
-    input_keys: ["x","y","z"]
-    output_keys: ["u","v","w"]
-    num_layers: 10
-    hidden_size: 20
-    activation: "silu"
-    weight_norm: true
+  input_keys: ["x","y","z"]
+  output_keys: ["u","v","w"]
+  num_layers: 10
+  hidden_size: 20
+  activation: "silu"
+  weight_norm: true
 
 # training settings
 TRAIN:

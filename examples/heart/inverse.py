@@ -14,7 +14,7 @@
 
 from os import path as osp
 
-import equation_inverse as eq_func
+import equation as eq_func
 import hydra
 import numpy as np
 import paddle
