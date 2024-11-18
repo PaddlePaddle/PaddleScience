@@ -1,13 +1,12 @@
+|年份 | 期刊 | 论文PDF | 问题类型 | 在线运行 |  网络/算法类型    | 神经网络/传统算法 |
+|-----|-----|-----|---------|-----|---------|----|
+|2022|Neural Networks| [Transformers for Modeling Physical Systems](https://arxiv.org/pdf/2010.03957?) | 2D低雷诺数瞬态流动问题 | [Cylinder2D问题求解](https://aistudio.baidu.com/projectdetail/6178818?sUid=455441&shared=1&ts=1684397945680) | 物理嵌入 | PINN | 监督学习 |
+|2024|arXiv|[CVIT: CONTINUOUS VISION TRANSFORMER FOR OPERATOR LEARNING](https://arxiv.org/pdf/2405.13998)|1D对流advection方程求解|[CVit的advection方程求解](https://aistudio.baidu.com/projectdetail/8141430)|神经算子|CViT, Vision Transformer|
+|2024|Journal of Scientific Computing|[Discontinuity Computing Using Physics-Informed Neural Network](https://arxiv.org/pdf/2206.03864)|1D欧拉方程，lax激波管，sod激波管。2D欧拉方程|[PINN求解可压缩流体欧拉方程组的正问题](https://aistudio.baidu.com/projectdetail/8141430)|神经算子|PINN|
+|-|-|-|3D瞬态lagrange物质点法|[拉格朗日粒子流体Benchmark开源数据集](https://aistudio.baidu.com/projectdetail/7507477)|传统CFD|MPM DEM SPH|
+|-|-|-|1D wave方程, 2D NS方程|[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7507477)|神经算子|PITT,Transformer|
 
-[科学计算案例：基于PaddleScience的Cylinder2D问题求解](https://aistudio.baidu.com/projectdetail/6178818?sUid=455441&shared=1&ts=1684397945680)
-
-[基于PaddleScience+CVit的advection方程求解](https://aistudio.baidu.com/projectdetail/8141430)
-
-[共创计划：基于 PINN 方法求解可压缩流体欧拉方程组的正问题](https://aistudio.baidu.com/projectdetail/7593837)
-
-[拉格朗日粒子流体Benchmark开源数据集](https://aistudio.baidu.com/projectdetail/7507477)
-
-[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7309026)
+##待更新
 
 [DeepXDE传热和流体科学计算案例](https://aistudio.baidu.com/projectdetail/5489960?channelType=0&channel=0)
 
