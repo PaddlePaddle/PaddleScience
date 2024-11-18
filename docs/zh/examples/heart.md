@@ -254,7 +254,7 @@ examples/heart/forward.py:125:137
 
 ``` py linenums="138"
 --8<--
-examples/heart/forward.py:138:170
+examples/heart/forward.py:138:168
 --8<--
 ```
 
@@ -264,9 +264,9 @@ examples/heart/forward.py:138:170
 
 本文中的输入数据是评估器构建中准备好的输入字典 `input_dict`，输出数据是对应的 3 个预测的物理量，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="171"
+``` py linenums="170"
 --8<--
-examples/heart/forward.py:171:184
+examples/heart/forward.py:170:182
 --8<--
 ```
 
@@ -274,17 +274,17 @@ examples/heart/forward.py:171:184
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练：
 
-``` py linenums="185"
+``` py linenums="184"
 --8<--
-examples/heart/forward.py:185:202
+examples/heart/forward.py:184:200
 --8<--
 ```
 
 训练后调用 `ppsci.solver.Solver.plot_loss_history` 可以将训练中的 `loss` 画出：
 
-``` py linenums="202"
+``` py linenums="201"
 --8<--
-examples/heart/forward.py:202:204
+examples/heart/forward.py:201:203
 --8<--
 ```
 
@@ -294,9 +294,9 @@ examples/heart/forward.py:202:204
 
 评估和可视化过程不需要进行优化器等构建，仅需构建模型、计算域、评估器（本案例不包括）、可视化器，然后按顺序传递给 `ppsci.solver.Solver` 启动评估和可视化：
 
-``` py linenums="271"
+``` py linenums="269"
 --8<--
-examples/heart/forward.py:271:278
+examples/heart/forward.py:269:275
 --8<--
 ```
 

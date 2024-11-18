@@ -162,7 +162,6 @@ def train(cfg: DictConfig):
             "input": input_dict,
             "label": label_dict,
         },
-        "sampler": {"name": "BatchSampler"},
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
@@ -220,7 +219,7 @@ def train(cfg: DictConfig):
         ),
     }
 
-    # initialize adam solver
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -389,7 +388,7 @@ def evaluate(cfg: DictConfig):
         "vis_eval_geom": visualizer_geom,
     }
 
-    # load pretrained model
+    # initialize solver
     solver = ppsci.solver.Solver(
         model=model,
         validator=validator,
