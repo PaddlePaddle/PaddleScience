@@ -8,6 +8,10 @@
 |-----|-----|-----|AI 医疗影像|[基于3D-Unet的脑肿瘤MRI图像分割](https://aistudio.baidu.com/projectdetail/388306)|---------|----|
 |-----|-----|-----|AI 医疗影像|[医学影像挑战赛(分类)](https://aistudio.baidu.com/projectdetail/1993210)|---------|----|
 |-----|-----|-----|AI 医疗影像|[肝脏CT影像分割](https://aistudio.baidu.com/projectdetail/6212016)|---------|----|
+|-----|-----|-----|AI 医疗影像|[利用胸部CT和PaddleSeg计算心胸比](https://aistudio.baidu.com/projectdetail/1438719)|---------|----|
+
+
+
 
 
 ## 待整理

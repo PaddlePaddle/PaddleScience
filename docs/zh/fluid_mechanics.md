@@ -5,12 +5,10 @@
 |2024|Journal of Scientific Computing|[Discontinuity Computing Using Physics-Informed Neural Network](https://arxiv.org/pdf/2206.03864)|1D欧拉方程，lax激波管，sod激波管。2D欧拉方程|[PINN求解可压缩流体欧拉方程组的正问题](https://aistudio.baidu.com/projectdetail/8141430)|神经算子|PINN|
 |-|-|-|3D瞬态lagrange物质点法|[拉格朗日粒子流体Benchmark开源数据集](https://aistudio.baidu.com/projectdetail/7507477)|传统CFD|MPM DEM SPH|
 |-|-|-|1D wave方程, 2D NS方程|[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7507477)|神经算子|PITT,Transformer|
+|2021|SIAM Review|[DeepXDE: A deep learning library for solving differential equations](https://arxiv.org/pdf/1907.04502)|2D 瞬态固体传热, 2D NS方程|[DeepXDE传热和流体科学计算案例](https://aistudio.baidu.com/projectdetail/7507477)|物理嵌入|PINN|
+|2022|Connection Science|[AMGNET: multi-scale graph neural networks for flow field prediction](https://www.tandfonline.com/doi/pdf/10.1080/09540091.2022.2131737)|2D 稳态圆柱Re=78, 2D 稳态机翼Ma=0.65|[AMGNET 论文复现](https://aistudio.baidu.com/projectdetail/5592458)|神经算子|AMGNET|
 
 ## 待整理
-
-[DeepXDE传热和流体科学计算案例](https://aistudio.baidu.com/projectdetail/5489960?channelType=0&channel=0)
-
-[AI for Science 共创计划 AMGNET 论文复现](https://aistudio.baidu.com/projectdetail/5592458?channelType=0&channel=0)
 
 [AI for Science 共创计划GNN Laminar Flow 论文复现](https://aistudio.baidu.com/projectdetail/5563934?channelType=0&channel=0)
 
