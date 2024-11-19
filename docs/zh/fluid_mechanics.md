@@ -6,7 +6,7 @@
 |-|-|-|3D瞬态lagrange物质点法|[拉格朗日粒子流体Benchmark开源数据集](https://aistudio.baidu.com/projectdetail/7507477)|传统CFD|MPM DEM SPH|
 |-|-|-|1D wave方程, 2D NS方程|[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7507477)|神经算子|PITT,Transformer|
 
-##待更新
+## 待整理
 
 [DeepXDE传热和流体科学计算案例](https://aistudio.baidu.com/projectdetail/5489960?channelType=0&channel=0)
 

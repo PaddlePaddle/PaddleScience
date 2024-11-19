@@ -1,3 +1,16 @@
+
+|年份 | 期刊 | 论文PDF | 问题类型 | 在线运行 |  网络/算法类型    | 神经网络/传统算法 |
+|-----|-----|-----|---------|-----|---------|----|
+|-----|-----|-----|AI 医疗影像|[CheXNet-CAM：CT 影像肺炎检测可视化](https://aistudio.baidu.com/projectdetail/2535474)|---------|----|
+|-----|-----|-----|AI 医疗影像|[基于Unet+++实现脊柱MRI定位（上）](https://aistudio.baidu.com/projectdetail/2354135)|---------|----|
+|-----|-----|-----|AI 医疗影像|[基于Unet+++实现脊柱MRI定位（中）](https://aistudio.baidu.com/projectdetail/4646398)|---------|----|
+|-----|-----|-----|AI 医疗影像|[医学图像处理工具SimpleITK与DataSet](https://aistudio.baidu.com/projectdetail/1915947)|---------|----|
+|-----|-----|-----|AI 医疗影像|[基于3D-Unet的脑肿瘤MRI图像分割](https://aistudio.baidu.com/projectdetail/388306)|---------|----|
+|-----|-----|-----|AI 医疗影像|[医学影像挑战赛(分类)](https://aistudio.baidu.com/projectdetail/1993210)|---------|----|
+|-----|-----|-----|AI 医疗影像|[肝脏CT影像分割](https://aistudio.baidu.com/projectdetail/6212016)|---------|----|
+
+
+
 [【PaddleHelix】螺旋桨生物计算开源工具集](https://aistudio.baidu.com/aistudio/projectdetail/1293361?channelType=0&channel=0&sUid=14197935&ts=1731058781419)
 
 [使用螺旋桨PaddleHelix完成RNA结构预测竞赛的前置基础知识整理](https://aistudio.baidu.com/aistudio/projectdetail/1404818?channelType=0&channel=0&sUid=14197935&ts=1731058794651)
@@ -39,3 +52,6 @@
 [医学影像数据集集锦](https://aistudio.baidu.com/aistudio/projectdetail/462184?channelType=0&channel=0&sUid=14197935&ts=1731060976805)
 
 [基于紫外差分吸收光谱技术与神经网络结合的呼出气体中氨气的检测](https://aistudio.baidu.com/aistudio/projectdetail/8190914?channelType=0&channel=0&sUid=14197935&ts=1731058813858)
+
+
+
