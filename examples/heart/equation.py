@@ -34,9 +34,9 @@ class Hooke(base.PDE):
     \end{pmatrix}
     =
     \begin{bmatrix}
-        \frac{1}{E} & -\frac{v}{E} & -\frac{v}{E} & 0 & 0 & 0 \\
-        -\frac{v}{E} & \frac{1}{E} & -\frac{v}{E} & 0 & 0 & 0 \\
-        -\frac{v}{E} & -\frac{v}{E} & \frac{1}{E} & 0 & 0 & 0 \\
+        \frac{1}{E} & -\frac{\nu}{E} & -\frac{\nu}{E} & 0 & 0 & 0 \\
+        -\frac{\nu}{E} & \frac{1}{E} & -\frac{\nu}{E} & 0 & 0 & 0 \\
+        -\frac{\nu}{E} & -\frac{\nu}{E} & \frac{1}{E} & 0 & 0 & 0 \\
         0 & 0 & 0 & \frac{1}{G} & 0 & 0 \\
         0 & 0 & 0 & 0 & \frac{1}{G} & 0 \\
         0 & 0 & 0 & 0 & 0 & \frac{1}{G}  \\
