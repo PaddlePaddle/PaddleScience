@@ -10,6 +10,7 @@
 |-----|-----|-----|AI 医疗影像|[肝脏CT影像分割](https://aistudio.baidu.com/projectdetail/6212016)|---------|----|
 
 
+## 待整理
 
 [【PaddleHelix】螺旋桨生物计算开源工具集](https://aistudio.baidu.com/aistudio/projectdetail/1293361?channelType=0&channel=0&sUid=14197935&ts=1731058781419)
 
