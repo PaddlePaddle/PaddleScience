@@ -10,10 +10,11 @@ from tensorly.decomposition import parafac
 from tensorly.decomposition import tensor_train_matrix
 from tensorly.decomposition import tucker
 
-from ..factorized_tensors import CPTensor
-from ..factorized_tensors import DenseTensor
-from ..factorized_tensors import TuckerTensor
-from ..utils.parameter_list import FactorList
+from ppsci.contrib.tltorch.factorized_tensors.factorized_tensors import CPTensor
+from ppsci.contrib.tltorch.factorized_tensors.factorized_tensors import DenseTensor
+from ppsci.contrib.tltorch.factorized_tensors.factorized_tensors import TuckerTensor
+from ppsci.contrib.tltorch.utils.parameter_list import FactorList
+
 from .core import TensorizedTensor
 
 tl.set_backend("paddle")

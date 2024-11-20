@@ -1,12 +1,10 @@
 colorlog
 einops
-git+https://github.com/tensorly/tensorly.git@main
 h5py
 hydra-core
 imageio
 matplotlib
 meshio==5.3.4
-mpi4py
 numpy>=1.20.0,<2.0.0
 pydantic>=2.5.0
 pyevtk
@@ -17,6 +15,7 @@ scikit-optimize
 scipy
 seaborn
 sympy
+tensorly
 tqdm
 typing-extensions
 wandb
