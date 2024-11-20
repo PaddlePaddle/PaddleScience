@@ -76,3 +76,4 @@ EVAL:
 # inference settings
 INFER:
   export_path: ./inference/catheter
+  batch_size: 20
