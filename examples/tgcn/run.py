@@ -49,8 +49,6 @@ def train(cfg: DictConfig):
         },
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -97,7 +95,6 @@ def train(cfg: DictConfig):
         iters_per_epoch=iters_per_epoch,
         log_freq=cfg.log_freq,
         eval_during_train=True,
-        seed=cfg.seed,
         device=cfg.device,
         validator=validator,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
@@ -123,8 +120,6 @@ def eval(cfg: DictConfig):
         },
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -162,7 +157,6 @@ def eval(cfg: DictConfig):
         model=model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
-        seed=cfg.seed,
         device=cfg.device,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,

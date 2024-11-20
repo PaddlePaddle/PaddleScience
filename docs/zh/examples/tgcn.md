@@ -3,7 +3,6 @@
 === "模型训练命令"
 
     ``` sh
-    # Train
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip
     unzip tgcn_data.zip
     python run.py data_name=PEMSD8
@@ -13,7 +12,6 @@
 === "模型评估命令"
 
     ``` sh
-    # Eval
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip
     unzip tgcn_data.zip
     wget https://paddle-org.bj.bcebos.com/paddlescience/models/tgcn/PEMSD8_pretrained_model.pdparams
@@ -42,7 +40,7 @@ TGCN，一种用于交通流量预测的时空图卷积网络（Temporal Graph C
 
 该模块使用两层消息传递网络，提取空间特征更新节点特征：
 
-``` py linenums="9" title="ppsci/arch/tgcn.py"
+``` py linenums="12" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:12:35
 --8<--
@@ -52,7 +50,7 @@ ppsci/arch/tgcn.py:12:35
 
 该模块使用三层一维卷积网络，提取时间特征更新节点特征：
 
-``` py linenums="30" title="ppsci/arch/tgcn.py"
+``` py linenums="38" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:38:71
 --8<--
@@ -62,27 +60,27 @@ ppsci/arch/tgcn.py:38:71
 
 TGCN 模型首先使用特征嵌入层对输入信号（即交通节点在过去一段时间内的流量数据）进行编码：
 
-``` py linenums="74" title="ppsci/arch/tgcn.py"
+``` py linenums="140" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:140:145
 --8<--
 ```
 
-``` py linenums="93" title="ppsci/arch/tgcn.py"
+``` py linenums="173" title="ppsci/arch/tgcn.py"
 --8<--
-ppsci/arch/tgcn.py:176:176
+ppsci/arch/tgcn.py:173:176
 --8<--
 ```
 
 然后模型交替堆叠前述 TCN 模块与 GCN 模块，更新节点特征：
 
-``` py linenums="76" title="ppsci/arch/tgcn.py"
+``` py linenums="147" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:147:157
 --8<--
 ```
 
-``` py linenums="95" title="ppsci/arch/tgcn.py"
+``` py linenums="178" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:178:192
 --8<--
@@ -90,13 +88,13 @@ ppsci/arch/tgcn.py:178:192
 
 最后模型将初始节点特征与两个 GCN 模块的输入拼接，使用两层 MLP 得到目标输出（即交通节点在未来一段时间内的流量预测）：
 
-``` py linenums="84" title="ppsci/arch/tgcn.py"
+``` py linenums="159" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:159:170
 --8<--
 ```
 
-``` py linenums="111" title="ppsci/arch/tgcn.py"
+``` py linenums="194" title="ppsci/arch/tgcn.py"
 --8<--
 ppsci/arch/tgcn.py:194:198
 --8<--
@@ -116,9 +114,9 @@ ppsci/arch/tgcn.py:194:198
 
 该案例基于 TGCN 模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="77" title="examples/tgcn/run.py"
+``` py linenums="67" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:67:84
+examples/tgcn/run.py:67:82
 --8<--
 ```
 
@@ -128,7 +126,7 @@ examples/tgcn/run.py:67:84
 
 训练集数据加载的代码如下:
 
-``` py linenums="19" title="examples/tgcn/run.py"
+``` py linenums="10" title="examples/tgcn/run.py"
 --8<--
 examples/tgcn/run.py:10:29
 --8<--
@@ -136,7 +134,7 @@ examples/tgcn/run.py:10:29
 
 定义监督约束的代码如下：
 
-``` py linenums="40" title="examples/tgcn/run.py"
+``` py linenums="31" title="examples/tgcn/run.py"
 --8<--
 examples/tgcn/run.py:31:35
 --8<--
@@ -154,17 +152,17 @@ examples/tgcn/run.py:31:35
 
 验证集数据加载的代码如下:
 
-``` py linenums="44" title="examples/tgcn/run.py"
+``` py linenums="37" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:37:56
+examples/tgcn/run.py:37:54
 --8<--
 ```
 
 定义监督评估器的代码如下：
 
-``` py linenums="65" title="examples/tgcn/run.py"
+``` py linenums="56" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:58:65
+examples/tgcn/run.py:56:63
 --8<--
 ```
 
@@ -174,9 +172,9 @@ examples/tgcn/run.py:58:65
 
 本案例中学习率大小设置为 `1e-2`，优化器使用 `Adam`，用 PaddleScience 代码表示如下：
 
-``` py linenums="81" title="examples/tgcn/run.py"
+``` py linenums="83" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:85:86
+examples/tgcn/run.py:83:84
 --8<--
 ```
 
@@ -184,9 +182,9 @@ examples/tgcn/run.py:85:86
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="86" title="examples/tgcn/run.py"
+``` py linenums="88" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:90:107
+examples/tgcn/run.py:88:104
 --8<--
 ```
 
@@ -194,9 +192,9 @@ examples/tgcn/run.py:90:107
 
 通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 参数，可以自动保存在验证集上效果最优的模型参数。
 
-``` py linenums="98" title="examples/tgcn/run.py"
+``` py linenums="97" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:99:99
+examples/tgcn/run.py:97:97
 --8<--
 ```
 
@@ -206,17 +204,17 @@ examples/tgcn/run.py:99:99
 
 测试集数据加载的代码如下:
 
-``` py linenums="122" title="examples/tgcn/run.py"
+``` py linenums="108" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:111:130
+examples/tgcn/run.py:108:125
 --8<--
 ```
 
 定义监督评估器的代码如下：
 
-``` py linenums="143" title="examples/tgcn/run.py"
+``` py linenums="127" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:132:139
+examples/tgcn/run.py:127:134
 --8<--
 ```
 
@@ -226,17 +224,17 @@ examples/tgcn/run.py:132:139
 
 设置预训练模型参数的加载路径并加载模型。
 
-``` py linenums="159" title="examples//tgcn/run.py"
+``` py linenums="138" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:141:158
+examples/tgcn/run.py:138:153
 --8<--
 ```
 
 实例化 `ppsci.solver.Solver`，然后启动评估。
 
-``` py linenums="165" title="examples/tgcn/run.py"
+``` py linenums="155" title="examples/tgcn/run.py"
 --8<--
-examples/tgcn/run.py:160:172
+examples/tgcn/run.py:155:166
 --8<--
 ```
 
@@ -244,9 +242,9 @@ examples/tgcn/run.py:160:172
 
 数据集接口：
 
-``` py linenums="1" title="ppsci\data\dataset\pems_dataset.py"
+``` py linenums="1" title="ppsci/data/dataset/pems_dataset.py"
 --8<--
-ppsci\data\dataset\pems_dataset.py
+ppsci/data/dataset/pems_dataset.py
 --8<--
 ```
 

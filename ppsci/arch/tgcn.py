@@ -94,19 +94,19 @@ class TGCN(Arch):
         >>> import paddle
         >>> import ppsci
         >>> model = ppsci.arch.TGCN(
-        ...    input_keys=("input",),
-        ...    output_keys=("label",),
-        ...    adj=numpy.ones((307, 307), dtype=numpy.float32),
-        ...    in_dim=1,
-        ...    emb_dim=32
-        ...    hidden=64,
-        ...    gc_layer=2,
-        ...    tc_layer=2
-        ...    k_s=3,
-        ...    dropout=0.25,
-        ...    alpha=0.1,
-        ...    input_len=12,
-        ...    label_len=12,
+        ...     input_keys=("input",),
+        ...     output_keys=("label",),
+        ...     adj=numpy.ones((307, 307), dtype=numpy.float32),
+        ...     in_dim=1,
+        ...     emb_dim=32
+        ...     hidden=64,
+        ...     gc_layer=2,
+        ...     tc_layer=2
+        ...     k_s=3,
+        ...     dropout=0.25,
+        ...     alpha=0.1,
+        ...     input_len=12,
+        ...     label_len=12,
         ... )
         >>> input_dict = {"input": paddle.rand([64, 12, 307, 1]),}
         >>> label_dict = model(input_dict)

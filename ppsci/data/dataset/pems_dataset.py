@@ -112,9 +112,7 @@ class PEMSDataset(Dataset):
         self.norm_input = norm_input
         self.norm_label = norm_label
 
-        data = np.load(os.path.join(file_path, "{}.npy".format(split))).astype(
-            np.float32
-        )
+        data = np.load(os.path.join(file_path, f"{split}.npy")).astype(np.float32)
 
         self.mean = np.load(os.path.join(file_path, "mean.npy")).astype(np.float32)
         self.std = np.load(os.path.join(file_path, "std.npy")).astype(np.float32)
