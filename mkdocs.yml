@@ -52,6 +52,7 @@ nav:
         - XPINN: zh/examples/xpinns.md
         - NeuralOperator: zh/examples/neuraloperator.md
         - Brusselator3D: zh/examples/brusselator3d.md
+        - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md
@@ -80,6 +81,7 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+          - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
           - Heat_PINN: zh/examples/heat_pinn.md
@@ -170,6 +172,7 @@ theme:
     - content.tabs.link
     - content.action.edit
     - content.action.view
+    - content.tooltips
   icon:
     edit: material/pencil
     view: material/eye
@@ -210,6 +213,7 @@ plugins:
 
 # Extensions
 markdown_extensions:
+  - abbr
   - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
