@@ -20,7 +20,7 @@
 [🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
-🔥 [飞桨AI for Science共创计划2期](https://aistudio.baidu.com/activitydetail/1502019365），算力点等资源全面升级，速度来报名
+🔥 [飞桨AI for Science共创计划2期](https://aistudio.baidu.com/activitydetail/1502019365)，算力点等资源全面升级，速度来报名
 
 🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中 ](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
 
