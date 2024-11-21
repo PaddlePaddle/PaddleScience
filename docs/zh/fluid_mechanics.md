@@ -7,14 +7,12 @@
 |-|-|-|1D wave方程, 2D NS方程|[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7507477)|神经算子|PITT,Transformer|
 |2021|SIAM Review|[DeepXDE: A deep learning library for solving differential equations](https://arxiv.org/pdf/1907.04502)|2D 瞬态固体传热, 2D NS方程|[DeepXDE传热和流体科学计算案例](https://aistudio.baidu.com/projectdetail/7507477)|物理嵌入|PINN|
 |2022|Connection Science|[AMGNET: multi-scale graph neural networks for flow field prediction](https://www.tandfonline.com/doi/pdf/10.1080/09540091.2022.2131737)|2D 稳态圆柱Re=78, 2D 稳态机翼Ma=0.65|[AMGNET 论文复现](https://aistudio.baidu.com/projectdetail/5592458)|神经算子|AMGNET|
+|2021|Physics of Fluids|[Graph neural networks for laminar flow prediction around random 2D shapes](https://arxiv.org/pdf/2107.11529)|2D 稳态圆柱|[GNN Laminar Flow 论文复现](https://aistudio.baidu.com/projectdetail/5563934)|神经算子|图卷积神经网络|
+|-|-|-|2D 气液两相流动|[基于Transformer的神经算子预测模型](https://aistudio.baidu.com/projectdetail/7509905)|模型降阶|ROMER|
+|2021|Journal of Fluid Mechanics|[Unsupervised deep learning for super-resolution reconstruction of turbulence](https://arxiv.org/pdf/2007.15324)|JHTDB Re=1000 强迫各向异性瞬态湍流|[CycleGAN 湍流超分辨率重建](https://aistudio.baidu.com/projectdetail/4493261)|流场重建|对抗神经网络 Cycle-GAN|
 
 ## 待整理
 
-[AI for Science 共创计划GNN Laminar Flow 论文复现](https://aistudio.baidu.com/projectdetail/5563934?channelType=0&channel=0)
-
-[共创计划：基于Transformer架构的流体流动降阶模拟的研究](https://aistudio.baidu.com/projectdetail/7509905)
-
-[[论文复现赛第七期] 54 - CycleGAN 湍流超分辨率重建](https://aistudio.baidu.com/projectdetail/4493261?channelType=0&channel=0)
 
 [【论文复现】基于神经微分方程的流体降阶模型(超详细讲解Neural ODE)](https://aistudio.baidu.com/projectdetail/5680422?searchKeyword=%E8%B6%85%E8%AF%A6%E7%BB%86%E8%AE%B2%E8%A7%A3ODE&searchTab=ALL)
 

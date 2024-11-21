@@ -1,8 +1,16 @@
-# 共创计划
+# 共创计划2期
 
-PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目，打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨 AI for Science 共创计划](https://www.paddlepaddle.org.cn/science)
 
-## 项目精选
+🔥 [AI for Science 热身任务：CGCNN 可解释预测材料属性的晶体图卷积神经网络](https://aistudio.baidu.com/projectdetail/8560880)，打卡领取GPU算力
+
+🔥 [AI for Science 热身任务：PaddleScience PINN 板壳线弹性静力学分析](https://aistudio.baidu.com/projectdetail/8556958)，打卡领取GPU算力
+
+🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中 ](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+
+
+PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目，打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨 AI for Science 共创计划](https://aistudio.baidu.com/activitydetail/1502019365)
+
+## 共创计划1期，项目精选
 
 - 使用嵌套傅立叶神经算子进行实时高分辨二氧化碳地质封存预测: <https://aistudio.baidu.com/projectdetail/7390303>
 - 多源异构数据与机理融合的极端天气预报算法研究: <https://aistudio.baidu.com/projectdetail/7586532>

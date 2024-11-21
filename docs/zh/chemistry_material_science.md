@@ -1,3 +1,7 @@
+|年份 | 期刊 | 论文PDF | 问题类型 | 在线运行 |  网络/算法类型    | 神经网络/传统算法 |
+|-----|-----|-----|---------|-----|---------|----|
+|2018|Physics Review Letter|[Crystal Graph Convolutional Neural Networks for an Accurate and Interpretable Prediction of Material Properties](https://arxiv.org/pdf/1710.10324)|材料属性预测|[CGCNN 可解释预测材料属性的晶体图卷积神经网络](https://aistudio.baidu.com/projectdetail/8560880)|---------|----|
+
 [材料缺陷检测](https://aistudio.baidu.com/aistudio/projectdetail/3482461?channelType=0&channel=0&sUid=14197935&ts=1731059563182)
 
 [使用Paddle框架实现晶圆缺陷图片相似度推荐](https://aistudio.baidu.com/aistudio/projectdetail/5818368?channelType=0&channel=0&sUid=14197935&ts=1731059764951)
