@@ -136,7 +136,7 @@ def load_darcy_pt(
         input_encoder = UnitGaussianNormalizer(dim=reduce_dims)
         input_encoder.fit(x_train)
         # x_train = input_encoder.transform(x_train)
-        # x_test = input_encoder.transform(x_test.contiguous())
+        # x_test = input_encoder.transform(x_test)
     else:
         input_encoder = None
 

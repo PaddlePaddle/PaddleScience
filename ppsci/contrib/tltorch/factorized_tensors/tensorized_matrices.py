@@ -159,13 +159,9 @@ class CPTensorized(CPTensor, TensorizedTensor, name="CP"):
             weights, factors = parafac(tensor.to(paddle.float64), rank, **kwargs)
 
         return cls(
-            paddle.base.framework.EagerParamBase.from_tensor(
-                weights.to(dtype).contiguous()
-            ),
+            paddle.base.framework.EagerParamBase.from_tensor(weights.to(dtype)),
             [
-                paddle.base.framework.EagerParamBase.from_tensor(
-                    f.to(dtype).contiguous()
-                )
+                paddle.base.framework.EagerParamBase.from_tensor(f.to(dtype))
                 for f in factors
             ],
             tensorized_shape,
@@ -280,11 +276,8 @@ class TuckerTensorized(TensorizedTensor, TuckerTensor, name="Tucker"):
             core, factors = tucker(tensor, rank, **kwargs)
 
         return cls(
-            paddle.base.framework.EagerParamBase.from_tensor(core.contiguous()),
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ],
+            paddle.base.framework.EagerParamBase.from_tensor(core),
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors],
             tensorized_shape,
             rank=rank,
         )
@@ -621,10 +614,7 @@ class BlockTT(TensorizedTensor, name="BlockTT"):
 
         with paddle.no_grad():
             factors = tensor_train_matrix(tensor, rank, **kwargs)
-        factors = [
-            paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-            for f in factors
-        ]
+        factors = [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
 
         return cls(factors, tensorized_shape, rank)
 
@@ -635,10 +625,7 @@ class BlockTT(TensorizedTensor, name="BlockTT"):
             factors = tensor_train_matrix(tensor, rank, **kwargs)
 
         self.factors = FactorList(
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ]
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
         )
         self.rank = tuple([f.shape[0] for f in factors] + [1])
 

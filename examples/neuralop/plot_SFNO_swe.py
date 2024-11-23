@@ -49,7 +49,6 @@ model = SFNO(
     projection_channels=64,
     factorization="dense",
 )
-model = model
 
 n_params = count_model_params(model)
 print(f"\nOur model has {n_params} parameters.")
@@ -136,8 +135,8 @@ for index, resolution in enumerate([(32, 64), (64, 128)]):
     y = data["y"][0, ...].numpy()
     # Model prediction
     x_in = x.unsqueeze(0)
-    out = model(x_in).squeeze()[0, ...].detach().cpu().numpy()
-    x = x[0, ...].detach().numpy()
+    out = model(x_in).squeeze()[0, ...].numpy()
+    x = x[0, ...].numpy()
 
     ax = fig.add_subplot(2, 3, index * 3 + 1)
     ax.imshow(x)

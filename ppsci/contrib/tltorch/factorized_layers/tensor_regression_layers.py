@@ -146,7 +146,7 @@ class TRL(nn.Layer):
             weight_shape = self.weight_shape
 
         with paddle.no_grad():
-            weight = paddle.t(linear.weight).contiguous().view(weight_shape)
+            weight = paddle.t(linear.weight).view(weight_shape)
 
             self.weight.init_from_tensor(weight, **kwargs)
             if self.bias is not None:

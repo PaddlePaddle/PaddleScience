@@ -75,17 +75,11 @@ def setup(config):
 
     else:
         is_logger = True
-        # if torch.cuda.is_available():
-        #     device = torch.device('cuda:0')
-        # else:
-        #     device = torch.device('cpu')
         if "seed" in config.distributed:
             seed = config.distributed.seed
 
     # Set device, random seed and optimization
     if paddle.device.cuda.device_count() >= 1:
-
-        # torch.cuda.set_device(device.index)
 
         if "seed" in config.distributed:
             paddle.seed(seed)

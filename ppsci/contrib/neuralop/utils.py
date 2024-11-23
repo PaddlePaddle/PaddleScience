@@ -61,21 +61,6 @@ class UnitGaussianNormalizer:
 
         return x
 
-    def cuda(self):
-        self.mean = self.mean.cuda()
-        self.std = self.std.cuda()
-        return self
-
-    def cpu(self):
-        self.mean = self.mean.cpu()
-        self.std = self.std.cpu()
-        return self
-
-    def to(self, device):
-        self.mean = self.mean.to(device)
-        self.std = self.std.to(device)
-        return self
-
 
 def count_model_params(model):
     """Returns the total number of parameters of a PyTorch model

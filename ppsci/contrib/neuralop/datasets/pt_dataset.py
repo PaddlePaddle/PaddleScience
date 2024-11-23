@@ -120,7 +120,7 @@ def load_pt_traintestsplit(
                     current_data, size=interp_res, mode=interp_mode, align_corners=False
                 )  # antialias=antialias
 
-            train_data.append(current_data.contiguous())
+            train_data.append(current_data)
 
             transform = (
                 PositionalEmbedding2D(grid_boundaries)
@@ -161,7 +161,7 @@ def load_pt_traintestsplit(
                     current_data, size=interp_res, mode=interp_mode, align_corners=False
                 )
 
-            test_data.append(current_data.contiguous())
+            test_data.append(current_data)
 
             transform = (
                 PositionalEmbedding2D(grid_boundaries)

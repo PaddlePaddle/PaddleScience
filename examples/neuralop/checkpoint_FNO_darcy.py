@@ -21,6 +21,7 @@ from ppsci.contrib.neuralop.training import CheckpointCallback
 from ppsci.contrib.neuralop.utils import count_model_params
 
 device = "cpu"
+paddle.device.set_device(device=device)
 
 
 # %%
@@ -44,7 +45,6 @@ model = TFNO(
     factorization="tucker",
     rank=0.42,
 )
-model = model.to(device)
 
 n_params = count_model_params(model)
 print(f"\nOur model has {n_params} parameters.")

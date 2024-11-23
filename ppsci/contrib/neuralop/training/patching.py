@@ -112,10 +112,10 @@ class MultigridPatching2D(nn.Layer):
         H = size[2] * self.n_patches[0]
 
         # Reshape
-        x = x.permute(0, 3, 2, 1)
-        x = x.reshape(B, self.n_patches[0], self.n_patches[1], size[3], size[2], C)
-        x = x.permute(0, 5, 1, 4, 2, 3)
-        x = x.reshape(B, C, H, W)
+        x = x.transpose([0, 3, 2, 1])
+        x = x.reshape([B, self.n_patches[0], self.n_patches[1], size[3], size[2], C])
+        x = x.transpose([0, 5, 1, 4, 2, 3])
+        x = x.reshape([B, C, H, W])
 
         return x
 
@@ -189,14 +189,16 @@ class MultigridPatching2D(nn.Layer):
             x_sub = x_sub.unfold(-1, s2_patched + 2 * padding[1], s2_stride)
             x_sub = x_sub.unfold(-3, s1_patched + 2 * padding[0], s1_stride)
 
-            x_sub = x_sub.permute(0, 2, 3, 4, 5, 1)
+            x_sub = x_sub.transpose([0, 2, 3, 4, 5, 1])
             x_sub = x_sub.reshape(
-                patched.size(0),
-                s2_patched + 2 * padding[1],
-                s1_patched + 2 * padding[0],
-                -1,
+                [
+                    patched.size(0),
+                    s2_patched + 2 * padding[1],
+                    s1_patched + 2 * padding[0],
+                    -1,
+                ]
             )
-            x_sub = x_sub.permute(0, 3, 2, 1)
+            x_sub = x_sub.transpose([0, 3, 2, 1])
 
             patched = paddle.concat((patched, x_sub), 1)
 
@@ -207,7 +209,7 @@ class MultigridPatching2D(nn.Layer):
             ...,
             self.padding_height : -self.padding_height,
             self.padding_width : -self.padding_width,
-        ].contiguous()
+        ]
 
 
 # x : (batch, C, s) or (batch, C, h, w)
@@ -251,13 +253,15 @@ def make_patches(x, n, p=0):
         patch_size = size[-(j + 1)] // n[-(j + 1)]
         x = x.unfold(-(2 * j + 1), patch_size + 2 * p[-(j + 1)], patch_size)
 
-    x = x.permute(0, 2, 3, 4, 5, 1)
+    x = x.transpose([0, 2, 3, 4, 5, 1])
     x = x.reshape(
-        size[0] * n[0] * n[1],
-        size[-1] // n[-1] + 2 * p[-1],
-        size[-2] // n[-2] + 2 * p[-2],
-        size[1],
+        [
+            size[0] * n[0] * n[1],
+            size[-1] // n[-1] + 2 * p[-1],
+            size[-2] // n[-2] + 2 * p[-2],
+            size[1],
+        ]
     )
-    x = x.permute(0, 3, 2, 1)
+    x = x.transpose([0, 3, 2, 1])
 
     return x

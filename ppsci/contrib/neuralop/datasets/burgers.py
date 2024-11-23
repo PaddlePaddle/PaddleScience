@@ -24,11 +24,11 @@ def load_burgers_1d(
     if grid is not None:
         grid = paddle.linspace(grid[0], grid[1], s + 1)[0:-1].view(1, -1)
 
-        grid_train = grid.repeat(n_train, 1)
-        grid_test = grid.repeat(n_test, 1)
+        grid_train = grid.tile([n_train, 1])
+        grid_test = grid.tile([n_test, 1])
 
         x_train = paddle.concat((x_train.unsqueeze(1), grid_train.unsqueeze(1)), 1)
-        x_test = paddle.cat((x_test.unsqueeze(1), grid_test.unsqueeze(1)), 1)
+        x_test = paddle.concat((x_test.unsqueeze(1), grid_test.unsqueeze(1)), 1)
 
     train_loader = paddle.io.DataLoader(
         paddle.io.TensorDataset([x_train, y_train]),
@@ -103,34 +103,34 @@ def load_burgers_1dtime(
         dtype=paddle.float,
     )
 
-    grid_x = grid_x.reshape(1, 1, spatial_length)
-    grid_t = grid_t.reshape(1, temporal_length, 1)
+    grid_x = grid_x.reshape([1, 1, spatial_length])
+    grid_t = grid_t.reshape([1, temporal_length, 1])
 
-    x_train = x_train.reshape(n_train, 1, spatial_length).repeat(
+    x_train = x_train.reshape([n_train, 1, spatial_length]).tile(
         [1, temporal_length, 1]
     )
-    x_test = x_test.reshape(n_test, 1, spatial_length).repeat([1, temporal_length, 1])
+    x_test = x_test.reshape([n_test, 1, spatial_length]).tile([1, temporal_length, 1])
 
     # TODO: add option to not have positional encoding
     x_train = paddle.stack(
         [
             x_train,
-            grid_t.repeat([n_train, 1, spatial_length]),
-            grid_x.repeat([n_train, temporal_length, 1]),
+            grid_t.tile([n_train, 1, spatial_length]),
+            grid_x.tile([n_train, temporal_length, 1]),
         ],
         axis=3,
     )
     x_test = paddle.stack(
         [
             x_test,
-            grid_t.repeat([n_test, 1, spatial_length]),
-            grid_x.repeat([n_test, temporal_length, 1]),
+            grid_t.tile([n_test, 1, spatial_length]),
+            grid_x.tile([n_test, temporal_length, 1]),
         ],
         axis=3,
     )
 
-    x_train = x_train.permute(0, 3, 1, 2)
-    x_test = x_test.permute(0, 3, 1, 2)
+    x_train = x_train.transpose([0, 3, 1, 2])
+    x_test = x_test.transpose([0, 3, 1, 2])
     y_train = y_train.unsqueeze(1)
     y_test = y_test.unsqueeze(1)
 

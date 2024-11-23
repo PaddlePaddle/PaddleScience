@@ -134,13 +134,9 @@ class CPTensor(FactorizedTensor, name="CP"):
             weights, factors = parafac(tensor.to(paddle.float64), rank, **kwargs)
 
         return cls(
-            paddle.base.framework.EagerParamBase.from_tensor(
-                weights.to(dtype).contiguous()
-            ),
+            paddle.base.framework.EagerParamBase.from_tensor(weights.to(dtype)),
             [
-                paddle.base.framework.EagerParamBase.from_tensor(
-                    f.to(dtype).contiguous()
-                )
+                paddle.base.framework.EagerParamBase.from_tensor(f.to(dtype))
                 for f in factors
             ],
         )
@@ -149,14 +145,9 @@ class CPTensor(FactorizedTensor, name="CP"):
         with paddle.no_grad():
             weights, factors = parafac(tensor, self.rank, l2_reg=l2_reg, **kwargs)
 
-        self.weights = paddle.base.framework.EagerParamBase.from_tensor(
-            weights.contiguous()
-        )
+        self.weights = paddle.base.framework.EagerParamBase.from_tensor(weights)
         self.factors = FactorList(
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ]
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
         )
         return self
 
@@ -241,9 +232,7 @@ class CPTensor(FactorizedTensor, name="CP"):
 
         factors.insert(
             mode,
-            paddle.base.framework.EagerParamBase.from_tensor(
-                new_factor.to(factors[0]).contiguous()
-            ),
+            paddle.base.framework.EagerParamBase.from_tensor(new_factor.to(factors[0])),
         )
         self.factors = FactorList(factors)
 
@@ -310,11 +299,8 @@ class TuckerTensor(FactorizedTensor, name="Tucker"):
             core, factors = tucker(tensor, rank, **kwargs)
 
         return cls(
-            paddle.base.framework.EagerParamBase.from_tensor(core.contiguous()),
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ],
+            paddle.base.framework.EagerParamBase.from_tensor(core),
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors],
         )
 
     def init_from_tensor(
@@ -365,12 +351,9 @@ class TuckerTensor(FactorizedTensor, name="Tucker"):
                     factors.insert(mode, factor)
                     core = core.unsqueeze(mode)
 
-        self.core = paddle.base.framework.EagerParamBase.from_tensor(core.contiguous())
+        self.core = paddle.base.framework.EagerParamBase.from_tensor(core)
         self.factors = FactorList(
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ]
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
         )
         return self
 
@@ -479,10 +462,7 @@ class TTTensor(FactorizedTensor, name="TT"):
             factors = tensor_train(tensor, rank)
 
         return cls(
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ]
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
         )
 
     def init_from_tensor(self, tensor, **kwargs):
@@ -491,10 +471,7 @@ class TTTensor(FactorizedTensor, name="TT"):
             factors = tensor_train(tensor, self.rank)
 
         self.factors = FactorList(
-            [
-                paddle.base.framework.EagerParamBase.from_tensor(f.contiguous())
-                for f in factors
-            ]
+            [paddle.base.framework.EagerParamBase.from_tensor(f) for f in factors]
         )
         self.rank = tuple([f.shape[0] for f in factors] + [1])
         return self
@@ -603,7 +580,7 @@ class TTTensor(FactorizedTensor, name="TT"):
 
         factors.insert(
             mode,
-            paddle.base.framework.EagerParamBase.from_tensor(new_factor.contiguous()),
+            paddle.base.framework.EagerParamBase.from_tensor(new_factor),
         )
         self.factors = FactorList(factors)
 

@@ -14,7 +14,7 @@ def linear_tucker(tensor, tucker_matrix, transpose=True, channels_first=True):
     else:
         contraction_axis = 0
     n_rows = len(tucker_matrix.tensorized_shape[contraction_axis])
-    tensor = tensor.reshape(-1, *tucker_matrix.tensorized_shape[contraction_axis])
+    tensor = tensor.reshape([-1, *tucker_matrix.tensorized_shape[contraction_axis]])
 
     modes_tensor = list(range(tensor.ndim - n_rows, tensor.ndim))
     if transpose:
@@ -38,7 +38,7 @@ def linear_cp(tensor, cp_matrix, transpose=True):
         )
         in_shape = cp_matrix.tensorized_shape[0]
         modes_cp = list(range(in_features))
-    tensor = tensor.reshape(-1, *in_shape)
+    tensor = tensor.reshape([-1, *in_shape])
 
     modes_tensor = list(range(1, tensor.ndim))
 
@@ -51,7 +51,7 @@ def linear_blocktt(tensor, tt_matrix, transpose=True):
     else:
         contraction_axis = 0
     ndim = len(tt_matrix.tensorized_shape[contraction_axis])
-    tensor = tensor.reshape(-1, *tt_matrix.tensorized_shape[contraction_axis])
+    tensor = tensor.reshape([-1, *tt_matrix.tensorized_shape[contraction_axis]])
 
     bs = "a"
     start = ord(bs) + 1

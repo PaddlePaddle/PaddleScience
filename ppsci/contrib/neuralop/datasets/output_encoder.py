@@ -22,18 +22,6 @@ class OutputEncoder(paddle.nn.Layer):
     def decode(self):
         pass
 
-    @abstractmethod
-    def cuda(self):
-        pass
-
-    @abstractmethod
-    def cpu(self):
-        pass
-
-    @abstractmethod
-    def to(self, device):
-        pass
-
 
 class MultipleFieldOutputEncoder(OutputEncoder):
     """When a model has multiple output fields,
@@ -96,15 +84,6 @@ class MultipleFieldOutputEncoder(OutputEncoder):
             out[indices] = decoded
 
         return out
-
-    def cpu(self):
-        self.encoders = {k: v.cpu() for k, v in self.encoders.items()}
-
-    def cuda(self):
-        self.encoders = {k: v.cuda() for k, v in self.encoders.items()}
-
-    def to(self, device):
-        self.encoders = {k: v.to(device) for k, v in self.encoders.items()}
 
 
 class DictTransform(Transform):
@@ -169,15 +148,6 @@ class DictTransform(Transform):
             out[indices] = decoded
 
         return out
-
-    def cpu(self):
-        self.encoders = {k: v.cpu() for k, v in self.encoders.items()}
-
-    def cuda(self):
-        self.encoders = {k: v.cuda() for k, v in self.encoders.items()}
-
-    def to(self, device):
-        self.encoders = {k: v.to(device) for k, v in self.encoders.items()}
 
 
 class UnitGaussianNormalizer(Transform):
@@ -303,21 +273,6 @@ class UnitGaussianNormalizer(Transform):
 
     def forward(self, x):
         return self.transform(x)
-
-    def cuda(self):
-        self.mean = self.mean.cuda()
-        self.std = self.std.cuda()
-        return self
-
-    def cpu(self):
-        self.mean = self.mean.cpu()
-        self.std = self.std.cpu()
-        return self
-
-    def to(self, device):
-        self.mean = self.mean.to(device)
-        self.std = self.std.to(device)
-        return self
 
     @classmethod
     def from_dataset(cls, dataset, dim=None, keys=None, mask=None):

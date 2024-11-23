@@ -24,18 +24,6 @@ class Transform(paddle.nn.Layer):
     def inverse_transform(self):
         pass
 
-    @abstractmethod
-    def cuda(self):
-        pass
-
-    @abstractmethod
-    def cpu(self):
-        pass
-
-    @abstractmethod
-    def to(self, device):
-        pass
-
 
 class Normalizer:
     def __init__(self, mean, std, eps=1e-6):
@@ -257,8 +245,8 @@ class PositionalEmbedding2D:
             grid_x, grid_y = regular_grid(
                 spatial_dims, grid_boundaries=self.grid_boundaries
             )
-            grid_x = grid_x.to(device).to(dtype).unsqueeze(0).unsqueeze(0)
-            grid_y = grid_y.to(device).to(dtype).unsqueeze(0).unsqueeze(0)
+            grid_x = grid_x.to(dtype).unsqueeze(0).unsqueeze(0)
+            grid_y = grid_y.to(dtype).unsqueeze(0).unsqueeze(0)
             self._grid = grid_x, grid_y
             self._res = spatial_dims
 

@@ -428,7 +428,7 @@ def total_drag(
 
 
 class WeightedL2DragLoss(object):
-    def __init__(self, mappings: dict, device: str = "cuda"):
+    def __init__(self, mappings: dict, device: str = "gpu"):
         """WeightedL2DragPlusLPQLoss calculates the l2 drag loss
             over the shear stress and pressure outputs of a model.
 

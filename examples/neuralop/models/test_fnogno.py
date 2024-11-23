@@ -13,7 +13,7 @@ tenalg.set_backend("einsum")
 @pytest.mark.parametrize("fno_n_modes", [(8,), (8, 8), (8, 8, 8)])
 def test_fnogno(gno_transform_type, fno_n_modes):
     if paddle.device.cuda.device_count() >= 1:
-        device = "cuda:0"
+        device = "gpu:0"
     else:
         device = "cpu"
 

@@ -121,7 +121,7 @@ class FactorizedEmbedding(nn.Layer):
         # to handle case where input is not 1-D
         output_shape = (*input.shape, self.embedding_dim)
 
-        flattened_input = input.reshape(-1)
+        flattened_input = input.reshape([-1])
 
         if self.n_layers == 1:
             if indices == 0:
@@ -136,7 +136,7 @@ class FactorizedEmbedding(nn.Layer):
         # TuckerTensorized returns tensor not matrix,
         # and requires reshape not view for contiguous
         elif self.factorization.lower() == "tucker":
-            embeddings = embeddings.reshape(input.shape[0], -1)
+            embeddings = embeddings.reshape([input.shape[0], -1])
 
         return embeddings.view(output_shape)
 

@@ -50,7 +50,6 @@ model = TFNO(
     factorization="tucker",
     rank=0.42,
 )
-model = model
 
 n_params = count_model_params(model)
 print(f"\nOur model has {n_params} parameters.")
@@ -155,7 +154,7 @@ for index in range(3):
     plt.yticks([], [])
 
     ax = fig.add_subplot(3, 3, index * 3 + 3)
-    ax.imshow(out.squeeze().detach().numpy())
+    ax.imshow(out.squeeze().numpy())
     if index == 0:
         ax.set_title("Model prediction")
     plt.xticks([], [])

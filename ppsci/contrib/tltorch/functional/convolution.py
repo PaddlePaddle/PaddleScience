@@ -111,7 +111,7 @@ def general_conv1d_(
     x_shape = list(x.shape)
     x = tl.reshape(x, (-1, in_channels, x_shape[-1]))
     x = F.conv1d(
-        x.contiguous(),
+        x,
         kernel,
         bias=bias,
         stride=stride,
@@ -187,7 +187,7 @@ def tucker_conv(x, tucker_tensor, bias=None, stride=1, padding=0, dilation=1):
 
     # Change the number of channels to the rank
     x_shape = list(x.shape)
-    x = x.reshape((batch_size, x_shape[1], -1)).contiguous()
+    x = x.reshape((batch_size, x_shape[1], -1))
 
     # This can be done with a tensor contraction
     # First conv == tensor contraction
@@ -244,7 +244,7 @@ def tt_conv(x, tt_tensor, bias=None, stride=1, padding=0, dilation=1):
 
     # Change the number of channels to the rank
     x_shape = list(x.shape)
-    x = x.reshape((batch_size, x_shape[1], -1)).contiguous()
+    x = x.reshape((batch_size, x_shape[1], -1))
 
     # First conv == tensor contraction
     # from (1, in_channels, rank) to (rank == out_channels, in_channels, 1)
@@ -258,7 +258,7 @@ def tt_conv(x, tt_tensor, bias=None, stride=1, padding=0, dilation=1):
         # From (in_rank, kernel_size, out_rank) to (out_rank, in_rank, kernel_size)
         kernel = tl.transpose(tt_tensor.factors[i + 1], [2, 0, 1])
         x = general_conv1d(
-            x.contiguous(),
+            x,
             kernel,
             i + 2,
             stride=stride[i],
@@ -306,7 +306,7 @@ def cp_conv(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
 
     # Change the number of channels to the rank
     x_shape = list(x.shape)
-    x = x.reshape((batch_size, x_shape[1], -1)).contiguous()
+    x = x.reshape((batch_size, x_shape[1], -1))
 
     # First conv == tensor contraction
     # from (in_channels, rank) to (rank == out_channels, in_channels, 1)
@@ -320,7 +320,7 @@ def cp_conv(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
         # From (kernel_size, rank) to (rank, 1, kernel_size)
         kernel = tl.transpose(cp_tensor.factors[i + 2]).unsqueeze(1)
         x = general_conv1d(
-            x.contiguous(),
+            x,
             kernel,
             i + 2,
             stride=stride[i],
@@ -367,7 +367,7 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
 
     # Change the number of channels to the rank
     x_shape = list(x.shape)
-    x = x.reshape((batch_size, x_shape[1], -1)).contiguous()
+    x = x.reshape((batch_size, x_shape[1], -1))
 
     # First conv == tensor contraction
     # from (in_channels, rank) to (rank == out_channels, in_channels, 1)
@@ -382,7 +382,7 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
     if order == 1:
         weight = tl.transpose(factors[2]).unsqueeze(1)
         x = F.conv1d(
-            x.contiguous(),
+            x,
             weight,
             stride=stride,
             padding=padding,
@@ -397,7 +397,7 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
             batched_modes=0,
         ).unsqueeze(1)
         x = F.conv2d(
-            x.contiguous(),
+            x,
             weight,
             stride=stride,
             padding=padding,
@@ -417,7 +417,7 @@ def cp_conv_mobilenet(x, cp_tensor, bias=None, stride=1, padding=0, dilation=1):
             batched_modes=0,
         ).unsqueeze(1)
         x = F.conv3d(
-            x.contiguous(),
+            x,
             weight,
             stride=stride,
             padding=padding,

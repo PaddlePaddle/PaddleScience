@@ -30,7 +30,7 @@ def test_tfno(
     preactivation,
 ):
     if paddle.device.cuda.device_count() >= 1:
-        device = "cuda"
+        device = "gpu"
         s = 128
         modes = 16
         width = 64

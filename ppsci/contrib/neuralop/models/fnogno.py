@@ -287,22 +287,14 @@ class FNOGNO(nn.Layer):
         # Embed input points
         n_in = in_p.view([-1, in_p.shape[-1]]).shape[0]
         if self.pos_embed is not None:
-            in_p_embed = self.pos_embed(
-                in_p.reshape(
-                    -1,
-                )
-            ).reshape((n_in, -1))
+            in_p_embed = self.pos_embed(in_p.reshape((-1,))).reshape((n_in, -1))
         else:
             in_p_embed = in_p.reshape((n_in, -1))
 
         # Embed output points
         n_out = out_p.shape[0]
         if self.pos_embed is not None:
-            out_p_embed = self.pos_embed(
-                out_p.reshape(
-                    -1,
-                )
-            ).reshape((n_out, -1))
+            out_p_embed = self.pos_embed(out_p.reshape((-1,))).reshape((n_out, -1))
         else:
             out_p_embed = out_p  # .reshape((n_out, -1))
 
