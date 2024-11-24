@@ -1,4 +1,5 @@
 colorlog
+configmypy
 einops
 h5py
 hydra-core
