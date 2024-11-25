@@ -560,35 +560,11 @@ def inference(cfg: DictConfig):
     label_dict = {"u": np.ones_like(input_dict["x"])}
     weight_dict = {"u": np.ones_like(input_dict["x"])}
 
-    num_test = 500
-    data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
-    data_2d_xy_test = (
-        np.array(
-            np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution), np.float32
-        )
-        .reshape(3, -1)
-        .T
-    )
-    input_dict_KL = {
-        "x": data_2d_xy_test[:, 0:1],
-        "y": data_2d_xy_test[:, 1:2],
-        "nu": data_2d_xy_test[:, 2:3],
-    }
-    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
-    label_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
-    weight_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
-
     dataset_vel = {
         "name": "NamedArrayDataset",
         "input": input_dict,
         "label": label_dict,
         "weight": weight_dict,
-    }
-    dataset_kl = {
-        "name": "NamedArrayDataset",
-        "input": input_dict_KL,
-        "label": label_dict_KL,
-        "weight": weight_dict_KL,
     }
     eval_cfg = {
         "sampler": {
