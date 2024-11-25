@@ -178,6 +178,85 @@ def evaluate(cfg: DictConfig):
     functions.output_graph(model, input_dict_val, cfg.output_dir, cfg.case_name)
 
 
+def export(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # set initial states for convlstm
+    NUM_CONVLSTM = cfg.num_convlstm
+    (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))
+    initial_state = []
+    for _ in range(NUM_CONVLSTM):
+        initial_state.append((h0, c0))
+
+    # grid parameters
+    time_steps = cfg.TIME_STEPS
+    dx = cfg.DX[0] / cfg.DX[1]
+
+    steps = cfg.EVAL.TIME_BATCH_SIZE + 1
+    effective_step = list(range(0, steps))
+    num_time_batch = int(time_steps / cfg.EVAL.TIME_BATCH_SIZE)
+
+    functions.dt = cfg.DT
+    functions.dx = dx
+    functions.num_time_batch = num_time_batch
+    model = ppsci.arch.PhyCRNet(
+        dt=cfg.DT, step=steps, effective_step=effective_step, **cfg.MODEL
+    )
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # use Burgers_2d_solver_HighOrder.py to generate data
+    data = scio.loadmat(cfg.DATA_PATH)
+    uv = data["uv"]  # [t,c,h,w]
+    functions.uv = uv
+
+    initial_state = []
+    # generate input data
+    (_, _, input_dict, _,) = functions.Dataset(
+        paddle.to_tensor(initial_state),
+        paddle.to_tensor(
+            uv[
+                0:1,
+            ],
+            dtype=paddle.get_default_dtype(),
+        ),
+    ).get()
+
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.INFER.input_keys}, cfg.INFER.batch_size
+    )
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    functions.output_graph(predictor, input_dict, cfg.output_dir, cfg.case_name)
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="burgers_equations.yaml"
 )
@@ -186,8 +265,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
