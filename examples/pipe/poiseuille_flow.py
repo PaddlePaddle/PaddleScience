@@ -431,22 +431,38 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg):
     from paddle.static import InputSpec
+
     model_u = ppsci.arch.MLP(**cfg.MODEL.u_net)
     model_v = ppsci.arch.MLP(**cfg.MODEL.v_net)
     model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
 
-    solver_u = ppsci.solver.Solver(model_u, pretrained_model_path=cfg.EXPORT.pretrained_model_path)
-    solver_v = ppsci.solver.Solver(model_v, pretrained_model_path=cfg.EXPORT.pretrained_model_path)
-    solver_p = ppsci.solver.Solver(model_p, pretrained_model_path=cfg.EXPORT.pretrained_model_path)
+    solver_u = ppsci.solver.Solver(
+        model_u, pretrained_model_path=cfg.EXPORT.pretrained_model_path
+    )
+    solver_v = ppsci.solver.Solver(
+        model_v, pretrained_model_path=cfg.EXPORT.pretrained_model_path
+    )
+    solver_p = ppsci.solver.Solver(
+        model_p, pretrained_model_path=cfg.EXPORT.pretrained_model_path
+    )
 
     input_spec_u = [
-        {key: InputSpec([None, 1], "float32", name=key) for key in cfg.MODEL.u_net.input_keys},
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.u_net.input_keys
+        },
     ]
     input_spec_v = [
-        {key: InputSpec([None, 1], "float32", name=key) for key in cfg.MODEL.v_net.input_keys},
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.v_net.input_keys
+        },
     ]
     input_spec_p = [
-        {key: InputSpec([None, 1], "float32", name=key) for key in cfg.MODEL.p_net.input_keys},
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.p_net.input_keys
+        },
     ]
 
     export_path_u = os.path.join(cfg.output_dir, "u_net")
@@ -507,16 +523,16 @@ def inference(cfg: DictConfig):
             return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
 
         def output_trans_u(self, input, out):
-            return {"u": out["u"] * (R ** 2 - self.input["y"] ** 2)}
+            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
 
         def output_trans_v(self, input, out):
-            return {"v": (R ** 2 - self.input["y"] ** 2) * out["v"]}
+            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
 
         def output_trans_p(self, input, out):
             return {
                 "p": (
-                        (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
-                        + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
+                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
                 )
             }
 
@@ -538,7 +554,7 @@ def inference(cfg: DictConfig):
     dP = P_IN - P_OUT
 
     for i in range(N_p):
-        uy = (R ** 2 - data_1d_y ** 2) * dP / (2 * L * data_1d_nu[i] * RHO)
+        uy = (R**2 - data_1d_y ** 2) * dP / (2 * L * data_1d_nu[i] * RHO)
         u_analytical[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
 
     label_dict = {"u": np.ones_like(input_dict["x"])}
@@ -558,7 +574,7 @@ def inference(cfg: DictConfig):
         "y": data_2d_xy_test[:, 1:2],
         "nu": data_2d_xy_test[:, 2:3],
     }
-    u_max_a = (R ** 2) * dP / (2 * L * data_1d_nu_distribution * RHO)
+    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
     label_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
     weight_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
 
@@ -689,7 +705,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
