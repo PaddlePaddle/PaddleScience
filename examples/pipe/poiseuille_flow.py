@@ -554,7 +554,7 @@ def inference(cfg: DictConfig):
     dP = P_IN - P_OUT
 
     for i in range(N_p):
-        uy = (R**2 - data_1d_y ** 2) * dP / (2 * L * data_1d_nu[i] * RHO)
+        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
         u_analytical[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
 
     label_dict = {"u": np.ones_like(input_dict["x"])}
@@ -665,7 +665,7 @@ def inference(cfg: DictConfig):
     u_max_pred = output_dict_test["u"]
 
     # Analytical result, y = 0
-    u_max_a = (R ** 2) * (P_IN - P_OUT) / (2 * L * data_1d_nu * RHO)
+    u_max_a = (R**2) * (P_IN - P_OUT) / (2 * L * data_1d_nu * RHO)
 
     plt.figure(2)
     plt.clf()
