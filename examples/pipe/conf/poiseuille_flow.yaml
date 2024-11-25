@@ -76,3 +76,21 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
+
+# export settings
+EXPORT:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/poiseuille_flow_pretrained.pdparams"
+
+# inference settings
+INFER:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/poiseuille_flow_pretrained.pdparams"
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 8192
+  num_cpu_threads: 10
+  batch_size: 8192
