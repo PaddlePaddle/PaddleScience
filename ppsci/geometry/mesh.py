@@ -1109,9 +1109,16 @@ class SDFMesh(geometry.Geometry):
         n: int,
         random: Literal["pseudo"] = "pseudo",
         criteria: Optional[Callable[..., np.ndarray]] = None,
+        evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria."""
+        if evenly:
+            # TODO(sensen): Implement uniform sample for mesh interior.
+            raise NotImplementedError(
+                "uniformly sample for interior in mesh is not support yet, "
+                "you may need to set evenly=False in config dict of constraint"
+            )
         points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
