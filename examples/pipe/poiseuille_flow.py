@@ -560,13 +560,37 @@ def inference(cfg: DictConfig):
     label_dict = {"u": np.ones_like(input_dict["x"])}
     weight_dict = {"u": np.ones_like(input_dict["x"])}
 
+    num_test = 500
+    data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
+    data_2d_xy_test = (
+        np.array(
+            np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution), np.float32
+        )
+        .reshape(3, -1)
+        .T
+    )
+    input_dict_KL = {
+        "x": data_2d_xy_test[:, 0:1],
+        "y": data_2d_xy_test[:, 1:2],
+        "nu": data_2d_xy_test[:, 2:3],
+    }
+    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
+    label_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
+    weight_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
+
     dataset_vel = {
         "name": "NamedArrayDataset",
         "input": input_dict,
         "label": label_dict,
         "weight": weight_dict,
     }
-    eval_cfg = {
+    dataset_kl = {
+        "name": "NamedArrayDataset",
+        "input": input_dict_KL,
+        "label": label_dict_KL,
+        "weight": weight_dict_KL,
+    }
+    infer_cfg = {
         "sampler": {
             "name": "BatchSampler",
             "shuffle": False,
@@ -574,7 +598,8 @@ def inference(cfg: DictConfig):
         },
         "batch_size": 2000,
     }
-    eval_cfg["dataset"] = dataset_vel
+    infer_cfg["dataset"] = dataset_vel
+    infer_cfg["dataset"] = dataset_kl
 
     solver = ppsci.solver.Solver(
         model,
@@ -582,18 +607,15 @@ def inference(cfg: DictConfig):
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
 
-    # inference
     output_dict = solver.predict(input_dict, return_numpy=True)
     u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
-
-    PLOT_DIR = osp.join(cfg.output_dir, "visu")
-    os.makedirs(PLOT_DIR, exist_ok=True)
-
     fontsize = 16
     idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
     nu_index = [3, 6, 9, 12, 14, 20, 49]  # pick 7 nu samples
     ytext = [0.55, 0.5, 0.4, 0.28, 0.1, 0.05, 0.001]  # text y position
 
+    PLOT_DIR = osp.join(cfg.output_dir, "visu")
+    os.makedirs(PLOT_DIR, exist_ok=True)
     plt.figure(1)
     plt.clf()
     for idxP in range(len(nu_index)):
@@ -633,15 +655,13 @@ def inference(cfg: DictConfig):
     # Distribution of center velocity
     # Predicted result
     input_dict_test = {
-        "x": data_2d_xy[:, 0:1],
-        "y": data_2d_xy[:, 1:2],
-        "nu": data_2d_xy[:, 2:3],
+        "x": data_2d_xy_test[:, 0:1],
+        "y": data_2d_xy_test[:, 1:2],
+        "nu": data_2d_xy_test[:, 2:3],
     }
     output_dict_test = solver.predict(input_dict_test, return_numpy=True)
     u_max_pred = output_dict_test["u"]
-
-    # Analytical result, y = 0
-    u_max_a = (R**2) * (P_IN - P_OUT) / (2 * L * data_1d_nu * RHO)
+    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
 
     plt.figure(2)
     plt.clf()
