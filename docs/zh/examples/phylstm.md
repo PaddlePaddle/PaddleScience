@@ -44,6 +44,44 @@
         python phylstm3.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams
         ```
 
+=== "模型导出命令"
+
+    === "phylstm2"
+
+        ``` sh
+        python phylstm2.py mode=export
+        ```
+
+    === "phylstm3"
+
+        ``` sh
+        python phylstm3.py mode=export
+        ```
+
+=== "模型推理命令"
+
+    === "phylstm2"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat -o data_boucwen.mat
+    python phylstm2.py mode=infer
+    ```
+
+    === "phylstm3"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat -o data_boucwen.mat
+    python phylstm3.py mode=infer
+    ```
+
+
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [phylstm2_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams) | loss(sup_valid): 0.00799 |
