@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from os import path as osp
 
 import hydra
@@ -63,80 +64,29 @@ def getdata(x_path, y_path, para_path, output_path, n_data, n, s, is_train=True,
     return x, y, inputPara
 
 
-def transfer(theta):
-    L_p = 60 + (250 - 60)/(1 + paddle.exp(theta[0]))
-    x1 = -0.5*L_p
-    x3 = x1  + 15 + (L_p/2 - 15)/(1 + paddle.exp(theta[2]))
-    x2 = -L_p  + L_p/(1 + paddle.exp(theta[1]))
-    h = 20   + (10)/(1 + paddle.exp(theta[3]))
-    return L_p, x1, x2, x3, h
+def plot(input: np.ndarray, out_pred: np.ndarray, output_dir: str):
+    os.makedirs(output_dir, exist_ok=True)
+    fig_path = osp.join(output_dir, "inference.png")
 
-
-def inv_transfer(L_p, x2, x3, h):
-    x1 = -0.5*L_p
-    theta = np.zeros(4)
-    theta[0] = np.log( (250 - 60)/(L_p - 60) - 1 )
-    theta[1] = np.log( L_p/(x2 + L_p) - 1 )
-    theta[2] = np.log( (L_p/2 - 15)/(x3 - x1  - 15) - 1 )
-    theta[3] = np.log( 10/(h - 20 ) - 1 )
-    return theta
-
-
-def catheter_mesh_1d_total_length(L_x, L_p, x2, x3, h, N_s):
-    x1 = -0.5 * L_p
-    n_periods = paddle.floor(x=L_x / L_p)
-    L_x_last_period = L_x - n_periods * L_p
-    L_p_s = x1 + L_p + (0 - x3) + paddle.sqrt(x=(x2 - x1) ** 2 + h ** 2
-        ) + paddle.sqrt(x=(x3 - x2) ** 2 + h ** 2)
-    L_s = L_p_s * n_periods + Lx2length(L_x_last_period, L_p, x1, x2, x3, h)
-    d_arr = paddle.linspace(start=0, stop=1, num=N_s) * L_s
-    period_arr = paddle.floor(x=d_arr / L_p_s).detach()
-    d_arr -= period_arr * L_p_s
-    xx, yy = d2xy(d_arr, L_p, x1, x2, x3, h)
-    xx = xx - period_arr * L_p
-    X_Y = paddle.zeros(shape=(1, N_s, 2), dtype='float32')
-    X_Y[0, :, 0], X_Y[0, :, 1] = xx, yy
-    return X_Y, xx, yy
-
-
-def Lx2length(L_x, L_p, x1, x2, x3, h):
-    l0, l1, l2, l3 = -x3, paddle.sqrt(x=(x2 - x3) ** 2 + h ** 2), paddle.sqrt(x
-        =(x1 - x2) ** 2 + h ** 2), L_p + x1
-    if L_x < -x3:
-        l = L_x
-    elif L_x < -x2:
-        l = l0 + l1 * (L_x + x3) / (x3 - x2)
-    elif L_x < -x1:
-        l = l0 + l1 + l2 * (L_x + x2) / (x2 - x1)
-    else:
-        l = l0 + l1 + l2 + L_x + x1
-    return l
-
-
-def d2xy(d, L_p, x1, x2, x3, h):
-    p0, p1, p2, p3 = paddle.to_tensor(data=[0.0, 0.0]).cpu().numpy(), paddle.to_tensor(data
-        =[x3, 0.0]).cpu().numpy(), paddle.to_tensor(data=[x2, h]).cpu().numpy(), paddle.to_tensor(data=
-        [x1, 0.0]).cpu().numpy()
-    v0, v1, v2, v3 = paddle.to_tensor(data=[x3 - 0, 0.0]).cpu().numpy(), paddle.to_tensor(
-        data=[x2 - x3, h]).cpu().numpy(), paddle.to_tensor(data=[x1 - x2, -h]
-        ).cpu().numpy(), paddle.to_tensor(data=[-L_p - x1, 0.0]).cpu().numpy()
-    l0, l1, l2, l3 = -x3.cpu().numpy(), paddle.sqrt(x=(x2 - x3) ** 2 + h ** 2).cpu().numpy(), paddle.sqrt(x
-        =(x1 - x2) ** 2 + h ** 2).cpu().numpy(), (L_p + x1).cpu().numpy()
-    xx, yy = paddle.zeros(shape=tuple(d.shape)).cpu().numpy(), paddle.zeros(shape=tuple(d
-        .shape)).cpu().numpy()
-    ind = d < l0
-    xx[ind] = d[ind] * v0[0] / l0 + p0[0]
-    yy[ind] = d[ind] * v0[1] / l0 + p0[1]
-    ind = paddle.logical_and(x=d < l0 + l1, y=d >= l0)
-    xx[ind] = (d[ind] - l0) * v1[0] / l1 + p1[0]
-    yy[ind] = (d[ind] - l0) * v1[1] / l1 + p1[1]
-    ind = paddle.logical_and(x=d < l0 + l1 + l2, y=d >= l0 + l1)
-    xx[ind] = (d[ind] - l0 - l1) * v2[0] / l2 + p2[0]
-    yy[ind] = (d[ind] - l0 - l1) * v2[1] / l2 + p2[1]
-    ind = d >= l0 + l1 + l2
-    xx[ind] = (d[ind] - l0 - l1 - l2) * v3[0] / l3 + p3[0]
-    yy[ind] = (d[ind] - l0 - l1 - l2) * v3[1] / l3 + p3[1]
-    return paddle.to_tensor(xx), paddle.to_tensor(yy)
+    xx = np.linspace(-500, 0, 2001)
+    fig = plt.figure(figsize=(5, 4))
+    plt.plot(input[:, 0], input[:, 1], color="C1", label="Channel geometry")
+    plt.plot(input[:, 0], 100 - input[:, 1], color="C1")
+    plt.plot(
+            xx,
+            out_pred,
+            "--*",
+            color="C2",
+            fillstyle="none",
+            markevery=len(xx) // 10,
+            label="Predicted bacteria distribution",
+        )
+    plt.xlabel(r"x")
+    plt.legend()
+    plt.tight_layout()
+    fig.savefig(fig_path, bbox_inches="tight", dpi=400)
+    plt.close()
+    ppsci.utils.logger.info(f"Saving figure to {fig_path}")
 
 
 def train(cfg: DictConfig):
@@ -291,32 +241,23 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-    from deploy.python_infer import pinn_predictor
+    from deploy import python_infer
 
-    predictor = pinn_predictor.PINNPredictor(cfg)
+    predictor = python_infer.GeneralPredictor(cfg)
 
     # evaluate
-    L_p, x2, x3, h = 100.0, -40.0, -30.0, 25.0
-    theta0 =  inv_transfer(L_p, x2, x3, h) 
-    theta_min = np.copy(theta0)
-    theta_min_perturbed = np.copy(theta_min)
-    theta = paddle.to_tensor(theta_min_perturbed.astype(np.float32), stop_gradient=False)
     input, output, _ = getdata(**cfg.TEST_DATA, is_train=False)
-    input_dict = {"input": input}
+    input_dict = {"input": input[0, :, :]}
 
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     # mapping data to cfg.INFER.output_keys
+    output_keys = ["output"]
     output_dict = {
-        store_key: output_dict[infer_key]
-        for store_key, infer_key in zip(['output'], ['intput'])
+        store_key: paddle.exp(output_dict[infer_key]).numpy().flatten()
+        for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
     
-    ppsci.visualize.save_plot_from_1d_dict(
-        "./catheter_predict",
-        {**input_dict, **output_dict, "output_label": output},
-        ("input",),
-        ("output", "output_label"),
-    )
+    plot(input_dict["input"], output_dict['output'], cfg.output_dir)
 
 
 

@@ -76,4 +76,6 @@ EVAL:
 # inference settings
 INFER:
   export_path: ./inference/catheter
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
   batch_size: 20
