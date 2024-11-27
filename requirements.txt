@@ -1,5 +1,4 @@
 colorlog
-configmypy
 einops
 h5py
 hydra-core
@@ -16,8 +15,6 @@ scikit-optimize
 scipy
 seaborn
 sympy
-tensorly
 tqdm
 typing-extensions
-wandb
 wget
