@@ -1,9 +1,8 @@
 from timeit import default_timer
 
 import paddle
+from neuralop.losses import LpLoss
 from paddle import amp
-
-from ppsci.contrib.neuralop.losses import LpLoss
 
 from .callbacks import PipelineCallback
 

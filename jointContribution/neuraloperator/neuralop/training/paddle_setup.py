@@ -1,6 +1,5 @@
+import neuralop.mpu.comm as comm
 import paddle
-
-import ppsci.contrib.neuralop.mpu.comm as comm
 
 
 def setup(config):

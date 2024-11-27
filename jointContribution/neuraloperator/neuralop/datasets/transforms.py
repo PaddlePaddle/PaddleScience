@@ -2,9 +2,8 @@ from abc import abstractmethod
 from typing import List
 
 import paddle
+from neuralop.training.patching import MultigridPatching2D
 from paddle.io import Dataset
-
-from ppsci.contrib.neuralop.training.patching import MultigridPatching2D
 
 
 class Transform(paddle.nn.Layer):

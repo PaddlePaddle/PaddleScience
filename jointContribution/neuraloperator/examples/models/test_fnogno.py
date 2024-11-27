@@ -1,8 +1,7 @@
 import paddle
 import pytest
+from neuralop.models import FNOGNO
 from tensorly import tenalg
-
-from ppsci.contrib.neuralop.models import FNOGNO
 
 tenalg.set_backend("einsum")
 

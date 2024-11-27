@@ -14,7 +14,6 @@
 
 from ppsci import arch  # isort:skip
 from ppsci import autodiff  # isort:skip
-from ppsci import contrib  # isort:skip
 from ppsci import constraint  # isort:skip
 from ppsci import data  # isort:skip
 from ppsci import equation  # isort:skip

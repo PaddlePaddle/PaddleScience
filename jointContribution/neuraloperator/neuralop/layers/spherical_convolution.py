@@ -7,9 +7,9 @@ import tensorly as tl
 from paddle import nn
 from paddle_harmonics import InverseRealSHT
 from paddle_harmonics import RealSHT
-from tensorly._factorized_tensor import FactorizedTensor
 from tensorly.plugins import use_opt_einsum
 
+from ..tltorch.factorized_tensors.core import FactorizedTensor
 from ..utils import validate_scaling_factor
 from .base_spectral_conv import BaseSpectralConv
 from .spectral_convolution import SubConv
@@ -236,18 +236,14 @@ class SHT(nn.Layer):
         try:
             sht = self._SHT_cache[cache_key]
         except KeyError:
-            sht = (
-                RealSHT(
-                    nlat=height,
-                    nlon=width,
-                    lmax=modes_height,
-                    mmax=modes_width,
-                    grid=grid,
-                    norm=norm,
-                )
-                .to(device=x.device)
-                .to(dtype=self.dtype)
-            )
+            sht = RealSHT(
+                nlat=height,
+                nlon=width,
+                lmax=modes_height,
+                mmax=modes_width,
+                grid=grid,
+                norm=norm,
+            ).to(dtype=self.dtype)
             self._SHT_cache[cache_key] = sht
 
         return sht(x)
@@ -268,18 +264,14 @@ class SHT(nn.Layer):
         try:
             isht = self._iSHT_cache[cache_key]
         except KeyError:
-            isht = (
-                InverseRealSHT(
-                    nlat=height,
-                    nlon=width,
-                    lmax=modes_height,
-                    mmax=modes_width,
-                    grid=grid,
-                    norm=norm,
-                )
-                .to(device=x.device)
-                .to(dtype=self.dtype)
-            )
+            isht = InverseRealSHT(
+                nlat=height,
+                nlon=width,
+                lmax=modes_height,
+                mmax=modes_width,
+                grid=grid,
+                norm=norm,
+            ).to(dtype=self.dtype)
             self._iSHT_cache[cache_key] = isht
 
         return isht(x)
@@ -416,9 +408,10 @@ class SphericalConv(BaseSpectralConv):
             # test
             # https://github.com/PaddlePaddle/docs/blob/develop/docs/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.md
             # https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/model_convert/convert_from_pytorch/api_difference/nn/torch.nn.Parameter.html
+            result_tuple = (n_layers, self.out_channels) + (1,) * self.order
+            shape = list(result_tuple)
             self.bias = paddle.base.framework.EagerParamBase.from_tensor(
-                init_std
-                * paddle.randn(*((n_layers, self.out_channels) + (1,) * self.order))
+                init_std * paddle.randn(shape)
             )
         else:
             self.bias = None

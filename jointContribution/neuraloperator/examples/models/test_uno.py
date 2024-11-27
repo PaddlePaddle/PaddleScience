@@ -2,8 +2,7 @@ import time
 
 import paddle
 import pytest
-
-from ppsci.contrib.neuralop.models import UNO
+from neuralop.models import UNO
 
 
 # [TODO]: loss.backward() will lead to segmentation fault on macos

@@ -1,6 +1,5 @@
 import paddle
-
-from ppsci.contrib.neuralop.training.patching import MultigridPatching2D
+from neuralop.training.patching import MultigridPatching2D
 
 
 class DefaultDataProcessor(paddle.nn.Layer):

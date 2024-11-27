@@ -1,11 +1,10 @@
 import math
 
+import neuralop.mpu.comm as comm
 import paddle
+from neuralop.mpu.mappings import gather_from_model_parallel_region
+from neuralop.mpu.mappings import scatter_to_model_parallel_region
 from paddle import nn
-
-import ppsci.contrib.neuralop.mpu.comm as comm
-from ppsci.contrib.neuralop.mpu.mappings import gather_from_model_parallel_region
-from ppsci.contrib.neuralop.mpu.mappings import scatter_to_model_parallel_region
 
 
 class MultigridPatching2D(nn.Layer):
