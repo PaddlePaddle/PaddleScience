@@ -43,7 +43,6 @@ except ImportError:
 __all__ = [
     "arch",
     "autodiff",
-    "contrib",
     "constraint",
     "data",
     "equation",
