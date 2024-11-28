@@ -29,7 +29,17 @@ from ppsci.utils import logger
 
 
 # build data
-def getdata(x_path, y_path, para_path, output_path, n_data, n, s, is_train=True, is_inference=False):
+def getdata(
+    x_path,
+    y_path,
+    para_path,
+    output_path,
+    n_data,
+    n,
+    s,
+    is_train=True,
+    is_inference=False,
+):
 
     # load data
     inputX_raw = np.load(x_path)[:, 0:n_data]
@@ -42,10 +52,10 @@ def getdata(x_path, y_path, para_path, output_path, n_data, n, s, is_train=True,
     inputY = inputY_raw[:, 0::3]
     inputPara = inputPara_raw[:, 0::3]
     output = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
-    
+
     if is_inference:
         return inputX, inputY, inputPara, output
-    
+
     inputX = paddle.to_tensor(data=inputX, dtype="float32").transpose(perm=[1, 0])
     inputY = paddle.to_tensor(data=inputY, dtype="float32").transpose(perm=[1, 0])
     input = paddle.stack(x=[inputX, inputY], axis=-1)
@@ -73,14 +83,14 @@ def plot(input: np.ndarray, out_pred: np.ndarray, output_dir: str):
     plt.plot(input[:, 0], input[:, 1], color="C1", label="Channel geometry")
     plt.plot(input[:, 0], 100 - input[:, 1], color="C1")
     plt.plot(
-            xx,
-            out_pred,
-            "--*",
-            color="C2",
-            fillstyle="none",
-            markevery=len(xx) // 10,
-            label="Predicted bacteria distribution",
-        )
+        xx,
+        out_pred,
+        "--*",
+        color="C2",
+        fillstyle="none",
+        markevery=len(xx) // 10,
+        label="Predicted bacteria distribution",
+    )
     plt.xlabel(r"x")
     plt.legend()
     plt.tight_layout()
@@ -256,9 +266,8 @@ def inference(cfg: DictConfig):
         store_key: paddle.exp(output_dict[infer_key]).numpy().flatten()
         for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
-    
-    plot(input_dict["input"], output_dict['output'], cfg.output_dir)
 
+    plot(input_dict["input"], output_dict["output"], cfg.output_dir)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="catheter.yaml")
