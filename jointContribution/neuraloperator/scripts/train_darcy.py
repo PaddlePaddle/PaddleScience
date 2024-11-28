@@ -17,6 +17,8 @@ from neuralop.utils import count_model_params
 from neuralop.utils import get_wandb_api_key
 from paddle import DataParallel as DDP
 
+paddle.device.set_device("gpu")
+
 # Read the configuration
 config_name = "default"
 pipe = ConfigPipeline(
@@ -95,10 +97,10 @@ if config.patching.levels > 0:
         stitching=config.patching.stitching,
         levels=config.patching.levels,
     )
-data_processor = data_processor.to(device)
+data_processor = data_processor
 
 model = get_model(config)
-model = model.to(device)
+model = model
 
 # Use distributed data parallel
 if config.distributed.use_distributed:
