@@ -106,6 +106,7 @@ class FNO1d(nn.Layer):
         input_channel (int, optional, optional): Number of channels of the input tensor. Defaults to 2.
         output_np (int, optional, optional): Number of points to sample the solution. Defaults to 2001.
     """
+
     def __init__(
         self,
         input_key=("input",),
