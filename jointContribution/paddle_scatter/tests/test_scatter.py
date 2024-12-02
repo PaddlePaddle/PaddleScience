@@ -5,6 +5,7 @@ import paddle
 import paddle_scatter
 import pytest
 from paddle_scatter.testing import dtypes
+from paddle_scatter.testing import dtypes_half
 from paddle_scatter.testing import ind_dtypes
 from paddle_scatter.testing import places
 from paddle_scatter.testing import reductions
@@ -221,6 +222,33 @@ def test_forward(test, reduce, dtype, ind_dtype, place):
     assert paddle.all(out == expected)
 
 
+@pytest.mark.skipif(
+    not paddle.core.is_compiled_with_cuda()
+    and paddle.core.is_bfloat16_supported()
+    and paddle.core.is_float16_supported(),
+    reason="half dtype not available",
+)
+@pytest.mark.parametrize(
+    "test,reduce,dtype,ind_dtype", product(tests, reductions, dtypes_half, ind_dtypes)
+)
+def test_forward_half(test, reduce, dtype, ind_dtype):
+    paddle.set_device("gpu")
+    src = tensor(test["src"], dtype)
+    index = tensor(test["index"], ind_dtype)
+    dim = test["dim"]
+    expected = tensor(test[reduce], dtype)
+
+    fn = getattr(paddle_scatter, "scatter_" + reduce)
+    out = fn(src, index, dim)
+    if reduce == "min" or reduce == "max":
+        out, arg_out = out
+        arg_expected = tensor(test["arg_" + reduce], ind_dtype)
+        print(arg_out)
+        print(arg_expected)
+        assert paddle.all(arg_out == arg_expected)
+    assert paddle.all(out == expected)
+
+
 @pytest.mark.parametrize("test,reduce,place", product(tests, reductions, places))
 def test_backward(test, reduce, place):
     paddle.set_device(place)
@@ -229,6 +257,28 @@ def test_backward(test, reduce, place):
     exp_grad = tensor(test[f"{reduce}_grad"], paddle.float64)
 
     src = tensor(test["src"], paddle.float64)
+    src.stop_gradient = False
+    out = paddle_scatter.scatter(src, index, dim, None, None, reduce)
+    out.backward()
+    np.testing.assert_allclose(
+        src.grad.numpy(), exp_grad.numpy(), rtol=1e-05, atol=1e-06
+    )
+
+
+@pytest.mark.skipif(
+    not paddle.core.is_compiled_with_cuda()
+    and paddle.core.is_bfloat16_supported()
+    and paddle.core.is_float16_supported(),
+    reason="half dtype not available",
+)
+@pytest.mark.parametrize("test,reduce", product(tests, reductions))
+def test_backward_half(test, reduce):
+    paddle.set_device("gpu")
+    index = tensor(test["index"], paddle.int64)
+    dim = test["dim"]
+    exp_grad = tensor(test[f"{reduce}_grad"], paddle.float16)
+
+    src = tensor(test["src"], paddle.float16)
     src.stop_gradient = False
     out = paddle_scatter.scatter(src, index, dim, None, None, reduce)
     out.backward()
@@ -268,11 +318,81 @@ def test_out(test, reduce, dtype, ind_dtype, place):
     np.testing.assert_allclose(out.numpy(), expected.numpy(), rtol=1e-05, atol=1e-06)
 
 
+@pytest.mark.skipif(
+    not paddle.core.is_compiled_with_cuda()
+    and paddle.core.is_bfloat16_supported()
+    and paddle.core.is_float16_supported(),
+    reason="half dtype not available",
+)
+@pytest.mark.parametrize(
+    "test,reduce,dtype,ind_dtype", product(tests, reductions, dtypes_half, ind_dtypes)
+)
+def test_out_half(test, reduce, dtype, ind_dtype):
+    paddle.set_device("gpu")
+    src = tensor(test["src"], dtype)
+    index = tensor(test["index"], ind_dtype)
+    dim = test["dim"]
+    expected = tensor(test[reduce], dtype)
+
+    out = paddle.full_like(expected, -2)
+
+    getattr(paddle_scatter, "scatter_" + reduce)(src, index, dim, out)
+
+    if reduce == "sum" or reduce == "add":
+        expected = expected - 2
+    elif reduce == "mul":
+        expected = out  # We can not really test this here.
+    elif reduce == "mean":
+        expected = out  # We can not really test this here.
+    elif reduce == "min":
+        print(expected)
+        expected = expected.fill_(-2)
+    elif reduce == "max":
+        expected[expected == 0] = -2
+    else:
+        raise ValueError
+
+    np.testing.assert_allclose(out.numpy(), expected.numpy(), rtol=1e-05, atol=1e-06)
+
+
+@pytest.mark.skipif(
+    not paddle.core.is_compiled_with_cuda()
+    and paddle.core.is_bfloat16_supported()
+    and paddle.core.is_float16_supported(),
+    reason="half dtype not available",
+)
+@pytest.mark.parametrize(
+    "test,reduce,dtype,ind_dtype", product(tests, reductions, dtypes_half, ind_dtypes)
+)
+def test_non_contiguous(test, reduce, dtype, ind_dtype):
+    paddle.set_device("gpu")
+    src = tensor(test["src"], dtype)
+    index = tensor(test["index"], ind_dtype)
+    dim = test["dim"]
+    expected = tensor(test[reduce], dtype)
+
+    if src.dim() > 1:
+        shape = list(range(src.dim()))
+        shape[0], shape[1] = shape[1], shape[0]
+        src = src.transpose(shape).contiguous().transpose(shape)
+    if index.dim() > 1:
+        shape = list(range(index.dim()))
+        shape[0], shape[1] = shape[1], shape[0]
+        index = index.transpose(shape).contiguous().transpose(shape)
+
+    out = getattr(paddle_scatter, "scatter_" + reduce)(src, index, dim)
+    if reduce == "min" or reduce == "max":
+        out, arg_out = out
+        arg_expected = tensor(test["arg_" + reduce], ind_dtype)
+        assert paddle.all(arg_out == arg_expected)
+    assert paddle.all(out == expected)
+
+
 @pytest.mark.parametrize(
     "test,reduce,dtype,ind_dtype,place",
     product(tests, reductions, dtypes, ind_dtypes, places),
 )
-def test_non_contiguous(test, reduce, dtype, ind_dtype, place):
+def test_non_contiguous_half(test, reduce, dtype, ind_dtype, place):
     paddle.set_device(place)
     src = tensor(test["src"], dtype)
     index = tensor(test["index"], ind_dtype)

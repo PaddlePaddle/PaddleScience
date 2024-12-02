@@ -32,10 +32,10 @@ def get_extensions():
 
 
 setup(
-    name="paddle_scatter_min_max_ops",
+    name="paddle_scatter_ops",
     version="1.0",
     author="NKNaN",
     url="https://github.com/PaddlePaddle/PaddleScience/jointContribution/paddle_scatter",
-    description="Paddle extension of scatter and segment operators with min and max reduction methods",
+    description="Paddle extension of scatter and segment operators with min and max reduction methods, originally from https://github.com/rusty1s/pytorch_scatter",
     ext_modules=get_extensions(),
 )

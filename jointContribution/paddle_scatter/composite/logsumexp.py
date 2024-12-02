@@ -42,7 +42,7 @@ def scatter_logsumexp(
         )
 
     index = broadcast(index, src, dim)
-    eps = paddle.to_tensor(eps, dtype=src.dtype)
+    eps = paddle.full([], eps, dtype=src.dtype)
 
     if out is not None:
         dim_size = out.shape[dim]

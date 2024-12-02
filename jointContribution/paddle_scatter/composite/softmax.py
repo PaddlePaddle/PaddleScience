@@ -84,7 +84,7 @@ def scatter_log_softmax(
         )
 
     index = broadcast(index, src, dim)
-    eps = paddle.to_tensor(eps, dtype=src.dtype)
+    eps = paddle.full([], eps, dtype=src.dtype)
 
     max_value_per_index = scatter_max(src, index, dim=dim, dim_size=dim_size)[0]
     max_per_src_element = max_value_per_index.take_along_axis(indices=index, axis=dim)

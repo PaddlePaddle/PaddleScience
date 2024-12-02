@@ -2,17 +2,7 @@ from typing import Optional
 from typing import Tuple
 
 import paddle
-from paddle import arange
-from paddle import assign
-from paddle import full
-from paddle import repeat_interleave
-from paddle import zeros
-from paddle.geometric import segment_mean
-from paddle.geometric import segment_sum
-from paddle_scatter_min_max_ops import custom_segment_csr_min_max
-
-from .utils import transform_2d
-from .utils import transform_3d
+import paddle_scatter_ops
 
 
 def segment_sum_csr(
@@ -48,46 +38,19 @@ def segment_sum_csr(
     else:
         indptr = indptr.expand(indptr_shape)
 
-    num_seg = indptr_shape[dim] - 1
     if out is None:
-        out_size = src_shape
-        if indptr.numel() == 0:
-            out_size[dim] = 0
-        else:
-            out_size[dim] = num_seg
+        size = src.shape
+        size[dim] = max(indptr_shape[dim] - 1, 0)
         if src.numel() == 0:
-            return zeros(out_size, dtype=src.dtype)
+            return paddle.zeros(size, dtype=src.dtype)
+        return paddle_scatter_ops.custom_segment_csr(src, indptr, None, size, "sum")[0]
     else:
-        assert (
-            out.shape[dim] == num_seg
-        ), "The (size of indptr at last dimension) must be\
-                                             equal to the (size of out at the same dimension) + 1."
         if src.numel() == 0:
             return out
-        out_size = out.shape
-    tmp = zeros(out_size, dtype=src.dtype)
-
-    repeats = indptr.diff(n=1, axis=dim)
-    assert (
-        repeats.sum(axis=dim) == src.shape[dim]
-    ).all(), "The length of specified index by indptr shoud be\
-                                                             equal to the size of src at last dimension of indptr."
-    src_flatten = transform_3d(src, dim)
-    out_flatten = transform_3d(tmp, dim)
-    repeats_flatten = transform_2d(repeats, dim)
-    src_dim_indices = arange(num_seg)
-    for i in range(src_flatten.shape[0]):
-        for j in range(src_flatten.shape[-1]):
-            belongs_to = repeat_interleave(src_dim_indices, repeats_flatten[i], 0)
-            result = segment_sum(src_flatten[i, :, j], belongs_to)
-            if out_size[dim] >= len(result):
-                out_flatten[i, : len(result), j] = result
-            else:
-                out_flatten[i, :, j] = result[: out_size[dim]]
-    if out is None:
-        return out_flatten.reshape(out_size)
-    else:
-        assign(out_flatten.reshape(out_size), out)
+        result = paddle_scatter_ops.custom_segment_csr(
+            src, indptr, out, out.shape, "sum"
+        )[0]
+        paddle.assign(result, out)
         return out
 
 
@@ -150,46 +113,19 @@ def segment_mean_csr(
     else:
         indptr = indptr.expand(indptr_shape)
 
-    num_seg = indptr_shape[dim] - 1
     if out is None:
-        out_size = src_shape
-        if indptr.numel() == 0:
-            out_size[dim] = 0
-        else:
-            out_size[dim] = num_seg
+        size = src.shape
+        size[dim] = max(indptr_shape[dim] - 1, 0)
         if src.numel() == 0:
-            return zeros(out_size, dtype=src.dtype)
+            return paddle.zeros(size, dtype=src.dtype)
+        return paddle_scatter_ops.custom_segment_csr(src, indptr, None, size, "mean")[0]
     else:
-        assert (
-            out.shape[dim] == num_seg
-        ), "The (size of indptr at last dimension) must be\
-                                             equal to the (size of out at the same dimension) + 1."
         if src.numel() == 0:
             return out
-        out_size = out.shape
-    tmp = zeros(out_size, dtype=src.dtype)
-
-    repeats = indptr.diff(n=1, axis=dim)
-    assert (
-        repeats.sum(axis=dim) == src.shape[dim]
-    ).all(), "The length of specified index by indptr shoud be\
-                                                             equal to the size of src at last dimension of indptr."
-    src_flatten = transform_3d(src, dim)
-    out_flatten = transform_3d(tmp, dim)
-    repeats_flatten = transform_2d(repeats, dim)
-    src_dim_indices = arange(num_seg)
-    for i in range(src_flatten.shape[0]):
-        for j in range(src_flatten.shape[-1]):
-            belongs_to = repeat_interleave(src_dim_indices, repeats_flatten[i], 0)
-            result = segment_mean(src_flatten[i, :, j], belongs_to)
-            if out_size[dim] >= len(result):
-                out_flatten[i, : len(result), j] = result
-            else:
-                out_flatten[i, :, j] = result[: out_size[dim]]
-    if out is None:
-        return out_flatten.reshape(out_size)
-    else:
-        assign(out_flatten.reshape(out_size), out)
+        result = paddle_scatter_ops.custom_segment_csr(
+            src, indptr, out, out.shape, "mean"
+        )[0]
+        paddle.assign(result, out)
         return out
 
 
@@ -231,15 +167,17 @@ def segment_min_csr(
         size[dim] = max(indptr_shape[dim] - 1, 0)
         if src.numel() == 0:
             return (
-                zeros(size, dtype=src.dtype),
-                full(size, src.shape[dim], indptr.dtype),
+                paddle.zeros(size, dtype=src.dtype),
+                paddle.full(size, src.shape[dim], indptr.dtype),
             )
-        return custom_segment_csr_min_max(src, indptr, size, "min")
+        return paddle_scatter_ops.custom_segment_csr(src, indptr, None, size, "min")
     else:
         if src.numel() == 0:
-            return (out, full(size, src.shape[dim], indptr.dtype))
-        result, arg_result = custom_segment_csr_min_max(src, indptr, out.shape, "min")
-        assign(result, out)
+            return (out, paddle.full(size, src.shape[dim], indptr.dtype))
+        result, arg_result = paddle_scatter_ops.custom_segment_csr(
+            src, indptr, out, out.shape, "min"
+        )
+        paddle.assign(result, out)
         return out, arg_result
 
 
@@ -276,20 +214,25 @@ def segment_max_csr(
     else:
         indptr = indptr.expand(indptr_shape)
 
+    size = src.shape
     if out is None:
-        size = src.shape
         size[dim] = max(indptr_shape[dim] - 1, 0)
         if src.numel() == 0:
             return (
-                zeros(size, dtype=src.dtype),
-                full(size, src.shape[dim], indptr.dtype),
+                paddle.zeros(size, dtype=src.dtype),
+                paddle.full(size, src.shape[dim], indptr.dtype),
             )
-        return custom_segment_csr_min_max(src, indptr, size, "max")
+        return paddle_scatter_ops.custom_segment_csr(src, indptr, None, size, "max")
     else:
         if src.numel() == 0:
-            return (out, full(size, src.shape[dim], indptr.dtype))
-        result, arg_result = custom_segment_csr_min_max(src, indptr, out.shape, "max")
-        assign(result, out)
+            return (out, paddle.full(size, src.shape[dim], indptr.dtype))
+        for i in range(len(size)):
+            if i != dim:
+                assert size[i] == out.shape[i]
+        result, arg_result = paddle_scatter_ops.custom_segment_csr(
+            src, indptr, out, out.shape, "max"
+        )
+        paddle.assign(result, out)
         return out, arg_result
 
 
@@ -429,26 +372,16 @@ def gather_csr(
         out_size = src_shape
         if indptr.numel() == 0:
             out_size[dim] = 0
-        else:
-            # refer to the original design in source cpp code
-            out_size[dim] = indptr.flatten()[-1]
-        out = zeros(out_size, dtype=src.dtype)
+            return paddle.zeros(out_size, dtype=src.dtype)
+        out_size[dim] = indptr.flatten()[-1]
+        return paddle_scatter_ops.custom_gather_csr(src, indptr, None, out_size)
     else:
+        if src.numel() == 0:
+            return out
         out_size = out.shape
-    if src.numel() == 0:
+        for i in range(len(out_size)):
+            if i != dim:
+                assert src_shape[i] == out_size[i]
+        result = paddle_scatter_ops.custom_gather_csr(src, indptr, out, out_size)
+        paddle.assign(result, out)
         return out
-
-    repeats = indptr.diff(n=1, axis=dim)
-    src_flatten = transform_3d(src, dim)
-    out_flatten = transform_3d(out, dim)
-    repeats_flatten = transform_2d(repeats, dim)
-    for i in range(src_flatten.shape[0]):
-        for j in range(src_flatten.shape[-1]):
-            result = repeat_interleave(src_flatten[i, :, j], repeats_flatten[i], 0)
-            repeat_sum = repeats_flatten[i].sum()
-            if out_size[dim] >= repeat_sum:
-                out_flatten[i, :repeat_sum, j] = result[:repeat_sum]
-            else:
-                out_flatten[i, :, j] = result[: out_size[dim]]
-    assign(out_flatten.reshape(out_size), out)
-    return out

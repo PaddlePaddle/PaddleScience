@@ -135,7 +135,7 @@ std::vector<paddle::Tensor> scatter_min_max_cuda_forward(const paddle::Tensor& x
     using MPType = typename MPTypeTrait<data_t>::Type;
     paddle::Tensor out_mp;
     if (x.dtype() == paddle::DataType::FLOAT16 || x.dtype() == paddle::DataType::BFLOAT16) {
-      out_mp = paddle::empty(return_shape, paddle::DataType::FLOAT32, x.place());  
+      out_mp = paddle::experimental::cast(out, paddle::DataType::FLOAT32);  
     } else {
       out_mp = out;
     }

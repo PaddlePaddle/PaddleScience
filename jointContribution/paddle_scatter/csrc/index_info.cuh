@@ -2,14 +2,14 @@
 
 #include "paddle/extension.h"
 
-#define MAX_TENSORINFO_DIMS 25
+#define MAX_TENSORINFO_DIMS 7
 
 template <typename T> struct TensorInfo {
   TensorInfo(const T *p, int dim, int sz[MAX_TENSORINFO_DIMS],
              int st[MAX_TENSORINFO_DIMS]) {
     data = p;
     dims = dim;
-    PD_CHECK(dims < MAX_TENSORINFO_DIMS, "Input dims should be smaller than 25.");
+    PD_CHECK(dims < MAX_TENSORINFO_DIMS, "Input dims should be smaller than 7.");
 
     for (int i = 0; i < dim; ++i) {
       sizes[i] = sz[i];
@@ -30,11 +30,8 @@ TensorInfo<T> getTensorInfo(const paddle::Tensor &tensor) {
   int strides[MAX_TENSORINFO_DIMS];
 
   int dims = tensor.shape().size();
-  // int stride_i = 1;
   for (int i = dims - 1; i >= 0; --i) {
     sizes[i] = tensor.shape()[i];
-    // strides[i] = stride_i;
-    // stride_i *= sizes[i];
     sizes[i] = tensor.strides()[i];
   }
 

@@ -150,3 +150,34 @@ static inline __device__ void atomMin(float *address, float val) {
 static inline __device__ void atomMin(double *address, double val) {
   AtomicMinDecimalImpl<double, sizeof(double)>()(address, val);
 }
+
+#define OP(X, Y) Y + X
+ATOMIC(Add)
+#undef OP
+static inline __device__ void atomAdd(uint8_t *address, uint8_t val) {
+  AtomicAddIntegerImpl<uint8_t, sizeof(uint8_t)>()(address, val);
+}
+static inline __device__ void atomAdd(int8_t *address, int8_t val) {
+  AtomicAddIntegerImpl<int8_t, sizeof(int8_t)>()(address, val);
+}
+static inline __device__ void atomAdd(int16_t *address, int16_t val) {
+  AtomicAddIntegerImpl<int16_t, sizeof(int16_t)>()(address, val);
+}
+static inline __device__ void atomAdd(int32_t *address, int32_t val) {
+  atomicAdd(address, val);
+}
+static inline __device__ void atomAdd(int64_t *address, int64_t val) {
+  AtomicAddIntegerImpl<int64_t, sizeof(int64_t)>()(address, val);
+}
+static inline __device__ void atomAdd(float *address, float val) {
+  atomicAdd(address, val);
+}
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 600 || CUDA_VERSION < 8000)
+static inline __device__ void atomAdd(double *address, double val) {
+  AtomicAddDecimalImpl<double, sizeof(double)>()(address, val);
+}
+#else
+static inline __device__ void atomAdd(double *address, double val) {
+  atomicAdd(address, val);
+}
+#endif

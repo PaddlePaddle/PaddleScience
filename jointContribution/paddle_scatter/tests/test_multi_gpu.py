@@ -22,8 +22,8 @@ tests = [
 ]
 
 
-@pytest.mark.skipif(not paddle.cuda.is_available(), reason="CUDA not available")
-@pytest.mark.skipif(paddle.cuda.device_count() < 2, reason="No multiple GPUS")
+@pytest.mark.skipif(paddle.device.cuda.device_count() == 0, reason="CUDA not available")
+@pytest.mark.skipif(paddle.device.cuda.device_count() < 2, reason="No multiple GPUS")
 @pytest.mark.parametrize("test,reduce,dtype", product(tests, reductions, dtypes))
 def test_forward(test, reduce, dtype):
     paddle.set_device("gpu:1")

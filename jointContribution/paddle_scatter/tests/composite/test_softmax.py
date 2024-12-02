@@ -39,7 +39,7 @@ def test_log_softmax():
         paddle.to_tensor([7], dtype=paddle.float32), axis=-1
     )
     out4 = paddle.nn.functional.log_softmax(
-        paddle.to_tensor([-1, float("-inf")]), axis=-1
+        paddle.to_tensor([-1.0, float("-inf")]), axis=-1
     )
 
     expected = paddle.stack(

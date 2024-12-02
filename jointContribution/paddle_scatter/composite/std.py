@@ -57,7 +57,7 @@ def scatter_std(
     res = scatter_sum(var, index, dim, out, dim_size)
 
     if unbiased:
-        count = count.subtract(paddle.to_tensor(1, dtype=src.dtype)).clip(1)
+        count = count.subtract(paddle.full([], 1, dtype=src.dtype)).clip(1)
     res = res.divide(count + 1e-6).sqrt()
 
     if out is not None:

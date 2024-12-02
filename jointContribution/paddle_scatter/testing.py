@@ -4,13 +4,8 @@ import paddle
 
 reductions = ["sum", "add", "mean", "min", "max"]
 
-dtypes = [
-    # paddle.float16, paddle.bfloat16,
-    paddle.float32,
-    paddle.float64,
-    paddle.int32,
-    paddle.int64,
-]
+dtypes = [paddle.float32, paddle.float64, paddle.int32, paddle.int64]
+dtypes_half = [paddle.float16, paddle.bfloat16]
 ind_dtypes = [paddle.int32, paddle.int64]
 grad_dtypes = [paddle.float32, paddle.float64]
 
