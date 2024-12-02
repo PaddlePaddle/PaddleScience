@@ -473,8 +473,6 @@ def export(cfg):
     solver_v.export(input_spec_v, export_path_v)
     solver_p.export(input_spec_p, export_path_p)
 
-    print(f"Inference models have been exported to {cfg.output_dir}.")
-
 
 def inference(cfg: DictConfig):
     NU_MEAN = 0.001
