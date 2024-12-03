@@ -540,7 +540,9 @@ def inference(cfg: DictConfig):
             return {
                 "p": (
                     (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
-                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                    + (X_IN - self.input["x"])
+                    * (X_OUT - self.input["x"])
+                    * out["p"]
                 )
             }
 
