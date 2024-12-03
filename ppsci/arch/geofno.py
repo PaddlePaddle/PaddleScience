@@ -16,7 +16,6 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.nn.initializer as Initializer
-import paddle.optimizer
 
 
 ################################################################

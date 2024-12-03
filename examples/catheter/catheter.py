@@ -25,7 +25,6 @@ import ppsci
 from ppsci.loss import L2RelLoss
 from ppsci.optimizer import Adam
 from ppsci.optimizer import lr_scheduler
-from ppsci.utils import logger
 
 
 # build data
