@@ -436,44 +436,48 @@ def export(cfg):
     model_v = ppsci.arch.MLP(**cfg.MODEL.v_net)
     model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
 
-    solver_u = ppsci.solver.Solver(
-        model_u, pretrained_model_path=cfg.EXPORT.pretrained_model_path
-    )
-    solver_v = ppsci.solver.Solver(
-        model_v, pretrained_model_path=cfg.EXPORT.pretrained_model_path
-    )
-    solver_p = ppsci.solver.Solver(
-        model_p, pretrained_model_path=cfg.EXPORT.pretrained_model_path
-    )
+    class Transform:
+        def input_trans(self, input):
+            self.input = input
+            x, y = input["x"], input["y"]
+            nu = input["nu"]
+            b = 2 * np.pi / (X_OUT - X_IN)
+            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
+            sin_x = X_IN * paddle.sin(b * x + c)
+            cos_x = X_IN * paddle.cos(b * x + c)
+            return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
 
-    input_spec_u = [
-        {
-            key: InputSpec([None, 1], "float32", name=key)
-            for key in cfg.MODEL.u_net.input_keys
-        },
-    ]
-    input_spec_v = [
-        {
-            key: InputSpec([None, 1], "float32", name=key)
-            for key in cfg.MODEL.v_net.input_keys
-        },
-    ]
-    input_spec_p = [
-        {
-            key: InputSpec([None, 1], "float32", name=key)
-            for key in cfg.MODEL.p_net.input_keys
-        },
-    ]
+        def output_trans_u(self, input, out):
+            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
 
-    export_path_u = os.path.join(cfg.output_dir, "u_net")
-    export_path_v = os.path.join(cfg.output_dir, "v_net")
-    export_path_p = os.path.join(cfg.output_dir, "p_net")
+        def output_trans_v(self, input, out):
+            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
 
-    solver_u.export(input_spec_u, export_path_u)
-    solver_v.export(input_spec_v, export_path_v)
-    solver_p.export(input_spec_p, export_path_p)
+        def output_trans_p(self, input, out):
+            return {
+                "p": (
+                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
+                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                )
+            }
 
-    print(f"Inference models have been exported to {cfg.output_dir}.")
+    transform = Transform()
+    model_u.register_input_transform(transform.input_trans)
+    model_v.register_input_transform(transform.input_trans)
+    model_p.register_input_transform(transform.input_trans)
+    model_u.register_output_transform(transform.output_trans_u)
+    model_v.register_output_transform(transform.output_trans_v)
+    model_p.register_output_transform(transform.output_trans_p)
+    model = ppsci.arch.ModelList((model_u, model_v, model_p))
+
+    model_input_keys = ["x", "y", "nu"]
+    input_spec = {
+        key: InputSpec(shape=[None, 1], dtype="float32", name=key) for key in model_input_keys
+        }
+
+    solver = ppsci.solver.Solver(model, pretrained_model_path=cfg.EXPORT.pretrained_model_path)
+    export_path = os.path.join(cfg.output_dir)
+    solver.export(input_spec, export_path)
 
 
 def inference(cfg: DictConfig):
