@@ -10,45 +10,43 @@
 ## 4.模型构建
 对于三个预测对象，设计了相同的深度神经网络，网络结构为含有两层隐藏层的神经网络，第一层隐藏层含有587个神经元，第二层隐藏层含有256个神经元，隐藏层之间加入Dropout。本文档以angle预测为例介绍
 
-``` pylinenums=“88”
+``` py linenums=“88”
 --8<--
-angle_ppsci.py：//88:96
+angle_ppsci.py：88:96
 --8<--
 ```
 
 ## 5.约束构建
 本研究采用监督学习，直接构建'SupervisedConstraint'
 
-``` pylinenums=“75”
+``` py linenums=“75”
 --8<--
-angle_ppsci.py：//75:87
+angle_ppsci.py：75:87
 --8<--
 ```
 
 ## 6. 优化器构建
 训练器采用Adam优化器
 
-``` pylinenums=“97”
+``` py linenums=“97”
 --8<--
-angle_ppsci.py：//97:102
+angle_ppsci.py：97:102
 --8<--
 ```
 
 ## 7. 模型训练
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给'ppsci.solver.Solver'，然后启动训练
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练
-
-``` py linenums="105"
+``` py linenums=“105”
 --8<--
-angle_ppsci.py://105:115
+angle_ppsci.py：105:115
 --8<--
 ```
 
 ## 8. 完整代码
 
-``` py angle_ppsci.py"
+``` py linenums="1" title="angle_ppsci.py"
 --8<--
 angle_ppsci.py
 --8<--
 ```
-
