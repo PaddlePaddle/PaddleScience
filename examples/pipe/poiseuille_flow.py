@@ -541,7 +541,8 @@ def inference(cfg: DictConfig):
         def output_trans_p(self, input, out):
             return {
                 "p": (
-                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
+                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
                 )
             }
 
