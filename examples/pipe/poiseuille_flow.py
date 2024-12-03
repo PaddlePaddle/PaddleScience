@@ -435,29 +435,30 @@ def export(cfg):
     model_u = ppsci.arch.MLP(**cfg.MODEL.u_net)
     model_v = ppsci.arch.MLP(**cfg.MODEL.v_net)
     model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
+    X_OUT = cfg.X_IN + cfg.L
 
     class Transform:
         def input_trans(self, input):
             self.input = input
             x, y = input["x"], input["y"]
             nu = input["nu"]
-            b = 2 * np.pi / (X_OUT - X_IN)
-            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-            sin_x = X_IN * paddle.sin(b * x + c)
-            cos_x = X_IN * paddle.cos(b * x + c)
+            b = 2 * np.pi / (X_OUT - cfg.X_IN)
+            c = np.pi * (cfg.X_IN + X_OUT) / (cfg.X_IN - X_OUT)
+            sin_x = cfg.X_IN * paddle.sin(b * x + c)
+            cos_x = cfg.X_IN * paddle.cos(b * x + c)
             return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
 
         def output_trans_u(self, input, out):
-            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
+            return {"u": out["u"] * (cfg.R**2 - self.input["y"] ** 2)}
 
         def output_trans_v(self, input, out):
-            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
+            return {"v": (cfg.R**2 - self.input["y"] ** 2) * out["v"]}
 
         def output_trans_p(self, input, out):
             return {
                 "p": (
-                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
-                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                    (cfg.P_IN - cfg.P_OUT) * (X_OUT - self.input["x"]) / cfg.L
+                    + (cfg.X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
                 )
             }
 
