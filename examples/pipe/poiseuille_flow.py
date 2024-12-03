@@ -472,10 +472,13 @@ def export(cfg):
 
     model_input_keys = ["x", "y", "nu"]
     input_spec = {
-        key: InputSpec(shape=[None, 1], dtype="float32", name=key) for key in model_input_keys
-        }
+        key: InputSpec(shape=[None, 1], dtype="float32", name=key)
+        for key in model_input_keys
+    }
 
-    solver = ppsci.solver.Solver(model, pretrained_model_path=cfg.EXPORT.pretrained_model_path)
+    solver = ppsci.solver.Solver(
+        model, pretrained_model_path=cfg.EXPORT.pretrained_model_path
+    )
     export_path = os.path.join(cfg.output_dir)
     solver.export(input_spec, export_path)
 
