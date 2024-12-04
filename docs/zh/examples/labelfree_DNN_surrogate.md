@@ -34,20 +34,17 @@
     python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
     ```
 
-
 === "模型导出命令"
 
     ``` sh
     python poiseuille_flow.py mode=export
     ```
 
-
 === "模型推理命令"
 
     ``` sh
     python poiseuille_flow.py mode=infer
     ```
-
 
 | 预训练模型  | 指标 |
 |:--| :--|
