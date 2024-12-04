@@ -458,7 +458,9 @@ def export(cfg: DictConfig):
             return {
                 "p": (
                     (cfg.P_IN - cfg.P_OUT) * (X_OUT - self.input["x"]) / cfg.L
-                    + (cfg.X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                    + (cfg.X_IN - self.input["x"])
+                    * (X_OUT - self.input["x"])
+                    * out["p"]
                 )
             }
 
@@ -475,12 +477,9 @@ def export(cfg: DictConfig):
         model,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    input_keys = ['x', 'y', 'nu']
+    input_keys = ["x", "y", "nu"]
     input_spec = [
-        {
-            key: InputSpec([None, 1], "float32", name=key)
-            for key in input_keys
-        },
+        {key: InputSpec([None, 1], "float32", name=key) for key in input_keys},
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
@@ -519,6 +518,7 @@ def inference(cfg: DictConfig):
 
     # Initialize your custom predictor
     from deploy.python_infer import pinn_predictor
+    
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # Prepare input data
