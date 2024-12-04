@@ -429,7 +429,7 @@ def evaluate(cfg: DictConfig):
     plt.savefig(osp.join(PLOT_DIR, "pipe_unformUQ.png"), bbox_inches="tight")
 
 
-def export(cfg):
+def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     model_u = ppsci.arch.MLP(**cfg.MODEL.u_net)
@@ -458,9 +458,7 @@ def export(cfg):
             return {
                 "p": (
                     (cfg.P_IN - cfg.P_OUT) * (X_OUT - self.input["x"]) / cfg.L
-                    + (cfg.X_IN - self.input["x"])
-                    * (X_OUT - self.input["x"])
-                    * out["p"]
+                    + (cfg.X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
                 )
             }
 
@@ -473,17 +471,18 @@ def export(cfg):
     model_p.register_output_transform(transform.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
-    model_input_keys = ["x", "y", "nu"]
-    input_spec = {
-        key: InputSpec(shape=[None, 1], dtype="float32", name=key)
-        for key in model_input_keys
-    }
-
     solver = ppsci.solver.Solver(
-        model, pretrained_model_path=cfg.EXPORT.pretrained_model_path
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    export_path = os.path.join(cfg.output_dir)
-    solver.export(input_spec, export_path)
+    input_keys = ['x', 'y', 'nu']
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
 
 
 def inference(cfg: DictConfig):
@@ -504,6 +503,7 @@ def inference(cfg: DictConfig):
     NU_START = NU_MEAN - NU_MEAN * NU_STD  # 0.0001
     NU_END = NU_MEAN + NU_MEAN * NU_STD  # 0.1
 
+    ## prepare data with (?, 2)
     data_1d_x = np.linspace(
         X_IN, X_OUT, N_x, endpoint=True, dtype=paddle.get_default_dtype()
     )
@@ -517,49 +517,17 @@ def inference(cfg: DictConfig):
         np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu)).reshape(3, -1).T
     )
 
-    model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u",), 3, 50, "swish")
-    model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v",), 3, 50, "swish")
-    model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p",), 3, 50, "swish")
+    # Initialize your custom predictor
+    from deploy.python_infer import pinn_predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
 
-    class Transform:
-        def input_trans(self, input):
-            self.input = input
-            x, y = input["x"], input["y"]
-            nu = input["nu"]
-            b = 2 * np.pi / (X_OUT - X_IN)
-            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-            sin_x = X_IN * paddle.sin(b * x + c)
-            cos_x = X_IN * paddle.cos(b * x + c)
-            return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
-
-        def output_trans_u(self, input, out):
-            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
-
-        def output_trans_v(self, input, out):
-            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
-
-        def output_trans_p(self, input, out):
-            return {
-                "p": (
-                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
-                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
-                )
-            }
-
-    transform = Transform()
-    model_u.register_input_transform(transform.input_trans)
-    model_v.register_input_transform(transform.input_trans)
-    model_p.register_input_transform(transform.input_trans)
-    model_u.register_output_transform(transform.output_trans_u)
-    model_v.register_output_transform(transform.output_trans_v)
-    model_p.register_output_transform(transform.output_trans_p)
-    model = ppsci.arch.ModelList((model_u, model_v, model_p))
-
+    # Prepare input data
     input_dict = {
         "x": data_2d_xy[:, 0:1],
         "y": data_2d_xy[:, 1:2],
         "nu": data_2d_xy[:, 2:3],
     }
+
     u_analytical = np.zeros([N_y, N_x, N_p])
     dP = P_IN - P_OUT
 
@@ -567,9 +535,7 @@ def inference(cfg: DictConfig):
         uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
         u_analytical[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
 
-    label_dict = {"u": np.ones_like(input_dict["x"])}
-    weight_dict = {"u": np.ones_like(input_dict["x"])}
-
+    # Validator KL
     num_test = 500
     data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
     data_2d_xy_test = (
@@ -579,51 +545,22 @@ def inference(cfg: DictConfig):
         .reshape(3, -1)
         .T
     )
-    input_dict_KL = {
-        "x": data_2d_xy_test[:, 0:1],
-        "y": data_2d_xy_test[:, 1:2],
-        "nu": data_2d_xy_test[:, 2:3],
-    }
-    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
-    label_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
-    weight_dict_KL = {"u": np.ones_like(input_dict_KL["x"])}
 
-    dataset_vel = {
-        "name": "NamedArrayDataset",
-        "input": input_dict,
-        "label": label_dict,
-        "weight": weight_dict,
+    # Perform inference
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
-    dataset_kl = {
-        "name": "NamedArrayDataset",
-        "input": input_dict_KL,
-        "label": label_dict_KL,
-        "weight": weight_dict_KL,
-    }
-    infer_cfg = {
-        "sampler": {
-            "name": "BatchSampler",
-            "shuffle": False,
-            "drop_last": False,
-        },
-        "batch_size": 2000,
-    }
-    infer_cfg["dataset"] = dataset_vel
-    infer_cfg["dataset"] = dataset_kl
-
-    solver = ppsci.solver.Solver(
-        model,
-        output_dir=cfg.output_dir,
-        pretrained_model_path=cfg.INFER.pretrained_model_path,
-    )
-
-    output_dict = solver.predict(input_dict, return_numpy=True)
+    # Process and reshape output as needed
     u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
     fontsize = 16
     idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
     nu_index = [3, 6, 9, 12, 14, 20, 49]  # pick 7 nu samples
     ytext = [0.55, 0.5, 0.4, 0.28, 0.1, 0.05, 0.001]  # text y position
 
+    # Plot
     PLOT_DIR = osp.join(cfg.output_dir, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     plt.figure(1)
@@ -663,13 +600,27 @@ def inference(cfg: DictConfig):
     plt.savefig(osp.join(PLOT_DIR, "pipe_uProfiles.png"), bbox_inches="tight")
 
     # Distribution of center velocity
+    num_test = 500
+    data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
+    data_2d_xy_test = (
+        np.array(
+            np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution), np.float32
+        )
+        .reshape(3, -1)
+        .T
+    )
     # Predicted result
     input_dict_test = {
         "x": data_2d_xy_test[:, 0:1],
         "y": data_2d_xy_test[:, 1:2],
         "nu": data_2d_xy_test[:, 2:3],
     }
-    output_dict_test = solver.predict(input_dict_test, return_numpy=True)
+    output_dict_test = predictor.predict(input_dict_test, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
+    output_dict_test = {
+        store_key: output_dict_test[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict_test.keys())
+    }
     u_max_pred = output_dict_test["u"]
     u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
 
