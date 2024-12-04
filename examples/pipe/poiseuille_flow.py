@@ -518,7 +518,7 @@ def inference(cfg: DictConfig):
 
     # Initialize your custom predictor
     from deploy.python_infer import pinn_predictor
-    
+
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # Prepare input data
