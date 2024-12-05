@@ -49,13 +49,6 @@ class SpectralConv1d(nn.Layer):
         )
         self.weights1 = paddle.complex(self.weights1_real, self.weights1_imag)
 
-        tmp = paddle.ParamAttr(
-            initializer=Initializer.Normal(mean=0.0 + 0.0j, std=self.scale)
-        )
-        self.weights1 = self.create_parameter(
-            [in_channels, out_channels, self.modes1], dtype="complex64", attr=tmp
-        )
-
     # Complex multiplication
     def compl_mul1d(self, input, weights):
         # (batch, in_channel, x ), (in_channel, out_channel, x) -> (batch, out_channel, x)
