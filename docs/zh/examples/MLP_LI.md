@@ -3,10 +3,21 @@
 ## 概述
 该多层感知器（MLP）模型旨在利用从材料项目（Materials Project）数据集中提取的特征，预测锂离子电池电极材料的电化学性能。输入特征包括化学计量属性、晶体结构特性、电子结构属性和其他电池属性。输出为平均电压、比能量和比容量。
 
+## 数据集介绍
+关于数据集，请查看该文件，MP_data_down_loading(train+validate).csv
+
+数据读取需要额外安装依赖 `bayesian-optimization`，请运行安装命令 `pip install bayesian-optimization`。
 
 ## 模型
 
 要查看该模型的具体实现，请参考以下代码文件：`MLP_LI.py`
+
+## 模型训练命令
+=== "模型训练命令"
+
+    ``` sh
+    python MLP_LI.py
+    ```
 
 ## 训练好的模型权重文件
 
