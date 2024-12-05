@@ -45,6 +45,10 @@ def getdata(
     inputY_raw = np.load(y_path)[:, 0:n_data]
     inputPara_raw = np.load(para_path)[:, 0:n_data]
     output_raw = np.load(output_path)[:, 0:n_data]
+    print(output_raw.shape)
+    print(output_raw[:, 0::3].shape)
+    print(output_raw[:, 1::3].shape)
+    print(output_raw[:, 2::3].shape)
 
     # preprocess data
     inputX = inputX_raw[:, 0::3]
@@ -124,32 +128,36 @@ def train(cfg: DictConfig):
 
     # set model
     model = ppsci.arch.FNO1d(**cfg.MODEL)
-    model.set_state_dict(paddle.load(cfg.TRAIN.pretrained_model_path))
+    if cfg.TRAIN.use_pretrained_model is True:
+        print("Loading pretrained model from {}".format(cfg.TRAIN.pretrained_model_path))
+        model.set_state_dict(paddle.load(cfg.TRAIN.pretrained_model_path))
 
     # set optimizer
     ITERS_PER_EPOCH = int(cfg.TRAIN_DATA.n / cfg.TRAIN.batch_size)
     scheduler = lr_scheduler.MultiStepDecay(
         **cfg.TRAIN.lr_scheduler, iters_per_epoch=ITERS_PER_EPOCH
     )
-    optimizer = Adam(scheduler, weight_decay=cfg.TRAIN.weight_decay)(model)
+    optimizer = Adam(scheduler(), weight_decay=cfg.TRAIN.weight_decay)(model)
 
     # generate test dataset
     inputs_test, labels_test, _ = getdata(**cfg.TEST_DATA, is_train=False)
 
     # set validator
-    l2rel_validator = ppsci.validate.SupervisedValidator(
-        {
-            "dataset": {
-                "name": "NamedArrayDataset",
-                "input": {"input": inputs_test},
-                "label": {"output": labels_test},
+    l2rel_validator = {
+        "validator1":ppsci.validate.SupervisedValidator(
+            {
+                "dataset": {
+                    "name": "NamedArrayDataset",
+                    "input": {"input": inputs_test},
+                    "label": {"output": labels_test},
+                },
+                "batch_size": cfg.TRAIN.batch_size,
             },
-            "batch_size": cfg.TRAIN.batch_size,
-        },
-        ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
-        metric={"L2Rel": ppsci.metric.L2Rel()},
-        name="L2Rel_Validator",
-    )
+            ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
+            metric={"L2Rel": ppsci.metric.L2Rel()},
+            name="L2Rel_Validator",
+        )
+    }
 
     # initialize solver
     solver = ppsci.solver.Solver(
