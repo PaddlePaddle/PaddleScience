@@ -199,7 +199,10 @@ def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     input_spec = [
-        {key: InputSpec([None, 1, 19, 84], "float32", name=key) for key in model.input_keys},
+        {
+            key: InputSpec([None, 1, 19, 84], "float32", name=key)
+            for key in model.input_keys
+        },
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
@@ -209,7 +212,6 @@ def inference(cfg: DictConfig):
 
     predictor = pinn_predictor.PINNPredictor(cfg)
     pad_singleside = cfg.MODEL.pad_singleside
-    model = ppsci.arch.USCNN(**cfg.MODEL)
 
     data = np.load(cfg.test_data_dir)
     paras = data["paras"]
@@ -307,7 +309,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
