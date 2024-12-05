@@ -475,7 +475,7 @@ class AdamW:
         import inspect
 
         extra_kwargs = {}
-        if "amsgrad" in inspect.signature(optim.Adam.__init__).parameters:
+        if "amsgrad" in inspect.signature(optim.AdamW.__init__).parameters:
             extra_kwargs["amsgrad"] = self.amsgrad
 
         opt = optim.AdamW(
