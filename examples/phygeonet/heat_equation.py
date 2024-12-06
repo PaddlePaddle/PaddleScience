@@ -6,6 +6,7 @@ import numpy as np
 import paddle
 import utils
 from omegaconf import DictConfig
+import os.path as osp
 
 import ppsci
 from ppsci.utils import logger
@@ -178,8 +179,7 @@ def inference(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(cfg)
     data = np.load(cfg.data_dir)
     coords = data["coords"]
-
-    ofv_sb = paddle.to_tensor(data["OFV_sb"])
+    ofv_sb = data["OFV_sb"]
 
     ## create model
     pad_singleside = cfg.MODEL.pad_singleside
@@ -201,7 +201,11 @@ def inference(cfg: DictConfig):
     output_v[0, 0, 0, 0] = 0.5 * (output_v[0, 0, 0, 1] + output_v[0, 0, 1, 0])
     output_v[0, 0, 0, -1] = 0.5 * (output_v[0, 0, 0, -2] + output_v[0, 0, 1, -1])
 
-    ofv_sb = ofv_sb.numpy()
+    ev = paddle.sqrt(
+        paddle.mean((ofv_sb - output_v[0, 0]) ** 2) / paddle.mean(ofv_sb**2)
+    ).item()
+    logger.info(f"ev: {ev}")
+
     fig = plt.figure()
     ax = plt.subplot(1, 2, 1)
     utils.visualize(
@@ -228,7 +232,7 @@ def inference(cfg: DictConfig):
     ax.set_aspect("equal")
     ax.set_title("FV " + r"$T$")
     fig.tight_layout(pad=1)
-    fig.savefig(f"{cfg.output_dir}/result.png", bbox_inches="tight")
+    fig.savefig(osp.join(cfg.output_dir, "result.png"), bbox_inches="tight")
     plt.close(fig)
 
 

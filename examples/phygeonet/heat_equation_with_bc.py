@@ -215,8 +215,8 @@ def inference(cfg: DictConfig):
 
     data = np.load(cfg.test_data_dir)
     paras = data["paras"]
-    truths = paddle.to_tensor(data["truths"])
-    coords = paddle.to_tensor(data["coords"])
+    truths = data["truths"]
+    coords = data["coords"]
 
     paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])
     input_spec = {"coords": paras}
@@ -239,11 +239,16 @@ def inference(cfg: DictConfig):
         output_v[j, 0, :, -pad_singleside:] = 0
         output_v[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
 
+    error = paddle.sqrt(
+        paddle.mean((truths - output_v) ** 2) / paddle.mean(truths ** 2)
+    ).item()
+    logger.info(f"The average error: {error / num_sample}")
+
     output_vs = output_v
     PARALIST = [1, 2, 3, 4, 5, 6, 7]
     for i in range(len(PARALIST)):
-        truth = truths[i].numpy()
-        coord = coords[i].numpy()
+        truth = truths[i]
+        coord = coords[i]
         output_v = output_vs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
