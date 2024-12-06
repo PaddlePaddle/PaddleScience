@@ -185,7 +185,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
     少数案例尚未支持导出功能，因此对应文档中未给出导出命令。
 
-在训练完毕后，我们通常需要将模型导出为 `*.pdmodel`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
+在训练完毕后，我们通常需要将模型导出为 `*.json`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
 
 ``` sh
 python aneurysm.py mode=export \
@@ -200,15 +200,19 @@ python aneurysm.py mode=export \
 
 ``` log
 ...
-ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.pdmodel, *.pdiparams and *.pdiparams.info files.
+ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.json, *.pdiparams files.
 ```
 
 ``` sh
 ./inference/
-├── aneurysm.pdiparams
+├── aneurysm.json
 ├── aneurysm.pdiparams.info
-└── aneurysm.pdmodel
 ```
+
+!!! Warning
+
+    Paddle 在 3.0 以及之后的版本中将 PIR 设置为默认的静态图执行模式，因此移除了 `*.pdmodel` 和 `*.pdiparams` 格式的文件，而由 `*.json` 文件代替。
+    为此 PaddleScience 进行了适配([deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L105-L107))，用户无需关心后缀格式，会根据 Paddle 版本是否支持 PIR，在加载上述文件时，自动替换为正确的后缀名。
 
 #### 1.2.2 ONNX 推理模型导出
 
