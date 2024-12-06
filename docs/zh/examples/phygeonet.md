@@ -56,7 +56,6 @@
 === "模型导出命令"
 
     ``` sh
-
     # heat_equation
     python heat_equation.py mode=export
 
