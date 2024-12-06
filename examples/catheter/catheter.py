@@ -14,6 +14,7 @@
 
 import os
 from os import path as osp
+from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
@@ -153,7 +154,7 @@ def train(cfg: DictConfig):
                 },
                 "batch_size": cfg.TRAIN.batch_size,
             },
-            ppsci.loss.FunctionalLoss(L2RelLoss(reduction="sum")),
+            L2RelLoss(reduction="sum"),
             metric={"L2Rel": ppsci.metric.L2Rel()},
             name="L2Rel_Validator",
         )
@@ -167,6 +168,7 @@ def train(cfg: DictConfig):
         optimizer,
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
+        eval_with_no_grad=True,
         eval_during_train=cfg.TRAIN.eval_during_train,
         validator=l2rel_validator,
         save_freq=cfg.TRAIN.save_freq,
