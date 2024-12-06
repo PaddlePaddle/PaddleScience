@@ -24,7 +24,6 @@ hydra:
 
 # general settings
 mode: train # running mode: train/eval
-log_freq: 50
 seed: 66
 data_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
