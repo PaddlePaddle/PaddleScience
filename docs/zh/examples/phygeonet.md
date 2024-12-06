@@ -66,7 +66,6 @@
 === "模型推理命令"
 
     ``` sh
-
     # heat_equation
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
