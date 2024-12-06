@@ -240,7 +240,7 @@ def inference(cfg: DictConfig):
         output_v[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
 
     error = paddle.sqrt(
-        paddle.mean((truths - output_v) ** 2) / paddle.mean(truths ** 2)
+        paddle.mean((truths - output_v) ** 2) / paddle.mean(truths**2)
     ).item()
     logger.info(f"The average error: {error / num_sample}")
 

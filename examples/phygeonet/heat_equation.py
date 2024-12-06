@@ -1,3 +1,4 @@
+import os.path as osp
 from typing import Dict
 
 import hydra
@@ -6,7 +7,6 @@ import numpy as np
 import paddle
 import utils
 from omegaconf import DictConfig
-import os.path as osp
 
 import ppsci
 from ppsci.utils import logger
