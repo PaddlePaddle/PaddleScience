@@ -86,7 +86,6 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --create-dirs -o ./data/heat_equation.npz
 
     python heat_equation_with_bc.py mode=infer
-
     ```
 
 | 模型 | mRes | ev |
