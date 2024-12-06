@@ -62,7 +62,6 @@
 
     # heat_equation_bc
     python heat_equation_with_bc.py mode=export
-
     ```
 
 === "模型推理命令"
