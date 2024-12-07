@@ -51,3 +51,21 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
+
+# inference settings
+INFER:
+  pretrained_model_path: 'https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams'
+  export_path: ./inference/heat_equation
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 20
+  gpu_id: 0
+  max_batch_size: 256
+  num_cpu_threads: 10
+  batch_size: 256

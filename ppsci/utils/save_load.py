@@ -196,7 +196,7 @@ def load_checkpoint(
         avg_param_dict = paddle.load(f"{path}_ema.pdparams")
         ema_model.set_state_dict(avg_param_dict)
 
-    if aggregator is not None:
+    if aggregator is not None and aggregator.should_persist:
         aggregator_dict = paddle.load(f"{path}.pdagg")
         aggregator.set_state_dict(aggregator_dict)
 

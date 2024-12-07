@@ -7,6 +7,7 @@
         - Cosine
         - CosineWarmRestarts
         - ExponentialDecay
+        - LambdaDecay
         - Linear
         - MultiStepDecay
         - OneCycleLR

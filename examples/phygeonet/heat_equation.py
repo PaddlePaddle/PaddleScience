@@ -1,3 +1,4 @@
+import os.path as osp
 from typing import Dict
 
 import hydra
@@ -153,14 +154,102 @@ def evaluate(cfg: DictConfig):
     plt.close(fig)
 
 
+def export(cfg: DictConfig):
+    model = ppsci.arch.USCNN(**cfg.MODEL)
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 2, 19, 84], "float32", name=key)
+            for key in model.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    data = np.load(cfg.data_dir)
+    coords = data["coords"]
+    ofv_sb = data["OFV_sb"]
+
+    ## create model
+    pad_singleside = cfg.MODEL.pad_singleside
+    input_spec = {"coords": coords}
+
+    output_v = predictor.predict(input_spec, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
+    output_v = {
+        store_key: output_v[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_v.keys())
+    }
+
+    output_v = output_v["output_v"]
+
+    output_v[0, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
+    output_v[0, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
+    output_v[0, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
+    output_v[0, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
+    output_v[0, 0, 0, 0] = 0.5 * (output_v[0, 0, 0, 1] + output_v[0, 0, 1, 0])
+    output_v[0, 0, 0, -1] = 0.5 * (output_v[0, 0, 0, -2] + output_v[0, 0, 1, -1])
+
+    ev = paddle.sqrt(
+        paddle.mean((ofv_sb - output_v[0, 0]) ** 2) / paddle.mean(ofv_sb**2)
+    ).item()
+    logger.info(f"ev: {ev}")
+
+    fig = plt.figure()
+    ax = plt.subplot(1, 2, 1)
+    utils.visualize(
+        ax,
+        coords[0, 0, 1:-1, 1:-1],
+        coords[0, 1, 1:-1, 1:-1],
+        output_v[0, 0, 1:-1, 1:-1],
+        "horizontal",
+        [0, 1],
+    )
+    utils.set_axis_label(ax, "p")
+    ax.set_title("CNN " + r"$T$")
+    ax.set_aspect("equal")
+    ax = plt.subplot(1, 2, 2)
+    utils.visualize(
+        ax,
+        coords[0, 0, 1:-1, 1:-1],
+        coords[0, 1, 1:-1, 1:-1],
+        ofv_sb[1:-1, 1:-1],
+        "horizontal",
+        [0, 1],
+    )
+    utils.set_axis_label(ax, "p")
+    ax.set_aspect("equal")
+    ax.set_title("FV " + r"$T$")
+    fig.tight_layout(pad=1)
+    fig.savefig(osp.join(cfg.output_dir, "result.png"), bbox_inches="tight")
+    plt.close(fig)
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="heat_equation.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,109 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_transformer4sr/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2024
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+DATA_GENERATE:
+  # output path
+  data_path: "./data_generated/"
+  # filters
+  num_nodes: [2,15] # number of nodes
+  num_nested_max: 6 # multiple levels of nesting
+  num_consts: [1,1]  # number of constants(C)
+  num_vars: [1,6] # number of variables(x1,x2,...)
+  seq_length_max: 30
+  order_of_mag_limit: 1.0e+9  # magnitude of value
+  # others
+  num_init_trials: 100000  # number of initial trials
+  num_sampling_per_eq: 25 # number of times to evaluate constants for each unique equation
+  sampling_times: 50  # the number of observations
+  var_type: 'normal' # variable representation, 'normal' is (y, x1, x2, ...), 'log' is log(abs(y, x1, x2, ...)), or 'both'
+  num_zfill: 8
+DATA:
+  data_path: "./data_generated/" # ${DATA_GENERATE.data_path}
+  data_path_srsd: ["./srsd-feynman_easy/"]
+  ratio: [0.8,0.1,0.1]
+  sampling_times: ${DATA_GENERATE.sampling_times}
+  seq_length_max: 30  # ${DATA_GENERATE.seq_length_max}
+  response_variable: ["y", "x1", "x2", "x3", "x4", "x5", "x6"]  # maximum number of variables is len(response_variable)=7
+  vocab_library: ["add","mul","sin","cos","log","exp","neg","inv","sqrt","sq","cb","C","x1","x2","x3","x4","x5","x6"]  # vocab_size=len(vocab_library)+2(because add and mul are binary operators)
+# model settings
+MODEL:
+  input_keys: ["input", "target_seq"]
+  output_keys: ["output"]
+  d_model: 256  # the innermost dimension of model
+  heads: 4
+  num_layers_enc: 4
+  num_layers_dec: 8
+  act: "relu"
+  dropout: 0.25
+
+# training settings
+TRAIN:
+  epochs: 1000
+  iters_per_epoch: -1
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 20
+  lr_warmup: 4000
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1
+    by_epoch: false
+  adam:
+    beta1: 0.9
+    beta2: 0.98
+    epsilon: 1.0e-9
+  batch_size: 512
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  num_repeat: 50
+  pretrained_model_path: null
+
+# inference settings
+INFER:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/transformer4sr/transformer4sr_pretrained.pdparams"
+  export_path: ./inference/transformer4sr
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ${INFER.export_path}.onnx
+  ir_optim: true
+  min_subgraph_size: 10
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 128
+  num_cpu_threads: 4
+  batch_size: 8

@@ -1,0 +1,17 @@
+# Using free-form deformation model
+model:
+  name: FullAffine
+# Loss terms of objective function to minimize
+energy:
+  seg: [1, MSE]
+# Optimization scheme and parameters
+optim:
+  name: Adam
+  step_size: 0.01
+  min_delta: -0.01
+  max_steps: 100
+# Gaussian resolution pyramid
+pyramid:
+  dims: ["x", "y", "z"]
+  levels: 3
+  spacing: [1., 1., 1.]

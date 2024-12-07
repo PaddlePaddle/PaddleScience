@@ -53,6 +53,40 @@
 
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    # heat_equation
+    python heat_equation.py mode=export
+
+    # heat_equation_bc
+    python heat_equation_with_bc.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # heat_equation
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
+
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --create-dirs -o ./data/heat_equation.npz
+
+    python heat_equation.py mode=infer
+
+    # heat_equation_bc
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz -P ./data/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz -P ./data/
+
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --create-dirs -o ./data/heat_equation.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --create-dirs -o ./data/heat_equation.npz
+
+    python heat_equation_with_bc.py mode=infer
+    ```
+
 | 模型 | mRes | ev |
 | :-- | :-- | :-- |
 | [heat_equation_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
