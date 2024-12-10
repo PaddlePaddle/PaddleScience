@@ -223,7 +223,7 @@ examples/tempoGAN/tempoGAN.py:164:201
 --8<--
 ```
 
-各个参数含义与[Generator 的约束](#361)相同。
+各个参数含义与[Generator 的约束](#361-generator)相同。
 
 #### 3.6.3 Discriminator_tempo 的约束
 
@@ -233,7 +233,7 @@ examples/tempoGAN/tempoGAN.py:205:244
 --8<--
 ```
 
-各个参数含义与[Generator 的约束](#361)相同。
+各个参数含义与[Generator 的约束](#361-generator)相同。
 
 ### 3.7 可视化器构建
 
