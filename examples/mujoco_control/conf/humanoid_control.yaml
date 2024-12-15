@@ -1,0 +1,41 @@
+defaults:
+  - _self_
+
+hydra:
+  run:
+    dir: outputs_HumanoidControl/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode}
+    chdir: false
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+mode: train
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+DATA:
+  num_episodes: 100
+  episode_length: 500
+
+MODEL:
+  hidden_size: 256
+
+TRAIN:
+  epochs: 100
+  iters_per_epoch: 10
+  save_freq: 10
+  learning_rate: 0.001
+  batch_size: 32
+  pretrained_model_path: null
+  checkpoint_path: null
+  eval_with_no_grad: true
+
+EVAL:
+  pretrained_model_path: outputs_HumanoidControl/2024-12-15/22-02-39/mode=train/checkpoints/latest.pdparams
+  eval_with_no_grad: true
+  num_episodes: 5
+  episode_length: 1000
+  interactive: false

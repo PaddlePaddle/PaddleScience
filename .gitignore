@@ -129,3 +129,24 @@ FETCH_HEAD
 # vtk
 *.vtk
 *.vtu
+<<<<<<< ours
+=======
+
+# auto generated version file by setuptools_scm
+ppsci/_version.py
+# Model checkpoints
+*.pdparams
+*.pdopt
+*.pdstates
+
+# Output directories
+outputs_HumanoidControl/
+
+# Screenshots and images
+test_screenshot/
+
+# Cache files
+__pycache__/
+*.py[cod]
+*.class
+>>>>>>> theirs
