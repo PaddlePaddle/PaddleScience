@@ -86,13 +86,17 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
             )
 
         if num_timestamps > 1:
-            hl.pointsToVTK(f"{filename}_t-{t}", axis_x, axis_y, axis_z, data=data_vtu)
+            width = len(str(num_timestamps - 1))
+            hl.pointsToVTK(
+                f"{filename}_t-{t:0{width}}", axis_x, axis_y, axis_z, data=data_vtu
+            )
         else:
             hl.pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtu)
 
     if num_timestamps > 1:
         logger.message(
-            f"Visualization results are saved to: {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
+            f"Visualization results are saved to: {filename}_t-{0:0{width}}.vtu ~ "
+            f"{filename}_t-{num_timestamps - 1:0{width}}.vtu"
         )
     else:
         logger.message(f"Visualization result is saved to: {filename}.vtu")

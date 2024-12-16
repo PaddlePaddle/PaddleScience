@@ -334,7 +334,7 @@ def inference(cfg: DictConfig):
     label_val = data_funcs.transform(labels_val, "label")
     in_train_mean, in_train_std = data_funcs.get_mean_std(in_train)
     label_train_mean, label_train_std = data_funcs.get_mean_std(label_train)
-    input_infer = data_funcs.encode(in_val, in_train_mean, in_train_std)
+    input_infer = data_funcs.encode(in_val[0:1], in_train_mean, in_train_std)
     if not cfg.MODEL.use_grid:
         input_infer = data_funcs.cat_grid(input_infer)
 
@@ -349,9 +349,9 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    pred = paddle.squeeze(
+    pred = np.squeeze(
         data_funcs.decode(output_dict["output"], label_train_mean, label_train_std)
-    ).numpy()
+    )
     label = np.squeeze(label_val[0])
 
     data_funcs.draw_plot(osp.join(cfg.output_dir, "result"), pred, label)
@@ -364,9 +364,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "eval":
         evaluate(cfg)
     elif cfg.mode == "export":
-        raise ValueError("Export is not currently supported.")
+        export(cfg)
     elif cfg.mode == "infer":
-        raise ValueError("Infer is not currently supported.")
+        inference(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
