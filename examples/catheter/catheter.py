@@ -130,7 +130,9 @@ def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.FNO1d(**cfg.MODEL)
     if cfg.TRAIN.use_pretrained_model is True:
-        print("Loading pretrained model from {}".format(cfg.TRAIN.pretrained_model_path))
+        print(
+            "Loading pretrained model from {}".format(cfg.TRAIN.pretrained_model_path)
+        )
         model.set_state_dict(paddle.load(cfg.TRAIN.pretrained_model_path))
 
     # set optimizer
@@ -145,7 +147,7 @@ def train(cfg: DictConfig):
 
     # set validator
     l2rel_validator = {
-        "validator1":ppsci.validate.SupervisedValidator(
+        "validator1": ppsci.validate.SupervisedValidator(
             {
                 "dataset": {
                     "name": "NamedArrayDataset",
