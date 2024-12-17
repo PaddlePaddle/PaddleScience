@@ -40,42 +40,36 @@ def getdata(
     is_train=True,
     is_inference=False,
 ):
-
     # load data
     inputX_raw = np.load(x_path)[:, 0:n_data]
     inputY_raw = np.load(y_path)[:, 0:n_data]
     inputPara_raw = np.load(para_path)[:, 0:n_data]
     output_raw = np.load(output_path)[:, 0:n_data]
-    print(output_raw.shape)
-    print(output_raw[:, 0::3].shape)
-    print(output_raw[:, 1::3].shape)
-    print(output_raw[:, 2::3].shape)
 
     # preprocess data
     inputX = inputX_raw[:, 0::3]
     inputY = inputY_raw[:, 0::3]
     inputPara = inputPara_raw[:, 0::3]
-    output = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
+    label = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
 
     if is_inference:
-        return inputX, inputY, inputPara, output
+        label = label.unsqueeze(axis=-1)
+        return inputX, inputY, inputPara, label
 
     inputX = paddle.to_tensor(data=inputX, dtype="float32").transpose(perm=[1, 0])
     inputY = paddle.to_tensor(data=inputY, dtype="float32").transpose(perm=[1, 0])
     input = paddle.stack(x=[inputX, inputY], axis=-1)
-    output = paddle.to_tensor(data=output, dtype="float32").transpose(perm=[1, 0])
+    label = paddle.to_tensor(data=label, dtype="float32").transpose(perm=[1, 0])
     if is_train:
         index = paddle.randperm(n=n)
         index = index[:n]
-
-        x = paddle.index_select(input, index)
-        y = paddle.index_select(output, index)
-        x = x.reshape([n, s, 2])
+        input = paddle.index_select(input, index)
+        label = paddle.index_select(label, index)
+        input = input.reshape([n, s, 2])
     else:
-        x = input.reshape([n, s, 2])
-        y = output
-
-    return x, y, inputPara
+        input = input.reshape([n, s, 2])
+    label = label.unsqueeze(axis=-1)
+    return input, label, inputPara
 
 
 def plot(input: np.ndarray, out_pred: np.ndarray, output_dir: str):

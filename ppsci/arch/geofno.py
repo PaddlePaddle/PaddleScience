@@ -47,12 +47,24 @@ class SpectralConv1d(nn.Layer):
             [in_channels, out_channels, self.modes1],
             attr=Initializer.Assign(self.scale * img),
         )
-        self.weights1 = paddle.complex(self.weights1_real, self.weights1_imag)
 
-    # Complex multiplication
-    def compl_mul1d(self, input, weights):
+    def compl_mul1d(self, op1, op2_real, op2_imag):
         # (batch, in_channel, x ), (in_channel, out_channel, x) -> (batch, out_channel, x)
-        return paddle.einsum("bix,iox->box", input, weights)
+        eq = "bix,iox->box"
+        op1_real = op1.real()
+        op1_imag = op1.imag()
+        result_real = paddle.unsqueeze(
+            paddle.einsum(eq, op1_real, op2_imag) + paddle.einsum(eq, op1_imag, op2_real),
+            axis=-1,
+        )
+        result_imag = paddle.unsqueeze(
+            paddle.einsum(eq, op1_real, op2_imag) + paddle.einsum(eq, op1_imag, op2_real),
+            axis=-1,
+        )
+        result_complex = paddle.as_complex(
+            paddle.concat([result_real, result_imag], axis=-1)
+        )
+        return result_complex
 
     def forward(self, x, output_size=None):
         batchsize = x.shape[0]
@@ -69,7 +81,7 @@ class SpectralConv1d(nn.Layer):
         out_ft = paddle.complex(out_ft_real, out_ft_img)
 
         out_ft[:, :, : self.modes1] = self.compl_mul1d(
-            x_ft[:, :, : self.modes1], self.weights1
+            x_ft[:, :, : self.modes1], self.weights1_real, self.weights1_imag
         )
 
         # Return to physical space
