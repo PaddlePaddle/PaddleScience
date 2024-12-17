@@ -1,10 +1,12 @@
 # AI-aided geometric design of anti-infection catheters(人工智能辅助的抗感染导管几何设计)
 
+distributed under a creative commons Attribution license 4.0 (cc BY). 
+
 ## 1. 背景简介
 ### 1.1 论文信息:
 |年份 | 期刊 | 作者|引用数 | 论文PDF | 
 |-----|-----|-----|---|-----|
-|2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[AI-aided geometric design of anti-infection catheters](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf)|
+|3 January 2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[AI-aided geometric design of anti-infection catheters](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf)|
 
 ### 1.2 作者介绍
 
@@ -110,11 +112,11 @@ $$
 
 - （i）平均上游游动距离$x_{up}=-\int_{0}^{-\infty}\rho(x)xdx$，通过计算细菌分布函数$ρ(x)$的加权平均值得出，其中$x$为细菌位置；
 
-- （ii）前$1\%$上游游动最远的细菌所能到达的距离$x_{1\%}$。模拟结果显示，表面改性仅在中等流速下略微减少了$x_{up}$，但对x1%几乎没有影响（图2F中的蓝线和粉线）。这种表面改性效果不佳的结果与近几年一些论文的实验观察结果一致（39, 40）。
+- （ii）前$1\%$上游游动最远的细菌所能到达的距离$x_{1\%}$。模拟结果显示，表面改性仅在中等流速下略微减少了$x_{up}$，但对$x_{1\%}$几乎没有影响（图2F中的蓝线和粉线）。这种表面改性效果不佳的结果与近几年一些论文的实验观察结果一致（39, 40）。
 
 随后，我们通过添加物理障碍物来探索导管表面几何形状的作用。我们发现，对称和不对称的障碍物都能显著抑制细菌的上游游动（如图2F中的黑色和绿色线条所示）。我们确定了两种协同效应：首先，障碍物的斜率会在细菌从障碍物顶部出发时改变其游动方向，从而打断了它们沿着管壁表面的连续攀爬。不对称的形状会使细菌的运动偏向下游（如图2A所示），这在模拟的0流速下的轨迹（补充材料和图S1）以及低流速下上游游动统计数据的差异（图2F中的黑色和绿色线条）中均有所体现。其次，在有限的流速下，流场与光滑通道中的泊肃叶流不同（如图2B所示）。在泊肃叶流中，涡量会使细菌转向下游。而在障碍物附近，涡量会增强，导致细菌转向上游（如图2C和补充材料图S2所示）, 从而加强了细菌的转向机制。结合这两种效应，我们预计在具有优化障碍物几何形状的通道中，细菌的上游游动将显著减少。
 
-设计优化的参数空间由四个参数表征：障碍物基底长度$L$、高度$h$、尖端位置$s$以及障碍物间距$d$；我们用W表示通道宽度（图2G）。为了优化这个空间，我们设定了两个约束条件。首先，如果相邻障碍物过于接近，它们尖端的涡旋就会开始重叠。由于这种重叠，最大有效涡旋强度（正好在障碍物尖端；有效涡旋的数学定义见补充材料）和涡旋的有效尺寸都会减小。此外，还会形成更大的边界层和滞流区（图S2，A和B）。因此，我们将障碍物间距约束为$d > 0.5W$（图S2G）。其次，在其他参数固定的情况下，随着h的增加，障碍物尖端的有效涡旋强度也会增加（图S2，C至H），这有利于促进涡旋重定向效应。然而，当$h = W/2$时，管道显然会发生堵塞。这种随着h增加而堵塞加剧的趋势反映在为了保持相同的有效流速而所需压力降的持续增加上（图S2I）。为了避免堵塞，我们将高度约束为$h < 0.3W$。
+设计优化的参数空间由四个参数表征：障碍物基底长度$L$、高度$h$、尖端位置$s$以及障碍物间距$d$；我们用W表示通道宽度（图2G）。为了优化这个空间，我们设定了两个约束条件。首先，如果相邻障碍物过于接近，它们尖端的涡旋就会开始重叠。由于这种重叠，最大有效涡旋强度（正好在障碍物尖端；有效涡旋的数学定义见补充材料）和涡旋的有效尺寸都会减小。此外，还会形成更大的边界层和滞流区（图S2，A和B）。因此，我们将障碍物间距约束为$d > 0.5W$（图S2G）。其次，在其他参数固定的情况下，随着h的增加，障碍物尖端的有效涡旋强度也会增加（图S2，C至H），这有利于促进涡旋重定向效应。然而，当$h = W/2$时，管道显然会发生堵塞。这种随着$h$增加而堵塞加剧的趋势反映在为了保持相同的有效流速而所需压力降的持续增加上（图S2I）。为了避免堵塞，我们将高度约束为$h < 0.3W$。
 
 ![图2. 障碍物抑制上游游动和几何优化的物理机制](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter2.png)
 
