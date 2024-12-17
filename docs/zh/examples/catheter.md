@@ -221,9 +221,9 @@ $$
 
 ![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS2-1.png)
 ![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS2-2.png)
+
 **图S2. 几何优化约束和缩放的考虑因素**
 
-图S2. 几何优化约束和缩放的考虑因素。
 - （A-H）归一化涡量作为障碍物高度ℎ和障碍物间距𝑑的函数。
 - （I）沿通道一个周期内的归一化压降作为归一化障碍物高度ℎ/𝑑的函数。
 - （J）宏观圆柱形管内细菌运动的横截面视图。与轨迹2相比，轨迹2中的细菌在管中心附近经历强烈的下游流动，而采取轨迹1的另一个细菌则靠近管壁。因此，细菌1所经历的流动条件与我们考虑的微流控通道中的条件更为相似。其上游游动行为和几何抑制机制将与微流控条件相似，只是存在定量上的差异。
