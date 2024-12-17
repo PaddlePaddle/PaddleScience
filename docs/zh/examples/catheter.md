@@ -132,23 +132,13 @@ $$
 
 数据文件说明如下：
 
-`./data.zip/training/`
-
-|          字段名          |        说明        |
-| :----------------------: | :----------------: |
-| x_1d_structured_mesh.npy | 形状为(2001, 3003) |
-| y_1d_structured_mesh.npy | 形状为(2001, 3003) |
-|      data_info.npy      |  形状为(7, 3003)  |
-|   density_1d_data.npy   | 形状为(2001, 3003) |
-
-`./data.zip/test/`
-
-|          字段名          |       说明       |
-| :----------------------: | :---------------: |
-| x_1d_structured_mesh.npy | 形状为(2001, 300) |
-| y_1d_structured_mesh.npy | 形状为(2001, 300) |
-|      data_info.npy      |  形状为(7, 300)  |
-|   density_1d_data.npy   | 形状为(2001, 300) |
+|`./data.zip/training/`||`./data.zip/test/`||
+| :----------------------: | :----------------: | :----------------------: | :---------------: |
+|          文件名          |        说明        |          文件名          |       说明       |
+| training/x_1d_structured_mesh.npy | 形状为(2001, 3003) | test/x_1d_structured_mesh.npy | 形状为(2001, 300) |
+| training/y_1d_structured_mesh.npy | 形状为(2001, 3003) | test/y_1d_structured_mesh.npy | 形状为(2001, 300) |
+|      training/data_info.npy      |  形状为(7, 3003)  |      test/data_info.npy      |  形状为(7, 300)  |
+|   training/density_1d_data.npy   | 形状为(2001, 3003) |   test/density_1d_data.npy   | 形状为(2001, 300) |
 
 在加载数据之后，需要将 x、y 进行合并，同时对于合并后的训练数据重新 `reshape` 为 `(1000, 2001, 2)` 的格式，具体代码如下
 
@@ -254,16 +244,17 @@ examples/catheter/catheter.py
 
 可以看到模型预测结果与真实结果基本一致，优化后的导管具有特定的几何形状，如障碍物分布和间距等，这些形状特征能够显著影响流体动力学相互作用，从而抑制细菌的上游游泳行为。
 
-## 6. 参考资料
+## 6. 参考
 
-参考文献： [AI-aided geometric design of anti-infection catheters](https://www.science.org/doi/pdf/10.1126/sciadv.adj1741)
-
-参考代码： [Geo-FNO-catheter](https://github.com/zongyi-li/Geo-FNO-catheter)
+参考代码： /zongyi-li/Geo-FNO-catheter
 
 参考文献列表
+
 1. J. W. Warren, the catheter and urinary tract infection. Med. Clin. North Am. 75, 481–493
 (1991).
+
 2. l. e. nicolle, catheter- related urinary tract infection. Drugs Aging 22, 627–639 (2005).
+
 3. e. K. Shuman, c. e. chenoweth, Urinary catheter- associated infections. Infect. Dis. Clin.
 North Am. 32, 885–897 (2018).
 4. n. Buetti, A. tabah, J. F. timsit, W. Zingg, What is new in catheter use and catheter
