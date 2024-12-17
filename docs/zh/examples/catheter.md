@@ -1,36 +1,37 @@
 # AI-aided geometric design of anti-infection catheters(人工智能辅助的抗感染导管几何设计)
 
-## 论文信息:
+## 1. 背景简介
+### 1.1 论文信息:
 |年份 | 期刊 | 作者|引用数 | 论文PDF | 
 |-----|-----|-----|---|-----|
 |2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[AI-aided geometric design of anti-infection catheters](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf)|
 
-## 作者介绍
+### 1.2 作者介绍
 
-### 第一作者：加州理工学院 Tingtao Zhou
+#### 第一作者：加州理工学院 Tingtao Zhou
 
 研究方向：统计物理学、流体力学、活性物质、无序材料
 
 ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter5.png)
 
-### 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038)
+#### 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038)
 
-https://www.eas.caltech.edu/people/daraio
+教师主页：https://www.eas.caltech.edu/people/daraio
 
 研究方向：力学 材料 非线性动力学 软物质 生物材料
 
 ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter6.png)
 
-### 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555)
+#### 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555)
 
-https://www.bbe.caltech.edu/people/paul-w-sternberg
+教师主页：https://www.bbe.caltech.edu/people/paul-w-sternberg
 
 研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。
 
 ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter7.png)
 
 
-### 其他作者与机构
+#### 其他作者与机构
 
 加州理工学院,工程与应用科学部\化学与化学工程系\生物与生物工程系
 
@@ -38,7 +39,7 @@ https://www.bbe.caltech.edu/people/paul-w-sternberg
 
 Meta Platforms公司(前Facebook)，Reality Labs部门
 
-## 代码信息
+### 1.3 模型&复现代码
 |问题类型 | 在线运行 |神经网络|预训练模型|指标|
 |---------|-----|---------|-|-|
 |算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|[GeoFNO_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams)|loss(MAE): 0.4195|
@@ -60,13 +61,12 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
     python catheter.py
     ```
 
-=== "模型评估命令"
+=== "预训练模型快速评估"
 
     ``` sh
     python catheter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams
     ```
 
-## 1. 背景简介
 在狭窄管道内的流体环境中，细菌能借助流体动力学作用逆流迁移，对使用植入性导管的患者构成泌尿道感染的严重威胁。尽管已有提议采用涂层与结构化表面来抑制导管内的细菌滋生，但遗憾的是，至今尚无一种表面结构或涂层技术能从根本上解决污染难题。鉴于此，我们依据逆流游动的物理原理，创新性地提出了一种几何设计方案，并通过AI模型对细菌流入动力学进行预测与优化。相较于传统模拟方法，所采用的傅立叶神经算子人工智能技术实现了显著的速度提升。
 
 在准二维微流体实验中，我们以大肠杆菌为对象，验证了该设计的抗感染机制，并在临床相关流速下，通过 3D 打印的导管原型对其有效性进行了评估。实验结果显示，我们的导管设计在抑制导管上游端细菌污染方面，实现了 1-2 个数量级的提升，有望大幅延长导管的安全留置时间，并整体降低导管相关性尿路感染的风险。
