@@ -6,14 +6,9 @@
 |2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[AI-aided geometric design of anti-infection catheters](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf)|
 
 ## 代码信息
-|问题类型 | 在线运行 |神经网络|
-|---------|-----|---------|
-|算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|
-
-## 复现结果：
-| 预训练模型  | 指标 |
-|:--| :--|
-| [GeoFNO_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams) | loss(MAE): 0.4195 |
+|问题类型 | 在线运行 |神经网络|预训练模型|指标|
+|---------|-----|---------|-|-|
+|算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|[GeoFNO_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams)|loss(MAE): 0.4195|
 
 
 === "模型训练命令"
