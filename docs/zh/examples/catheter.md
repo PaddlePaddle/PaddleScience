@@ -5,6 +5,39 @@
 |-----|-----|-----|---|-----|
 |2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[AI-aided geometric design of anti-infection catheters](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf)|
 
+## 作者介绍
+
+### 第一作者：加州理工学院 Tingtao Zhou
+
+研究方向：统计物理学、流体力学、活性物质、无序材料
+
+![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter5.png)
+
+### 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038)
+
+https://www.eas.caltech.edu/people/daraio
+
+研究方向：力学 材料 非线性动力学 软物质 生物材料
+
+![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter6.png)
+
+### 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555)
+
+https://www.bbe.caltech.edu/people/paul-w-sternberg
+
+研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。
+
+![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter7.png)
+
+
+### 其他作者与机构
+
+加州理工学院,工程与应用科学部\化学与化学工程系\生物与生物工程系
+
+北京大学,北京国际数学研究中心
+
+Meta Platforms公司(前Facebook)，Reality Labs部门
+
 ## 代码信息
 |问题类型 | 在线运行 |神经网络|预训练模型|指标|
 |---------|-----|---------|-|-|
