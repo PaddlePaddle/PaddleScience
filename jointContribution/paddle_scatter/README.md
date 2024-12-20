@@ -3,7 +3,7 @@
 ```sh
 cd paddle_scatter
 python setup_ops.py install
-python install .
+pip install .
 ```
 
 - Test
