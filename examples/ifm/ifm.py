@@ -156,6 +156,11 @@ def train(cfg: DictConfig):
             "data_label": cfg.data_label,
         },
         "batch_size": cfg.EVAL.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": True,
+        },
         "num_workers": 1,
     }
 
@@ -221,6 +226,11 @@ def evaluate(cfg: DictConfig):
             "data_label": cfg.data_label,
         },
         "batch_size": 128,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": True,
+        },
         "num_workers": 1,
     }
 
