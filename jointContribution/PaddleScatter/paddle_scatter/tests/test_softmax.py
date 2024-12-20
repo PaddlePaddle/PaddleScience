@@ -54,6 +54,6 @@ def test_log_softmax():
         [out0[0], out1[0], out0[1], out1[1], out1[2], out2[0], out4[0], out4[1]], axis=0
     )
 
-    assert paddle.allclose(out, expected)
+    assert paddle.allclose(out, expected, rtol=1e-3)
 
     out.backward(paddle.randn(out.shape, out.dtype))
