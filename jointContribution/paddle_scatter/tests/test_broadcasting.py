@@ -3,8 +3,8 @@ from itertools import product
 import paddle
 import pytest
 from paddle_scatter import scatter
-from paddle_scatter.testing import places
-from paddle_scatter.testing import reductions
+from paddle_scatter.tests.testing import places
+from paddle_scatter.tests.testing import reductions
 
 
 @pytest.mark.parametrize("reduce,place", product(reductions, places))

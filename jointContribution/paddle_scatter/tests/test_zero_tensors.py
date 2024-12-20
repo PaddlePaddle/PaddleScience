@@ -7,11 +7,11 @@ from paddle_scatter import gather_csr
 from paddle_scatter import scatter
 from paddle_scatter import segment_coo
 from paddle_scatter import segment_csr
-from paddle_scatter.testing import grad_dtypes
-from paddle_scatter.testing import ind_dtypes
-from paddle_scatter.testing import places
-from paddle_scatter.testing import reductions
-from paddle_scatter.testing import tensor
+from paddle_scatter.tests.testing import grad_dtypes
+from paddle_scatter.tests.testing import ind_dtypes
+from paddle_scatter.tests.testing import places
+from paddle_scatter.tests.testing import reductions
+from paddle_scatter.tests.testing import tensor
 
 
 @pytest.mark.parametrize(

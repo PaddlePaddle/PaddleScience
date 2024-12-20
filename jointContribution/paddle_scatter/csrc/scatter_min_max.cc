@@ -143,13 +143,14 @@ std::vector<paddle::Tensor> scatter_min_max_cpu_forward(const paddle::Tensor& x,
   return {out, arg_out};
 }
 
-
+#ifdef PADDLE_WITH_CUDA
 std::vector<paddle::Tensor> scatter_min_max_cuda_forward(const paddle::Tensor& x,
                                                          const paddle::Tensor& index,
                                                          const paddle::optional<paddle::Tensor>& init,
                                                          const std::vector<int64_t>& return_shape,
                                                          const std::string& reduce,
                                                          int64_t dim);
+#endif
 
 std::vector<paddle::Tensor> ScatterMinMaxForward(const paddle::Tensor& x,
                                                  const paddle::Tensor& index,
@@ -159,8 +160,10 @@ std::vector<paddle::Tensor> ScatterMinMaxForward(const paddle::Tensor& x,
                                                  int64_t dim) {
   if (x.is_cpu()) {
     return scatter_min_max_cpu_forward(x, index, init, return_shape, reduce, dim);
+#ifdef PADDLE_WITH_CUDA
   } else if (x.is_gpu()) {
     return scatter_min_max_cuda_forward(x, index, init, return_shape, reduce, dim);
+#endif
   } else {
     PD_THROW("Unsupported device type for forward function of custom scatter_min_max operator.");
   }

@@ -327,11 +327,13 @@ std::vector<paddle::Tensor> gather_coo_cpu_forward(const paddle::Tensor& x,
   return {out};
 }
 
+#ifdef PADDLE_WITH_CUDA
 std::vector<paddle::Tensor> segment_coo_cuda_forward(const paddle::Tensor& x,
                                                     const paddle::Tensor& index,
                                                     const paddle::optional<paddle::Tensor>& init,
                                                     std::vector<int64_t> return_shape,
                                                     std::string reduce);
+#endif
 
 std::vector<paddle::Tensor> SegmentCooForward(const paddle::Tensor& x,
                                               const paddle::Tensor& index,
@@ -340,18 +342,22 @@ std::vector<paddle::Tensor> SegmentCooForward(const paddle::Tensor& x,
                                               std::string reduce) {
   if (x.is_cpu()) {
     return segment_coo_cpu_forward(x, index, init, return_shape, reduce);
+#ifdef PADDLE_WITH_CUDA
   } else if (x.is_gpu()) {
     return segment_coo_cuda_forward(x, index, init, return_shape, reduce);
+#endif
   } else {
     PD_THROW("Unsupported device type for forward function of custom segment_coo operator.");
   }
 }
 
 
+#ifdef PADDLE_WITH_CUDA
 std::vector<paddle::Tensor> gather_coo_cuda_forward(const paddle::Tensor& x,
                                                     const paddle::Tensor& index,
                                                     const paddle::optional<paddle::Tensor>& init,
                                                     std::vector<int64_t> return_shape);
+#endif
 
 std::vector<paddle::Tensor> GatherCooForward(const paddle::Tensor& x,
                                             const paddle::Tensor& index,
@@ -359,8 +365,10 @@ std::vector<paddle::Tensor> GatherCooForward(const paddle::Tensor& x,
                                             std::vector<int64_t> return_shape) {
   if (x.is_cpu()) {
     return gather_coo_cpu_forward(x, index, init, return_shape);
+#ifdef PADDLE_WITH_CUDA
   } else if (x.is_gpu()) {
     return gather_coo_cuda_forward(x, index, init, return_shape);
+#endif
   } else {
     PD_THROW("Unsupported device type for forward function of custom gather_coo operator.");
   }

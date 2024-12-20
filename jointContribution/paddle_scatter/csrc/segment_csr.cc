@@ -233,11 +233,13 @@ std::vector<paddle::Tensor> gather_csr_cpu_forward(const paddle::Tensor& x,
   return {out};
 }
 
+#ifdef PADDLE_WITH_CUDA
 std::vector<paddle::Tensor> segment_csr_cuda_forward(const paddle::Tensor& x,
                                                     const paddle::Tensor& indptr,
                                                     const paddle::optional<paddle::Tensor>& init,
                                                     const std::vector<int64_t>& return_shape,
                                                     const std::string& reduce);
+#endif
 
 std::vector<paddle::Tensor> SegmentCsrForward(const paddle::Tensor& x,
                                               const paddle::Tensor& indptr,
@@ -246,17 +248,21 @@ std::vector<paddle::Tensor> SegmentCsrForward(const paddle::Tensor& x,
                                               const std::string& reduce) {
   if (x.is_cpu()) {
     return segment_csr_cpu_forward(x, indptr, init, return_shape, reduce);
+#ifdef PADDLE_WITH_CUDA
   } else if (x.is_gpu()) {
     return segment_csr_cuda_forward(x, indptr, init, return_shape, reduce);
+#endif
   } else {
     PD_THROW("Unsupported device type for forward function of custom segment_csr operator.");
   }
 }
 
+#ifdef PADDLE_WITH_CUDA
 std::vector<paddle::Tensor> gather_csr_cuda_forward(const paddle::Tensor& x,
                                                     const paddle::Tensor& indptr,
                                                     const paddle::optional<paddle::Tensor>& init,
                                                     const std::vector<int64_t>& return_shape);
+#endif
 
 std::vector<paddle::Tensor> GatherCsrForward(const paddle::Tensor& x,
                                             const paddle::Tensor& indptr,
@@ -264,8 +270,10 @@ std::vector<paddle::Tensor> GatherCsrForward(const paddle::Tensor& x,
                                             const std::vector<int64_t>& return_shape) {
   if (x.is_cpu()) {
     return gather_csr_cpu_forward(x, indptr, init, return_shape);
+#ifdef PADDLE_WITH_CUDA
   } else if (x.is_gpu()) {
     return gather_csr_cuda_forward(x, indptr, init, return_shape);
+#endif
   } else {
     PD_THROW("Unsupported device type for forward function of custom gather_csr operator.");
   }

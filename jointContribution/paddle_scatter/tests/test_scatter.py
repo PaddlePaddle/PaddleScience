@@ -4,12 +4,12 @@ import numpy as np
 import paddle
 import paddle_scatter
 import pytest
-from paddle_scatter.testing import dtypes
-from paddle_scatter.testing import dtypes_half
-from paddle_scatter.testing import ind_dtypes
-from paddle_scatter.testing import places
-from paddle_scatter.testing import reductions
-from paddle_scatter.testing import tensor
+from paddle_scatter.tests.testing import dtypes
+from paddle_scatter.tests.testing import dtypes_half
+from paddle_scatter.tests.testing import ind_dtypes
+from paddle_scatter.tests.testing import places
+from paddle_scatter.tests.testing import reductions
+from paddle_scatter.tests.testing import tensor
 
 reductions = reductions + ["mul"]
 
@@ -224,8 +224,8 @@ def test_forward(test, reduce, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    and paddle.core.is_bfloat16_supported()
-    and paddle.core.is_float16_supported(),
+    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
+    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -267,8 +267,8 @@ def test_backward(test, reduce, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    and paddle.core.is_bfloat16_supported()
-    and paddle.core.is_float16_supported(),
+    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
+    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize("test,reduce", product(tests, reductions))
@@ -320,8 +320,8 @@ def test_out(test, reduce, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    and paddle.core.is_bfloat16_supported()
-    and paddle.core.is_float16_supported(),
+    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
+    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -357,8 +357,8 @@ def test_out_half(test, reduce, dtype, ind_dtype):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    and paddle.core.is_bfloat16_supported()
-    and paddle.core.is_float16_supported(),
+    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
+    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(

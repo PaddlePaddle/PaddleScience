@@ -3,9 +3,9 @@ from itertools import product
 import paddle
 import paddle_scatter
 import pytest
-from paddle_scatter.testing import dtypes
-from paddle_scatter.testing import reductions
-from paddle_scatter.testing import tensor
+from paddle_scatter.tests.testing import dtypes
+from paddle_scatter.tests.testing import reductions
+from paddle_scatter.tests.testing import tensor
 
 tests = [
     {
