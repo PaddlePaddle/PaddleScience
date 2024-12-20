@@ -19,7 +19,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
 3. 安装必要的依赖包
 
     ``` sh
-    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+    python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 4. 基于当前所在的 `develop` 分支，新建一个分支(假设新分支名字为 `dev_model`)
@@ -51,7 +51,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
     因此在 commit 您的代码之前，请务必先在 `PaddleScience/` 目录下执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
 
     ``` sh
-    pip install pre-commit
+    python -m pip install pre-commit
     pre-commit install
     ```
 
@@ -896,7 +896,7 @@ solver.visualize()
 文档撰写过程中需进行即时渲染，预览文档内容以检查撰写的内容是否有误。因此需要按照如下命令，安装 mkdocs 相关依赖包。
 
 ``` sh
-pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 ### 3.2 撰写文档内容

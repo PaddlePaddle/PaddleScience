@@ -30,10 +30,12 @@
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - Transformer
         - UNetEx
         - UNONet
         - USCNN
         - LNO
+        - TGCN
         - IFMMLP
       show_root_heading: true
       heading_level: 3

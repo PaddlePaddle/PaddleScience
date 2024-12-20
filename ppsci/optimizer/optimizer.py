@@ -188,6 +188,8 @@ class Adam:
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient clipping strategy. Defaults to None.
         lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
+        amsgrad (bool, optional): Whether to use the AMSGrad variant of this algorithm from the paper
+            `On the Convergence of Adam and Beyond <https://openreview.net/forum?id=ryQu7f-RZ>`_. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -208,6 +210,7 @@ class Adam:
             Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
         ] = None,
         lazy_mode: bool = False,
+        amsgrad: bool = False,
     ):
         self.learning_rate = learning_rate
         self.beta1 = beta1
@@ -217,6 +220,7 @@ class Adam:
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
         self.lazy_mode = lazy_mode
+        self.amsgrad = amsgrad
 
     def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
@@ -225,6 +229,11 @@ class Adam:
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
+        import inspect
+
+        extra_kwargs = {}
+        if "amsgrad" in inspect.signature(optim.Adam.__init__).parameters:
+            extra_kwargs["amsgrad"] = self.amsgrad
         opt = optim.Adam(
             learning_rate=self.learning_rate,
             beta1=self.beta1,
@@ -234,6 +243,7 @@ class Adam:
             grad_clip=self.grad_clip,
             lazy_mode=self.lazy_mode,
             parameters=parameters,
+            **extra_kwargs,
         )
         return opt
 
@@ -386,6 +396,8 @@ class AdamW:
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient clipping strategy. Defaults to None.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
         one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
+        amsgrad (bool, optional): Whether to use the AMSGrad variant of this algorithm from the paper
+            `On the Convergence of Adam and Beyond <https://openreview.net/forum?id=ryQu7f-RZ>`_. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -405,6 +417,7 @@ class AdamW:
         ] = None,
         no_weight_decay_name: Optional[str] = None,
         one_dim_param_no_weight_decay: bool = False,
+        amsgrad: bool = False,
     ):
         super().__init__()
         self.learning_rate = learning_rate
@@ -417,6 +430,7 @@ class AdamW:
             no_weight_decay_name.split() if no_weight_decay_name else []
         )
         self.one_dim_param_no_weight_decay = one_dim_param_no_weight_decay
+        self.amsgrad = amsgrad
 
     def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
@@ -458,6 +472,11 @@ class AdamW:
                 if model_list
                 else []
             )
+        import inspect
+
+        extra_kwargs = {}
+        if "amsgrad" in inspect.signature(optim.AdamW.__init__).parameters:
+            extra_kwargs["amsgrad"] = self.amsgrad
 
         opt = optim.AdamW(
             learning_rate=self.learning_rate,
@@ -468,6 +487,7 @@ class AdamW:
             weight_decay=self.weight_decay,
             grad_clip=self.grad_clip,
             apply_decay_param_fun=self._apply_decay_param_fun,
+            **extra_kwargs,
         )
         return opt
 

@@ -31,5 +31,6 @@
         - SEVIRDataset
         - MOlFLOWDataset
         - CGCNNDataset
+        - PEMSDataset
         - IFMMoeDataset
       show_root_heading: true

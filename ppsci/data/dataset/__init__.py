@@ -40,6 +40,7 @@ from ppsci.data.dataset.mrms_dataset import MRMSDataset
 from ppsci.data.dataset.mrms_dataset import MRMSSampledDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
+from ppsci.data.dataset.pems_dataset import PEMSDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
@@ -69,6 +70,7 @@ __all__ = [
     "MRMSSampledDataset",
     "IterableNPZDataset",
     "NPZDataset",
+    "PEMSDataset",
     "CylinderDataset",
     "LorenzDataset",
     "RadarDataset",

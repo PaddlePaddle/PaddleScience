@@ -20,6 +20,8 @@
 [🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
+🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中 ](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+
 🔥 [开放原子第二届开源大赛：飞桨科学计算工具组件开发大赛](https://competition.atomgit.com/competitionInfo?id=805ad94637707d062f24e54265d85731)，总奖金25万人民币，火热报名中
 
 🔥 [PaddlePaddle Hackathon 7th 开源贡献个人挑战赛](https://github.com/PaddlePaddle/Paddle/issues/67603)
@@ -55,6 +57,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 光纤怪波 | [Optical rogue wave](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nlsmb) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1007/s11071-023-08824-w)|
 | 域分解 | [XPINN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/xpinns) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 | 布鲁塞尔扩散系统 | [3D-Brusselator](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/brusselator3d) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
+| 符号回归 | [Transformer4SR](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -89,6 +92,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 受力分析 | [结构震动模拟](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/phylstm) | 机理驱动 | PhyLSTM | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat) | [Paper](https://arxiv.org/abs/2002.10253) |
 | 受力分析 | [2D 弹塑性结构](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/epnn) | 机理驱动 | EPNN | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat) | [Paper](https://arxiv.org/abs/2204.12088) |
 | 受力分析和逆问题 | [3D 汽车控制臂变形](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/control_arm) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析和逆问题 | [3D 心脏仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heart.md) | 数理融合 | PINN | 监督学习 | - | - |
 | 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/topopt) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
 | 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_exchanger) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
 | 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_pinn) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
@@ -177,7 +181,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
 
         # install paddlesci with editable mode
-        pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:git_install] -->
 
@@ -187,9 +191,9 @@ python -c "import paddle; paddle.utils.run_check()"
         <!-- --8<-- [start:pip_install] -->
         ``` shell
         # release
-        pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
         # nightly build
-        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+        # python -m pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:pip_install] -->
 
@@ -213,7 +217,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
         export PYTHONPATH=$PYTHONPATH:$PWD # for linux
         set PYTHONPATH=%cd% # for windows
-        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
         注：上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
