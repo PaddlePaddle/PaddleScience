@@ -13,6 +13,10 @@ places = ["cpu"]
 if paddle.core.is_compiled_with_cuda():
     places.append("gpu")
 
+device = (
+    paddle.CUDAPlace(0) if paddle.core.is_compiled_with_cuda() else paddle.CPUPlace()
+)
+
 
 def tensor(x: Any, dtype: paddle.dtype):
     return None if x is None else paddle.to_tensor(x).astype(dtype)

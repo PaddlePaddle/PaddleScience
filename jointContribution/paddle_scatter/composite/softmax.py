@@ -1,8 +1,8 @@
 from typing import Optional
 
 import paddle
-from paddle_scatter import scatter_max
-from paddle_scatter import scatter_sum
+from paddle_scatter.scatter import scatter_max
+from paddle_scatter.scatter import scatter_sum
 from paddle_scatter.utils import broadcast
 
 

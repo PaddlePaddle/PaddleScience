@@ -4,6 +4,7 @@ import numpy as np
 import paddle
 import paddle_scatter
 import pytest
+from paddle_scatter.tests.testing import device
 from paddle_scatter.tests.testing import dtypes
 from paddle_scatter.tests.testing import dtypes_half
 from paddle_scatter.tests.testing import ind_dtypes
@@ -203,8 +204,8 @@ def test_forward(test, reduce, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -260,8 +261,8 @@ def test_backward(test, reduce, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize("test,reduce", product(tests, reductions))
@@ -324,8 +325,8 @@ def test_out(test, reduce, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -402,8 +403,8 @@ def test_non_contiguous(test, reduce, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(

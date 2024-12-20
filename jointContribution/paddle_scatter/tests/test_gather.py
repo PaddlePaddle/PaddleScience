@@ -4,6 +4,7 @@ import paddle
 import pytest
 from paddle_scatter import gather_coo
 from paddle_scatter import gather_csr
+from paddle_scatter.tests.testing import device
 from paddle_scatter.tests.testing import dtypes
 from paddle_scatter.tests.testing import dtypes_half
 from paddle_scatter.tests.testing import ind_dtypes
@@ -75,8 +76,8 @@ def test_forward(test, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    and paddle.core.is_bfloat16_supported()
-    and paddle.core.is_float16_supported(),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -118,8 +119,8 @@ def test_backward(test, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize("test", tests)
@@ -167,8 +168,8 @@ def test_out(test, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
@@ -226,8 +227,8 @@ def test_non_contiguous(test, dtype, ind_dtype, place):
 
 @pytest.mark.skipif(
     not paddle.core.is_compiled_with_cuda()
-    or not paddle.core.is_bfloat16_supported(paddle.CUDAPlace(0))
-    or not paddle.core.is_float16_supported(paddle.CUDAPlace(0)),
+    or not paddle.core.is_bfloat16_supported(device)
+    or not paddle.core.is_float16_supported(device),
     reason="half dtype not available",
 )
 @pytest.mark.parametrize(
