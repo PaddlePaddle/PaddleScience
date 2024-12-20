@@ -153,7 +153,7 @@ class RegDGCNN(paddle.nn.Layer):
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
         weight_keys: Tuple[str, ...],
-        args,
+        args: dict,
         output_channels=1,
     ):
         """

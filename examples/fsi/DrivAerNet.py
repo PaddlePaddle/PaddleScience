@@ -15,7 +15,6 @@
 from os import path as osp
 
 import hydra
-import numpy as np
 import paddle
 from omegaconf import DictConfig
 
@@ -23,48 +22,20 @@ import ppsci
 from ppsci.utils import logger
 
 
-def setup_seed(seed: int):
-    """Set the seed for reproducibility."""
-    paddle.seed(seed=seed)
-    paddle.seed(seed=seed)
-    np.random.seed(seed)
-
-
-def initialize_model(cfg_model: dict, config: dict) -> paddle.nn.Layer:
-    """
-    Initialize and return the RegDGCNN model.
-    Args:
-        config (dict): A dictionary containing configuration parameters for the model, including:
-            - k: The number of nearest neighbors to consider in the graph construction.
-            - channels: A list defining the number of output channels for each graph convolutional layer.
-            - linear_sizes: A list defining the sizes of each linear layer following the convolutional layers.
-            - emb_dims: The size of the global feature vector obtained after the graph convolutional and pooling layers.
-            - dropout: The dropout rate applied after each linear layer for regularization.
-            - output_channels: The number of output channels in the final layer, equal to the number of prediction targets.
-
-    Returns:
-        paddle.nn.Layer: The initialized RegDGCNN model, wrapped in a DataParallel module if multiple GPUs are used.
-    """
-    model = ppsci.arch.RegDGCNN(
-        input_keys=cfg_model.input_keys,
-        label_keys=cfg_model.output_keys,
-        weight_keys=cfg_model.weight_keys,
-        args=config,
-    )
-    if config["cuda"] and paddle.device.cuda.device_count() > 1:
-        model = paddle.DataParallel(layers=model)
-    return model
-
-
 def train(cfg: DictConfig):
     # set seed
-    setup_seed(cfg.ARGS.seed)
+    ppsci.utils.misc.set_random_seed(cfg.TRAIN.seed)
 
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = initialize_model(cfg.MODEL, cfg.ARGS)
+    model = ppsci.arch.RegDGCNN(
+        input_keys=cfg.MODEL.input_keys,
+        label_keys=cfg.MODEL.output_keys,
+        weight_keys=cfg.MODEL.weight_keys,
+        args=cfg.MODEL,
+    )
 
     train_dataloader_cfg = {
         "dataset": {
@@ -76,9 +47,9 @@ def train(cfg: DictConfig):
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.TRAIN.train_ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
-            "num_points": cfg.ARGS.num_points,
+            "num_points": cfg.TRAIN.num_points,
         },
-        "batch_size": cfg.ARGS.batch_size,
+        "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -105,9 +76,9 @@ def train(cfg: DictConfig):
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.TRAIN.eval_ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
-            "num_points": cfg.ARGS.num_points,
+            "num_points": cfg.TRAIN.num_points,
         },
-        "batch_size": cfg.ARGS.batch_size,
+        "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -171,13 +142,18 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set seed
-    setup_seed(cfg.ARGS.seed)
+    ppsci.utils.misc.set_random_seed(cfg.TRAIN.seed)
 
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
-    model = initialize_model(cfg.MODEL, cfg.ARGS)
+    model = ppsci.arch.RegDGCNN(
+        input_keys=cfg.MODEL.input_keys,
+        label_keys=cfg.MODEL.output_keys,
+        weight_keys=cfg.MODEL.weight_keys,
+        args=cfg.MODEL,
+    )
 
     valid_dataloader_cfg = {
         "dataset": {
@@ -189,9 +165,9 @@ def evaluate(cfg: DictConfig):
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.EVAL.ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
-            "num_points": cfg.ARGS.num_points,
+            "num_points": cfg.TRAIN.num_points,
         },
-        "batch_size": cfg.ARGS.batch_size,
+        "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
