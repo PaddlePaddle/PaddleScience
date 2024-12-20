@@ -1,5 +1,7 @@
 # DeepCFD(Deep Computational Fluid Dynamics)
 
+<a href="https://aistudio.baidu.com/projectdetail/8691947" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 === "模型训练命令"
 
     ``` sh
@@ -59,7 +61,7 @@
 
 ## 2. 问题定义
 
- Navier-Stokes 方程是用于描述流体运动的方程，它的二维形式如下，
+Navier-Stokes 方程是用于描述流体运动的方程，它的二维形式如下，
 
 质量守恒：
 
