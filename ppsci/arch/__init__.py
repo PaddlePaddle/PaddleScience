@@ -107,9 +107,7 @@ __all__ = [
     "USCNN",
     "VelocityDiscriminator",
     "VelocityGenerator",
-    "Transolver",
     "RegDGCNN",
-    "RegPointNet",
 ]
 
 
