@@ -95,6 +95,7 @@ class DataAugmentation:
         return dropped_pointcloud
 
 
+class DrivAerNetDataset(paddle.io.Dataset):
     """
     Paddle Dataset class for the DrivAerNet dataset, handling loading, transforming, and augmenting 3D car models.
 
