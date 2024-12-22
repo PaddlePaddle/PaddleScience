@@ -27,7 +27,6 @@ from ppsci.data.dataset.csv_dataset import IterableCSVDataset
 from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
 from ppsci.data.dataset.darcyflow_dataset import DarcyFlowDataset
 from ppsci.data.dataset.dgmr_dataset import DGMRDataset
-from ppsci.data.dataset.drivaernet_dataset import DrivAerNetDataset
 from ppsci.data.dataset.drivaernetplusplus_dataset import DrivAerNetPlusPlusDataset
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
