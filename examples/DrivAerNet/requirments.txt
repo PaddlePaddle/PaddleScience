@@ -1,2 +1,0 @@
-pyvista==0.43.3
-trimesh==4.0.8
