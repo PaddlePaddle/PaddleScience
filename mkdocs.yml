@@ -73,7 +73,7 @@ nav:
           - tempoGAN: zh/examples/tempoGAN.md
           - NSFNet4: zh/examples/nsfnet4.md
           - ViV: zh/examples/viv.md
-          - DrivAerNet: zh/examples/DrivAerNet.md
+          - DrivAerNetPlusPlus: zh/examples/DrivAerNetPlusPlus.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
