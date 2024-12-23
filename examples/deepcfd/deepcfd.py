@@ -194,8 +194,8 @@ def predict_and_save_plot(
     )
     plt.colorbar(orientation="horizontal")
     plt.tight_layout()
-    plt.show()
     plt.savefig(os.path.join(plot_dir, f"cfd_{index}.png"), bbox_inches="tight")
+    plt.show()
 
 
 def train(cfg: DictConfig):
