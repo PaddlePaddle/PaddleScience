@@ -14,7 +14,6 @@
 
 import os
 from os import path as osp
-from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
