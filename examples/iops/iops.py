@@ -167,7 +167,7 @@ def predict_pollution(sample, model, scaler, label_encoder):
 if __name__ == "__main__":
     # 数据预处理
     X_train, X_test, y_train, y_test, scaler, label_encoder = preprocess_data(
-        "./北京市2023年雷达值及类型.xlsx"
+        "./trainData.xlsx"
     )
 
     # 计算类别权重
