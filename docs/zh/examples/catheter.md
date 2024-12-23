@@ -1,6 +1,6 @@
 # AI-aided geometric design of anti-infection catheters(人工智能辅助的抗感染导管几何设计)
 
-Distributed under a creative commons Attribution license 4.0 (CC BY). 
+Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
 ### 1.1 论文信息:
