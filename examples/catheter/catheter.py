@@ -14,7 +14,6 @@
 
 import os
 from os import path as osp
-from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
@@ -53,8 +52,11 @@ def getdata(
     label = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
 
     if is_inference:
-        label = label.unsqueeze(axis=-1)
-        return inputX, inputY, inputPara, label
+        inputX = np.transpose(inputX, (1, 0))
+        inputY = np.transpose(inputY, (1, 0))
+        input = np.stack(arrays=[inputX, inputY], axis=-1).astype(np.float32)
+        input = input.reshape(n, s, 2)
+        return input
 
     inputX = paddle.to_tensor(data=inputX, dtype="float32").transpose(perm=[1, 0])
     inputY = paddle.to_tensor(data=inputY, dtype="float32").transpose(perm=[1, 0])
@@ -186,11 +188,12 @@ def evaluate(cfg: DictConfig):
 
     # set data
     x_test, y_test, para = getdata(**cfg.TEST_DATA, is_train=False)
-    y_test = y_test.numpy().flatten()
+    y_test = y_test.numpy()
 
     for sample_id in [0, 8]:
         sample, uf, L_p, x1, x2, x3, h = para[:, sample_id]
         mesh = x_test[sample_id, :, :]
+        mesh = mesh.numpy()
 
         y_test_pred = (
             paddle.exp(
@@ -201,8 +204,8 @@ def evaluate(cfg: DictConfig):
         )
         print(
             "rel. error is ",
-            np.linalg.norm(y_test_pred - y_test[sample_id, :].numpy())
-            / np.linalg.norm(y_test[sample_id, :]),
+            np.linalg.norm(y_test_pred - y_test[sample_id, :].flatten())
+            / np.linalg.norm(y_test[sample_id, :].flatten()),
         )
         xx = np.linspace(-500, 0, 2001)
         plt.figure(figsize=(5, 4))
@@ -241,7 +244,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        cfg=cfg,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
     # export model
     from paddle.static import InputSpec
@@ -252,7 +255,7 @@ def export(cfg: DictConfig):
             for key in model.input_keys
         },
     ]
-    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
+    solver.export(input_spec, cfg.INFER.export_path)
 
 
 def inference(cfg: DictConfig):
@@ -261,18 +264,20 @@ def inference(cfg: DictConfig):
     predictor = python_infer.GeneralPredictor(cfg)
 
     # evaluate
-    input, output, _ = getdata(**cfg.TEST_DATA, is_train=False)
-    input_dict = {"input": input[0, :, :]}
+    input= getdata(**cfg.TEST_DATA, is_train=False, is_inference=True)
+    input_dict = {"input": input}
 
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     # mapping data to cfg.INFER.output_keys
     output_keys = ["output"]
     output_dict = {
-        store_key: paddle.exp(output_dict[infer_key]).numpy().flatten()
+        store_key: paddle.exp(paddle.to_tensor(output_dict[infer_key])).numpy().flatten()
         for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
 
-    plot(input_dict["input"], output_dict["output"], cfg.output_dir)
+    mesh = input_dict["input"][5, :, :]
+    yy = output_dict["output"][5]
+    plot(mesh, yy, cfg.output_dir)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="catheter.yaml")
@@ -283,11 +288,11 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     elif cfg.mode == "export":
         export(cfg)
-    elif cfg.mode == "inference":
+    elif cfg.mode == "infer":
         inference(cfg)
     else:
         raise ValueError(
-            f"cfg.mode should in ['train', 'eval', 'export', 'inference], but got '{cfg.mode}'"
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer], but got '{cfg.mode}'"
         )
 
 

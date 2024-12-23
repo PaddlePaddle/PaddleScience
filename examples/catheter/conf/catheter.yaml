@@ -58,7 +58,7 @@ MODEL:
 # training settings
 TRAIN:
   use_pretrained_model: False
-  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams"
+  pretrained_model_path: "https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/init_GeoFno.pdparams"
   lr_scheduler:
     epochs: 1001
     learning_rate: 0.001
@@ -72,11 +72,22 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: null
+  pretrained_model_path: "https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO"
 
 # inference settings
 INFER:
+  pretrained_model_path: https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams
   export_path: ./inference/catheter
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
   batch_size: 20

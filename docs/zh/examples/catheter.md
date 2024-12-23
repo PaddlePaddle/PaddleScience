@@ -45,7 +45,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 
 |问题类型 | 在线运行 |神经网络|预训练模型|指标|
 |---------|-----|---------|-|-|
-|算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|[GeoFNO_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams)|loss(MAE): 0.4195|
+|算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|[GeoFNO_pretrained.pdparams](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams)|loss(MAE): 0.0664|
 
 
 === "模型训练命令"
@@ -67,7 +67,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 === "预训练模型快速评估"
 
     ``` sh
-    python catheter.py mode=eval EVAL.pretrained_model_path=https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdmodel
+    python catheter.py mode=eval
     ```
 
 在狭窄管道内的流体环境中，细菌能借助流体动力学作用逆流迁移，对使用植入性导管的患者构成泌尿道感染的严重威胁。尽管已有提议采用涂层与结构化表面来抑制导管内的细菌滋生，但遗憾的是，至今尚无一种表面结构或涂层技术能从根本上解决污染难题。鉴于此，我们依据逆流游动的物理原理，创新性地提出了一种几何设计方案，并通过AI模型对细菌流入动力学进行预测与优化。相较于传统模拟方法，所采用的傅立叶神经算子人工智能技术实现了显著的速度提升。
