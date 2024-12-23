@@ -1,10 +1,10 @@
 # AI-aided geometric design of anti-infection catheters(人工智能辅助的抗感染导管几何设计)
 
-Distributed under a creative commons Attribution license 4.0 (CC BY). 
+Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
 ### 1.1 论文信息:
-|年份 | 期刊 | 作者|引用数 | 论文PDF | 
+|年份 | 期刊 | 作者|引用数 | 论文PDF |
 |-----|-----|-----|---|-----|
 |3 January 2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf)|
 
@@ -57,7 +57,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
     cd PaddleScience
     export PYTHONPATH=$PYTHONPATH:$PWD # for linux
     cd PaddleScience/examples/catheter
-    
+
     # 下载数据
     wget https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip
     unzip data.zip
@@ -67,7 +67,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 === "预训练模型快速评估"
 
     ``` sh
-    python catheter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/GeoFNO/GeoFNO_pretrained.pdparams
+    python catheter.py mode=eval EVAL.pretrained_model_path=https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdmodel
     ```
 
 在狭窄管道内的流体环境中，细菌能借助流体动力学作用逆流迁移，对使用植入性导管的患者构成泌尿道感染的严重威胁。尽管已有提议采用涂层与结构化表面来抑制导管内的细菌滋生，但遗憾的是，至今尚无一种表面结构或涂层技术能从根本上解决污染难题。鉴于此，我们依据逆流游动的物理原理，创新性地提出了一种几何设计方案，并通过AI模型对细菌流入动力学进行预测与优化。相较于传统模拟方法，所采用的傅立叶神经算子人工智能技术实现了显著的速度提升。
@@ -105,7 +105,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 ![图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter.png)
 
 **图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图**
- 
+
 - **（A）提出的CAUTI机制**：尿液从患者膀胱内通过导管向外流出时，细菌能够逆着尿流方向（即上游）游动，进而可能侵入患者体内并引发感染。
 - **（B）细菌的跑动-翻滚运动与上游游动机制**：细菌通过一种特有的跑动-翻滚运动模式，在液体环境中实现上游游动。
 - **（C）模拟探索导管形状**：利用模拟技术，探索不同导管形状对细菌上游游动的影响，以期找到能够抑制细菌上游游动的导管设计。
@@ -150,22 +150,22 @@ $$
 ![图2. 障碍物抑制上游游动和几何优化的物理机制](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter2.png)
 
 **图2. 障碍物抑制上游游动和几何优化的物理机制**
- 
+
 - **（A）无流动时的几何整流效应**：描述了在没有流体流动的情况下，几何形状对细菌游动方向的影响。
- 
+
 - **（B）光滑通道中的泊肃叶流**：彩色背景显示流涡量的相对大小，颜色越深表示涡量越大。在光滑通道中，泊肃叶流产生的涡量使细菌头部向下游旋转。
- 
+
 - **（C）带有对称障碍物的通道中的流动**：在带有对称障碍物的通道中，障碍物顶部附近的流速和涡量增强，这导致更强的扭矩作用在细菌上，使其重定向至下游。
- 
+
 - **（D）和（E）不同条件下的细菌模拟轨迹**：
   - - **（D）光滑通道**：在宽度为50μm的二维光滑通道中，细菌的模拟轨迹显示其持续游动状态。
   - - **（E）排斥细菌的表面改性通道**：在表面经过改性以排斥细菌的通道中，细菌的游动轨迹受到显著影响。
- 
+
 - **（F）上游游动的群体统计**：
   - - 实线（左侧y轴）表示平均上游距离，反映了细菌群体在上游方向上的平均游动距离。
   - - 虚线（右侧y轴）表示群体中前1%游动者的上游距离，揭示了少数高效游动细菌的表现。
   - - 不同颜色的线条代表不同的通道条件：蓝色为光滑通道，橙色为表面改性通道，黑色为对称障碍物通道，绿色为不对称障碍物通道。
- 
+
 - **（G）AI算子神经网络模型和结果**：
   - - Geo-FnO模型旨在学习导管几何形状与细菌分布之间的关系，通过一系列神经算子层实现。
   - - 模型首先将不规则的通道几何形状映射到单位段[0,1]，然后在潜在空间中应用基于傅里叶的内核进行预测。
@@ -175,19 +175,19 @@ $$
 ![图3. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter3.png)
 
 **图3. 微流控实验**
- 
+
 - **（A）微流控实验示意图**：微流控通道的一端连接着装有成像溶液的注射器，另一端则连接着装有大肠杆菌的储液池。长箭头表示流动方向。
- 
+
 - **（B）细菌在锐角处的积聚**：由于流动停滞，细菌在通道的锐角处积聚。
- 
+
 - **（C）微流控通道的明场图像**：展示了通道的实际结构。
- 
+
 - **（D）细菌从通道壁上脱落的典型事件**：
   - - 细菌（白色点）的轨迹在过去5s内以黄色线条显示。
   - - 上图展示了一种类型1的轨迹，其中细菌从障碍物尖端脱落。
   - - 下图展示了一种典型的类型2轨迹，其中细菌从通道的平滑部分脱落。
   - - 左列为实验图像，右列为模拟图像。
- 
+
 - **（E）脱落事件的统计**：提供了关于细菌脱落事件的统计数据。
 
 ![图4. 3D打印导管原型的实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter4.png)
@@ -367,104 +367,157 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 在加载数据之后，需要将 x、y 进行合并，同时对于合并后的训练数据重新 `reshape` 为 `(1000, 2001, 2)` 的格式，具体代码如下
 
 ```py
---8<--
-examples/catheter/catheter.py:29:61
---8<--
+# build data
+def getdata(
+    x_path,
+    y_path,
+    para_path,
+    output_path,
+    n_data,
+    n,
+    s,
+    is_train=True,
+    is_inference=False,
+):
+    # load data
+    inputX_raw = np.load(x_path)[:, 0:n_data]
+    inputY_raw = np.load(y_path)[:, 0:n_data]
+    inputPara_raw = np.load(para_path)[:, 0:n_data]
+    output_raw = np.load(output_path)[:, 0:n_data]
+
+    # preprocess data
+    inputX = inputX_raw[:, 0::3]
+    inputY = inputY_raw[:, 0::3]
+    inputPara = inputPara_raw[:, 0::3]
+    label = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
+
+    if is_inference:
+        label = label.unsqueeze(axis=-1)
+        return inputX, inputY, inputPara, label
+
+    inputX = paddle.to_tensor(data=inputX, dtype="float32").transpose(perm=[1, 0])
+    inputY = paddle.to_tensor(data=inputY, dtype="float32").transpose(perm=[1, 0])
+    input = paddle.stack(x=[inputX, inputY], axis=-1)
 ```
 
 ### 3.2 GeoFNO 模型
 
 GeoFNO 是一种基于 **几何聚焦傅里叶神经算子 (Geo-FNO** ) 的机器学习模型，它将几何形状转换到傅里叶空间，从而更好地捕捉形状的特征，并利用傅里叶变换的可逆性，可以将结果转换回物理空间。
 
-在论文中，该模型能够学习并解决与几何形状相关的偏微分方程（SPDE），从而实现对导管几何形状的优化，并根据论文所提供 pytorch 模型代码，现用 PaddleScience 代码表示如下
+在论文中，该模型能够学习并解决与几何形状相关的偏微分方程（SPDE），从而实现对导管几何形状的优化, 代码表示如下
 
 ```py
---8<--
-ppsci/arch/geofno.py:64:146
---8<--
+class FNO1d(nn.Layer):
+    """The overall network. It contains 4 layers of the Fourier layer.
+    1. Lift the input to the desire channel dimension by self.fc0 .
+    2. 4 layers of the integral operators u' = (W + K)(u).
+         W defined by self.w; K defined by self.conv .
+    3. Project from the channel space to the output space by self.fc1 and self.fc2 .
+
+    Args:
+        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
+        output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
+        modes (int, optional, optional): Number of Fourier modes to compute, it should be the same as
+            that in fft part of the code below. Defaults to 64.
+        width (int, optional, optional): Number of channels in each Fourier layer. Defaults to 64.
+        padding (int, optional, optional): How many zeros to pad to the input Tensor. Defaults to 100.
+        input_channel (int, optional, optional): Number of channels of the input tensor. Defaults to 2.
+        output_np (int, optional, optional): Number of points to sample the solution. Defaults to 2001.
+    """
+
+    def __init__(
+        self,
+        input_key=("input",),
+        output_key=("output",),
+        modes=64,
+        width=64,
+        padding=100,
+        input_channel=2,
+        output_np=2001,
+    ):
+        super().__init__()
+        self.input_keys = input_key
+        self.output_keys = output_key
+
+        self.output_np = output_np
+        self.modes1 = modes
+        self.width = width
+        self.padding = padding
+        self.fc0 = nn.Linear(input_channel, self.width)
+
+        self.conv0 = SpectralConv1d(self.width, self.width, self.modes1)
+        self.conv1 = SpectralConv1d(self.width, self.width, self.modes1)
+        self.conv2 = SpectralConv1d(self.width, self.width, self.modes1)
+        self.conv3 = SpectralConv1d(self.width, self.width, self.modes1)
+        self.conv4 = SpectralConv1d(self.width, self.width, self.modes1)
+
+        self.w0 = nn.Conv1D(self.width, self.width, 1)
+        self.w1 = nn.Conv1D(self.width, self.width, 1)
+        self.w2 = nn.Conv1D(self.width, self.width, 1)
+        self.w3 = nn.Conv1D(self.width, self.width, 1)
+
+        self.fc1 = nn.Linear(self.width, 128)
+        self.fc2 = nn.Linear(128, 1)
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("input",)`，输出变量名是 `("output",)`，这些命名与后续代码保持一致。
 
 接着通过指定 FNO1d 的层数、特征通道数，神经元个数，并通过加载上文所提及的初始化权重模型，我们就实例化出了一个神经网络模型 `model`。
 
-### 3.3 约束构建
-
-#### 3.3.1 监督约束
-
-由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
-
-```py
---8<--
-examples/catheter/catheter.py:76:92
---8<--
-```
-
-`SupervisedConstraint` 的第一个参数是监督约束的读取配置，里面包好数据的 `label`，已便后续进行索引使用。同时定义了数据的 batch_size 以及其他相关配置；
-
-第二个参数是损失函数，此处我们选用论文代码仓中的 `LPLoss`损失函数，其定义可看 [Loss 构建](#36)；
-
-第三个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。
-
-### 3.4 优化器构建
-
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，同时使用 `PaddleScience` 中的 `MultiStepDecay` 生成动态学习率。
-
-```py
---8<--
-examples/catheter/catheter.py:100:102
---8<--
-```
-
-### 3.5 评估器构建
-
-在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
-
-```py
---8<--
-examples/catheter/catheter.py:110:127
---8<--
-```
-
-评价指标 `metric` 选择 `ppsci.metric.L2Rel` 即可。
-
-其余配置与 [约束构建](#33) 的设置类似。
-
-### 3.6 模型训练、评估
+### 3.3 模型训练、评估
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-```py
---8<--
-examples/catheter/catheter.py:130:141
---8<--
+```python
+# initialize solver
+solver = ppsci.solver.Solver(
+    model,
+    constraint,
+    cfg.output_dir,
+    optimizer,
+    lr_scheduler,
+    cfg.TRAIN.epochs,
+    cfg.TRAIN.iters_per_epoch,
+    save_freq=cfg.TRAIN.save_freq,
+    log_freq=cfg.log_freq,
+    eval_during_train=True,
+    eval_freq=cfg.TRAIN.eval_freq,
+    seed=cfg.seed,
+    equation=equation,
+    geom=geom,
+    validator=validator,
+    visualizer=visualizer,
+    pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+    checkpoint_path=cfg.TRAIN.checkpoint_path,
+    eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+)
+# train model
+solver.train()
+# evaluate after finished training
+solver.eval()
+# visualize prediction after finished training
+solver.visualize()
 ```
 
-## 4. 完整代码
 
-=== "catheter.py"
+## 4. 结果展示
 
-```py
---8<--
-examples/catheter/catheter.py
---8<--
-```
+=== "训练、推理loss"
 
-## 5. 结果展示
 
 下方展示了训练后模型对测试数据的第一次预测结果以及最后一次预测结果。
 
 === "第一次预测结果"
 
-![1725427977357](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725427977357.png)
+![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter10.png)
 
 === "最后一次预测结果"
 
-![1725428017615](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725428017615.png)
+![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter9.png)
 
 === "训练测试损失"
 
-![1725894134717](https://paddle-org.bj.bcebos.com/paddlescience/docs/catheter/1725894134717.png)
+![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter8.png)
 
 可以看到模型预测结果与真实结果基本一致，优化后的导管具有特定的几何形状，如障碍物分布和间距等，这些形状特征能够显著影响流体动力学相互作用，从而抑制细菌的上游游泳行为。
 

@@ -131,7 +131,7 @@ def train(cfg: DictConfig):
 
     # set optimizer
     ITERS_PER_EPOCH = int(cfg.TRAIN_DATA.n / cfg.TRAIN.batch_size)
-    scheduler = lr_scheduler.MultiStepDecay(
+    scheduler = lr_scheduler.Step(
         **cfg.TRAIN.lr_scheduler, iters_per_epoch=ITERS_PER_EPOCH
     )
     optimizer = Adam(scheduler(), weight_decay=cfg.TRAIN.weight_decay)(model)

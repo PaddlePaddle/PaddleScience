@@ -54,11 +54,13 @@ class SpectralConv1d(nn.Layer):
         op1_real = op1.real()
         op1_imag = op1.imag()
         result_real = paddle.unsqueeze(
-            paddle.einsum(eq, op1_real, op2_imag) + paddle.einsum(eq, op1_imag, op2_real),
+            paddle.einsum(eq, op1_real, op2_real)
+            - paddle.einsum(eq, op1_imag, op2_imag),
             axis=-1,
         )
         result_imag = paddle.unsqueeze(
-            paddle.einsum(eq, op1_real, op2_imag) + paddle.einsum(eq, op1_imag, op2_real),
+            paddle.einsum(eq, op1_real, op2_imag)
+            + paddle.einsum(eq, op1_imag, op2_real),
             axis=-1,
         )
         result_complex = paddle.as_complex(
