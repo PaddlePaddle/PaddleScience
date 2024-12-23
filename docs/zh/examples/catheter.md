@@ -4,7 +4,7 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
 ### 1.1 论文信息:
-|年份 | 期刊 | 作者|引用数 | 论文PDF | 
+|年份 | 期刊 | 作者|引用数 | 论文PDF |
 |-----|-----|-----|---|-----|
 |3 January 2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf)|
 
@@ -57,7 +57,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
     cd PaddleScience
     export PYTHONPATH=$PYTHONPATH:$PWD # for linux
     cd PaddleScience/examples/catheter
-    
+
     # 下载数据
     wget https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip
     unzip data.zip
@@ -105,7 +105,7 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 ![图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter.png)
 
 **图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图**
- 
+
 - **（A）提出的CAUTI机制**：尿液从患者膀胱内通过导管向外流出时，细菌能够逆着尿流方向（即上游）游动，进而可能侵入患者体内并引发感染。
 - **（B）细菌的跑动-翻滚运动与上游游动机制**：细菌通过一种特有的跑动-翻滚运动模式，在液体环境中实现上游游动。
 - **（C）模拟探索导管形状**：利用模拟技术，探索不同导管形状对细菌上游游动的影响，以期找到能够抑制细菌上游游动的导管设计。
@@ -150,22 +150,22 @@ $$
 ![图2. 障碍物抑制上游游动和几何优化的物理机制](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter2.png)
 
 **图2. 障碍物抑制上游游动和几何优化的物理机制**
- 
+
 - **（A）无流动时的几何整流效应**：描述了在没有流体流动的情况下，几何形状对细菌游动方向的影响。
- 
+
 - **（B）光滑通道中的泊肃叶流**：彩色背景显示流涡量的相对大小，颜色越深表示涡量越大。在光滑通道中，泊肃叶流产生的涡量使细菌头部向下游旋转。
- 
+
 - **（C）带有对称障碍物的通道中的流动**：在带有对称障碍物的通道中，障碍物顶部附近的流速和涡量增强，这导致更强的扭矩作用在细菌上，使其重定向至下游。
- 
+
 - **（D）和（E）不同条件下的细菌模拟轨迹**：
   - - **（D）光滑通道**：在宽度为50μm的二维光滑通道中，细菌的模拟轨迹显示其持续游动状态。
   - - **（E）排斥细菌的表面改性通道**：在表面经过改性以排斥细菌的通道中，细菌的游动轨迹受到显著影响。
- 
+
 - **（F）上游游动的群体统计**：
   - - 实线（左侧y轴）表示平均上游距离，反映了细菌群体在上游方向上的平均游动距离。
   - - 虚线（右侧y轴）表示群体中前1%游动者的上游距离，揭示了少数高效游动细菌的表现。
   - - 不同颜色的线条代表不同的通道条件：蓝色为光滑通道，橙色为表面改性通道，黑色为对称障碍物通道，绿色为不对称障碍物通道。
- 
+
 - **（G）AI算子神经网络模型和结果**：
   - - Geo-FnO模型旨在学习导管几何形状与细菌分布之间的关系，通过一系列神经算子层实现。
   - - 模型首先将不规则的通道几何形状映射到单位段[0,1]，然后在潜在空间中应用基于傅里叶的内核进行预测。
@@ -175,19 +175,19 @@ $$
 ![图3. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter3.png)
 
 **图3. 微流控实验**
- 
+
 - **（A）微流控实验示意图**：微流控通道的一端连接着装有成像溶液的注射器，另一端则连接着装有大肠杆菌的储液池。长箭头表示流动方向。
- 
+
 - **（B）细菌在锐角处的积聚**：由于流动停滞，细菌在通道的锐角处积聚。
- 
+
 - **（C）微流控通道的明场图像**：展示了通道的实际结构。
- 
+
 - **（D）细菌从通道壁上脱落的典型事件**：
   - - 细菌（白色点）的轨迹在过去5s内以黄色线条显示。
   - - 上图展示了一种类型1的轨迹，其中细菌从障碍物尖端脱落。
   - - 下图展示了一种典型的类型2轨迹，其中细菌从通道的平滑部分脱落。
   - - 左列为实验图像，右列为模拟图像。
- 
+
 - **（E）脱落事件的统计**：提供了关于细菌脱落事件的统计数据。
 
 ![图4. 3D打印导管原型的实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter4.png)
