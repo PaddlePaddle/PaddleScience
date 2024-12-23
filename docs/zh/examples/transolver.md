@@ -1,11 +1,11 @@
 # Transolver: A Fast Transformer Solver for PDEs on General Geometries(Transolver：一种在一般几何形状上快速求解偏微分方程的Transformer求解器)
 
-Distributed under a creative commons Attribution license 4.0 (CC BY). 
+Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
 ### 1.1 论文信息:
 
-|年份 | 期刊 | 作者|引用数 | 论文PDF | 
+|年份 | 期刊 | 作者|引用数 | 论文PDF |
 |-----|-----|-----|---|-----|
 |October 2024|ICML Spotlight|Haixu Wu, Huakun Luo, Haowen Wang, Jianmin Wang, Mingsheng Long|15|[Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20Transolver/2402.02366v2.pdf)|
 
