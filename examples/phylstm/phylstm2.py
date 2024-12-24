@@ -308,14 +308,144 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
 
+def export(cfg: DictConfig):
+    mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
+    u_data = mat["target_X_tf"]
+    u_data = u_data.reshape([u_data.shape[0], u_data.shape[1], 1])
+    u_all = u_data
+    eta_star = u_all[0:10]
+    eta = eta_star
+    # set model
+    model = ppsci.arch.DeepPhyLSTM(
+        cfg.MODEL.input_size,
+        eta.shape[2],
+        cfg.MODEL.hidden_size,
+        cfg.MODEL.model_type,
+    )
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
+    ag_data = mat["input_tf"]  # ag, ad, av
+    u_data = mat["target_X_tf"]
+    ut_data = mat["target_Xd_tf"]
+    utt_data = mat["target_Xdd_tf"]
+    ag_data = ag_data.reshape([ag_data.shape[0], ag_data.shape[1], 1])
+    u_data = u_data.reshape([u_data.shape[0], u_data.shape[1], 1])
+    ut_data = ut_data.reshape([ut_data.shape[0], ut_data.shape[1], 1])
+    utt_data = utt_data.reshape([utt_data.shape[0], utt_data.shape[1], 1])
+
+    t = mat["time"]
+    dt = t[0, 1] - t[0, 0]
+
+    ag_all = ag_data
+    u_all = u_data
+    u_t_all = ut_data
+    u_tt_all = utt_data
+
+    # finite difference
+    N = u_data.shape[1]
+    phi1 = np.concatenate(
+        [
+            np.array([-3 / 2, 2, -1 / 2]),
+            np.zeros([N - 3]),
+        ]
+    )
+    temp1 = np.concatenate([-1 / 2 * np.identity(N - 2), np.zeros([N - 2, 2])], axis=1)
+    temp2 = np.concatenate([np.zeros([N - 2, 2]), 1 / 2 * np.identity(N - 2)], axis=1)
+    phi2 = temp1 + temp2
+    phi3 = np.concatenate(
+        [
+            np.zeros([N - 3]),
+            np.array([1 / 2, -2, 3 / 2]),
+        ]
+    )
+    phi_t0 = (
+        1
+        / dt
+        * np.concatenate(
+            [
+                np.reshape(phi1, [1, phi1.shape[0]]),
+                phi2,
+                np.reshape(phi3, [1, phi3.shape[0]]),
+            ],
+            axis=0,
+        )
+    )
+    phi_t0 = np.reshape(phi_t0, [1, N, N])
+
+    ag_star = ag_all[0:10]
+    eta_star = u_all[0:10]
+    eta_t_star = u_t_all[0:10]
+    eta_tt_star = u_tt_all[0:10]
+    ag_c_star = ag_all[0:50]
+    lift_star = -ag_c_star
+
+    eta = eta_star
+    ag = ag_star
+    lift = lift_star
+    eta_t = eta_t_star
+    eta_tt = eta_tt_star
+    ag_c = ag_c_star
+    g = -eta_tt - ag
+    phi_t = np.repeat(phi_t0, ag_c_star.shape[0], axis=0)
+
+    input_dict = {
+        "eta": eta,
+        "eta_t": eta_t,
+        "g": g,
+        "ag": ag,
+        "ag_c": ag_c,
+        "lift": lift,
+        "phi_t": phi_t,
+    }
+
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./phylstm2_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="phylstm2.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
