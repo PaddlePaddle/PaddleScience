@@ -58,6 +58,7 @@ from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
 from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.new_model import DNN  # isort:skip
 
 __all__ = [
     "MoFlowNet",
@@ -74,6 +75,7 @@ __all__ = [
     "CVit",
     "CVit1D",
     "CylinderEmbedding",
+    "DNN",
     "DeepONet",
     "DeepPhyLSTM",
     "DGMR",
