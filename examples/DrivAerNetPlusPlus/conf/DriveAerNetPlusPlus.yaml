@@ -1,0 +1,73 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - _self_
+
+hydra:
+  run:
+    dir: outputs_DragPrediction/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode}
+    chdir: false
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train
+seed: 1
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+# model settings
+MODEL:
+  input_keys: ["vertices"]
+  output_keys: ["cd_value"]
+  weight_keys: ["weight_keys"]
+  dropout: 0.0
+  emb_dims: 1024
+  channels: [6, 64, 128, 256, 512, 1024]
+  linear_sizes: [128, 64, 32, 16]
+  k: 40
+  output_channels: 1
+
+
+# training settings
+TRAIN:
+  seed: 1
+  num_points: 5000
+  epochs: 100
+  num_workers: 32
+  eval_during_train: True
+  train_ids_file: "train_design_ids.txt"
+  eval_ids_file: "val_design_ids.txt"
+  batch_size: 32
+  scheduler:
+    mode: "min"
+    patience: 20
+    factor: 0.1
+    verbose: True
+
+# evaluation settings
+EVAL:
+  batch_size: 1
+  pretrained_model_path: null
+  eval_with_no_grad: True
+  ids_file: "test_design_ids.txt"
+
+ARGS:
+  cuda: True
+  # optimizer settings
+  weight_decay: 0.0001
+  lr: 0.001
+  optimizer: 'adam'
+  # dataset settings
+  dataset_path: 'DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle'
+  aero_coeff: 'DrivAerNetPlusPlus_Drag_8k.csv'
+  subset_dir: 'subset_dir'
