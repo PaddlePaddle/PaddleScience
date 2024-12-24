@@ -26,6 +26,8 @@ from paddle.nn import functional as F
 
 import ppsci
 from ppsci.utils import logger
+import paddle
+import numpy as np
 
 if TYPE_CHECKING:
     import paddle
@@ -210,6 +212,37 @@ def evaluate(cfg: DictConfig):
                 index,
                 "cylinder",
             )
+
+
+def inference(model_path: str, input_data_path: str):
+   
+    model = paddle.jit.load(model_path)
+    model.eval()
+
+    input_data = np.load(input_data_path, allow_pickle=True)
+    input_graph = input_data["input_graph"]
+
+    graph = ppsci.utils.GraphData(
+        nodes=input_graph["node_features"],
+        edges=input_graph["edges"],
+        edge_features=input_graph["edge_features"],
+    )
+
+    with paddle.no_grad():
+        predictions = model(graph)
+
+    return {
+        "velocity_x": predictions["velocity_x"].numpy(),
+        "velocity_y": predictions["velocity_y"].numpy(),
+        "pressure": predictions["pressure"].numpy(),
+    }
+
+
+result = inference("pretrained_model.pdparams", "input_graph_data.npz")
+print("Velocity X:", result["velocity_x"])
+print("Velocity Y:", result["velocity_y"])
+print("Pressure:", result["pressure"])
+
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="amgnet_cylinder.yaml")
