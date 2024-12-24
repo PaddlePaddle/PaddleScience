@@ -2,6 +2,20 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7127446" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型导出命令"
+
+    ``` sh
+    python cfdgcn.py mode=export
+    ```
+
+
+=== "模型推理命令"
+
+    ``` sh
+    python cfdgcn.py mode=infer
+    ```
+
+
 === "模型训练命令"
 
     ``` sh
@@ -23,7 +37,7 @@
     # generalization experiments
     mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
       TRAIN.batch_size=$((BATCH_SIZE)) \
-      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \  
+      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \
       TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine. su2" \
       EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" \
       EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" \
