@@ -264,14 +264,16 @@ def inference(cfg: DictConfig):
     predictor = python_infer.GeneralPredictor(cfg)
 
     # evaluate
-    input= getdata(**cfg.TEST_DATA, is_train=False, is_inference=True)
+    input = getdata(**cfg.TEST_DATA, is_train=False, is_inference=True)
     input_dict = {"input": input}
 
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     # mapping data to cfg.INFER.output_keys
     output_keys = ["output"]
     output_dict = {
-        store_key: paddle.exp(paddle.to_tensor(output_dict[infer_key])).numpy().flatten()
+        store_key: paddle.exp(paddle.to_tensor(output_dict[infer_key]))
+        .numpy()
+        .flatten()
         for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
 
