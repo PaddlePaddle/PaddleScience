@@ -86,7 +86,6 @@ __all__ = [
     "build_dataset",
     "CGCNNDataset",
     "FWIDataset",
-    "DrivAerNetDataset",
     "DrivAerNetPlusPlusDataset",
 ]
 
