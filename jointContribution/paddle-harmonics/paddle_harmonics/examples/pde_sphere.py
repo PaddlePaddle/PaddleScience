@@ -29,6 +29,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import math
 
 import numpy as np
 import paddle
@@ -139,7 +140,7 @@ class SphereSolver(nn.Layer):
     def randspec(self):
         """random data on the sphere"""
 
-        rspec = paddle.randn(self.lap.shape, self.lap.dtype) / 4 / paddle.pi
+        rspec = paddle.randn(self.lap.shape, self.lap.dtype) / 4 / math.pi
         return rspec
 
     def plot_griddata(
@@ -158,7 +159,7 @@ class SphereSolver(nn.Layer):
         """
         import matplotlib.pyplot as plt
 
-        lons = self.lons.squeeze() - paddle.pi
+        lons = self.lons.squeeze() - math.pi
         lats = self.lats.squeeze()
 
         if data.place.is_gpu_place():

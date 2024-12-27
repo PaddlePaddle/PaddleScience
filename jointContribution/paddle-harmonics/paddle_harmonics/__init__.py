@@ -30,8 +30,6 @@
 #
 __version__ = "0.6.5"
 
-import paddle
-
 from . import quadrature
 from .convolution import DiscreteContinuousConvS2
 from .convolution import DiscreteContinuousConvTransposeS2
@@ -39,13 +37,6 @@ from .sht import InverseRealSHT
 from .sht import InverseRealVectorSHT
 from .sht import RealSHT
 from .sht import RealVectorSHT
-
-
-def patch_paddle():
-    setattr(paddle, "pi", 3.141592653589793)
-
-
-patch_paddle()
 
 __all__ = [
     "quadrature",

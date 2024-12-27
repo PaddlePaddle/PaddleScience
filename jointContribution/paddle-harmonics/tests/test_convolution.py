@@ -196,7 +196,7 @@ def _precompute_convolution_tensor_dense(
 
             # compute spherical coordinates
             theta = paddle.acos(z)
-            phi = paddle.atan2(y, x) + paddle.pi
+            phi = paddle.atan2(y, x) + math.pi
 
             # find the indices where the rotated position falls into the support of the kernel
             out[:, t, p, :, :] = kernel_handle(theta, phi)
@@ -394,7 +394,7 @@ class TestDiscreteContinuousConvolution(unittest.TestCase):
         nlat_in, nlon_in = in_shape
         nlat_out, nlon_out = out_shape
 
-        theta_cutoff = (kernel_shape[0] + 1) * paddle.pi / float(nlat_in - 1)
+        theta_cutoff = (kernel_shape[0] + 1) * math.pi / float(nlat_in - 1)
 
         if transpose:
             psi_dense = _precompute_convolution_tensor_dense(

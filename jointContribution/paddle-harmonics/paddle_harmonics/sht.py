@@ -29,6 +29,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import math
+
 import numpy as np
 import paddle as paddle
 import paddle.fft
@@ -121,7 +123,7 @@ class RealSHT(nn.Layer):
         assert x.shape[-1] == self.nlon
 
         # apply real fft in the longitudinal direction
-        x = 2.0 * paddle.pi * paddle.fft.rfft(x, axis=-1, norm="forward")
+        x = 2.0 * math.pi * paddle.fft.rfft(x, axis=-1, norm="forward")
 
         # do the Legendre-Gauss quadrature
         x = paddle.as_real(x)
@@ -308,7 +310,7 @@ class RealVectorSHT(nn.Layer):
         assert len(x.shape) >= 3
 
         # apply real fft in the longitudinal direction
-        x = 2.0 * paddle.pi * paddle.fft.rfft(x, axis=-1, norm="forward")
+        x = 2.0 * math.pi * paddle.fft.rfft(x, axis=-1, norm="forward")
 
         # do the Legendre-Gauss quadrature
         x = paddle.as_real(x)

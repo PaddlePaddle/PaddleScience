@@ -93,7 +93,7 @@ class ComplexReLU(nn.Layer):
         # elif self.mode == "halfplane":
         #     # bias is an angle parameter in this case
         #     modified_angle = paddle.angle(z) - self.bias
-        #     condition = paddle.logical_and( (0. <= modified_angle), (modified_angle < paddle.pi/2.) )
+        #     condition = paddle.logical_and( (0. <= modified_angle), (modified_angle < math.pi/2.) )
         #     out = paddle.where(condition, z, self.negative_slope * z)
 
         elif self.mode == "real":

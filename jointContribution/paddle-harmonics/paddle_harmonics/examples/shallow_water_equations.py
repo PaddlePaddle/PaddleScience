@@ -29,6 +29,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import math
 
 import numpy as np
 import paddle
@@ -241,9 +242,9 @@ class ShallowWaterSolver(nn.Layer):
         place = self.lap.place
 
         umax = 80.0
-        phi0 = paddle.to_tensor([paddle.pi / 7.0], place=place)
-        phi1 = paddle.to_tensor([0.5 * paddle.pi - phi0], place=place)
-        phi2 = 0.25 * paddle.pi
+        phi0 = paddle.to_tensor([math.pi / 7.0], place=place)
+        phi1 = paddle.to_tensor([0.5 * math.pi - phi0], place=place)
+        phi2 = 0.25 * math.pi
         en = paddle.exp(paddle.to_tensor(-4.0 / (phi1 - phi0) ** 2, place=place))
         alpha = 1.0 / 3.0
         beta = 1.0 / 15.0
@@ -260,7 +261,7 @@ class ShallowWaterSolver(nn.Layer):
         hbump = (
             self.hamp
             * paddle.cos(lats)
-            * paddle.exp(-(((lons - paddle.pi) / alpha) ** 2))
+            * paddle.exp(-(((lons - math.pi) / alpha) ** 2))
             * paddle.exp(-((phi2 - lats) ** 2) / beta)
         )
 
@@ -306,13 +307,13 @@ class ShallowWaterSolver(nn.Layer):
         uspec = paddle.zeros([3, self.lmax, self.mmax], dtype=ctype).to(place)
         uspec[:, :llimit, :mlimit] = complex_sqrt(
             paddle.to_tensor(
-                4 * paddle.pi / llimit / (llimit + 1), place=place, dtype=ctype
+                4 * math.pi / llimit / (llimit + 1), place=place, dtype=ctype
             )
         ) * paddle.randn(uspec[:, :llimit, :mlimit].shape, dtype=uspec.dtype)
 
         uspec[0] = self.gravity * self.hamp * uspec[0]
         uspec[0, 0, 0] += (
-            complex_sqrt(paddle.to_tensor(4 * paddle.pi, place=place, dtype=ctype))
+            complex_sqrt(paddle.to_tensor(4 * math.pi, place=place, dtype=ctype))
             * self.havg
             * self.gravity
         )
@@ -364,7 +365,7 @@ class ShallowWaterSolver(nn.Layer):
         return uspec
 
     def integrate_grid(self, ugrid, dimensionless=False, polar_opt=0):
-        dlon = 2 * paddle.pi / self.nlon
+        dlon = 2 * math.pi / self.nlon
         radius = 1 if dimensionless else self.radius
         if polar_opt > 0:
             out = paddle.sum(
@@ -396,7 +397,7 @@ class ShallowWaterSolver(nn.Layer):
         """
         import matplotlib.pyplot as plt
 
-        lons = self.lons.squeeze() - paddle.pi
+        lons = self.lons.squeeze() - math.pi
         lats = self.lats.squeeze()
 
         if data.place.is_gpu_place():

@@ -242,7 +242,7 @@ def _precompute_convolution_tensor_s2(
 
         # compute spherical coordinates, where phi needs to fall into the [0, 2pi) range
         theta = paddle.acos(z)
-        phi = paddle.atan2(y, x) + paddle.pi
+        phi = paddle.atan2(y, x) + math.pi
 
         # find the indices where the rotated position falls into the support of the kernel
         iidx, vals = kernel_handle(theta, phi)
@@ -308,7 +308,7 @@ def _precompute_convolution_tensor_2d(
         diffs = paddle.where(diffs.abs() < periodic_diffs.abs(), diffs, periodic_diffs)
 
     r = paddle.sqrt(diffs[0] ** 2 + diffs[1] ** 2)
-    phi = paddle.atan2(diffs[1], diffs[0]) + paddle.pi
+    phi = paddle.atan2(diffs[1], diffs[0]) + math.pi
 
     idx, vals = kernel_handle(r, phi)
     idx = idx.transpose(1, 0)
@@ -405,7 +405,7 @@ class DiscreteContinuousConvS2(DiscreteContinuousConv):
         # compute theta cutoff based on the bandlimit of the input field
         if theta_cutoff is None:
             theta_cutoff = (
-                (self.kernel_shape[0] + 1) * paddle.pi / float(self.nlat_in - 1)
+                (self.kernel_shape[0] + 1) * math.pi / float(self.nlat_in - 1)
             )
 
         if theta_cutoff <= 0.0:
@@ -415,7 +415,7 @@ class DiscreteContinuousConvS2(DiscreteContinuousConv):
         _, wgl = _precompute_latitudes(self.nlat_in, grid=grid_in)
         quad_weights = (
             2.0
-            * paddle.pi
+            * math.pi
             * paddle.to_tensor(wgl).to(paddle.float32).reshape([-1, 1])
             / self.nlon_in
         )
@@ -501,7 +501,7 @@ class DiscreteContinuousConvTransposeS2(DiscreteContinuousConv):
         # bandlimit
         if theta_cutoff is None:
             theta_cutoff = (
-                (self.kernel_shape[0] + 1) * paddle.pi / float(self.nlat_in - 1)
+                (self.kernel_shape[0] + 1) * math.pi / float(self.nlat_in - 1)
             )
 
         if theta_cutoff <= 0.0:
@@ -511,7 +511,7 @@ class DiscreteContinuousConvTransposeS2(DiscreteContinuousConv):
         _, wgl = _precompute_latitudes(self.nlat_in, grid=grid_in)
         quad_weights = (
             2.0
-            * paddle.pi
+            * math.pi
             * paddle.to_tensor(wgl).to(paddle.float32).reshape([-1, 1])
             / self.nlon_in
         )
