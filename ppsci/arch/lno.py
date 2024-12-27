@@ -85,9 +85,11 @@ class Laplace(nn.Layer):
         self.lambdas = []
         for i in range(self.dims):
             t_i = self.t_lst[i]
+            self.register_buffer(f"t_{i}", t_i)
             dt = (t_i[0, 1] - t_i[0, 0]).item()
             omega = paddle.fft.fftfreq(n=tuple(t_i.shape)[1], d=dt) * 2 * np.pi * 1.0j
             lambda_ = omega.reshape([*omega.shape, 1, 1, 1])
+            self.register_buffer(f"lambda_{i}", lambda_)
             self.lambdas.append(lambda_)
 
     def get_einsum_eqs(self) -> None:

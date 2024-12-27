@@ -24,7 +24,7 @@ import sympy as sp
 from ppsci.equation.pde import base
 
 
-class Hooke_Inverse(base.PDE):
+class Hooke(base.PDE):
     r"""equations for umbrella opening force.
     Use either (E, nu) or (lambda_, mu) to define the material properties.
 
@@ -34,9 +34,9 @@ class Hooke_Inverse(base.PDE):
     \end{pmatrix}
     =
     \begin{bmatrix}
-        \frac{1}{E} & -\frac{v}{E} & -\frac{v}{E} & 0 & 0 & 0 \\
-        -\frac{v}{E} & \frac{1}{E} & -\frac{v}{E} & 0 & 0 & 0 \\
-        -\frac{v}{E} & -\frac{v}{E} & \frac{1}{E} & 0 & 0 & 0 \\
+        \frac{1}{E} & -\frac{\nu}{E} & -\frac{\nu}{E} & 0 & 0 & 0 \\
+        -\frac{\nu}{E} & \frac{1}{E} & -\frac{\nu}{E} & 0 & 0 & 0 \\
+        -\frac{\nu}{E} & -\frac{\nu}{E} & \frac{1}{E} & 0 & 0 & 0 \\
         0 & 0 & 0 & \frac{1}{G} & 0 & 0 \\
         0 & 0 & 0 & 0 & \frac{1}{G} & 0 \\
         0 & 0 & 0 & 0 & 0 & \frac{1}{G}  \\
@@ -70,7 +70,7 @@ class Hooke_Inverse(base.PDE):
 
     def __init__(
         self,
-        E: paddle.base.framework.EagerParamBase,
+        E: Union[float, str, paddle.base.framework.EagerParamBase],
         nu: Union[float, str],
         P: Union[float, str],
         dim: int = 3,
@@ -81,10 +81,6 @@ class Hooke_Inverse(base.PDE):
         self.detach_keys = detach_keys
         self.dim = dim
         self.time = time
-
-        self.E = E
-        self.learnable_parameters.append(self.E)
-        E = self.create_symbols(self.E.name)
 
         t, x, y, z = self.create_symbols("t x y z")
         normal_x, normal_y, normal_z = self.create_symbols("normal_x normal_y normal_z")
@@ -102,6 +98,13 @@ class Hooke_Inverse(base.PDE):
             nu = self.create_function(nu, invars)
         if isinstance(P, str):
             P = self.create_function(P, invars)
+        if isinstance(E, str):
+            E = self.create_function(E, invars)
+            self.E = E
+        elif isinstance(E, paddle.base.framework.EagerParamBase):
+            self.E = E
+            self.learnable_parameters.append(self.E)
+            E = self.create_symbols(self.E.name)
 
         self.nu = nu
         self.P = P
