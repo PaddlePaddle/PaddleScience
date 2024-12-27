@@ -23,6 +23,7 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.loss import L2RelLoss
+from ppsci.utils import logger
 from ppsci.optimizer import Adam
 from ppsci.optimizer import lr_scheduler
 
@@ -126,7 +127,7 @@ def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.FNO1d(**cfg.MODEL)
     if cfg.TRAIN.use_pretrained_model is True:
-        print(
+        logger.info(
             "Loading pretrained model from {}".format(cfg.TRAIN.pretrained_model_path)
         )
         model.set_state_dict(paddle.load(cfg.TRAIN.pretrained_model_path))
@@ -202,7 +203,7 @@ def evaluate(cfg: DictConfig):
             .numpy()
             .flatten()
         )
-        print(
+        logger.info(
             "rel. error is ",
             np.linalg.norm(y_test_pred - y_test[sample_id, :].flatten())
             / np.linalg.norm(y_test[sample_id, :].flatten()),

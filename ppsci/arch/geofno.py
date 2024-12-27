@@ -18,9 +18,6 @@ import paddle.nn.functional as F
 import paddle.nn.initializer as Initializer
 
 
-################################################################
-# fourier layer
-################################################################
 class SpectralConv1d(nn.Layer):
     def __init__(self, in_channels, out_channels, modes1):
         super(SpectralConv1d, self).__init__()
@@ -190,7 +187,7 @@ class FNO1d(nn.Layer):
         x1 = self.conv4(x, self.output_np)
         x2 = F.interpolate(x, size=[self.output_np], mode="linear", align_corners=True)
         x = x1 + x2
-        # x(batch, channel, 2001)
+        # Change the x-dimension to (batch, channel, 2001)
         x = x.transpose(perm=[0, 2, 1])
         x = self.fc1(x)
         x = F.gelu(x, approximate=False)
