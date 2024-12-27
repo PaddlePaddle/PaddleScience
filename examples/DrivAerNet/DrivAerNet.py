@@ -97,29 +97,16 @@ def train(cfg: DictConfig):
     validator = {drivaernet_valid.name: drivaernet_valid}
 
     # set optimizer
-    optimizer = (
-        paddle.optimizer.Adam(
-            parameters=model.parameters(),
-            learning_rate=cfg.ARGS.lr,
-            weight_decay=cfg.ARGS.weight_decay,
-        )
-        if cfg.ARGS.optimizer == "adam"
-        else paddle.optimizer.SGD(
-            parameters=model.parameters(),
-            learning_rate=cfg.ARGS.lr,
-            weight_decay=cfg.ARGS.weight_decay,
-        )
-    )
+    # set optimizer
+    lr_scheduler = paddle.optimizer.lr.ReduceOnPlateau(mode=cfg.TRAIN.scheduler.mode,
+                                                       patience=cfg.TRAIN.scheduler.patience,
+                                                       factor=cfg.TRAIN.scheduler.factor,
+                                                       verbose=cfg.TRAIN.scheduler.verbose,
+                                                       learning_rate=cfg.ARGS.lr)
 
-    tmp_lr = paddle.optimizer.lr.ReduceOnPlateau(
-        mode=cfg.TRAIN.scheduler.mode,
-        patience=cfg.TRAIN.scheduler.patience,
-        factor=cfg.TRAIN.scheduler.factor,
-        verbose=cfg.TRAIN.scheduler.verbose,
-        learning_rate=optimizer.get_lr(),
-    )
-    optimizer.set_lr_scheduler(tmp_lr)
-    scheduler = tmp_lr
+    optimizer = ppsci.optimizer.Adam(lr_scheduler, weight_decay=cfg.ARGS.weight_decay)(
+        model) if cfg.ARGS.optimizer == 'adam' else ppsci.optimizer.SGD(
+        lr_scheduler, weight_decay=cfg.ARGS.weight_decay)(model)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -127,7 +114,7 @@ def train(cfg: DictConfig):
         constraint=constraint,
         output_dir=cfg.output_dir,
         optimizer=optimizer,
-        lr_scheduler=scheduler,
+        lr_scheduler=lr_scheduler,
         epochs=cfg.TRAIN.epochs,
         validator=validator,
         eval_during_train=cfg.TRAIN.eval_during_train,
