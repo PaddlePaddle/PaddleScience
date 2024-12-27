@@ -97,7 +97,6 @@ def train(cfg: DictConfig):
     validator = {drivaernet_valid.name: drivaernet_valid}
 
     # set optimizer
-    # set optimizer
     lr_scheduler = paddle.optimizer.lr.ReduceOnPlateau(mode=cfg.TRAIN.scheduler.mode,
                                                        patience=cfg.TRAIN.scheduler.patience,
                                                        factor=cfg.TRAIN.scheduler.factor,
