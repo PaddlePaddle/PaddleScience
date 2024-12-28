@@ -917,7 +917,6 @@ class Solver:
             self.model,
             input_spec=input_spec,
             full_graph=full_graph,
-            ignore_module=ignore_modules,
         )
 
         # save static graph model to disk

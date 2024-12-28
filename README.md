@@ -181,7 +181,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
 
         # install paddlesci with editable mode
-        pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:git_install] -->
 
@@ -191,9 +191,9 @@ python -c "import paddle; paddle.utils.run_check()"
         <!-- --8<-- [start:pip_install] -->
         ``` shell
         # release
-        pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
         # nightly build
-        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+        # python -m pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:pip_install] -->
 
@@ -217,7 +217,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
         export PYTHONPATH=$PYTHONPATH:$PWD # for linux
         set PYTHONPATH=%cd% # for windows
-        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
         注：上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
