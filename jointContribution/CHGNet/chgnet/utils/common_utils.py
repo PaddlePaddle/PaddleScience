@@ -1,17 +1,17 @@
 from __future__ import annotations
-import os
-import paddle
+
 import json
+import os
+
 import numpy as np
-#import nvidia_smi
+import nvidia_smi
+import paddle
 
 
 def determine_device(
-        use_device: (str | None)=None, 
-        *, 
-        check_cuda_mem: bool = False
-    ) ->str:
-    """Determine the device to use for torch model.
+    use_device: (str | None) = None, *, check_cuda_mem: bool = False
+) -> str:
+    """Determine the device to use for model.
 
     Args:
         use_device (str): User specify device name
@@ -21,7 +21,7 @@ def determine_device(
     Returns:
         device (str): device name to be passed to model.to(device)
     """
-    use_device = use_device or os.getenv('CHGNET_DEVICE')
+    use_device = use_device or os.getenv("CHGNET_DEVICE")
     if use_device in {"gpu", None} or paddle.is_compiled_with_cuda():
         device = "gpu"
     else:
@@ -29,7 +29,7 @@ def determine_device(
     return device
 
 
-def cuda_devices_sorted_by_free_mem() ->list[int]:
+def cuda_devices_sorted_by_free_mem() -> list[int]:
     """List available CUDA devices sorted by increasing available memory.
 
     To get the device with the most free memory, use the last list item.
@@ -53,15 +53,15 @@ def cuda_devices_sorted_by_free_mem() ->list[int]:
 class AverageMeter:
     """Computes and stores the average and current value."""
 
-    def __init__(self) ->None:
+    def __init__(self) -> None:
         """Initialize the meter."""
         self.reset()
 
-    def reset(self) ->None:
+    def reset(self) -> None:
         """Reset the meter value, average, sum and count to 0."""
         self.val = self.avg = self.sum = self.count = 0.0
 
-    def update(self, val: float, n: int=1) ->None:
+    def update(self, val: float, n: int = 1) -> None:
         """Update the meter value, average, sum and count.
 
         Args:
@@ -75,7 +75,7 @@ class AverageMeter:
             self.avg = self.sum / self.count
 
 
-def mae(prediction: paddle.Tensor, target: paddle.Tensor) ->paddle.Tensor:
+def mae(prediction: paddle.Tensor, target: paddle.Tensor) -> paddle.Tensor:
     """Computes the mean absolute error between prediction and target.
 
     Args:
@@ -88,7 +88,7 @@ def mae(prediction: paddle.Tensor, target: paddle.Tensor) ->paddle.Tensor:
     return paddle.mean(x=paddle.abs(x=target - prediction))
 
 
-def read_json(filepath: str) ->dict:
+def read_json(filepath: str) -> dict:
     """Read the JSON file.
 
     Args:
@@ -101,7 +101,7 @@ def read_json(filepath: str) ->dict:
         return json.load(file)
 
 
-def write_json(dct: dict, filepath: str) ->dict:
+def write_json(dct: dict, filepath: str) -> dict:
     """Write the JSON file.
 
     Args:
@@ -109,7 +109,7 @@ def write_json(dct: dict, filepath: str) ->dict:
         filepath (str): file name of JSON to write.
     """
 
-    def handler(obj: object) ->(int | object):
+    def handler(obj: object) -> (int | object):
         """Convert numpy int64 to int.
 
         Fixes TypeError: Object of type int64 is not JSON serializable
@@ -121,11 +121,12 @@ def write_json(dct: dict, filepath: str) ->dict:
         if isinstance(obj, np.integer):
             return int(obj)
         return obj
-    with open(filepath, mode='w') as file:
+
+    with open(filepath, mode="w") as file:
         json.dump(dct, file, default=handler)
 
 
-def mkdir(path: str) ->str:
+def mkdir(path: str) -> str:
     """Make directory.
 
     Args:
@@ -138,5 +139,5 @@ def mkdir(path: str) ->str:
     if not folder:
         os.makedirs(path)
     else:
-        print('Folder exists')
+        print("Folder exists")
     return path

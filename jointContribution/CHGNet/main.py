@@ -1,17 +1,21 @@
-from chgnet.model.model import CHGNet
-from pymatgen.core import Structure
-
+from ase.io.trajectory import Trajectory
 from chgnet.model import StructOptimizer
-
 from chgnet.model.dynamics import MolecularDynamics
+from chgnet.model.model import CHGNet
+from chgnet.utils import solve_charge_by_mag
+from pymatgen.core import Structure
+from pymatgen.io.ase import AseAtomsAdaptor
 
+# This is the paddle version of chgnet, which heavily references
+# https://github.com/CederGroupHub/chgnet.
 
 # load the CHGNet model
 chgnet = CHGNet.load()
-structure = Structure.from_file('chgnet/mp-18767-LiMnO2.cif')
+structure = Structure.from_file("chgnet/mp-18767-LiMnO2.cif")
 
 # predict the structure
 prediction = chgnet.predict_structure(structure)
+
 
 for key, unit in [
     ("energy", "eV/atom"),
@@ -20,7 +24,6 @@ for key, unit in [
     ("magmom", "mu_B"),
 ]:
     print(f"CHGNet-predicted {key} ({unit}):\n{prediction[key[0]]}\n")
-
 
 
 # structure optimizer
@@ -33,7 +36,7 @@ result = relaxer.relax(structure, verbose=True)
 print("Relaxed structure:\n")
 print(result["final_structure"])
 
-print(result['trajectory'].energies)
+print(result["trajectory"].energies)
 
 
 # run molecular dynamics
@@ -49,9 +52,6 @@ md = MolecularDynamics(
 )
 md.run(50)  # run a 0.1 ps MD simulation
 
-from ase.io.trajectory import Trajectory
-from pymatgen.io.ase import AseAtomsAdaptor
-from chgnet.utils import solve_charge_by_mag
 
 traj = Trajectory("md_out.traj")
 mag = traj[-1].get_magnetic_moments()

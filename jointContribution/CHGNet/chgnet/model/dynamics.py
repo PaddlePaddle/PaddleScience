@@ -1,46 +1,73 @@
 from __future__ import annotations
+
 import contextlib
 import inspect
 import io
 import pickle
 import sys
 import warnings
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
+from typing import Literal
+
 import numpy as np
-from ase import Atoms, units
-from ase.calculators.calculator import Calculator, all_changes, all_properties
+from ase import Atoms
+from ase import units
+from ase.calculators.calculator import Calculator
+from ase.calculators.calculator import all_changes
+from ase.calculators.calculator import all_properties
 from ase.md.npt import NPT
-from ase.md.nptberendsen import Inhomogeneous_NPTBerendsen, NPTBerendsen, NVTBerendsen
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
+from ase.md.nptberendsen import Inhomogeneous_NPTBerendsen
+from ase.md.nptberendsen import NPTBerendsen
+from ase.md.nptberendsen import NVTBerendsen
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from ase.md.velocitydistribution import Stationary
 from ase.md.verlet import VelocityVerlet
 from ase.optimize.bfgs import BFGS
 from ase.optimize.bfgslinesearch import BFGSLineSearch
 from ase.optimize.fire import FIRE
-from ase.optimize.lbfgs import LBFGS, LBFGSLineSearch
+from ase.optimize.lbfgs import LBFGS
+from ase.optimize.lbfgs import LBFGSLineSearch
 from ase.optimize.mdmin import MDMin
-from ase.optimize.sciopt import SciPyFminBFGS, SciPyFminCG
-from pymatgen.analysis.eos import BirchMurnaghan
-from pymatgen.core.structure import Molecule, Structure
-from pymatgen.io.ase import AseAtomsAdaptor
+from ase.optimize.sciopt import SciPyFminBFGS
+from ase.optimize.sciopt import SciPyFminCG
 from chgnet.model.model import CHGNet
 from chgnet.utils import determine_device
+from pymatgen.analysis.eos import BirchMurnaghan
+from pymatgen.core.structure import Molecule
+from pymatgen.core.structure import Structure
+from pymatgen.io.ase import AseAtomsAdaptor
+
 if TYPE_CHECKING:
     from ase.io import Trajectory
     from ase.optimize.optimize import Optimizer
     from typing_extensions import Self
-OPTIMIZERS = {'FIRE': FIRE, 'BFGS': BFGS, 'LBFGS': LBFGS, 'LBFGSLineSearch':
-    LBFGSLineSearch, 'MDMin': MDMin, 'SciPyFminCG': SciPyFminCG,
-    'SciPyFminBFGS': SciPyFminBFGS, 'BFGSLineSearch': BFGSLineSearch}
+OPTIMIZERS = {
+    "FIRE": FIRE,
+    "BFGS": BFGS,
+    "LBFGS": LBFGS,
+    "LBFGSLineSearch": LBFGSLineSearch,
+    "MDMin": MDMin,
+    "SciPyFminCG": SciPyFminCG,
+    "SciPyFminBFGS": SciPyFminBFGS,
+    "BFGSLineSearch": BFGSLineSearch,
+}
 
 
 class CHGNetCalculator(Calculator):
     """CHGNet Calculator for ASE applications."""
-    implemented_properties = 'energy', 'forces', 'stress', 'magmoms'
 
-    def __init__(self, model: (CHGNet | None)=None, *, use_device: (str |
-        None)=None, check_cuda_mem: bool=False, stress_weight: (float |
-        None)=1 / 160.21766208, on_isolated_atoms: Literal['ignore', 'warn',
-        'error']='warn', **kwargs) ->None:
+    implemented_properties = "energy", "forces", "stress", "magmoms"
+
+    def __init__(
+        self,
+        model: (CHGNet | None) = None,
+        *,
+        use_device: (str | None) = None,
+        check_cuda_mem: bool = False,
+        stress_weight: (float | None) = 1 / 160.21766208,
+        on_isolated_atoms: Literal["ignore", "warn", "error"] = "warn",
+        **kwargs,
+    ) -> None:
         """Provide a CHGNet instance to calculate various atomic properties using ASE.
 
         Args:
@@ -61,37 +88,37 @@ class CHGNetCalculator(Calculator):
             **kwargs: Passed to the Calculator parent class.
         """
         super().__init__(**kwargs)
-        device = determine_device(use_device=use_device, check_cuda_mem=
-            check_cuda_mem)
+        device = determine_device(use_device=use_device, check_cuda_mem=check_cuda_mem)
         self.device = device
         if model is None:
             self.model = CHGNet.load(verbose=False, use_device=self.device)
         else:
             self.model = model.to(self.device)
-        self.model.graph_converter.set_isolated_atom_response(on_isolated_atoms
-            )
+        self.model.graph_converter.set_isolated_atom_response(on_isolated_atoms)
         self.stress_weight = stress_weight
-        print(f'CHGNet will run on {self.device}')
+        print(f"CHGNet will run on {self.device}")
 
     @classmethod
-    def from_file(cls, path: str, use_device: (str | None)=None, **kwargs
-        ) ->Self:
+    def from_file(cls, path: str, use_device: (str | None) = None, **kwargs) -> Self:
         """Load a user's CHGNet model and initialize the Calculator."""
-        return cls(model=CHGNet.from_file(path), use_device=use_device, **
-            kwargs)
+        return cls(model=CHGNet.from_file(path), use_device=use_device, **kwargs)
 
     @property
-    def version(self) ->(str | None):
+    def version(self) -> (str | None):
         """The version of CHGNet."""
         return self.model.version
 
     @property
-    def n_params(self) ->int:
+    def n_params(self) -> int:
         """The number of parameters in CHGNet."""
         return self.model.n_params
 
-    def calculate(self, atoms: (Atoms | None)=None, properties: (list |
-        None)=None, system_changes: (list | None)=None) ->None:
+    def calculate(
+        self,
+        atoms: (Atoms | None) = None,
+        properties: (list | None) = None,
+        system_changes: (list | None) = None,
+    ) -> None:
         """Calculate various properties of the atoms using CHGNet.
 
         Args:
@@ -103,28 +130,36 @@ class CHGNetCalculator(Calculator):
         """
         properties = properties or all_properties
         system_changes = system_changes or all_changes
-        super().calculate(atoms=atoms, properties=properties,
-            system_changes=system_changes)
+        super().calculate(
+            atoms=atoms, properties=properties, system_changes=system_changes
+        )
         structure = AseAtomsAdaptor.get_structure(atoms)
         graph = self.model.graph_converter(structure)
-        model_prediction = self.model.predict_graph(graph.to(self.device),
-            task='efsm', return_crystal_feas=True)
-        factor = (1 if not self.model.is_intensive else structure.
-            composition.num_atoms)
-        self.results.update(energy=model_prediction['e'] * factor, forces=
-            model_prediction['f'], free_energy=model_prediction['e'] *
-            factor, magmoms=model_prediction['m'], stress=model_prediction[
-            's'] * self.stress_weight, crystal_fea=model_prediction[
-            'crystal_fea'])
+        model_prediction = self.model.predict_graph(
+            graph.to(self.device), task="efsm", return_crystal_feas=True
+        )
+        factor = 1 if not self.model.is_intensive else structure.composition.num_atoms
+        self.results.update(
+            energy=model_prediction["e"] * factor,
+            forces=model_prediction["f"],
+            free_energy=model_prediction["e"] * factor,
+            magmoms=model_prediction["m"],
+            stress=model_prediction["s"] * self.stress_weight,
+            crystal_fea=model_prediction["crystal_fea"],
+        )
 
 
 class StructOptimizer:
     """Wrapper class for structural relaxation."""
 
-    def __init__(self, model: (CHGNet | CHGNetCalculator | None)=None,
-        optimizer_class: (Optimizer | str | None)='FIRE', use_device: (str |
-        None)=None, stress_weight: float=1 / 160.21766208,
-        on_isolated_atoms: Literal['ignore', 'warn', 'error']='warn') ->None:
+    def __init__(
+        self,
+        model: (CHGNet | CHGNetCalculator | None) = None,
+        optimizer_class: (Optimizer | str | None) = "FIRE",
+        use_device: (str | None) = None,
+        stress_weight: float = 1 / 160.21766208,
+        on_isolated_atoms: Literal["ignore", "warn", "error"] = "warn",
+    ) -> None:
         """Provide a trained CHGNet model and an optimizer to relax crystal structures.
 
         Args:
@@ -148,32 +183,44 @@ class StructOptimizer:
                 optimizer_class = OPTIMIZERS[optimizer_class]
             else:
                 raise ValueError(
-                    f'Optimizer instance not found. Select from {list(OPTIMIZERS)}'
-                    )
+                    f"Optimizer instance not found. Select from {list(OPTIMIZERS)}"
+                )
         self.optimizer_class: Optimizer = optimizer_class
         if isinstance(model, CHGNetCalculator):
             self.calculator = model
         else:
-            self.calculator = CHGNetCalculator(model=model, stress_weight=
-                stress_weight, use_device=use_device, on_isolated_atoms=
-                on_isolated_atoms)
+            self.calculator = CHGNetCalculator(
+                model=model,
+                stress_weight=stress_weight,
+                use_device=use_device,
+                on_isolated_atoms=on_isolated_atoms,
+            )
 
     @property
-    def version(self) ->str:
+    def version(self) -> str:
         """The version of CHGNet."""
         return self.calculator.model.version
 
     @property
-    def n_params(self) ->int:
+    def n_params(self) -> int:
         """The number of parameters in CHGNet."""
         return self.calculator.model.n_params
 
-    def relax(self, atoms: (Structure | Atoms), *, fmax: (float | None)=0.1,
-        steps: (int | None)=500, relax_cell: (bool | None)=True, ase_filter:
-        (str | None)='FrechetCellFilter', save_path: (str | None)=None,
-        loginterval: (int | None)=1, crystal_feas_save_path: (str | None)=
-        None, verbose: bool=True, assign_magmoms: bool=True, **kwargs) ->dict[
-        str, Structure | TrajectoryObserver]:
+    def relax(
+        self,
+        atoms: (Structure | Atoms),
+        *,
+        fmax: (float | None) = 0.1,
+        steps: (int | None) = 500,
+        relax_cell: (bool | None) = True,
+        ase_filter: (str | None) = "FrechetCellFilter",
+        save_path: (str | None) = None,
+        loginterval: (int | None) = 1,
+        crystal_feas_save_path: (str | None) = None,
+        verbose: bool = True,
+        assign_magmoms: bool = True,
+        **kwargs,
+    ) -> dict[str, Structure | TrajectoryObserver]:
         """Relax the Structure/Atoms until maximum force is smaller than fmax.
 
         Args:
@@ -208,15 +255,19 @@ class StructOptimizer:
         """
         from ase import filters
         from ase.filters import Filter
-        valid_filter_names = [name for name, cls in inspect.getmembers(
-            filters, inspect.isclass) if issubclass(cls, Filter)]
+
+        valid_filter_names = [
+            name
+            for name, cls in inspect.getmembers(filters, inspect.isclass)
+            if issubclass(cls, Filter)
+        ]
         if isinstance(ase_filter, str):
             if ase_filter in valid_filter_names:
                 ase_filter = getattr(filters, ase_filter)
             else:
                 raise ValueError(
-                    f'Invalid ase_filter={ase_filter!r}, must be one of {valid_filter_names}. '
-                    )
+                    f"Invalid ase_filter={ase_filter!r}, must be one of {valid_filter_names}. "
+                )
         if isinstance(atoms, Structure):
             atoms = AseAtomsAdaptor().get_atoms(atoms)
         atoms.calc = self.calculator
@@ -243,9 +294,10 @@ class StructOptimizer:
         if assign_magmoms:
             for key in struct.site_properties:
                 struct.remove_site_property(property_name=key)
-            struct.add_site_property('magmom', [float(magmom) for magmom in
-                atoms.get_magnetic_moments()])
-        return {'final_structure': struct, 'trajectory': obs}
+            struct.add_site_property(
+                "magmom", [float(magmom) for magmom in atoms.get_magnetic_moments()]
+            )
+        return {"final_structure": struct, "trajectory": obs}
 
 
 class TrajectoryObserver:
@@ -253,7 +305,7 @@ class TrajectoryObserver:
     intermediate structures.
     """
 
-    def __init__(self, atoms: Atoms) ->None:
+    def __init__(self, atoms: Atoms) -> None:
         """Create a TrajectoryObserver from an Atoms object.
 
         Args:
@@ -267,7 +319,7 @@ class TrajectoryObserver:
         self.atom_positions: list[np.ndarray] = []
         self.cells: list[np.ndarray] = []
 
-    def __call__(self) ->None:
+    def __call__(self) -> None:
         """The logic for saving the properties of an Atoms during the relaxation."""
         self.energies.append(self.compute_energy())
         self.forces.append(self.atoms.get_forces())
@@ -276,11 +328,11 @@ class TrajectoryObserver:
         self.atom_positions.append(self.atoms.get_positions())
         self.cells.append(self.atoms.get_cell()[:])
 
-    def __len__(self) ->int:
+    def __len__(self) -> int:
         """The number of steps in the trajectory."""
         return len(self.energies)
 
-    def compute_energy(self) ->float:
+    def compute_energy(self) -> float:
         """Calculate the potential energy.
 
         Returns:
@@ -288,17 +340,22 @@ class TrajectoryObserver:
         """
         return self.atoms.get_potential_energy()
 
-    def save(self, filename: str) ->None:
+    def save(self, filename: str) -> None:
         """Save the trajectory to file.
 
         Args:
             filename (str): filename to save the trajectory
         """
-        out_pkl = {'energy': self.energies, 'forces': self.forces,
-            'stresses': self.stresses, 'magmoms': self.magmoms,
-            'atom_positions': self.atom_positions, 'cell': self.cells,
-            'atomic_number': self.atoms.get_atomic_numbers()}
-        with open(filename, 'wb') as file:
+        out_pkl = {
+            "energy": self.energies,
+            "forces": self.forces,
+            "stresses": self.stresses,
+            "magmoms": self.magmoms,
+            "atom_positions": self.atom_positions,
+            "cell": self.cells,
+            "atomic_number": self.atoms.get_atomic_numbers(),
+        }
+        with open(filename, "wb") as file:
             pickle.dump(out_pkl, file)
 
 
@@ -307,40 +364,51 @@ class CrystalFeasObserver:
     intermediate crystal feature structures.
     """
 
-    def __init__(self, atoms: Atoms) ->None:
+    def __init__(self, atoms: Atoms) -> None:
         """Create a CrystalFeasObserver from an Atoms object."""
         self.atoms = atoms
         self.crystal_feature_vectors: list[np.ndarray] = []
 
-    def __call__(self) ->None:
+    def __call__(self) -> None:
         """Record Atoms crystal feature vectors after an MD/relaxation step."""
-        self.crystal_feature_vectors.append(self.atoms._calc.results[
-            'crystal_fea'])
+        self.crystal_feature_vectors.append(self.atoms._calc.results["crystal_fea"])
 
-    def __len__(self) ->int:
+    def __len__(self) -> int:
         """Number of recorded steps."""
         return len(self.crystal_feature_vectors)
 
-    def save(self, filename: str) ->None:
+    def save(self, filename: str) -> None:
         """Save the crystal feature vectors to filename in pickle format."""
-        out_pkl = {'crystal_feas': self.crystal_feature_vectors}
-        with open(filename, 'wb') as file:
+        out_pkl = {"crystal_feas": self.crystal_feature_vectors}
+        with open(filename, "wb") as file:
             pickle.dump(out_pkl, file)
 
 
 class MolecularDynamics:
     """Molecular dynamics class."""
 
-    def __init__(self, atoms: (Atoms | Structure), *, model: (CHGNet |
-        CHGNetCalculator | None)=None, ensemble: str='nvt', thermostat: str
-        ='Berendsen_inhomogeneous', temperature: int=300,
-        starting_temperature: (int | None)=None, timestep: float=2.0,
-        pressure: float=0.000101325, taut: (float | None)=None, taup: (
-        float | None)=None, bulk_modulus: (float | None)=None, trajectory:
-        (str | Trajectory | None)=None, logfile: (str | None)=None,
-        loginterval: int=1, crystal_feas_logfile: (str | None)=None,
-        append_trajectory: bool=False, on_isolated_atoms: Literal['ignore',
-        'warn', 'error']='warn', use_device: (str | None)=None) ->None:
+    def __init__(
+        self,
+        atoms: (Atoms | Structure),
+        *,
+        model: (CHGNet | CHGNetCalculator | None) = None,
+        ensemble: str = "nvt",
+        thermostat: str = "Berendsen_inhomogeneous",
+        temperature: int = 300,
+        starting_temperature: (int | None) = None,
+        timestep: float = 2.0,
+        pressure: float = 0.000101325,
+        taut: (float | None) = None,
+        taup: (float | None) = None,
+        bulk_modulus: (float | None) = None,
+        trajectory: (str | Trajectory | None) = None,
+        logfile: (str | None) = None,
+        loginterval: int = 1,
+        crystal_feas_logfile: (str | None) = None,
+        append_trajectory: bool = False,
+        on_isolated_atoms: Literal["ignore", "warn", "error"] = "warn",
+        use_device: (str | None) = None,
+    ) -> None:
         """Initialize the MD class.
 
         Args:
@@ -411,20 +479,22 @@ class MolecularDynamics:
         if isinstance(atoms, Structure | Molecule):
             atoms = AseAtomsAdaptor().get_atoms(atoms)
         if starting_temperature is not None:
-            MaxwellBoltzmannDistribution(atoms, temperature_K=
-                starting_temperature, force_temp=True)
+            MaxwellBoltzmannDistribution(
+                atoms, temperature_K=starting_temperature, force_temp=True
+            )
             Stationary(atoms)
         self.atoms = atoms
         if isinstance(model, CHGNetCalculator):
             self.atoms.calc = model
         else:
-            self.atoms.calc = CHGNetCalculator(model=model, use_device=
-                use_device, on_isolated_atoms=on_isolated_atoms)
+            self.atoms.calc = CHGNetCalculator(
+                model=model, use_device=use_device, on_isolated_atoms=on_isolated_atoms
+            )
         if taut is None:
             taut = 100 * timestep
         if taup is None:
             taup = 1000 * timestep
-        if ensemble.lower() == 'nve':
+        if ensemble.lower() == "nve":
             """
             VelocityVerlet (constant N, V, E) molecular dynamics.
 
@@ -432,40 +502,58 @@ class MolecularDynamics:
             ensembles, since the VelocityVerlet algorithm assumes a strict conservative
             force field.
             """
-            self.dyn = VelocityVerlet(atoms=self.atoms, timestep=timestep *
-                units.fs, trajectory=trajectory, logfile=logfile,
-                loginterval=loginterval, append_trajectory=append_trajectory)
-            print('NVE-MD created')
-        elif ensemble.lower() == 'nvt':
+            self.dyn = VelocityVerlet(
+                atoms=self.atoms,
+                timestep=timestep * units.fs,
+                trajectory=trajectory,
+                logfile=logfile,
+                loginterval=loginterval,
+                append_trajectory=append_trajectory,
+            )
+            print("NVE-MD created")
+        elif ensemble.lower() == "nvt":
             """
             Constant volume/temperature molecular dynamics.
             """
-            if thermostat.lower() == 'nose-hoover':
+            if thermostat.lower() == "nose-hoover":
                 """
                 Nose-hoover (constant N, V, T) molecular dynamics.
                 ASE implementation currently only supports upper triangular lattice
                 """
                 self.upper_triangular_cell()
-                self.dyn = NPT(atoms=self.atoms, timestep=timestep * units.
-                    fs, temperature_K=temperature, externalstress=pressure *
-                    units.GPa, ttime=taut * units.fs, pfactor=None,
-                    trajectory=trajectory, logfile=logfile, loginterval=
-                    loginterval, append_trajectory=append_trajectory)
-                print('NVT-Nose-Hoover MD created')
-            elif thermostat.lower().startswith('berendsen'):
+                self.dyn = NPT(
+                    atoms=self.atoms,
+                    timestep=timestep * units.fs,
+                    temperature_K=temperature,
+                    externalstress=pressure * units.GPa,
+                    ttime=taut * units.fs,
+                    pfactor=None,
+                    trajectory=trajectory,
+                    logfile=logfile,
+                    loginterval=loginterval,
+                    append_trajectory=append_trajectory,
+                )
+                print("NVT-Nose-Hoover MD created")
+            elif thermostat.lower().startswith("berendsen"):
                 """
                 Berendsen (constant N, V, T) molecular dynamics.
                 """
-                self.dyn = NVTBerendsen(atoms=self.atoms, timestep=timestep *
-                    units.fs, temperature_K=temperature, taut=taut * units.
-                    fs, trajectory=trajectory, logfile=logfile, loginterval
-                    =loginterval, append_trajectory=append_trajectory)
-                print('NVT-Berendsen-MD created')
+                self.dyn = NVTBerendsen(
+                    atoms=self.atoms,
+                    timestep=timestep * units.fs,
+                    temperature_K=temperature,
+                    taut=taut * units.fs,
+                    trajectory=trajectory,
+                    logfile=logfile,
+                    loginterval=loginterval,
+                    append_trajectory=append_trajectory,
+                )
+                print("NVT-Berendsen-MD created")
             else:
                 raise ValueError(
                     "Thermostat not supported, choose in 'Nose-Hoover', 'Berendsen', 'Berendsen_inhomogeneous'"
-                    )
-        elif ensemble.lower() == 'npt':
+                )
+        elif ensemble.lower() == "npt":
             """
             Constant pressure/temperature molecular dynamics.
             """
@@ -476,20 +564,21 @@ class MolecularDynamics:
                 try:
                     eos = EquationOfState(model=self.atoms.calc)
                     eos.fit(atoms=atoms, steps=500, fmax=0.1, verbose=False)
-                    bulk_modulus = eos.get_bulk_modulus(unit='GPa')
-                    bulk_modulus_au = eos.get_bulk_modulus(unit='eV/A^3')
-                    compressibility_au = eos.get_compressibility(unit='A^3/eV')
+                    bulk_modulus = eos.get_bulk_modulus(unit="GPa")
+                    bulk_modulus_au = eos.get_bulk_modulus(unit="eV/A^3")
+                    compressibility_au = eos.get_compressibility(unit="A^3/eV")
                     print(
-                        f'Completed bulk modulus calculation: k = {bulk_modulus:.3}GPa, {bulk_modulus_au:.3}eV/A^3'
-                        )
+                        f"Completed bulk modulus calculation: k = {bulk_modulus:.3}GPa, {bulk_modulus_au:.3}eV/A^3"
+                    )
                 except Exception:
                     bulk_modulus_au = 2 / 160.2176
                     compressibility_au = 1 / bulk_modulus_au
                     warnings.warn(
-                        'Warning!!! Equation of State fitting failed, setting bulk modulus to 2 GPa. NPT simulation can proceed with incorrect pressure relaxation time.User input for bulk modulus is recommended.'
-                        , stacklevel=2)
+                        "Warning!!! Equation of State fitting failed, setting bulk modulus to 2 GPa. NPT simulation can proceed with incorrect pressure relaxation time.User input for bulk modulus is recommended.",
+                        stacklevel=2,
+                    )
             self.bulk_modulus = bulk_modulus
-            if thermostat.lower() == 'nose-hoover':
+            if thermostat.lower() == "nose-hoover":
                 """
                 Combined Nose-Hoover and Parrinello-Rahman dynamics, creating an
                 NPT (or N,stress,T) ensemble.
@@ -498,28 +587,40 @@ class MolecularDynamics:
                 """
                 self.upper_triangular_cell()
                 ptime = taup * units.fs
-                self.dyn = NPT(atoms=self.atoms, timestep=timestep * units.
-                    fs, temperature_K=temperature, externalstress=pressure *
-                    units.GPa, ttime=taut * units.fs, pfactor=bulk_modulus *
-                    units.GPa * ptime * ptime, trajectory=trajectory,
-                    logfile=logfile, loginterval=loginterval,
-                    append_trajectory=append_trajectory)
-                print('NPT-Nose-Hoover MD created')
-            elif thermostat.lower() == 'berendsen_inhomogeneous':
+                self.dyn = NPT(
+                    atoms=self.atoms,
+                    timestep=timestep * units.fs,
+                    temperature_K=temperature,
+                    externalstress=pressure * units.GPa,
+                    ttime=taut * units.fs,
+                    pfactor=bulk_modulus * units.GPa * ptime * ptime,
+                    trajectory=trajectory,
+                    logfile=logfile,
+                    loginterval=loginterval,
+                    append_trajectory=append_trajectory,
+                )
+                print("NPT-Nose-Hoover MD created")
+            elif thermostat.lower() == "berendsen_inhomogeneous":
                 """
                 Inhomogeneous_NPTBerendsen thermo/barostat
                 This is a more flexible scheme that fixes three angles of the unit
                 cell but allows three lattice parameter to change independently.
                 see: https://gitlab.com/ase/ase/-/blob/master/ase/md/nptberendsen.py
                 """
-                self.dyn = Inhomogeneous_NPTBerendsen(atoms=self.atoms,
-                    timestep=timestep * units.fs, temperature_K=temperature,
-                    pressure_au=pressure * units.GPa, taut=taut * units.fs,
-                    taup=taup * units.fs, compressibility_au=
-                    compressibility_au, trajectory=trajectory, logfile=
-                    logfile, loginterval=loginterval)
-                print('NPT-Berendsen-inhomogeneous-MD created')
-            elif thermostat.lower() == 'npt_berendsen':
+                self.dyn = Inhomogeneous_NPTBerendsen(
+                    atoms=self.atoms,
+                    timestep=timestep * units.fs,
+                    temperature_K=temperature,
+                    pressure_au=pressure * units.GPa,
+                    taut=taut * units.fs,
+                    taup=taup * units.fs,
+                    compressibility_au=compressibility_au,
+                    trajectory=trajectory,
+                    logfile=logfile,
+                    loginterval=loginterval,
+                )
+                print("NPT-Berendsen-inhomogeneous-MD created")
+            elif thermostat.lower() == "npt_berendsen":
                 """
                 This is a similar scheme to the Inhomogeneous_NPTBerendsen.
                 This is a less flexible scheme that fixes the shape of the
@@ -527,24 +628,31 @@ class MolecularDynamics:
                 lattice constants.
                 see: https://gitlab.com/ase/ase/-/blob/master/ase/md/nptberendsen.py
                 """
-                self.dyn = NPTBerendsen(atoms=self.atoms, timestep=timestep *
-                    units.fs, temperature_K=temperature, pressure_au=
-                    pressure * units.GPa, taut=taut * units.fs, taup=taup *
-                    units.fs, compressibility_au=compressibility_au,
-                    trajectory=trajectory, logfile=logfile, loginterval=
-                    loginterval, append_trajectory=append_trajectory)
-                print('NPT-Berendsen-MD created')
+                self.dyn = NPTBerendsen(
+                    atoms=self.atoms,
+                    timestep=timestep * units.fs,
+                    temperature_K=temperature,
+                    pressure_au=pressure * units.GPa,
+                    taut=taut * units.fs,
+                    taup=taup * units.fs,
+                    compressibility_au=compressibility_au,
+                    trajectory=trajectory,
+                    logfile=logfile,
+                    loginterval=loginterval,
+                    append_trajectory=append_trajectory,
+                )
+                print("NPT-Berendsen-MD created")
             else:
                 raise ValueError(
                     "Thermostat not supported, choose in 'Nose-Hoover', 'Berendsen', 'Berendsen_inhomogeneous'"
-                    )
+                )
         self.trajectory = trajectory
         self.logfile = logfile
         self.loginterval = loginterval
         self.timestep = timestep
         self.crystal_feas_logfile = crystal_feas_logfile
 
-    def run(self, steps: int) ->None:
+    def run(self, steps: int) -> None:
         """Thin wrapper of ase MD run.
 
         Args:
@@ -557,7 +665,7 @@ class MolecularDynamics:
         if self.crystal_feas_logfile:
             obs.save(self.crystal_feas_logfile)
 
-    def set_atoms(self, atoms: Atoms) ->None:
+    def set_atoms(self, atoms: Atoms) -> None:
         """Set new atoms to run MD.
 
         Args:
@@ -568,7 +676,7 @@ class MolecularDynamics:
         self.dyn.atoms = atoms
         self.dyn.atoms.calc = calculator
 
-    def upper_triangular_cell(self, *, verbose: (bool | None)=False) ->None:
+    def upper_triangular_cell(self, *, verbose: (bool | None) = False) -> None:
         """Transform to upper-triangular cell.
         ASE Nose-Hoover implementation only supports upper-triangular cell
         while ASE's canonical description is lower-triangular cell.
@@ -584,21 +692,28 @@ class MolecularDynamics:
             cos_a, cos_b, cos_g = np.cos(angles)
             cos_p = (cos_g - cos_a * cos_b) / (sin_a * sin_b)
             cos_p = np.clip(cos_p, -1, 1)
-            sin_p = (1 - cos_p ** 2) ** 0.5
-            new_basis = [(a * sin_b * sin_p, a * sin_b * cos_p, a * cos_b),
-                (0, b * sin_a, b * cos_a), (0, 0, c)]
+            sin_p = (1 - cos_p**2) ** 0.5
+            new_basis = [
+                (a * sin_b * sin_p, a * sin_b * cos_p, a * cos_b),
+                (0, b * sin_a, b * cos_a),
+                (0, 0, c),
+            ]
             self.atoms.set_cell(new_basis, scale_atoms=True)
             if verbose:
-                print('Transformed to upper triangular unit cell.', flush=True)
+                print("Transformed to upper triangular unit cell.", flush=True)
 
 
 class EquationOfState:
     """Class to calculate equation of state."""
 
-    def __init__(self, model: (CHGNet | CHGNetCalculator | None)=None,
-        optimizer_class: (Optimizer | str | None)='FIRE', use_device: (str |
-        None)=None, stress_weight: float=1 / 160.21766208,
-        on_isolated_atoms: Literal['ignore', 'warn', 'error']='error') ->None:
+    def __init__(
+        self,
+        model: (CHGNet | CHGNetCalculator | None) = None,
+        optimizer_class: (Optimizer | str | None) = "FIRE",
+        use_device: (str | None) = None,
+        stress_weight: float = 1 / 160.21766208,
+        on_isolated_atoms: Literal["ignore", "warn", "error"] = "error",
+    ) -> None:
         """Initialize a structure optimizer object for calculation of bulk modulus.
 
         Args:
@@ -617,14 +732,25 @@ class EquationOfState:
                 with isolated atoms.
                 Default = 'error'
         """
-        self.relaxer = StructOptimizer(model=model, optimizer_class=
-            optimizer_class, use_device=use_device, stress_weight=
-            stress_weight, on_isolated_atoms=on_isolated_atoms)
+        self.relaxer = StructOptimizer(
+            model=model,
+            optimizer_class=optimizer_class,
+            use_device=use_device,
+            stress_weight=stress_weight,
+            on_isolated_atoms=on_isolated_atoms,
+        )
         self.fitted = False
 
-    def fit(self, atoms: (Structure | Atoms), *, n_points: int=11, fmax: (
-        float | None)=0.1, steps: (int | None)=500, verbose: (bool | None)=
-        False, **kwargs) ->None:
+    def fit(
+        self,
+        atoms: (Structure | Atoms),
+        *,
+        n_points: int = 11,
+        fmax: (float | None) = 0.1,
+        steps: (int | None) = 500,
+        verbose: (bool | None) = False,
+        **kwargs,
+    ) -> None:
         """Relax the Structure/Atoms and fit the Birch-Murnaghan equation of state.
 
         Args:
@@ -644,21 +770,33 @@ class EquationOfState:
         if isinstance(atoms, Atoms):
             atoms = AseAtomsAdaptor.get_structure(atoms)
         primitive_cell = atoms.get_primitive_structure()
-        local_minima = self.relaxer.relax(primitive_cell, relax_cell=True,
-            fmax=fmax, steps=steps, verbose=verbose, **kwargs)
+        local_minima = self.relaxer.relax(
+            primitive_cell,
+            relax_cell=True,
+            fmax=fmax,
+            steps=steps,
+            verbose=verbose,
+            **kwargs,
+        )
         volumes, energies = [], []
         for idx in np.linspace(-0.1, 0.1, n_points):
-            structure_strained = local_minima['final_structure'].copy()
+            structure_strained = local_minima["final_structure"].copy()
             structure_strained.apply_strain([idx, idx, idx])
-            result = self.relaxer.relax(structure_strained, relax_cell=
-                False, fmax=fmax, steps=steps, verbose=verbose, **kwargs)
-            volumes.append(result['final_structure'].volume)
-            energies.append(result['trajectory'].energies[-1])
+            result = self.relaxer.relax(
+                structure_strained,
+                relax_cell=False,
+                fmax=fmax,
+                steps=steps,
+                verbose=verbose,
+                **kwargs,
+            )
+            volumes.append(result["final_structure"].volume)
+            energies.append(result["trajectory"].energies[-1])
         self.bm = BirchMurnaghan(volumes=volumes, energies=energies)
         self.bm.fit()
         self.fitted = True
 
-    def get_bulk_modulus(self, unit: str='eV/A^3') ->float:
+    def get_bulk_modulus(self, unit: str = "eV/A^3") -> float:
         """Get the bulk modulus of from the fitted Birch-Murnaghan equation of state.
 
         Args:
@@ -670,15 +808,15 @@ class EquationOfState:
         """
         if self.fitted is False:
             raise ValueError(
-                'Equation of state needs to be fitted first through self.fit()'
-                )
-        if unit == 'eV/A^3':
+                "Equation of state needs to be fitted first through self.fit()"
+            )
+        if unit == "eV/A^3":
             return self.bm.b0
-        if unit == 'GPa':
+        if unit == "GPa":
             return self.bm.b0_GPa
-        raise NotImplementedError('unit has to be eV/A^3 or GPa')
+        raise NotImplementedError("unit has to be eV/A^3 or GPa")
 
-    def get_compressibility(self, unit: str='A^3/eV') ->float:
+    def get_compressibility(self, unit: str = "A^3/eV") -> float:
         """Get the bulk modulus of from the fitted Birch-Murnaghan equation of state.
 
         Args:
@@ -691,13 +829,12 @@ class EquationOfState:
         """
         if self.fitted is False:
             raise ValueError(
-                'Equation of state needs to be fitted first through self.fit()'
-                )
-        if unit == 'A^3/eV':
+                "Equation of state needs to be fitted first through self.fit()"
+            )
+        if unit == "A^3/eV":
             return 1 / self.bm.b0
-        if unit == 'GPa^-1':
+        if unit == "GPa^-1":
             return 1 / self.bm.b0_GPa
-        if unit in {'Pa^-1', 'm^2/N'}:
+        if unit in {"Pa^-1", "m^2/N"}:
             return 1 / (self.bm.b0_GPa * 1000000000.0)
-        raise NotImplementedError(
-            'unit has to be one of A^3/eV, GPa^-1 Pa^-1 or m^2/N')
+        raise NotImplementedError("unit has to be one of A^3/eV, GPa^-1 Pa^-1 or m^2/N")

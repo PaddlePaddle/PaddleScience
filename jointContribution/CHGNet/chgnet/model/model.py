@@ -1,23 +1,34 @@
 from __future__ import annotations
-import sys
-sys.path.append('/root/host/ssd3/zhangzhimin04/workspaces_118/chgnet_paddle/chgnet/paddle_project/utils')
-import os
-import paddle
+
 import math
+import os
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
-from pymatgen.core import Structure
-from chgnet.graph import CrystalGraph, CrystalGraphConverter
+from typing import TYPE_CHECKING
+from typing import Literal
+
+import paddle
+from chgnet.graph import CrystalGraph
+from chgnet.graph import CrystalGraphConverter
 from chgnet.graph.crystalgraph import DTYPE
 from chgnet.model.composition_model import AtomRef
-from chgnet.model.encoders import AngleEncoder, AtomEmbedding, BondEncoder
-from chgnet.model.functions import MLP, GatedMLP, find_normalization
-from chgnet.model.layers import AngleUpdate, AtomConv, BondConv, GraphAttentionReadOut, GraphPooling
+from chgnet.model.encoders import AngleEncoder
+from chgnet.model.encoders import AtomEmbedding
+from chgnet.model.encoders import BondEncoder
+from chgnet.model.functions import MLP
+from chgnet.model.functions import GatedMLP
+from chgnet.model.functions import find_normalization
+from chgnet.model.layers import AngleUpdate
+from chgnet.model.layers import AtomConv
+from chgnet.model.layers import BondConv
+from chgnet.model.layers import GraphAttentionReadOut
+from chgnet.model.layers import GraphPooling
 from chgnet.utils import determine_device
+from pymatgen.core import Structure
+
 if TYPE_CHECKING:
-    from typing_extensions import Self
     from chgnet import PredTask
+    from typing_extensions import Self
 module_dir = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -26,20 +37,38 @@ class CHGNet(paddle.nn.Layer):
     A model that takes in a crystal graph and output energy, force, magmom, stress.
     """
 
-    def __init__(self, *, atom_fea_dim: int=64, bond_fea_dim: int=64,
-        angle_fea_dim: int=64, composition_model: (str | paddle.nn.Layer)=
-        'MPtrj', num_radial: int=31, num_angular: int=31, n_conv: int=4,
-        atom_conv_hidden_dim: (Sequence[int] | int)=64, update_bond: bool=
-        True, bond_conv_hidden_dim: (Sequence[int] | int)=64, update_angle:
-        bool=True, angle_layer_hidden_dim: (Sequence[int] | int)=0,
-        conv_dropout: float=0, read_out: str='ave', mlp_hidden_dims: (
-        Sequence[int] | int)=(64, 64, 64), mlp_dropout: float=0, mlp_first:
-        bool=True, is_intensive: bool=True, non_linearity: Literal['silu',
-        'relu', 'tanh', 'gelu']='silu', atom_graph_cutoff: float=6,
-        bond_graph_cutoff: float=3, graph_converter_algorithm: Literal[
-        'legacy', 'fast']='fast', cutoff_coeff: int=8, learnable_rbf: bool=
-        True, gMLP_norm: (str | None)='layer', readout_norm: (str | None)=
-        'layer', version: (str | None)=None, **kwargs) ->None:
+    def __init__(
+        self,
+        *,
+        atom_fea_dim: int = 64,
+        bond_fea_dim: int = 64,
+        angle_fea_dim: int = 64,
+        composition_model: (str | paddle.nn.Layer) = "MPtrj",
+        num_radial: int = 31,
+        num_angular: int = 31,
+        n_conv: int = 4,
+        atom_conv_hidden_dim: (Sequence[int] | int) = 64,
+        update_bond: bool = True,
+        bond_conv_hidden_dim: (Sequence[int] | int) = 64,
+        update_angle: bool = True,
+        angle_layer_hidden_dim: (Sequence[int] | int) = 0,
+        conv_dropout: float = 0,
+        read_out: str = "ave",
+        mlp_hidden_dims: (Sequence[int] | int) = (64, 64, 64),
+        mlp_dropout: float = 0,
+        mlp_first: bool = True,
+        is_intensive: bool = True,
+        non_linearity: Literal["silu", "relu", "tanh", "gelu"] = "silu",
+        atom_graph_cutoff: float = 6,
+        bond_graph_cutoff: float = 3,
+        graph_converter_algorithm: Literal["legacy", "fast"] = "fast",
+        cutoff_coeff: int = 8,
+        learnable_rbf: bool = True,
+        gMLP_norm: (str | None) = "layer",
+        readout_norm: (str | None) = "layer",
+        version: (str | None) = None,
+        **kwargs,
+    ) -> None:
         """Initialize CHGNet.
 
         Args:
@@ -122,11 +151,14 @@ class CHGNet(paddle.nn.Layer):
             version (str): Pretrained checkpoint version.
             **kwargs: Additional keyword arguments
         """
-        self.model_args = {key: val for key, val in locals().items() if key
-             not in {'self', '__class__', 'kwargs'}}
+        self.model_args = {
+            key: val
+            for key, val in locals().items()
+            if key not in {"self", "__class__", "kwargs"}
+        }
         self.model_args.update(kwargs)
         if version:
-            self.model_args['version'] = version
+            self.model_args["version"] = version
         super().__init__()
         self.atom_fea_dim = atom_fea_dim
         self.bond_fea_dim = bond_fea_dim
@@ -136,107 +168,159 @@ class CHGNet(paddle.nn.Layer):
             self.composition_model = composition_model
         elif isinstance(composition_model, str):
             self.composition_model = AtomRef(is_intensive=is_intensive)
-            #import pdb
-            #pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
             self.composition_model.initialize_from(composition_model)
         else:
             self.composition_model = None
         if self.composition_model is not None:
             for param in self.composition_model.parameters():
                 param.stop_gradient = not False
-        self.graph_converter = CrystalGraphConverter(atom_graph_cutoff=
-            atom_graph_cutoff, bond_graph_cutoff=bond_graph_cutoff,
-            algorithm=graph_converter_algorithm, verbose=kwargs.pop(
-            'converter_verbose', False))
+        self.graph_converter = CrystalGraphConverter(
+            atom_graph_cutoff=atom_graph_cutoff,
+            bond_graph_cutoff=bond_graph_cutoff,
+            algorithm=graph_converter_algorithm,
+            verbose=kwargs.pop("converter_verbose", False),
+        )
         self.atom_embedding = AtomEmbedding(atom_feature_dim=atom_fea_dim)
-        self.bond_basis_expansion = BondEncoder(atom_graph_cutoff=
-            atom_graph_cutoff, bond_graph_cutoff=bond_graph_cutoff,
-            num_radial=num_radial, cutoff_coeff=cutoff_coeff, learnable=
-            learnable_rbf)
-        self.bond_embedding = paddle.nn.Linear(in_features=num_radial,
-            out_features=bond_fea_dim, bias_attr=False)
-        self.bond_weights_ag = paddle.nn.Linear(in_features=num_radial,
-            out_features=atom_fea_dim, bias_attr=False)
-        self.bond_weights_bg = paddle.nn.Linear(in_features=num_radial,
-            out_features=bond_fea_dim, bias_attr=False)
-        self.angle_basis_expansion = AngleEncoder(num_angular=num_angular,
-            learnable=learnable_rbf)
-        self.angle_embedding = paddle.nn.Linear(in_features=num_angular,
-            out_features=angle_fea_dim, bias_attr=False)
-        conv_norm = kwargs.pop('conv_norm', None)
-        mlp_out_bias = kwargs.pop('mlp_out_bias', False)
-        atom_graph_layers = [AtomConv(atom_fea_dim=atom_fea_dim,
-            bond_fea_dim=bond_fea_dim, hidden_dim=atom_conv_hidden_dim,
-            dropout=conv_dropout, activation=non_linearity, norm=conv_norm,
-            gMLP_norm=gMLP_norm, use_mlp_out=True, mlp_out_bias=
-            mlp_out_bias, resnet=True) for _ in range(n_conv)]
-        self.atom_conv_layers = paddle.nn.LayerList(sublayers=atom_graph_layers
+        self.bond_basis_expansion = BondEncoder(
+            atom_graph_cutoff=atom_graph_cutoff,
+            bond_graph_cutoff=bond_graph_cutoff,
+            num_radial=num_radial,
+            cutoff_coeff=cutoff_coeff,
+            learnable=learnable_rbf,
+        )
+        self.bond_embedding = paddle.nn.Linear(
+            in_features=num_radial, out_features=bond_fea_dim, bias_attr=False
+        )
+        self.bond_weights_ag = paddle.nn.Linear(
+            in_features=num_radial, out_features=atom_fea_dim, bias_attr=False
+        )
+        self.bond_weights_bg = paddle.nn.Linear(
+            in_features=num_radial, out_features=bond_fea_dim, bias_attr=False
+        )
+        self.angle_basis_expansion = AngleEncoder(
+            num_angular=num_angular, learnable=learnable_rbf
+        )
+        self.angle_embedding = paddle.nn.Linear(
+            in_features=num_angular, out_features=angle_fea_dim, bias_attr=False
+        )
+        conv_norm = kwargs.pop("conv_norm", None)
+        mlp_out_bias = kwargs.pop("mlp_out_bias", False)
+        atom_graph_layers = [
+            AtomConv(
+                atom_fea_dim=atom_fea_dim,
+                bond_fea_dim=bond_fea_dim,
+                hidden_dim=atom_conv_hidden_dim,
+                dropout=conv_dropout,
+                activation=non_linearity,
+                norm=conv_norm,
+                gMLP_norm=gMLP_norm,
+                use_mlp_out=True,
+                mlp_out_bias=mlp_out_bias,
+                resnet=True,
             )
+            for _ in range(n_conv)
+        ]
+        self.atom_conv_layers = paddle.nn.LayerList(sublayers=atom_graph_layers)
         if update_bond:
-            bond_graph_layers = [BondConv(atom_fea_dim=atom_fea_dim,
-                bond_fea_dim=bond_fea_dim, angle_fea_dim=angle_fea_dim,
-                hidden_dim=bond_conv_hidden_dim, dropout=conv_dropout,
-                activation=non_linearity, norm=conv_norm, gMLP_norm=
-                gMLP_norm, use_mlp_out=True, mlp_out_bias=mlp_out_bias,
-                resnet=True) for _ in range(n_conv - 1)]
-            self.bond_conv_layers = paddle.nn.LayerList(sublayers=
-                bond_graph_layers)
+            bond_graph_layers = [
+                BondConv(
+                    atom_fea_dim=atom_fea_dim,
+                    bond_fea_dim=bond_fea_dim,
+                    angle_fea_dim=angle_fea_dim,
+                    hidden_dim=bond_conv_hidden_dim,
+                    dropout=conv_dropout,
+                    activation=non_linearity,
+                    norm=conv_norm,
+                    gMLP_norm=gMLP_norm,
+                    use_mlp_out=True,
+                    mlp_out_bias=mlp_out_bias,
+                    resnet=True,
+                )
+                for _ in range(n_conv - 1)
+            ]
+            self.bond_conv_layers = paddle.nn.LayerList(sublayers=bond_graph_layers)
         else:
             self.bond_conv_layers = [None for _ in range(n_conv - 1)]
         if update_angle:
-            angle_layers = [AngleUpdate(atom_fea_dim=atom_fea_dim,
-                bond_fea_dim=bond_fea_dim, angle_fea_dim=angle_fea_dim,
-                hidden_dim=angle_layer_hidden_dim, dropout=conv_dropout,
-                activation=non_linearity, norm=conv_norm, gMLP_norm=
-                gMLP_norm, resnet=True) for _ in range(n_conv - 1)]
+            angle_layers = [
+                AngleUpdate(
+                    atom_fea_dim=atom_fea_dim,
+                    bond_fea_dim=bond_fea_dim,
+                    angle_fea_dim=angle_fea_dim,
+                    hidden_dim=angle_layer_hidden_dim,
+                    dropout=conv_dropout,
+                    activation=non_linearity,
+                    norm=conv_norm,
+                    gMLP_norm=gMLP_norm,
+                    resnet=True,
+                )
+                for _ in range(n_conv - 1)
+            ]
             self.angle_layers = paddle.nn.LayerList(sublayers=angle_layers)
         else:
             self.angle_layers = [None for _ in range(n_conv - 1)]
-        self.site_wise = paddle.nn.Linear(in_features=atom_fea_dim,
-            out_features=1)
+        self.site_wise = paddle.nn.Linear(in_features=atom_fea_dim, out_features=1)
         self.readout_norm = find_normalization(readout_norm, dim=atom_fea_dim)
         self.mlp_first = mlp_first
         if mlp_first:
-            self.read_out_type = 'sum'
+            self.read_out_type = "sum"
             input_dim = atom_fea_dim
             self.pooling = GraphPooling(average=False)
-        elif read_out in {'attn', 'weighted'}:
-            self.read_out_type = 'attn'
-            num_heads = kwargs.pop('num_heads', 3)
-            self.pooling = GraphAttentionReadOut(atom_fea_dim, num_head=
-                num_heads, average=True)
+        elif read_out in {"attn", "weighted"}:
+            self.read_out_type = "attn"
+            num_heads = kwargs.pop("num_heads", 3)
+            self.pooling = GraphAttentionReadOut(
+                atom_fea_dim, num_head=num_heads, average=True
+            )
             input_dim = atom_fea_dim * num_heads
         else:
-            self.read_out_type = 'ave'
+            self.read_out_type = "ave"
             input_dim = atom_fea_dim
             self.pooling = GraphPooling(average=True)
-        if kwargs.pop('final_mlp', 'MLP') in {'normal', 'MLP'}:
-            self.mlp = MLP(input_dim=input_dim, hidden_dim=mlp_hidden_dims,
-                output_dim=1, dropout=mlp_dropout, activation=non_linearity)
-        else:
-            self.mlp = paddle.nn.Sequential(GatedMLP(input_dim=input_dim,
-                hidden_dim=mlp_hidden_dims, output_dim=mlp_hidden_dims[-1],
-                dropout=mlp_dropout, norm=gMLP_norm, activation=
-                non_linearity), paddle.nn.Linear(in_features=
-                mlp_hidden_dims[-1], out_features=1))
-        version_str = f' v{version}' if version else ''
-        print(
-            f'CHGNet{version_str} initialized with {self.n_params:,} parameters'
+        if kwargs.pop("final_mlp", "MLP") in {"normal", "MLP"}:
+            self.mlp = MLP(
+                input_dim=input_dim,
+                hidden_dim=mlp_hidden_dims,
+                output_dim=1,
+                dropout=mlp_dropout,
+                activation=non_linearity,
             )
+        else:
+            self.mlp = paddle.nn.Sequential(
+                GatedMLP(
+                    input_dim=input_dim,
+                    hidden_dim=mlp_hidden_dims,
+                    output_dim=mlp_hidden_dims[-1],
+                    dropout=mlp_dropout,
+                    norm=gMLP_norm,
+                    activation=non_linearity,
+                ),
+                paddle.nn.Linear(in_features=mlp_hidden_dims[-1], out_features=1),
+            )
+        version_str = f" v{version}" if version else ""
+        print(f"CHGNet{version_str} initialized with {self.n_params:,} parameters")
 
     @property
-    def version(self) ->(str | None):
+    def version(self) -> (str | None):
         """Return the version of the loaded checkpoint."""
-        return self.model_args.get('version')
+        return self.model_args.get("version")
 
     @property
-    def n_params(self) ->int:
+    def n_params(self) -> int:
         """Return the number of parameters in the model."""
         return sum(p.size for p in self.parameters())
 
-    def forward(self, graphs: Sequence[CrystalGraph], *, task: PredTask='e',
-        return_site_energies: bool=False, return_atom_feas: bool=False,
-        return_crystal_feas: bool=False) ->dict[str, paddle.Tensor]:
+    def forward(
+        self,
+        graphs: Sequence[CrystalGraph],
+        *,
+        task: PredTask = "e",
+        return_site_energies: bool = False,
+        return_atom_feas: bool = False,
+        return_crystal_feas: bool = False,
+    ) -> dict[str, paddle.Tensor]:
         """Get prediction associated with input graphs
         Args:
             graphs (List): a list of CrystalGraphs
@@ -253,28 +337,46 @@ class CHGNet(paddle.nn.Layer):
         Returns:
             model output (dict).
         """
-        comp_energy = (0 if self.composition_model is None else self.
-            composition_model(graphs))
-        batched_graph = BatchedGraph.from_graphs(graphs,
+        comp_energy = (
+            0 if self.composition_model is None else self.composition_model(graphs)
+        )
+        batched_graph = BatchedGraph.from_graphs(
+            graphs,
             bond_basis_expansion=self.bond_basis_expansion,
             angle_basis_expansion=self.angle_basis_expansion,
-            compute_stress='s' in task)
-        prediction = self._compute(batched_graph, compute_force='f' in task,
-            compute_stress='s' in task, compute_magmom='m' in task,
-            return_site_energies=return_site_energies, return_atom_feas=
-            return_atom_feas, return_crystal_feas=return_crystal_feas)
-        prediction['e'] += comp_energy
+            compute_stress="s" in task,
+        )
+        prediction = self._compute(
+            batched_graph,
+            compute_force="f" in task,
+            compute_stress="s" in task,
+            compute_magmom="m" in task,
+            return_site_energies=return_site_energies,
+            return_atom_feas=return_atom_feas,
+            return_crystal_feas=return_crystal_feas,
+        )
+        prediction["e"] += comp_energy
         if return_site_energies and self.composition_model is not None:
-            site_energy_shifts = self.composition_model.get_site_energies(
-                graphs)
-            prediction['site_energies'] = [(i + j) for i, j in zip(
-                prediction['site_energies'], site_energy_shifts, strict=True)]
+            site_energy_shifts = self.composition_model.get_site_energies(graphs)
+            prediction["site_energies"] = [
+                (i + j)
+                for i, j in zip(
+                    prediction["site_energies"], site_energy_shifts, strict=True
+                )
+            ]
         return prediction
 
-    def _compute(self, g: BatchedGraph, *, compute_force: bool=False,
-        compute_stress: bool=False, compute_magmom: bool=False,
-        return_site_energies: bool=False, return_atom_feas: bool=False,
-        return_crystal_feas: bool=False) ->dict:
+    def _compute(
+        self,
+        g: BatchedGraph,
+        *,
+        compute_force: bool = False,
+        compute_stress: bool = False,
+        compute_magmom: bool = False,
+        return_site_energies: bool = False,
+        return_atom_feas: bool = False,
+        return_crystal_feas: bool = False,
+    ) -> dict:
         """Get Energy, Force, Stress, Magmom associated with input graphs
         force = - d(Energy)/d(atom_positions)
         stress = 1/V * d(Energy)/d(strain).
@@ -304,76 +406,114 @@ class CHGNet(paddle.nn.Layer):
         """
         prediction = {}
         atoms_per_graph = paddle.bincount(x=g.atom_owners)
-        prediction['atoms_per_graph'] = atoms_per_graph
+        prediction["atoms_per_graph"] = atoms_per_graph
         atom_feas = self.atom_embedding(g.atomic_numbers - 1)
         bond_feas = self.bond_embedding(g.bond_bases_ag)
         bond_weights_ag = self.bond_weights_ag(g.bond_bases_ag)
         bond_weights_bg = self.bond_weights_bg(g.bond_bases_bg)
         if len(g.angle_bases) != 0:
             angle_feas = self.angle_embedding(g.angle_bases)
-        for idx, (atom_layer, bond_layer, angle_layer) in enumerate(zip(
-            self.atom_conv_layers[:-1], self.bond_conv_layers, self.
-            angle_layers, strict=False)):
-            atom_feas = atom_layer(atom_feas=atom_feas, bond_feas=bond_feas,
-                bond_weights=bond_weights_ag, atom_graph=g.
-                batched_atom_graph, directed2undirected=g.directed2undirected)
+        for idx, (atom_layer, bond_layer, angle_layer) in enumerate(
+            zip(
+                self.atom_conv_layers[:-1],
+                self.bond_conv_layers,
+                self.angle_layers,
+                strict=False,
+            )
+        ):
+            atom_feas = atom_layer(
+                atom_feas=atom_feas,
+                bond_feas=bond_feas,
+                bond_weights=bond_weights_ag,
+                atom_graph=g.batched_atom_graph,
+                directed2undirected=g.directed2undirected,
+            )
             if len(g.angle_bases) != 0 and bond_layer is not None:
-                bond_feas = bond_layer(atom_feas=atom_feas, bond_feas=
-                    bond_feas, bond_weights=bond_weights_bg, angle_feas=
-                    angle_feas, bond_graph=g.batched_bond_graph)
+                bond_feas = bond_layer(
+                    atom_feas=atom_feas,
+                    bond_feas=bond_feas,
+                    bond_weights=bond_weights_bg,
+                    angle_feas=angle_feas,
+                    bond_graph=g.batched_bond_graph,
+                )
                 if angle_layer is not None:
-                    angle_feas = angle_layer(atom_feas=atom_feas, bond_feas
-                        =bond_feas, angle_feas=angle_feas, bond_graph=g.
-                        batched_bond_graph)
+                    angle_feas = angle_layer(
+                        atom_feas=atom_feas,
+                        bond_feas=bond_feas,
+                        angle_feas=angle_feas,
+                        bond_graph=g.batched_bond_graph,
+                    )
             if idx == self.n_conv - 2:
                 if return_atom_feas:
-                    prediction['atom_fea'] = paddle.split(x=atom_feas,
-                        num_or_sections=atoms_per_graph.tolist())
+                    prediction["atom_fea"] = paddle.split(
+                        x=atom_feas, num_or_sections=atoms_per_graph.tolist()
+                    )
                 if compute_magmom:
                     magmom = paddle.abs(x=self.site_wise(atom_feas))
-                    prediction['m'] = list(paddle.split(x=magmom.reshape([-
-                        1]), num_or_sections=atoms_per_graph.tolist()))
-        atom_feas = self.atom_conv_layers[-1](atom_feas=atom_feas,
-            bond_feas=bond_feas, bond_weights=bond_weights_ag, atom_graph=g
-            .batched_atom_graph, directed2undirected=g.directed2undirected)
+                    prediction["m"] = list(
+                        paddle.split(
+                            x=magmom.reshape([-1]),
+                            num_or_sections=atoms_per_graph.tolist(),
+                        )
+                    )
+        atom_feas = self.atom_conv_layers[-1](
+            atom_feas=atom_feas,
+            bond_feas=bond_feas,
+            bond_weights=bond_weights_ag,
+            atom_graph=g.batched_atom_graph,
+            directed2undirected=g.directed2undirected,
+        )
         if self.readout_norm is not None:
             atom_feas = self.readout_norm(atom_feas)
         if self.mlp_first:
             energies = self.mlp(atom_feas)
             energy = self.pooling(energies, g.atom_owners).reshape([-1])
             if return_site_energies:
-                prediction['site_energies'] = paddle.split(x=energies.
-                    squeeze(axis=1), num_or_sections=atoms_per_graph.tolist())
+                prediction["site_energies"] = paddle.split(
+                    x=energies.squeeze(axis=1), num_or_sections=atoms_per_graph.tolist()
+                )
             if return_crystal_feas:
-                prediction['crystal_fea'] = self.pooling(atom_feas, g.
-                    atom_owners)
+                prediction["crystal_fea"] = self.pooling(atom_feas, g.atom_owners)
         else:
             crystal_feas = self.pooling(atom_feas, g.atom_owners)
             energy = self.mlp(crystal_feas).reshape([-1]) * atoms_per_graph
             if return_crystal_feas:
-                prediction['crystal_fea'] = crystal_feas
+                prediction["crystal_fea"] = crystal_feas
 
         if compute_force:
-            force = paddle.grad(outputs=energy.sum(), inputs=g.
-                atom_positions, create_graph=False, retain_graph=True)
-            prediction['f'] = [(-1 * force_dim) for force_dim in force]
+            force = paddle.grad(
+                outputs=energy.sum(),
+                inputs=g.atom_positions,
+                create_graph=False,
+                retain_graph=True,
+            )
+            prediction["f"] = [(-1 * force_dim) for force_dim in force]
         if compute_stress:
-            stress = paddle.grad(outputs=energy.sum(), inputs=g.strains,
-                create_graph=False, retain_graph=True)
+            stress = paddle.grad(
+                outputs=energy.sum(),
+                inputs=g.strains,
+                create_graph=False,
+                retain_graph=True,
+            )
             scale = 1 / g.volumes * 160.21766208
             stress = [(i * j) for i, j in zip(stress, scale, strict=False)]
-            prediction['s'] = stress
-            
+            prediction["s"] = stress
+
         if self.is_intensive:
-            energy /= atoms_per_graph.cast('float32')
-        prediction['e'] = energy
+            energy /= atoms_per_graph.cast("float32")
+        prediction["e"] = energy
         return prediction
 
-    def predict_structure(self, structure: (Structure | Sequence[Structure]
-        ), *, task: PredTask='efsm', return_site_energies: bool=False,
-        return_atom_feas: bool=False, return_crystal_feas: bool=False,
-        batch_size: int=16) ->(dict[str, paddle.Tensor] | list[dict[str,
-        paddle.Tensor]]):
+    def predict_structure(
+        self,
+        structure: (Structure | Sequence[Structure]),
+        *,
+        task: PredTask = "efsm",
+        return_site_energies: bool = False,
+        return_atom_feas: bool = False,
+        return_crystal_feas: bool = False,
+        batch_size: int = 16,
+    ) -> (dict[str, paddle.Tensor] | list[dict[str, paddle.Tensor]]):
         """Predict from pymatgen.core.Structure.
 
         Args:
@@ -399,19 +539,28 @@ class CHGNet(paddle.nn.Layer):
                     magneton mu_B
         """
         if self.graph_converter is None:
-            raise ValueError('graph_converter cannot be None!')
-        structures = [structure] if isinstance(structure, Structure
-            ) else structure
+            raise ValueError("graph_converter cannot be None!")
+        structures = [structure] if isinstance(structure, Structure) else structure
         graphs = [self.graph_converter(struct) for struct in structures]
-        return self.predict_graph(graphs, task=task, return_site_energies=
-            return_site_energies, return_atom_feas=return_atom_feas,
-            return_crystal_feas=return_crystal_feas, batch_size=batch_size)
+        return self.predict_graph(
+            graphs,
+            task=task,
+            return_site_energies=return_site_energies,
+            return_atom_feas=return_atom_feas,
+            return_crystal_feas=return_crystal_feas,
+            batch_size=batch_size,
+        )
 
-    def predict_graph(self, graph: (CrystalGraph | Sequence[CrystalGraph]),
-        *, task: PredTask='efsm', return_site_energies: bool=False,
-        return_atom_feas: bool=False, return_crystal_feas: bool=False,
-        batch_size: int=16) ->(dict[str, paddle.Tensor] | list[dict[str,
-        paddle.Tensor]]):
+    def predict_graph(
+        self,
+        graph: (CrystalGraph | Sequence[CrystalGraph]),
+        *,
+        task: PredTask = "efsm",
+        return_site_energies: bool = False,
+        return_atom_feas: bool = False,
+        return_crystal_feas: bool = False,
+        batch_size: int = 16,
+    ) -> (dict[str, paddle.Tensor] | list[dict[str, paddle.Tensor]]):
         """Predict from CrustalGraph.
 
         Args:
@@ -437,53 +586,68 @@ class CHGNet(paddle.nn.Layer):
         """
         if not isinstance(graph, CrystalGraph | Sequence):
             raise TypeError(
-                f'type(graph)={type(graph)!r} must be CrystalGraph or list of CrystalGraphs'
-                )
-        #next(iter(self.parameters())).place
+                f"type(graph)={type(graph)!r} must be CrystalGraph or list of CrystalGraphs"
+            )
+        # next(iter(self.parameters())).place
         graphs = [graph] if isinstance(graph, CrystalGraph) else graph
         self.eval()
-        predictions: list[dict[str, paddle.Tensor]] = [{} for _ in range(
-            len(graphs))]
+        predictions: list[dict[str, paddle.Tensor]] = [{} for _ in range(len(graphs))]
         n_steps = math.ceil(len(graphs) / batch_size)
         for step in range(n_steps):
-            prediction = self.forward([g for g in graphs[
-                batch_size * step:batch_size * (step + 1)]], task=task,
-                return_site_energies=return_site_energies, return_atom_feas
-                =return_atom_feas, return_crystal_feas=return_crystal_feas)
-            for key in ({'e', 'f', 's', 'm', 'site_energies', 'atom_fea',
-                'crystal_fea'} & {*prediction}):
+            prediction = self.forward(
+                [g for g in graphs[batch_size * step : batch_size * (step + 1)]],
+                task=task,
+                return_site_energies=return_site_energies,
+                return_atom_feas=return_atom_feas,
+                return_crystal_feas=return_crystal_feas,
+            )
+            for key in {
+                "e",
+                "f",
+                "s",
+                "m",
+                "site_energies",
+                "atom_fea",
+                "crystal_fea",
+            } & {*prediction}:
                 for idx, tensor in enumerate(prediction[key]):
-                    predictions[step * batch_size + idx][key] = tensor.cpu(
-                        ).detach().numpy()
+                    predictions[step * batch_size + idx][key] = (
+                        tensor.cpu().detach().numpy()
+                    )
         return predictions[0] if len(graphs) == 1 else predictions
 
-    def as_dict(self) ->dict:
+    def as_dict(self) -> dict:
         """Return the CHGNet weights and args in a dictionary."""
-        return {'state_dict': self.state_dict(), 'model_args': self.model_args}
+        return {"state_dict": self.state_dict(), "model_args": self.model_args}
 
-    def todict(self) ->dict:
+    def todict(self) -> dict:
         """Needed for ASE JSON serialization when saving CHGNet potential to
         trajectory file (https://github.com/CederGroupHub/chgnet/issues/48).
         """
-        return {'model_name': type(self).__name__, 'model_args': self.
-            model_args}
+        return {"model_name": type(self).__name__, "model_args": self.model_args}
 
     @classmethod
-    def from_dict(cls, dct: dict, **kwargs) ->Self:
+    def from_dict(cls, dct: dict, **kwargs) -> Self:
         """Build a CHGNet from a saved dictionary."""
-        chgnet = cls(**dct['model_args'], **kwargs)
-        chgnet.set_state_dict(state_dict=dct['state_dict'])
+        chgnet = cls(**dct["model_args"], **kwargs)
+        chgnet.set_state_dict(state_dict=dct["state_dict"])
         return chgnet
 
     @classmethod
-    def from_file(cls, path: str, **kwargs) ->Self:
+    def from_file(cls, path: str, **kwargs) -> Self:
         """Build a CHGNet from a saved file."""
         state = paddle.load(path=str(path))
-        return cls.from_dict(state['model'], **kwargs)
+        return cls.from_dict(state["model"], **kwargs)
 
     @classmethod
-    def load(cls, *, model_name: str='0.3.0', use_device: (str | None)=None,
-        check_cuda_mem: bool=False, verbose: bool=True) ->Self:
+    def load(
+        cls,
+        *,
+        model_name: str = "0.3.0",
+        use_device: (str | None) = None,
+        check_cuda_mem: bool = False,
+        verbose: bool = True,
+    ) -> Self:
         """Load pretrained CHGNet model.
 
         Args:
@@ -500,18 +664,20 @@ class CHGNet(paddle.nn.Layer):
         Raises:
             ValueError: On unknown model_name.
         """
-        checkpoint_path = {'0.3.0':
-            '../pretrained/0.3.0/chgnet_0.3.0_paddle.pdparams',
-            '0.2.0': '../pretrained/0.2.0/chgnet_0.2.0_e30f77s348m32.pth.tar'
-            }.get(model_name)
+        checkpoint_path = {
+            "0.3.0": "../pretrained/0.3.0/chgnet_0.3.0_paddle.pdparams",
+            "0.2.0": "../pretrained/0.2.0/chgnet_0.2.0_e30f77s348m32.pth.tar",
+        }.get(model_name)
         if checkpoint_path is None:
-            raise ValueError(f'Unknown model_name={model_name!r}')
-        model = cls.from_file(os.path.join(module_dir, checkpoint_path),
-            mlp_out_bias=model_name == '0.2.0', version=model_name)
-        device = determine_device(use_device=use_device, check_cuda_mem=
-            check_cuda_mem)
+            raise ValueError(f"Unknown model_name={model_name!r}")
+        model = cls.from_file(
+            os.path.join(module_dir, checkpoint_path),
+            mlp_out_bias=model_name == "0.2.0",
+            version=model_name,
+        )
+        device = determine_device(use_device=use_device, check_cuda_mem=check_cuda_mem)
         if verbose:
-            print(f'CHGNet will run on {device}')
+            print(f"CHGNet will run on {device}")
         return model
 
 
@@ -546,22 +712,28 @@ class BatchedGraph:
         volumes (Tensor): the volume of each structure in the batch
             [batch_size]
     """
-    atomic_numbers: Tensor
-    bond_bases_ag: Tensor
-    bond_bases_bg: Tensor
-    angle_bases: Tensor
-    batched_atom_graph: Tensor
-    batched_bond_graph: Tensor
-    atom_owners: Tensor
-    directed2undirected: Tensor
+
+    atomic_numbers: paddle.Tensor
+    bond_bases_ag: paddle.Tensor
+    bond_bases_bg: paddle.Tensor
+    angle_bases: paddle.Tensor
+    batched_atom_graph: paddle.Tensor
+    batched_bond_graph: paddle.Tensor
+    atom_owners: paddle.Tensor
+    directed2undirected: paddle.Tensor
     atom_positions: Sequence[paddle.Tensor]
     strains: Sequence[paddle.Tensor]
-    volumes: Sequence[paddle.Tensor] | Tensor
+    volumes: Sequence[paddle.Tensor] | paddle.Tensor
 
     @classmethod
-    def from_graphs(cls, graphs: Sequence[CrystalGraph],
-        bond_basis_expansion: paddle.nn.Layer, angle_basis_expansion:
-        paddle.nn.Layer, *, compute_stress: bool=False) ->Self:
+    def from_graphs(
+        cls,
+        graphs: Sequence[CrystalGraph],
+        bond_basis_expansion: paddle.nn.Layer,
+        angle_basis_expansion: paddle.nn.Layer,
+        *,
+        compute_stress: bool = False,
+    ) -> Self:
         """Featurize and assemble a list of graphs.
 
         Args:
@@ -584,38 +756,47 @@ class BatchedGraph:
             n_atom = graph.atomic_number.shape[0]
             atomic_numbers.append(graph.atomic_number)
             if compute_stress:
-                strain = paddle.to_tensor(paddle.zeros([3, 3], dtype='float32'), stop_gradient=False)
-                lattice = paddle.matmul(graph.lattice, paddle.eye(3, dtype='float32') + strain)
+                strain = paddle.to_tensor(
+                    paddle.zeros([3, 3], dtype="float32"), stop_gradient=False
+                )
+                lattice = paddle.matmul(
+                    graph.lattice, paddle.eye(3, dtype="float32") + strain
+                )
             else:
                 strain = None
                 lattice = graph.lattice
-            volumes.append(paddle.dot(x=lattice[0], y=paddle.cross(x=
-                lattice[1], y=lattice[2], axis=-1)))
+            volumes.append(
+                paddle.dot(
+                    x=lattice[0], y=paddle.cross(x=lattice[1], y=lattice[2], axis=-1)
+                )
+            )
             strains.append(strain)
             atom_cart_coords = graph.atom_frac_coord @ lattice
             if graph.atom_graph.dim() == 1:
                 graph.atom_graph = graph.atom_graph.reshape(0, 2)
             bond_basis_ag, bond_basis_bg, bond_vectors = bond_basis_expansion(
-                center=atom_cart_coords[graph.atom_graph[:, 0]], neighbor=
-                atom_cart_coords[graph.atom_graph[:, 1]],
-                undirected2directed=graph.undirected2directed, image=graph.
-                neighbor_image, lattice=lattice)
+                center=atom_cart_coords[graph.atom_graph[:, 0]],
+                neighbor=atom_cart_coords[graph.atom_graph[:, 1]],
+                undirected2directed=graph.undirected2directed,
+                image=graph.neighbor_image,
+                lattice=lattice,
+            )
             atom_positions.append(atom_cart_coords)
             bond_bases_ag.append(bond_basis_ag)
             bond_bases_bg.append(bond_basis_bg)
             batched_atom_graph.append(graph.atom_graph + atom_offset_idx)
-            directed2undirected.append(graph.directed2undirected + n_undirected
-                )
+            directed2undirected.append(graph.directed2undirected + n_undirected)
             if len(graph.bond_graph) != 0:
-                bond_vecs_i = paddle.gather(x=bond_vectors, axis=0,
-                    index=graph.bond_graph[:, 2])
-                bond_vecs_j = paddle.gather(x=bond_vectors, axis=0,
-                    index=graph.bond_graph[:, 4])
+                bond_vecs_i = paddle.gather(
+                    x=bond_vectors, axis=0, index=graph.bond_graph[:, 2]
+                )
+                bond_vecs_j = paddle.gather(
+                    x=bond_vectors, axis=0, index=graph.bond_graph[:, 4]
+                )
                 angle_basis = angle_basis_expansion(bond_vecs_i, bond_vecs_j)
                 angle_bases.append(angle_basis)
-                bond_graph = paddle.zeros([graph.bond_graph.
-                    shape[0], 3])
-                #graph.bond_graph.new_zeros()
+                bond_graph = paddle.zeros([graph.bond_graph.shape[0], 3])
+                # graph.bond_graph.new_zeros()
                 bond_graph[:, 0] = graph.bond_graph[:, 0] + atom_offset_idx
                 bond_graph[:, 1] = graph.bond_graph[:, 1] + n_undirected
                 bond_graph[:, 2] = graph.bond_graph[:, 3] + n_undirected
@@ -628,20 +809,31 @@ class BatchedGraph:
         atomic_numbers = paddle.concat(x=atomic_numbers, axis=0)
         bond_bases_ag = paddle.concat(x=bond_bases_ag, axis=0)
         bond_bases_bg = paddle.concat(x=bond_bases_bg, axis=0)
-        angle_bases = paddle.concat(x=angle_bases, axis=0) if len(angle_bases
-            ) != 0 else paddle.to_tensor(data=[])
+        angle_bases = (
+            paddle.concat(x=angle_bases, axis=0)
+            if len(angle_bases) != 0
+            else paddle.to_tensor(data=[])
+        )
         batched_atom_graph = paddle.concat(x=batched_atom_graph, axis=0)
         if batched_bond_graph != []:
             batched_bond_graph = paddle.concat(x=batched_bond_graph, axis=0)
         else:
             batched_bond_graph = paddle.to_tensor(data=[])
-        atom_owners = paddle.concat(x=atom_owners, axis=0).astype('int32')
+        atom_owners = paddle.concat(x=atom_owners, axis=0).astype("int32")
         directed2undirected = paddle.concat(x=directed2undirected, axis=0)
-        volumes = paddle.to_tensor(data=volumes, dtype=DTYPE, place=
-            atomic_numbers.place)
-        return cls(atomic_numbers=atomic_numbers, bond_bases_ag=
-            bond_bases_ag, bond_bases_bg=bond_bases_bg, angle_bases=
-            angle_bases, batched_atom_graph=batched_atom_graph,
-            batched_bond_graph=batched_bond_graph, atom_owners=atom_owners,
-            directed2undirected=directed2undirected, atom_positions=
-            atom_positions, strains=strains, volumes=volumes)
+        volumes = paddle.to_tensor(
+            data=volumes, dtype=DTYPE, place=atomic_numbers.place
+        )
+        return cls(
+            atomic_numbers=atomic_numbers,
+            bond_bases_ag=bond_bases_ag,
+            bond_bases_bg=bond_bases_bg,
+            angle_bases=angle_bases,
+            batched_atom_graph=batched_atom_graph,
+            batched_bond_graph=batched_bond_graph,
+            atom_owners=atom_owners,
+            directed2undirected=directed2undirected,
+            atom_positions=atom_positions,
+            strains=strains,
+            volumes=volumes,
+        )

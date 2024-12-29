@@ -1,22 +1,35 @@
 from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
+
 import paddle
-from typing import TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
     from typing_extensions import Self
-DTYPE = 'float32'
+DTYPE = "float32"
 
 
 class CrystalGraph:
     """A data class for crystal graph."""
 
-    def __init__(self, atomic_number: paddle.Tensor, atom_frac_coord:
-        paddle.Tensor, atom_graph: paddle.Tensor, atom_graph_cutoff: float,
-        neighbor_image: paddle.Tensor, directed2undirected: paddle.Tensor,
-        undirected2directed: paddle.Tensor, bond_graph: paddle.Tensor,
-        bond_graph_cutoff: float, lattice: paddle.Tensor, graph_id: (str |
-        None)=None, mp_id: (str | None)=None, composition: (str | None)=None
-        ) ->None:
+    def __init__(
+        self,
+        atomic_number: paddle.Tensor,
+        atom_frac_coord: paddle.Tensor,
+        atom_graph: paddle.Tensor,
+        atom_graph_cutoff: float,
+        neighbor_image: paddle.Tensor,
+        directed2undirected: paddle.Tensor,
+        undirected2directed: paddle.Tensor,
+        bond_graph: paddle.Tensor,
+        bond_graph_cutoff: float,
+        lattice: paddle.Tensor,
+        graph_id: (str | None) = None,
+        mp_id: (str | None) = None,
+        composition: (str | None) = None,
+    ) -> None:
         """Initialize the crystal graph.
 
         Attention! This data class is not intended to be created manually. CrystalGraph
@@ -81,34 +94,46 @@ class CrystalGraph:
         self.composition = composition
         if len(directed2undirected) != 2 * len(undirected2directed):
             raise ValueError(
-                f'{graph_id} number of directed indices ({len(directed2undirected)}) != 2 * number of undirected indices ({2 * len(undirected2directed)})!'
-                )
+                f"{graph_id} number of directed indices ({len(directed2undirected)}) != 2 * number of undirected indices ({2 * len(undirected2directed)})!"
+            )
 
-    def to(self, device: str='cpu') ->CrystalGraph:
+    def to(self, device: str = "cpu") -> CrystalGraph:
         """Move the graph to a device. Default = 'cpu'."""
-        return CrystalGraph(atomic_number=self.atomic_number.to(device),
-            atom_frac_coord=self.atom_frac_coord.to(device), atom_graph=
-            self.atom_graph.to(device), atom_graph_cutoff=self.
-            atom_graph_cutoff, neighbor_image=self.neighbor_image.to(device
-            ), directed2undirected=self.directed2undirected.to(device),
+        return CrystalGraph(
+            atomic_number=self.atomic_number.to(device),
+            atom_frac_coord=self.atom_frac_coord.to(device),
+            atom_graph=self.atom_graph.to(device),
+            atom_graph_cutoff=self.atom_graph_cutoff,
+            neighbor_image=self.neighbor_image.to(device),
+            directed2undirected=self.directed2undirected.to(device),
             undirected2directed=self.undirected2directed.to(device),
-            bond_graph=self.bond_graph.to(device), bond_graph_cutoff=self.
-            bond_graph_cutoff, lattice=self.lattice.to(device), graph_id=
-            self.graph_id, mp_id=self.mp_id, composition=self.composition)
+            bond_graph=self.bond_graph.to(device),
+            bond_graph_cutoff=self.bond_graph_cutoff,
+            lattice=self.lattice.to(device),
+            graph_id=self.graph_id,
+            mp_id=self.mp_id,
+            composition=self.composition,
+        )
 
-    def to_dict(self) ->dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the graph to a dictionary."""
-        return {'atomic_number': self.atomic_number, 'atom_frac_coord':
-            self.atom_frac_coord, 'atom_graph': self.atom_graph,
-            'atom_graph_cutoff': self.atom_graph_cutoff, 'neighbor_image':
-            self.neighbor_image, 'directed2undirected': self.
-            directed2undirected, 'undirected2directed': self.
-            undirected2directed, 'bond_graph': self.bond_graph,
-            'bond_graph_cutoff': self.bond_graph_cutoff, 'lattice': self.
-            lattice, 'graph_id': self.graph_id, 'mp_id': self.mp_id,
-            'composition': self.composition}
+        return {
+            "atomic_number": self.atomic_number,
+            "atom_frac_coord": self.atom_frac_coord,
+            "atom_graph": self.atom_graph,
+            "atom_graph_cutoff": self.atom_graph_cutoff,
+            "neighbor_image": self.neighbor_image,
+            "directed2undirected": self.directed2undirected,
+            "undirected2directed": self.undirected2directed,
+            "bond_graph": self.bond_graph,
+            "bond_graph_cutoff": self.bond_graph_cutoff,
+            "lattice": self.lattice,
+            "graph_id": self.graph_id,
+            "mp_id": self.mp_id,
+            "composition": self.composition,
+        }
 
-    def save(self, fname: (str | None)=None, save_dir: str='.') ->str:
+    def save(self, fname: (str | None) = None, save_dir: str = ".") -> str:
         """Save the graph to a file.
 
         Args:
@@ -121,14 +146,14 @@ class CrystalGraph:
         if fname is not None:
             save_name = os.path.join(save_dir, fname)
         elif self.graph_id is not None:
-            save_name = os.path.join(save_dir, f'{self.graph_id}.pt')
+            save_name = os.path.join(save_dir, f"{self.graph_id}.pt")
         else:
-            save_name = os.path.join(save_dir, f'{self.composition}.pt')
+            save_name = os.path.join(save_dir, f"{self.composition}.pt")
         paddle.save(obj=self.to_dict(), path=save_name)
         return save_name
 
     @classmethod
-    def from_file(cls, file_name: str) ->Self:
+    def from_file(cls, file_name: str) -> Self:
         """Load a crystal graph from a file.
 
         Args:
@@ -140,11 +165,11 @@ class CrystalGraph:
         return paddle.load(path=str(file_name))
 
     @classmethod
-    def from_dict(cls, dic: dict[str, Any]) ->Self:
+    def from_dict(cls, dic: dict[str, Any]) -> Self:
         """Load a CrystalGraph from a dictionary."""
         return cls(**dic)
 
-    def __repr__(self) ->str:
+    def __repr__(self) -> str:
         """String representation of the graph."""
         composition = self.composition
         atom_graph_cutoff = self.atom_graph_cutoff
@@ -153,12 +178,10 @@ class CrystalGraph:
         n_atoms = len(self.atomic_number)
         atom_graph_len = len(self.atom_graph)
         bond_graph_len = len(self.bond_graph)
-        return (
-            f'CrystalGraph(composition={composition!r}, atom_graph_cutoff={atom_graph_cutoff!r}, bond_graph_cutoff={bond_graph_cutoff!r}, n_atoms={n_atoms!r}, atom_graph_len={atom_graph_len!r}, bond_graph_len={bond_graph_len!r})'
-            )
+        return f"CrystalGraph(composition={composition!r}, atom_graph_cutoff={atom_graph_cutoff!r}, bond_graph_cutoff={bond_graph_cutoff!r}, n_atoms={n_atoms!r}, atom_graph_len={atom_graph_len!r}, bond_graph_len={bond_graph_len!r})"
 
     @property
-    def num_isolated_atoms(self) ->int:
+    def num_isolated_atoms(self) -> int:
         """Number of isolated atoms given the atom graph cutoff
         Isolated atoms are disconnected nodes in the atom graph
         that will not get updated in CHGNet.
@@ -167,5 +190,4 @@ class CrystalGraph:
         With the default CHGNet atom graph cutoff radius, only ~ 0.1% of MPtrj dataset
         structures has isolated atoms.
         """
-        return len(self.atomic_number) - paddle.unique(x=self.atom_graph[:, 0]
-            ).size
+        return len(self.atomic_number) - paddle.unique(x=self.atom_graph[:, 0]).size

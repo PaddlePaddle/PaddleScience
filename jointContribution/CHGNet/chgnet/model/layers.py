@@ -1,17 +1,30 @@
 from __future__ import annotations
-import sys
-sys.path.append('/home/huanye/chgnet/paddle_project/utils')
+
 import paddle
-from chgnet.model.functions import MLP, GatedMLP, aggregate, find_activation, find_normalization
+from chgnet.model.functions import MLP
+from chgnet.model.functions import GatedMLP
+from chgnet.model.functions import aggregate
+from chgnet.model.functions import find_activation
+from chgnet.model.functions import find_normalization
 
 
 class AtomConv(paddle.nn.Layer):
     """A convolution Layer to update atom features."""
 
-    def __init__(self, *, atom_fea_dim: int, bond_fea_dim: int, hidden_dim:
-        int=64, dropout: float=0, activation: str='silu', norm: (str | None
-        )=None, use_mlp_out: bool=True, mlp_out_bias: bool=False, resnet:
-        bool=True, gMLP_norm: (str | None)=None) ->None:
+    def __init__(
+        self,
+        *,
+        atom_fea_dim: int,
+        bond_fea_dim: int,
+        hidden_dim: int = 64,
+        dropout: float = 0,
+        activation: str = "silu",
+        norm: (str | None) = None,
+        use_mlp_out: bool = True,
+        mlp_out_bias: bool = False,
+        resnet: bool = True,
+        gMLP_norm: (str | None) = None,
+    ) -> None:
         """Initialize the AtomConv layer.
 
         Args:
@@ -44,17 +57,31 @@ class AtomConv(paddle.nn.Layer):
         self.use_mlp_out = use_mlp_out
         self.resnet = resnet
         self.activation = find_activation(activation)
-        self.twoBody_atom = GatedMLP(input_dim=2 * atom_fea_dim +
-            bond_fea_dim, output_dim=atom_fea_dim, hidden_dim=hidden_dim,
-            dropout=dropout, norm=gMLP_norm, activation=activation)
+        self.twoBody_atom = GatedMLP(
+            input_dim=2 * atom_fea_dim + bond_fea_dim,
+            output_dim=atom_fea_dim,
+            hidden_dim=hidden_dim,
+            dropout=dropout,
+            norm=gMLP_norm,
+            activation=activation,
+        )
         if self.use_mlp_out:
-            self.mlp_out = MLP(input_dim=atom_fea_dim, output_dim=
-                atom_fea_dim, hidden_dim=0, bias=mlp_out_bias)
+            self.mlp_out = MLP(
+                input_dim=atom_fea_dim,
+                output_dim=atom_fea_dim,
+                hidden_dim=0,
+                bias=mlp_out_bias,
+            )
         self.atom_norm = find_normalization(name=norm, dim=atom_fea_dim)
 
-    def forward(self, atom_feas: paddle.Tensor, bond_feas: paddle.Tensor,
-        bond_weights: paddle.Tensor, atom_graph: paddle.Tensor,
-        directed2undirected: paddle.Tensor) ->paddle.Tensor:
+    def forward(
+        self,
+        atom_feas: paddle.Tensor,
+        bond_feas: paddle.Tensor,
+        bond_weights: paddle.Tensor,
+        atom_graph: paddle.Tensor,
+        directed2undirected: paddle.Tensor,
+    ) -> paddle.Tensor:
         """Forward pass of AtomConv module that updates the atom features and
             optionally bond features.
 
@@ -78,19 +105,18 @@ class AtomConv(paddle.nn.Layer):
         Notes:
             - num_batch_atoms = sum(num_atoms) in batch
         """
-        center_atoms = paddle.index_select(x=atom_feas, axis=0, index=
-            atom_graph[:, 0])
-        nbr_atoms = paddle.index_select(x=atom_feas, axis=0, index=
-            atom_graph[:, 1])
-        bonds = paddle.index_select(x=bond_feas, axis=0, index=
-            directed2undirected)
+        center_atoms = paddle.index_select(x=atom_feas, axis=0, index=atom_graph[:, 0])
+        nbr_atoms = paddle.index_select(x=atom_feas, axis=0, index=atom_graph[:, 1])
+        bonds = paddle.index_select(x=bond_feas, axis=0, index=directed2undirected)
         messages = paddle.concat(x=[center_atoms, bonds, nbr_atoms], axis=1)
         messages = self.twoBody_atom(messages)
-        bond_weight = paddle.index_select(x=bond_weights, axis=0, index=
-            directed2undirected)
+        bond_weight = paddle.index_select(
+            x=bond_weights, axis=0, index=directed2undirected
+        )
         messages *= bond_weight
-        new_atom_feas = aggregate(messages, atom_graph[:, 0], average=False,
-            num_owner=len(atom_feas))
+        new_atom_feas = aggregate(
+            messages, atom_graph[:, 0], average=False, num_owner=len(atom_feas)
+        )
         if self.use_mlp_out:
             new_atom_feas = self.mlp_out(new_atom_feas)
         if self.resnet:
@@ -103,11 +129,21 @@ class AtomConv(paddle.nn.Layer):
 class BondConv(paddle.nn.Layer):
     """A convolution Layer to update bond features."""
 
-    def __init__(self, atom_fea_dim: int, bond_fea_dim: int, angle_fea_dim:
-        int, *, hidden_dim: int=64, dropout: float=0, activation: str=
-        'silu', norm: (str | None)=None, use_mlp_out: bool=True,
-        mlp_out_bias: bool=False, resnet=True, gMLP_norm: (str | None)=None
-        ) ->None:
+    def __init__(
+        self,
+        atom_fea_dim: int,
+        bond_fea_dim: int,
+        angle_fea_dim: int,
+        *,
+        hidden_dim: int = 64,
+        dropout: float = 0,
+        activation: str = "silu",
+        norm: (str | None) = None,
+        use_mlp_out: bool = True,
+        mlp_out_bias: bool = False,
+        resnet=True,
+        gMLP_norm: (str | None) = None,
+    ) -> None:
         """Initialize the BondConv layer.
 
         Args:
@@ -141,18 +177,31 @@ class BondConv(paddle.nn.Layer):
         self.use_mlp_out = use_mlp_out
         self.resnet = resnet
         self.activation = find_activation(activation)
-        self.twoBody_bond = GatedMLP(input_dim=atom_fea_dim + 2 *
-            bond_fea_dim + angle_fea_dim, output_dim=bond_fea_dim,
-            hidden_dim=hidden_dim, dropout=dropout, norm=gMLP_norm,
-            activation=activation)
+        self.twoBody_bond = GatedMLP(
+            input_dim=atom_fea_dim + 2 * bond_fea_dim + angle_fea_dim,
+            output_dim=bond_fea_dim,
+            hidden_dim=hidden_dim,
+            dropout=dropout,
+            norm=gMLP_norm,
+            activation=activation,
+        )
         if self.use_mlp_out:
-            self.mlp_out = MLP(input_dim=bond_fea_dim, output_dim=
-                bond_fea_dim, hidden_dim=0, bias=mlp_out_bias)
+            self.mlp_out = MLP(
+                input_dim=bond_fea_dim,
+                output_dim=bond_fea_dim,
+                hidden_dim=0,
+                bias=mlp_out_bias,
+            )
         self.bond_norm = find_normalization(name=norm, dim=bond_fea_dim)
 
-    def forward(self, atom_feas: paddle.Tensor, bond_feas: paddle.Tensor,
-        bond_weights: paddle.Tensor, angle_feas: paddle.Tensor, bond_graph:
-        paddle.Tensor) ->paddle.Tensor:
+    def forward(
+        self,
+        atom_feas: paddle.Tensor,
+        bond_feas: paddle.Tensor,
+        bond_weights: paddle.Tensor,
+        angle_feas: paddle.Tensor,
+        bond_graph: paddle.Tensor,
+    ) -> paddle.Tensor:
         """Update the bond features.
 
         Args:
@@ -174,22 +223,29 @@ class BondConv(paddle.nn.Layer):
         Notes:
             - num_batch_atoms = sum(num_atoms) in batch
         """
-        center_atoms = paddle.index_select(x=atom_feas, axis=0, index=
-            bond_graph[:, 0].cast("int32"))
-        bond_feas_i = paddle.index_select(x=bond_feas, axis=0, index=
-            bond_graph[:, 1].cast("int32"))
-        bond_feas_j = paddle.index_select(x=bond_feas, axis=0, index=
-            bond_graph[:, 2].cast("int32"))
-        total_fea = paddle.concat(x=[bond_feas_i, bond_feas_j, angle_feas,
-            center_atoms], axis=1)
+        center_atoms = paddle.index_select(
+            x=atom_feas, axis=0, index=bond_graph[:, 0].cast("int32")
+        )
+        bond_feas_i = paddle.index_select(
+            x=bond_feas, axis=0, index=bond_graph[:, 1].cast("int32")
+        )
+        bond_feas_j = paddle.index_select(
+            x=bond_feas, axis=0, index=bond_graph[:, 2].cast("int32")
+        )
+        total_fea = paddle.concat(
+            x=[bond_feas_i, bond_feas_j, angle_feas, center_atoms], axis=1
+        )
         bond_update = self.twoBody_bond(total_fea)
-        bond_weights_i = paddle.index_select(x=bond_weights, axis=0, index=
-            bond_graph[:, 1].cast("int32"))
-        bond_weights_j = paddle.index_select(x=bond_weights, axis=0, index=
-            bond_graph[:, 2].cast("int32"))
+        bond_weights_i = paddle.index_select(
+            x=bond_weights, axis=0, index=bond_graph[:, 1].cast("int32")
+        )
+        bond_weights_j = paddle.index_select(
+            x=bond_weights, axis=0, index=bond_graph[:, 2].cast("int32")
+        )
         bond_update = bond_update * bond_weights_i * bond_weights_j
-        new_bond_feas = aggregate(bond_update, bond_graph[:, 1], average=
-            False, num_owner=len(bond_feas))
+        new_bond_feas = aggregate(
+            bond_update, bond_graph[:, 1], average=False, num_owner=len(bond_feas)
+        )
         if self.use_mlp_out:
             new_bond_feas = self.mlp_out(new_bond_feas)
         if self.resnet:
@@ -202,10 +258,19 @@ class BondConv(paddle.nn.Layer):
 class AngleUpdate(paddle.nn.Layer):
     """Update angle features."""
 
-    def __init__(self, atom_fea_dim: int, bond_fea_dim: int, angle_fea_dim:
-        int, *, hidden_dim: int=0, dropout: float=0, activation: str='silu',
-        norm: (str | None)=None, resnet: bool=True, gMLP_norm: (str | None)
-        =None) ->None:
+    def __init__(
+        self,
+        atom_fea_dim: int,
+        bond_fea_dim: int,
+        angle_fea_dim: int,
+        *,
+        hidden_dim: int = 0,
+        dropout: float = 0,
+        activation: str = "silu",
+        norm: (str | None) = None,
+        resnet: bool = True,
+        gMLP_norm: (str | None) = None,
+    ) -> None:
         """Initialize the AngleUpdate layer.
 
         Args:
@@ -233,14 +298,23 @@ class AngleUpdate(paddle.nn.Layer):
         super().__init__()
         self.resnet = resnet
         self.activation = find_activation(activation)
-        self.twoBody_bond = GatedMLP(input_dim=atom_fea_dim + 2 *
-            bond_fea_dim + angle_fea_dim, output_dim=angle_fea_dim,
-            hidden_dim=hidden_dim, dropout=dropout, norm=gMLP_norm,
-            activation=activation)
+        self.twoBody_bond = GatedMLP(
+            input_dim=atom_fea_dim + 2 * bond_fea_dim + angle_fea_dim,
+            output_dim=angle_fea_dim,
+            hidden_dim=hidden_dim,
+            dropout=dropout,
+            norm=gMLP_norm,
+            activation=activation,
+        )
         self.angle_norm = find_normalization(norm, dim=angle_fea_dim)
 
-    def forward(self, atom_feas: paddle.Tensor, bond_feas: paddle.Tensor,
-        angle_feas: paddle.Tensor, bond_graph: paddle.Tensor) ->paddle.Tensor:
+    def forward(
+        self,
+        atom_feas: paddle.Tensor,
+        bond_feas: paddle.Tensor,
+        angle_feas: paddle.Tensor,
+        bond_graph: paddle.Tensor,
+    ) -> paddle.Tensor:
         """Update the angle features using bond graph.
 
         Args:
@@ -260,17 +334,14 @@ class AngleUpdate(paddle.nn.Layer):
         Notes:
             - num_batch_atoms = sum(num_atoms) in batch
         """
-        bond_graph = bond_graph.astype('int64')
-        center_atoms = paddle.index_select(x=atom_feas, axis=0, index=
-            bond_graph[:, 0])
-        bond_feas_i = paddle.index_select(x=bond_feas, axis=0, index=
-            bond_graph[:, 1])
-        bond_feas_j = paddle.index_select(x=bond_feas, axis=0, index=
-            bond_graph[:, 2])
-        total_fea = paddle.concat(x=[bond_feas_i, bond_feas_j, angle_feas,
-            center_atoms], axis=1)
+        bond_graph = bond_graph.astype("int64")
+        center_atoms = paddle.index_select(x=atom_feas, axis=0, index=bond_graph[:, 0])
+        bond_feas_i = paddle.index_select(x=bond_feas, axis=0, index=bond_graph[:, 1])
+        bond_feas_j = paddle.index_select(x=bond_feas, axis=0, index=bond_graph[:, 2])
+        total_fea = paddle.concat(
+            x=[bond_feas_i, bond_feas_j, angle_feas, center_atoms], axis=1
+        )
         new_angle_feas = self.twoBody_bond(total_fea)
-
 
         if self.resnet:
             new_angle_feas += angle_feas
@@ -282,15 +353,16 @@ class AngleUpdate(paddle.nn.Layer):
 class GraphPooling(paddle.nn.Layer):
     """Pooling the sub-graphs in the batched graph."""
 
-    def __init__(self, *, average: bool=False) ->None:
+    def __init__(self, *, average: bool = False) -> None:
         """Args:
         average (bool): whether to average the features.
         """
         super().__init__()
         self.average = average
 
-    def forward(self, atom_feas: paddle.Tensor, atom_owner: paddle.Tensor
-        ) ->paddle.Tensor:
+    def forward(
+        self, atom_feas: paddle.Tensor, atom_owner: paddle.Tensor
+    ) -> paddle.Tensor:
         """Merge the atom features that belong to same graph in a batched graph.
 
         Args:
@@ -311,8 +383,14 @@ class GraphAttentionReadOut(paddle.nn.Layer):
     merge the information from atom_feas to crystal_fea.
     """
 
-    def __init__(self, atom_fea_dim: int, num_head: int=3, hidden_dim: int=
-        32, *, average=False) ->None:
+    def __init__(
+        self,
+        atom_fea_dim: int,
+        num_head: int = 3,
+        hidden_dim: int = 32,
+        *,
+        average=False,
+    ) -> None:
         """Initialize the layer.
 
         Args:
@@ -322,13 +400,15 @@ class GraphAttentionReadOut(paddle.nn.Layer):
             average (bool): whether to average the features
         """
         super().__init__()
-        self.key = MLP(input_dim=atom_fea_dim, output_dim=num_head,
-            hidden_dim=hidden_dim)
+        self.key = MLP(
+            input_dim=atom_fea_dim, output_dim=num_head, hidden_dim=hidden_dim
+        )
         self.softmax = paddle.nn.Softmax(axis=0)
         self.average = average
 
-    def forward(self, atom_feas: paddle.Tensor, atom_owner: paddle.Tensor
-        ) ->paddle.Tensor:
+    def forward(
+        self, atom_feas: paddle.Tensor, atom_owner: paddle.Tensor
+    ) -> paddle.Tensor:
         """Merge the atom features that belong to same graph in a batched graph.
 
         Args:
@@ -346,8 +426,8 @@ class GraphAttentionReadOut(paddle.nn.Layer):
         bin_count = paddle.bincount(x=atom_owner)
         start_index = 0
         for n_atom in bin_count:
-            atom_fea = atom_feas[start_index:start_index + n_atom, :]
-            weight = self.softmax(weights[start_index:start_index + n_atom, :])
+            atom_fea = atom_feas[start_index : start_index + n_atom, :]
+            weight = self.softmax(weights[start_index : start_index + n_atom, :])
             crystal_fea = (atom_fea.T @ weight).reshape([-1])
             if self.average:
                 crystal_fea /= n_atom
