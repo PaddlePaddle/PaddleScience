@@ -22,7 +22,8 @@ model = ppsci.arch.DNN(
 ## 5.约束构建
 本研究采用监督学习，直接构建'SupervisedConstraint'
 
-``` 
+
+```
  bc_sup = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg={
             "dataset": {
@@ -41,7 +42,7 @@ model = ppsci.arch.DNN(
 ## 6. 优化器构建
 训练器采用Adam优化器
 
-``` 
+```
  optimizer = ppsci.optimizer.optimizer.Adam(
         cfg.TRAIN.learning_rate,
         beta1=(0.9, 0.99)[0],
@@ -54,7 +55,7 @@ model = ppsci.arch.DNN(
 ## 7. 模型训练
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给'ppsci.solver.Solver'，然后启动训练
 
-``` 
+```
 solver = ppsci.solver.Solver(
         model,
         constraint={
@@ -70,7 +71,7 @@ solver = ppsci.solver.Solver(
 
 ## 8. 完整代码
 
-``` 
+```
 import os
 
 import hydra
