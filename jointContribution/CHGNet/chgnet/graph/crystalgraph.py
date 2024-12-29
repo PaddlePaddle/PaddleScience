@@ -4,7 +4,7 @@ import paddle
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from typing_extensions import Self
-TORCH_DTYPE = 'float32'
+DTYPE = 'float32'
 
 
 class CrystalGraph:

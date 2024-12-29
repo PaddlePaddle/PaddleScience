@@ -348,7 +348,7 @@ class GraphAttentionReadOut(paddle.nn.Layer):
         for n_atom in bin_count:
             atom_fea = atom_feas[start_index:start_index + n_atom, :]
             weight = self.softmax(weights[start_index:start_index + n_atom, :])
-            crystal_fea = (atom_fea.T @ weight).view(-1)
+            crystal_fea = (atom_fea.T @ weight).reshape([-1])
             if self.average:
                 crystal_fea /= n_atom
             crystal_feas.append(crystal_fea)

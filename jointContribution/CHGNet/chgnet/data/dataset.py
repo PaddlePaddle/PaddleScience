@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
     from chgnet import TrainTask
 warnings.filterwarnings('ignore')
-TORCH_DTYPE = 'float32'
+DTYPE = 'float32'
 
 
 class StructureData(paddle.io.Dataset):
@@ -130,18 +130,18 @@ class StructureData(paddle.io.Dataset):
                 crystal_graph = self.graph_converter(struct, graph_id=
                     graph_id, mp_id=mp_id)
                 targets = {'e': paddle.to_tensor(data=self.energies[
-                    graph_id], dtype=TORCH_DTYPE), 'f': paddle.to_tensor(
-                    data=self.forces[graph_id], dtype=TORCH_DTYPE)}
+                    graph_id], dtype=DTYPE), 'f': paddle.to_tensor(
+                    data=self.forces[graph_id], dtype=DTYPE)}
                 if self.stresses is not None:
                     targets['s'] = paddle.to_tensor(data=self.stresses[
-                        graph_id], dtype=TORCH_DTYPE) * -0.1
+                        graph_id], dtype=DTYPE) * -0.1
                 if self.magmoms is not None:
                     mag = self.magmoms[graph_id]
                     if mag is None:
                         targets['m'] = None
                     else:
                         targets['m'] = paddle.abs(x=paddle.to_tensor(data=
-                            mag, dtype=TORCH_DTYPE))
+                            mag, dtype=DTYPE))
                 return crystal_graph, targets
             except Exception:
                 struct = self.structures[graph_id]
@@ -225,19 +225,19 @@ class CIFData(paddle.io.Dataset):
                     if key == 'e':
                         energy = self.data[graph_id][self.energy_key]
                         targets['e'] = paddle.to_tensor(data=energy, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 'f':
                         force = self.data[graph_id][self.force_key]
                         targets['f'] = paddle.to_tensor(data=force, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 's':
                         stress = self.data[graph_id][self.stress_key]
                         targets['s'] = paddle.to_tensor(data=stress, dtype=
-                            TORCH_DTYPE) * -0.1
+                            DTYPE) * -0.1
                     elif key == 'm':
                         mag = self.data[graph_id][self.magmom_key]
                         targets['m'] = paddle.abs(x=paddle.to_tensor(data=
-                            mag, dtype=TORCH_DTYPE))
+                            mag, dtype=DTYPE))
                 return crystal_graph, targets
             except Exception:
                 try:
@@ -340,22 +340,22 @@ class GraphData(paddle.io.Dataset):
                     if key == 'e':
                         energy = self.labels[mp_id][graph_id][self.energy_key]
                         targets['e'] = paddle.to_tensor(data=energy, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 'f':
                         force = self.labels[mp_id][graph_id][self.force_key]
                         targets['f'] = paddle.to_tensor(data=force, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 's':
                         stress = self.labels[mp_id][graph_id][self.stress_key]
                         targets['s'] = paddle.to_tensor(data=stress, dtype=
-                            TORCH_DTYPE) * -0.1
+                            DTYPE) * -0.1
                     elif key == 'm':
                         mag = self.labels[mp_id][graph_id][self.magmom_key]
                         if mag is None:
                             targets['m'] = None
                         else:
                             targets['m'] = paddle.abs(x=paddle.to_tensor(
-                                data=mag, dtype=TORCH_DTYPE))
+                                data=mag, dtype=DTYPE))
                 return crystal_graph, targets
             except Exception:
                 self.failed_graph_id.append(graph_id)
@@ -520,22 +520,22 @@ class StructureJsonData(paddle.io.Dataset):
                     if key == 'e':
                         energy = self.data[mp_id][graph_id][self.energy_key]
                         targets['e'] = paddle.to_tensor(data=energy, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 'f':
                         force = self.data[mp_id][graph_id][self.force_key]
                         targets['f'] = paddle.to_tensor(data=force, dtype=
-                            TORCH_DTYPE)
+                            DTYPE)
                     elif key == 's':
                         stress = self.data[mp_id][graph_id][self.stress_key]
                         targets['s'] = paddle.to_tensor(data=stress, dtype=
-                            TORCH_DTYPE) * -0.1
+                            DTYPE) * -0.1
                     elif key == 'm':
                         mag = self.data[mp_id][graph_id][self.magmom_key]
                         if mag is None:
                             targets['m'] = None
                         else:
                             targets['m'] = paddle.abs(x=paddle.to_tensor(
-                                data=mag, dtype=TORCH_DTYPE))
+                                data=mag, dtype=DTYPE))
                 return crystal_graph, targets
             except Exception:
                 structure = Structure.from_dict(self.data[mp_id][graph_id][
@@ -633,7 +633,7 @@ def collate_graphs(batch_data: list) ->tuple[list[CrystalGraph], dict[str,
     graphs = [graph for graph, _ in batch_data]
     all_targets = {key: [] for key in batch_data[0][1]}
     all_targets['e'] = paddle.to_tensor(data=[targets['e'] for _, targets in
-        batch_data], dtype=TORCH_DTYPE)
+        batch_data], dtype=DTYPE)
     for _, targets in batch_data:
         for target, value in targets.items():
             if target != 'e':

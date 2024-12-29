@@ -15,7 +15,7 @@ try:
     from chgnet.graph.cygraph import make_graph
 except (ImportError, AttributeError):
     make_graph = None
-TORCH_DTYPE = 'float32'
+DTYPE = 'float32'
 
 
 class CrystalGraphConverter(paddle.nn.Layer):
@@ -92,10 +92,13 @@ class CrystalGraphConverter(paddle.nn.Layer):
         Return:
             CrystalGraph that is ready to use by CHGNet
         """
+        n_atoms = len(structure)
+        data=[site.specie.Z for site in structure]
+        atomic_number = paddle.to_tensor(data, dtype='int32', stop_gradient=not False)
         atom_frac_coord = paddle.to_tensor(data=structure.frac_coords,
-            dtype=TORCH_DTYPE, stop_gradient=not True)
+            dtype=DTYPE, stop_gradient=not True)
         lattice = paddle.to_tensor(data=structure.lattice.matrix, dtype=
-            TORCH_DTYPE, stop_gradient=not True)
+            DTYPE, stop_gradient=not True)
         center_index, neighbor_index, image, distance = (structure.
             get_neighbor_list(r=self.atom_graph_cutoff, sites=structure.
             sites, numerical_tol=1e-08))
@@ -128,7 +131,7 @@ class CrystalGraphConverter(paddle.nn.Layer):
                 print(msg, file=sys.stderr)
         return CrystalGraph(atomic_number=atomic_number, atom_frac_coord=
             atom_frac_coord, atom_graph=atom_graph, neighbor_image=paddle.
-            to_tensor(data=image, dtype=TORCH_DTYPE), directed2undirected=
+            to_tensor(data=image, dtype=DTYPE), directed2undirected=
             directed2undirected, undirected2directed=undirected2directed,
             bond_graph=bond_graph, lattice=lattice, graph_id=graph_id,
             mp_id=mp_id, composition=structure.composition.formula,

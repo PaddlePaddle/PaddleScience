@@ -43,7 +43,7 @@ class CompositionModel(paddle.nn.Layer):
         """
         composition_feas = self.activation(self.fc1(composition_feas))
         composition_feas += self.gated_mlp(composition_feas)
-        return self.fc2(composition_feas).view(-1)
+        return self.fc2(composition_feas).reshape([-1])
 
     def forward(self, graphs: list[CrystalGraph]) ->paddle.Tensor:
         """Get the energy of a list of CrystalGraphs as Tensor."""

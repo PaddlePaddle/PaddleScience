@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-sys.path.append('/home/huanye/chgnet/paddle_project/utils')
+sys.path.append('/root/host/ssd3/zhangzhimin04/workspaces_118/chgnet_paddle/chgnet/paddle_project/utils')
 import os
 import paddle
 import math
@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 from pymatgen.core import Structure
 from chgnet.graph import CrystalGraph, CrystalGraphConverter
-from chgnet.graph.crystalgraph import TORCH_DTYPE
+from chgnet.graph.crystalgraph import DTYPE
 from chgnet.model.composition_model import AtomRef
 from chgnet.model.encoders import AngleEncoder, AtomEmbedding, BondEncoder
 from chgnet.model.functions import MLP, GatedMLP, find_normalization
@@ -331,8 +331,8 @@ class CHGNet(paddle.nn.Layer):
                         num_or_sections=atoms_per_graph.tolist())
                 if compute_magmom:
                     magmom = paddle.abs(x=self.site_wise(atom_feas))
-                    prediction['m'] = list(paddle.split(x=magmom.view(-
-                        1), num_or_sections=atoms_per_graph.tolist()))
+                    prediction['m'] = list(paddle.split(x=magmom.reshape([-
+                        1]), num_or_sections=atoms_per_graph.tolist()))
         atom_feas = self.atom_conv_layers[-1](atom_feas=atom_feas,
             bond_feas=bond_feas, bond_weights=bond_weights_ag, atom_graph=g
             .batched_atom_graph, directed2undirected=g.directed2undirected)
@@ -340,7 +340,7 @@ class CHGNet(paddle.nn.Layer):
             atom_feas = self.readout_norm(atom_feas)
         if self.mlp_first:
             energies = self.mlp(atom_feas)
-            energy = self.pooling(energies, g.atom_owners).view(-1)
+            energy = self.pooling(energies, g.atom_owners).reshape([-1])
             if return_site_energies:
                 prediction['site_energies'] = paddle.split(x=energies.
                     squeeze(axis=1), num_or_sections=atoms_per_graph.tolist())
@@ -349,9 +349,10 @@ class CHGNet(paddle.nn.Layer):
                     atom_owners)
         else:
             crystal_feas = self.pooling(atom_feas, g.atom_owners)
-            energy = self.mlp(crystal_feas).view(-1) * atoms_per_graph
+            energy = self.mlp(crystal_feas).reshape([-1]) * atoms_per_graph
             if return_crystal_feas:
                 prediction['crystal_fea'] = crystal_feas
+
         if compute_force:
             force = paddle.grad(outputs=energy.sum(), inputs=g.
                 atom_positions, create_graph=False, retain_graph=True)
@@ -362,8 +363,9 @@ class CHGNet(paddle.nn.Layer):
             scale = 1 / g.volumes * 160.21766208
             stress = [(i * j) for i, j in zip(stress, scale, strict=False)]
             prediction['s'] = stress
+            
         if self.is_intensive:
-            energy /= atoms_per_graph
+            energy /= atoms_per_graph.cast('float32')
         prediction['e'] = energy
         return prediction
 
@@ -437,7 +439,6 @@ class CHGNet(paddle.nn.Layer):
             raise TypeError(
                 f'type(graph)={type(graph)!r} must be CrystalGraph or list of CrystalGraphs'
                 )
-        model_device = "cpu"
         #next(iter(self.parameters())).place
         graphs = [graph] if isinstance(graph, CrystalGraph) else graph
         self.eval()
@@ -445,7 +446,7 @@ class CHGNet(paddle.nn.Layer):
             len(graphs))]
         n_steps = math.ceil(len(graphs) / batch_size)
         for step in range(n_steps):
-            prediction = self.forward([g.to(model_device) for g in graphs[
+            prediction = self.forward([g for g in graphs[
                 batch_size * step:batch_size * (step + 1)]], task=task,
                 return_site_energies=return_site_energies, return_atom_feas
                 =return_atom_feas, return_crystal_feas=return_crystal_feas)
@@ -471,7 +472,7 @@ class CHGNet(paddle.nn.Layer):
     def from_dict(cls, dct: dict, **kwargs) ->Self:
         """Build a CHGNet from a saved dictionary."""
         chgnet = cls(**dct['model_args'], **kwargs)
-        """chgnet.set_state_dict(state_dict=dct['state_dict'])"""
+        chgnet.set_state_dict(state_dict=dct['state_dict'])
         return chgnet
 
     @classmethod
@@ -509,7 +510,6 @@ class CHGNet(paddle.nn.Layer):
             mlp_out_bias=model_name == '0.2.0', version=model_name)
         device = determine_device(use_device=use_device, check_cuda_mem=
             check_cuda_mem)
-        model = model.to(device)
         if verbose:
             print(f'CHGNet will run on {device}')
         return model
@@ -607,9 +607,9 @@ class BatchedGraph:
             directed2undirected.append(graph.directed2undirected + n_undirected
                 )
             if len(graph.bond_graph) != 0:
-                bond_vecs_i = paddle.index_select(x=bond_vectors, axis=0,
+                bond_vecs_i = paddle.gather(x=bond_vectors, axis=0,
                     index=graph.bond_graph[:, 2])
-                bond_vecs_j = paddle.index_select(x=bond_vectors, axis=0,
+                bond_vecs_j = paddle.gather(x=bond_vectors, axis=0,
                     index=graph.bond_graph[:, 4])
                 angle_basis = angle_basis_expansion(bond_vecs_i, bond_vecs_j)
                 angle_bases.append(angle_basis)
@@ -635,10 +635,9 @@ class BatchedGraph:
             batched_bond_graph = paddle.concat(x=batched_bond_graph, axis=0)
         else:
             batched_bond_graph = paddle.to_tensor(data=[])
-        atom_owners = paddle.concat(x=atom_owners, axis=0).astype('int32').to(
-            atomic_numbers.place)
+        atom_owners = paddle.concat(x=atom_owners, axis=0).astype('int32')
         directed2undirected = paddle.concat(x=directed2undirected, axis=0)
-        volumes = paddle.to_tensor(data=volumes, dtype=TORCH_DTYPE, place=
+        volumes = paddle.to_tensor(data=volumes, dtype=DTYPE, place=
             atomic_numbers.place)
         return cls(atomic_numbers=atomic_numbers, bond_bases_ag=
             bond_bases_ag, bond_bases_bg=bond_bases_bg, angle_bases=

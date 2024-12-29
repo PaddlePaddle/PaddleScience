@@ -27,12 +27,19 @@ class Fourier(paddle.nn.Layer):
 
     def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         """Apply Fourier expansion to a feature Tensor."""
-        result = paddle.zeros(shape=[tuple(x.shape)[0], 1 + 2 * self.order],
+
+        # result = paddle.zeros(shape=[tuple(x.shape)[0], 1 + 2 * self.order],
+        #     dtype=x.dtype)
+        result = paddle.ones(shape=[tuple(x.shape)[0], 1],
             dtype=x.dtype)
-        result[:, 0] = 1 / paddle.sqrt(x=paddle.to_tensor(data=[2.0]))
+        result = result / paddle.sqrt(x=paddle.to_tensor(data=[2.0]))
+
         tmp = paddle.outer(x=x, y=self.frequencies)
-        result[:, 1:self.order + 1] = paddle.sin(x=tmp)
-        result[:, self.order + 1:] = paddle.cos(x=tmp)
+        # result[:, 1:self.order + 1] = paddle.sin(x=tmp)
+        # result[:, self.order + 1:] = paddle.cos(x=tmp)
+
+        result = paddle.concat([result, paddle.sin(tmp), paddle.cos(tmp)], axis=1)
+
         return result / np.sqrt(np.pi)
 
 

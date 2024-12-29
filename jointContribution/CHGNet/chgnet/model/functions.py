@@ -21,9 +21,9 @@ def aggregate(data: paddle.Tensor, owners: paddle.Tensor, *, average=True,
     Returns:
         output (Tensor): [num_owner, feature_dim]
     """
-    #import pdb; pdb.set_trace()
     bin_count = paddle.bincount(x=owners.cast("int32"))
-    bin_count = (bin_count!=0).cast(dtype=bin_count.dtype)
+    # bin_count = (bin_count!=0).cast(dtype=bin_count.dtype)
+    bin_count = paddle.where(bin_count != 0, bin_count, paddle.ones([1], dtype=bin_count.dtype))
     #.where(bin_count != 0, y=paddle.ones(
     #    shape=[1], dtype=bin_count.dtype))
     # bin_count = bin_count.where(bin_count != 0, bin_count.new_ones(1))
@@ -31,9 +31,12 @@ def aggregate(data: paddle.Tensor, owners: paddle.Tensor, *, average=True,
         difference = num_owner - tuple(bin_count.shape)[0]
         bin_count = paddle.concat(x=[bin_count, paddle.ones(shape=
             difference, dtype=bin_count.dtype)])
-    output = paddle.zeros(shape=[tuple(bin_count.shape)[0], tuple(data.
+        
+    output0 = paddle.zeros(shape=[tuple(bin_count.shape)[0], tuple(data.
         shape)[1]], dtype=data.dtype)
-    output = output.index_add_(axis=0, index=owners.cast("int32"), value=data)
+    output0.stop_gradient = False
+    output = output0.index_add(axis=0, index=owners.cast('int32'), value=data)
+
     if average:
         output = (output.T / bin_count).T
     return output
