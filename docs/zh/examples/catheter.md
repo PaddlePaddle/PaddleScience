@@ -367,21 +367,21 @@ examples/catheter/catheter.py:162:177
 
 ## 4. 结果展示
 
-=== "   训练、推理loss"
+=== "训练、推理loss"
 
 下方展示了训练后模型对测试数据的第一次预测结果以及最后一次预测结果。
 
-=== "   第一次预测结果"
+=== "第一次预测结果"
 
-![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter10.png)
+    ![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter10.png)
 
-=== "   最后一次预测结果"
+=== "最后一次预测结果"
 
-![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter9.png)
+    ![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter9.png)
 
-=== "   训练测试损失"
+=== "训练测试损失"
 
-![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter8.png)
+    ![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter8.png)
 
 可以看到模型预测结果与真实结果基本一致，优化后的导管具有特定的几何形状，如障碍物分布和间距等，这些形状特征能够显著影响流体动力学相互作用，从而抑制细菌的上游游泳行为。
 
