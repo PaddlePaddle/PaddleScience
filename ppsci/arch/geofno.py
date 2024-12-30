@@ -19,12 +19,12 @@ import paddle.nn.initializer as Initializer
 
 
 class SpectralConv1d(nn.Layer):
+    """
+    1D Fourier layer. It does FFT, linear transform, and Inverse FFT.
+    """
+
     def __init__(self, in_channels, out_channels, modes1):
         super(SpectralConv1d, self).__init__()
-
-        """
-        1D Fourier layer. It does FFT, linear transform, and Inverse FFT.
-        """
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -108,6 +108,15 @@ class FNO1d(nn.Layer):
         padding (int, optional, optional): How many zeros to pad to the input Tensor. Defaults to 100.
         input_channel (int, optional, optional): Number of channels of the input tensor. Defaults to 2.
         output_np (int, optional, optional): Number of points to sample the solution. Defaults to 2001.
+
+    Examples:
+        >>> model = ppsci.arch.FNO1d()
+        >>> input_data = paddle.randn([100, 2001, 2])
+        >>> input_dict = {"input": input_data}
+        >>> out_dict = model(input_dict)
+        >>> for k, v in out_dict.items():
+        ...     print(k, v.shape)
+        output [100, 1]
     """
 
     def __init__(

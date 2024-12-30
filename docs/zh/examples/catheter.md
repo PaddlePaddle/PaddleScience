@@ -4,9 +4,9 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
 ### 1.1 论文信息:
-|年份 | 期刊 | 作者|引用数 | 论文PDF |
-|-----|-----|-----|---|-----|
-|3 January 2024|Science Advance|Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio|15|[Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf)|
+| 年份           | 期刊            | 作者                                                                                             | 引用数 | 论文PDF                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------- | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3 January 2024 | Science Advance | Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio | 15     | [Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf) |
 
 ### 1.2 作者介绍
 
@@ -43,19 +43,14 @@ Meta Platforms公司(前Facebook)，Reality Labs部门
 
 ### 1.3 模型&复现代码
 
-|问题类型 | 在线运行 |神经网络|预训练模型|指标|
-|---------|-----|---------|-|-|
-|算子神经网络预测流场|[人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783)|傅立叶几何神经算子|[GeoFNO_pretrained.pdparams](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams)|loss(MAE): 0.0664|
+| 问题类型             | 在线运行                                                                                                                   | 神经网络           | 预训练模型                                                                                                                                                              | 指标              |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| 算子神经网络预测流场 | [人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783) | 傅立叶几何神经算子 | [GeoFNO_pretrained.pdparams](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams) | loss(MAE): 0.0664 |
 
 
 === "模型训练命令"
 
     ``` sh
-    # 安装PaddleScience
-    git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
-    python -m pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
-    cd PaddleScience
-    export PYTHONPATH=$PYTHONPATH:$PWD # for linux
     cd PaddleScience/examples/catheter
 
     # 下载数据
@@ -264,8 +259,6 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 
 这些参数的约束条件是为了满足制造限制和涡旋生成机制的物理条件（图2，B和C；更多讨论见补充文本和附图S2）。数据集被存储起来以供未来任务重复使用。我们使用相对经验均方误差作为损失函数。模型训练在1个GPU上使用Adam优化器进行了20分钟。它在100个测试数据点上获得了大约$4\%$的相对误差。
 
-
-
 ### 2.7 基于梯度的快速逆向设计优化
 
 我们的人工智能方法相较于传统求解器具有显著的速度优势，并且其可微性使得能够快速应用基于梯度的方法进行几何设计优化。在GPU上，每次评估仅需0.005s，而使用基于GPU的流体和粒子动力学模拟则需要10分钟，因此，在优化过程中进行数千次评估变得切实可行。此外，我们利用深度学习包中的自动微分工具，高效计算相对于设计变量的梯度，从而能够应用基于梯度的设计优化方法。
@@ -292,7 +285,6 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 
 - E. Geo-FNO在$d-s$ 横截面优化设计周围的损失景观可视化
 
-
 ### 2.8 细菌菌株、培养条件、材料和化学品
 
 对于3D导管长期实验，我们使用了具有卡那霉素抗性的野生型$BW25113$大肠杆菌；而对于微流控实验，则使用了表达mScarlet红色荧光蛋白并具有卡那霉素抗性的$BW25113$大肠杆菌。
@@ -312,8 +304,6 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 实验使用了奥林巴斯BX51WI显微镜，并配备了两个Photometrics Prime95B相机，通过Hamamatsu的W-View Gemini-2光学分配器连接。使用了奥林巴斯20×干物镜。以12.4帧/s的速度获取时间延迟图像，$488nm$激光强度设置为$20%$。显微镜的焦平面固定在通道深度$z$方向的中部，以避免记录到在通道顶部和底部爬行的细菌。
 
 实验在三天内进行，每天使用独立的E. coli培养批次，每天进行五次15分钟的记录。使用ImageJ软件（Fiji）进行视频后处理，以提取细菌的轨迹。通过轨迹的前向进展线性度进行过滤，以消除快速向下游移动的轨迹，并直观地突出向上游游动的轨迹。研究者估计向上游游动的时间间隔为$10s$，然后细菌会脱落。最大流速定义为沿通道中心线的最高流速。通过计算向上游脱落间隔期间，细菌和荧光珠沿中心线的最快速度的平均值，来估计瞬时最大流速。在补充材料中提供了几个视频记录。
-
-
 
 <video width="640"  controls>
     <source src="https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/adj1741_Movie_S1.mp4" type="video/mp4">
@@ -356,13 +346,13 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 
 数据文件说明如下：
 
-|`./data.zip/training/`||`./data.zip/test/`||
-| :----------------------: | :----------------: | :----------------------: | :---------------: |
-|          文件名          |        说明        |          文件名          |       说明       |
+|      `./data.zip/training/`       |                    |      `./data.zip/test/`       |                   |
+| :-------------------------------: | :----------------: | :---------------------------: | :---------------: |
+|              文件名               |        说明        |            文件名             |       说明        |
 | training/x_1d_structured_mesh.npy | 形状为(2001, 3003) | test/x_1d_structured_mesh.npy | 形状为(2001, 300) |
 | training/y_1d_structured_mesh.npy | 形状为(2001, 3003) | test/y_1d_structured_mesh.npy | 形状为(2001, 300) |
-|      training/data_info.npy      |  形状为(7, 3003)  |      test/data_info.npy      |  形状为(7, 300)  |
-|   training/density_1d_data.npy   | 形状为(2001, 3003) |   test/density_1d_data.npy   | 形状为(2001, 300) |
+|      training/data_info.npy       |  形状为(7, 3003)   |      test/data_info.npy       |  形状为(7, 300)   |
+|   training/density_1d_data.npy    | 形状为(2001, 3003) |   test/density_1d_data.npy    | 形状为(2001, 300) |
 
 在加载数据之后，需要将 x、y 进行合并，同时对于合并后的训练数据重新 `reshape` 为 `(1000, 2001, 2)` 的格式，具体代码如下
 
@@ -499,11 +489,9 @@ solver.eval()
 solver.visualize()
 ```
 
-
 ## 4. 结果展示
 
 === "训练、推理loss"
-
 
 下方展示了训练后模型对测试数据的第一次预测结果以及最后一次预测结果。
 
@@ -529,9 +517,7 @@ solver.visualize()
 
 1. J. W. Warren, the catheter and urinary tract infection. Med. Clin. North Am. 75, 481–493
 (1991).
-
 2. l. e. nicolle, catheter- related urinary tract infection. Drugs Aging 22, 627–639 (2005).
-
 3. e. K. Shuman, c. e. chenoweth, Urinary catheter- associated infections. Infect. Dis. Clin.
 North Am. 32, 885–897 (2018).
 4. n. Buetti, A. tabah, J. F. timsit, W. Zingg, What is new in catheter use and catheter
