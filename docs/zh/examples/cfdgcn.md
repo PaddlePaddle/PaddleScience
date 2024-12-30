@@ -2,6 +2,18 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7127446" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型导出命令"
+
+    ``` sh
+    python cfdgcn.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python cfdgcn.py mode=infer
+    ```
+
 === "模型训练命令"
 
     ``` sh

@@ -249,6 +249,83 @@ def evaluate(cfg: DictConfig):
                 "cylinder",
             )
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+import numpy as np
+import matplotlib.pyplot as plt
+from some_library import su2_simulate, build_fine_mesh_graph, upsample, concatenate  
+
+def u_solution_func(input_data) -> np.ndarray:
+    """
+    True solution function u(t) for comparison.
+    Example: u(t) = exp(-x) * cosh(x), replace with your CFD-GCN-specific solution.
+    """
+    if isinstance(input_data["x"], np.ndarray):
+        return np.exp(-input_data["x"]) * np.cosh(input_data["x"])
+    raise ValueError("Input data must be a numpy array.")
+
+def inference(model, coarse_mesh_data, fine_mesh_data):
+    """
+    Perform inference using CFD-GCN and visualize the results.
+
+    Parameters:
+    - model: CFD-GCN model with GCN layers.
+    - coarse_mesh_data: Coarse mesh data for CFD simulation.
+    - fine_mesh_data: Fine mesh data for graph-based processing.
+    """
+    # Step 1: Perform CFD simulation on the coarse mesh
+    cfd_coarse_simulation = su2_simulate(coarse_mesh_data)
+    
+    # Step 2: Process fine mesh data using the Graph Convolutional Network (GCN)
+    fine_graph = build_fine_mesh_graph(fine_mesh_data)
+    gcn_output = model.gcn(fine_graph)
+    
+    # Step 3: Upsample coarse simulation results to match fine mesh resolution
+    upsampled_simulation = upsample(cfd_coarse_simulation, fine_mesh_data)
+    
+    # Step 4: Combine upsampled simulation with GCN output
+    combined_input = concatenate(upsampled_simulation, gcn_output)
+    
+    # Step 5: Apply the final GCN layer for prediction
+    final_prediction = model.final_gcn(combined_input)
+    
+    # Generate input data for true solution
+    input_data = fine_mesh_data["x"]  # Assuming fine mesh has an "x" component
+    label_data = u_solution_func({"x": input_data})  # True solution
+    output_data = final_prediction  # Model prediction
+    
+    # Visualization
+    plt.plot(input_data, label_data, "-", label=r"$u(t)$")  # True solution
+    plt.plot(input_data, output_data, "o", label=r"$\hat{u}(t)$", markersize=4.0)  # Prediction
+    plt.legend()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$u$")
+    plt.title(r"CFD-GCN Prediction vs. True Solution")
+    plt.savefig("./CFDGCN_Prediction.png", dpi=200)
+    plt.show()
+
+
+
+    
+    
 
 @hydra.main(version_base=None, config_path="./conf", config_name="cfdgcn.yaml")
 def main(cfg: DictConfig):
@@ -257,8 +334,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

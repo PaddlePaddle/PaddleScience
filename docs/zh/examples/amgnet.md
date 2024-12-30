@@ -6,6 +6,18 @@
 
     本案例运行前需通过 `pip install -r requirements.txt` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [PyAMG](https://github.com/pyamg/pyamg) 代数多重网格工具。
 
+=== "模型导出命令"
+
+    ``` sh
+    python amgnet_cylinder.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python amgnet_cylinder.py mode=infer
+    ```
+
 === "模型训练命令"
 
     === "amgnet_airfoil"
