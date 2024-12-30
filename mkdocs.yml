@@ -56,7 +56,6 @@ nav:
       - 技术科学(AI for Technology):
         - 流体:
           - Catheter: zh/examples/catheter.md
-          - Transolver: zh/examples/transolver.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
           - BubbleNet: zh/examples/bubble.md
