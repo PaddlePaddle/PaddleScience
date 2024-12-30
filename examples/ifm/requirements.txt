@@ -1,5 +1,6 @@
 mdtraj
 numpy
 pandas
+pgl
 rdkit==2022.09.5
 scikit-learn
