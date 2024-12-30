@@ -3,7 +3,7 @@
 Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ## 1. 背景简介
-### 1.1 论文信息:
+### 1.1 论文信息
 | 年份           | 期刊            | 作者                                                                                             | 引用数 | 论文PDF                                                                                                                                                                                                                                                                                                                                                                 |
 | -------------- | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 3 January 2024 | Science Advance | Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio | 15     | [Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf) |
@@ -357,37 +357,9 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 在加载数据之后，需要将 x、y 进行合并，同时对于合并后的训练数据重新 `reshape` 为 `(1000, 2001, 2)` 的格式，具体代码如下
 
 ```py
-# build data
-def getdata(
-    x_path,
-    y_path,
-    para_path,
-    output_path,
-    n_data,
-    n,
-    s,
-    is_train=True,
-    is_inference=False,
-):
-    # load data
-    inputX_raw = np.load(x_path)[:, 0:n_data]
-    inputY_raw = np.load(y_path)[:, 0:n_data]
-    inputPara_raw = np.load(para_path)[:, 0:n_data]
-    output_raw = np.load(output_path)[:, 0:n_data]
-
-    # preprocess data
-    inputX = inputX_raw[:, 0::3]
-    inputY = inputY_raw[:, 0::3]
-    inputPara = inputPara_raw[:, 0::3]
-    label = (output_raw[:, 0::3] + output_raw[:, 1::3] + output_raw[:, 2::3]) / 3.0
-
-    if is_inference:
-        label = label.unsqueeze(axis=-1)
-        return inputX, inputY, inputPara, label
-
-    inputX = paddle.to_tensor(data=inputX, dtype="float32").transpose(perm=[1, 0])
-    inputY = paddle.to_tensor(data=inputY, dtype="float32").transpose(perm=[1, 0])
-    input = paddle.stack(x=[inputX, inputY], axis=-1)
+--8<--
+examples/catheter/catheter.py:31:75
+--8<--
 ```
 
 ### 3.2 GeoFNO 模型
@@ -397,57 +369,9 @@ GeoFNO 是一种基于 **几何聚焦傅里叶神经算子 (Geo-FNO** ) 的机�
 在论文中，该模型能够学习并解决与几何形状相关的偏微分方程（SPDE），从而实现对导管几何形状的优化, 代码表示如下
 
 ```py
-class FNO1d(nn.Layer):
-    """The overall network. It contains 4 layers of the Fourier layer.
-    1. Lift the input to the desire channel dimension by self.fc0 .
-    2. 4 layers of the integral operators u' = (W + K)(u).
-         W defined by self.w; K defined by self.conv .
-    3. Project from the channel space to the output space by self.fc1 and self.fc2 .
-
-    Args:
-        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
-        output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
-        modes (int, optional, optional): Number of Fourier modes to compute, it should be the same as
-            that in fft part of the code below. Defaults to 64.
-        width (int, optional, optional): Number of channels in each Fourier layer. Defaults to 64.
-        padding (int, optional, optional): How many zeros to pad to the input Tensor. Defaults to 100.
-        input_channel (int, optional, optional): Number of channels of the input tensor. Defaults to 2.
-        output_np (int, optional, optional): Number of points to sample the solution. Defaults to 2001.
-    """
-
-    def __init__(
-        self,
-        input_key=("input",),
-        output_key=("output",),
-        modes=64,
-        width=64,
-        padding=100,
-        input_channel=2,
-        output_np=2001,
-    ):
-        super().__init__()
-        self.input_keys = input_key
-        self.output_keys = output_key
-
-        self.output_np = output_np
-        self.modes1 = modes
-        self.width = width
-        self.padding = padding
-        self.fc0 = nn.Linear(input_channel, self.width)
-
-        self.conv0 = SpectralConv1d(self.width, self.width, self.modes1)
-        self.conv1 = SpectralConv1d(self.width, self.width, self.modes1)
-        self.conv2 = SpectralConv1d(self.width, self.width, self.modes1)
-        self.conv3 = SpectralConv1d(self.width, self.width, self.modes1)
-        self.conv4 = SpectralConv1d(self.width, self.width, self.modes1)
-
-        self.w0 = nn.Conv1D(self.width, self.width, 1)
-        self.w1 = nn.Conv1D(self.width, self.width, 1)
-        self.w2 = nn.Conv1D(self.width, self.width, 1)
-        self.w3 = nn.Conv1D(self.width, self.width, 1)
-
-        self.fc1 = nn.Linear(self.width, 128)
-        self.fc2 = nn.Linear(128, 1)
+--8<--
+ppsci/arch/geofno.py:95:205
+--8<--
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("input",)`，输出变量名是 `("output",)`，这些命名与后续代码保持一致。
@@ -459,51 +383,26 @@ class FNO1d(nn.Layer):
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
 ```python
-# initialize solver
-solver = ppsci.solver.Solver(
-    model,
-    constraint,
-    cfg.output_dir,
-    optimizer,
-    lr_scheduler,
-    cfg.TRAIN.epochs,
-    cfg.TRAIN.iters_per_epoch,
-    save_freq=cfg.TRAIN.save_freq,
-    log_freq=cfg.log_freq,
-    eval_during_train=True,
-    eval_freq=cfg.TRAIN.eval_freq,
-    seed=cfg.seed,
-    equation=equation,
-    geom=geom,
-    validator=validator,
-    visualizer=visualizer,
-    pretrained_model_path=cfg.TRAIN.pretrained_model_path,
-    checkpoint_path=cfg.TRAIN.checkpoint_path,
-    eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-)
-# train model
-solver.train()
-# evaluate after finished training
-solver.eval()
-# visualize prediction after finished training
-solver.visualize()
+--8<--
+examples/catheter/catheter.py:162:177
+--8<--
 ```
 
 ## 4. 结果展示
 
-=== "训练、推理loss"
+=== "   训练、推理loss"
 
 下方展示了训练后模型对测试数据的第一次预测结果以及最后一次预测结果。
 
-=== "第一次预测结果"
+=== "   第一次预测结果"
 
 ![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter10.png)
 
-=== "最后一次预测结果"
+=== "   最后一次预测结果"
 
 ![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter9.png)
 
-=== "训练测试损失"
+=== "   训练测试损失"
 
 ![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter8.png)
 
