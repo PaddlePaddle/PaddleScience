@@ -58,7 +58,7 @@ MODEL:
 # training settings
 TRAIN:
   use_pretrained_model: False
-  pretrained_model_path: "https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/init_GeoFno.pdparams"
+  pretrained_model_path: null
   lr_scheduler:
     epochs: 1001
     learning_rate: 0.001
@@ -72,7 +72,7 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: "https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO"
+  pretrained_model_path: null
 
 # inference settings
 INFER:

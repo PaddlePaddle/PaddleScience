@@ -28,10 +28,10 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 === "模型训练命令"
 
     ``` sh
-    cd PaddleScience/examples/catheter
-
-    # 下载数据
+    # linux
     wget https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip
+    # windows
+    # curl https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip -o data.zip
     unzip data.zip
     python catheter.py
     ```
@@ -39,7 +39,7 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 === "预训练模型快速评估"
 
     ``` sh
-    python catheter.py mode=eval
+    python catheter.py mode=eval EVAL.pretrained_model=https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams
     ```
 
 在狭窄管道内的流体环境中，细菌能借助流体动力学作用逆流迁移，对使用植入性导管的患者构成泌尿道感染的严重威胁。尽管已有提议采用涂层与结构化表面来抑制导管内的细菌滋生，但遗憾的是，至今尚无一种表面结构或涂层技术能从根本上解决污染难题。鉴于此，我们依据逆流游动的物理原理，创新性地提出了一种几何设计方案，并通过AI模型对细菌流入动力学进行预测与优化。相较于传统模拟方法，所采用的傅立叶神经算子人工智能技术实现了显著的速度提升。
