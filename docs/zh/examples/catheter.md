@@ -10,36 +10,13 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 ### 1.2 作者介绍
 
-#### 第一作者：加州理工学院 Tingtao Zhou
+- 第一作者：加州理工学院 Tingtao Zhou <br> 研究方向：统计物理学、流体力学、活性物质、无序材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter5.png)
 
-研究方向：统计物理学、流体力学、活性物质、无序材料
+- 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038) <br> 教师主页：https://www.eas.caltech.edu/people/daraio <br> 研究方向：力学 材料 非线性动力学 软物质 生物材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter6.png)
 
-![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter5.png)
+- 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555) <br> 教师主页：https://www.bbe.caltech.edu/people/paul-w-sternberg <br> 研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter7.png)
 
-#### 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038)
-
-教师主页：https://www.eas.caltech.edu/people/daraio
-
-研究方向：力学 材料 非线性动力学 软物质 生物材料
-
-![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter6.png)
-
-#### 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555)
-
-教师主页：https://www.bbe.caltech.edu/people/paul-w-sternberg
-
-研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。
-
-![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter7.png)
-
-
-#### 其他作者所属机构
-
-加州理工学院,工程与应用科学部\化学与化学工程系\生物与生物工程系
-
-北京大学,北京国际数学研究中心
-
-Meta Platforms公司(前Facebook)，Reality Labs部门
+- 其他作者所属机构 <br> 加州理工学院,工程与应用科学部\化学与化学工程系\生物与生物工程系 <br> 北京大学,北京国际数学研究中心 <br> Meta Platforms公司(前Facebook)，Reality Labs部门
 
 ### 1.3 模型&复现代码
 
