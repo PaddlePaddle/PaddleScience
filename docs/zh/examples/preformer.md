@@ -7,15 +7,13 @@
 === "模型训练命令"
 
     ``` sh
-    # 模型训练
-    python train.py
+    python main.py
     ```
 
 === "模型评估命令"
 
     ``` sh
-    # 模型评估
-    python train.py mode=eval
+    python main.py mode=eval
     ```
 
 ## 1. 背景简介
@@ -183,57 +181,9 @@ examples/preformer/train.py:143:156
 --8<--
 ```
 
-#### 3.2.6 模型导出
-
-通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 和 `eval_freq` 参数，可以自动保存在验证集上效果最优的模型参数。
-
-``` py linenums="100" title="examples/preformer/train.py"
---8<--
-examples/preformer/train.py:158:158
---8<--
-```
-
-#### 3.2.7 测试集上评估模型
-
-训练完成后，启动评估流程在测试集上评估模型。
-
-``` py linenums="112" title="examples/preformer/train.py"
---8<--
-examples/preformer/train.py:160:160
---8<--
-```
-
-
 ## 4. 完整代码
 
-数据集接口：
-
-``` py linenums="1" title="ppsci\data\dataset\era5sq_dataset.py"
+``` py linenums="1" title="examples/preformer/main.py"
 --8<--
-ppsci\data\dataset\era5sq_dataset.py
+examples/preformer/main.py
 --8<--
-```
-
-模型结构：
-
-``` py linenums="1" title="ppsci/arch/preformer.py"
---8<--
-ppsci/arch/preformer.py
---8<--
-```
-
-模型训练：
-
-``` py linenums="1" title="examples/preformer/train.py"
---8<--
-examples/preformer/train.py
---8<--
-```
-
-配置文件：
-
-``` py linenums="1" title="examples/preformer/conf/train.yaml"
---8<--
-examples/preformer/conf/train.yaml
---8<--
-```
