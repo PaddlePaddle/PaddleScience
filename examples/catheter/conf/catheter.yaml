@@ -1,0 +1,93 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_geofno/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+data_path: ./data
+
+TRAIN_DATA:
+  x_path: "${data_path}/training/x_1d_structured_mesh.npy"
+  y_path: "${data_path}/training/y_1d_structured_mesh.npy"
+  para_path: "${data_path}/training/data_info.npy"
+  output_path: "${data_path}/training/density_1d_data.npy"
+  n_data: 3000
+  n: 1000
+  s: 2001
+
+TEST_DATA:
+  x_path: "${data_path}/test/x_1d_structured_mesh.npy"
+  y_path: "${data_path}/test/y_1d_structured_mesh.npy"
+  para_path: "${data_path}/test/data_info.npy"
+  output_path: "${data_path}/test/density_1d_data.npy"
+  n_data: 300
+  n: 100
+  s: 2001
+
+# model settings
+MODEL:
+  modes: 64
+  width: 64
+  padding: 100
+  input_channel: 2
+  output_np: 2001
+
+# training settings
+TRAIN:
+  use_pretrained_model: False
+  pretrained_model_path: null
+  lr_scheduler:
+    epochs: 1001
+    learning_rate: 0.001
+    step_size: 100
+    gamma: 0.5
+  epochs: 1001
+  weight_decay: 0.0001
+  eval_during_train: true
+  batch_size: 20
+  save_freq: 100
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+
+# inference settings
+INFER:
+  pretrained_model_path: https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams
+  export_path: ./inference/catheter
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 20
