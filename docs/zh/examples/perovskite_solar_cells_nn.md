@@ -1,4 +1,4 @@
-# NN(Machine Learning for Perovskite Solar Cells: An Open-Source Pipeline)
+# psc_nn(Machine Learning for Perovskite Solar Cells: An Open-Source Pipeline)
 
 !!! note "注意事项"
 
@@ -9,24 +9,24 @@
 === "模型训练命令"
 
     ``` sh
-    python NN.py mode=train
+    python psc_nn.py mode=train
     ```
 
 === "模型评估命令"
 
     ``` sh
     # 使用本地预训练模型
-    python NN.py mode=eval eval.pretrained_model_path="Your pdparams path"
+    python psc_nn.py mode=eval eval.pretrained_model_path="Your pdparams path"
     ```
 
     ``` sh
     # 或使用远程预训练模型
-    python NN.py mode=eval eval.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/NN/solar_cell_pretrained.pdparams"
+    python psc_nn.py mode=eval eval.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams"
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [solar_cell_pretrained.pdparams](../params/solar_cell_pretrained.pdparams) | RMSE: 3.91798 |
+| [solar_cell_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams) | RMSE: 3.91798 |
 
 ## 1. 背景简介
 
@@ -34,7 +34,7 @@
 
 近年来，深度学习和机器学习技术的快速发展，为太阳能电池性能预测提供了创新的方法。通过机器学习技术，可以显著加快开发速度，同时实现与实验结果相当的预测精度。特别是在钙钛矿太阳能电池研究中，材料的化学组成和结构多样性为模型训练带来了新的挑战。为了解决这一问题，研究者们通常将材料的特性转换为固定长度的特征向量，以适配机器学习模型。尽管如此，不同性能指标的特征表示设计仍需不断优化，同时对模型预测结果的可解释性要求也更为严格。
 
-本研究中，通过利用包含钙钛矿太阳能电池特性信息的全面数据库（PDP），我们构建并评估了包括 XGBoost、NN 在内的多种机器学习模型，专注于预测短路电流密度（Jsc）。研究结果表明，结合深度学习与超参数优化工具（如 Optuna）能够显著提升太阳能电池设计的效率，为新型太阳能电池研发提供了更精确且高效的解决方案。
+本研究中，通过利用包含钙钛矿太阳能电池特性信息的全面数据库（PDP），我们构建并评估了包括 XGBoost、psc_nn 在内的多种机器学习模型，专注于预测短路电流密度（Jsc）。研究结果表明，结合深度学习与超参数优化工具（如 Optuna）能够显著提升太阳能电池设计的效率，为新型太阳能电池研发提供了更精确且高效的解决方案。
 
 ## 2. 模型原理
 
@@ -42,7 +42,7 @@
 
 该方法的主要思想是通过人工神经网络建立光谱响应数据与短路电流密度（Jsc）之间的非线性映射关系。人工神经网络模型的总体结构如下图所示：
 
-![NN_overview](../images/ML/En.png)
+![psc_nn_overview](../images/ML/psc_nn_overview.png)
 
 本案例采用多层感知机（MLP）作为基础模型架构，主要包括以下几个部分：
 
@@ -70,25 +70,25 @@
 
 为了方便数据处理，我们实现了一个辅助函数 `create_tensor_dict` 来创建输入和标签的 tensor 字典：
 
-``` py linenums="31" title="examples/ML_Pipeline/NN.py"
+``` py linenums="31" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:31:37
+examples/perovskite_solar_cells/psc_nn.py:31:37
 --8<--
 ```
 
 数据集的读取和预处理代码如下：
 
-``` py linenums="130" title="examples/ML_Pipeline/NN.py"
+``` py linenums="118" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:130:141
+examples/perovskite_solar_cells/psc_nn.py:118:129
 --8<--
 ```
 
 为了进行超参数优化，我们将训练集进一步划分为训练集和验证集：
 
-``` py linenums="142" title="examples/ML_Pipeline/NN.py"
+``` py linenums="130" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:142:147
+examples/perovskite_solar_cells/psc_nn.py:130:135
 --8<--
 ```
 
@@ -104,9 +104,9 @@ examples/ML_Pipeline/NN.py:142:147
 
 模型定义代码如下：
 
-``` py linenums="103" title="examples/ML_Pipeline/NN.py"
+``` py linenums="98" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:103:120
+examples/perovskite_solar_cells/psc_nn.py:98:115
 --8<--
 ```
 
@@ -114,9 +114,9 @@ examples/ML_Pipeline/NN.py:103:120
 
 考虑到数据集中不同样本的重要性可能不同，我们设计了一个加权均方误差损失函数。该函数对较大的 Jsc 值赋予更高的权重，以提高模型在高性能太阳能电池上的预测准确性：
 
-``` py linenums="20" title="examples/ML_Pipeline/NN.py"
+``` py linenums="20" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:20:30
+examples/perovskite_solar_cells/psc_nn.py:20:30
 --8<--
 ```
 
@@ -124,9 +124,9 @@ examples/ML_Pipeline/NN.py:20:30
 
 本案例基于数据驱动的方法求解问题，因此使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。为了减少代码重复，我们实现了 `create_constraint` 函数来创建监督约束：
 
-``` py linenums="38" title="examples/ML_Pipeline/NN.py"
+``` py linenums="38" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:38:58
+examples/perovskite_solar_cells/psc_nn.py:38:58
 --8<--
 ```
 
@@ -134,9 +134,9 @@ examples/ML_Pipeline/NN.py:38:58
 
 为了实时监测模型的训练情况，我们实现了 `create_validator` 函数来创建评估器：
 
-``` py linenums="59" title="examples/ML_Pipeline/NN.py"
+``` py linenums="59" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:59:83
+examples/perovskite_solar_cells/psc_nn.py:59:78
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/ML_Pipeline/NN.py:59:83
 
 为了统一管理优化器和学习率调度器的创建，我们实现了 `create_optimizer` 函数：
 
-``` py linenums="84" title="examples/ML_Pipeline/NN.py"
+``` py linenums="79" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:84:102
+examples/perovskite_solar_cells/psc_nn.py:79:97
 --8<--
 ```
 
@@ -154,17 +154,17 @@ examples/ML_Pipeline/NN.py:84:102
 
 在训练过程中，我们使用上述封装的函数来创建数据字典、约束、评估器和优化器：
 
-``` py linenums="242" title="examples/ML_Pipeline/NN.py"
+``` py linenums="230" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py:242:296
+examples/perovskite_solar_cells/psc_nn.py:230:280
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="examples/ML_Pipeline/NN.py"
+``` py linenums="1" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/ML_Pipeline/NN.py
+examples/perovskite_solar_cells/psc_nn.py
 --8<--
 ```
 
