@@ -102,6 +102,7 @@ nav:
         - TGCN: zh/examples/tgcn.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
+        - TADF: zh/examples/TADF.md
 
   - API 文档:
     - ppsci:
