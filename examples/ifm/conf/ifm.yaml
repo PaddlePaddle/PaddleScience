@@ -1,0 +1,122 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_ifm/doc_metric #${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 43
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+data_label: 'tox21' #'tox21'
+data_dir: './dataset/'
+
+# model settings
+MODEL:
+  input_keys: ["x", ]
+  output_keys: ["pred", ]
+  embed_name: 'IFM'
+
+# training settings
+TRAIN:
+  epochs: 80
+  iters_per_epoch: null #42
+  save_freq: 2
+  eval_during_train: false
+  eval_freq: 2
+  learning_rate: 0.001
+  batch_size: 128
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 128
+  pretrained_model_path: null #./outputs_ifm/doc_metric/checkpoints/epoch_${${HYPER_OPT.${data_label}}.epoch}.pdparams #"./outputs_ifm/2024-08-09/06-21-16/checkpoints/epoch_80.pdparams"
+  eval_with_no_grad: true
+
+HYPER_OPT:
+  # hidden_units_options = [64, 128, 256, 512]
+  tox21:
+    'd_out': 40
+    'dropout': 0.040875279882956944
+    'hidden_unit1': 512 #3
+    'hidden_unit2': 512 #3
+    'hidden_unit3': 512 #3
+    'l2': 4.482713460277411e-06
+    'omega0': 0.6124886445092693
+    'omega1': 0.7820986807482367
+    'sigma': 13.846474804138776
+    'epoch': 44
+  sider:
+    'd_out': 75
+    'dropout': 0.006014483573407364
+    'hidden_unit1': 128 #1
+    'hidden_unit2': 512 #3
+    'hidden_unit3': 128 #1
+    'l2': 6.300597661178866e-05
+    'omega0': 0.5989987615729764
+    'omega1': 0.6988619728428394
+    'sigma': 0.028121178425104386
+    'epoch': 20 #40 #20 #12 #169
+  bace:
+    'd_out': 38
+    'dropout': 0.05495722504861231
+    'hidden_unit1': 512 #3
+    'hidden_unit2': 512 #3
+    'hidden_unit3': 128 #1
+    'l2': 0.0026367264050607565
+    'omega0': 0.41503054103861836
+    'omega1': 0.609732460409304
+    'sigma': 3.4713824367756536
+    'epoch': 36
+  bbbp:
+    'd_out': 122
+    'dropout': 0.09708794924402875
+    'hidden_unit1': 256 #2
+    'hidden_unit2': 256 #2
+    'hidden_unit3': 128 #1
+    'l2': 0.008891601037203106
+    'omega0': 0.8701462728133552
+    'omega1': 0.9902222575839961
+    'sigma': 36.177153824422135
+    'epoch': 12
+  hiv:
+    'd_out': 108
+    'dropout': 0.12307438739178816
+    'hidden_unit1': 256 #2
+    'hidden_unit2': 256 #2
+    'hidden_unit3': 512 #3
+    'l2': 0.00363621683596208
+    'omega0': 0.9716859195340234
+    'omega1': 0.2804801296584338
+    'sigma': 0.021289589991844306
+    'epoch': 66 #65
+  common:
+    'd_out': 76 #hp.randint('d_out', 127),
+    'dropout': 0.02659859559082154 #hp.uniform('dropout', 0, 0.5),
+    'hidden_unit1': 128 #hp.choice('hidden_unit1', [64, 128, 256, 512]),
+    'hidden_unit2': 64 #hp.choice('hidden_unit2', [64, 128, 256, 512]),
+    'hidden_unit3': 64 #hp.choice('hidden_unit3', [64, 128, 256, 512])
+    'l2': 0.0006264826906785799 #hp.uniform('l2', 0, 0.01),
+    'omega0': 0.48799501140521095 #hp.uniform('omega0', 0.001, 1), #1
+    'omega1': 0.37676389088248685  #hp.uniform('omega1', 0.001, 1), #1
+    'sigma': 0.186724743661628 #hp.loguniform('sigma', np.log(0.01), np.log(100)),
+    'epoch': 80
