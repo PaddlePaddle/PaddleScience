@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.regpointnet import RegPointNet
+
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
@@ -107,6 +109,7 @@ __all__ = [
     "USCNN",
     "VelocityDiscriminator",
     "VelocityGenerator",
+    "RegPointNet",
 ]
 
 
