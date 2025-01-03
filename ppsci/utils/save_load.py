@@ -173,6 +173,7 @@ def load_checkpoint(
             equation_dict = paddle.load(f"{path}.pdeqn")
 
     # set state dict
+    logger.message(f"* Loading model checkpoint from {path}.pdparams")
     missing_keys, unexpected_keys = model.set_state_dict(param_dict)
     if missing_keys:
         logger.warning(
@@ -185,18 +186,23 @@ def load_checkpoint(
             "and corresponding weights will be ignored."
         )
 
+    logger.message(f"* Loading optimizer checkpoint from {path}.pdopt")
     optimizer.set_state_dict(optim_dict)
     if grad_scaler is not None:
+        logger.message(f"* Loading grad scaler checkpoint from {path}.pdscaler")
         grad_scaler.load_state_dict(scaler_dict)
     if equation is not None and equation_dict is not None:
+        logger.message(f"* Loading equation checkpoint from {path}.pdeqn")
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
     if ema_model:
+        logger.message(f"* Loading EMA checkpoint from {path}_ema.pdparams")
         avg_param_dict = paddle.load(f"{path}_ema.pdparams")
         ema_model.set_state_dict(avg_param_dict)
 
-    if aggregator is not None:
+    if aggregator is not None and aggregator.should_persist:
+        logger.message(f"* Loading loss aggregator checkpoint from {path}.pdagg")
         aggregator_dict = paddle.load(f"{path}.pdagg")
         aggregator.set_state_dict(aggregator_dict)
 

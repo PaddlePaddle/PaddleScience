@@ -85,6 +85,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 流场高分辨率重构 | [2D 湍流流场重构](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tempoGAN) | 数据驱动 | tempoGAN | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat) | [Paper](https://dl.acm.org/doi/10.1145/3197517.3201304)|
 | 流场高分辨率重构 | [2D 湍流流场重构](https://aistudio.baidu.com/projectdetail/4493261?contributionType=1) | 数据驱动 | cycleGAN | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat) | [Paper](https://arxiv.org/abs/2007.15324)|
 | 流场高分辨率重构 | [基于Voronoi嵌入辅助深度学习的稀疏传感器全局场重建](https://aistudio.baidu.com/projectdetail/5807904) | 数据驱动 | CNN | 监督学习 | [Data1](https://drive.google.com/drive/folders/1K7upSyHAIVtsyNAqe6P8TY1nS5WpxJ2c)<br>[Data2](https://drive.google.com/drive/folders/1pVW4epkeHkT2WHZB7Dym5IURcfOP4cXu)<br>[Data3](https://drive.google.com/drive/folders/1xIY_jIu-hNcRY-TTf4oYX1Xg4_fx8ZvD) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 流场预测 | [Catheter](https://aistudio.baidu.com/projectdetail/5379212) | 数据驱动 | FNO | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/291940) | [Paper](https://www.science.org/doi/pdf/10.1126/sciadv.adj1741) |
 | 求解器耦合 | [CFD-GCN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/cfdgcn) | 数据驱动 | GCN | 监督学习 | [Data](https://aistudio.baidu.com/aistudio/datasetdetail/184778)<br>[Mesh](https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar) | [Paper](https://arxiv.org/abs/2007.04439)|
 | 受力分析 | [1D 欧拉梁变形](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/euler_beam) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [2D 平板变形](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/biharmonic2d) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2108.07243) |
@@ -181,7 +182,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
 
         # install paddlesci with editable mode
-        pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:git_install] -->
 
@@ -191,9 +192,9 @@ python -c "import paddle; paddle.utils.run_check()"
         <!-- --8<-- [start:pip_install] -->
         ``` shell
         # release
-        pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
+        python -m pip install -U paddlesci -i https://pypi.tuna.tsinghua.edu.cn/simple
         # nightly build
-        # pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+        # python -m pip install https://paddle-qa.bj.bcebos.com/PaddleScience/whl/latest/dist/paddlesci-0.0.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```
         <!-- --8<-- [end:pip_install] -->
 
@@ -217,7 +218,7 @@ python -c "import paddle; paddle.utils.run_check()"
         cd PaddleScience
         export PYTHONPATH=$PYTHONPATH:$PWD # for linux
         set PYTHONPATH=%cd% # for windows
-        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
         注：上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。

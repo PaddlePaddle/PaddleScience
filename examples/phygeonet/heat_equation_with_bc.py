@@ -188,6 +188,119 @@ def evaluate(cfg: DictConfig):
         plt.close(fig1)
 
 
+def export(cfg: DictConfig):
+    model = ppsci.arch.USCNN(**cfg.MODEL)
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1, 19, 84], "float32", name=key)
+            for key in model.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    pad_singleside = cfg.MODEL.pad_singleside
+
+    data = np.load(cfg.test_data_dir)
+    paras = data["paras"]
+    truths = data["truths"]
+    coords = data["coords"]
+
+    paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])
+    input_spec = {"coords": paras}
+    output_v = predictor.predict(input_spec, cfg.INFER.batch_size)
+    # mapping data to cfg.INFER.output_keys
+    output_v = {
+        store_key: output_v[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_v.keys())
+    }
+    output_v = output_v["output_v"]
+    num_sample = output_v.shape[0]
+    for j in range(num_sample):
+        # Impose BC
+        output_v[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = output_v[
+            j, 0, 1:2, pad_singleside:-pad_singleside
+        ]
+        output_v[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = output_v[
+            j, 0, -2:-1, pad_singleside:-pad_singleside
+        ]
+        output_v[j, 0, :, -pad_singleside:] = 0
+        output_v[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
+
+    error = paddle.sqrt(
+        paddle.mean((truths - output_v) ** 2) / paddle.mean(truths**2)
+    ).item()
+    logger.info(f"The average error: {error / num_sample}")
+
+    output_vs = output_v
+    PARALIST = [1, 2, 3, 4, 5, 6, 7]
+    for i in range(len(PARALIST)):
+        truth = truths[i]
+        coord = coords[i]
+        output_v = output_vs[i]
+        truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
+        coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
+        fig1 = plt.figure()
+        xylabelsize = 20
+        xytickssize = 20
+        titlesize = 20
+        ax = plt.subplot(1, 2, 1)
+        _, cbar = utils.visualize(
+            ax,
+            coord[0, 0, :, :],
+            coord[0, 1, :, :],
+            output_v[0, :, :],
+            "horizontal",
+            [0, max(PARALIST)],
+        )
+        ax.set_aspect("equal")
+        utils.set_axis_label(ax, "p")
+        ax.set_title("PhyGeoNet " + r"$T$", fontsize=titlesize)
+        ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
+        ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
+        ax.set_xticks([-1, 0, 1])
+        ax.set_yticks([-1, 0, 1])
+        ax.tick_params(axis="x", labelsize=xytickssize)
+        ax.tick_params(axis="y", labelsize=xytickssize)
+        cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
+        cbar.ax.tick_params(labelsize=xytickssize)
+        ax = plt.subplot(1, 2, 2)
+        _, cbar = utils.visualize(
+            ax,
+            coord[0, 0, :, :],
+            coord[0, 1, :, :],
+            truth[0, 0, :, :],
+            "horizontal",
+            [0, max(PARALIST)],
+        )
+        ax.set_aspect("equal")
+        utils.set_axis_label(ax, "p")
+        ax.set_title("FV " + r"$T$", fontsize=titlesize)
+        ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
+        ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
+        ax.set_xticks([-1, 0, 1])
+        ax.set_yticks([-1, 0, 1])
+        ax.tick_params(axis="x", labelsize=xytickssize)
+        ax.tick_params(axis="y", labelsize=xytickssize)
+        cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
+        cbar.ax.tick_params(labelsize=xytickssize)
+        fig1.tight_layout(pad=1)
+        fig1.savefig(osp.join(cfg.output_dir, f"Para{i}T.png"), bbox_inches="tight")
+        plt.close(fig1)
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="heat_equation_with_bc.yaml"
 )
@@ -196,8 +309,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
