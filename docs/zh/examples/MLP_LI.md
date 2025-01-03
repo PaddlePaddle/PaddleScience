@@ -1,6 +1,11 @@
 # Battery_LI（锂离子电池电极材料性能预测）
 
-## 概述
+## 背景简介
+
+锂离子电池（Lithium-ion Battery, LIB）作为现代储能技术的核心，广泛应用于消费电子、电动汽车、以及可再生能源的存储等领域。电极材料是锂离子电池性能的关键，其性能直接决定了电池的能量密度、功率密度、寿命、和安全性。然而，电极材料的研发是一个复杂且耗时的过程，通常需要实验测试和理论计算相结合，这对时间和资源的消耗非常大。
+
+## 模型原理
+
 该多层感知器（MLP）模型旨在利用从材料项目（Materials Project）数据集中提取的特征，预测锂离子电池电极材料的电化学性能。输入特征包括化学计量属性、晶体结构特性、电子结构属性和其他电池属性。输出为平均电压、比能量和比容量。
 
 ## 数据集介绍
@@ -25,6 +30,13 @@
 |-----------------------------------|
 | [MLP_LI_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams) |
 
+## 完整代码
+
+``` py linenums="1" title="examples/MLP_LI/MLP_LI.py"
+--8<--
+examples/MLP_LI/MLP_LI.py
+--8<--
+```
 
 ## 模型性能
 
@@ -74,3 +86,4 @@
 ## 参考资料
 
 Yang, X., Li, Y., Liu, Z., & Zhang, W. (2022)
+(https://doi.org/10.1016/j.gee.2022.10.002)
