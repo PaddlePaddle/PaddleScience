@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import paddle
 import pytest
@@ -10,7 +12,8 @@ __all__ = []
 
 
 @pytest.mark.parametrize("dim", (3,))
-def test_l1loss_mean(dim):
+def test_pde_from_latex(dim):
+    os.system("pip install latex2sympy2")
     """Test for only mean."""
     batch_size = 13
     input_dims = ("x", "y", "z")[:dim]
@@ -36,7 +39,7 @@ def test_l1loss_mean(dim):
     eq2 = equation.NavierStokes(1, 1, 3, True)
 
     eq1_out = ppsci.lambdify(
-        eq1.equations["expr_1"],
+        eq1.equations["expr_0"],
         model,
     )({"x": x, "y": y, "z": z})
     eq2_out = ppsci.lambdify(
