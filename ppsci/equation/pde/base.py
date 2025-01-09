@@ -244,25 +244,37 @@ class PDE:
 
     @classmethod
     def from_latex(cls, tex: str, detach_keys: Optional[Tuple[str, ...]] = None):
+        r"""Construct a PDE object from a LaTeX string, multiple expressions can be separated by ';'.
+
+        Args:
+            tex (str): LaTeX string.
+
+        Returns:
+            PDE: PDE object.
+
+        Examples:
+            >>> import ppsci
+            >>> pde = ppsci.equation.PDE.from_latex(r'\frac{d}{dx}(u(x,y))) - x; \frac{d}{dx}(u(x,y)) + y^2')
+            >>> print(pde)
+            PDE
+                expr_0: Derivative(u(x, y), x)
+                expr_1: y**2 + Derivative(u(x, y), x)
+        """
         try:
             import latex2sympy2
         except ModuleNotFoundError:
             raise ImportError(
                 "Please install `latex2sympy2` via: pip install latex2sympy2"
             )
+        eq_obj = cls()
         sympy_expr = latex2sympy2.latex2sympy(tex)
         variables = sympy_expr.free_symbols
-
-        eq_obj = cls()
         eq_obj.dim = len(variables)
         eq_obj.detach_keys = detach_keys
-        eq_obj.add_equation("expr_1", sympy_expr)
+        tex = tex.split(";")
+        for idx, tex_ in enumerate(tex):
+            tex_ = tex_.strip()
+            sympy_expr_ = latex2sympy2.latex2sympy(tex_)
+            eq_obj.add_equation(f"expr_{idx}", sympy_expr_)
         eq_obj._apply_detach()
         return eq_obj
-
-
-if __name__ == "__main__":
-    s = PDE.from_latex(
-        r"\frac{d}{dx}(u{(t,x,y,z)}) + \frac{d}{dy}(v{(t,x,y,z)}) + \frac{d}{dz}(w{(t,x,y,z)})"
-    )
-    print(s)
