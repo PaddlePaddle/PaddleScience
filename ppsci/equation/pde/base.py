@@ -241,3 +241,28 @@ class PDE:
             [self.__class__.__name__]
             + [f"    {name}: {eq}" for name, eq in self.equations.items()]
         )
+
+    @classmethod
+    def from_latex(cls, tex: str, detach_keys: Optional[Tuple[str, ...]] = None):
+        try:
+            import latex2sympy2
+        except ModuleNotFoundError:
+            raise ImportError(
+                "Please install `latex2sympy2` via: pip install latex2sympy2"
+            )
+        sympy_expr = latex2sympy2.latex2sympy(tex)
+        variables = sympy_expr.free_symbols
+
+        eq_obj = cls()
+        eq_obj.dim = len(variables)
+        eq_obj.detach_keys = detach_keys
+        eq_obj.add_equation("expr_1", sympy_expr)
+        eq_obj._apply_detach()
+        return eq_obj
+
+
+if __name__ == "__main__":
+    s = PDE.from_latex(
+        r"\frac{d}{dx}(u{(t,x,y,z)}) + \frac{d}{dy}(v{(t,x,y,z)}) + \frac{d}{dz}(w{(t,x,y,z)})"
+    )
+    print(s)
