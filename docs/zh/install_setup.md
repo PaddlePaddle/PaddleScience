@@ -206,17 +206,51 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
 #### 1.4.3 安装第三方库[可选]
 
-PaddleScience 提供了多种第三方库供用户在开发时使用，均默认位于 `ppsci/externals` 目录下，使用方式如下：
+PaddleScience 提供了多种第三方库供用户在开发时使用，这些库位于 `ppsci/externals` 目录下，可以通过 `git submodule` 命令进行下载，然后根据需要进行安装和使用。以下是具体操作步骤：
 
-``` sh
-cd PaddleScience
+=== "下载"
 
-# 下载全部第三方库
-git submodule update --init ppsci/externals/
+    ``` sh
+    cd PaddleScience
 
-# 下载指定第三方库(以Open3D为例)
-git submodule update --init ppsci/externals/Open3D
-```
+    # 下载全部第三方库
+    git submodule update --init ppsci/externals/
+
+    # 下载指定第三方库(以 tensorly 为例)
+    git submodule update --init ppsci/externals/tensorly
+    ```
+
+=== "安装"
+
+    以 `tensorly` 为例，安装方法如下：
+
+    ``` sh
+    cd ppsci/externals/tensorly
+    pip install -e .
+    ```
+
+    其他库的安装方法请参考相应的 GitHub 项目主页上的说明。
+
+=== "使用"
+
+    以 `tensorly` 为例，使用方法如下：
+
+    ``` python
+    >>> from ppsci import externals
+    >>> print(externals.__all__)
+    ['deepali', 'open3d', 'paddle_harmonics', 'tensorly', 'warp']
+
+    >>> tl = externals.tensorly
+    >>> tl.set_backend("paddle")
+
+    >>> x = tl.tensor(np.ones((3, 3)))
+    Tensor(shape=[3, 3], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+       [[1., 1., 1.],
+        [1., 1., 1.],
+        [1., 1., 1.]])
+    ```
+
+请根据以上步骤下载、安装和使用您所需的第三方库。
 
 ## 2. 验证安装
 
