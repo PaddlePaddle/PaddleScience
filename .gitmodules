@@ -4,3 +4,12 @@
 [submodule "ppsci/contrib/Open3D"]
 	path = ppsci/contrib/Open3D
 	url = https://github.com/PFCCLab/Open3D.git
+[submodule "ppsci/contrib/deepali"]
+	path = ppsci/contrib/deepali
+	url = https://github.com/PFCCLab/deepali.git
+[submodule "ppsci/contrib/paddle_harmonics"]
+	path = ppsci/contrib/paddle_harmonics
+	url = https://github.com/PFCCLab/paddle_harmonics.git
+[submodule "ppsci/contrib/neuraloperator"]
+	path = ppsci/contrib/neuraloperator
+	url = https://github.com/PFCCLab/neuraloperator.git
