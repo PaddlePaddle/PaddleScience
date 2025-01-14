@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 
@@ -204,7 +205,13 @@ class DrivAerNetDataset(paddle.io.Dataset):
                     f"Error loading point cloud from {load_path}: {e}"
                 ) from e
 
-    def __getitem__(self, idx: int, apply_augmentations: bool = True):
+    def __getitem__(
+        self, idx: int, apply_augmentations: bool = True
+    ) -> Tuple[
+        Dict[str, paddle.Tensor],
+        Dict[str, paddle.Tensor],
+        Dict[str, paddle.Tensor],
+    ]:
         """
         Retrieves a sample and its corresponding label from the dataset, with an option to apply augmentations.
 
