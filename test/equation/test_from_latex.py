@@ -13,7 +13,7 @@ __all__ = []
 
 @pytest.mark.parametrize("dim", (3,))
 def test_pde_from_latex(dim):
-    os.system("pip install latex2sympy2")
+    os.system("pip install latex2sympy2==4.9.3")
     """Test for only mean."""
     batch_size = 13
     input_dims = ("x", "y", "z")[:dim]
