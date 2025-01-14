@@ -109,7 +109,7 @@
 
     上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
 
-#### 1.4.2 安装额外功能[可选]
+#### 1.4.2 安装Mesh几何[可选]
 
 PaddleScience 提供了两种复杂几何类型，如下所示：
 
@@ -228,7 +228,7 @@ git submodule update --init ppsci/externals/Open3D
 
     如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
 
-- [可选]如果已按照 [1.4.2 安装额外依赖](#142) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+- [可选]如果已按照 [1.4.2 安装Mesh几何](#142-mesh) 正确安装了 4 个依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
     ``` sh
