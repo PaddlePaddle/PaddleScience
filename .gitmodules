@@ -19,3 +19,6 @@
 [submodule "ppsci/externals/warp"]
 	path = ppsci/externals/warp
 	url = https://github.com/NVIDIA/warp.git
+[submodule "ppsci/externals/paddle_scatter"]
+	path = ppsci/externals/paddle_scatter
+	url = https://github.com/PFCCLab/paddle_scatter
