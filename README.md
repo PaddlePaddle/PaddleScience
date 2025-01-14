@@ -256,6 +256,12 @@ python -c "import paddle; paddle.utils.run_check()"
 | [TensorLy](https://tensorly.org/dev/index.html) | 张量计算库 | 全量支持 |
 | [NVIDIA/warp](https://github.com/NVIDIA/warp) | 高性能仿真/图形库 | 全量支持 |
 | [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
+| [Open3D](https://github.com/PFCCLab/Open3D.git) | 三维图形库 | 全量支持 |
+| [paddle_scatter](TODO) | 张量稀疏计算库 | 全量支持 |
+| [paddle_harmonics](https://dmlc.github.io/dlpack/latest/index.html) | 球面谐波变换库 | 全量支持 |
+| [neuraloperator](https://dmlc.github.io/dlpack/latest/index.html) | 神经算子库 | 全量支持 |
+| [tensorly](https://dmlc.github.io/dlpack/latest/index.html) | 张量运算库 | 全量支持 |
+| [warp](https://dmlc.github.io/dlpack/latest/index.html) | 基于 Python 的 GPU 高性能仿真和图形库 | 全量支持 |
 <!-- --8<-- [end:adaptation] -->
 
 <!-- --8<-- [start:support] -->

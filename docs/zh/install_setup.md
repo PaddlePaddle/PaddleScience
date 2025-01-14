@@ -204,6 +204,20 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
         3. 由于自测工具 nose 未适配 Python>=3.10，因此执行 `pymesh.test()` 会报错，**但这不影响 pymesh 正常使用**。
 
+#### 1.4.3 安装第三方库[可选]
+
+PaddleScience 提供了多种第三方库供用户在开发时使用，均默认位于 `ppsci/externals` 目录下，使用方式如下：
+
+``` sh
+cd PaddleScience
+
+# 下载全部第三方库
+git submodule update --init ppsci/externals/
+
+# 下载指定第三方库(以Open3D为例)
+git submodule update --init ppsci/externals/Open3D
+```
+
 ## 2. 验证安装
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
