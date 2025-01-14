@@ -1,3 +1,6 @@
 [submodule "competition/IJCAI_2024_CAR"]
 	path = competition/IJCAI_2024_CAR
 	url = https://atomgit.com/paddlenumberone/ijcai_car.git
+[submodule "ppsci/contrib/Open3D"]
+	path = ppsci/contrib/Open3D
+	url = https://github.com/PFCCLab/Open3D.git
