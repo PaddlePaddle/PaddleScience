@@ -50,7 +50,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 88
-ignore = ["E501", "E741", "E731"]
+lint.ignore = ["E501", "E741", "E731"]
 extend-exclude = [
     "./ppsci/geometry/inflation.py",
     "./ppsci/autodiff/__init__.py",
