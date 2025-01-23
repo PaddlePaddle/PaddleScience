@@ -20,7 +20,11 @@
 [🆕 最近更新](https://paddlescience-docs.readthedocs.io/zh-cn/latest/#_4) |
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
+<!-- --8<-- [start:announcement] -->
+🔥 [飞桨AI for Science共创计划2期](https://aistudio.baidu.com/activitydetail/1502019365)，免费提供海量算力等资源，欢迎报名。
+
 🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+<!-- --8<-- [end:announcement] -->
 
 <!-- --8<-- [start:description] -->
 ## 👀简介
@@ -284,7 +288,7 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
 <!-- --8<-- [start:collaboration] -->
 ## 🎯共创计划
 
-PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨AI for Science共创计划](https://www.paddlepaddle.org.cn/science)。
+PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨AI for Science共创计划](https://aistudio.baidu.com/activitydetail/1502019365)。
 <!-- --8<-- [end:collaboration] -->
 
 <!-- --8<-- [start:thanks] -->

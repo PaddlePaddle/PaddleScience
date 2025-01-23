@@ -4,7 +4,9 @@
 ./README.md:status
 --8<--
 
-🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
+--8<--
+./README.md:announcement
+--8<--
 
 <style>
     .container {
