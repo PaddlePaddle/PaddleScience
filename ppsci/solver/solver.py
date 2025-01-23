@@ -301,9 +301,7 @@ class Solver:
         # initialize distributed environment
         if self.world_size > 1:
             # TODO(sensen): Support different kind of DistributedStrategy
-            strategy = fleet.DistributedStrategy()
-            strategy.find_unused_parameters = True
-            fleet.init(is_collective=True, strategy=strategy)
+            fleet.init(is_collective=True)
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
                 "scale up the learning rate and reduce the 'epochs' or "
