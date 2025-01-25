@@ -25,6 +25,7 @@ for the task of surrogate modeling of the aerodynamic drag.
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Tuple
 
 import numpy as np
@@ -187,15 +188,16 @@ class RegPointNet(paddle.nn.Layer):
         normalized_data = (data - min_vals) / (max_vals - min_vals)
         return normalized_data
 
-    def forward(self, x):
+    def forward(self, x) -> Dict[str, paddle.Tensor]:
         """
         Forward pass of the network.
 
         Args:
-            x (Tensor): Input tensor of shape (batch_size, 3, num_points).
+            x (paddle.Tensor): Input tensor of shape (batch_size, 3, num_points).
 
         Returns:
-            paddle.Tensor: Output tensor of the predicted scalar value.
+            Dict[str, paddle.Tensor]: A dictionary where the key is the first element of `self.label_keys`
+                                       and the value is the output tensor of the predicted scalar value.
         """
 
         x = x[self.input_keys[0]]

@@ -28,6 +28,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 
@@ -124,14 +125,15 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
         try:
             with open(os.path.join(self.subset_dir, self.ids_file), "r") as file:
                 subset_ids = file.read().split()
-            self.subset_indices = self.data_frame[
-                self.data_frame["Design"].isin(subset_ids)
-            ].index.tolist()
-            self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
-                drop=True
-            )
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Error loading subset file {self.ids_file}: {e}")
+
+        self.subset_indices = self.data_frame[
+            self.data_frame["Design"].isin(subset_ids)
+        ].index.tolist()
+        self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
+            drop=True
+        )
 
     def __len__(self) -> int:
         """Returns the total number of samples in the dataset."""
@@ -161,8 +163,8 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
             vertices = paddle.concat(x=(vertices, padding), axis=0)
         return vertices
 
-    def _load_point_cloud(self, design_id: str) -> Optional[paddle.Tensor]:
-        load_path = os.path.join(self.root_dir, f"{design_id}.paddle_tensor")
+    def _load_point_cloud(self, design_id: str):
+        load_path = os.path.join(self.root_dir, f"{design_id}.pdparams")
         if os.path.exists(load_path) and os.path.getsize(load_path) > 0:
             try:
                 vertices = paddle.load(path=str(load_path))
@@ -174,7 +176,6 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
                         num_vertices, self.num_points, replace=False
                     )
                     vertices = vertices.numpy()[indices]
-                    vertices = paddle.to_tensor(vertices)
 
                 return vertices
             except (EOFError, RuntimeError, ValueError) as e:
@@ -182,16 +183,21 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
                     f"Error loading point cloud from {load_path}: {e}"
                 ) from e
 
-    def __getitem__(self, idx: int, apply_augmentations: bool = True):
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """
         Retrieves a sample and its corresponding label from the dataset, with an option to apply augmentations.
 
         Args:
             idx (int): Index of the sample to retrieve.
-            apply_augmentations (bool, optional): Whether to apply data augmentations. Defaults to True.
 
         Returns:
-            Tuple[paddle.Tensor, paddle.Tensor]: The sample (point cloud) and its label (Cd value).
+            Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+                A tuple containing three dictionaries:
+                    - The first dictionary contains the input data (point cloud) under the key specified by `self.input_keys[0]`.
+                    - The second dictionary contains the label (Cd value) under the key specified by `self.label_keys[0]`.
+                    - The third dictionary contains the weight (default is 1) under the key specified by `self.weight_keys[0]`.
         """
         if paddle.is_tensor(idx):
             idx = idx.tolist()

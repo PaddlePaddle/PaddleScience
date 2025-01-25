@@ -162,10 +162,10 @@ def evaluate(cfg: DictConfig):
         valid_dataloader_cfg,
         loss=ppsci.loss.MSELoss("mean"),
         metric={
-            "MSE": ppsci.metric.MSE(keep_batch=True),
-            "MAE": ppsci.metric.MAE(keep_batch=True),
-            "Max AE": ppsci.metric.MaxAE(keep_batch=True),
-            "R²": ppsci.metric.R2Score(keep_batch=True),
+            "MSE": ppsci.metric.MSE(),
+            "MAE": ppsci.metric.MAE(),
+            "Max AE": ppsci.metric.MaxAE(),
+            "R²": ppsci.metric.R2Score(),
         },
         name="DrivAerNetPlusPlus_valid",
     )
@@ -177,7 +177,6 @@ def evaluate(cfg: DictConfig):
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-        compute_metric_by_batch=True,
     )
 
     # evaluate model
