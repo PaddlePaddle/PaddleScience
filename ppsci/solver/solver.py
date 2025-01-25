@@ -435,6 +435,7 @@ class Solver:
         self.wandb_writer = None
         if not cfg:
             self.use_wandb = use_wandb
+            self.wandb_config = {}
         if self.use_wandb:
             try:
                 import wandb
@@ -444,7 +445,7 @@ class Solver:
                 )
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.wandb_writer = wandb.init(**wandb_config)
+                    self.wandb_writer = wandb.init(**self.wandb_config)
 
         # set TensorBoardX tool
         self.tbd_writer = None
@@ -485,8 +486,12 @@ class Solver:
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass. Defaults to False
-        jit.enable_to_static(to_static)
-        logger.message(f"Set to_static={to_static} for computational optimization.")
+        if not cfg:
+            self.to_static = to_static
+        jit.enable_to_static(self.to_static)
+        logger.message(
+            f"Set to_static={self.to_static} for computational optimization."
+        )
 
         # convert sympy to callable object if exist
         extra_parameters = []

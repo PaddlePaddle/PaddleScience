@@ -34,6 +34,7 @@ from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
+from ppsci.data.dataset.ifm_moe_dataset import IFMMoeDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
@@ -91,6 +92,7 @@ __all__ = [
     "FWIDataset",
     "DrivAerNetDataset",
     "DrivAerNetPlusPlusDataset",
+    "IFMMoeDataset",
 ]
 
 
