@@ -32,6 +32,7 @@ Parts of this code are modified from the original version authored by Yue Wang
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Tuple
 
 import numpy as np
@@ -262,7 +263,7 @@ class RegDGCNN(paddle.nn.Layer):
         self.dp4 = paddle.nn.Dropout(p=args["dropout"])
         self.linear5 = paddle.nn.Linear(in_features=16, out_features=output_channels)
 
-    def forward(self, x):
+    def forward(self, x: paddle.Tensor) -> Dict[str, paddle.Tensor]:
         """
         Forward pass of the model to process input data and predict outputs.
 

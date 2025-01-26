@@ -303,7 +303,7 @@ if importlib.util.find_spec("pydantic") is not None:
             seed: int = 42
             use_vdl: bool = False
             use_tbd: bool = False
-            wandb_config: Optional[Mapping] = None
+            wandb_config: Mapping = {}
             use_wandb: bool = False
             device: Literal["cpu", "gpu", "xpu"] = "gpu"
             use_amp: bool = False
