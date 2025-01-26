@@ -128,14 +128,15 @@ class DrivAerNetDataset(paddle.io.Dataset):
         try:
             with open(os.path.join(self.subset_dir, self.ids_file), "r") as file:
                 subset_ids = file.read().split()
-            self.subset_indices = self.data_frame[
-                self.data_frame["Design"].isin(subset_ids)
-            ].index.tolist()
-            self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
-                drop=True
-            )
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Error loading subset file {self.ids_file}: {e}")
+
+        self.subset_indices = self.data_frame[
+            self.data_frame["Design"].isin(subset_ids)
+        ].index.tolist()
+        self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
+            drop=True
+        )
 
         if self.mode == "train":
             self.data_frame = self.data_frame.sample(frac=self.train_fractions)
@@ -145,21 +146,6 @@ class DrivAerNetDataset(paddle.io.Dataset):
     def __len__(self) -> int:
         """Returns the total number of samples in the dataset."""
         return len(self.data_frame)
-
-    def min_max_normalize(self, data: paddle.Tensor) -> paddle.Tensor:
-        """
-        Normalizes the data to the range [0, 1] based on min and max values.
-
-        Args:
-            data: Input data as a paddle.Tensor.
-
-        Returns:
-            Normalized data as a paddle.Tensor.
-        """
-        min_vals, _ = data.min(axis=0, keepdim=True)
-        max_vals, _ = data.max(axis=0, keepdim=True)
-        normalized_data = (data - min_vals) / (max_vals - min_vals)
-        return normalized_data
 
     def _sample_or_pad_vertices(
         self, vertices: paddle.Tensor, num_points: int
@@ -206,12 +192,8 @@ class DrivAerNetDataset(paddle.io.Dataset):
                 ) from e
 
     def __getitem__(
-        self, idx: int, apply_augmentations: bool = True
-    ) -> Tuple[
-        Dict[str, paddle.Tensor],
-        Dict[str, paddle.Tensor],
-        Dict[str, paddle.Tensor],
-    ]:
+        self, idx: int
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray],]:
         """
         Retrieves a sample and its corresponding label from the dataset, with an option to apply augmentations.
 
@@ -219,8 +201,11 @@ class DrivAerNetDataset(paddle.io.Dataset):
             idx (int): Index of the sample to retrieve.
             apply_augmentations (bool, optional): Whether to apply data augmentations. Defaults to True.
 
-        Returns:
-            Tuple[paddle.Tensor, paddle.Tensor]: The sample (point cloud) and its label (Cd value).
+        Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+            A tuple containing three dictionaries:
+                - The first dictionary contains the input data (point cloud) under the key specified by `self.input_keys[0]`.
+                - The second dictionary contains the label (Cd value) under the key specified by `self.label_keys[0]`.
+                - The third dictionary contains the weight (default is 1) under the key specified by `self.weight_keys[0]`.
         """
         if paddle.is_tensor(x=idx):
             idx = idx.tolist()
