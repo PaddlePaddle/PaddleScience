@@ -552,9 +552,9 @@ DrivAerNet + + (见图 4)中的形状变化带来了额外的挑战。例如，�
 
 用于对点云进行随机变换，包括平移、加噪声和随机丢点，以提升模型的泛化能力。
 
-```py linenums="15"
+```py linenums="40"
 --8<--
-ppsci/arch/regpointnet.py:15:78
+ppsci/data/dataset/drivaernetplusplus_dataset.py:40:106
 --8<--
 ```
 
@@ -562,9 +562,9 @@ ppsci/arch/regpointnet.py:15:78
 
 用于加载 DrivAerNetPlusPlus 数据集，并处理点云数据（如采样、增强和归一化）。
 
-```py linenums="37"
+```py linenums="109"
 --8<--
-ppsci/data/dataset/drivaernetplusplus_dataset.py:37:266
+ppsci/data/dataset/drivaernetplusplus_dataset.py:109:325
 --8<--
 ```
 
