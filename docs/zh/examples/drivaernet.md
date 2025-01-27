@@ -56,7 +56,7 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 `sh
     wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
     tar -xvf data.tar
-   `
+`
 
 ![fig1](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer/fig/fig1.jpg)
 
@@ -277,9 +277,9 @@ $$
 
 用于对点云进行随机变换，包括平移、加噪声和随机丢点，以提升模型的泛化能力。
 
-```py linenums="46"
+```py linenums="37"
 --8<--
-ppsci/arch/regdgcnn.py:46:112
+ppsci/arch/drivaernet_dataset.py:37:112
 --8<--
 ```
 
@@ -287,9 +287,9 @@ ppsci/arch/regdgcnn.py:46:112
 
 用于加载 DrivAerNet 数据集，并处理点云数据（如采样、增强和归一化）。
 
-```py linenums="35"
+```py linenums="106"
 --8<--
-ppsci/data/dataset/drivaernet_dataset.py:35:261
+ppsci/data/dataset/drivaernet_dataset.py:106:330
 --8<--
 ```
 

@@ -35,7 +35,6 @@ from __future__ import annotations
 from typing import Dict
 from typing import Tuple
 
-import numpy as np
 import paddle
 
 
@@ -43,75 +42,6 @@ def transpose_aux_func(dims, dim0, dim1):
     perm = list(range(dims))
     perm[dim0], perm[dim1] = perm[dim1], perm[dim0]
     return perm
-
-
-class DataAugmentation:
-    """
-    Class encapsulating various data augmentation techniques for point clouds.
-    """
-
-    @staticmethod
-    def translate_pointcloud(
-        pointcloud: paddle.Tensor,
-        translation_range: Tuple[float, float] = (2.0 / 3.0, 3.0 / 2.0),
-    ) -> paddle.Tensor:
-        """
-        Translates the pointcloud by a random factor within a given range.
-
-        Args:
-            pointcloud: The input point cloud as a paddle.Tensor.
-            translation_range: A tuple specifying the range for translation factors.
-
-        Returns:
-            Translated point cloud as a paddle.Tensor.
-        """
-        xyz1 = np.random.uniform(
-            low=translation_range[0], high=translation_range[1], size=[3]
-        )
-        xyz2 = np.random.uniform(low=-0.2, high=0.2, size=[3])
-        translated_pointcloud = np.add(np.multiply(pointcloud, xyz1), xyz2).astype(
-            "float32"
-        )
-        return paddle.to_tensor(data=translated_pointcloud, dtype="float32")
-
-    @staticmethod
-    def jitter_pointcloud(
-        pointcloud: paddle.Tensor, sigma: float = 0.01, clip: float = 0.02
-    ) -> paddle.Tensor:
-        """
-        Adds Gaussian noise to the pointcloud.
-
-        Args:
-            pointcloud: The input point cloud as a paddle.Tensor.
-            sigma: Standard deviation of the Gaussian noise.
-            clip: Maximum absolute value for noise.
-
-        Returns:
-            Jittered point cloud as a paddle.Tensor.
-        """
-        N, C = tuple(pointcloud.shape)
-        jittered_pointcloud = pointcloud + paddle.clip(
-            x=sigma * paddle.randn(shape=[N, C]), min=-clip, max=clip
-        )
-        return jittered_pointcloud
-
-    @staticmethod
-    def drop_points(pointcloud: paddle.Tensor, drop_rate: float = 0.1) -> paddle.Tensor:
-        """
-        Randomly removes points from the point cloud based on the drop rate.
-
-        Args:
-            pointcloud: The input point cloud as a paddle.Tensor.
-            drop_rate: The percentage of points to be randomly dropped.
-
-        Returns:
-            The point cloud with points dropped as a paddle.Tensor.
-        """
-        num_drop = int(drop_rate * pointcloud.shape[0])
-        drop_indices = np.random.choice(pointcloud.shape[0], num_drop, replace=False)
-        keep_indices = np.setdiff1d(np.arange(pointcloud.shape[0]), drop_indices)
-        dropped_pointcloud = pointcloud[keep_indices, :]
-        return dropped_pointcloud
 
 
 def knn(x, k):
@@ -277,25 +207,7 @@ class RegDGCNN(paddle.nn.Layer):
 
         x = x[self.input_keys[0]]
         batch_size = x.shape[0]
-        # Initialize an empty list to store the processed samples
-        processed_samples = []
-        # Apply data augmentation and normalization for each sample in the batch
-        augmentation = DataAugmentation()
-        for i in range(batch_size):
-            sample = x[i].numpy()  # Convert to numpy array for data augmentation
-            sample = augmentation.translate_pointcloud(sample)
-            sample = augmentation.jitter_pointcloud(sample)
-            processed_samples.append(sample)
-
-        # Stack the processed samples back into a batch tensor
-        x_processed = paddle.to_tensor(np.stack(processed_samples, axis=0))
-
-        # Ensure the processed tensor has the same shape as the original input
-        if x_processed.shape != x.shape:
-            raise ValueError(
-                f"Processed tensor shape {x_processed.shape} does not match original input shape {x.shape}"
-            )
-        x = x_processed.transpose(perm=[0, 2, 1])
+        x = x.transpose(perm=[0, 2, 1])
 
         x = get_graph_feature(x, k=self.k)
         x = self.conv1(x)
