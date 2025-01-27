@@ -243,7 +243,7 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
         return vertices
 
     def _load_point_cloud(self, design_id: str):
-        load_path = os.path.join(self.root_dir, f"{design_id}.pdparams")
+        load_path = os.path.join(self.root_dir, f"{design_id}.paddle_tensor")
         if os.path.exists(load_path) and os.path.getsize(load_path) > 0:
             try:
                 vertices = paddle.load(path=str(load_path))
