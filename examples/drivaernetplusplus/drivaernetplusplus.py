@@ -39,7 +39,6 @@ def train(cfg: DictConfig):
             "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.MODEL.output_keys,
             "weight_keys": cfg.MODEL.weight_keys,
-
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.TRAIN.train_ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
@@ -64,7 +63,6 @@ def train(cfg: DictConfig):
             "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.MODEL.output_keys,
             "weight_keys": cfg.MODEL.weight_keys,
-
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.TRAIN.eval_ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
@@ -151,7 +149,6 @@ def evaluate(cfg: DictConfig):
             "input_keys": cfg.MODEL.input_keys,
             "label_keys": cfg.MODEL.output_keys,
             "weight_keys": cfg.MODEL.weight_keys,
-
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.EVAL.ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
