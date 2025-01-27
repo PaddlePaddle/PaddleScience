@@ -146,9 +146,10 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "DrivAerNetPlusPlusDataset",
             "root_dir": cfg.ARGS.dataset_path,
-            "input_keys": (cfg.MODEL.input_keys),
-            "label_keys": (cfg.MODEL.output_keys),
-            "weight_keys": (cfg.MODEL.weight_keys),
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "weight_keys": cfg.MODEL.weight_keys,
+
             "subset_dir": cfg.ARGS.subset_dir,
             "ids_file": cfg.EVAL.ids_file,
             "csv_file": cfg.ARGS.aero_coeff,
