@@ -506,7 +506,7 @@ RegDGCNN（Dynamic Graph Convolutional Neural Network for Regression）是一种
 
 **输出回归**：将全局特征输入到回归头，预测空气阻力系数 $C_d$。 模型的优点是能够高效捕获点云的局部几何关系，并结合全局上下文特征，适用于处理复杂的 3D 形状。
 
-##### **2. RegPointNet**
+2. RegPointNet
 
 RegPointNet 是一种经典的点云处理网络，直接对 3D 点的坐标进行学习，无需显式构建邻域。具体包括以下步骤：
 
