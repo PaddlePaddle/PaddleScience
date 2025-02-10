@@ -54,47 +54,47 @@ $$
    - 如果使用不同的批次大小（batch size），R² 的结果可能会显著不同。例如，较小的批次可能会导致更大的方差，从而影响 R² 的计算。因此，基于批次的 R² 计算结果依赖于批次大小的选择，缺乏稳定性。
 
 ```python
-    # 源代码DeepSurrogates/train_RegPointNet.py中的R²计算
-    def r2_score(output, target):
-    """Compute R-squared score."""
-    target_mean = torch.mean(target)
-    ss_tot = torch.sum((target - target_mean) ** 2)
-    ss_res = torch.sum((target - output) ** 2)
-    r2 = 1 - ss_res / ss_tot
-    return r2
+# 源代码DeepSurrogates/train_RegPointNet.py中的R²计算
+def r2_score(output, target):
+"""Compute R-squared score."""
+target_mean = torch.mean(target)
+ss_tot = torch.sum((target - target_mean) ** 2)
+ss_res = torch.sum((target - output) ** 2)
+r2 = 1 - ss_res / ss_tot
+return r2
 
-    with torch.no_grad():
-        for data, targets in test_dataloader:
-            start_time = time.time()  # Start time for inference
+with torch.no_grad():
+    for data, targets in test_dataloader:
+        start_time = time.time()  # Start time for inference
 
-            data, targets = data.to(device), targets.to(device).squeeze()
+        data, targets = data.to(device), targets.to(device).squeeze()
 
-            data = data.permute(0, 2, 1)
-            outputs = model(data)
+        data = data.permute(0, 2, 1)
+        outputs = model(data)
 
-            end_time = time.time()  # End time for inference
-            inference_time = end_time - start_time
-            total_inference_time += inference_time  # Accumulate total inference time
-            # print(outputs)
-            # print(targets)
-            mse = F.mse_loss(outputs, targets)  # Mean Squared Error (MSE)
-            mae = F.l1_loss(outputs, targets)  # Mean Absolute Error (MAE),
-            r2 = r2_score(outputs, targets)  # R-squared
+        end_time = time.time()  # End time for inference
+        inference_time = end_time - start_time
+        total_inference_time += inference_time  # Accumulate total inference time
+        # print(outputs)
+        # print(targets)
+        mse = F.mse_loss(outputs, targets)  # Mean Squared Error (MSE)
+        mae = F.l1_loss(outputs, targets)  # Mean Absolute Error (MAE),
+        r2 = r2_score(outputs, targets)  # R-squared
 
-            # Accumulate metrics to compute averages later
-            total_mse += mse.item()
-            total_mae += mae.item()
-            total_r2 += r2.item()
-            max_mae = max(max_mae, mae.item())
-            total_samples += targets.size(0)  # Increment total sample count
+        # Accumulate metrics to compute averages later
+        total_mse += mse.item()
+        total_mae += mae.item()
+        total_r2 += r2.item()
+        max_mae = max(max_mae, mae.item())
+        total_samples += targets.size(0)  # Increment total sample count
 
-    print(total_mse)
-    print(total_mae)
-    print(len(test_dataloader))
-    # Compute average metrics over the entire test set
-    avg_mse = total_mse / len(test_dataloader)
-    avg_mae = total_mae / len(test_dataloader)
-    avg_r2 = total_r2 / len(test_dataloader)
+print(total_mse)
+print(total_mae)
+print(len(test_dataloader))
+# Compute average metrics over the entire test set
+avg_mse = total_mse / len(test_dataloader)
+avg_mae = total_mae / len(test_dataloader)
+avg_r2 = total_r2 / len(test_dataloader)
 ```
 
 #### 正确的做法：基于所有数据计算 R²
@@ -164,7 +164,7 @@ $$
 
 ## 2. 问题定义
 
-#### 2.1 数据集呈现
+### 2.1 数据集呈现
 
 stl 源数据集下载教程参考，从[数据集下载地址](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OYU2FG)下载 DrivAerNet++: 3D Meshes，即.stl 网格数据。
 **Linux：**
@@ -178,21 +178,21 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 2. 使用 wget 或 curl 直接下载 Globus Connect Personal：
 
    ```sh
-   $ wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
+   wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
    ```
 
 3. 从下载的 tarball 中提取文件。
 
    ```sh
-   $ tar xzf globusconnectpersonal-latest.tgz
+   tar xzf globusconnectpersonal-latest.tgz
    # 替代 `x.y.z` 为下载的具体版本号
-   $ cd globusconnectpersonal-x.y.z
+   cd globusconnectpersonal-x.y.z
    ```
 
 4. 启动 Globus Connect 个人版。由于第一次运行，因此必须先完成设置，然后才能运行完整的应用程序。
 
    ```sh
-   $ ./globusconnectpersonal
+   ./globusconnectpersonal
    ```
 
 5. 设置过程，运行`./globusconnectpersonal`后弹出如下内容，通过登录网址获取认证代码。`== starting endpoint setup`后设置 endpoint 名字并获取 endpoint 的 ID 序号。
@@ -222,13 +222,13 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 6. 无 GUI 运行，后台启动 Globus Connect Personal。
 
    ```sh
-   $ ./globusconnectpersonal -start &
+   ./globusconnectpersonal -start &
    ```
 
 7. 查看 Globus Connect Personal 的状态，使用`-status`可以查看后台运行的 Globus Connect Personal 的状态。
 
    ```sh
-   $ ./globusconnectpersonal -status
+   ./globusconnectpersonal -status
    Globus Online: connected
    Transfer Status: idle
    ```
@@ -249,13 +249,13 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 10. 使用 Globus 需要安装 globus-cli。
 
     ```sh
-    $ pip install globus-cli
+    pip install globus-cli
     ```
 
 11. 登录，通过登录网址获取认证代码。
 
     ```sh
-    $ globus login --no-local-server
+    globus login --no-local-server
 
     Please authenticate with Globus here:
     ------------------------------------
@@ -279,7 +279,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 12. 找出要下载数据的名称和账户，以 PubDAS 为例。
 
     ```sh
-    $ globus endpoint search "PubDAS" --filter-owner-id 4c984b40-a0b2-4d9e-b132-b32                                                                               735905e23@clients.auth.globus.org
+    globus endpoint search "PubDAS" --filter-owner-id 4c984b40-a0b2-4d9e-b132-b32                                                                               735905e23@clients.auth.globus.org
     ID                                   | Owner                                                        | Display Name
     ------------------------------------ | ------------------------------------------------------------ | -------------
     706e304c-5def-11ec-9b5c-f9dfb1abb183 | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | PubDAS
@@ -295,7 +295,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 14. 查看该路径下的数据。
 
     ```sh
-    $ globus ls $ep1:
+    globus ls $ep1:
     DAS-Month-02.2023/
     FORESEE/
     FOSSA/
@@ -311,7 +311,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 15. 获取自己 Globus 的 ID。
 
     ```sh
-    $ globus endpoint search "YourName(STEP2)" --filter-owner-id yourname(step1)@globusid.org
+    globus endpoint search "YourName(STEP2)" --filter-owner-id yourname(step1)@globusid.org
     ID                                   | Owner                        | Display Name
     ------------------------------------ | ---------------------------- | --------------------------
     -----------------ID----------------- | yourname(step1)@globusid.org | YourName(STEP2)
@@ -327,7 +327,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
     ```sh
     # here is defaut path (your home path)
-    $ globus transfer $ep1:License.txt $ep2:/~/License.txt
+    globus transfer $ep1:License.txt $ep2:/~/License.txt
     Message: The transfer has been accepted and a task has been created and queued for execution
     Task ID: -----------------传送任务ID-----------------
     ```
@@ -335,7 +335,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 18. 利用上面的 Task ID 查看文件传输状态！
 
     ```sh
-    $ globus task show -----------------传送任务ID-----------------
+    globus task show -----------------传送任务ID-----------------
     Label:                        None
     Task ID:                      -----------------传送任务ID-----------------
     Is Paused:                    False
@@ -422,7 +422,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
 本研究使用克鲁瓦桑格式[ 3 ]为 DrivAerNet + +数据集提供详细的元数据，以确保文档的全面性和研究社区的易用性。本研究还包括数据集的数据表[ 27 ]，该数据集是在 Creative Commons AttributionNonCommercial ( CC BY-NC)许可证下提供的。DrivAerNet + +将托管在哈佛数据逆向仓库上，以确保最佳的可访问性和系统的数据管理。由于 39TB 的数据可能会对数据共享和访问带来挑战，本研究还提供了针对不同任务定制的数据集子集，其中包含了详细的元数据，以方便可用性。
 
-#### 2.2 基准设置
+### 2.2 基准设置
 
 在本文中，本研究探讨了各种机器学习任务，特别关注气动阻力( $C_d$ )的代理建模(回归)。这项研究与众不同，因为它是第一个使用大规模、多样化和高保真度数据集对多样化模型进行测试的。虽然先前的研究[ 22、37、43、6、67、68]通常将比较局限于单一的汽车设计或类别，但本研究的方法通过使用全面和公开的数据集，实现了模型之间的公平和广义比较，显示了在汽车空气动力学中的实际应用和性能。
 
@@ -430,7 +430,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
 DrivAerNet++ 提供了一个用于汽车空气动力学性能预测的多模态数据集，任务目标是基于输入数据预测汽车的空气阻力系数（$C_d$）。
 
-##### 输入
+#### 输入
 
 输入数据包括以下多模态信息：
 
@@ -438,7 +438,7 @@ DrivAerNet++ 提供了一个用于汽车空气动力学性能预测的多模态�
 2. **设计参数**：参数化汽车设计的向量表示，记为： $\mathbf{p} \in \mathbb{R}^d,$ 其中： - $d$ 是设计参数的数量（例如 26-50 个参数），用于描述车身类型、底盘配置、轮胎设计等特征。
 3. **附加流场数据（可选）**： - 表面压力场：$\mathbf{p_s}(x)$。 - 表面速度场：$\mathbf{u}(x) = (u, v, w)$。 不属于本案例，本案例仅涉及空气阻力系数（$C_d$）预测。
 
-##### 任务目标
+#### 任务目标
 
 目标是构建一个深度学习模型 $f(\cdot)$，输入点云数据 $x$ ，预测汽车的空气阻力系数 $C_d$，即：
 
@@ -448,7 +448,7 @@ $$
 
 其中： - $\hat{C}_d$ 是模型预测的空气阻力系数。 - $C_d$ 是真实的空气阻力系数。 模型需要学习点云的几何信息的相关性，精准预测阻力系数。
 
-##### 评估指标
+#### 评估指标
 
 模型的性能通过以下指标进行评估：
 
@@ -486,15 +486,15 @@ $$
 
 ## 3. 问题求解
 
-#### 3.1 气动阻力的代理模型
+### 3.1 气动阻力的代理模型
 
 在汽车设计的概念阶段和初始阶段，气动阻力系数是一个关键的指标，因为它表明了设计效率并影响了续驶里程。因此，准确、快速的阻力估算在设计过程中至关重要。在这一部分，本研究介绍了两种气动阻力预测的方法：第一，使用三维网格的三维几何深度学习，第二，使用基于参数化数据集的自动机器学习。
 
-##### 3.1.1 基于几何深度学习的三维网格气动阻力预测
+#### 3.1.1 基于几何深度学习的三维网格气动阻力预测
 
 为了预测汽车的空气阻力系数 ($C_d$)，本研究采用基于深度学习的回归方法，使用两种点云处理模型 **RegDGCNN** 和 **RegPointNet**，分别从输入数据中提取几何特征并完成回归任务。这些模型能够高效处理 3D 点云数据，并结合设计参数，构建端到端的预测框架。
 
-##### **1. RegDGCNN**
+1. RegDGCNN
 
 RegDGCNN（Dynamic Graph Convolutional Neural Network for Regression）是一种动态图卷积网络，能够捕获点云数据的局部和全局几何特征。具体包括以下核心步骤：
 
@@ -536,7 +536,7 @@ RegPointNet 是一种经典的点云处理网络，直接对 3D 点的坐标进�
 
 DrivAerNet + + (见图 4)中的形状变化带来了额外的挑战。例如，将详细的下车体替换为光滑的下车体可以改变相同汽车设计的阻力分布。将车轮由开式改为闭式可以略微影响拖曳力。此外，不同的尾部构型会导致不同的流场分离行为，从而引起阻力值的显著变化。这些因素使得 DrivAerNet + +对于泛化来说是一个非常具有挑战性的任务，因为看似微小的变化会显著地影响拖拽值，并为深度学习模型准确地学习这些变化的特征带来困难。
 
-##### 3.1.2 基于表格参数化数据的气动阻力预测
+#### 3.1.2 基于表格参数化数据的气动阻力预测
 
 本研究还探讨了利用参数化数据进行气动阻力预测的任务。为此，本研究采用贝叶斯超参数调优的 Auto ML (自动化机器学习)框架[ 24 ]，以及 Gradient Boosting [ 26 ]、XGBoost [ 12 ]、LightGBM [ 40 ]、Random Forests [ 10 ]等模型。这些方法利用设计参数估算气动阻力，不需要详细的三维几何结构。这种方法对于有效地评估几何修改对阻力和汽车整体性能的影响是非常有价值的。与三维网格修改相比，参数化数据的使用提供了显著的优势，因为它具有可访问性和易操作性。工程师可以快速调整设计参数，并立即观察对气动性能的影响，从而简化设计过程。
 
