@@ -100,8 +100,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.SPINN(**cfg.MODEL)
 
     # set equation
-    equation = {"Helmholtz": ppsci.equation.Helmholtz(3, 1.0)}
-    equation["Helmholtz"].model = model  # set model to equation for hvp
+    equation = {"Helmholtz": ppsci.equation.Helmholtz(3, 1.0, model)}
 
     # set constraint
     class InteriorDataGenerator:
