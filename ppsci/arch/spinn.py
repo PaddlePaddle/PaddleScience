@@ -137,10 +137,10 @@ class SPINN(base.Arch):
 
         return out
 
-    def forward_tensor(self, x, y, z) -> List[paddle.Tensor]:
+    def forward_tensor(self, *xs) -> List[paddle.Tensor]:
         # forward each dim branch
         feature_f = []
-        for i, input_var in enumerate((x, y, z)):
+        for i, input_var in enumerate(xs):
             input_i = {self.input_keys[i]: input_var}
             output_f_i = self.branch_nets[i](input_i)
             feature_f.append(output_f_i["f"])  # [B, r*output_dim]

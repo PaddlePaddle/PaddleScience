@@ -168,7 +168,7 @@ examples/heart/forward.py:33:35
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[1.4.2 额外依赖安装[可选]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 安装Mesh几何[可选]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `ppsci.geometry.Mesh` 即可读取、解析几何文件，得到计算域，并获取几何结构边界：
 

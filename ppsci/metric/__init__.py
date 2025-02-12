@@ -20,7 +20,9 @@ from ppsci.metric.func import FunctionalMetric
 from ppsci.metric.l2_rel import L2Rel
 from ppsci.metric.l2_rel import MeanL2Rel
 from ppsci.metric.mae import MAE
+from ppsci.metric.max_ae import MaxAE
 from ppsci.metric.mse import MSE
+from ppsci.metric.r2_score import R2Score
 from ppsci.metric.rmse import RMSE
 from ppsci.metric.rmse import LatitudeWeightedRMSE
 from ppsci.utils import misc
@@ -32,9 +34,11 @@ __all__ = [
     "L2Rel",
     "MeanL2Rel",
     "MAE",
+    "MaxAE",
     "MSE",
     "RMSE",
     "LatitudeWeightedRMSE",
+    "R2Score",
     "build_metric",
 ]
 

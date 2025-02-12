@@ -55,6 +55,7 @@ nav:
         - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
+          - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
           - BubbleNet: zh/examples/bubble.md
@@ -65,6 +66,7 @@ nav:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
+          - DrivAerNet: zh/examples/drivaernet.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
@@ -99,9 +101,11 @@ nav:
         - GraphCast: zh/examples/graphcast.md
         - VelocityGAN: zh/examples/velocity_gan.md
         - TGCN: zh/examples/tgcn.md
+        - IOPS: zh/examples/iops.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - TADF: zh/examples/TADF.md
+        - IFM: zh/examples/ifm.md
 
   - API 文档:
     - ppsci:
