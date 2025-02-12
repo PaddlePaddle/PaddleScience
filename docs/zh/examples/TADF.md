@@ -1,4 +1,40 @@
 # 化学领域-分子性质预测
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [Est.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams) | loss(MAE): 0.045 |
+| [f.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_pretrained.pdparams) | loss(MAE): 0.036 |
+| [angle.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_pretrained.pdparams) | loss(MAE): 0.041 |
+
+
+=== "模型训练命令"
+
+    ``` sh
+    #Est预测：
+    python Est.py mode=train
+
+    #f 预测
+    python f.py mode=train
+
+    # angle 预测
+    python angle.py mode=train
+
+    ```
+=== "模型评估命令"
+
+    ``` sh
+     #Est 评估：
+    python Est.py
+
+    #f 评估
+    python f.py
+
+    # angle 评估
+    python angle.py
+
+
+
+# 化学领域-分子性质预测
 ## 1.背景简介
 有机发光二极管（OLED）具有高效率、结构灵活和低成本的优势，在先进显示和照明技术中受到广泛关注。在有机发光二极管器件中，电注入载流子以1：3的比例形成单线态和三线态激子。以纯荧光材料为发光材料构建的OLED发光效率IQE理论极限为25%。另一方面，有机金属复合物发光材料通过引入稀有金属（Ir，Pt等）带来强自旋轨道耦合（SOC），可以将单线态激子通过系间窜越过程转化成三线态激子，从而利用三线态激子发出磷光，其IQE可达100%，但是稀有金属价格昂贵，为推广使用带来了阻碍。热活化延迟荧光材料（TADF）为解决这些问题提供了新思路，并引起了广泛关注。在TADF中，三线态通过逆系间窜越过程（RISC）转化成单重态并发出荧光，从而实现100%的IQE，而RISC过程很大程度上取决于最低单线态（S1）和最低三线态（T1） 之间的能隙（ΔEST）。根据量子力学理论，ΔEST相当于HOMO和LUMO之间的交换积分的两倍。因此TADF分子的常见设计策略是将电子供体（D）和电子受体（A）以明显扭曲的二面角结合以实现HOMO和LUMO在空间上明显的分离。然而，与ΔEST相反，振子强度（f）需要较大的HOMO和LUMO之间的重叠积分，这二者之间的矛盾需要进一步平衡。
 ##  2.功能目标
