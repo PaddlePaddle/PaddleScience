@@ -1,6 +1,6 @@
 import hydra
-from angle_ppsci import eval
-from angle_ppsci import train
+from angle_model import eval
+from angle_model import train
 from omegaconf import DictConfig
 
 

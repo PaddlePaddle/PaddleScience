@@ -19,12 +19,12 @@ plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
 
 # 加载数据集
 data = []
-for line in open(".\\examples\\TADF\\TADF_angle\\angle.dat"):
+for line in open("./angle.dat"):
     num = float(line.strip())
     num = num / 90
     data.append(num)
 smis = []
-for line in open(".\\examples\\TADF\\TADF_Est\\smis.txt"):
+for line in open("./smis.txt"):
     smis.append(line.strip())
 vectors = []
 del_mol = []

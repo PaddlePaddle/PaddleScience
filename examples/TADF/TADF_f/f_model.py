@@ -20,11 +20,11 @@ paddle.set_device("cpu")
 
 # 加载数据集
 data = []
-for line in open(".\\examples\\TADF\\TADF_f\\f.dat"):
+for line in open("./f.dat"):
     num = float(line.strip())
     data.append(num)
 smis = []
-for line in open(".\\examples\\TADF\\TADF_Est\\smis.txt"):
+for line in open("./smis.txt"):
     smis.append(line.strip())
 vectors = []
 del_mol = []

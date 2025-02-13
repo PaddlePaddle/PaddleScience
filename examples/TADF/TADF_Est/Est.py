@@ -1,6 +1,6 @@
 import hydra
-from est_ppsci import eval
-from est_ppsci import train
+from Est_model import eval
+from Est_model import train
 from omegaconf import DictConfig
 
 
