@@ -35,6 +35,7 @@ from ppsci.arch.epnn import Epnn  # isort:skip
 from ppsci.arch.extformer_moe_cuboid import ExtFormerMoECuboid  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
+from ppsci.arch.geofno import FNO1d  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.lno import LNO  # isort:skip
@@ -58,6 +59,8 @@ from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
 from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
+from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 
 __all__ = [
     "MoFlowNet",
@@ -80,6 +83,7 @@ __all__ = [
     "Discriminator",
     "Epnn",
     "ExtFormerMoECuboid",
+    "FNO1d",
     "Generator",
     "GraphCastNet",
     "HEDeepONets",
@@ -105,6 +109,8 @@ __all__ = [
     "USCNN",
     "VelocityDiscriminator",
     "VelocityGenerator",
+    "RegDGCNN",
+    "IFMMLP",
 ]
 
 

@@ -13,5 +13,7 @@
         - MeanL2Rel
         - MSE
         - RMSE
+        - MaxAE
+        - R2Score
       show_root_heading: true
       heading_level: 3

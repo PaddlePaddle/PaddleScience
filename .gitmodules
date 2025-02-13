@@ -1,3 +1,24 @@
 [submodule "competition/IJCAI_2024_CAR"]
 	path = competition/IJCAI_2024_CAR
 	url = https://atomgit.com/paddlenumberone/ijcai_car.git
+[submodule "ppsci/externals/Open3D"]
+	path = ppsci/externals/Open3D
+	url = https://github.com/PFCCLab/Open3D.git
+[submodule "ppsci/externals/deepali"]
+	path = ppsci/externals/deepali
+	url = https://github.com/PFCCLab/deepali.git
+[submodule "ppsci/externals/paddle_harmonics"]
+	path = ppsci/externals/paddle_harmonics
+	url = https://github.com/PFCCLab/paddle_harmonics.git
+[submodule "ppsci/externals/neuraloperator"]
+	path = ppsci/externals/neuraloperator
+	url = https://github.com/PFCCLab/neuraloperator.git
+[submodule "ppsci/externals/tensorly"]
+	path = ppsci/externals/tensorly
+	url = https://github.com/tensorly/tensorly.git
+[submodule "ppsci/externals/warp"]
+	path = ppsci/externals/warp
+	url = https://github.com/NVIDIA/warp.git
+[submodule "ppsci/externals/paddle_scatter"]
+	path = ppsci/externals/paddle_scatter
+	url = https://github.com/PFCCLab/paddle_scatter

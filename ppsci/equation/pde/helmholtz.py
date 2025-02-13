@@ -66,6 +66,7 @@ class Helmholtz(base.PDE):
         self,
         dim: int,
         k: float,
+        model: paddle.nn.Layer,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()
@@ -73,21 +74,42 @@ class Helmholtz(base.PDE):
         self.k = k
         self.detach_keys = detach_keys
 
-        self.model: paddle.nn.Layer
+        invars = self.create_symbols("x y z")[:dim]
 
-        def helmholtz(data_dict: Dict[str, "paddle.Tensor"]):
-            x, y, z = (
-                data_dict["x"],
-                data_dict["y"],
-                data_dict["z"],
-            )
+        # TODO: This is a hack, should be simplified in the future
+        self.model = model
+
+        def helmholtz(data_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
+            xs = tuple(data_dict[invar.name] for invar in invars)
 
             # TODO: Hard code here, for hvp_revrev requires tuple input(s) but not dict
-            u__x__x = hvp_revrev(lambda x_: self.model.forward_tensor(x_, y, z), (x,))
-            u__y__y = hvp_revrev(lambda y_: self.model.forward_tensor(x, y_, z), (y,))
-            u__z__z = hvp_revrev(lambda z_: self.model.forward_tensor(x, y, z_), (z,))
+            if self.dim == 1:
+                u__x__x = hvp_revrev(lambda x_: self.model.forward_tensor(x_), (xs[0],))
+                out = (self.k**2) * data_dict["u"] + u__x__x
+            elif self.dim == 2:
+                u__x__x = hvp_revrev(
+                    lambda x_: self.model.forward_tensor(x_, xs[1]), (xs[0],)
+                )
+                u__y__y = hvp_revrev(
+                    lambda y_: self.model.forward_tensor(xs[0], y_), (xs[1],)
+                )
+                out = (self.k**2) * data_dict["u"] + u__x__x + u__y__y
+            elif self.dim >= 3:
+                u__x__x = hvp_revrev(
+                    lambda x_: self.model.forward_tensor(x_, xs[1], xs[2]), (xs[0],)
+                )
+                u__y__y = hvp_revrev(
+                    lambda y_: self.model.forward_tensor(xs[0], y_, xs[2]), (xs[1],)
+                )
+                u__z__z = hvp_revrev(
+                    lambda z_: self.model.forward_tensor(xs[0], xs[1], z_), (xs[2],)
+                )
+                out = (self.k**2) * data_dict["u"] + u__x__x + u__y__y + u__z__z
+            else:
+                raise NotImplementedError(
+                    f"dim should be less or equal to 3, but got {self.dim}."
+                )
 
-            out = (self.k**2) * data_dict["u"] + u__x__x + u__y__y + u__z__z
             return out
 
         self.add_equation("helmholtz", helmholtz)

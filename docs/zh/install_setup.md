@@ -109,7 +109,7 @@
 
     上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
 
-#### 1.4.2 安装额外功能[可选]
+#### 1.4.2 安装Mesh几何[可选]
 
 PaddleScience 提供了两种复杂几何类型，如下所示：
 
@@ -204,6 +204,54 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
         3. 由于自测工具 nose 未适配 Python>=3.10，因此执行 `pymesh.test()` 会报错，**但这不影响 pymesh 正常使用**。
 
+#### 1.4.3 安装第三方库[可选]
+
+PaddleScience 提供了多种第三方库供用户在开发时使用，这些库位于 `ppsci/externals` 目录下，可以通过 `git submodule` 命令进行下载，然后根据需要进行安装和使用。以下是具体操作步骤：
+
+=== "下载"
+
+    ``` sh
+    cd PaddleScience
+
+    # 下载全部第三方库
+    git submodule update --init ppsci/externals/
+
+    # 下载指定第三方库(以 tensorly 为例)
+    git submodule update --init ppsci/externals/tensorly
+    ```
+
+=== "安装"
+
+    以 `tensorly` 为例，安装方法如下：
+
+    ``` sh
+    cd ppsci/externals/tensorly
+    pip install -e .
+    ```
+
+    其他库的安装方法请参考相应的 GitHub 项目主页上的说明。
+
+=== "使用"
+
+    以 `tensorly` 为例，使用方法如下：
+
+    ``` python
+    >>> from ppsci import externals
+    >>> print(externals.__all__)
+    ['deepali', 'open3d', 'paddle_harmonics', 'tensorly', 'warp']
+
+    >>> tl = externals.tensorly
+    >>> tl.set_backend("paddle")
+
+    >>> x = tl.tensor(np.ones((3, 3)))
+    Tensor(shape=[3, 3], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+       [[1., 1., 1.],
+        [1., 1., 1.],
+        [1., 1., 1.]])
+    ```
+
+请根据以上步骤下载、安装和使用您所需的第三方库。
+
 ## 2. 验证安装
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
@@ -214,7 +262,7 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
     如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
 
-- [可选]如果已按照 [1.4.2 安装额外依赖](#142) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+- [可选]如果已按照 [1.4.2 安装Mesh几何](#142-mesh) 正确安装了 4 个依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
     ``` sh
