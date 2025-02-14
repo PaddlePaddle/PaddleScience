@@ -54,12 +54,14 @@ class Helmholtz(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
+        k (float): The wave number, which is a parameter that affects the frequency of the solution.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.Helmholtz(2, -1.0, 1.0)
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u",), 2, 32)
+        >>> pde = ppsci.equation.Helmholtz(2, -1.0, model)
     """
 
     def __init__(
@@ -94,7 +96,7 @@ class Helmholtz(base.PDE):
                     lambda y_: self.model.forward_tensor(xs[0], y_), (xs[1],)
                 )
                 out = (self.k**2) * data_dict["u"] + u__x__x + u__y__y
-            elif self.dim >= 3:
+            elif self.dim == 3:
                 u__x__x = hvp_revrev(
                     lambda x_: self.model.forward_tensor(x_, xs[1], xs[2]), (xs[0],)
                 )
