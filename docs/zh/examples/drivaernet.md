@@ -12,7 +12,7 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 
 |预训练模型 |神经网络|指标|
 |:-------:|:-------:|:-:|
-|[CdPrediction_DrivAerNet_r2_100epochs_5k_best_model.pdparams](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer/CdPrediction_DrivAerNet_r2_100epochs_5k_best_model.pdparams)|RegDGCNN|    $R^2:87.5%$ |
+|[CdPrediction_DrivAerNet_r2_100epochs_5k_best_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DrivAerNet/CdPrediction_DrivAerNet_r2_100epochs_5k_pretrained.pdparams)|RegDGCNN|    $R^2:87.5%$ |
 
 === "模型训练命令"
 
@@ -23,7 +23,7 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 === "模型评估命令"
 
     ``` sh
-    python drivaernet.py mode=eval EVAL.pretrained_model_path=https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer/CdPrediction_DrivAerNet_r2_100epochs_5k_best_model.pdparams
+    python drivaernet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DrivAerNet/CdPrediction_DrivAerNet_r2_100epochs_5k_pretrained.pdparams
     ```
 
 ## 1. 背景简介

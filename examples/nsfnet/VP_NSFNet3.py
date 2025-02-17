@@ -445,11 +445,11 @@ def evaluate(cfg: DictConfig):
     for i in [0, 0.25, 0.5, 0.75, 1.0]:
         x_star, y_star, z_star = np.mgrid[-1.0:1.0:100j, -1.0:1.0:100j, -1.0:1.0:100j]
         x_star, y_star, z_star = (
-            x_star.reshape(-1, 1),
-            y_star.reshape(-1, 1),
-            z_star.reshape(-1, 1),
+            x_star.reshape(-1, 1).astype(np.float32),
+            y_star.reshape(-1, 1).astype(np.float32),
+            z_star.reshape(-1, 1).astype(np.float32),
         )
-        t_star = i * np.ones(x_star.shape)
+        t_star = i * np.ones(x_star.shape, dtype=x_star.dtype)
         u_star, v_star, w_star, p_star = analytic_solution_generate(
             x_star, y_star, z_star, t_star
         )
@@ -474,12 +474,12 @@ def evaluate(cfg: DictConfig):
 
     ## plot vorticity
     grid_x, grid_y = np.mgrid[-1.0:1.0:1000j, -1.0:1.0:1000j]
-    grid_x = grid_x.reshape(-1, 1)
-    grid_y = grid_y.reshape(-1, 1)
-    grid_z = np.zeros(grid_x.shape)
+    grid_x = grid_x.reshape(-1, 1).astype(np.float32)
+    grid_y = grid_y.reshape(-1, 1).astype(np.float32)
+    grid_z = np.zeros(grid_x.shape).astype(np.float32)
     T = np.linspace(0, 1, 101)
     for i in T:
-        t_star = i * np.ones(x_star.shape)
+        t_star = i * np.ones(x_star.shape, dtype=x_star.dtype)
         u_star, v_star, w_star, p_star = analytic_solution_generate(
             grid_x, grid_y, grid_z, t_star
         )
@@ -533,6 +533,7 @@ def evaluate(cfg: DictConfig):
         ax[2, 0].set_title("w_exact")
         ax[2, 1].set_title("w_pred")
         time = "%.3f" % i
+        logger.info(f"saving velocity_t={str(time)}.png")
         fig.savefig(OUTPUT_DIR + f"/velocity_t={str(time)}.png")
 
 
