@@ -203,11 +203,10 @@ def evaluate(cfg: DictConfig):
             .numpy()
             .flatten()
         )
-        logger.info(
-            "rel. error is ",
-            np.linalg.norm(y_test_pred - y_test[sample_id, :].flatten())
-            / np.linalg.norm(y_test[sample_id, :].flatten()),
-        )
+        error = np.linalg.norm(
+            y_test_pred - y_test[sample_id, :].flatten()
+        ) / np.linalg.norm(y_test[sample_id, :].flatten())
+        logger.info(f"rel. error is {error}")
         xx = np.linspace(-500, 0, 2001)
         plt.figure(figsize=(5, 4))
 
