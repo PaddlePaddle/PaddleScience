@@ -303,8 +303,6 @@ class DrivAerNetDataset(paddle.io.Dataset):
         if self.transform:
             vertices = self.transform(vertices)
 
-        cd_value = np.array(float(cd_value), dtype=np.float32).reshape([-1])
-
         self.cache[idx] = (
             {self.input_keys[0]: vertices},
             {self.label_keys[0]: cd_value},
