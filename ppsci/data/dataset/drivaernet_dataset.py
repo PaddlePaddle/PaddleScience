@@ -34,6 +34,75 @@ import paddle
 import pandas as pd
 
 
+class DataAugmentation:
+    """
+    Class encapsulating various data augmentation techniques for point clouds.
+    """
+
+    @staticmethod
+    def translate_pointcloud(
+        pointcloud: np.ndarray,
+        translation_range: Tuple[float, float] = (2.0 / 3.0, 3.0 / 2.0),
+    ) -> np.ndarray:
+        """
+        Translates the pointcloud by a random factor within a given range.
+
+        Args:
+            pointcloud: The input point cloud as a np.ndarray.
+            translation_range: A tuple specifying the range for translation factors.
+
+        Returns:
+            Translated point cloud as a np.ndarray.
+        """
+        xyz1 = np.random.uniform(
+            low=translation_range[0], high=translation_range[1], size=[3]
+        )
+        xyz2 = np.random.uniform(low=-0.2, high=0.2, size=[3])
+        translated_pointcloud = np.add(np.multiply(pointcloud, xyz1), xyz2).astype(
+            "float32"
+        )
+        return paddle.to_tensor(data=translated_pointcloud, dtype="float32")
+
+    @staticmethod
+    def jitter_pointcloud(
+        pointcloud: np.ndarray, sigma: float = 0.01, clip: float = 0.02
+    ) -> np.ndarray:
+        """
+        Adds Gaussian noise to the pointcloud.
+
+        Args:
+            pointcloud: The input point cloud as a np.ndarray.
+            sigma: Standard deviation of the Gaussian noise.
+            clip: Maximum absolute value for noise.
+
+        Returns:
+            Jittered point cloud as a np.ndarray.
+        """
+        N, C = tuple(pointcloud.shape)
+        jittered_pointcloud = pointcloud + paddle.clip(
+            x=sigma * paddle.randn(shape=[N, C]), min=-clip, max=clip
+        )
+        return jittered_pointcloud
+
+    @staticmethod
+    def drop_points(pointcloud: np.ndarray, drop_rate: float = 0.1) -> np.ndarray:
+        """
+        Randomly removes points from the point cloud based on the drop rate.
+
+        Args:
+            pointcloud: The input point cloud as a np.ndarray.
+            drop_rate: The percentage of points to be randomly dropped.
+
+        Returns:
+            The point cloud with points dropped as a np.ndarray.
+        """
+        num_drop = int(drop_rate * pointcloud.shape[0])
+        drop_indices = np.random.choice(pointcloud.shape[0], num_drop, replace=False)
+        keep_indices = np.setdiff1d(np.arange(pointcloud.shape[0]), drop_indices)
+        dropped_pointcloud = pointcloud[keep_indices, :]
+        return dropped_pointcloud
+
+
 class DrivAerNetDataset(paddle.io.Dataset):
     """
     Paddle Dataset class for the DrivAerNet dataset, handling loading, transforming, and augmenting 3D car models.
@@ -123,19 +192,21 @@ class DrivAerNetDataset(paddle.io.Dataset):
         self.pointcloud_exist = pointcloud_exist
         self.mode = mode
         self.train_fractions = train_fractions
+        self.augmentation = DataAugmentation()
         self.cache = {}
 
         try:
             with open(os.path.join(self.subset_dir, self.ids_file), "r") as file:
                 subset_ids = file.read().split()
-            self.subset_indices = self.data_frame[
-                self.data_frame["Design"].isin(subset_ids)
-            ].index.tolist()
-            self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
-                drop=True
-            )
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Error loading subset file {self.ids_file}: {e}")
+
+        self.subset_indices = self.data_frame[
+            self.data_frame["Design"].isin(subset_ids)
+        ].index.tolist()
+        self.data_frame = self.data_frame.loc[self.subset_indices].reset_index(
+            drop=True
+        )
 
         if self.mode == "train":
             self.data_frame = self.data_frame.sample(frac=self.train_fractions)
@@ -146,18 +217,12 @@ class DrivAerNetDataset(paddle.io.Dataset):
         """Returns the total number of samples in the dataset."""
         return len(self.data_frame)
 
-    def min_max_normalize(self, data: paddle.Tensor) -> paddle.Tensor:
+    def min_max_normalize(self, data: np.ndarray) -> np.ndarray:
         """
         Normalizes the data to the range [0, 1] based on min and max values.
-
-        Args:
-            data: Input data as a paddle.Tensor.
-
-        Returns:
-            Normalized data as a paddle.Tensor.
         """
-        min_vals, _ = data.min(axis=0, keepdim=True)
-        max_vals, _ = data.max(axis=0, keepdim=True)
+        min_vals = data.min(axis=0, keepdim=True)
+        max_vals = data.max(axis=0, keepdim=True)
         normalized_data = (data - min_vals) / (max_vals - min_vals)
         return normalized_data
 
@@ -207,11 +272,7 @@ class DrivAerNetDataset(paddle.io.Dataset):
 
     def __getitem__(
         self, idx: int, apply_augmentations: bool = True
-    ) -> Tuple[
-        Dict[str, paddle.Tensor],
-        Dict[str, paddle.Tensor],
-        Dict[str, paddle.Tensor],
-    ]:
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray],]:
         """
         Retrieves a sample and its corresponding label from the dataset, with an option to apply augmentations.
 
@@ -219,8 +280,11 @@ class DrivAerNetDataset(paddle.io.Dataset):
             idx (int): Index of the sample to retrieve.
             apply_augmentations (bool, optional): Whether to apply data augmentations. Defaults to True.
 
-        Returns:
-            Tuple[paddle.Tensor, paddle.Tensor]: The sample (point cloud) and its label (Cd value).
+        Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+            A tuple containing three dictionaries:
+                - The first dictionary contains the input data (point cloud) under the key specified by `self.input_keys[0]`.
+                - The second dictionary contains the label (Cd value) under the key specified by `self.label_keys[0]`.
+                - The third dictionary contains the weight (default is 1) under the key specified by `self.weight_keys[0]`.
         """
         if paddle.is_tensor(x=idx):
             idx = idx.tolist()
@@ -242,10 +306,16 @@ class DrivAerNetDataset(paddle.io.Dataset):
                 raise ValueError(
                     f"Failed to load point cloud for design {design_id}: {e}"
                 )
-
+        if apply_augmentations:
+            vertices = self.augmentation.translate_pointcloud(vertices.numpy())
+            vertices = self.augmentation.jitter_pointcloud(vertices)
         if self.transform:
             vertices = self.transform(vertices)
+
+        vertices = self.min_max_normalize(vertices)
+
         cd_value = np.array(float(cd_value), dtype=np.float32).reshape([-1])
+
         self.cache[idx] = (
             {self.input_keys[0]: vertices},
             {self.label_keys[0]: cd_value},
