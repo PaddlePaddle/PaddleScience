@@ -25,7 +25,7 @@ mode: train # running mode: train/eval
 output_dir: ${hydra:run.dir}
 log_freq: 20
 DATASET: "flatvel-a"
-DATASET_CONFIG: './dataset_config.json'
+DATASET_CONFIG: "./dataset_config.json"
 file_size: null
 k: 1
 
