@@ -217,15 +217,6 @@ class DrivAerNetDataset(paddle.io.Dataset):
         """Returns the total number of samples in the dataset."""
         return len(self.data_frame)
 
-    def min_max_normalize(self, data: np.ndarray) -> np.ndarray:
-        """
-        Normalizes the data to the range [0, 1] based on min and max values.
-        """
-        min_vals = data.min(axis=0, keepdim=True)
-        max_vals = data.max(axis=0, keepdim=True)
-        normalized_data = (data - min_vals) / (max_vals - min_vals)
-        return normalized_data
-
     def _sample_or_pad_vertices(
         self, vertices: paddle.Tensor, num_points: int
     ) -> paddle.Tensor:
@@ -311,10 +302,6 @@ class DrivAerNetDataset(paddle.io.Dataset):
             vertices = self.augmentation.jitter_pointcloud(vertices)
         if self.transform:
             vertices = self.transform(vertices)
-
-        vertices = self.min_max_normalize(vertices)
-
-        cd_value = np.array(float(cd_value), dtype=np.float32).reshape([-1])
 
         self.cache[idx] = (
             {self.input_keys[0]: vertices},
