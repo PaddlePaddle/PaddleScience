@@ -16,7 +16,6 @@ os.environ["HYDRA_FULL_ERROR"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
-paddle.set_device("cpu")
 
 # 加载数据集
 data = []

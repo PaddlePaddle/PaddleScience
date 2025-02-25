@@ -595,21 +595,9 @@ class PirateNetBlock(nn.Layer):
             ],
             default_initializer=nn.initializer.Constant(0),
         )
-        self.act1 = (
-            act_mod.get_activation(activation)
-            if activation != "stan"
-            else act_mod.get_activation(activation)(embed_dim)
-        )
-        self.act2 = (
-            act_mod.get_activation(activation)
-            if activation != "stan"
-            else act_mod.get_activation(activation)(embed_dim)
-        )
-        self.act3 = (
-            act_mod.get_activation(activation)
-            if activation != "stan"
-            else act_mod.get_activation(activation)(embed_dim)
-        )
+        self.act1 = act_mod.get_activation(activation)
+        self.act2 = act_mod.get_activation(activation)
+        self.act3 = act_mod.get_activation(activation)
 
     def forward(self, x, u, v):
         f = self.act1(self.linear1(x))
