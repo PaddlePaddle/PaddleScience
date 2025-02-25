@@ -247,20 +247,17 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
         if os.path.exists(load_path) and os.path.getsize(load_path) > 0:
             try:
                 vertices = paddle.load(path=str(load_path))
-
-                num_vertices = vertices.shape[0]
-
-                if num_vertices > self.num_points:
-                    indices = np.random.choice(
-                        num_vertices, self.num_points, replace=False
-                    )
-                    vertices = vertices.numpy()[indices]
-
-                return vertices
             except (EOFError, RuntimeError, ValueError) as e:
                 raise Exception(
                     f"Error loading point cloud from {load_path}: {e}"
                 ) from e
+            num_vertices = vertices.shape[0]
+
+            if num_vertices > self.num_points:
+                indices = np.random.choice(num_vertices, self.num_points, replace=False)
+                vertices = vertices.numpy()[indices]
+
+            return vertices
 
     def __getitem__(
         self, idx: int, apply_augmentations: bool = True
