@@ -9,7 +9,7 @@ mkdocs-include-markdown-plugin
 mkdocs-material
 mkdocs-material-extensions
 mkdocs-video
-mkdocstrings
+mkdocstrings==0.27.0
 mkdocstrings-python
 numpy>=1.20.0,<2.0.0
 pyyaml
