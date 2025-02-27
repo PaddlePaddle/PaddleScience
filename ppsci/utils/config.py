@@ -88,7 +88,7 @@ if importlib.util.find_spec("pydantic") is not None:
             Schema of training config for pydantic validation.
             """
 
-            epochs: int = 0
+            epochs: int = 1
             iters_per_epoch: int = 20
             update_freq: int = 1
             save_freq: int = 0
