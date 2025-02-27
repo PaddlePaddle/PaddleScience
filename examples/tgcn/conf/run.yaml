@@ -5,7 +5,9 @@ defaults:
   - TRAIN/swa: swa_default
   - EVAL: eval_default
   - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
   - _self_
+
 
 hydra:
   run:
@@ -39,8 +41,8 @@ reduce: mean
 
 # model settings
 MODEL:
-  input_keys: ['input']
-  label_keys: ['label']
+  input_keys: ["input"]
+  label_keys: ["label"]
 
 seed: 3407
 batch_size: 64

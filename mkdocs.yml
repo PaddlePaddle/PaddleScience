@@ -34,6 +34,7 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
+      - 多硬件支持: zh/multi_device.md
       - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
@@ -67,6 +68,7 @@ nav:
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
           - DrivAerNet: zh/examples/drivaernet.md
+          - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
@@ -76,6 +78,7 @@ nav:
           - tempoGAN: zh/examples/tempoGAN.md
           - NSFNet4: zh/examples/nsfnet4.md
           - ViV: zh/examples/viv.md
+          - DrivAerNet: zh/examples/drivaernet.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md

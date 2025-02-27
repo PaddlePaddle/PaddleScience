@@ -201,9 +201,7 @@ def inference(cfg: DictConfig):
     output_v[0, 0, 0, 0] = 0.5 * (output_v[0, 0, 0, 1] + output_v[0, 0, 1, 0])
     output_v[0, 0, 0, -1] = 0.5 * (output_v[0, 0, 0, -2] + output_v[0, 0, 1, -1])
 
-    ev = paddle.sqrt(
-        paddle.mean((ofv_sb - output_v[0, 0]) ** 2) / paddle.mean(ofv_sb**2)
-    ).item()
+    ev = np.sqrt(np.mean((ofv_sb - output_v[0, 0]) ** 2) / np.mean(ofv_sb**2))
     logger.info(f"ev: {ev}")
 
     fig = plt.figure()

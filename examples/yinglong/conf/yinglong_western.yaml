@@ -1,3 +1,13 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -6,16 +16,6 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - INFER.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
@@ -49,8 +49,18 @@ INFER:
   batch_size: 1
   mean_path: ./western_valid_data/stat/mean_crop.npy
   std_path: ./western_valid_data/stat/std_crop.npy
-  input_file: [./western_valid_data/valid/2022/01/01.h5, ./western_valid_data/valid/2022/01/02.h5, ./western_valid_data/valid/2022/01/03.h5]
+  input_file:
+    [
+      ./western_valid_data/valid/2022/01/01.h5,
+      ./western_valid_data/valid/2022/01/02.h5,
+      ./western_valid_data/valid/2022/01/03.h5,
+    ]
   init_time: 2022/01/01/00
-  nwp_file: [./western_valid_data/hrrr_nwp_h5/2022/01/01.h5, ./western_valid_data/hrrr_nwp_h5/2022/01/02.h5, ./western_valid_data/hrrr_nwp_h5/2022/01/03.h5]
+  nwp_file:
+    [
+      ./western_valid_data/hrrr_nwp_h5/2022/01/01.h5,
+      ./western_valid_data/hrrr_nwp_h5/2022/01/02.h5,
+      ./western_valid_data/hrrr_nwp_h5/2022/01/03.h5,
+    ]
   geo_file: ./western_valid_data/geo.h5
   num_timestamps: 48

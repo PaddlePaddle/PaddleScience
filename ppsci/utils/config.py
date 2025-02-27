@@ -88,7 +88,7 @@ if importlib.util.find_spec("pydantic") is not None:
             Schema of training config for pydantic validation.
             """
 
-            epochs: int = 0
+            epochs: int = 1
             iters_per_epoch: int = 20
             update_freq: int = 1
             save_freq: int = 0
@@ -212,7 +212,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdmodel_path: Optional[str] = None
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
-            device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu"
+            device: Literal["gpu", "cpu", "npu", "xpu", "sdaa"] = "cpu"
             engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True
@@ -305,7 +305,7 @@ if importlib.util.find_spec("pydantic") is not None:
             use_tbd: bool = False
             wandb_config: Mapping = {}
             use_wandb: bool = False
-            device: Literal["cpu", "gpu", "xpu"] = "gpu"
+            device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None
             use_amp: bool = False
             amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
             to_static: bool = False

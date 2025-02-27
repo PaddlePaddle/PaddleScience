@@ -33,5 +33,6 @@
         - CGCNNDataset
         - PEMSDataset
         - DrivAerNetDataset
+        - DrivAerNetPlusPlusDataset
         - IFMMoeDataset
       show_root_heading: true
