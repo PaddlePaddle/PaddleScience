@@ -83,7 +83,7 @@ class Solver:
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
         use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
-        device (Literal["cpu", "gpu", "xpu", None], optional): Runtime device. Defaults to None, which means use default device on current platform.
+        device (Literal["cpu", "gpu", "xpu", "sdaa", None], optional): Runtime device. Defaults to None, which means use default device on current platform.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
@@ -145,7 +145,7 @@ class Solver:
         use_wandb: bool = False,
         use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
-        device: Literal["cpu", "gpu", "xpu", None] = None,
+        device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None,
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,

@@ -212,7 +212,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdmodel_path: Optional[str] = None
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
-            device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu"
+            device: Literal["gpu", "cpu", "npu", "xpu", "sdaa"] = "cpu"
             engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True
@@ -305,7 +305,7 @@ if importlib.util.find_spec("pydantic") is not None:
             use_tbd: bool = False
             wandb_config: Mapping = {}
             use_wandb: bool = False
-            device: Literal["cpu", "gpu", "xpu", None] = None
+            device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None
             use_amp: bool = False
             amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
             to_static: bool = False
