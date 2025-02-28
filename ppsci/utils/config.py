@@ -442,9 +442,16 @@ if importlib.util.find_spec("pydantic") is not None:
     except ImportError as e:
         from ppsci.utils import logger
 
+        logger.error(e)
         logger.error(
-            f"Error occurred while loading module: \n{e}.\n"
             "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
         )
-    except Exception:
-        raise
+    except Exception as e:
+        raise e
+
+else:
+    from ppsci.utils import logger
+
+    logger.error(
+        "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
+    )
