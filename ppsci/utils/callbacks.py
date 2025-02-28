@@ -99,7 +99,8 @@ class InitCallback(Callback):
         if "device" in full_cfg:
             import paddle
 
-            paddle.device.set_device(full_cfg.device)
+            if isinstance(full_cfg.device, str):
+                paddle.device.set_device(full_cfg.device)
 
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):

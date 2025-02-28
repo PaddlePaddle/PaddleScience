@@ -511,4 +511,4 @@ class TFNO3dNet(FNONet):
         )
         self.n_modes_height = n_modes_height
         self.n_modes_width = n_modes_width
-        self.n_modes_height = n_modes_height
+        self.n_modes_depth = n_modes_depth

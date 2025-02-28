@@ -52,6 +52,9 @@ from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
 from ppsci.arch.new_model import DNN  # isort:skip
+from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
+from ppsci.arch.regpointnet import RegPointNet  # isort:skip
+from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 
 
 __all__ = [
@@ -93,7 +96,12 @@ __all__ = [
     "UNetEx",
     "UNONet",
     "USCNN",
-]
+    "VelocityDiscriminator",
+    "VelocityGenerator",
+    "RegDGCNN",
+    "RegPointNet",
+    "IFMMLP",
+
 
 
 def build_model(cfg):

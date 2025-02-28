@@ -1,3 +1,13 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -5,15 +15,6 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
@@ -25,8 +26,8 @@ output_dir: ${hydra:run.dir}
 data_dir: ./data/
 log_freq: 20
 MODEL:
-  input_keys: ["x", "y","z","t"]
-  output_keys: ["u", "v", "w","p"]
+  input_keys: ["x", "y", "z", "t"]
+  output_keys: ["u", "v", "w", "p"]
   num_layers: 10
   hidden_size: 300
   activation: "tanh"
@@ -53,13 +54,12 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
 
-
 INFER:
   pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
   export_path: ./inference/VP_NSFNet4
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
-  output_keys: ['p', 'u', 'v', 'w']
+  output_keys: ["p", "u", "v", "w"]
   device: gpu
   engine: native
   precision: fp32

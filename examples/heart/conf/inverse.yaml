@@ -7,6 +7,7 @@ defaults:
   - INFER: infer_default
   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
   - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -36,14 +37,14 @@ EPI_PATH: ./stl/epi.stl
 DATA_PATH: ./data/inverse.csv
 
 # set working condition
-E: 9  # truth
+E: 9 # truth
 nu: 0.45
 P: 1.064 # kPa
 
 # model settings
 MODEL:
-  input_keys: ["x","y","z"]
-  output_keys: ["u","v","w"]
+  input_keys: ["x", "y", "z"]
+  output_keys: ["u", "v", "w"]
   num_layers: 10
   hidden_size: 20
   activation: "silu"
@@ -66,10 +67,10 @@ TRAIN:
     bc_epi: 32
     interior: 8000
   weight:
-    bc_base: {"u": 0.1, "v": 0.1, "w": 0.1}
-    bc_endo: {"traction_x": 0.1, "traction_y": 0.1, "traction_z": 0.1}
-    bc_epi: {"traction": 0.1}
-    interior: {"hooke_x": 0.1, "hooke_y": 0.1, "hooke_z": 0.1}
+    bc_base: { "u": 0.1, "v": 0.1, "w": 0.1 }
+    bc_endo: { "traction_x": 0.1, "traction_y": 0.1, "traction_z": 0.1 }
+    bc_epi: { "traction": 0.1 }
+    interior: { "hooke_x": 0.1, "hooke_y": 0.1, "hooke_z": 0.1 }
   save_freq: 20
   eval_freq: 20
   eval_during_train: true
