@@ -293,7 +293,9 @@ def inference(cfg: DictConfig):
     # mapping data to cfg.INFER.output_keys
     output_dict = {
         store_key: output_dict[infer_key]
-        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+        for store_key, infer_key in zip(
+            sorted(cfg.MODEL.output_keys), output_dict.keys()
+        )
     }
     U_pred = np.sqrt(output_dict["u"] ** 2 + output_dict["v"] ** 2).reshape(
         [len(x_star), len(y_star)]
