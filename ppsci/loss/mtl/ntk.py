@@ -106,8 +106,8 @@ class NTK(base.LossAggregator):
 
         # compute current loss with moving weights
         loss = 0
-        for k, v in losses.items():
-            loss = loss + self.weight[0] * v
+        for i, (k, v) in enumerate(losses.items()):
+            loss = loss + self.weight[i] * v
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:
