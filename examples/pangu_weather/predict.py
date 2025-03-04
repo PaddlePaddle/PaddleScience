@@ -69,16 +69,16 @@ class PanguWeatherPredictor(base.Predictor):
         input_data: np.ndarray,
         input_surface_data: np.ndarray,
         batch_size: int = 1,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray] :
         """Predicts the output of the yinglong model for the given input.
 
         Args:
-            input_data (np.ndarray): Input data of shape.
-            input_surface_data (np.ndarray): Input Surface data of shape.
+            input_data (np.ndarray): Input data.
+            input_surface_data (np.ndarray): Input Surface data.
             batch_size (int, optional): Batch size, now only support 1. Defaults to 1.
 
         Returns:
-            np.ndarray: Prediction.
+            Tuple[np.ndarray, np.ndarray]: Prediction.
         """
         if batch_size != 1:
             raise ValueError(
