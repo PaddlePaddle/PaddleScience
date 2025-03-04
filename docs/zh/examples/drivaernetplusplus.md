@@ -11,7 +11,7 @@ DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dyna
 ## 代码信息
 
 |  预训练模型   |  神经网络   |   指标    |
-| :-----------: | :---------: | :-----: |
+| ----------- | --------- | ----- |
 | [DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams) | RegPointNet | $R^2:91.93%$ |
 
 === "模型训练命令"
@@ -67,7 +67,7 @@ $$
 
 1. **批次内方差 vs. 全局方差**：
 
-   - 当你在每个批次内计算 R² 时，$SS{tot}$是基于该批次内的真实值均值计算的。这会导致$SS{tot}$ 只反映了批次内的方差，而忽略了整个数据集的全局方差。
+   - 当你在每个批次内计算 R² 时，$SS_{tot}$是基于该批次内的真实值均值计算的。这会导致$SS_{tot}$ 只反映了批次内的方差，而忽略了整个数据集的全局方差。
    - 由于不同批次的数据分布可能不同，批次内的均值和方差可能会有很大差异，导致 R² 的估计不准确。
 
 2. **批次大小的影响**：
@@ -129,12 +129,12 @@ avg_r2 = total_r2 / len(test_dataloader)
 
    - 使用整个数据集的真实值 $y_{true}$ 来计算全局均值 $y_{mean}$，而不是每个批次内的局部均值。
 
-3. **计算全局的 $SS{tot}$ 和 $SS{res}$**：
+3. **计算全局的 $SS_{tot}$ 和 $SS_{res}$**：
 
-   - 使用全局均值 $y_{mean}$ 来计算总平方和 $SS{tot}$ 和残差平方和 $SS{res}$。
+   - 使用全局均值 $y_{mean}$ 来计算总平方和 $SS_{tot}$ 和残差平方和 $SS_{res}$。
 
 4. **计算最终的 R²**：
-   - 使用全局的 $SS{tot}$ 和 $SS{res}$ 来计算最终的 R²。
+   - 使用全局的 $SS_{tot}$ 和 $SS_{res}$ 来计算最终的 R²。
 
 ## 1. 背景简介
 
@@ -189,19 +189,15 @@ avg_r2 = total_r2 / len(test_dataloader)
 飞桨版数据集下载：
 
 ``` sh
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt
 mkdir -p data/subset_dir
-mv train_design_ids.txt data/subset_dir
-mv val_design_ids.txt data/subset_dir
-mv test_design_ids.txt data/subset_dir
-tar -xvf DrivAer++_Points.tar -C data/
-mv data/workspace/gino_data/14_DrivAer++/paddle_tensor data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
+tar -xvf DrivAer++_Points.tar -C ./data
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
+mv ./data/workspace/gino_data/14_DrivAer++/paddle_tensor ./data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
 rm -rf data/workspace
-mv DrivAerNetPlusPlus_Drag_8k.csv data/
 ```
 
 官方数据集下载：
@@ -210,19 +206,16 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 **Linux：**
 
 1. [Globus Connect Personal](https://www.globus.org/globus-connect-personal)是 Globus 提供的免费客户端。提供 Linux、Mac 和 Windows 版本。
-
 ``` sh
 下载地址：https://www.globus.org/globus-connect-personal
 ```
 
 2. 使用 wget 或 curl 直接下载 Globus Connect Personal：
-
 ``` sh
 wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
 ```
 
 3. 从下载的 tarball 中提取文件。
-
 ``` sh
 tar xzf globusconnectpersonal-latest.tgz
 # 替代 `x.y.z` 为下载的具体版本号
@@ -230,13 +223,11 @@ cd globusconnectpersonal-x.y.z
 ```
 
 4. 启动 Globus Connect 个人版。由于第一次运行，因此必须先完成设置，然后才能运行完整的应用程序。
-
 ``` sh
 ./globusconnectpersonal
 ```
 
 5. 设置过程，运行`./globusconnectpersonal`后弹出如下内容，通过登录网址获取认证代码。`== starting endpoint setup`后设置 endpoint 名字并获取 endpoint 的 ID 序号。
-
 ``` sh
 Detected that setup has not run yet, and '-setup' was not used
 Will now attempt to run
@@ -260,13 +251,11 @@ setup completed successfully
 ```
 
 6. 无 GUI 运行，后台启动 Globus Connect Personal。
-
 ``` sh
 ./globusconnectpersonal -start &
 ```
 
 7. 查看 Globus Connect Personal 的状态，使用`-status`可以查看后台运行的 Globus Connect Personal 的状态。
-
 ``` sh
 ./globusconnectpersonal -status
 Globus Online: connected
@@ -274,26 +263,22 @@ Transfer Status: idle
 ```
 
 8. 添加路径 Globus 下载路径。
-
 ``` sh
 vim ~/.globusonline/lta/config-paths
 ```
 
 9. 添加存储路径，更多信息可参考 Globus 官方教程。
-
 ``` sh
    ~/,0,0
 你的路径地址,0,1
 ```
 
 10. 使用 Globus 需要安装 globus-cli。
-
 ``` sh
 pip install globus-cli
 ```
 
 11. 登录，通过登录网址获取认证代码。
-
 ``` sh
 globus login --no-local-server
 
@@ -317,7 +302,6 @@ globus logout
 ```
 
 12. 找出要下载数据的名称和账户，以 PubDAS 为例。
-
 ``` sh
 globus endpoint search "PubDAS" --filter-owner-id 4c984b40-a0b2-4d9e-b132-b32                                                                               735905e23@clients.auth.globus.org
 ID                                   | Owner                                                        | Display Name
@@ -327,13 +311,11 @@ ID                                   | Owner                                    
 ```
 
 13. 简化下载数据源的 ID 名称（可选）
-
 ``` sh
 export ep1=706e304c-5def-11ec-9b5c-f9dfb1abb183
 ```
 
 14. 查看该路径下的数据。
-
 ``` sh
 globus ls $ep1:
 DAS-Month-02.2023/
@@ -349,7 +331,6 @@ License.txt
 ```
 
 15. 获取自己 Globus 的 ID。
-
 ``` sh
 globus endpoint search "YourName(STEP2)" --filter-owner-id yourname(step1)@globusid.org
 ID                                   | Owner                        | Display Name
@@ -358,13 +339,11 @@ ID                                   | Owner                        | Display Na
 ```
 
 16. 同理可简化自己的 ID（可选）
-
 ``` sh
 export ep2=-----------------ID-----------------
 ```
 
 17. 下载数据，将 PubDAS 中的 License.txt 从 ep1 数据源传送到 ep2（自己路径下，第 8，9 步设置）。
-
 ``` sh
 # here is defaut path (your home path)
 globus transfer $ep1:License.txt $ep2:/~/License.txt
@@ -373,7 +352,6 @@ Task ID: -----------------传送任务ID-----------------
 ```
 
 18. 利用上面的 Task ID 查看文件传输状态！
-
 ``` sh
 globus task show -----------------传送任务ID-----------------
 Label:                        None

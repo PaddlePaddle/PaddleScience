@@ -10,8 +10,8 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 
 ## 代码信息
 
-|预训练模型 |神经网络|指标|
-|:-------:|:-------:|:-:|
+| 预训练模型 | 神经网络 | 指标 |
+| ------- | ------- | --- |
 | [CdPrediction_DrivAerNet_r2_100epochs_5k_best_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DrivAerNet/CdPrediction_DrivAerNet_r2_100epochs_5k_pretrained.pdparams)| RegDGCNN | $R^2:88.22%$ |
 
 === "模型训练命令"
@@ -368,7 +368,6 @@ examples/drivaernet/drivaernet.py:112:128
 ```
 
 ## 4. 完整代码
-
 
 ``` py linenums="15" title="drivaernet.py"
 --8<--
