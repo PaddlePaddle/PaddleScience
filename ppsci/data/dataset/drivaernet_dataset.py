@@ -285,7 +285,7 @@ class DrivAerNetDataset(paddle.io.Dataset):
 
         row = self.data_frame.iloc[idx]
         design_id = row["Design"]
-        cd_value = row["Average Cd"]
+        cd_value = row["Average Cd"].reshape([-1])
         if self.pointcloud_exist:
             try:
                 vertices = self._load_point_cloud(design_id)
