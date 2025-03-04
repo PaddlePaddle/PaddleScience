@@ -417,24 +417,29 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         === "pip 安装"
 
             ``` sh
-            pip install paddlepaddle-gpu==2.3.0rc1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/
+            # cuda 11.8
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu118/
+            # cuda 12.3
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu123/
             ```
 
         === "源码编译"
 
-            ``` sh
+            ``` sh hl_lines="11 12"
             git clone https://github.com/PaddlePaddle/Paddle.git -b develop && cd Paddle/
             mkdir build && cd build
+
             cmake .. -DPY_VERSION=3.9 \
                 -DPYTHON_EXECUTABLE=$(which python3) \
                 -DWITH_GPU=ON \
-                -WITH_DISTRIBUTE=ON \
+                -DWITH_DISTRIBUTE=ON \
                 -DWITH_TESTING=OFF \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
                 -DPYTHON_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.so \
                 -DWITH_TENSORRT=ON \
                 -DTENSORRT_ROOT=$TRT_PATH
+
             pip install python/dist/paddlepaddle_gpu-0.0.0-cp*
             ```
 
