@@ -33,7 +33,7 @@ class FengWuPredictor(base.Predictor):
     """
 
     # 14 day with time-interval of siz hours
-    PREDICT_TIMESTAMP = 14 * 24 / 6
+    PREDICT_TIMESTAMP = int(14 * 24 / 6)
 
     def __init__(
         self,
