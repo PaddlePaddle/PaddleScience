@@ -12,7 +12,7 @@ DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dyna
 
 |  预训练模型   |  神经网络   |   指标    |
 | :-----------: | :---------: | :-----: |
-| [DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams) | RegPointNet | $R^2:92%$ |
+| [DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams) | RegPointNet | $R^2:91.93%$ |
 
 === "模型训练命令"
 
