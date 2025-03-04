@@ -73,14 +73,14 @@ def train(cfg: DictConfig):
         "num_workers": cfg.TRAIN.num_workers,
     }
 
-    drivaernet_valid = ppsci.validate.SupervisedValidator(
+    drivaernet_eval = ppsci.validate.SupervisedValidator(
         valid_dataloader_cfg,
         loss=ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},
-        name="DrivAerNet_valid",
+        name="DrivAerNet_eval",
     )
 
-    validator = {drivaernet_valid.name: drivaernet_valid}
+    validator = {drivaernet_eval.name: drivaernet_eval}
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ReduceOnPlateau(
@@ -162,7 +162,7 @@ def evaluate(cfg: DictConfig):
         "num_workers": cfg.EVAL.num_workers,
     }
 
-    drivaernet_valid = ppsci.validate.SupervisedValidator(
+    drivaernet_eval = ppsci.validate.SupervisedValidator(
         valid_dataloader_cfg,
         loss=ppsci.loss.MSELoss("mean"),
         metric={
@@ -171,10 +171,10 @@ def evaluate(cfg: DictConfig):
             "Max AE": ppsci.metric.MaxAE(),
             "R²": ppsci.metric.R2Score(),
         },
-        name="DrivAerNet_valid",
+        name="DrivAerNet_eval",
     )
 
-    validator = {drivaernet_valid.name: drivaernet_valid}
+    validator = {drivaernet_eval.name: drivaernet_eval}
 
     solver = ppsci.solver.Solver(
         model=model,
