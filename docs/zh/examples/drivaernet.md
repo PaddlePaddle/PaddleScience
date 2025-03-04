@@ -4,8 +4,8 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 
 ## 论文信息
 
-| 年份 | 期刊                         | 作者                                     | 引用数 | 论文 PDF                                                                                                |
-| ---- | ---------------------------- | ---------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
+| 年份 | 期刊                         | 作者                                     | 引用数 | 论文 PDF |
+| ---- | ---------------------------- | ---------------------------------------- | ------ | ---- |
 | 2024 | Design Automation Conference | Mohamed Elrefaie, Angela Dai, Faez Ahmed | 3      | DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Graph-Based Drag Prediction |
 
 ## 代码信息
@@ -17,12 +17,18 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 === "模型训练命令"
 
     ``` sh
+    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
+    tar -xvf data.tar
+
     python drivaernet.py
     ```
 
 === "模型评估命令"
 
     ``` sh
+    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
+    tar -xvf data.tar
+
     python drivaernet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DrivAerNet/CdPrediction_DrivAerNet_r2_100epochs_5k_pretrained.pdparams
     ```
 
@@ -51,12 +57,6 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 尽管在先前研究中采用了新的方法，但它们面临着源于 ShapeNet 数据集固有缺陷的限制，例如较低的网格分辨率，数据集尺寸小，以及过度简化，如将汽车建模为单身实体，而没有详细考虑车轮、下车体和侧镜等部件，这可能会显著影响真实世界的空气动力学性能。这种过度简化会显著影响真实世界的气动性能；在 DrivAer 模型快背模型中包括这些细节，在 CFD 模拟中，阻力值从 0.115 增加到 0.278，在风洞实验中，阻力值从 0.125 增加到 0.275。这些增加分别代表阻力的大幅增加约 142 %和 120 %，强调了综合建模在实现准确的气动评估中的关键作用。代理模型和设计优化中的另一个共同障碍是数据的稀缺性，这使得复制结果或基准测试各种模型和方法的工作复杂化。为了应对这一挑战，本研究的贡献引入了 DrivAerNet，这是一个为数据驱动的气动设计量身定制的综合基准数据集，旨在促进未来方法的比较和验证。
 
 ## 2. 问题定义
-
-数据下载：
-`sh
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
-    tar -xvf data.tar
-`
 
 ![fig1](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer/fig/fig1.jpg)
 
@@ -273,13 +273,13 @@ $$
 
 在 PDF 中，问题求解通常涉及数据预处理、模型设计、训练过程以及评估与优化的多个环节。在此过程中，涉及到如何处理数据集、构建合适的约束条件、选择优化器和评估器等环节。以下是具体的介绍，包括数据集、模型（以 RegDGCNN 为例）、约束构建、优化器构建、评估器构建、以及模型的训练和评估。
 
-**1.数据增强类：`DataAugmentation：**
+**1.数据增强类：`DataAugmentation`：**
 
 用于对点云进行随机变换，包括平移、加噪声和随机丢点，以提升模型的泛化能力。
 
-```py linenums="37"
+``` py linenums="37"
 --8<--
-ppsci/arch/drivaernet_dataset.py:37:112
+ppsci/data/dataset/drivaernet_dataset.py:37:103
 --8<--
 ```
 
@@ -287,7 +287,7 @@ ppsci/arch/drivaernet_dataset.py:37:112
 
 用于加载 DrivAerNet 数据集，并处理点云数据（如采样、增强和归一化）。
 
-```py linenums="106"
+``` py linenums="106"
 --8<--
 ppsci/data/dataset/drivaernet_dataset.py:106:330
 --8<--
@@ -303,7 +303,7 @@ RegDGCNN 是一种专为图形数据设计的深度学习模型，常用于处�
 2. **特征学习**：捕获点云的局部和全局几何特征。
 3. **输出**：预测的空气阻力系数（$C_d$），作为模型的回归输出。
 
-```python
+``` py
 model = ppsci.arch.RegDGCNN(input_keys=cfg.MODEL.input_keys,
                             label_keys=cfg.MODEL.output_keys,
                             weight_keys=cfg.MODEL.weight_keys,
@@ -312,7 +312,7 @@ model = ppsci.arch.RegDGCNN(input_keys=cfg.MODEL.input_keys,
 
 模型参数具体如下：
 
-```yaml
+``` yaml
 MODEL:
   input_keys: ["vertices"] # 输入数据的关键字（3D顶点数据）
   output_keys: ["cd_value"] # 输出数据的关键字（空气阻力系数）
@@ -329,7 +329,7 @@ MODEL:
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-```py linenums="34"
+``` py linenums="34"
 --8<--
 examples/drivaernet/drivaernet.py:34:58
 --8<--
@@ -339,7 +339,7 @@ examples/drivaernet/drivaernet.py:34:58
 
 优化器是模型训练中的关键部分，用于通过梯度下降法（或其他算法）调整模型参数。在本场景中，使用了`Adam`和`SGD`优化器，并通过学习率调度器来动态调整学习率。
 
-```py linenums="86"
+``` py linenums="86"
 --8<--
 examples/drivaernet/drivaernet.py:86:109
 --8<--
@@ -349,7 +349,7 @@ examples/drivaernet/drivaernet.py:86:109
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-```py linenums="60"
+``` py linenums="60"
 --8<--
 examples/drivaernet/drivaernet.py:60:81
 --8<--
@@ -361,7 +361,7 @@ examples/drivaernet/drivaernet.py:60:81
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-```py linenums="112"
+``` py linenums="112"
 --8<--
 examples/drivaernet/drivaernet.py:112:128
 --8<--
@@ -369,9 +369,8 @@ examples/drivaernet/drivaernet.py:112:128
 
 ## 4. 完整代码
 
-=== "drivaernet.py"
 
-```py linenums="15"
+``` py linenums="15" title="drivaernet.py"
 --8<--
 examples/drivaernet/drivaernet.py:15:200
 --8<--

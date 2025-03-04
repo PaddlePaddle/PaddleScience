@@ -27,7 +27,7 @@ def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.RegPointNet(
         input_keys=cfg.MODEL.input_keys,
-        label_keys=cfg.MODEL.output_keys,
+        output_keys=cfg.MODEL.output_keys,
         weight_keys=cfg.MODEL.weight_keys,
         args=cfg.MODEL,
     )
@@ -137,7 +137,7 @@ def evaluate(cfg: DictConfig):
     # set model
     model = ppsci.arch.RegPointNet(
         input_keys=cfg.MODEL.input_keys,
-        label_keys=cfg.MODEL.output_keys,
+        output_keys=cfg.MODEL.output_keys,
         weight_keys=cfg.MODEL.weight_keys,
         args=cfg.MODEL,
     )

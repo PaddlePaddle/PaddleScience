@@ -4,14 +4,14 @@ DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dyna
 
 ## 论文信息
 
-| 年份 | 会议                                                             | 作者                                                   | 引用数 | 论文 PDF                                                                                                                      |
-| ---- | ---------------------------------------------------------------- | ------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| 年份 | 会议 | 作者 | 引用数 | 论文 PDF                                                                                                                      |
+| ---- | ----- | --- | --- | --- |
 | 2024 | Conference and Workshop on Neural Information Processing Systems | Mohamed Elrefaie, Florin Morar, Angela Dai, Faez Ahmed | 4      | DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dynamics Simulations and Deep Learning Benchmarks |
 
 ## 代码信息
 
-|                                                                                                                                        预训练模型                                                                                                                                         |  神经网络   |   指标    |
-| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------: | :-------: |
+|  预训练模型   |  神经网络   |   指标    |
+| :-----------: | :---------: | :-----: |
 | [DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams) | RegPointNet | $R^2:92%$ |
 
 === "模型训练命令"
@@ -53,7 +53,7 @@ $$
 2. **批次大小的影响**：
    - 如果使用不同的批次大小（batch size），R² 的结果可能会显著不同。例如，较小的批次可能会导致更大的方差，从而影响 R² 的计算。因此，基于批次的 R² 计算结果依赖于批次大小的选择，缺乏稳定性。
 
-```python
+``` py
 # 源代码DeepSurrogates/train_RegPointNet.py中的R²计算
 def r2_score(output, target):
 """Compute R-squared score."""
@@ -118,7 +118,7 @@ avg_r2 = total_r2 / len(test_dataloader)
 
 ## 1. 背景简介
 
-本研究展示了 DrivAerNet + +，这是目前最大、最全面的用于气动汽车设计的多模态数据集。DrivAerNet + +包括 8000 种不同的汽车设计，采用高保真的计算流体动力学( CFD )模拟进行建模。该数据集包括不同的汽车配置，如快背式、切角背式和地产背式，具有不同的底盘和车轮设计，以代表内燃机和电动汽车。数据集中的每个入口都具有详细的三维网格、参数化模型、气动力系数和广泛的流场和表面场数据，以及用于汽车分类的分割零件和点云数据。该数据集支持广泛的机器学习应用，包括数据驱动的设计优化、生成式建模、代理模型训练、CFD 模拟加速和几何分类。DrivAerNet + +拥有超过 39TB 的公开可用工程数据，填补了可用资源的重大缺口，提供了高质量、多样化的数据，以增强模型训练，促进泛化，加速汽车设计过程。除了严格的数据集验证，本研究还在气动阻力预测任务上提供了 ML 基准测试结果，展示了本研究数据集支持的应用广度。该数据集将通过促进创新和提高空气动力学评估的保真度，对汽车设计和更广泛的工程学科产生重大影响。
+本研究展示了 DrivAerNet++，这是目前最大、最全面的用于气动汽车设计的多模态数据集。DrivAerNet++包括 8000 种不同的汽车设计，采用高保真的计算流体动力学( CFD )模拟进行建模。该数据集包括不同的汽车配置，如快背式、切角背式和地产背式，具有不同的底盘和车轮设计，以代表内燃机和电动汽车。数据集中的每个入口都具有详细的三维网格、参数化模型、气动力系数和广泛的流场和表面场数据，以及用于汽车分类的分割零件和点云数据。该数据集支持广泛的机器学习应用，包括数据驱动的设计优化、生成式建模、代理模型训练、CFD 模拟加速和几何分类。DrivAerNet++拥有超过 39TB 的公开可用工程数据，填补了可用资源的重大缺口，提供了高质量、多样化的数据，以增强模型训练，促进泛化，加速汽车设计过程。除了严格的数据集验证，本研究还在气动阻力预测任务上提供了 ML 基准测试结果，展示了本研究数据集支持的应用广度。该数据集将通过促进创新和提高空气动力学评估的保真度，对汽车设计和更广泛的工程学科产生重大影响。
 
 汽车设计是一个复杂和迭代的过程，需要设计师和工程师之间的密切合作，设计师专注于美学，工程师确保设计满足性能约束。其中一个关键的挑战是在美学吸引力和空气动力学效率之间取得平衡，这直接影响了燃料消耗。随着内燃机汽车( ICE )油耗法规的日益严格和纯电动汽车( BEV ) [ 46、8、44]续航里程要求的提高，保证高效的汽车空气动力学性能变得至关重要。因此，人们对开发用于汽车空气动力学建模的机器学习方法产生了极大的兴趣。
 
@@ -128,11 +128,11 @@ avg_r2 = total_r2 / len(test_dataloader)
 
 公开的、大规模的、多模态的汽车数据集显著缺乏，阻碍了数据驱动设计的进展。这与其他领域不同，标准化的数据集如 ImageNet [ 18 ]，ObjectNet3D [ 73 ]，ModelNet [ 72 ]和 ScanNet [ 16 ]推动了显著的进步。
 
-本研究使用 DrivAerNet + + 2 数据集(见图 1)来解决这些挑战。DrivAerNet + +数据集代表了对其前身 DrivAerNet 数据集[ 22 ]的重大进步，该数据集集成了 4000 种不同的汽车形状。这种改进使数据集的体积增加一倍，总共有 8000 个工业标准的汽车设计，并显著地提高了仿真的逼真度，具有更复杂的单元结构( 24M 细胞,与原始数据集的 8 - 16M 相反)。此外，DrivAerNet + +通过纳入详细的三维流场数据、参数化数据、气动性能系数和部分注释来扩展其实用性。该数据集包含了广泛的几何形状和配置，涵盖了大多数传统汽车的设计类别，包括传统 ICE 汽车的详细底盘和电动汽车的光滑底盘。
+本研究使用 DrivAerNet++ 2 数据集(见图 1)来解决这些挑战。DrivAerNet++数据集代表了对其前身 DrivAerNet 数据集[ 22 ]的重大进步，该数据集集成了 4000 种不同的汽车形状。这种改进使数据集的体积增加一倍，总共有 8000 个工业标准的汽车设计，并显著地提高了仿真的逼真度，具有更复杂的单元结构( 24M 细胞,与原始数据集的 8 - 16M 相反)。此外，DrivAerNet++通过纳入详细的三维流场数据、参数化数据、气动性能系数和部分注释来扩展其实用性。该数据集包含了广泛的几何形状和配置，涵盖了大多数传统汽车的设计类别，包括传统 ICE 汽车的详细底盘和电动汽车的光滑底盘。
 
 大规模、多样化和高保真度的数据集对于推进 CFD 和工程设计的深度学习方法至关重要，为新方法的开发、验证和比较提供了标准化的数据。新兴的数据集，如 AirfRANS [ 7 ]，BubbleML [ 30 ]，Lagrangebench [ 65 ]和 BLASTNet [ 13 ]，通过为训练和基准测试提供全面的数据，对流体力学中的机器学习社区做出了重大贡献。在工程设计中，航空器设计数据集(如 Aircraft Verse [ 14 ] )提供了详细多样的航空器设计配置，帮助工程师验证新的设计策略并确保高性能。然而，目前还没有大规模的三维外形数据集，可以将高保真的 CFD 模拟与专门为汽车气动设计量身定制的工程设计相结合。
 
-在表 1 中提出的比较通过强调缺乏包含数据驱动气动设计的全面特征的开源数据集来支持本研究的动机。这一差距强调了数据集的必要性，不仅要提供高保真度的模拟，还要确保实验验证，以确认计算模型的准确性和可靠性。DrivAerNet + +通过包含多种数据模态( 3D 网格、点云、CFD 数据、参数化数据和部分注释)来解决这些需求，并考虑了旋转车轮和下车体的建模。虽然 DrivAerNet [ 22 ]基于单一的汽车类别，但 DrivAerNet + +融合了多种汽车设计和类别。
+在表 1 中提出的比较通过强调缺乏包含数据驱动气动设计的全面特征的开源数据集来支持本研究的动机。这一差距强调了数据集的必要性，不仅要提供高保真度的模拟，还要确保实验验证，以确认计算模型的准确性和可靠性。DrivAerNet++通过包含多种数据模态( 3D 网格、点云、CFD 数据、参数化数据和部分注释)来解决这些需求，并考虑了旋转车轮和下车体的建模。虽然 DrivAerNet [ 22 ]基于单一的汽车类别，但 DrivAerNet++融合了多种汽车设计和类别。
 
 |          Dataset          | Size | Aerodynamics Data | Wheels/Underbody Modeling | Parametric Design Parameters | Shape Variation | Experimental Validation | Modalities  | Open-source |
 | :-----------------------: | :--: | :---------------: | :-----------------------: | :--------------------------: | :-------------: | :---------------------: | :---------: | :---------: |
@@ -160,243 +160,245 @@ avg_r2 = total_r2 / len(test_dataloader)
 
 - 较低的模拟保真度：由于运行高保真度 CFD 模拟的昂贵计算成本，在数据集大小和模拟保真度之间存在权衡。因此，现有的数据集，如[ 61、6、55、56、68、29]，使用的模拟保真度较低，降低了实际效用。
 
-本研究的数据集 DrivAerNet + +试图同时提供设计变化和多样性，以及模拟逼真度，使其高度适用于概念设计阶段。这种平衡保证了设计人员可以在不牺牲模拟质量的前提下探索广泛的空气动力学概念。
+本研究的数据集 DrivAerNet++试图同时提供设计变化和多样性，以及模拟逼真度，使其高度适用于概念设计阶段。这种平衡保证了设计人员可以在不牺牲模拟质量的前提下探索广泛的空气动力学概念。
 
 ## 2. 问题定义
 
 ### 2.1 数据集呈现
+
+飞桨版数据集下载：
+
+``` sh
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt
+wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt
+mkdir -p data/subset_dir
+mv train_design_ids.txt data/subset_dir
+mv val_design_ids.txt data/subset_dir
+mv test_design_ids.txt data/subset_dir
+tar -xvf DrivAer++_Points.tar -C data/
+mv data/workspace/gino_data/14_DrivAer++/paddle_tensor data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
+rm -rf data/workspace
+mv DrivAerNetPlusPlus_Drag_8k.csv data/
+```
+
+官方数据集下载：
 
 stl 源数据集下载教程参考，从[数据集下载地址](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OYU2FG)下载 DrivAerNet++: 3D Meshes，即.stl 网格数据。
 **Linux：**
 
 1. [Globus Connect Personal](https://www.globus.org/globus-connect-personal)是 Globus 提供的免费客户端。提供 Linux、Mac 和 Windows 版本。
 
-   ```sh
-   下载地址：https://www.globus.org/globus-connect-personal
-   ```
+``` sh
+下载地址：https://www.globus.org/globus-connect-personal
+```
 
 2. 使用 wget 或 curl 直接下载 Globus Connect Personal：
 
-   ```sh
-   wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
-   ```
+``` sh
+wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
+```
 
 3. 从下载的 tarball 中提取文件。
 
-   ```sh
-   tar xzf globusconnectpersonal-latest.tgz
-   # 替代 `x.y.z` 为下载的具体版本号
-   cd globusconnectpersonal-x.y.z
-   ```
+``` sh
+tar xzf globusconnectpersonal-latest.tgz
+# 替代 `x.y.z` 为下载的具体版本号
+cd globusconnectpersonal-x.y.z
+```
 
 4. 启动 Globus Connect 个人版。由于第一次运行，因此必须先完成设置，然后才能运行完整的应用程序。
 
-   ```sh
-   ./globusconnectpersonal
-   ```
+``` sh
+./globusconnectpersonal
+```
 
 5. 设置过程，运行`./globusconnectpersonal`后弹出如下内容，通过登录网址获取认证代码。`== starting endpoint setup`后设置 endpoint 名字并获取 endpoint 的 ID 序号。
 
-   ```sh
-   Detected that setup has not run yet, and '-setup' was not used
-   Will now attempt to run
-     globusconnectpersonal -setup
+``` sh
+Detected that setup has not run yet, and '-setup' was not used
+Will now attempt to run
+   globusconnectpersonal -setup
 
-   Globus Connect Personal needs you to log in to continue the setup process.
+Globus Connect Personal needs you to log in to continue the setup process.
 
-   We will display a login URL. Copy it into any browser and log in to get a
-   single-use code. Return to this command with the code to continue setup.
+We will display a login URL. Copy it into any browser and log in to get a
+single-use code. Return to this command with the code to continue setup.
 
-   Login here:
-   -----
-   https://auth.globus.org/你的网址内容
-   -----
-   Enter the auth code: 你的认证代码
-   == starting endpoint setup
+Login here:
+-----
+https://auth.globus.org/你的网址内容
+-----
+Enter the auth code: 你的认证代码
+== starting endpoint setup
 
-   Input a value for the Endpoint Name: 你设置的endpoint名字
-   registered new endpoint, id: 你的endpoint的ID
-   setup completed successfully
-   ```
+Input a value for the Endpoint Name: 你设置的endpoint名字
+registered new endpoint, id: 你的endpoint的ID
+setup completed successfully
+```
 
 6. 无 GUI 运行，后台启动 Globus Connect Personal。
 
-   ```sh
-   ./globusconnectpersonal -start &
-   ```
+``` sh
+./globusconnectpersonal -start &
+```
 
 7. 查看 Globus Connect Personal 的状态，使用`-status`可以查看后台运行的 Globus Connect Personal 的状态。
 
-   ```sh
-   ./globusconnectpersonal -status
-   Globus Online: connected
-   Transfer Status: idle
-   ```
+``` sh
+./globusconnectpersonal -status
+Globus Online: connected
+Transfer Status: idle
+```
 
 8. 添加路径 Globus 下载路径。
 
-   ```sh
-   vim ~/.globusonline/lta/config-paths
-   ```
+``` sh
+vim ~/.globusonline/lta/config-paths
+```
 
 9. 添加存储路径，更多信息可参考 Globus 官方教程。
 
-   ```sh
-    ~/,0,0
-   你的路径地址,0,1
-   ```
+``` sh
+   ~/,0,0
+你的路径地址,0,1
+```
 
 10. 使用 Globus 需要安装 globus-cli。
 
-    ```sh
-    pip install globus-cli
-    ```
+``` sh
+pip install globus-cli
+```
 
 11. 登录，通过登录网址获取认证代码。
 
-    ```sh
-    globus login --no-local-server
+``` sh
+globus login --no-local-server
 
-    Please authenticate with Globus here:
-    ------------------------------------
-    https://auth.globus.org/你的网址信息
-    ------------------------------------
+Please authenticate with Globus here:
+------------------------------------
+https://auth.globus.org/你的网址信息
+------------------------------------
 
-    Enter the resulting Authorization Code here: 从网址获取的认证代码
+Enter the resulting Authorization Code here: 从网址获取的认证代码
 
-    You have successfully logged in to the Globus CLI!
+You have successfully logged in to the Globus CLI!
 
-    You can check your primary identity with
-      globus whoami
+You can check your primary identity with
+globus whoami
 
-    For information on which of your identities are in session use
-      globus session show
+For information on which of your identities are in session use
+globus session show
 
-    Logout of the Globus CLI with
-      globus logout
-    ```
+Logout of the Globus CLI with
+globus logout
+```
 
 12. 找出要下载数据的名称和账户，以 PubDAS 为例。
 
-    ```sh
-    globus endpoint search "PubDAS" --filter-owner-id 4c984b40-a0b2-4d9e-b132-b32                                                                               735905e23@clients.auth.globus.org
-    ID                                   | Owner                                                        | Display Name
-    ------------------------------------ | ------------------------------------------------------------ | -------------
-    706e304c-5def-11ec-9b5c-f9dfb1abb183 | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | PubDAS
-    1013e4a6-5df1-11ec-bded-55fe55c2cfea | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | PubDAS-upload
-    ```
+``` sh
+globus endpoint search "PubDAS" --filter-owner-id 4c984b40-a0b2-4d9e-b132-b32                                                                               735905e23@clients.auth.globus.org
+ID                                   | Owner                                                        | Display Name
+------------------------------------ | ------------------------------------------------------------ | -------------
+706e304c-5def-11ec-9b5c-f9dfb1abb183 | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | PubDAS
+1013e4a6-5df1-11ec-bded-55fe55c2cfea | 4c984b40-a0b2-4d9e-b132-b32735905e23@clients.auth.globus.org | PubDAS-upload
+```
 
 13. 简化下载数据源的 ID 名称（可选）
 
-    ```sh
-    export ep1=706e304c-5def-11ec-9b5c-f9dfb1abb183
-    ```
+``` sh
+export ep1=706e304c-5def-11ec-9b5c-f9dfb1abb183
+```
 
 14. 查看该路径下的数据。
 
-    ```sh
-    globus ls $ep1:
-    DAS-Month-02.2023/
-    FORESEE/
-    FOSSA/
-    Fairbanks/
-    LaFargeConcoMine/
-    Stanford-1-Campus/
-    Stanford-2-Sandhill-Road/
-    Stanford-3-ODH4/
-    Valencia/
-    License.txt
-    ```
+``` sh
+globus ls $ep1:
+DAS-Month-02.2023/
+FORESEE/
+FOSSA/
+Fairbanks/
+LaFargeConcoMine/
+Stanford-1-Campus/
+Stanford-2-Sandhill-Road/
+Stanford-3-ODH4/
+Valencia/
+License.txt
+```
 
 15. 获取自己 Globus 的 ID。
 
-    ```sh
-    globus endpoint search "YourName(STEP2)" --filter-owner-id yourname(step1)@globusid.org
-    ID                                   | Owner                        | Display Name
-    ------------------------------------ | ---------------------------- | --------------------------
-    -----------------ID----------------- | yourname(step1)@globusid.org | YourName(STEP2)
-    ```
+``` sh
+globus endpoint search "YourName(STEP2)" --filter-owner-id yourname(step1)@globusid.org
+ID                                   | Owner                        | Display Name
+------------------------------------ | ---------------------------- | --------------------------
+-----------------ID----------------- | yourname(step1)@globusid.org | YourName(STEP2)
+```
 
 16. 同理可简化自己的 ID（可选）
 
-    ```sh
-    export ep2=-----------------ID-----------------
-    ```
+``` sh
+export ep2=-----------------ID-----------------
+```
 
 17. 下载数据，将 PubDAS 中的 License.txt 从 ep1 数据源传送到 ep2（自己路径下，第 8，9 步设置）。
 
-    ```sh
-    # here is defaut path (your home path)
-    globus transfer $ep1:License.txt $ep2:/~/License.txt
-    Message: The transfer has been accepted and a task has been created and queued for execution
-    Task ID: -----------------传送任务ID-----------------
-    ```
+``` sh
+# here is defaut path (your home path)
+globus transfer $ep1:License.txt $ep2:/~/License.txt
+Message: The transfer has been accepted and a task has been created and queued for execution
+Task ID: -----------------传送任务ID-----------------
+```
 
 18. 利用上面的 Task ID 查看文件传输状态！
 
-    ```sh
-    globus task show -----------------传送任务ID-----------------
-    Label:                        None
-    Task ID:                      -----------------传送任务ID-----------------
-    Is Paused:                    False
-    Type:                         TRANSFER
-    Directories:                  0
-    Files:                        1
-    Status:                       SUCCEEDED
-    Request Time:                 2022-01-24T17:20:07+00:00
-    Faults:                       0
-    Total Subtasks:               2
-    Subtasks Succeeded:           2
-    Subtasks Pending:             0
-    Subtasks Retrying:            0
-    Subtasks Failed:              0
-    Subtasks Canceled:            0
-    Subtasks Expired:             0
-    Subtasks with Skipped Errors: 0
-    Completion Time:              2022-01-24T17:20:08+00:00
-    Source Endpoint:              ESnet Read-Only Test DTN at Starlight
-    Source Endpoint ID:           57218f41-3200-11e8-b907-0ac6873fc732
-    Destination Endpoint:         Globus Tutorial Endpoint 1
-    Destination Endpoint ID:      -----------------ID-----------------
-    Bytes Transferred:            1000000
-    Bytes Per Second:             587058
-    ```
-
-飞桨版数据下载：
-
-    ``` sh
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt
-    wget https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt
-    mkdir data/subset_dir
-    mv train_design_ids.txt data/subset_dir
-    mv val_design_ids.txt data/subset_dir
-    mv test_design_ids.txt data/subset_dir
-    tar -xvf DrivAer++_Points.tar -C data/
-    mv data/workspace/gino_data/14_DrivAer++/paddle_tensor data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
-    rm -rf data/workspace
-    mv DrivAerNetPlusPlus_Drag_8k.csv data/
-    ```
+``` sh
+globus task show -----------------传送任务ID-----------------
+Label:                        None
+Task ID:                      -----------------传送任务ID-----------------
+Is Paused:                    False
+Type:                         TRANSFER
+Directories:                  0
+Files:                        1
+Status:                       SUCCEEDED
+Request Time:                 2022-01-24T17:20:07+00:00
+Faults:                       0
+Total Subtasks:               2
+Subtasks Succeeded:           2
+Subtasks Pending:             0
+Subtasks Retrying:            0
+Subtasks Failed:              0
+Subtasks Canceled:            0
+Subtasks Expired:             0
+Subtasks with Skipped Errors: 0
+Completion Time:              2022-01-24T17:20:08+00:00
+Source Endpoint:              ESnet Read-Only Test DTN at Starlight
+Source Endpoint ID:           57218f41-3200-11e8-b907-0ac6873fc732
+Destination Endpoint:         Globus Tutorial Endpoint 1
+Destination Endpoint ID:      -----------------ID-----------------
+Bytes Transferred:            1000000
+Bytes Per Second:             587058
+```
 
 **基准几何体生成：**在汽车空气动力学中，根据汽车后端[ 33、34 ]处的气流形态，通常将生产汽车分为三大类：后备箱型、快背型和凹槽型汽车。为了确保本研究的数据集涵盖了大多数传统汽车设计的整个设计空间，本研究基于 DrivAer 模型[ 47 ]创建了具有不同设计的多个参数化模型。这包括不同的后部构型- -快背、后掠和凹口- -导致不同的尾流结构和流场形态。此外，本研究还改变了车轮，包括开放和封闭的设计，以及平滑和详细的选项。对于汽车底座，本研究既包括典型的 ICE 汽车的详细底座，也包括适用于电动汽车(见图 2)的平滑底座。通过探索各种后部、车轮和下车体构型，本研究旨在提供对其气动影响的全面理解，从而支持开发更鲁棒和可泛化的深度学习模型。对于参数化模型的创建，本研究利用商业软件 ANSA ® 定义了 26 个几何参数，允许本研究对这些参数化模型进行变形，从而得到一个大规模的 3D 汽车数据集。本研究的目标是开发一个过程生成器，以创建拓扑有效的汽车设计，确保每个设计都满足 CFD 求解器评估的必要要求和汽车设计师的可用性。
 
 ![fig2](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/fig/fig2.jpg)
 
-图 2：导出 DrivAerNet + +的参数化模型的基线模型，展示了一系列的形状设计和配置。变化包括后备箱、快背和凹口车车身类型以及不同的底盘配置，如平滑和详细。轮式选项以封闭、开放、详细、流畅的风格呈现。
+图 2：导出 DrivAerNet++的参数化模型的基线模型，展示了一系列的形状设计和配置。变化包括后备箱、快背和凹口车车身类型以及不同的底盘配置，如平滑和详细。轮式选项以封闭、开放、详细、流畅的风格呈现。
 
-**高分辨率 3D 行业标准设计：**本研究的设计策划包括选择有效的汽车配置，然后进行详细的 CFD 模拟，以评估空气动力学性能。本研究的目标是创建一个平衡的数据集，包含各种各样的汽车设计，确保覆盖不同的空气动力学性能指标和美学考虑。图 3 展示了用于生成 DrivAerNet + +数据集的设计参数子集。通过为每个参数定义一个下界和上界，并对基准参数模型进行变形，本研究确保了适合工程应用和模拟的全面和定义良好的表示。本研究的设计方法是多样性保持的，确保优化不会导致过于相似的设计。为了实现这一点，本研究采用了最优拉丁超立方采样进行实验设计( DoE )。具体来说，本研究采用增强型随机进化算法( ESE ) [ 17 ]来保证设计空间的高效采样。使用这些步骤，DrivAerNet + +的多样性明显高于 DrivAerNet [ 22 ]。
+**高分辨率 3D 行业标准设计：**本研究的设计策划包括选择有效的汽车配置，然后进行详细的 CFD 模拟，以评估空气动力学性能。本研究的目标是创建一个平衡的数据集，包含各种各样的汽车设计，确保覆盖不同的空气动力学性能指标和美学考虑。图 3 展示了用于生成 DrivAerNet++数据集的设计参数子集。通过为每个参数定义一个下界和上界，并对基准参数模型进行变形，本研究确保了适合工程应用和模拟的全面和定义良好的表示。本研究的设计方法是多样性保持的，确保优化不会导致过于相似的设计。为了实现这一点，本研究采用了最优拉丁超立方采样进行实验设计( DoE )。具体来说，本研究采用增强型随机进化算法( ESE ) [ 17 ]来保证设计空间的高效采样。使用这些步骤，DrivAerNet++的多样性明显高于 DrivAerNet [ 22 ]。
 
 ![fig3](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/fig/fig3.jpg)
 
-图 3：DrivAerNet + +数据集生成的设计参数。选取了几个对气动力有显著影响的几何参数，并在特定范围内变化。这些参数范围的选择是为了避免难以制造或不美观的值。汽车草图改编自[ 32 ]。
+图 3：DrivAerNet++数据集生成的设计参数。选取了几个对气动力有显著影响的几何参数，并在特定范围内变化。这些参数范围的选择是为了避免难以制造或不美观的值。汽车草图改编自[ 32 ]。
 
-**CFD 网格生成：**对于网格生成，本研究使用了开源的 SnappyHexMesh 工具[ 48 ]。遵循[ 31、54、32 ]的最佳网格划分方法，本研究确保了本研究的网格能够准确地模拟边界层相互作用。每个网格共有 2400 万个单元格，其中 500 ~ 750k 个单元格专门用于汽车表面，确保对车身和车轮进行详细的网格划分，以准确捕捉必要的空气动力学现象。作为比较，在 DrivAerNet [ 22 ]和 DrivAerNet + +之后，由[ 61 ]引入的最大的数据集，它有 2474 个汽车设计，每个 CFD 模拟使用了大约 200 万个单元。关于啮合过程和验证的所有技术细节都在附录中提供。
+**CFD 网格生成：**对于网格生成，本研究使用了开源的 SnappyHexMesh 工具[ 48 ]。遵循[ 31、54、32 ]的最佳网格划分方法，本研究确保了本研究的网格能够准确地模拟边界层相互作用。每个网格共有 2400 万个单元格，其中 500 ~ 750k 个单元格专门用于汽车表面，确保对车身和车轮进行详细的网格划分，以准确捕捉必要的空气动力学现象。作为比较，在 DrivAerNet [ 22 ]和 DrivAerNet++之后，由[ 61 ]引入的最大的数据集，它有 2474 个汽车设计，每个 CFD 模拟使用了大约 200 万个单元。关于啮合过程和验证的所有技术细节都在附录中提供。
 
 **自动高保真 CFD 模拟：**本研究使用开源软件 OpenFOAM v11 [ 28 ]，基于 Menter 的公式[ 45 ]，使用 k - ω SST 湍流模型进行稳态不可压缩模拟。本研究对生成的几何体进行了质量检查，以确保它们在 CFD 域内模拟准备和正确对齐，然后对 CFD 网格划分进行质量检查，最后检查以确保每个 CFD 模拟的收敛性。总的来说，本研究在最近发布的 DrivAerNet 数据集[ 22 ]中生成了 4，000 个额外的模拟，包括各种设计、流动行为、湍流和分离现象。
 
-**计算成本运行：**DrivAerNet + +的高保真 CFD 仿真需要大量的计算资源。模拟在 MIT Supercloud 上进行，通过 60 个节点的并行化，总共 2880 个 CPU 核心，每个 CFD 案例使用 256 个核心和 1000 GB 的内存。整个数据集需要 39TB 的存储空间，CFD 模拟的文件总数为 834332。作业并行化采用 MPI 进行管理[ 19 ]，保证了计算任务的高效分配。仿真耗时约 3 × 106 个 CPU 小时。
+**计算成本运行：**DrivAerNet++的高保真 CFD 仿真需要大量的计算资源。模拟在 MIT Supercloud 上进行，通过 60 个节点的并行化，总共 2880 个 CPU 核心，每个 CFD 案例使用 256 个核心和 1000 GB 的内存。整个数据集需要 39TB 的存储空间，CFD 模拟的文件总数为 834332。作业并行化采用 MPI 进行管理[ 19 ]，保证了计算任务的高效分配。仿真耗时约 3 × 106 个 CPU 小时。
 
 **数据集结构：**本研究的数据集表示使用多种模态的汽车设计，以确保在各种应用中的全面覆盖和易用性。
 
@@ -420,7 +422,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
 图 4：最上面一行的散点图显示了不同构型的$C_d$和$C_l$之间的关系：第一幅图显示了底盘构型的影响，比较了电动汽车中常用的详细和光滑的底盘。第二个情节突出了设计美学和风格跨越汽车类别(客货两用汽车、有长坡度车顶的汽车和 Estateback)的影响。第三个方案考察了不同车轮构型的影响，强调了小的几何修改对空气动力学的重要性。下方的密度图显示了相同构型下$C_d$的分布，提供了这些设计元素和类别如何影响气动效率的详细视图。
 
-本研究使用克鲁瓦桑格式[ 3 ]为 DrivAerNet + +数据集提供详细的元数据，以确保文档的全面性和研究社区的易用性。本研究还包括数据集的数据表[ 27 ]，该数据集是在 Creative Commons AttributionNonCommercial ( CC BY-NC)许可证下提供的。DrivAerNet + +将托管在哈佛数据逆向仓库上，以确保最佳的可访问性和系统的数据管理。由于 39TB 的数据可能会对数据共享和访问带来挑战，本研究还提供了针对不同任务定制的数据集子集，其中包含了详细的元数据，以方便可用性。
+本研究使用克鲁瓦桑格式[ 3 ]为 DrivAerNet++数据集提供详细的元数据，以确保文档的全面性和研究社区的易用性。本研究还包括数据集的数据表[ 27 ]，该数据集是在 Creative Commons AttributionNonCommercial ( CC BY-NC)许可证下提供的。DrivAerNet++将托管在哈佛数据逆向仓库上，以确保最佳的可访问性和系统的数据管理。由于 39TB 的数据可能会对数据共享和访问带来挑战，本研究还提供了针对不同任务定制的数据集子集，其中包含了详细的元数据，以方便可用性。
 
 ### 2.2 基准设置
 
@@ -516,7 +518,7 @@ RegPointNet 是一种经典的点云处理网络，直接对 3D 点的坐标进�
 
 **输出回归**：全局特征通过全连接层映射到空气阻力系数 $C_d$。 模型的优点是结构简单且参数量较少，能够高效处理较小规模的点云数据。
 
-在这里，本研究测试了在 PyTorch [ 49 ]和 PyTorch Geometric [ 25 ]中实现的不同几何深度学习模型(点网络、GCNN 、RegDGCNN )，用于气动阻力的代理模型建模任务，突出了数据集多样性和缩放的重要性。具体来说，本研究使用不同的表示来训练模型，包括基于图的模型和基于点云的模型。与以往研究[ 37、20、43、6]不同的是，在一个汽车设计(快车)上训练模型，在另一个实验中，在所有设计(有长坡度车顶的汽车、客货两用汽车和 Estateback)上训练模型。首先，本研究在 DrivAerNet 数据集[ 22 ]上训练深度学习模型，该数据集包括带有详细底座、开轮和镜子的快背板的变体。该数据集包含 4，000 个汽车设计( 2800 个用于训练,大约 600 个用于验证, 600 个用于测试)，结果如表 2 所示。然后，在 DrivAerNet + +数据集上训练和测试相同的模型，该数据集包含 8，000 个(有长坡度车顶的汽车、带后背、客货两用汽车、流畅细致的底座、不同的车轮配置)广泛变化的汽车设计，分为 5，600 个用于训练，1，200 个用于验证，1，200 个用于测试，结果如表 3 所示。
+在这里，本研究测试了在 PyTorch [ 49 ]和 PyTorch Geometric [ 25 ]中实现的不同几何深度学习模型(点网络、GCNN 、RegDGCNN )，用于气动阻力的代理模型建模任务，突出了数据集多样性和缩放的重要性。具体来说，本研究使用不同的表示来训练模型，包括基于图的模型和基于点云的模型。与以往研究[ 37、20、43、6]不同的是，在一个汽车设计(快车)上训练模型，在另一个实验中，在所有设计(有长坡度车顶的汽车、客货两用汽车和 Estateback)上训练模型。首先，本研究在 DrivAerNet 数据集[ 22 ]上训练深度学习模型，该数据集包括带有详细底座、开轮和镜子的快背板的变体。该数据集包含 4，000 个汽车设计( 2800 个用于训练,大约 600 个用于验证, 600 个用于测试)，结果如表 2 所示。然后，在 DrivAerNet++数据集上训练和测试相同的模型，该数据集包含 8，000 个(有长坡度车顶的汽车、带后背、客货两用汽车、流畅细致的底座、不同的车轮配置)广泛变化的汽车设计，分为 5，600 个用于训练，1，200 个用于验证，1，200 个用于测试，结果如表 3 所示。
 
 |     Model     | MSE ($×10^{-5}$) | MAE ($×10^{-3}$) | Max AE ($×10^{-3}$) | $R^2$ | Training Time | Inference Time | Number of Parameters |
 | :-----------: | :--------------: | :--------------: | :-----------------: | :---: | :-----------: | :------------: | :------------------: |
@@ -532,9 +534,9 @@ RegPointNet 是一种经典的点云处理网络，直接对 3D 点的坐标进�
 |   GCNN [42]   |       17.1       |      10.43       |        15.03        | 0.596 |     49hrs     |     50.8s      |       100,481        |
 | RegDGCNN [22] |       14.2       |       9.31       |        12.79        | 0.641 |    12.6hrs    |     0.85s      |      3,164,257       |
 
-表 3：深度学习模型在 DrivAerNet + + ( All car )包含 1200 款汽车设计的测试集上进行气动阻力预测的对比分析。
+表 3：深度学习模型在 DrivAerNet++ ( All car )包含 1200 款汽车设计的测试集上进行气动阻力预测的对比分析。
 
-DrivAerNet + + (见图 4)中的形状变化带来了额外的挑战。例如，将详细的下车体替换为光滑的下车体可以改变相同汽车设计的阻力分布。将车轮由开式改为闭式可以略微影响拖曳力。此外，不同的尾部构型会导致不同的流场分离行为，从而引起阻力值的显著变化。这些因素使得 DrivAerNet + +对于泛化来说是一个非常具有挑战性的任务，因为看似微小的变化会显著地影响拖拽值，并为深度学习模型准确地学习这些变化的特征带来困难。
+DrivAerNet++ (见图 4)中的形状变化带来了额外的挑战。例如，将详细的下车体替换为光滑的下车体可以改变相同汽车设计的阻力分布。将车轮由开式改为闭式可以略微影响拖曳力。此外，不同的尾部构型会导致不同的流场分离行为，从而引起阻力值的显著变化。这些因素使得 DrivAerNet++对于泛化来说是一个非常具有挑战性的任务，因为看似微小的变化会显著地影响拖拽值，并为深度学习模型准确地学习这些变化的特征带来困难。
 
 #### 3.1.2 基于表格参数化数据的气动阻力预测
 
@@ -581,10 +583,10 @@ ppsci/data/dataset/drivaernetplusplus_dataset.py:109:325
 | 全局特征聚合 | 动态图特征池化                       | 最大池化                         |
 | 适用场景     | 复杂几何形状、点云局部关系显著的任务 | 点云分布均匀或较少点数的任务     |
 
-```python
+``` py
     model = ppsci.arch.RegPointNet(
         input_keys=cfg.MODEL.input_keys,
-        label_keys=cfg.MODEL.output_keys,
+        output_keys=cfg.MODEL.output_keys,
         weight_keys=cfg.MODEL.weight_keys,
         args=cfg.MODEL)  # 根据自己的需求选择模型，RegDGCNN可参考DrivAerNet的设置。
 ```
@@ -661,15 +663,15 @@ examples/drivaernetplusplus/drivaernetplusplus.py:16:199
 
 #### 5.1 局限性和未来工作
 
-DrivAerNet + +数据集包含 8000 个汽车设计，涵盖了大多数传统汽车设计。然而，模拟的逼真度略低于工业上通常使用的( CFD 网格为 O ( 100M ))单元[ 4 ] )。此外，当使用稳态 RANS 模拟时，3D 汽车周围的高度湍流和随时间变化的流动引入了误差。虽然 k - ω - SST 模型[ 45 ]提供了准确的结果，但它很难预测流动分离和再附[ 36、4 ]。未来的工作应采用混合 RANS - LES 方法，以更好地捕捉流场的时间依赖性。
+DrivAerNet++数据集包含 8000 个汽车设计，涵盖了大多数传统汽车设计。然而，模拟的逼真度略低于工业上通常使用的( CFD 网格为 O ( 100M ))单元[ 4 ] )。此外，当使用稳态 RANS 模拟时，3D 汽车周围的高度湍流和随时间变化的流动引入了误差。虽然 k - ω - SST 模型[ 45 ]提供了准确的结果，但它很难预测流动分离和再附[ 36、4 ]。未来的工作应采用混合 RANS - LES 方法，以更好地捕捉流场的时间依赖性。
 
-此外，本研究训练的代理模型不够复杂，不足以学习复杂的几何和气动特征。更高级的模型，如几何信息神经算子[ 43 ]，卷积占位网络[ 51 ]和复杂的图模型，应该进行测试。本研究主要关注阻力的代理模型，因为它是初始设计阶段最关键的因素。然而，利用 DrivAerNet + +进行其他任务，如加速 CFD 模拟，对于更全面的方法是必要的。
+此外，本研究训练的代理模型不够复杂，不足以学习复杂的几何和气动特征。更高级的模型，如几何信息神经算子[ 43 ]，卷积占位网络[ 51 ]和复杂的图模型，应该进行测试。本研究主要关注阻力的代理模型，因为它是初始设计阶段最关键的因素。然而，利用 DrivAerNet++进行其他任务，如加速 CFD 模拟，对于更全面的方法是必要的。
 
 为了增强数据集，未来的工作将侧重于集成瞬态 CFD 模拟，并结合额外的模态，如二维图像绘制和多模态学习方法。这将提高模型的准确性和鲁棒性，推动汽车设计和优化的创新。
 
 #### 5.2 结论与飞桨版结果
 
-在本文中，本研究介绍了 DrivAerNet + +，这是一个最大的、用于数据驱动的气动设计的多模态三维数据集，它包含了高保真的 CFD 模拟和各种汽车设计。本研究的数据集包括 8000 辆基于行业标准形状的汽车，提供了各种气动性能指标的广泛覆盖。该数据集需要 39TB 的存储量，比工程上可比的数据集要大得多，且公开可用。此外，生成 DrivAerNet + +的计算成本比最近发表的 CFD 数据集[ 43 ]大一个数量级，该数据集使用了 185，744 个 CPU 小时，而本研究的数据集需要 300 万 CPU 小时。
+在本文中，本研究介绍了 DrivAerNet++，这是一个最大的、用于数据驱动的气动设计的多模态三维数据集，它包含了高保真的 CFD 模拟和各种汽车设计。本研究的数据集包括 8000 辆基于行业标准形状的汽车，提供了各种气动性能指标的广泛覆盖。该数据集需要 39TB 的存储量，比工程上可比的数据集要大得多，且公开可用。此外，生成 DrivAerNet++的计算成本比最近发表的 CFD 数据集[ 43 ]大一个数量级，该数据集使用了 185，744 个 CPU 小时，而本研究的数据集需要 300 万 CPU 小时。
 
 该数据集支持广泛的机器学习任务，包括气动性能的代理模型建模、CFD 模拟的加速、数据驱动的设计优化、生成式人工智能、形状和零件分类以及三维形状重建。本研究还展示了第一个对标结果，证明了几何深度学习模型和 AutoML 框架对阻力系数预测的有效性。此外，本研究还探讨了在不同类型的汽车中建立拖曳力代理模型的广义模型的挑战。虽然在单个汽车类别上训练的模型表现良好，但当应用于完全多样化的数据集时，它们的性能在 R2 方面从 0.82 - 0.9 显著降低到 0.6。这强调了在不同设计之间实现稳健性能的复杂性。本研究的数据集可用于内燃机( ICE )汽车和电动汽车的数据驱动设计，涵盖美学/风格、气动效率和性能等主要设计方面。本研究相信该数据集将作为推进工程设计和 CFD 研究的基石，为开发更准确、更高效的预测模型提供丰富的资源。
 
