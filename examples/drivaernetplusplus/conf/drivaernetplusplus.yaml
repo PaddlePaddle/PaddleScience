@@ -22,7 +22,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: eval
+mode: train
 seed: 1
 output_dir: ${hydra:run.dir}
 log_freq: 100
