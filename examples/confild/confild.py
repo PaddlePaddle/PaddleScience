@@ -45,7 +45,7 @@ class Normalizer_ts(Normalizer):
         assert type(data) == paddle.Tensor
         if len(self.params) == 0:
             if self.method == "-11" or self.method == "01":
-                if self.dim == None:
+                if self.dim is None:
                     self.params = paddle.max(x=data), paddle.min(x=data)
                 else:
                     self.params = (
@@ -58,7 +58,7 @@ class Normalizer_ts(Normalizer):
                         0
                     ]
             elif self.method == "ms":
-                if self.dim == None:
+                if self.dim is None:
                     self.params = paddle.mean(x=data, axis=self.dim), paddle.std(
                         x=data, axis=self.dim
                     )
