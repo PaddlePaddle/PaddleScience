@@ -69,7 +69,7 @@ class PanguWeatherPredictor(base.Predictor):
         input_data: np.ndarray,
         input_surface_data: np.ndarray,
         batch_size: int = 1,
-    ) -> Tuple[np.ndarray, np.ndarray] :
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Predicts the output of the yinglong model for the given input.
 
         Args:
@@ -131,9 +131,7 @@ def inference(cfg: DictConfig):
     )
 
 
-@hydra.main(
-    version_base=None, config_path="./conf", config_name="pangu_weather_24.yaml"
-)
+@hydra.main(version_base=None, config_path="./conf", config_name="pangu_weather.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "infer":
         inference(cfg)
