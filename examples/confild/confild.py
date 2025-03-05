@@ -161,16 +161,15 @@ def inference(cfg: DictConfig):
     # mapping data to cfg.INFER.output_keys
     output_keys = ["output"]
     output_dict = {
-        store_key: Normalizer_ts(**cfg.normalizer).denormalize(paddle.to_tensor(output_dict[infer_key]))
+        store_key: Normalizer_ts(**cfg.normalizer)
+        .denormalize(paddle.to_tensor(output_dict[infer_key]))
         .numpy()
         .flatten()
         for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
 
 
-@hydra.main(
-    version_base=None, config_path="./conf", config_name="confild_case1.yaml"
-)
+@hydra.main(version_base=None, config_path="./conf", config_name="confild_case1.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "infer":
         inference(cfg)
