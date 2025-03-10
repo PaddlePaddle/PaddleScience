@@ -42,5 +42,5 @@ INFER:
   batch_size: 1
   mean_path: ./data_mean.npy
   std_path: ./data_std.npy
-  input_prev_file: './data/input1.npy'
+  input_file: './data/input1.npy'
   input_next_file: './data/input2.npy'

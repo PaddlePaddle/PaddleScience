@@ -148,7 +148,7 @@ def inference(cfg: DictConfig):
     predictor = FengWuPredictor(cfg)
 
     # load data
-    input_data_prev = np.load(cfg.INFER.input_prev_file).astype(np.float32)
+    input_data_prev = np.load(cfg.INFER.input_file).astype(np.float32)
     input_data_next = np.load(cfg.INFER.input_next_file).astype(np.float32)
 
     # run predictor
