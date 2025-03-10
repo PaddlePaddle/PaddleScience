@@ -212,7 +212,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdmodel_path: Optional[str] = None
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
-            device: Literal["gpu", "cpu", "npu", "xpu", "sdaa"] = "cpu"
+            device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu"
             engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True

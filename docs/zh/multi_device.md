@@ -88,27 +88,211 @@
 | 地震波形反演 | [VelocityGAN 地震波形反演](./examples/velocity_gan.md) | ✅ | | | |
 | 交通预测 | [TGCN 交通流量预测](./examples/tgcn.md) | ✅ | | | |
 
-## 2. 贡献指南
+## 2. 运行指南
 
-我们在公开的案例文档开头提供了基于 GPU 训练的参考精度和对应的预训练模型权重，如果需要在指定的硬件上运行，可以参考如下步骤：
+针对 PaddleScience 已支持的硬件，我们为每个硬件提供了一个运行示例，以[1D 欧拉梁变形](./examples/euler_beam.md)为例。
 
-1. 在案例开头位置添加一行代码，将飞桨运行设备设置为当前硬件设备
+!!! note
 
-    ``` py hl_lines="3"
-    import paddle
+    请确保你已经在你的环境中正确安装了计算硬件对应的 PaddlePaddle，否则请参考 [PaddleCustomDevice](https://github.com/PaddlePaddle/PaddleCustomDevice)，将你的硬件代码接入到飞桨中。
 
-    paddle.set_device("your_device_name")
+=== "NVIDIA"
 
-    # 原案例代码
+    ``` sh
+    # 安装 PaddleScience
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
+
+    cd PaddleScience
+
+    # install paddlesci with editable mode
+    python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+    cd examples/euler_beam
     ```
 
-2. 按照案例文档步骤，准备好数据集，在指定硬件上进行全量训练，保存训练日志，记录最佳模型精度以及最佳模型权重，这些内容一般会在训练过程中，自动保存在案例文件夹下
+    === "模型训练命令"
 
-3. 如果模型文档中提供了模型导出和推理命令，请按照模型导出和推理命令，验证在新硬件上模型导出和推理是否能够正常执行并对齐 GPU 的推理结果
+        ``` sh
+        python euler_beam.py
+        ```
 
-4. 上述步骤完成后，可以在本文档(`docs/zh/multi_device.md`)的表格中，给对应模型在指定硬件上添加支持信息(✅)，然后提交 PR 到 PaddleScience
+    === "模型评估命令"
 
-## 3. 更多文档
+        ``` sh
+        python euler_beam.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
+        ```
+
+    === "模型导出命令"
+
+        ``` sh
+        python euler_beam.py mode=export
+        ```
+
+    === "模型推理命令"
+
+        ``` sh
+        python euler_beam.py mode=infer
+        ```
+
+=== "海光"
+
+    ``` sh
+    # 安装 PaddleScience
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
+
+    cd PaddleScience
+
+    # install paddlesci with editable mode
+    python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+    cd examples/euler_beam
+    ```
+
+    === "模型训练命令"
+
+        ``` sh
+        python euler_beam.py
+        ```
+
+    === "模型评估命令"
+
+        ``` sh
+        # 测试自己训练的模型
+        python euler_beam.py mode=eval EVAL.pretrained_model_path=$YOUR_MODEL_PATH
+        # 测试官方提供的预训练模型
+        python euler_beam.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
+        ```
+
+    === "模型导出命令"
+
+        ``` sh
+        python euler_beam.py mode=export
+        ```
+
+    === "模型推理命令"
+
+        ``` sh
+        python euler_beam.py mode=infer
+        ```
+
+=== "太初"
+
+        ``` sh
+    # 安装 PaddleScience
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
+
+    cd PaddleScience
+
+    # install paddlesci with editable mode
+    python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+    cd examples/euler_beam
+    ```
+
+    === "模型训练命令"
+
+        ``` sh
+        python euler_beam.py device=sdaa
+        ```
+
+    === "模型评估命令"
+
+        ``` sh
+        # 测试自己训练的模型
+        python euler_beam.py device=sdaa mode=eval EVAL.pretrained_model_path=$YOUR_MODEL_PATH
+        # 测试官方提供的预训练模型
+        python euler_beam.py device=sdaa mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
+        ```
+
+    === "模型导出命令"
+
+        ``` sh
+        python euler_beam.py mode=export
+        ```
+
+    === "模型推理命令"
+
+        ``` sh
+        python euler_beam.py mode=infer INFER.device=sdaa
+        ```
+
+=== "沐曦"
+
+        ``` sh
+    # 安装 PaddleScience
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
+
+    cd PaddleScience
+
+    # install paddlesci with editable mode
+    python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+    cd examples/euler_beam
+    ```
+
+    === "模型训练命令"
+
+        ``` sh
+        TODO
+        ```
+
+    === "模型评估命令"
+
+        ``` sh
+        # 测试自己训练的模型
+        TODO
+        # 测试官方提供的预训练模型
+        TODO
+        ```
+
+    === "模型导出命令"
+
+        ``` sh
+        TODO
+        ```
+
+    === "模型推理命令"
+
+        ``` sh
+        TODO
+        ```
+
+## 3. 贡献指南
+
+我们在公开的案例文档开头提供了基于 NVIDIA CUDA 训练的参考精度和对应的预训练模型权重，如果需要在指定的硬件上运行，可以参考如下步骤：
+
+1. 如果你的硬件类型尚未接入 PaddlePaddle，则可以参考 [PaddleCustomDevice](https://github.com/PaddlePaddle/PaddleCustomDevice) 官方文档，接入飞桨框架。如果你的硬件类型已接入 PaddlePaddle，但尚未添加到 PaddleScience 的硬件支持列表中，请在 [ppsci/utils/config.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/ppsci/utils/config.py#L215) 和 [deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L217) 中添加你的硬件类型。
+
+2. 按照案例文档给出的步骤，准备好必要的数据集。
+
+3. 如果模型文档中提供了模型训练命令，则需要在你的硬件上进行全量训练，保存训练日志，记录最佳模型精度以及最佳模型权重，这些内容一般会在训练过程中，自动保存在案例文件夹下。
+
+4. 如果模型文档中提供了模型评估命令，则需要在你的硬件上对第三步所保存的最佳模型进行精度评估，保存评估日志，记录评估精度，这些内容一般会在评估过程中，自动保存在案例文件夹下。
+
+    !!! note
+
+        对于模型全量训练精度，默认要求最佳精度与 NVIDIA CUDA 精度对齐。具体地，如果案例精度指标为相对误差(如 L2 相对误差)，则指标不能超过参考值 ± 0.5%，如果案例精度指标为 MSE/MAE 一类的误差，则与参考值应保持在同一量级。
+
+5. 如果模型文档中提供了模型导出和推理命令，请按照模型导出和推理命令，验证在新硬件上模型导出和推理是否能够正常执行并对齐 CUDA 的推理结果。
+
+6. 上述步骤完成后，可以在 [1. 硬件支持列表](#1) 的表格中，给对应模型添加你的硬件支持信息(✅)，然后提交 PR 到 PaddleScience。你的 PR 应该至少包括以下内容：
+    * 在 [2. 运行指南](#2) 中添加基于你的硬件环境使用模型的运行说明文档
+    * 训练保存的最佳模型权重文件(`.pdparams` 文件)
+    * 训练/评估等运行日志(`.log` 文件)
+    * 验证模型精度所用到的软件版本，包括但不限于：
+        * PaddlePaddle 版本
+        * PaddleCustomDevice 版本(如果有)
+    * 验证模型精度所用到的机器环境，包括但不限于：
+        * 芯片型号
+        * 系统版本
+        * 硬件驱动版本
+        * 算子库版本等
+
+## 4. 更多文档
 
 更多关于飞桨多硬件适配和使用的相关文档，可以参考：
 
