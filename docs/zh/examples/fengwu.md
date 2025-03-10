@@ -49,13 +49,13 @@
 
 在该案例中，实现了 FengWuPredictor用于ONNX模型的推理：
 
-``` py linenums="102" title="examples/fengwu/predict.py"
+``` py linenums="74" title="examples/fengwu/predict.py"
 --8<--
-examples/fengwu/predict.py:28:130
+examples/fengwu/predict.py:74:130
 --8<--
 ```
 
-``` yaml linenums="18" title="examples/fengwu/conf/fengwu.yaml"
+``` yaml linenums="28" title="examples/fengwu/conf/fengwu.yaml"
 --8<--
 examples/fengwu/conf/fengwu.yaml:28:46
 --8<--
