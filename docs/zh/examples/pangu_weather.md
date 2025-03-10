@@ -60,13 +60,13 @@
 
 在该案例中，实现了 PanguWeatherPredictor用于ONNX模型的推理：
 
-``` py linenums="30" title="examples/pangu_weather/predict.py"
+``` py linenums="67" title="examples/pangu_weather/predict.py"
 --8<--
 examples/pangu_weather/predict.py:67:97
 --8<--
 ```
 
-``` yaml linenums="15" title="examples/pangu_weather/conf/pangu_weather.yaml"
+``` yaml linenums="29" title="examples/pangu_weather/conf/pangu_weather.yaml"
 --8<--
 examples/pangu_weather/conf/pangu_weather.yaml:29:44
 --8<--
