@@ -16,13 +16,10 @@
 
     ``` sh
     # Download sample input data
-    mkdir -p ./data
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Pangu/input_surface.npy -P ./data
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Pangu/input_upper.npy -P ./data
 
     # Download pretrain model weight
-    mkdir -p ./inference
-
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Pangu/pangu_weather_1.onnx -P ./inference
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Pangu/pangu_weather_3.onnx -P ./inference
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Pangu/pangu_weather_6.onnx -P ./inference
