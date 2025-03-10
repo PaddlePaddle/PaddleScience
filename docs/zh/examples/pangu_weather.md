@@ -50,7 +50,10 @@
 
 模型的总体结构如图所示：
 
-待补充
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/pangu-weather/model_architecture.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>模型结构</figcaption>
+</figure>
 
 其主要思想是使用一个视觉transformer的3D变种来处理复杂的不均匀的气象要素。由于气象数据分辨率很大，因而相比于常见的vision transformer方法，研究人员将网络的encoder和decoder减少到2级（8个block），同时采用Swin transformer的滑窗注意力机制，以减少网络的计算量
 
@@ -100,9 +103,12 @@ examples/pangu_weather/predict.py
 
 ## 6. 结果展示
 
-下图展示了模型的预测结果。
+下图展示了模型的温度预测结果，更多指标可以使用 ncvue 查看。
 
-待补充
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/pangu-weather/temperature.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>温度预测结果</figcaption>
+</figure>
 
 ## 7. 参考资料
 
