@@ -16,12 +16,10 @@
 
     ``` sh
     # Download sample input data
-    mkdir -p ./data
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input1.npy -P ./data
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input2.npy -P ./data
 
     # Download pretrain model weight
-    mkdir -p ./inference
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/fengwu_v2.onnx -P ./inference
 
     # inference
@@ -38,7 +36,12 @@
 
 模型的总体结构如图所示：
 
-待补充
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/fengwu/model_architecture.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>模型结构</figcaption>
+</figure>
+
+模型将气候变量作为不同模态的输入。在 `Modal-Customized Encoder` 中将多个模态的特征进行编码，并使用基于 Transformer 的 `Cross-modal Fuser` 对编码后的特征进行融合，得到联合表示，最后在 `Modal-Customized Decoder` 中从联合表示中分别预测气候变量。
 
 模型使用预训练权重推理，接下来将介绍模型的推理过程。
 
@@ -88,7 +91,10 @@ examples/fengwu/predict.py
 
 下图展示了模型的平均海平面气压预测结果，更多指标可以使用 ncvue 查看。
 
-待补充
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/fengwu/image.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>平均海平面气压</figcaption>
+</figure>
 
 ## 7. 参考资料
 
