@@ -89,11 +89,11 @@ examples/fengwu/predict.py
 
 ## 6. 结果展示
 
-下图展示了模型的平均海平面气压预测结果，更多指标可以使用 ncvue 查看。
+下图展示了模型的未来6小时平均海平面气压预测结果，更多指标可以使用 ncvue 查看。
 
 <figure markdown>
   ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/fengwu/image.png){ loading=lazy style="margin:0 auto;"}
-  <figcaption>平均海平面气压</figcaption>
+  <figcaption>未来6小时平均海平面气压</figcaption>
 </figure>
 
 ## 7. 参考资料
