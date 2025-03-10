@@ -14,6 +14,8 @@
 
 import hydra
 import numpy as np
+import glob
+import re
 import paddle
 from omegaconf import DictConfig
 from packaging import version
@@ -21,26 +23,32 @@ from packaging import version
 from ppsci.utils import logger
 
 
-class Normalizer(object):
+def load_elbow_flow(path):
+    return np.load(f"{path}")[1:]
+
+def load_channel_flow(
+    path,
+    t_start=0,
+    t_end=1200,
+    t_every=1,
+):
+    return np.load(f"{path}")[t_start:t_end:t_every]
+
+def load_periodic_hill_flow(path):
+    data = np.load(f"{path}")
+    return data
+
+def load_3d_flow(path):
+    data = np.load(f"{path}")
+    return data
+
+
+class Normalizer_ts(object):
     def __init__(self, params=[], method="-11", dim=None):
         self.params = params
         self.method = method
         self.dim = dim
 
-    def fit_normalize(self, data):
-        raise NotImplementedError
-
-    def normalize(self, new_data):
-        raise NotImplementedError
-
-    def denormalize(self, new_data_norm):
-        raise NotImplementedError
-
-    def get_params(self):
-        raise NotImplementedError
-
-
-class Normalizer_ts(Normalizer):
     def fit_normalize(self, data):
         assert type(data) == paddle.Tensor
         if len(self.params) == 0:
@@ -141,12 +149,29 @@ def inference(cfg: DictConfig):
         paddle_version = f"develop({paddle.version.commit[:7]})"
 
     logger.info(f"Using paddlepaddle {paddle_version}")
-    # load Data
-    cood_data = paddle.to_tensor(np.load(cfg.coor_path))
-    # normalize data
-    coord = Normalizer_ts(**cfg.normalizer).normalize(cood_data).numpy()
 
-    input_data = np.load(cfg.data_path)
+    # switch case
+    if cfg.load_data_fn == "load_3d_flow":
+        input_data = load_3d_flow(cfg.data_path)
+    elif cfg.load_data_fn == "load_elbow_flow":
+        input_data = load_elbow_flow(cfg.data_path)
+    elif cfg.load_data_fn == "load_channel_flow":
+        input_data = load_channel_flow(cfg.data_path)
+    elif cfg.load_data_fn == "load_periodic_hill_flow":
+        input_data = load_periodic_hill_flow(cfg.data_path)
+    else:
+        input_data = np.load(cfg.data_path)
+
+    if cfg.coor_path is None:
+        spatio_shape = input_data.shape[1:-1]
+        coord = [np.linspace(0, 1, i) for i in spatio_shape]
+        coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
+    else:
+        # load Data
+        cood_data = paddle.to_tensor(np.load(cfg.coor_path))
+        # normalize data
+        coord = Normalizer_ts(**cfg.INFER.normalizer).normalize(cood_data).numpy()
+
     if len(tuple(input_data.shape)) > 2:
         latents = input_data[:, None, None]
     else:
@@ -157,11 +182,11 @@ def inference(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     input_dict = {"coords": coord, "latents": latents}
-    output_dict = predictor.predict(input_dict, cfg.batch_size)
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
     # mapping data to cfg.INFER.output_keys
     output_keys = ["output"]
     output_dict = {
-        store_key: Normalizer_ts(**cfg.normalizer)
+        store_key: Normalizer_ts(**cfg.INFER.normalizer)
         .denormalize(paddle.to_tensor(output_dict[infer_key]))
         .numpy()
         .flatten()

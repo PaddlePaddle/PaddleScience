@@ -46,11 +46,9 @@ INFER:
   max_batch_size: 1024
   num_cpu_threads: 10
   batch_size: 4
+  normalizer:
+    method: '-11'
+    dim: 0
 
 data_path: /home/xinyang/store/projects/nfdiff/algo/elbow/uvp.npy
 coor_path: /home/xinyang/store/projects/nfdiff/algo/elbow/coor.npy
-
-normalizer:
-  method: '-11'
-  dim: 0
-batch_size: 4
