@@ -179,7 +179,7 @@
 
 === "太初"
 
-        ``` sh
+    ``` sh
     # 安装 PaddleScience
     git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
     # 若 github clone 速度比较慢，可以使用 gitee clone
@@ -221,7 +221,7 @@
 
 === "沐曦"
 
-        ``` sh
+    ``` sh
     # 安装 PaddleScience
     git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
     # 若 github clone 速度比较慢，可以使用 gitee clone
