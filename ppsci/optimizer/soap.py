@@ -482,9 +482,7 @@ class SOAP(optim.Optimizer):
             if len(m) == 0:
                 final.append([])
                 continue
-            _, Q = paddle.linalg.eigh(
-                m.to(paddle.float64) + 1e-30 * paddle.eye(m.shape[0])
-            )
+            _, Q = paddle.linalg.eigh(m + 1e-30 * paddle.eye(m.shape[0]))
             Q = Q.to(m.dtype)
             Q = paddle.flip(Q, [1])
 
