@@ -67,10 +67,10 @@ EVAL:
 optimizer:
   weight_decay: 0.0001
   lr: 0.001
-  optimizer: 'adam'
+  optimizer: "adam"
 
 ARGS:
   # dataset settings
-  dataset_path: 'data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle'
-  aero_coeff: 'data/AeroCoefficients_DrivAerNet_FilteredCorrected.csv'
-  subset_dir: 'data/subset_dir'
+  dataset_path: "data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle"
+  aero_coeff: "data/AeroCoefficients_DrivAerNet_FilteredCorrected.csv"
+  subset_dir: "data/subset_dir"
