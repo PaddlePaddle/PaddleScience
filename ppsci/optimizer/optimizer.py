@@ -498,6 +498,45 @@ class AdamW:
 
 
 class SOAP:
+    """
+    Improving and Stabilizing Shampoo using Adam. Implements SOAP algorithm (https://arxiv.org/abs/2409.11321).
+
+    Args:
+        lr (float, optional):
+            The learning rate to use. defaults to 0.003.
+        betas (Tuple[float,float], optional):
+            Adam's betas parameters (b1, b2). defaults to `(0.95, 0.95)`.
+        shampoo_beta (float, optional):
+            If >= 0, use this beta for the preconditioner (L and R in paper, state['GG'] below) moving average instead of betas[1].
+            defaults to -1.
+        eps (float, optional):
+            Adam's epsilon for numerical stability. defaults to 1e-08.
+        weight_decay (float, optional): weight decay coefficient. defaults to 0.01.
+        precondition_frequency (int, optional):
+            How often to update the preconditioner. defaults to 10.
+        max_precond_dim (int, optional):
+            Maximum dimension of the preconditioner.
+            Set to 10000, so that we exclude most common vocab sizes while including layers. defaults to 10000.
+        merge_dims (bool, optional):
+            Whether or not to merge dimensions of the preconditioner. defaults to `False`.
+        precondition_1d (bool, optional):
+            Whether or not to precondition 1D gradients. defaults to `False`.
+        normalize_grads (bool, optional):
+            Whether or not to normalize gradients per layer.
+            Helps at large precondition_frequency (~100 in our experiments),
+            but hurts performance at small precondition_frequency (~10 in our experiments). defaults to `False`.
+        data_format (str, optional):
+            Data format of the input for convolutional layers.
+            Should be "channels_last" for data_format of NHWC and "channels_first" for NCHW. defaults to `channels_first`.
+        correct_bias (bool, optional):
+            Whether or not to use bias correction in Adam. defaults to `True`.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.SOAP(1e-3)(model)
+    """
+
     def __init__(
         self,
         lr: float = 3e-3,
