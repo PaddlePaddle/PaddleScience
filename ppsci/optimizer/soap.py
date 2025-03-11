@@ -10,38 +10,84 @@ class SOAP(optim.Optimizer):
     Implements SOAP algorithm (https://arxiv.org/abs/2409.11321).
 
     Parameters:
-        params (`Iterable[nn.parameter.Parameter]`):
-            Iterable of parameters to optimize or dictionaries defining parameter groups.
-        lr (`float`, *optional*, defaults to 0.003):
-            The learning rate to use.
-        betas (`Tuple[float,float]`, *optional*, defaults to `(0.95, 0.95)`):
-            Adam's betas parameters (b1, b2).
-        shampoo_beta (`float`, *optional*, defaults to -1):
+        params (list|tuple):
+            List/Tuple of ``Tensor`` names to update to minimize ``loss``.
+        lr (float, optional):
+            The learning rate to use. defaults to 0.003.
+        betas (Tuple[float,float], optional):
+            Adam's betas parameters (b1, b2). defaults to `(0.95, 0.95)`.
+        shampoo_beta (float, optional):
             If >= 0, use this beta for the preconditioner (L and R in paper, state['GG'] below) moving average instead of betas[1].
-        eps (`float`, *optional*, defaults to 1e-08):
-            Adam's epsilon for numerical stability.
-        weight_decay (`float`, *optional*, defaults to 0.01): weight decay coefficient.
-        precondition_frequency (`int`, *optional*, defaults to 10):
-            How often to update the preconditioner.
-        max_precond_dim (`int`, *optional*, defaults to 10000):
+            defaults to -1.
+        eps (float, optional):
+            Adam's epsilon for numerical stability. defaults to 1e-08.
+        weight_decay (float, optional): weight decay coefficient. defaults to 0.01.
+        precondition_frequency (int, optional):
+            How often to update the preconditioner. defaults to 10.
+        max_precond_dim (int, optional):
             Maximum dimension of the preconditioner.
-            Set to 10000, so that we exclude most common vocab sizes while including layers.
-        merge_dims (`bool`, *optional*, defaults to `False`):
-            Whether or not to merge dimensions of the preconditioner.
-        precondition_1d (`bool`, *optional*, defaults to `False`):
-            Whether or not to precondition 1D gradients.
-        normalize_grads (`bool`, *optional*, defaults to `False`):
+            Set to 10000, so that we exclude most common vocab sizes while including layers. defaults to 10000.
+        merge_dims (bool, optional):
+            Whether or not to merge dimensions of the preconditioner. defaults to `False`.
+        precondition_1d (bool, optional):
+            Whether or not to precondition 1D gradients. defaults to `False`.
+        normalize_grads (bool, optional):
             Whether or not to normalize gradients per layer.
             Helps at large precondition_frequency (~100 in our experiments),
-            but hurts performance at small precondition_frequency (~10 in our experiments).
-        data_format (`str`, *optional*, defaults to `channels_first`):
+            but hurts performance at small precondition_frequency (~10 in our experiments). defaults to `False`.
+        data_format (str, optional):
             Data format of the input for convolutional layers.
-            Should be "channels_last" for data_format of NHWC and "channels_first" for NCHW.
-        correct_bias (`bool`, *optional*, defaults to `True`):
-            Whether or not to use bias correction in Adam.
+            Should be "channels_last" for data_format of NHWC and "channels_first" for NCHW. defaults to `channels_first`.
+        correct_bias (bool, optional):
+            Whether or not to use bias correction in Adam. defaults to `True`.
         name (str, optional): Normally there is no need for user to set this property.
             For more information, please refer to :ref:`api_guide_Name`.
             The default value is None.
+
+    Return:
+        loss (Tensor): the final loss of closure.
+
+    Examples:
+        .. code-block:: python
+
+            >>> import paddle
+            >>> import ppsci
+            >>> import numpy as np
+
+            >>> paddle.disable_static()
+            >>> np.random.seed(0)
+            >>> np_w = np.random.rand(1).astype(np.float32)
+            >>> np_x = np.random.rand(1).astype(np.float32)
+
+            >>> inputs = [np.random.rand(1).astype(np.float32) for i in range(10)]
+            >>> # y = 2x
+            >>> targets = [2 * x for x in inputs]
+
+            >>> class Net(paddle.nn.Layer):
+            ...     def __init__(self):
+            ...         super().__init__()
+            ...         w = paddle.to_tensor(np_w)
+            ...         self.w = paddle.create_parameter(shape=w.shape, dtype=w.dtype, default_initializer=paddle.nn.initializer.Assign(w))
+            ...
+            ...     def forward(self, x):
+            ...         return self.w * x
+            ...
+            >>> net = Net()
+            >>> opt = ppsci.optimizer.soap.SOAP(params=net.parameters())
+            >>> def train_step(inputs, targets):
+            ...     def closure():
+            ...         outputs = net(inputs)
+            ...         loss = paddle.nn.functional.mse_loss(outputs, targets)
+            ...         print('loss: ', loss.item())
+            ...         opt.clear_grad()
+            ...         loss.backward()
+            ...         return loss
+            ...     opt.step(closure)
+            ...
+            >>> for input, target in zip(inputs, targets):
+            ...     input = paddle.to_tensor(input)
+            ...     target = paddle.to_tensor(target)
+            ...     train_step(input, target)
     """
 
     def __init__(
@@ -488,4 +534,5 @@ class SOAP(optim.Optimizer):
                 exp_avg_sq = exp_avg_sq.reshape(orig_shape)
 
         state["exp_avg_sq"] = exp_avg_sq
+
         return final
