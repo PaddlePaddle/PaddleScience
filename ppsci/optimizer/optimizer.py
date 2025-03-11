@@ -30,6 +30,8 @@ from typing_extensions import Literal
 from ppsci.utils import logger
 from ppsci.utils import misc
 
+from .soap import SOAP as _SOAP
+
 if TYPE_CHECKING:
     import paddle
 
@@ -493,6 +495,60 @@ class AdamW:
 
     def _apply_decay_param_fun(self, name):
         return name not in self.no_weight_decay_param_name_list
+
+
+class SOAP:
+    def __init__(
+        self,
+        lr: float = 3e-3,
+        betas=(0.95, 0.95),
+        shampoo_beta: float = -1,
+        eps: float = 1e-8,
+        weight_decay: float = 0.01,
+        precondition_frequency: int = 10,
+        max_precond_dim: int = 10000,  #
+        merge_dims: bool = False,  # Merge dimensions till the product of the dimensions is less than or equal to max_precond_dim.
+        precondition_1d: bool = False,
+        normalize_grads: bool = False,
+        data_format: str = "channels_first",
+        correct_bias: bool = True,
+    ):
+        self.lr = lr
+        self.betas = betas
+        self.shampoo_beta = shampoo_beta
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.precondition_frequency = precondition_frequency
+        self.max_precond_dim = max_precond_dim
+        self.merge_dims = merge_dims
+        self.precondition_1d = precondition_1d
+        self.normalize_grads = normalize_grads
+        self.data_format = data_format
+        self.correct_bias = correct_bias
+
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
+        # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
+        parameters = (
+            sum([m.parameters() for m in model_list], []) if model_list else None
+        )
+        opt = _SOAP(
+            params=parameters,
+            lr=self.lr,
+            betas=self.betas,
+            shampoo_beta=self.shampoo_beta,
+            eps=self.eps,
+            weight_decay=self.weight_decay,
+            precondition_frequency=self.precondition_frequency,
+            max_precond_dim=self.max_precond_dim,
+            merge_dims=self.merge_dims,
+            precondition_1d=self.precondition_1d,
+            normalize_grads=self.normalize_grads,
+            data_format=self.data_format,
+            correct_bias=self.correct_bias,
+        )
+        return opt
 
 
 class OptimizerList:

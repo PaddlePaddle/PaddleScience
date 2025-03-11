@@ -133,7 +133,8 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
+    # optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
+    optimizer = ppsci.optimizer.SOAP(lr_scheduler)(model)
 
     # set validator
     tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
