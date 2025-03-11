@@ -34,6 +34,11 @@ class FengWuPredictor(base.Predictor):
 
     # 14 day with time-interval of siz hours
     PREDICT_TIMESTAMP = int(14 * 24 / 6)
+    # Where 69 represents 69 atmospheric features, The first four variables are surface variables in the order of ['u10', 'v10', 't2m', 'msl'],
+    # followed by non-surface variables in the order of ['z', 'q', 'u', 'v', 't']. Each data has 13 levels, which are ordered as
+    # [50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000].
+    # Therefore, the order of the 69 variables is [u10, v10, t2m, msl, z50, z100, ..., z1000, q50, q100, ..., q1000, t50, t100, ..., t1000].
+    NUM_ATMOSPHERIC_FEATURES = 69
 
     def __init__(
         self,
@@ -113,7 +118,7 @@ class FengWuPredictor(base.Predictor):
 
         output_data_list = []
         # prepare input dict
-        for _ in range(self.__class__.PREDICT_TIMESTAMP):
+        for _ in range(self.PREDICT_TIMESTAMP):
             input_dict = {
                 self.input_names[0]: input_data,
             }
@@ -121,9 +126,15 @@ class FengWuPredictor(base.Predictor):
             # run predictor
             output_data = self.predictor.run(None, input_dict)[0]
             input_data = np.concatenate(
-                (input_data[:, 69:], output_data[:, :69]), axis=1
+                (
+                    input_data[:, self.NUM_ATMOSPHERIC_FEATURES :],
+                    output_data[:, : self.NUM_ATMOSPHERIC_FEATURES],
+                ),
+                axis=1,
             )
-            output_data = (output_data[0, :69] * self.data_std) + self.data_mean
+            output_data = (
+                output_data[0, : self.NUM_ATMOSPHERIC_FEATURES] * self.data_std
+            ) + self.data_mean
 
             output_data_list.append(output_data)
 
