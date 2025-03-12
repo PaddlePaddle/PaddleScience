@@ -30,25 +30,68 @@ seed: 2025
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
+TRAIN:
+  epochs: 100000
+  multiGPU: 1
+
+EVAL:
+  confild_pretrained_model_path: ./outputs_confild_case1/confild_case1/epoch_99999
+  latent_pretrained_model_path: ./outputs_confild_case1/latent_case1/epoch_99999
+
+CONFILD:
+  input_keys: ["latent_z, confild_x"]
+  output_keys: ["confild_output"]
+  num_hidden_layers: 10
+  out_features: 3
+  hidden_features: 128
+  dims: 2
+  hidden_size: 128
+
+Latent:
+  input_keys: ["latent_x"]
+  output_keys: ["latent_z"]
+  lumped_latent: true
+  hidden_size: 128
+  dims: 2
+
 INFER:
-  pretrained_model_path: null
-  export_path: ./inference/confild_case1
-  pdmodel_path: ${INFER.export_path}.pdmodel
-  pdiparams_path: ${INFER.export_path}.pdiparams
-  onnx_path: ${INFER.export_path}.onnx
-  device: gpu
-  engine: native
-  precision: fp32
-  ir_optim: true
-  min_subgraph_size: 5
-  gpu_mem: 2000
-  gpu_id: 0
-  max_batch_size: 1024
-  num_cpu_threads: 10
+  Latent:
+    pretrained_model_path: null
+    export_path: ./inference/latent_case1
+    pdmodel_path: ${INFER.export_path}.pdmodel
+    pdiparams_path: ${INFER.export_path}.pdiparams
+    onnx_path: ${INFER.export_path}.onnx
+    device: gpu
+    engine: native
+    precision: fp32
+    ir_optim: true
+    min_subgraph_size: 5
+    gpu_mem: 2000
+    gpu_id: 0
+    max_batch_size: 1024
+    num_cpu_threads: 10
+  Confild:
+    pretrained_model_path: null
+    export_path: ./inference/confild_case1
+    pdmodel_path: ${INFER.export_path}.pdmodel
+    pdiparams_path: ${INFER.export_path}.pdiparams
+    onnx_path: ${INFER.export_path}.onnx
+    device: gpu
+    engine: native
+    precision: fp32
+    ir_optim: true
+    min_subgraph_size: 5
+    gpu_mem: 2000
+    gpu_id: 0
+    max_batch_size: 1024
+    num_cpu_threads: 10
   batch_size: 64
+
+Data:
+  shape: [918, 3]
+  data_path: /home/xinyang/store/projects/nfdiff/algo/elbow/uvp.npy
+  coor_path: /home/xinyang/store/projects/nfdiff/algo/elbow/coor.npy
   normalizer:
     method: "-11"
     dim: 0
-
-data_path: /home/xinyang/store/projects/nfdiff/algo/elbow/uvp.npy
-coor_path: /home/xinyang/store/projects/nfdiff/algo/elbow/coor.npy
+  load_data_fn: sda

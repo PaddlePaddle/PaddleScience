@@ -20,6 +20,8 @@ import paddle
 from omegaconf import DictConfig
 from packaging import version
 
+import ppsci
+from ppsci.arch import LatentContainer, SIRENAutodecoder_film
 from ppsci.utils import logger
 
 
@@ -136,70 +138,141 @@ class Normalizer_ts(object):
             return data_norm
 
 
-def inference(cfg: DictConfig):
-    # log paddlepaddle's version
-    if version.Version(paddle.__version__) != version.Version("0.0.0"):
-        paddle_version = paddle.__version__
-        if version.Version(paddle.__version__) < version.Version("2.6.0"):
-            logger.warning(
-                f"Detected paddlepaddle version is '{paddle_version}', "
-                "currently it is recommended to use release 2.6 or develop version."
-            )
+# build data
+def getdata(cfg):
+    ###### read data - fois ######
+    if cfg.Data.load_data_fn == "load_3d_flow":
+        input_data = load_3d_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_elbow_flow":
+        input_data = load_elbow_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_channel_flow":
+        input_data = load_channel_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_periodic_hill_flow":
+        input_data = load_periodic_hill_flow(cfg.Data.data_path)
     else:
-        paddle_version = f"develop({paddle.version.commit[:7]})"
+        input_data = np.load(cfg.Data.data_path)
 
-    logger.info(f"Using paddlepaddle {paddle_version}")
+    spatio_shape = input_data.shape[1:-1]
+    spatio_axis = list(
+                range(input_data.ndim if isinstance(input_data, np.ndarray) else input_data.dim())
+            )[1:-1]
 
-    # switch case
-    if cfg.load_data_fn == "load_3d_flow":
-        input_data = load_3d_flow(cfg.data_path)
-    elif cfg.load_data_fn == "load_elbow_flow":
-        input_data = load_elbow_flow(cfg.data_path)
-    elif cfg.load_data_fn == "load_channel_flow":
-        input_data = load_channel_flow(cfg.data_path)
-    elif cfg.load_data_fn == "load_periodic_hill_flow":
-        input_data = load_periodic_hill_flow(cfg.data_path)
-    else:
-        input_data = np.load(cfg.data_path)
-
-    if cfg.coor_path is None:
-        spatio_shape = input_data.shape[1:-1]
+    ###### read data - coordinate ######
+    if cfg.Data.coord_path is None:
         coord = [np.linspace(0, 1, i) for i in spatio_shape]
         coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
     else:
-        # load Data
-        cood_data = paddle.to_tensor(np.load(cfg.coor_path))
-        # normalize data
-        coord = Normalizer_ts(**cfg.INFER.normalizer).normalize(cood_data).numpy()
+        coord = np.load(cfg.Data.coord_path)
+    
+    ###### convert to tensor ######
+    input_data = paddle.to_tensor(input_data) if not isinstance(input_data, paddle.Tensor) else input_data
+    coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
+    N_samples = input_data.shape[0]
 
-    if len(tuple(input_data.shape)) > 2:
-        latents = input_data[:, None, None]
+    ###### normalizer ######
+    in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
+    in_normalizer.fit_normalize(coord if cfg.Latent.lumped_latent else coord.flatten(0, cfg.dims-1))
+    out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
+    out_normalizer.fit_normalize(input_data if cfg.Latent.lumped_latent else input_data.flatten(0, cfg.dims))
+    normed_coords = in_normalizer.normalize(coord)
+    normed_fois = out_normalizer.normalize(input_data)
+
+    return normed_coords, normed_fois, N_samples, spatio_axis
+
+
+def signal_train(cfg):
+    pass
+
+
+def mutil_train(cfg):
+    pass
+
+
+def train(cfg):
+    if cfg.TRAIN.mutil_GPU > 1:
+        mutil_train(cfg)
     else:
-        latents = input_data[:, None]
+        signal_train(cfg)
 
-    from deploy.python_infer import pinn_predictor
 
-    predictor = pinn_predictor.PINNPredictor(cfg)
+def evaluate(cfg: DictConfig):
+    # set data
+    normed_coords, normed_fois, N_samples, spatio_axis = getdata(cfg)
+    
+    # set model
+    confild = SIRENAutodecoder_film(**cfg.CONFILD)
+    latent = LatentContainer(N_samples=N_samples, **cfg.Latent)
+    ppsci.utils.save_load.load_pretrain(
+        confild,
+        cfg.EVAL.confild_pretrained_model_path,
+    )
+    ppsci.utils.save_load.load_pretrain(
+        latent,
+        cfg.EVAL.latent_pretrained_model_path,
+    )
 
-    input_dict = {"coords": coord, "latents": latents}
-    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
-    # mapping data to cfg.INFER.output_keys
-    output_keys = ["output"]
-    output_dict = {
-        store_key: Normalizer_ts(**cfg.INFER.normalizer)
-        .denormalize(paddle.to_tensor(output_dict[infer_key]))
-        .numpy()
-        .flatten()
-        for store_key, infer_key in zip(output_keys, output_dict.keys())
+
+def inference(cfg):
+    normed_coords, normed_fois, _, _ = getdata(cfg)
+    fois_len = normed_fois.shape[0]
+    idxs = np.array([i for i in range(fois_len)])
+    from deploy import python_infer
+
+    latent_predictor = python_infer.GeneralPredictor(cfg.INFER.Latent)
+    input_dict = {"latent_x": idxs}
+    output_dict = latent_predictor.predict(input_dict, cfg.INFER.batch_size)
+    cnf_predictor = python_infer.GeneralPredictor(cfg.INFER.Confild)
+    input_dict = {
+       "cnf": normed_coords, output_dict.keys()[0]: output_dict.values()[0],
     }
+    output_dict = cnf_predictor.predict(input_dict, cfg.INFER.batch_size)
+    print(output_dict)
+
+
+def export(cfg):
+    # set model
+    cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
+    latent_model = LatentContainer(**cfg.Latent)
+    # initialize solver
+    latnet_solver = ppsci.solver.Solver(
+        latent_model,
+        pretrained_model_path=cfg.INFER.Latent.pretrained_model_path,
+    )
+    cnf_solver = ppsci.solver.Solver(
+        cnf_model,
+        pretrained_model_path=cfg.INFER.Confild.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None], "float32", name=key)
+            for key in latent_model.input_keys
+        },
+    ]
+    cnf_input_spec = [
+        {
+          cnf_model.input_keys[0]: InputSpec([None]+cfg.Data.shape, "float32", name=cnf_model.input_keys[0]),
+          cnf_model.input_keys[1]: InputSpec([None], "float32", name=cnf_model.input_keys[1])
+        }
+    ]
+    cnf_solver.export(cnf_input_spec, cfg.INFER.Confild.export_path)
+    latnet_solver.export(input_spec, cfg.INFER.Latent.export_path)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="confild_case1.yaml")
 def main(cfg: DictConfig):
-    if cfg.mode == "infer":
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    elif cfg.mode == "infer":
         inference(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['infer'], but got '{cfg.mode}'")
+        raise ValueError(f"cfg.mode should in ['train', 'eval', 'infer', 'export'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
