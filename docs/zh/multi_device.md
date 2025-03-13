@@ -14,13 +14,13 @@
 | 相场方程 | [Allen-Cahn](./examples/allen_cahn.md) | ✅ | | | ✅ |
 | 微分方程 | [拉普拉斯方程](./examples/laplace2d.md) | ✅ | | | ✅ |
 | 微分方程 | [伯格斯方程](./examples/deephpms.md) | ✅ | | | |
-| 微分方程 | [非线性偏微分方程](./examples/pirbn.md) | ✅ | | | ✅ |
+| 微分方程 | [非线性偏微分方程](./examples/pirbn.md) | ✅ | | | |
 | 微分方程 | [洛伦兹方程](./examples/lorenz.md) | ✅ | | | ✅ |
 | 微分方程 | [若斯叻方程](./examples/rossler.md) | ✅ | | | ✅ |
 | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | | ✅ |
-| 微分方程 | [梯度增强的物理知识融合 PDE 求解](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/gpinn/poisson_1d.py) | ✅ | | | ✅ |
+| 微分方程 | [梯度增强的物理知识融合 PDE 求解](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/gpinn/poisson_1d.py) | ✅ | | | |
 | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | | ✅ |
-| 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | ✅ | | | ✅ |
+| 微分方程 | [分数阶微分方程](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py) | ✅ | | | |
 | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | | |
 | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | | ✅ |
 | 布鲁塞尔扩散系统 | [3D-Brusselator](./examples/brusselator3d.md) | ✅ | | | |
@@ -81,8 +81,8 @@
 |-----|-----|-----|-----|-----|-----|
 | 天气预报 | [Extformer-MoE 气象预报](./examples/extformer_moe.md) | ✅ | | | |
 | 天气预报 | [FourCastNet 气象预报](./examples/fourcastnet.md) | ✅ | | | |
-| 天气预报 | [NowCastNet 气象预报](./examples/nowcastnet.md) | ✅ | | | ✅ |
-| 天气预报 | [GraphCast 气象预报](./examples/graphcast.md) | ✅ | | | ✅ |
+| 天气预报 | [NowCastNet 气象预报](./examples/nowcastnet.md) | ✅ | | | |
+| 天气预报 | [GraphCast 气象预报](./examples/graphcast.md) | ✅ | | | |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | ✅ | | | |
 | 天气预报 | [DGMR 气象预报](./examples/dgmr.md) | ✅ | | | |
 | 地震波形反演 | [VelocityGAN 地震波形反演](./examples/velocity_gan.md) | ✅ | | | |
