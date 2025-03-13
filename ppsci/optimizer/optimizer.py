@@ -27,10 +27,9 @@ from paddle import regularizer
 from paddle.incubate import optimizer as incubate_optim
 from typing_extensions import Literal
 
+from ppsci.optimizer.soap import SOAP as _SOAP
 from ppsci.utils import logger
 from ppsci.utils import misc
-
-from .soap import SOAP as _SOAP
 
 if TYPE_CHECKING:
     import paddle
@@ -502,14 +501,16 @@ class SOAP:
     Improving and Stabilizing Shampoo using Adam. Implements SOAP algorithm (https://arxiv.org/abs/2409.11321).
 
     Args:
-        lr (float, optional):
+        learning_rate (float, optional):
             The learning rate to use. defaults to 0.003.
-        betas (Tuple[float,float], optional):
-            Adam's betas parameters (b1, b2). defaults to `(0.95, 0.95)`.
+        beta1 (float, optional):
+            Adam's betas parameters beta1. defaults to 0.95.
+        beta2 (float, optional):
+            Adam's betas parameters beta2. defaults to 0.95.
         shampoo_beta (float, optional):
             If >= 0, use this beta for the preconditioner (L and R in paper, state['GG'] below) moving average instead of betas[1].
             defaults to -1.
-        eps (float, optional):
+        epsilon (float, optional):
             Adam's epsilon for numerical stability. defaults to 1e-08.
         weight_decay (float, optional): weight decay coefficient. defaults to 0.01.
         precondition_frequency (int, optional):
@@ -539,10 +540,11 @@ class SOAP:
 
     def __init__(
         self,
-        lr: float = 3e-3,
-        betas=(0.95, 0.95),
+        learning_rate: float = 3e-3,
+        beta1: float = 0.95,
+        beta2: float = 0.95,
         shampoo_beta: float = -1,
-        eps: float = 1e-8,
+        epsilon: float = 1e-8,
         weight_decay: float = 0.01,
         precondition_frequency: int = 10,
         max_precond_dim: int = 10000,  #
@@ -552,10 +554,11 @@ class SOAP:
         data_format: str = "channels_first",
         correct_bias: bool = True,
     ):
-        self.lr = lr
-        self.betas = betas
+        self.learning_rate = learning_rate
+        self.beta1 = beta1
+        self.beta2 = beta2
         self.shampoo_beta = shampoo_beta
-        self.eps = eps
+        self.epsilon = epsilon
         self.weight_decay = weight_decay
         self.precondition_frequency = precondition_frequency
         self.max_precond_dim = max_precond_dim
@@ -573,11 +576,12 @@ class SOAP:
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
         opt = _SOAP(
-            params=parameters,
-            lr=self.lr,
-            betas=self.betas,
+            parameters=parameters,
+            learning_rate=self.learning_rate,
+            beta1=self.beta1,
+            beta2=self.beta2,
             shampoo_beta=self.shampoo_beta,
-            eps=self.eps,
+            eps=self.epsilon,
             weight_decay=self.weight_decay,
             precondition_frequency=self.precondition_frequency,
             max_precond_dim=self.max_precond_dim,
