@@ -581,7 +581,7 @@ class SOAP:
             beta1=self.beta1,
             beta2=self.beta2,
             shampoo_beta=self.shampoo_beta,
-            eps=self.epsilon,
+            epsilon=self.epsilon,
             weight_decay=self.weight_decay,
             precondition_frequency=self.precondition_frequency,
             max_precond_dim=self.max_precond_dim,
