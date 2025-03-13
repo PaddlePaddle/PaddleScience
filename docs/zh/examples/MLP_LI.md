@@ -9,7 +9,11 @@
 该多层感知器（MLP）模型旨在利用从材料项目（Materials Project）数据集中提取的特征，预测锂离子电池电极材料的电化学性能。输入特征包括化学计量属性、晶体结构特性、电子结构属性和其他电池属性。输出为平均电压、比能量和比容量。
 
 ## 数据集介绍
-关于数据集，请查看该文件，MP_data_down_loading(train+validate).csv
+
+| 数据集名称 | 下载链接 |
+|-----------|---------|
+| 训练集 + 验证集 | [MP_data_down_loading(train+validate).csv](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2FMP_data_down_loading(train%2Bvalidate).csv) |
+| 训练集 + 验证集 + 测试集 | [MP_data_down_loading(train+validate+test).csv](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2FMP_data_down_loading(train%2Bvalidate%2Btest).csv) |
 
 数据读取需要额外安装依赖 `bayesian-optimization`，请运行安装命令 `pip install bayesian-optimization`。
 
@@ -17,18 +21,27 @@
 
 要查看该模型的具体实现，请参考以下代码文件：`MLP_LI.py`
 
-## 模型训练命令
-=== "模型训练命令"
-
-    ``` sh
-    python MLP_LI.py
-    ```
 
 ## 训练好的模型权重文件
 
 | 预训练模型                        |
 |-----------------------------------|
-| [MLP_LI_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams) |
+| [MLP_LI_pretrained.pdparams]( https://paddle-org.bj.bcebos.com/paddlescience%2Fmodels%2FMLP_LI_pretrained.pdparams) |
+
+ 
+## 模型训练命令
+=== "模型训练命令"
+
+    ``` sh    
+    # 训练模型
+    python MLP_LI.py --train
+    
+    # 下载预训练模型（如果需要）
+    wget "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams" -O ./checkpoints/MLP_LI_pretrained.pdparams
+
+    # 使用预训练模型进行评估
+    python MLP_LI.py --evaluate --model_path ./checkpoints/MLP_LI_pretrained.pdparams
+    ```
 
 ## 完整代码
 
@@ -63,17 +76,17 @@ examples/MLP_LI/MLP_LI.py
 #### 1. 电压的性能预测（原始尺度）
 此图展示了电压的性能预测。预测值与真实值的比较用于评估模型的准确性。
 
-![电压的性能预测（原始尺度）](../results_out/performance_prediction_voltage.png)
+![电压的性能预测（原始尺度）](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2Fperformance_prediction_voltage.png)
 
 #### 2. 性能预测（原始尺度）
 此图展示了模型对所有三个电化学性能（电压、比能量和比容量）的整体预测表现。
 
-![性能预测（原始尺度）](../results_out/performance_prediction_original.png)
+![性能预测（原始尺度）](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2Fperformance_prediction_original.png )
 
 #### 3. 初始训练损失
 以下图显示了在初始训练阶段的训练和验证损失变化情况（按Epochs）。
 
-![初始训练损失](../results_out/initial_training_loss.png)
+![初始训练损失](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2Finitial_training_loss.png)
 
 ## 结论
 该 MLP 模型在提供的数据集上表现出较强的预测能力，尤其是在电压的预测上。然而，在比容量和比能量的预测上还有进一步改进的空间。未来可以通过更丰富的特征工程、更复杂的模型架构以及优化的超参数调整来提高模型的预测性能。
