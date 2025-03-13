@@ -38,7 +38,7 @@ class Predictor:
     Args:
         pdmodel_path (Optional[str]): Path to the PaddlePaddle model file. Defaults to None.
         pdiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
-        device (Literal["gpu", "cpu", "npu", "xpu", "sdaa"], optional): Device to use for inference. Defaults to "cpu".
+        device (Literal["cpu", "gpu", "npu", "xpu", "sdaa"], optional): Device to use for inference. Defaults to "cpu".
         engine (Literal["native", "tensorrt", "onnx", "mkldnn"], optional): Inference engine to use. Defaults to "native".
         precision (Literal["fp32", "fp16", "int8"], optional): Precision to use for inference. Defaults to "fp32".
         onnx_path (Optional[str], optional): Path to the ONNX model file. Defaults to None.
@@ -54,7 +54,7 @@ class Predictor:
         pdmodel_path: Optional[str] = None,
         pdiparams_path: Optional[str] = None,
         *,
-        device: Literal["gpu", "cpu", "npu", "xpu", "sdaa"] = "cpu",
+        device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu",
         engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
         precision: Literal["fp32", "fp16", "int8"] = "fp32",
         onnx_path: Optional[str] = None,
@@ -214,7 +214,7 @@ class Predictor:
         return predictor, config
 
     def _check_device(self, device: str):
-        if device not in ["gpu", "cpu", "npu", "xpu"]:
+        if device not in ["cpu", "gpu", "npu", "xpu"]:
             raise ValueError(
                 "Inference only supports 'gpu', 'cpu', 'npu' and 'xpu' devices, "
                 f"but got {device}."
