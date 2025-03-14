@@ -78,7 +78,6 @@ nav:
           - tempoGAN: zh/examples/tempoGAN.md
           - NSFNet4: zh/examples/nsfnet4.md
           - ViV: zh/examples/viv.md
-          - DrivAerNet: zh/examples/drivaernet.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -105,6 +104,8 @@ nav:
         - VelocityGAN: zh/examples/velocity_gan.md
         - TGCN: zh/examples/tgcn.md
         - IOPS: zh/examples/iops.md
+        - Pang-Weather: zh/examples/pangu_weather.md
+        - FengWu: zh/examples/fengwu.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
