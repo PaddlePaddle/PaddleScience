@@ -27,7 +27,7 @@ from paddle import regularizer
 from paddle.incubate import optimizer as incubate_optim
 from typing_extensions import Literal
 
-from ppsci.optimizer.soap import SOAP as _SOAP
+from ppsci.optimizer.soap import SOAP as SOAP_impl
 from ppsci.utils import logger
 from ppsci.utils import misc
 
@@ -575,7 +575,7 @@ class SOAP:
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
-        opt = _SOAP(
+        opt = SOAP_impl(
             parameters=parameters,
             learning_rate=self.learning_rate,
             beta1=self.beta1,

@@ -125,7 +125,7 @@ class SOAP(optim.Optimizer):
         correct_bias: bool = True,
         name: str = None,
     ):
-        self._betas = (beta1, beta2)
+        self._betas = paddle.to_tensor((beta1, beta2))
         self._shampoo_beta = shampoo_beta
         self._epsilon = epsilon
         self._weight_decay = weight_decay
@@ -244,7 +244,7 @@ class SOAP(optim.Optimizer):
                 )
 
                 exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
-                beta1, beta2 = paddle.to_tensor(self._betas)
+                beta1, beta2 = self._betas
 
                 state["step"] += 1
 
@@ -255,7 +255,9 @@ class SOAP(optim.Optimizer):
                     (1.0 - beta2) * grad_projected.square()
                 )
 
-                denom = exp_avg_sq.sqrt().add_(paddle.to_tensor(self._epsilon))
+                denom = exp_avg_sq.sqrt().add_(
+                    paddle.full([], self._epsilon, dtype=exp_avg_sq.dtype)
+                )
 
                 # Projecting the exponential moving average of gradients to the eigenbases of Shampoo's preconditioner
                 # i.e. projecting to the eigenbases of matrices in state['GG']
