@@ -22,14 +22,35 @@ the config.yaml file)
 """
 
 # from dataclasses import dataclass
+import math
 
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from layers.ball_query import BallQueryLayer
+
+import ppsci
+
+from .layers.ball_query import BallQueryLayer
 
 # from modulus.models.meta import ModelMetaData
 # from modulus.models.module import Module
+
+
+def kaiming_init(layer):
+    if isinstance(layer, (nn.layer.conv._ConvNd, nn.Linear)):
+        print(f"layer: {layer} ")
+        init_kaimingUniform = paddle.nn.initializer.KaimingUniform(
+            nonlinearity="leaky_relu", negative_slope=math.sqrt(5)
+        )
+        init_kaimingUniform(layer.weight)
+        if layer.bias is not None:
+            fan_in, _ = ppsci.utils.initializer._calculate_fan_in_and_fan_out(
+                layer.weight
+            )
+            if fan_in != 0:
+                bound = 1 / math.sqrt(fan_in)
+                init_uniform = paddle.nn.initializer.Uniform(low=-bound, high=bound)
+            init_uniform(layer.bias)
 
 
 def calculate_pos_encoding(nx, d=8):
@@ -659,6 +680,8 @@ class DoMINO(nn.Layer):
                     )
                 )
 
+        self.apply(kaiming_init)
+
     def geometry_encoder(self, geo_centers, p_grid, sdf):
         """Function to return local geometry encoding"""
         return self.geo_rep(geo_centers, p_grid, sdf)
@@ -1122,7 +1145,7 @@ if __name__ == "__main__":
     else:
         paddle.set_device("cpu")
     cfg = OmegaConf.register_new_resolver("eval", eval)
-    with initialize(version_base="1.3", config_path="conf"):
+    with initialize(version_base="1.3", config_path="../../scripts/conf"):
         cfg = compose(config_name="config")
     cfg.model.model_type = "combined"
     model = DoMINO(
