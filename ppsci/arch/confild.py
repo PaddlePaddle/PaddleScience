@@ -107,13 +107,12 @@ class BatchLinear(paddle.nn.Linear):
             params = OrderedDict(self.named_parameters())
         bias = params.get("bias", None)
         weight = params["weight"]
+        
         output = paddle.matmul(
             x=input,
-            y=weight.transpose(
-                perm=[*[i for i in range(len(tuple(weight.shape)) - 2)], -1, -2]
-            ),
+            y=weight
         )
-        if not bias == None:
+        if bias is not None:
             output += bias.unsqueeze(axis=-2)
         return output
 
@@ -221,6 +220,36 @@ class FeatureMapping:
 class SIRENAutodecoder_film(paddle.nn.Layer):
     """
     siren network with author decoding
+
+    Args:
+        input_keys (Tuple[str,...], optional): Key to get the input tensor from the dict.
+        output_keys (Tuple[str,...], optional): Key to save the output tensor into the dict.
+        in_coord_features (int, optional): Number of input coordinates features
+        in_latent_features (int, optional): Number of input latent features
+        out_features (int, optional): Number of output features
+        num_hidden_layers (int, optional): Number of hidden layers
+        hidden_features (int, optional): Number of hidden features
+        outermost_linear (bool, optional): Whether to use linear layer at the end. Defaults to False.
+        nonlinearity (str, optional): Nonlinearity to use. Defaults to "sine".
+        weight_init (Callable, optional): Weight initialization function. Defaults to None.
+        bias_init (Callable, optional): Bias initialization function. Defaults to None.
+        premap_mode (str, optional): Feature mapping mode. Defaults to None.
+
+    Examples:
+        >>> model = ppsci.arch.SIRENAutodecoder_film(
+                input_keys=["input1", "input2"],
+                output_keys=("output",),
+                in_coord_features=2,
+                in_latent_features=128,
+                out_features=3,
+                num_hidden_layers=10,
+                hidden_features=128,
+            )
+        >>> input_data = {"input1": paddle.randn([10, 2]), "input2": paddle.randn([10, 128])}
+        >>> out_dict = model(input_data)
+        >>> for k, v in out_dict.items():
+        ...     print(k, v.shape)
+        output [22, 918, 3]
     """
 
     def __init__(
@@ -265,7 +294,7 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
         )
         self.net2 = paddle.nn.LayerList(
             sublayers=[
-                BatchLinear(in_latent_features, hidden_features, bias=False)
+                BatchLinear(in_latent_features, hidden_features, bias_attr=False)
                 for i in range(num_hidden_layers + 1)
             ]
         )
@@ -285,6 +314,7 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
             x = self.premap_layer(coords)
         else:
             x = coords
+
         for i in range(len(self.net1) - 1):
             x = self.net1[i](x) + self.net2[i](latents)
             x = self.nl(x)
@@ -299,26 +329,48 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
 class LatentContainer(paddle.nn.Layer):
     """
     a model container that stores latents for multi GPU
+
+    Args:
+        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
+        output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
+        N_samples (int, optional): Number of samples. Defaults to None.
+        N_features (int, optional): Number of features. Defaults to None.
+        dims (int, optional): Number of dimensions. Defaults to None.
+        lumped (bool, optional): Whether to lump the latents. Defaults to False.
+
+    Examples:
+        >>> model = ppsci.arch.LatentContainer(N_samples=1600, N_features=128, dims=2, lumped=True)
+        >>> input_data = paddle.linspace(0, 1600, 1600, 'int64')
+        >>> input_dict = {"input": input_data}
+        >>> out_dict = model(input_dict)
+        >>> for k, v in out_dict.items():
+        ...     print(k, v.shape)
+        output [1600, 1, 128]
     """
 
     def __init__(
             self, 
-            input_key=("input",),
-            output_key=("output",),
+            input_keys=("input",),
+            output_keys=("output",),
             N_samples=None,
             N_features=None,
             dims=None,
             lumped=False
     ):
         super().__init__()
-        self.input_keys = input_key
-        self.output_keys = output_key
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        self.dims = [1] * dims if not lumped else [1] + [N_features]
         self.expand_dims = " ".join(["1" for _ in range(dims)]) if not lumped else "1"
         self.expand_dims = f"N f -> N {self.expand_dims} f"
-        self.latents = paddle.base.framework.EagerParamBase.from_tensor(
-            tensor=paddle.zeros(shape=(N_samples, N_features), dtype="float32")
+        self.latents = self.create_parameter(
+            shape=(N_samples, N_features),
+            dtype='float32',
+            default_initializer=paddle.nn.initializer.Constant(0.0)
         )
 
     def forward(self, batch_ids):
         x = batch_ids[self.input_keys[0]]
-        return {self.output_keys[0]: rearrange(self.latents[x], self.expand_dims)}
+        selected_latents = paddle.gather(self.latents, x)
+        expanded_latents = selected_latents.reshape([-1] + self.dims)
+        return {self.output_keys[0]: expanded_latents}
