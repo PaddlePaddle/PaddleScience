@@ -9,7 +9,10 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat -P ./dataset/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat --create-dirs -o ./dataset/allen_cahn.mat
+    # Using Adam optimizer
     python allen_cahn_piratenet.py
+    # Using SOAP optimizer
+    python allen_cahn_piratenet.py TRAIN.optim=soap TRAIN.lr_scheduler.warmup_epoch=5
     ```
 
 === "模型评估命令"
@@ -19,7 +22,10 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat -P ./dataset/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AllenCahn/allen_cahn.mat --create-dirs -o ./dataset/allen_cahn.mat
+    # Using Adam pretrained model
     python allen_cahn_piratenet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_pretrained.pdparams
+    # Using SOAP pretrained model
+    python allen_cahn_piratenet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_soap_pretrained.pdparams
     ```
 
 === "模型导出命令"
@@ -41,6 +47,7 @@
 | 预训练模型  | 指标 |
 |:--| :--|
 | [allen_cahn_piratenet_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_pretrained.pdparams) | L2Rel.u: 1.2e-05 |
+| [allen_cahn_piratenet_soap_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_soap_pretrained.pdparams) | L2Rel.u: 6.8e-6 |
 
 ## 1. 背景简介
 

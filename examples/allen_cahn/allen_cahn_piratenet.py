@@ -133,7 +133,15 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
+
+    if cfg.TRAIN.optim == "adam":
+        optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
+    elif cfg.TRAIN.optim == "soap":
+        optimizer = ppsci.optimizer.SOAP(lr_scheduler)(model)
+    else:
+        raise ValueError(
+            f"cfg.TRAIN.optim should be in ['adam','soap'], but got '{cfg.TRAIN.optim}'."
+        )
 
     # set validator
     tx_star = misc.cartesian_product(t_star, x_star).astype(dtype)
