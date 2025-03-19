@@ -155,6 +155,14 @@
 | 地震波形反演 | [VelocityGAN 地震波形反演](./zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
 | 交通预测 | [TGCN 交通流量预测](./zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
 
+<br>
+<p align="center"><b>化学科学 (AI for Chemistry)</b></p>
+
+| 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
+|-----|---------|-----|---------|----|---------|---------|
+| 化学分子生成 | [Moflow](./zh/examples/moflow.md) | 数据驱动 | moflow | 监督学习 | qm9/ zink250k | [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1) |
+| 化学反应预测 | [IFM](./zh/examples/ifm.md) | 数据驱动 | FourCastNet | 监督学习 | tox21/sider/hiv/bace/bbbp | [Understanding the Limitations of Deep Models for Molecular property prediction: Insights and Solutions](https://openreview.net/pdf?id=NLFqlDeuzt) |
+
 ## 🚀快速安装
 
 === "方式1: 源码安装[推荐]"
