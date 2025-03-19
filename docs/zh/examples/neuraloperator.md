@@ -85,14 +85,14 @@
 
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
-| [tfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams) | 0.13113 | 0.08514 | 0.30353 | 0.12408
+| [tfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams) | 0.13113 | 0.08514 | 0.30353 | 0.12408 |
 
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
-| [uno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams) | 0.18360 | 0.11040 | 0.74840 | 0.60193
+| [uno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams) | 0.18360 | 0.11040 | 0.74840 | 0.60193 |
 
 | 模型                                                                                                           | 32x64_l2 | 64x128_l2 |
-|:-------------------------------------------------------------------------------------------------------------|:---------|:----------|
+|:-- |:-- | :-- |
 | [sfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams) | 1.01075  | 2.33481   |
 
 ## 1. 背景简介
