@@ -20,7 +20,7 @@
     | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | | ✅ |
     | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | | ✅ |
     | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | | |
-    | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | | ✅ |
+    | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | ✅ | ✅ |
     | 布鲁塞尔扩散系统 | [3D-Brusselator](./examples/brusselator3d.md) | ✅ | | | |
     | 符号回归 | [Transformer4SR](./examples/transformer4sr.md) | ✅ | | | |
 
@@ -199,16 +199,16 @@
     === "模型训练命令"
 
         ``` sh
-        python euler_beam.py device=sdaa
+        python euler_beam.py
         ```
 
     === "模型评估命令"
 
         ``` sh
         # 测试自己训练的模型
-        python euler_beam.py device=sdaa mode=eval EVAL.pretrained_model_path=$YOUR_MODEL_PATH
+        python euler_beam.py mode=eval EVAL.pretrained_model_path=$YOUR_MODEL_PATH
         # 测试官方提供的预训练模型
-        python euler_beam.py device=sdaa mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
+        python euler_beam.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
         ```
 
     === "模型导出命令"
