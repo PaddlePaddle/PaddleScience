@@ -66,8 +66,8 @@
 
     | 问题类型 | 案例名称 | NVIDIA | 海光 | 太初 | 沐曦 |
     |-----|-----|-----|-----|-----|-----|
-    | 材料设计 | [散射板设计(反问题)](./examples/hpinns.md) | ✅ | | | ✅ |
-    | 材料设计 | [CGCNN](./examples/cgcnn.md) | ✅ | | | |
+    | 材料设计 | [散射板设计(反问题)](./examples/hpinns.md) | ✅ | | ✅ | ✅ |
+    | 材料设计 | [CGCNN](./examples/cgcnn.md) | ✅ | | ✅ | |
 
 === "地球科学(AI for Earth Science)"
 

@@ -214,9 +214,9 @@ class Predictor:
         return predictor, config
 
     def _check_device(self, device: str):
-        if device not in ["cpu", "gpu", "npu", "xpu"]:
+        if device not in ["cpu", "gpu", "npu", "xpu", "sdaa"]:
             raise ValueError(
-                "Inference only supports 'gpu', 'cpu', 'npu' and 'xpu' devices, "
+                "Inference only supports 'gpu', 'cpu', 'npu', 'xpu' and 'sdaa' devices, "
                 f"but got {device}."
             )
 
