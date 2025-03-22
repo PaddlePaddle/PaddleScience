@@ -31,40 +31,40 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 TRAIN:
-  batch_size: 40
-  test_batch_size: 40
+  batch_size: 4
+  test_batch_size: 4
   epochs: 20000
-  mutil_GPU: 1
+  mutil_GPU: 2
   lr:
     cnf: 1.e-4
     latents: 1.e-5
 
 EVAL:
-  confild_pretrained_model_path: ./outputs_confild_case1/confild_case1/epoch_99999
-  latent_pretrained_model_path: ./outputs_confild_case1/latent_case1/epoch_99999
+  confild_pretrained_model_path: ./outputs_confild_case4/confild_case4/epoch_99999
+  latent_pretrained_model_path: ./outputs_confild_case4/latent_case4/epoch_99999
 
 CONFILD:
   input_keys: ["confild_x", "latent_z"]
   output_keys: ["confild_output"]
-  num_hidden_layers: 10
+  num_hidden_layers: 15
   out_features: 3
-  hidden_features: 128
-  in_coord_features: 2
-  in_latent_features: 128
+  hidden_features: 384
+  in_coord_features: 3
+  in_latent_features: 384
 
 Latent:
   input_keys: ["latent_x"]
   output_keys: ["latent_z"]
-  N_samples: 16000
-  lumped: true
-  N_features: 128
-  dims: 2
+  N_samples: 1200
+  lumped: True
+  N_features: 384
+  dims: 3
 
 INFER:
   Latent:
     INFER:
       pretrained_model_path: null
-      export_path: ./inference/latent_case1
+      export_path: ./inference/latent_case4
       pdmodel_path: ${INFER.Latent.INFER.export_path}.pdmodel
       pdiparams_path: ${INFER.Latent.INFER.export_path}.pdiparams
       onnx_path: ${INFER.Latent.INFER.export_path}.onnx
@@ -81,7 +81,7 @@ INFER:
   Confild:
     INFER:
       pretrained_model_path: null
-      export_path: ./inference/confild_case1
+      export_path: ./inference/confild_case4
       pdmodel_path: ${INFER.Confild.INFER.export_path}.pdmodel
       pdiparams_path: ${INFER.Confild.INFER.export_path}.pdiparams
       onnx_path: ${INFER.Confild.INFER.export_path}.onnx
@@ -94,10 +94,10 @@ INFER:
       gpu_id: 0
       max_batch_size: 1024
       num_cpu_threads: 10
-      coord_shape: [918, 2]
-      latents_shape: [1, 128]
+      coord_shape: [58483, 3]
+      latents_shape: [1, 384]
     log_freq: 20
-  batch_size: 64
+  batch_size: 4
 
 Data:
   data_path: /home/xinyang/store/projects/nfdiff/algo/elbow/uvp.npy
@@ -105,4 +105,4 @@ Data:
   normalizer:
     method: "-11"
     dim: 0
-  load_data_fn: load_elbow_flow
+  load_data_fn: load_3d_flow

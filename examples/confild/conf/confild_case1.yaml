@@ -56,7 +56,7 @@ Latent:
   input_keys: ["latent_x"]
   output_keys: ["latent_z"]
   N_samples: 16000
-  lumped: true
+  lumped: True
   N_features: 128
   dims: 2
 
