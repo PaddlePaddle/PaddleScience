@@ -1,0 +1,375 @@
+default: &DEFAULT
+  num_data_workers: 1
+  # model
+  model: 'fno'
+  depth: 5
+  in_dim: 2
+  out_dim: 1
+  dropout: 0
+  # data/domain
+  Lx: !!float 1.0
+  Ly: !!float 1.0
+  nx: 256
+  ny: 256
+  # optimization
+  optimizer: 'adam'
+  scheduler: 'none'
+  learning_rate: !!float 1.0
+  max_epochs: 500
+  scheduler_epochs: 500
+  weight_decay: 0
+  batch_size: 25
+  # misc
+  log_to_screen: !!bool False
+  save_checkpoint: !!bool False
+  seed: 0
+  plot_figs: !!bool False
+  pack_data: !!bool False
+  # Weights & Biases
+  entity: 'entity_name'
+  project: 'proj_name'
+  group: 'helmholtz'
+  log_to_wandb: !!bool False
+  distill: !!bool False
+  subsample: 1
+  exp_dir: './exp/'
+  tie_fields: !!bool False
+  use_all_fields: !!bool True
+  tie_batches: !!bool False
+  model_type: fno
+  pretrained: False
+  warmup_steps: 0
+  epoch_size: 1
+  accum_grad: 1
+  enable_amp: !!bool False
+  log_interval: 1
+  checkpoint_save_interval: 10
+  debug_grad: False
+
+helmholtz: &helmholtz
+  <<: *DEFAULT
+  n_demos: 0
+  batch_size: 128
+  nx: 128
+  ny: 128
+  log_to_wandb: !!bool True
+  save_checkpoint: !!bool True
+  max_epochs: 500
+  scheduler: 'cosine'
+
+  model: 'fno'
+  layers: [64, 64, 64, 64, 64]
+  modes1: [65, 65, 65, 65]
+  modes2: [65, 65, 65, 65]
+  fc_dim: 128
+
+  in_dim: 2
+  out_dim: 1
+  mode_cut: 32
+  embed_cut: 64
+  fc_cut: 2
+
+  optimizer: 'adam'
+
+  learning_rate: 1E-3
+  pack_data: !!bool False
+
+helm-64-scale-o5_15: &helm_64_o5_15
+  <<: *helmholtz
+  train_path:   '/path/to/helmholtz_64_o5_15_train.h5'
+  val_path:     '/path/to/helmholtz_64_o5_15_val.h5'
+  test_path:    '/path/to/helmholtz_64_o5_15_test.h5'
+  scales_path:  '/path/to/helmholtz_64_o5_15_train_scale.npy'
+  # train_rand_idx_path: '/path/to/old_gen/train_rand_idx.npy'
+  batch_size: 128
+  in_dim: 3
+  out_dim: 1
+  mode_cut: 32
+  embed_cut: 64
+  fc_cut: 2
+  learning_rate: 1E-3
+  subsample: 1
+  nx: 64
+  ny: 64
+
+  pt: "train"
+  pt_split: [46080, 8192]
+  pretrained: False
+
+
+helm-64-pretrain-o1_20: &helm_64_o1_20_pt
+  <<: *helmholtz
+  train_path:   '/path/to/helmholtz_64_o1_20_train.h5'
+  val_path:     '/path/to/helmholtz_64_o1_20_val.h5'
+  test_path:    '/path/to/helmholtz_64_o1_20_test.h5'
+  scales_path:  '/path/to/helmholtz_64_o1_20_train_scale.npy'
+  train_rand_idx_path: '/path/to/train_rand_idx.npy'
+  batch_size: 128
+  in_dim: 3
+  out_dim: 1
+  mode_cut: 32
+  embed_cut: 64
+  fc_cut: 2
+  learning_rate: 1E-3
+  subsample: 1
+  nx: 64
+  ny: 64
+  pt: "pretrain"
+  pt_split: [46080, 8192] #[0.9, 0.1]
+  blur: [0, 1]
+
+helm-64-pretrain-o1_20_ft: &helm_64_o1_20_ft
+  <<: *helm_64_o1_20_pt
+  pt: "train"
+  fix_backbone: False
+
+
+helm-64-finetune-o5_15: &helm_64_o5_15_ft
+  <<: *helmholtz
+  train_path:   '/path/to/helmholtz_64_o5_15_train.h5'
+  val_path:     '/path/to/helmholtz_64_o5_15_val.h5'
+  test_path:    '/path/to/helmholtz_64_o5_15_test.h5'
+  scales_path:  '/path/to/helmholtz_64_o5_15_train_scale.npy'
+  train_rand_idx_path: '/path/to/train_rand_idx.npy'
+  batch_size: 128
+  in_dim: 3  #normal helmholtz has 3 dim, joint has 4
+  out_dim: 1
+  mode_cut: 32
+  embed_cut: 64
+  fc_cut: 2
+  learning_rate: 1E-3
+  subsample: 1
+  nx: 64
+  ny: 64
+  pt: "train"
+  pt_split: [46080, 8192]
+  fix_backbone: False
+  pretrained: True
+  pretrained_ckpt_path: /pretrained_ckpt_path/training_checkpoints/ckpt.tar
+
+helm-64-o5_15_ft0: &helm_64_o5_15_ft0
+  <<: *helm_64_o5_15_ft
+  subsample: 1
+
+helm-64-o5_15_ft0_r0: &helm_64_o5_15_ft0_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 1
+
+helm-64-o5_15_ft0_r1: &helm_64_o5_15_ft0_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 1
+  seed: 1
+
+helm-64-o5_15_ft0_r2: &helm_64_o5_15_ft0_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 1
+  seed: 2
+
+helm-64-o5_15_ft1: &helm_64_o5_15_ft1
+  <<: *helm_64_o5_15_ft
+  subsample: 2
+
+helm-64-o5_15_ft1_r0: &helm_64_o5_15_ft1_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 2
+
+helm-64-o5_15_ft2: &helm_64_o5_15_ft2
+  <<: *helm_64_o5_15_ft
+  subsample: 4
+
+helm-64-o5_15_ft2_r0: &helm_64_o5_15_ft2_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 4
+
+helm-64-o5_15_ft3_r1: &helm_64_o5_15_ft3_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 8
+  seed: 1
+
+helm-64-o5_15_ft3_r2: &helm_64_o5_15_ft3_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 8
+  seed: 2
+
+helm-64-o5_15_ft3_r0: &helm_64_o5_15_ft3_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 8
+  seed: 0
+
+helm-64-o5_15_ft3_r3: &helm_64_o5_15_ft3_r3
+  <<: *helm_64_o5_15_ft
+  subsample: 8
+  seed: 3
+
+helm-64-o5_15_ft4_r0: &helm_64_o5_15_ft4_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 16
+  seed: 0
+
+helm-64-o5_15_ft4_r3: &helm_64_o5_15_ft4_r3
+  <<: *helm_64_o5_15_ft
+  subsample: 16
+  seed: 3
+
+helm-64-o5_15_ft4_r1: &helm_64_o5_15_ft4_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 16
+  seed: 1
+
+helm-64-o5_15_ft4_r2: &helm_64_o5_15_ft4_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 16
+  seed: 2
+
+helm-64-o5_15_ft5_r1: &helm_64_o5_15_ft5_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 32
+  seed: 1
+
+helm-64-o5_15_ft5_r0: &helm_64_o5_15_ft5_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 32
+  seed: 0
+
+helm-64-o5_15_ft5_r2: &helm_64_o5_15_ft5_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 32
+  seed: 2
+
+helm-64-o5_15_ft6_r0: &helm_64_o5_15_ft6_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 64
+  seed: 0
+
+helm-64-o5_15_ft6_r1: &helm_64_o5_15_ft6_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 64
+  seed: 1
+
+helm-64-o5_15_ft6_r2: &helm_64_o5_15_ft6_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 64
+  seed: 2
+
+helm-64-o5_15_ft7_r0: &helm_64_o5_15_ft7_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 128
+  # learning_rate: 1E-5
+  batch_size: 64
+  seed: 0
+
+helm-64-o5_15_ft7_r1: &helm_64_o5_15_ft7_r1
+  <<: *helm_64_o5_15_ft
+  subsample: 128
+  # learning_rate: 1E-5
+  batch_size: 64
+  seed: 1
+
+helm-64-o5_15_ft7_r2: &helm_64_o5_15_ft7_r2
+  <<: *helm_64_o5_15_ft
+  subsample: 128
+  # learning_rate: 1E-5
+  batch_size: 64
+  seed: 2
+
+helm-64-o5_15_ft8_r0: &helm_64_o5_15_ft8_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 256
+  # learning_rate: 1E-5
+  batch_size: 32
+  seed: 0
+
+helm-64-o5_15_ft9_r0: &helm_64_o5_15_ft9_r0
+  <<: *helm_64_o5_15_ft
+  subsample: 512
+  # learning_rate: 1E-5
+  batch_size: 16
+  seed: 0
+
+helm-64-pretrain-o1_20_m0: &helm-64-o1_20_pt_m0
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.
+
+helm-64-pretrain-o1_20_m1: &helm-64-o1_20_pt_m1
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.1
+
+helm-64-pretrain-o1_20_m2: &helm-64-o1_20_pt_m2
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.2
+
+helm-64-pretrain-o1_20_m3: &helm-64-o1_20_pt_m3
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.3
+
+helm-64-pretrain-o1_20_m4: &helm-64-o1_20_pt_m4
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.4
+
+helm-64-pretrain-o1_20_m5: &helm-64-o1_20_pt_m5
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.5
+
+helm-64-pretrain-o1_20_m6: &helm-64-o1_20_pt_m6
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.6
+
+helm-64-pretrain-o1_20_m7: &helm-64-o1_20_pt_m7
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.7
+
+helm-64-pretrain-o1_20_m8: &helm-64-o1_20_pt_m8
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.8
+
+helm-64-pretrain-o1_20_m9: &helm-64-o1_20_pt_m9
+  <<: *helm_64_o1_20_pt
+  mask_ratio: 0.9
+
+helm-64-o5_15_bsln: &helm_64_o5_15_baseline
+  <<: *helm_64_o5_15
+  pt: "train"
+  pt_split: [0, 1]
+
+helm-64-o5_15_b0: &helm-64-o1_10_ss4
+  <<: *helm_64_o5_15_baseline
+  subsample: 4
+
+helm-64-o5_15_b1: &helm-64-o1_10_ss8
+  <<: *helm_64_o5_15_baseline
+  subsample: 8
+
+helm-64-o5_15_b2: &helm-64-o1_10_ss16
+  <<: *helm_64_o5_15_baseline
+  subsample: 16
+
+helm-64-o5_15_b3: &helm-64-o1_10_ss32
+  <<: *helm_64_o5_15_baseline
+  subsample: 32
+
+helm-64-o5_15_b4: &helm-64-o1_10_ss64
+  <<: *helm_64_o5_15_baseline
+  subsample: 64
+
+helm-64-o5_15_b5: &helm-64-o1_10_ss128
+  <<: *helm_64_o5_15_baseline
+  subsample: 128
+
+helm-64-o5_15_b6: &helm-64-o1_10_ss256
+  <<: *helm_64_o5_15_baseline
+  subsample: 256
+
+helm-64-o5_15_b7: &helm-64-o1_10_ss512
+  <<: *helm_64_o5_15_baseline
+  subsample: 512
+  batch_size: 64
+
+helm-64-o5_15_b8: &helm-64-o1_10_ss1024
+  <<: *helm_64_o5_15_baseline
+  subsample: 1024
+  batch_size: 32
+
+helm-64-o5_15_b9: &helm-64-o1_10_ss2048
+  <<: *helm_64_o5_15_baseline
+  subsample: 2048
+  batch_size: 16
