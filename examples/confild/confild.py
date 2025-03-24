@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import glob
-import re
-
 import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from packaging import version
 from paddle.distributed import fleet
 from paddle.io import DataLoader
 from paddle.io import DistributedBatchSampler
@@ -194,7 +190,7 @@ def getdata(cfg):
     ###### normalizer ######
     in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
     in_normalizer.fit_normalize(
-        coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims-1)
+        coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims - 1)
     )
     out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
     out_normalizer.fit_normalize(
@@ -398,21 +394,27 @@ def train(cfg):
 def evaluate(cfg: DictConfig):
     # set data
     normed_coords, normed_fois, _, spatio_axis, out_normalizer = getdata(cfg)
-    print(normed_coords.shape)
+
     if len(normed_coords.shape) + 1 == len(normed_fois.shape):
         normed_coords = paddle.tile(
             normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
         )
-        print(normed_coords.shape)
+
     idx = paddle.to_tensor(
         np.array([i for i in range(normed_fois.shape[0])]), dtype="int64"
     )
     # set model
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
     latent = LatentContainer(**cfg.Latent)
+    logger.info(
+        "Loading pretrained model from {}".format(cfg.EVAL.confild_pretrained_model_path)
+    )
     ppsci.utils.save_load.load_pretrain(
         confild,
         cfg.EVAL.confild_pretrained_model_path,
+    )
+    logger.info(
+        "Loading pretrained model from {}".format(cfg.EVAL.latent_pretrained_model_path)
     )
     ppsci.utils.save_load.load_pretrain(
         latent,
@@ -433,6 +435,9 @@ def evaluate(cfg: DictConfig):
 
     y_test_pred = out_normalizer.denormalize(y_test_pred)
     y_test = out_normalizer.denormalize(normed_fois)
+    logger.info(
+        "Result is {}".format(y_test.numpy())
+    )
 
 
 def inference(cfg):
@@ -456,7 +461,10 @@ def inference(cfg):
         "latent_z": list(output_dict.values())[0],
     }
     output_dict = cnf_predictor.predict(input_dict, cfg.INFER.batch_size)
-    print(output_dict)
+
+    logger.info(
+        "Result is {}".format(output_dict["confild_output"]) 
+    )
 
 
 def export(cfg):

@@ -269,7 +269,7 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
         self.output_keys = output_keys
 
         self.premap_mode = premap_mode
-        if not self.premap_mode == None:
+        if self.premap_mode is not None:
             self.premap_layer = FeatureMapping(
                 in_coord_features, mode=premap_mode, **kwargs
             )
@@ -306,7 +306,7 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
     def forward(self, input_data):
         coords = input_data[self.input_keys[0]]
         latents = input_data[self.input_keys[1]]
-        if not self.premap_mode == None:
+        if self.premap_mode is not None:
             x = self.premap_layer(coords)
         else:
             x = coords
