@@ -276,7 +276,6 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
 
 
-
 def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     fleet.init(is_collective=True)
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
@@ -285,32 +284,36 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     latents_model = fleet.distributed_model(latents_model)
 
     # set optimizer
-    cnf_optimizer = ppsci.optimizer.Adam(
-        cfg.TRAIN.lr.cnf, weight_decay=0.0
-    )(cnf_model)
+    cnf_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.cnf, weight_decay=0.0)(
+        cnf_model
+    )
     cnf_optimizer = fleet.distributed_optimizer(cnf_optimizer)
-    latents_optimizer = ppsci.optimizer.Adam(
-        cfg.TRAIN.lr.latents, weight_decay=0.0
-    )(latents_model)
+    latents_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.latents, weight_decay=0.0)(
+        latents_model
+    )
     latents_optimizer = fleet.distributed_optimizer(latents_optimizer)
 
     dataset = basic_set(normed_fois, normed_coords)
 
-    train_sampler = DistributedBatchSampler(dataset, cfg.Train.batch_size, shuffle=True, drop_last=True)
+    train_sampler = DistributedBatchSampler(
+        dataset, cfg.Train.batch_size, shuffle=True, drop_last=True
+    )
     train_loader = DataLoader(
-                dataset,
-                batch_sampler=train_sampler,
-                shuffle=True,
-                num_workers=cfg.TRAIN.mutil_GPU
-            )
-    test_sampler = DistributedBatchSampler(dataset, cfg.Train.test_batch_size, drop_last=True)
+        dataset,
+        batch_sampler=train_sampler,
+        shuffle=True,
+        num_workers=cfg.TRAIN.mutil_GPU
+    )
+    test_sampler = DistributedBatchSampler(
+        dataset, cfg.Train.test_batch_size, drop_last=True
+    )
     test_loader = DataLoader(
-                dataset,
-                batch_sampler=test_sampler,
-                shuffle=False,
-                num_workers=cfg.TRAIN.mutil_GPU
-            )
-            
+        dataset,
+        batch_sampler=test_sampler,
+        shuffle=False,
+        num_workers=cfg.TRAIN.mutil_GPU
+    )
+
     criterion = paddle.nn.MSELoss()
 
     for i in range(cfg.TRAIN.epochs):
@@ -346,8 +349,15 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                     if isinstance(test_coords, list):
                         test_coords = [i for i in test_coords]
                     prediction = out_normalizer.denormalize(
-                            cnf_model({"confild_x":test_coords, "latent_z":latents_model({"latent_x": idx})["latent_z"]})["confild_output"]
-                        )
+                        cnf_model(
+                            {
+                                "confild_x":test_coords,
+                                "latent_z":latents_model({"latent_x": idx})[
+                                    "latent_z"
+                                ],
+                            }
+                        )["confild_output"]
+                    )
                     target = out_normalizer.denormalize(test_fois)
                     error = rMAE(prediction=prediction, target=target, dims=spatio_axis)
                     test_error.append(error)
@@ -370,12 +380,14 @@ def evaluate(cfg: DictConfig):
     # set data
     normed_coords, normed_fois, _, spatio_axis, out_normalizer = getdata(cfg)
     print(normed_coords.shape)
-    if(len(normed_coords.shape) + 1 == len(normed_fois.shape)):
-        # normed_coords = paddle.unsqueeze(normed_coords, 0)
-        # print(normed_coords.shape)
-        normed_coords = paddle.tile(normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape))
+    if len(normed_coords.shape) + 1 == len(normed_fois.shape):
+        normed_coords = paddle.tile(
+            normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
+        )
         print(normed_coords.shape)
-    idx = paddle.to_tensor(np.array([i for i in range(normed_fois.shape[0])]), dtype="int64")
+    idx = paddle.to_tensor(
+        np.array([i for i in range(normed_fois.shape[0])]), dtype="int64"
+    )
     # set model
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
     latent = LatentContainer(**cfg.Latent)
@@ -390,18 +402,26 @@ def evaluate(cfg: DictConfig):
     latent_test_pred = latent({"latent_x": idx})
     y_test_pred = []
     for i in range(normed_coords.shape[0]):
-        y_test_pred.append(confild({"confild_x": normed_coords[i], "latent_z": latent_test_pred["latent_z"][i]})["confild_output"].numpy())
+        y_test_pred.append(
+            confild(
+                {
+                    "confild_x": normed_coords[i],
+                    "latent_z": latent_test_pred["latent_z"][i],
+                }
+            )["confild_output"].numpy()
+        )
     y_test_pred = paddle.to_tensor(np.array(y_test_pred))
-    # y_test_pred = confild({"confild_x": normed_coords, "latent_z": latent_test_pred["latent_z"]})
+
     y_test_pred = out_normalizer.denormalize(y_test_pred)
     y_test = out_normalizer.denormalize(normed_fois)
 
 
 def inference(cfg):
     normed_coords, normed_fois, _, _, _ = getdata(cfg)
-    if(len(normed_coords.shape) + 1 == len(normed_fois.shape)):
-        # normed_coords = paddle.unsqueeze(normed_coords, -1)
-        normed_coords = paddle.tile(normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape))
+    if len(normed_coords.shape) + 1 == len(normed_fois.shape):
+        normed_coords = paddle.tile(
+            normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
+        )
 
     fois_len = normed_fois.shape[0]
     idxs = np.array([i for i in range(fois_len)])
@@ -410,10 +430,11 @@ def inference(cfg):
     latent_predictor = python_infer.GeneralPredictor(cfg.INFER.Latent)
     input_dict = {"latent_x": idxs}
     output_dict = latent_predictor.predict(input_dict, cfg.INFER.batch_size)
-    
+
     cnf_predictor = python_infer.GeneralPredictor(cfg.INFER.Confild)
     input_dict = {
-       "confild_x": normed_coords.numpy(), "latent_z": list(output_dict.values())[0],
+        "confild_x": normed_coords.numpy(),
+        "latent_z": list(output_dict.values())[0],
     }
     output_dict = cnf_predictor.predict(input_dict, cfg.INFER.batch_size)
     print(output_dict)
@@ -436,15 +457,20 @@ def export(cfg):
     from paddle.static import InputSpec
 
     input_spec = [
-        {
-            key: InputSpec([None], "int64", name=key)
-            for key in latent_model.input_keys
-        },
+        {key: InputSpec([None], "int64", name=key) for key in latent_model.input_keys},
     ]
     cnf_input_spec = [
         {
-          cnf_model.input_keys[0]: InputSpec([None]+list(cfg.INFER.Confild.INFER.coord_shape), "float32", name=cnf_model.input_keys[0]),
-          cnf_model.input_keys[1]: InputSpec([None]+list(cfg.INFER.Confild.INFER.latents_shape), "float32", name=cnf_model.input_keys[1])
+            cnf_model.input_keys[0]: InputSpec(
+                [None] + list(cfg.INFER.Confild.INFER.coord_shape),
+                "float32",
+                name=cnf_model.input_keys[0],
+            ),
+            cnf_model.input_keys[1]: InputSpec(
+                [None] + list(cfg.INFER.Confild.INFER.latents_shape),
+                "float32",
+                name=cnf_model.input_keys[1]
+            ),
         }
     ]
     cnf_solver.export(cnf_input_spec, cfg.INFER.Confild.INFER.export_path)
@@ -462,7 +488,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "export":
         export(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval', 'infer', 'export'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'infer', 'export'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

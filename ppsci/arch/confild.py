@@ -1,11 +1,10 @@
 import math
 from collections import OrderedDict
-from einops import rearrange
 
 import numpy as np
 import paddle
 
-DEFAULT_W0 = 30.
+DEFAULT_W0 = 30.0
 
 
 class Swish(paddle.nn.Layer):
@@ -107,11 +106,8 @@ class BatchLinear(paddle.nn.Linear):
             params = OrderedDict(self.named_parameters())
         bias = params.get("bias", None)
         weight = params["weight"]
-        
-        output = paddle.matmul(
-            x=input,
-            y=weight
-        )
+
+        output = paddle.matmul(x=input, y=weight)
         if bias is not None:
             output += bias.unsqueeze(axis=-2)
         return output
@@ -266,12 +262,12 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
         weight_init=None,
         bias_init=None,
         premap_mode=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        
+
         self.premap_mode = premap_mode
         if not self.premap_mode == None:
             self.premap_layer = FeatureMapping(
@@ -349,13 +345,13 @@ class LatentContainer(paddle.nn.Layer):
     """
 
     def __init__(
-            self, 
-            input_keys=("input",),
-            output_keys=("output",),
-            N_samples=None,
-            N_features=None,
-            dims=None,
-            lumped=False
+        self, 
+        input_keys=("input",),
+        output_keys=("output",),
+        N_samples=None,
+        N_features=None,
+        dims=None,
+        lumped=False,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -365,8 +361,8 @@ class LatentContainer(paddle.nn.Layer):
         self.expand_dims = f"N f -> N {self.expand_dims} f"
         self.latents = self.create_parameter(
             shape=(N_samples, N_features),
-            dtype='float32',
-            default_initializer=paddle.nn.initializer.Constant(0.0)
+            dtype="float32",
+            default_initializer=paddle.nn.initializer.Constant(0.0),
         )
 
     def forward(self, batch_ids):
