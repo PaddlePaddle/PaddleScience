@@ -12,12 +12,12 @@
     |-----|-----|-----|-----|-----|-----|
     | 亥姆霍兹方程 | [SPINN(Helmholtz3D)](./examples/spinn.md) | ✅ | | | ✅ |
     | 相场方程 | [Allen-Cahn](./examples/allen_cahn.md) | ✅ | | | ✅ |
-    | 微分方程 | [拉普拉斯方程](./examples/laplace2d.md) | ✅ | | | ✅ |
+    | 微分方程 | [拉普拉斯方程](./examples/laplace2d.md) | ✅ | | ✅ | ✅ |
     | 微分方程 | [伯格斯方程](./examples/deephpms.md) | ✅ | | | ✅ |
     | 微分方程 | [非线性偏微分方程](./examples/pirbn.md) | ✅ | | | ✅ |
-    | 微分方程 | [洛伦兹方程](./examples/lorenz.md) | ✅ | | | ✅ |
+    | 微分方程 | [洛伦兹方程](./examples/lorenz.md) | ✅ | | ✅ | ✅ |
     | 微分方程 | [若斯叻方程](./examples/rossler.md) | ✅ | | | ✅ |
-    | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | | ✅ |
+    | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | ✅ | ✅ |
     | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | | ✅ |
     | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | | ✅ |
     | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | ✅ | ✅ |
@@ -45,7 +45,7 @@
     | 多相流 | [气液两相流](./examples/bubble.md) | ✅ | | | ✅ |
     | 流场高分辨率重构 | [2D 湍流流场重构](./examples/tempoGAN.md) | ✅ | | | ✅ |
     | 求解器耦合 | [CFD-GCN](./examples/cfdgcn.md) | ✅ | | | |
-    | 受力分析 | [1D 欧拉梁变形](./examples/euler_beam.md) | ✅ | | | ✅ |
+    | 受力分析 | [1D 欧拉梁变形](./examples/euler_beam.md) | ✅ | | ✅ | ✅ |
     | 受力分析 | [2D 平板变形](./examples/biharmonic2d.md) | ✅ | | | ✅ |
     | 受力分析 | [3D 连接件变形](./examples/bracket.md) | ✅ | | | |
     | 受力分析 | [结构震动模拟](./examples/phylstm.md) | ✅ | | | ✅ |
