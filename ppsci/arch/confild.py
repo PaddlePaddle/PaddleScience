@@ -345,7 +345,7 @@ class LatentContainer(paddle.nn.Layer):
     """
 
     def __init__(
-        self, 
+        self,
         input_keys=("input",),
         output_keys=("output",),
         N_samples=None,

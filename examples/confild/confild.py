@@ -12,23 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import hydra
-import numpy as np
 import glob
 import re
+
+import hydra
+import numpy as np
 import paddle
 from omegaconf import DictConfig
 from packaging import version
+from paddle.distributed import fleet
+from paddle.io import DataLoader
+from paddle.io import DistributedBatchSampler
 
 import ppsci
-from paddle.distributed import fleet
-from paddle.io import DataLoader, DistributedBatchSampler
-from ppsci.arch import LatentContainer, SIRENAutodecoder_film
+from ppsci.arch import LatentContainer
+from ppsci.arch import SIRENAutodecoder_film
 from ppsci.utils import logger
 
 
 def load_elbow_flow(path):
     return np.load(f"{path}")[1:]
+
 
 def load_channel_flow(
     path,
@@ -38,9 +42,11 @@ def load_channel_flow(
 ):
     return np.load(f"{path}")[t_start:t_end:t_every]
 
+
 def load_periodic_hill_flow(path):
     data = np.load(f"{path}")
     return data
+
 
 def load_3d_flow(path):
     data = np.load(f"{path}")
@@ -162,8 +168,10 @@ def getdata(cfg):
 
     spatio_shape = input_data.shape[1:-1]
     spatio_axis = list(
-                range(input_data.ndim if isinstance(input_data, np.ndarray) else input_data.dim())
-            )[1:-1]
+        range(
+            input_data.ndim if isinstance(input_data, np.ndarray) else input_data.dim()
+        )
+    )[1:-1]
 
     ###### read data - coordinate ######
     if cfg.Data.coor_path is None:
@@ -171,19 +179,27 @@ def getdata(cfg):
         coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
     else:
         coord = np.load(cfg.Data.coor_path)
-    coord = coord.astype('float32')
-    input_data = input_data.astype('float32')
-    
+    coord = coord.astype("float32")
+    input_data = input_data.astype("float32")
+
     ###### convert to tensor ######
-    input_data = paddle.to_tensor(input_data) if not isinstance(input_data, paddle.Tensor) else input_data
+    input_data = (
+        paddle.to_tensor(input_data)
+        if not isinstance(input_data, paddle.Tensor)
+        else input_data
+    )
     coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
     N_samples = input_data.shape[0]
 
     ###### normalizer ######
     in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-    in_normalizer.fit_normalize(coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims-1))
+    in_normalizer.fit_normalize(
+        coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims-1)
+    )
     out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-    out_normalizer.fit_normalize(input_data if cfg.Latent.lumped else input_data.flatten(0, cfg.Latent.dims))
+    out_normalizer.fit_normalize(
+        input_data if cfg.Latent.lumped else input_data.flatten(0, cfg.Latent.dims)
+    )
     normed_coords = in_normalizer.normalize(coord)
     normed_fois = out_normalizer.normalize(input_data)
 
@@ -215,21 +231,19 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
 
     dataset = basic_set(normed_fois, normed_coords)
     criterion = paddle.nn.MSELoss()
-    
+
     # set loader
     train_loader = DataLoader(
-                dataset=dataset, batch_size=cfg.TRAIN.batch_size, shuffle=True
-            )
+        dataset=dataset, batch_size=cfg.TRAIN.batch_size, shuffle=True
+    )
     test_loader = DataLoader(
-                dataset=dataset, batch_size=cfg.TRAIN.test_batch_size, shuffle=False
-            )
+        dataset=dataset, batch_size=cfg.TRAIN.test_batch_size, shuffle=False
+    )
     # set optimizer
-    cnf_optimizer = ppsci.optimizer.Adam(
-        cfg.TRAIN.lr.cnf, weight_decay=0.0
-    )(cnf_model)
-    latents_optimizer = ppsci.optimizer.Adam(
-        cfg.TRAIN.lr.latents, weight_decay=0.0
-    )(latents_model)
+    cnf_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.cnf, weight_decay=0.0)(cnf_model)
+    latents_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.latents, weight_decay=0.0)(
+        latents_model
+    )
 
     for i in range(cfg.TRAIN.epochs):
         cnf_model.train()
@@ -264,8 +278,15 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                     if isinstance(test_coords, list):
                         test_coords = [i for i in test_coords]
                     prediction = out_normalizer.denormalize(
-                            cnf_model({"confild_x":test_coords, "latent_z":latents_model({"latent_x": idx})["latent_z"]})
+                        cnf_model(
+                            {
+                                "confild_x": test_coords,
+                                "latent_z": latents_model({"latent_x": idx})[
+                                    "latent_z"
+                                ],
+                            }
                         )
+                    )
                     target = out_normalizer.denormalize(test_fois)
                     error = rMAE(prediction=prediction, target=target, dims=spatio_axis)
                     test_error.append(error)
@@ -284,9 +305,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     latents_model = fleet.distributed_model(latents_model)
 
     # set optimizer
-    cnf_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.cnf, weight_decay=0.0)(
-        cnf_model
-    )
+    cnf_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.cnf, weight_decay=0.0)(cnf_model)
     cnf_optimizer = fleet.distributed_optimizer(cnf_optimizer)
     latents_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.latents, weight_decay=0.0)(
         latents_model
@@ -302,7 +321,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
         dataset,
         batch_sampler=train_sampler,
         shuffle=True,
-        num_workers=cfg.TRAIN.mutil_GPU
+        num_workers=cfg.TRAIN.mutil_GPU,
     )
     test_sampler = DistributedBatchSampler(
         dataset, cfg.Train.test_batch_size, drop_last=True
@@ -311,7 +330,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
         dataset,
         batch_sampler=test_sampler,
         shuffle=False,
-        num_workers=cfg.TRAIN.mutil_GPU
+        num_workers=cfg.TRAIN.mutil_GPU,
     )
 
     criterion = paddle.nn.MSELoss()
@@ -351,8 +370,8 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                     prediction = out_normalizer.denormalize(
                         cnf_model(
                             {
-                                "confild_x":test_coords,
-                                "latent_z":latents_model({"latent_x": idx})[
+                                "confild_x": test_coords,
+                                "latent_z": latents_model({"latent_x": idx})[
                                     "latent_z"
                                 ],
                             }
@@ -469,7 +488,7 @@ def export(cfg):
             cnf_model.input_keys[1]: InputSpec(
                 [None] + list(cfg.INFER.Confild.INFER.latents_shape),
                 "float32",
-                name=cnf_model.input_keys[1]
+                name=cnf_model.input_keys[1],
             ),
         }
     ]
