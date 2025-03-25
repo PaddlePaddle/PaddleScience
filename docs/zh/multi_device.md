@@ -10,15 +10,15 @@
 
     | 问题类型 | 案例名称 | NVIDIA | 海光 | 太初 | 沐曦 |
     |-----|-----|-----|-----|-----|-----|
-    | 亥姆霍兹方程 | [SPINN(Helmholtz3D)](./examples/spinn.md) | ✅ | | | ✅ |
+    | 亥姆霍兹方程 | [SPINN(Helmholtz3D)](./examples/spinn.md) | ✅ | | ✅ | ✅ |
     | 相场方程 | [Allen-Cahn](./examples/allen_cahn.md) | ✅ | | | ✅ |
     | 微分方程 | [拉普拉斯方程](./examples/laplace2d.md) | ✅ | | | ✅ |
     | 微分方程 | [伯格斯方程](./examples/deephpms.md) | ✅ | | | ✅ |
     | 微分方程 | [非线性偏微分方程](./examples/pirbn.md) | ✅ | | | ✅ |
     | 微分方程 | [洛伦兹方程](./examples/lorenz.md) | ✅ | | | ✅ |
-    | 微分方程 | [若斯叻方程](./examples/rossler.md) | ✅ | | | ✅ |
+    | 微分方程 | [若斯叻方程](./examples/rossler.md) | ✅ | | ✅ | ✅ |
     | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | | ✅ |
-    | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | | ✅ |
+    | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | ✅ | ✅ |
     | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | | ✅ |
     | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | ✅ | ✅ |
     | 布鲁塞尔扩散系统 | [3D-Brusselator](./examples/brusselator3d.md) | ✅ | | | |
