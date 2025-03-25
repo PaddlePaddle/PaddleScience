@@ -78,7 +78,7 @@ python confild.py mode=eval
 data # CNF的训练数据集
 |
 |-- data.npy # 要拟合的数据
-| 
+|
 |-- coords.npy # 查询坐标
 ```
 

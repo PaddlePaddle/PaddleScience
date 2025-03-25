@@ -407,7 +407,9 @@ def evaluate(cfg: DictConfig):
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
     latent = LatentContainer(**cfg.Latent)
     logger.info(
-        "Loading pretrained model from {}".format(cfg.EVAL.confild_pretrained_model_path)
+        "Loading pretrained model from {}".format(
+            cfg.EVAL.confild_pretrained_model_path
+        )
     )
     ppsci.utils.save_load.load_pretrain(
         confild,
@@ -435,9 +437,7 @@ def evaluate(cfg: DictConfig):
 
     y_test_pred = out_normalizer.denormalize(y_test_pred)
     y_test = out_normalizer.denormalize(normed_fois)
-    logger.info(
-        "Result is {}".format(y_test.numpy())
-    )
+    logger.info("Result is {}".format(y_test.numpy()))
 
 
 def inference(cfg):
@@ -462,9 +462,7 @@ def inference(cfg):
     }
     output_dict = cnf_predictor.predict(input_dict, cfg.INFER.batch_size)
 
-    logger.info(
-        "Result is {}".format(output_dict["confild_output"]) 
-    )
+    logger.info("Result is {}".format(output_dict["confild_output"]) )
 
 
 def export(cfg):
