@@ -55,7 +55,6 @@
 
     由于新版本的 Paddle 依赖的 python 版本较高，`pgl` 与 `mpi4py` 的安装可能会出现问题，建议使用[AI Studio快速体验](https://aistudio.baidu.com/projectdetail/7127446)，项目中已经配置好运行环境。
 
-    本案例SU2版本太低(v6.2.0)，因此需要安装指定版本的openmpi和mpi4py(openmpi 1.10.2和mpi4py 3.1.4)。
 ### 3.1 数据集下载
 
 该案例使用的机翼数据集 Airfoil来自 de Avila Belbute-Peres 等人，其中翼型数据集采用 NACA0012 翼型，包括 train, test 以及对应的网格数据 mesh_fine；圆柱数据集是原作者利用软件计算的 CFD 算例。
