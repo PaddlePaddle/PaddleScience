@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
@@ -240,6 +241,7 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     latents_optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr.latents, weight_decay=0.0)(
         latents_model
     )
+    losses = []
 
     for i in range(cfg.TRAIN.epochs):
         cnf_model.train()
@@ -262,8 +264,9 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
             latents_optimizer.clear_grad(set_to_zero=False)
             loss.backward()
             latents_optimizer.step()
-            train_loss.append(loss.item())
-        epoch_loss = paddle.stack(x=train_loss).mean()
+            train_loss.append(loss)
+        epoch_loss = paddle.stack(x=train_loss).mean().item()
+        losses.append(epoch_loss)
         print("epoch {}, train loss {}".format(i + 1, epoch_loss))
         if i % 100 == 0:
             test_error = []
@@ -281,7 +284,7 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                                     "latent_z"
                                 ],
                             }
-                        )
+                        )["confild_output"]
                     )
                     target = out_normalizer.denormalize(test_fois)
                     error = rMAE(prediction=prediction, target=target, dims=spatio_axis)
@@ -291,6 +294,25 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
         if i % 1000 == 0:
             paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
+    # 绘制损失图
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(cfg.TRAIN.epochs), losses, label='Training Loss')
+
+    # 添加标题和标签
+    plt.title('Training Loss over Epochs')
+    plt.xlabel('Epochs')
+    plt.xticks(rotation=45)
+    plt.ylabel('Loss')
+
+    # 添加图例
+    plt.legend()
+
+    # 显示网格线
+    plt.grid(True)
+
+    # 显示图形
+    plt.show()
+
 
 
 def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
@@ -330,6 +352,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     )
 
     criterion = paddle.nn.MSELoss()
+    losses = []
 
     for i in range(cfg.TRAIN.epochs):
         cnf_model.train()
@@ -354,6 +377,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
             latents_optimizer.step()
             train_loss.append(loss)
         epoch_loss = paddle.stack(x=train_loss).mean().item()
+        losses.append(epoch_loss)
         print("epoch {}, train loss {}".format(i + 1, epoch_loss))
         if i % 100 == 0:
             test_error = []
@@ -381,6 +405,24 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
         if i % 1000 == 0:
             paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
+    # 绘制损失图
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(cfg.TRAIN.epochs), losses, label='Training Loss')
+
+    # 添加标题和标签
+    plt.title('Training Loss over Epochs')
+    plt.xlabel('Epochs')
+    plt.xticks(rotation=45)
+    plt.ylabel('Loss')
+
+    # 添加图例
+    plt.legend()
+
+    # 显示网格线
+    plt.grid(True)
+
+    # 显示图形
+    plt.show()
 
 
 def train(cfg):
