@@ -5,7 +5,7 @@ from paddle import nn
 
 
 # https://github.com/erichson/SuperBench/blob/3719ef9010dc081c3f8e9644813764ef56420fc9/eval.py#L123
-class Conv2dDerivative(nn.Module):
+class Conv2dDerivative(nn.Layer):
     def __init__(self, DerFilter, resol, kernel_size=3, name=""):
         super(Conv2dDerivative, self).__init__()
 
@@ -35,7 +35,7 @@ class Conv2dDerivative(nn.Module):
         return derivative / self.resol
 
 
-class LossGenerator(nn.Module):
+class LossGenerator(nn.Layer):
     def __init__(self, dx=2.0 * math.pi / 2048.0, kernel_size=3, device=None):
         super(LossGenerator, self).__init__()
 

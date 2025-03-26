@@ -16,17 +16,17 @@ export MASTER_ADDR=$(hostname)
 ngpu=1
 
 # yaml file
-# yaml_config=./config/operators_poisson.yaml
-# run_name="r0"
-# config="pois-64-pretrain-e1_20_m3"
-
-yaml_config=./config/operators_helmholtz.yaml
+yaml_config=./config/operators_poisson.yaml
 run_name="r0"
-config="helm-64-pretrain-o1_20_m1"
+config="pois-64-pretrain-e1_20_m3"
+
+# yaml_config=./config/operators_helmholtz.yaml
+# run_name="r0"
+# config="helm-64-pretrain-o1_20_m1"
 
 # run command
 # cmd="python train.py --yaml_config=$config_file --config=$config --run_num=$run_num --root_dir=$scratch"
-cmd="python pretrain_basic.py --run_name $run_name --config $config --yaml_config $yaml_config"
+cmd="python3.9 pretrain_basic.py --run_name $run_name --config $config --yaml_config $yaml_config"
 # cmd="python finetune.py --yaml_config=$config_file  --config=$config --run_num=$run_num --root_dir=$scratch --weights=$scratch/expts/helm-64-pretrain-o1_20_m$m_id/r0/checkpoints/backbone.tar"
 
 $cmd
