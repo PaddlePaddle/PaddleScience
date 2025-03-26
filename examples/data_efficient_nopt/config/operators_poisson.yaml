@@ -31,7 +31,7 @@ default: &DEFAULT
   entity: 'entity_name'
   project: 'proj_name'
   group: 'poisson'
-  log_to_wandb: !!bool True
+  log_to_wandb: !!bool False
   distill: !!bool False
   subsample: 1
   exp_dir: './exp/'
@@ -84,7 +84,7 @@ poisson-64-scale-e5_15: &poisson_64_e5_15
   scales_path: '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train_scale.npy'
   train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
   batch_size: 128
-  log_to_wandb: !!bool True
+  log_to_wandb: !!bool False
   learning_rate: 1E-3
 
   mode_cut: 32
@@ -107,7 +107,7 @@ pois-64-pretrain-e1_20: &pois_64_e1_20_pt
   scales_path:  '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e1_20_train_scale.npy'
   train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
   batch_size: 128
-  log_to_wandb: !!bool True
+  log_to_wandb: !!bool False
   mode_cut: 32
   embed_cut: 64
   fc_cut: 2
@@ -128,7 +128,7 @@ pois-64-finetune-e5_15: &pois_64_e5_15_ft
   scales_path:  '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train_scale.npy'
   train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
   batch_size: 128
-  log_to_wandb: !!bool True
+  log_to_wandb: !!bool False
   mode_cut: 32
   embed_cut: 64
   fc_cut: 2

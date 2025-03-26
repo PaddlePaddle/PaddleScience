@@ -1,6 +1,6 @@
 basic_config: &basic_config
   # Run settings
-  log_to_wandb: !!bool True # Use wandb integration
+  log_to_wandb: !!bool False # Use wandb integration
   log_to_screen: !!bool True # Log progress to screen.
   save_checkpoint: !!bool True # Save checkpoints
   checkpoint_save_interval: 100 # Save every # epochs - also saves "best" according to val loss

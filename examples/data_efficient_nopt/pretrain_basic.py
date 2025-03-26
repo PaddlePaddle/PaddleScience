@@ -91,7 +91,7 @@ def add_weight_decay(model, weight_decay=1e-5, inner_lr=1e-3, skip_list=()):
     decay = []
     no_decay = []
     for name, param in model.named_parameters():
-        if not param.requires_grad:
+        if param.stop_gradient:
             continue
         if len(param.squeeze().shape) <= 1 or name in skip_list:
             no_decay.append(param)
@@ -230,24 +230,32 @@ class Trainer:
         if params.optimizer == "adam":
             if self.params.learning_rate < 0:
                 self.optimizer = DAdaptAdam(
-                    parameters, lr=1.0, growth_rate=1.05, log_every=100, decouple=True
+                    parameters,
+                    learning_rate=1.0,
+                    growth_rate=1.05,
+                    log_every=100,
+                    decouple=True,
                 )
             else:
-                self.optimizer = optim.AdamW(parameters, lr=params.learning_rate)
+                self.optimizer = optim.AdamW(
+                    parameters=parameters, learning_rate=params.learning_rate
+                )
         elif params.optimizer == "adan":
             # if self.params.learning_rate < 0:
-            #     self.optimizer =  DAdaptAdan(parameters, lr=1., growth_rate=1.05, log_every=100)
+            #     self.optimizer =  DAdaptAdan(parameters, learning_rate=1., growth_rate=1.05, log_every=100)
             # else:
-            #     self.optimizer = Adan(parameters, lr=params.learning_rate)
+            #     self.optimizer = Adan(parameters, learning_rate=params.learning_rate)
             raise NotImplementedError("Adan not implemented yet")
         elif params.optimizer == "sgd":
             self.optimizer = optim.SGD(
-                self.model.parameters(), lr=params.learning_rate, momentum=0.9
+                parameters=self.model.parameters(),
+                learning_rate=params.learning_rate,
+                momentum=0.9,
             )
         else:
             raise ValueError(f"Optimizer {params.optimizer} not supported")
         self.gscaler = amp.GradScaler(
-            enabled=(self.mp_type == paddle.float16 and params.enable_amp)
+            enable=(self.mp_type == paddle.float16 and params.enable_amp)
         )
 
     def initialize_scheduler(self, params):
