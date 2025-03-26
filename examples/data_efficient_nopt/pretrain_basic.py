@@ -439,7 +439,7 @@ class Trainer:
             self.model.require_backward_grad_sync = (
                 1 + batch_idx
             ) % self.params.accum_grad == 0
-            with amp.autocast(self.params.enable_amp, dtype=self.mp_type):
+            with amp.auto_cast(self.params.enable_amp, dtype=self.mp_type):
                 model_start = time.time()
 
                 output = self.model(inp_blur, mask)
