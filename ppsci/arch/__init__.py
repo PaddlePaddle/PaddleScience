@@ -101,7 +101,7 @@ __all__ = [
     "RegDGCNN",
     "RegPointNet",
     "IFMMLP",
-
+]
 
 
 def build_model(cfg):
