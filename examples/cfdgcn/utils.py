@@ -262,7 +262,9 @@ def plot_field(
             plt.gca().invert_yaxis()
         fig.canvas.draw()
         w, h = fig.canvas.get_width_height()
-        array = np.frombuffer(fig.canvas.print_to_buffer()[0], dtype=np.uint8).reshape((h, w, 4))[..., :3]
+        array = np.frombuffer(fig.canvas.print_to_buffer()[0], dtype=np.uint8).reshape(
+            (h, w, 4)
+        )[..., :3]
         fig.clf()
         fig.clear()
         plt.close()
