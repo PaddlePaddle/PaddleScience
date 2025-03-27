@@ -368,7 +368,7 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 
 PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
-|  | Native | ONNX | TensorRT | macaRT | KLDNN |
+|  | Native | ONNX | TensorRT | macaRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | NVIDIA | ✅ | ✅ | ✅ | / | / |
 | MetaX | ✅ | ✅ | / | ✅ | / |
