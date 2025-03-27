@@ -104,6 +104,8 @@ nav:
         - VelocityGAN: zh/examples/velocity_gan.md
         - TGCN: zh/examples/tgcn.md
         - IOPS: zh/examples/iops.md
+        - Pang-Weather: zh/examples/pangu_weather.md
+        - FengWu: zh/examples/fengwu.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - TADF: zh/examples/TADF.md
