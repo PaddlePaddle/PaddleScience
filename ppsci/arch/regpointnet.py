@@ -40,26 +40,23 @@ class RegPointNet(paddle.nn.Layer):
 
     Args:
         input_keys (Tuple[str, ...]): Keys for input data fields.
-        label_keys (Tuple[str, ...]): Keys for label data fields.
+        output_keys (Tuple[str, ...]): Keys for output data fields.
         weight_keys (Tuple[str, ...]): Keys for weight data fields.
         args (dict): Configuration parameters including:
             - 'emb_dims' (int): Dimensionality of the embedding space.
             - 'dropout' (float): Dropout probability.
-
-    Methods:
-        forward(x): Forward pass through the network.
     """
 
     def __init__(
         self,
         input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
         weight_keys: Tuple[str, ...],
         args,
     ):
         super().__init__()
         self.input_keys = input_keys
-        self.label_keys = label_keys
+        self.output_keys = output_keys
         self.weight_keys = weight_keys
         self.args = args
         self.conv1 = paddle.nn.Conv1D(
@@ -109,19 +106,19 @@ class RegPointNet(paddle.nn.Layer):
         self.bn10 = paddle.nn.BatchNorm1D(num_features=64)
         self.final_linear = paddle.nn.Linear(in_features=64, out_features=1)
 
-    def forward(self, x) -> Dict[str, paddle.Tensor]:
+    def forward(self, x: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         """
         Forward pass of the network.
 
         Args:
-            x (paddle.Tensor): Input tensor of shape (batch_size, 3, num_points).
+            x (Dict[str, paddle.Tensor]): Input tensor of shape (batch_size, 3, num_points).
 
         Returns:
-            Dict[str, paddle.Tensor]: A dictionary where the key is the first element of `self.label_keys`
+            Dict[str, paddle.Tensor]: A dictionary where the key is the first element of `self.output_keys`
                                        and the value is the output tensor of the predicted scalar value.
         """
 
-        x = x[self.input_keys[0]]
+        x: paddle.Tensor = x[self.input_keys[0]]
 
         x_processed = x.transpose(perm=[0, 2, 1])
 
@@ -146,4 +143,4 @@ class RegPointNet(paddle.nn.Layer):
         x = paddle.nn.functional.relu(x=self.bn9(self.linear3(x)))
         x = paddle.nn.functional.relu(x=self.bn10(self.linear4(x)))
         x = self.final_linear(x)
-        return {self.label_keys[0]: x}
+        return {self.output_keys[0]: x}

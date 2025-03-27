@@ -10,6 +10,7 @@
 === "模型训练命令"
 
     ``` sh
+    # windows
     #Est预测：
     python Est.py mode=train
 
@@ -23,6 +24,7 @@
 === "模型评估命令"
 
     ``` sh
+    # windows
      #Est 评估：
     python Est.py
 
