@@ -250,12 +250,6 @@ def main(cfg: DictConfig):
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
-# if cfg.mode == "train":
-#     train(cfg)
-# elif cfg.mode == "eval":
-#     evaluate(cfg)
-
-
 if __name__ == "__main__":
     main()
 ```
