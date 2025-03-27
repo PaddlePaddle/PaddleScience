@@ -19,7 +19,7 @@
     | 微分方程 | [若斯叻方程](./examples/rossler.md) | ✅ | | ✅ | ✅ |
     | 算子学习 | [DeepONet](./examples/deeponet.md) | ✅ | | ✅ | ✅ |
     | 积分方程 | [沃尔泰拉积分方程](./examples/volterra_ide.md) | ✅ | | ✅ | ✅ |
-    | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | | ✅ |
+    | 光纤怪波 | [Optical rogue wave](./examples/nlsmb.md) | ✅ | | ✅ | ✅ |
     | 域分解 | [XPINN](./examples/xpinns.md) | ✅ | | ✅ | ✅ |
     | 布鲁塞尔扩散系统 | [3D-Brusselator](./examples/brusselator3d.md) | ✅ | | | |
     | 符号回归 | [Transformer4SR](./examples/transformer4sr.md) | ✅ | | | |
