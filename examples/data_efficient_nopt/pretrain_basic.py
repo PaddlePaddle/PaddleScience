@@ -3,7 +3,8 @@ import gc
 
 # import logging
 import os
-import pickle as pkl
+
+# import pickle as pkl
 import random
 import time
 
@@ -17,7 +18,6 @@ import paddle.distributed as dist
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-import wandb
 from dadaptation import DAdaptAdam
 
 # from dadaptation import DAdaptAdan
@@ -32,13 +32,14 @@ from utils import logging_utils
 
 # from utils.load_ckpt_utils import load_ckpt
 from utils.YParams import YParams
+from visualdl import LogWriter
 
 # from collections import defaultdict
 # from pdb import set_trace as bp
 
 
 def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
-    x = paddle.sum((pred - target) ** 2, dim=spatial_dim) / paddle.sum(
+    x = paddle.sum((pred - target) ** 2, axis=spatial_dim) / paddle.sum(
         target**2, axis=spatial_dim
     )
     x = paddle.sqrt(x)
@@ -121,10 +122,10 @@ class Trainer:
         self.epoch = 0
         self.debug_grad = params.debug_grad
         self.mp_type = (
-            paddle.bfloat16
+            "bfloat16"
             if paddle.device.cuda.device_count() >= 1
             and paddle.amp.is_bfloat16_supported()
-            else paddle.float16
+            else "float16"
         )
 
         self.iters = 0
@@ -359,18 +360,18 @@ class Trainer:
         """Load model/opt from path"""
         checkpoint = paddle.load(checkpoint_path)
         try:
-            self.model.load_state_dict(checkpoint["model_state"])
+            self.model.set_state_dict(checkpoint["model_state"])
         except:  # noqa
             new_state_dict = OrderedDict()
             for key, val in checkpoint["model_state"].items():
                 name = key[7:]
                 new_state_dict[name] = val
-            self.model.load_state_dict(new_state_dict)
+            self.model.set_state_dict(new_state_dict)
         self.iters = checkpoint["iters"]
         if (
             self.params.resuming
         ):  # restore checkpoint is used for finetuning as well as resuming. If finetuning (i.e., not resuming), restore checkpoint does not load optimizer state, instead uses config specified lr.
-            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            self.optimizer.set_state_dict(checkpoint["optimizer_state_dict"])
             self.startEpoch = checkpoint["epoch"]
             self.epoch = self.startEpoch
         else:
@@ -410,14 +411,11 @@ class Trainer:
                                 int((sigma * 4 + 1) / 2) * 2 + 1,
                                 (_inp.shape[2] // 2) * 2 - 1,
                             )
-                            if _kernel >= 2:
-                                # [https://github.com/PaddlePaddle/Paddle/issues/26568]
-                                raise NotImplementedError(
-                                    "Gaussian blur not implemented"
-                                )
-                                # _inp = functional.gaussian_blur(
-                                #     _inp, kernel_size=[_kernel, _kernel], sigma=sigma
-                                # )
+                            # if _kernel >= 2:
+                            #     # [https://github.com/PaddlePaddle/Paddle/issues/26568]
+                            #     _inp = functional.gaussian_blur(
+                            #         _inp, kernel_size=[_kernel, _kernel], sigma=sigma
+                            #     )
                             inp_blur.append(_inp)
                         inp_blur = paddle.stack(inp_blur, axis=0)
                     else:
@@ -428,11 +426,12 @@ class Trainer:
                     inp_blur = inp.detach().clone()
             except:  # noqa
                 print("DATA FAILLL", inp.shape)
-                time.sleep(600)
+                raise "s"
             if len(inp.shape) == 5:
                 inp = rearrange(inp, "b t c h w -> t b c h w")
                 inp_blur = rearrange(inp_blur, "b t c h w -> t b c h w")
 
+            logwriter = LogWriter(logdir="./runs/data_effient_nopt")
             data_time += time.time() - data_start
             dtime = time.time() - data_start
 
@@ -545,7 +544,7 @@ class Trainer:
                                 "data_shape",
                                 inp.shape,
                             )
-                    self.optimizer.zero_grad(set_to_none=True)
+                    self.optimizer.clear_gradients(set_to_zero=False)
                     if self.scheduler is not None:
                         self.scheduler.step()
                     optimizer_step = time.time() - backward_end
@@ -559,8 +558,14 @@ class Trainer:
                         f"Epoch {self.epoch} Batch {batch_idx} Train Loss {log_nrmse.item()}"
                     )
                 if self.log_to_screen:
+                    logwriter.add_scalar(
+                        "train_avg_loss",
+                        value=log_nrmse.item(),
+                        step=self.iters + steps - 1,
+                    )
                     print(
-                        "Total Times. Batch: {}, Rank: {}, Data Shape: {}, Data time: {}, Forward: {}, Backward: {}, Optimizer: {}".format(
+                        "Total Times. Global step: {}, Batch: {}, Rank: {}, Data Shape: {}, Data time: {}, Forward: {}, Backward: {}, Optimizer: {}".format(
+                            self.iters + steps - 1,
                             batch_idx,
                             self.global_rank,
                             inp.shape,
@@ -689,50 +694,48 @@ class Trainer:
 
     def train(self):
         # This is set up this way based on old code to allow wandb sweeps
-        if self.params.log_to_wandb:
-            if self.sweep_id:
-                wandb.init(dir=self.params.experiment_dir)
-                hpo_config = wandb.config.as_dict()
-                self.params.update_params(hpo_config)
-                # params = self.params
-            else:
-                wandb.init(
-                    dir=self.params.experiment_dir,
-                    config=self.params,
-                    name=self.params.name,
-                    group=self.params.group,
-                    project=self.params.project,
-                    entity=self.params.entity,
-                    resume=True,
-                )
+        # if self.params.log_to_wandb:
+        #     if self.sweep_id:
+        #         wandb.init(dir=self.params.experiment_dir)
+        #         hpo_config = wandb.config.as_dict()
+        #         self.params.update_params(hpo_config)
+        #         # params = self.params
+        #     else:
+        #         wandb.init(
+        #             dir=self.params.experiment_dir,
+        #             config=self.params,
+        #             name=self.params.name,
+        #             group=self.params.group,
+        #             project=self.params.project,
+        #             entity=self.params.entity,
+        #             resume=True,
+        #         )
 
-        if self.sweep_id and dist.is_initialized():
-            param_file = f"temp_hpo_config_{os.environ['SLURM_JOBID']}.pkl"
-            if self.global_rank == 0:
-                with open(param_file, "wb") as f:
-                    pkl.dump(hpo_config, f)
-            dist.barrier()  # Stop until the configs are written by hacky MPI sub
-            if self.global_rank != 0:
-                with open(param_file, "rb") as f:
-                    hpo_config = pkl.load(f)
-            dist.barrier()  # Stop until the configs are written by hacky MPI sub
-            if self.global_rank == 0:
-                os.remove(param_file)
-            # If tuning batch size, need to go from global to local batch size
-            if "batch_size" in hpo_config:
-                hpo_config["batch_size"] = int(
-                    hpo_config["batch_size"] // self.world_size
-                )
-            self.params.update_params(hpo_config)
-            # params = self.params
-            self.initialize_data(
-                self.params
-            )  # This is the annoying redundant part - but the HPs need to be set from wandb
-            self.initialize_model(self.params)
-            self.initialize_optimizer(self.params)
-            self.initialize_scheduler(self.params)
-        if self.params.log_to_wandb:
-            wandb.watch(self.model)
+        # if self.sweep_id and dist.is_initialized():
+        #     param_file = f"temp_hpo_config_{os.environ['SLURM_JOBID']}.pkl"
+        #     if self.global_rank == 0:
+        #         with open(param_file, "wb") as f:
+        #             pkl.dump(hpo_config, f)
+        #     dist.barrier()  # Stop until the configs are written by hacky MPI sub
+        #     if self.global_rank != 0:
+        #         with open(param_file, "rb") as f:
+        #             hpo_config = pkl.load(f)
+        #     dist.barrier()  # Stop until the configs are written by hacky MPI sub
+        #     if self.global_rank == 0:
+        #         os.remove(param_file)
+        #     # If tuning batch size, need to go from global to local batch size
+        #     if "batch_size" in hpo_config:
+        #         hpo_config["batch_size"] = int(
+        #             hpo_config["batch_size"] // self.world_size
+        #         )
+        #     self.params.update_params(hpo_config)
+        #     # params = self.params
+        #     self.initialize_data(
+        #         self.params
+        #     )  # This is the annoying redundant part - but the HPs need to be set from wandb
+        #     self.initialize_model(self.params)
+        #     self.initialize_optimizer(self.params)
+        #     self.initialize_scheduler(self.params)
         self.single_print("Starting Training Loop...")
         # Actually train now, saving checkpoints, logging time, and logging to wandb
         # best_valid_loss = 1.0e6
@@ -757,8 +760,6 @@ class Trainer:
             train_logs.update(valid_logs)
             # train_logs['time/valid_time'] = post_start-valid_start
             post_start = time.time()
-            if self.params.log_to_wandb:
-                wandb.log(train_logs)
             gc.collect()
             paddle.device.cuda.empty_cache()
 
@@ -874,13 +875,6 @@ if __name__ == "__main__":
     trainer = Trainer(params, global_rank, local_rank, device, sweep_id=args.sweep_id)
     if args.sweep_id and trainer.global_rank == 0:
         print(args.sweep_id, trainer.params.entity, trainer.params.project)
-        wandb.agent(
-            args.sweep_id,
-            function=trainer.train,
-            count=1,
-            entity=trainer.params.entity,
-            project=trainer.params.project,
-        )
     else:
         trainer.train()
     if params.log_to_screen:

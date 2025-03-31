@@ -17,12 +17,12 @@ default: &DEFAULT
   optimizer: 'adam'
   scheduler: 'none'
   learning_rate: !!float 1.0
-  max_epochs: 2
+  max_epochs: 500
   scheduler_epochs: 500
   weight_decay: 0
   batch_size: 25
   # misc
-  log_to_screen: !!bool False
+  log_to_screen: !!bool True
   save_checkpoint: !!bool False
   seed: 0
   plot_figs: !!bool False
@@ -45,7 +45,7 @@ default: &DEFAULT
   accum_grad: 1
   enable_amp: !!bool False
   log_interval: 1
-  checkpoint_save_interval: 10
+  checkpoint_save_interval: 1000
   debug_grad: False
 
 poisson: &poisson

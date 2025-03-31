@@ -8,8 +8,8 @@ from argparse import Namespace
 from collections import OrderedDict
 
 import numpy as np
-import torch
-import torch.distributed as dist
+import paddle
+import paddle.distributed as dist
 import yaml
 
 # from utils.data_utils import get_data_loader
@@ -17,15 +17,13 @@ from data_utils.pois_helm_datasets import get_data_loader
 from models.fno import build_fno
 from pretrain_basic import l2_err
 from scipy.stats import linregress
-
-# from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 # from utils.loss_utils import LossMSE
 # from utils.YParams import YParams
 
 
-@torch.no_grad()
+@paddle.no_grad()
 def get_pred(args):
     with open(args.config, "r") as stream:
         config = yaml.load(stream, yaml.FullLoader)
@@ -38,7 +36,10 @@ def get_pred(args):
     save_path = os.path.join(
         save_dir, "fno-prediction-demo%d.pt" % (args.num_demos if args.num_demos else 0)
     )
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if paddle.device.cuda.device_count() >= 1:
+        paddle.set_device("gpu")
+    else:
+        paddle.set_device("cpu")
 
     params = Namespace(**config["default"])
     if not hasattr(params, "n_demos"):
@@ -57,17 +58,18 @@ def get_pred(args):
             params, params.train_path, dist.is_initialized(), train=False
         )  # , pack=data_param.pack_data)
         input_demos, target_demos = next(iter(dataloader_icl))
-        input_demos = input_demos.to(device)
-        target_demos = target_demos.to(device)
+        input_demos = input_demos
+        target_demos = target_demos
 
     # model_param = Namespace(**config['model'])
     # model_param.n_demos = params.n_demos
-    model = build_fno(params).to(device)
+    model = build_fno(params)
 
     if args.ckpt_path:
-        checkpoint = torch.load(args.ckpt_path)
+        raise NotImplementedError("Loading checkpoint is not supported")
+        checkpoint = paddle.load(args.ckpt_path)
         try:
-            model.load_state_dict(checkpoint["model_state"])
+            model.set_state_dict(checkpoint["model_state"])
         except:  # noqa
             new_state_dict = OrderedDict()
             for key, val in checkpoint["model_state"].items():
@@ -111,7 +113,7 @@ def get_pred(args):
     # for u, a_in in dataloader:
     for inputs, targets in pbar:
         # if len(pred_list) > len(dataloader) // 100: break
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs, targets
         if args.num_demos is None or args.num_demos == 0:
             u = model(inputs)
         else:
@@ -124,7 +126,8 @@ def get_pred(args):
         data_loss = l2_err(u.detach(), targets.detach())
         losses.append(data_loss.item())
         data_loss_normalized = l2_err(
-            u.detach() / torch.abs(u).max(), targets.detach() / torch.abs(targets).max()
+            u.detach() / paddle.abs(u).max(),
+            targets.detach() / paddle.abs(targets).max(),
         )
         losses_normalized.append(data_loss_normalized.item())
         # print(data_loss.item())
@@ -133,8 +136,8 @@ def get_pred(args):
 
     # print(np.mean(losses))
     slope, intercept, r, p, se = linregress(
-        torch.cat(pred_list, dim=0).view(-1).numpy(),
-        torch.cat(truth_list, dim=0).view(-1).numpy(),
+        paddle.concat(pred_list, axis=0).view([-1]).numpy(),
+        paddle.concat(truth_list, axis=0).view([-1]).numpy(),
     )
     print(
         "RMSE:",
@@ -146,9 +149,9 @@ def get_pred(args):
         "Slope:",
         slope,
     )
-    truth_arr = torch.cat(truth_list, dim=0)
-    pred_arr = torch.cat(pred_list, dim=0)
-    torch.save(
+    truth_arr = paddle.concat(truth_list, axis=0)
+    pred_arr = paddle.concat(pred_list, axis=0)
+    paddle.save(
         {
             "truth": truth_arr,
             "pred": pred_arr,
@@ -162,7 +165,6 @@ def get_pred(args):
 
 
 if __name__ == "__main__":
-    torch.backends.cudnn.benchmark = True
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, default="config/inference_helmholtz.yaml")
     # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/p/puren93/neuralopt/expts/helm-64-o5_15_ft0/all_mask_m6/checkpoints/ckpt.tar')

@@ -240,13 +240,13 @@ class SpectralConv2dV2(nn.Layer):
         )
 
     def forward(self, x: paddle.Tensor):
-        size_0 = x.size(-2)
-        size_1 = x.size(-1)
+        size_0 = x.shape[-2]
+        size_1 = x.shape[-1]
         batchsize = x.shape[0]
         # dtype = x.dtype
 
         # Compute Fourier coeffcients up to factor of e^(- something constant)
-        x_ft = paddle.fft.rfft2(x.float(), axes=(-2, -1), norm="ortho")
+        x_ft = paddle.fft.rfft2(x.astype(paddle.float32), axes=(-2, -1), norm="ortho")
         x_ft = paddle.as_real(x_ft)
 
         out_ft = paddle.zeros(
