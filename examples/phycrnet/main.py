@@ -79,6 +79,7 @@ def train(cfg: DictConfig):
             },
             "batch_size": 1,
             "num_workers": 0,
+            "auto_collation": True,
         },
         ppsci.loss.FunctionalLoss(functions.train_loss_func),
         {
@@ -97,6 +98,7 @@ def train(cfg: DictConfig):
             },
             "batch_size": 1,
             "num_workers": 0,
+            "auto_collation": True,
         },
         ppsci.loss.FunctionalLoss(functions.val_loss_func),
         {
