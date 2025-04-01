@@ -370,6 +370,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | macaRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| Intel(CPU) | ✅ | ✅ | / | / | ✅ |
 | NVIDIA | ✅ | ✅ | ✅ | / | / |
 | MetaX | ✅ | ✅ | / | ✅ | / |
 
