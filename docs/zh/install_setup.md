@@ -158,7 +158,7 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
     # CMake suite maintained and supported by Kitware (kitware.com/cmake).
     ```
 
-    PyMesh 库需要以 setup 的方式进行安装，命令如下：
+    推荐以 setup 的方式安装 PyMesh 库，命令如下：
 
     ``` sh
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
