@@ -258,18 +258,21 @@ class FNN2d(nn.Layer):
         demo_xs_aug = []
         for _ in range(repeat):
             if sum(sigma_range) > 0:
-                raise NotImplementedError("Gaussian blur is not implemented in paddle.")
-                # sigma = random.uniform(*sigma_range)
-                # # https://github.com/scipy/scipy/blob/v1.11.4/scipy/ndimage/_filters.py#L232
-                # _kernel = min(
-                #     int((sigma * 4 + 1) / 2) * 2 + 1, (x.shape[1] // 2) * 2 - 1
-                # )
+                import random
+
+                sigma = random.uniform(*sigma_range)
+                # https://github.com/scipy/scipy/blob/v1.11.4/scipy/ndimage/_filters.py#L232
+                _kernel = min(
+                    int((sigma * 4 + 1) / 2) * 2 + 1, (x.shape[1] // 2) * 2 - 1
+                )
             mask = paddle.nn.functional.dropout(paddle.ones([1, C, H, W]), p=p)
             ######
+            from .gaussian_blur import gaussian_blur
+
             if sum(sigma_range) > 0:
-                # [TODO]
-                raise NotImplementedError("Gaussian blur is not implemented in paddle.")
-                # _x_aug = torchvision.transforms.functional.gaussian_blur(x.clone(), kernel_size=[_kernel, _kernel], sigma=sigma)
+                _x_aug = gaussian_blur(
+                    x.clone(), kernel_size=[_kernel, _kernel], sigma=sigma
+                )
             else:
                 _x_aug = x.clone()
             _x_aug = _x_aug * mask
@@ -277,9 +280,9 @@ class FNN2d(nn.Layer):
             ######
             _demo_xs_aug = []
             if sum(sigma_range) > 0:
-                # [TODO]
-                raise NotImplementedError("Gaussian blur is not implemented in paddle.")
-                # _demo_xs_aug = torchvision.transforms.functional.gaussian_blur(demo_xs.clone(), kernel_size=[_kernel, _kernel], sigma=sigma)
+                _demo_xs_aug = gaussian_blur(
+                    demo_xs.clone(), kernel_size=[_kernel, _kernel], sigma=sigma
+                )
             else:
                 _demo_xs_aug = demo_xs.clone()
             _demo_xs_aug = _demo_xs_aug * mask

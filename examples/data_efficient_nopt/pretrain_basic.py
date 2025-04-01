@@ -23,6 +23,7 @@ from dadaptation import DAdaptAdam
 # from dadaptation import DAdaptAdan
 from einops import rearrange
 from models.fno import fno_pretrain
+from models.gaussian_blur import gaussian_blur
 from models.vmae import build_vmae
 
 # from paddle import DataParallel
@@ -411,11 +412,11 @@ class Trainer:
                                 int((sigma * 4 + 1) / 2) * 2 + 1,
                                 (_inp.shape[2] // 2) * 2 - 1,
                             )
-                            # if _kernel >= 2:
-                            #     # [https://github.com/PaddlePaddle/Paddle/issues/26568]
-                            #     _inp = functional.gaussian_blur(
-                            #         _inp, kernel_size=[_kernel, _kernel], sigma=sigma
-                            #     )
+                            if _kernel >= 2:
+                                # [https://github.com/PaddlePaddle/Paddle/issues/26568]
+                                _inp = gaussian_blur(
+                                    _inp, kernel_size=[_kernel, _kernel], sigma=sigma
+                                )
                             inp_blur.append(_inp)
                         inp_blur = paddle.stack(inp_blur, axis=0)
                     else:

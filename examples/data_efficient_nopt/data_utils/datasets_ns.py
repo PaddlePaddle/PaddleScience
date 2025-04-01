@@ -1214,7 +1214,7 @@
 #                 int((sigma * 4 + 1) / 2) * 2 + 1, (data_blur.shape[-1] // 2) * 2 - 1
 #             )
 #             if _kernel >= 2:
-#                 data_blur = functional.gaussian_blur(
+#                 data_blur = gaussian_blur(
 #                     data_blur, kernel_size=[_kernel, _kernel], sigma=sigma
 #                 )
 #             data_blur = data_blur.permute(1, 2, 0)
