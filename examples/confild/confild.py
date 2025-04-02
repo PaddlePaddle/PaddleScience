@@ -544,7 +544,7 @@ def export(cfg):
     latnet_solver.export(input_spec, cfg.INFER.Latent.INFER.export_path)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="confild_case1.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="confild_case2.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

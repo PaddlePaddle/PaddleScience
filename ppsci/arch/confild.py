@@ -368,5 +368,9 @@ class LatentContainer(paddle.nn.Layer):
     def forward(self, batch_ids):
         x = batch_ids[self.input_keys[0]]
         selected_latents = paddle.gather(self.latents, x)
-        expanded_latents = selected_latents.reshape([-1] + self.dims)
+        if len(selected_latents.shape) > 1:
+            getShape = [tuple(selected_latents.shape)[0]] + self.dims + [tuple(selected_latents.shape)[1]]
+        else:
+            getShape = [-1] + self.dims
+        expanded_latents = selected_latents.reshape(getShape)
         return {self.output_keys[0]: expanded_latents}
