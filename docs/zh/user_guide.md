@@ -24,7 +24,7 @@ pip install hydra-core
 
 !!! warning
 
-    注意本教程内的打印运行配置方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
+    请注意，本教程中的打印运行配置方法**仅用于调试**，hydra 默认在打印完配置后会立即结束程序。因此，在正常运行程序时请勿加上 `-c job` 参数。
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
@@ -78,7 +78,7 @@ TRAIN:
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
-    这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
+    这种方式通过命令行参数临时重载运行配置，而不会修改 bracket.yaml 文件本身，能够灵活地控制运行时的配置，确保不同实验之间互不干扰。
 
 !!! tip "设置含转义字符的参数值"
 
@@ -211,7 +211,7 @@ ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, inclu
 
 !!! Warning
 
-    Paddle 在 3.0 以及之后的版本中将 PIR 设置为默认的静态图执行模式，因此移除了 `*.pdmodel` 和 `*.pdiparams` 格式的文件，而由 `*.json` 文件代替。
+    在 Paddle 3.0 及之后的版本中，PIR 被设置为默认的静态图执行模式，因此 `*.pdmodel` 格式的文件被移除，改由 `*.json` 文件代替。
     为此 PaddleScience 进行了适配([deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L105-L107))，用户无需关心后缀格式，会根据 Paddle 版本是否支持 PIR，在加载上述文件时，自动替换为正确的后缀名。
 
 #### 1.2.2 ONNX 推理模型导出
@@ -370,6 +370,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 |  | Native | ONNX | TensorRT | macaRT | MKLDNN |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| Intel(CPU) | ✅ | ✅ | / | / | ✅ |
 | NVIDIA | ✅ | ✅ | ✅ | / | / |
 | MetaX | ✅ | ✅ | / | ✅ | / |
 
@@ -831,7 +832,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
     3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
     4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
     5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
-    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    6. `n_jobs: 1`：这设置了可并行运行的试验数量。值为 1 表示试验将顺序执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
     7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
     8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
     9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
@@ -895,7 +896,7 @@ best_value: 0.02460772916674614
 
 #### 2.2.1 数据并行
 
-接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
+接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
 1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
@@ -923,8 +924,8 @@ best_value: 0.02460772916674614
 
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
-
-    EPOCHS = 3000 if not args.epochs else args.epochs
+    ...
+    ...
     ```
 
 2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例
