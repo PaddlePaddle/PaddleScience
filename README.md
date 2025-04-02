@@ -157,7 +157,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
+请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 
@@ -216,7 +216,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - 设置 PYTHONPATH 并手动安装 requirements
 
-        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内临时将环境变量 `PYTHONPATH` 设置为 PaddleScience 的**绝对路径**，如下所示。
 
         ``` shell
         cd PaddleScience
@@ -270,7 +270,7 @@ python -c "import paddle; paddle.utils.run_check()"
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
 
-如使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 提出建议，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
+如在使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 中提出，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
 <!-- --8<-- [end:support] -->
 
 <!-- --8<-- [start:contribution] -->
