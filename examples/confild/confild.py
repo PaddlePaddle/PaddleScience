@@ -310,6 +310,9 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     # 显示网格线
     plt.grid(True)
 
+    # 保存为 PNG 格式
+    plt.savefig('case.png')
+
     # 显示图形
     plt.show()
 
@@ -420,6 +423,9 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
 
     # 显示网格线
     plt.grid(True)
+
+    # 保存为 PNG 格式
+    plt.savefig('case.png')
 
     # 显示图形
     plt.show()

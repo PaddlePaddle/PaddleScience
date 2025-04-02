@@ -356,7 +356,7 @@ class LatentContainer(paddle.nn.Layer):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.dims = [1] * dims if not lumped else [1] + [N_features]
+        self.dims = [1] * dims if not lumped else [1]
         self.expand_dims = " ".join(["1" for _ in range(dims)]) if not lumped else "1"
         self.expand_dims = f"N f -> N {self.expand_dims} f"
         self.latents = self.create_parameter(
