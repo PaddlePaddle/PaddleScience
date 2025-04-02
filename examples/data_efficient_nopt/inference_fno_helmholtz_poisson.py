@@ -66,7 +66,6 @@ def get_pred(args):
     model = build_fno(params)
 
     if args.ckpt_path:
-        raise NotImplementedError("Loading checkpoint is not supported")
         checkpoint = paddle.load(args.ckpt_path)
         try:
             model.set_state_dict(checkpoint["model_state"])
