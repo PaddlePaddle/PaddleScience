@@ -291,7 +291,7 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-        if i % 1000 == 0:
+        if i % 100 == 0:
             paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
     # 绘制损失图
@@ -405,7 +405,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-        if i % 1000 == 0:
+        if i % 100 == 0:
             paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
     # 绘制损失图
@@ -550,7 +550,7 @@ def export(cfg):
     latnet_solver.export(input_spec, cfg.INFER.Latent.INFER.export_path)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="confild_case2.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="confild_case1.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
