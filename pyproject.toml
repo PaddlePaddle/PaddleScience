@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=65", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -46,6 +46,8 @@ exclude = [
     "test_tipc*",
     "test*",
     "tools*",
+    "ppsci/externals*",
+    "ppsci/externals/*",
 ]
 
 [tool.ruff]
@@ -55,12 +57,6 @@ extend-exclude = [
     "./ppsci/geometry/inflation.py",
     "./ppsci/autodiff/__init__.py",
 ]
-
-[tool.setuptools_scm]
-version_file = "ppsci/_version.py"
-tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
-fallback_version = "0.0.0"
-version_scheme = "post-release"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

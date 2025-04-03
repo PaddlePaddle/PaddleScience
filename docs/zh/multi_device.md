@@ -269,7 +269,7 @@
 
 我们在公开的案例文档开头提供了基于 NVIDIA CUDA 训练的参考精度和对应的预训练模型权重，如果需要在指定的硬件上运行，可以参考如下步骤：
 
-1. 如果你的硬件类型尚未接入 PaddlePaddle，则可以参考 [PaddleCustomDevice](https://github.com/PaddlePaddle/PaddleCustomDevice) 官方文档，接入飞桨框架。如果你的硬件类型已接入 PaddlePaddle，但尚未添加到 PaddleScience 的硬件支持列表中，请在 [ppsci/utils/config.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/ppsci/utils/config.py#L215) 和 [deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L217) 中添加你的硬件类型。
+1. 如果你的硬件类型尚未接入 PaddlePaddle，则可以参考 [PaddleCustomDevice](https://github.com/PaddlePaddle/PaddleCustomDevice) 官方文档，接入飞桨框架。如果你的硬件类型已接入 PaddlePaddle，但尚未添加到 PaddleScience 的硬件支持列表中，请在 [ppsci/utils/config.py](https://github.com/PaddlePaddle/PaddleScience/release/1.4/ppsci/utils/config.py#L215) 和 [deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/release/1.4/deploy/python_infer/base.py#L217) 中添加你的硬件类型。
 
 2. 按照案例文档给出的步骤，准备好必要的数据集。
 

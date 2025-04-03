@@ -60,7 +60,7 @@ $$
 
 ## 3. 模型构建
 
-接下来开始讲解如何使用PaddleScience框架实现VelocityGAN。以下内容仅对关键步骤进行阐述，其余细节请参考 [API文档](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/api/arch/)。
+接下来开始讲解如何使用PaddleScience框架实现VelocityGAN。以下内容仅对关键步骤进行阐述，其余细节请参考 [API文档](https://paddlescience-docs.readthedocs.io/zh-cn/release-1.4/zh/api/arch/)。
 
 ### 3.1 数据集介绍
 
