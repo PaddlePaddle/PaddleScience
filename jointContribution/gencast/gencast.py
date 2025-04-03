@@ -20,15 +20,12 @@ Throughout we will refer to notation and equations from [1].
   https://arxiv.org/abs/2206.00364
 """
 
-from typing import Any, Optional, Tuple
+from typing import Optional
 
 import denoiser
 import dpm_solver_plus_plus_2s
-
-import xarray as xr
-import paddle
 import paddle.nn as nn
-import dataclasses
+import xarray as xr
 
 
 class GenCast(nn.Layer):
@@ -48,7 +45,7 @@ class GenCast(nn.Layer):
 
     def __init__(
         self,
-        cfg, 
+        cfg,
     ):
         """Constructs GenCast."""
         super(GenCast, self).__init__()
@@ -60,11 +57,11 @@ class GenCast(nn.Layer):
 
     def _c_in(self, noise_scale: xr.DataArray) -> xr.DataArray:
         """Scaling applied to the noisy targets input to the underlying network."""
-        return (noise_scale**2 + 1)**-0.5
+        return (noise_scale**2 + 1) ** -0.5
 
     def _c_out(self, noise_scale: xr.DataArray) -> xr.DataArray:
         """Scaling applied to the underlying network's raw outputs."""
-        return noise_scale * (noise_scale**2 + 1)**-0.5
+        return noise_scale * (noise_scale**2 + 1) ** -0.5
 
     def _c_skip(self, noise_scale: xr.DataArray) -> xr.DataArray:
         """Scaling applied to the skip connection."""
@@ -80,7 +77,8 @@ class GenCast(nn.Layer):
         noisy_targets: xr.Dataset,
         noise_levels: xr.DataArray,
         forcings: Optional[xr.Dataset] = None,
-        **kwargs) -> xr.Dataset:
+        **kwargs
+    ) -> xr.Dataset:
         """The preconditioned denoising function D from the paper (Eqn 7)."""
         # Convert xarray DataArray to Paddle tensor for operations
         raw_predictions = self._denoiser(
@@ -88,16 +86,17 @@ class GenCast(nn.Layer):
             noisy_targets=noisy_targets * self._c_in(noise_levels),
             noise_levels=noise_levels,
             forcings=forcings,
-            **kwargs)
+            **kwargs
+        )
 
-        return (raw_predictions * self._c_out(noise_levels) +
-                noisy_targets * self._c_skip(noise_levels))
+        return raw_predictions * self._c_out(
+            noise_levels
+        ) + noisy_targets * self._c_skip(noise_levels)
 
     def forward(self, inputs, targets_template, forcings=None, **kwargs):
-        
+
         if self._sampler is None:
             self._sampler = dpm_solver_plus_plus_2s.Sampler(
                 self._preconditioned_denoiser, **self._sampler_config
             )
         return self._sampler(inputs, targets_template, forcings, **kwargs)
-

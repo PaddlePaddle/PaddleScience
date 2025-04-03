@@ -17,13 +17,17 @@
 import dataclasses
 import functools
 import math
-from typing import Any, Callable, Tuple, Optional, Dict, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import dinosaur.associated_legendre as associated_legendre
 import dinosaur.fourier as fourier
 import numpy as np
 import paddle
-
 
 LATITUDE_SPACINGS = dict(
     gauss=associated_legendre.gauss_legendre_nodes,
@@ -37,24 +41,25 @@ def get_latitude_nodes(n: int, spacing: str) -> tuple[np.ndarray, np.ndarray]:
     get_nodes = LATITUDE_SPACINGS.get(spacing)
     if get_nodes is None:
         raise ValueError(
-            f'Unknown spacing: {spacing}'
-            f'available spacings are {list(LATITUDE_SPACINGS.keys())}'
+            f"Unknown spacing: {spacing}"
+            f"available spacings are {list(LATITUDE_SPACINGS.keys())}"
         )
     return get_nodes(n)
 
+
 @dataclasses.dataclass
 class _SphericalHarmonicBasis:
-  """Data structure representing a basis for spherical harmonics.
+    """Data structure representing a basis for spherical harmonics.
 
-  Attributes:
-    f: Fourier matrix.
-    p: Legendre transform coefficients.
-    w: nodal quadrature weights.
-  """
+    Attributes:
+      f: Fourier matrix.
+      p: Legendre transform coefficients.
+      w: nodal quadrature weights.
+    """
 
-  f: np.ndarray
-  p: np.ndarray
-  w: np.ndarray
+    f: np.ndarray
+    p: np.ndarray
+    w: np.ndarray
 
 
 @dataclasses.dataclass(frozen=True)
@@ -82,7 +87,7 @@ class SphericalHarmonics:
     total_wavenumbers: int = 0
     longitude_nodes: int = 0
     latitude_nodes: int = 0
-    latitude_spacing: str = 'gauss'
+    latitude_spacing: str = "gauss"
 
     @property
     def nodal_axes(self) -> tuple[np.ndarray, np.ndarray]:
@@ -162,9 +167,7 @@ class RealSphericalHarmonics(SphericalHarmonics):
     @functools.cached_property
     def nodal_axes(self) -> tuple[np.ndarray, np.ndarray]:
         longitude, _ = fourier.quadrature_nodes(self.longitude_nodes)
-        sin_latitude, _ = get_latitude_nodes(
-            self.latitude_nodes, self.latitude_spacing
-        )
+        sin_latitude, _ = get_latitude_nodes(self.latitude_nodes, self.latitude_spacing)
         return longitude, sin_latitude
 
     @functools.cached_property
@@ -197,7 +200,7 @@ class RealSphericalHarmonics(SphericalHarmonics):
 
     @functools.cached_property
     def mask(self) -> np.ndarray:
-        m, l = np.meshgrid(*self.modal_axes, indexing='ij')
+        m, l = np.meshgrid(*self.modal_axes, indexing="ij")
         return np.abs(m) <= l
 
     @functools.cached_property
@@ -247,10 +250,10 @@ class RealSphericalHarmonics(SphericalHarmonics):
         p = paddle.to_tensor(self.basis.p)
         f = paddle.to_tensor(self.basis.f)
         x = paddle.to_tensor(x)
-        px = paddle.einsum('mjl,...ml->...mj', p, x)
+        px = paddle.einsum("mjl,...ml->...mj", p, x)
         # note: explicitly matrix multiplication seems to be faster than using an
         # explicit FFT at the resolutions we use.
-        fpx = paddle.einsum('im,...mj->...ij', f, px)
+        fpx = paddle.einsum("im,...mj->...ij", f, px)
         return fpx
 
     def transform(self, x):
@@ -258,12 +261,15 @@ class RealSphericalHarmonics(SphericalHarmonics):
         f = self.basis.f
         p = self.basis.p
         wx = w * x
-        fwx = paddle.einsum('im,...ij->...mj', f, wx)
-        pfwx = paddle.einsum('mjl,...mj->...ml', p, fwx)
+        fwx = paddle.einsum("im,...ij->...mj", f, wx)
+        pfwx = paddle.einsum("mjl,...mj->...ml", p, fwx)
         return pfwx
 
     def longitudinal_derivative(self, x: paddle.Tensor) -> paddle.Tensor:
         return fourier.real_basis_derivative(x, axis=-2)
+
+    def _round_to_multiple(x: int, multiple: int) -> int:
+        return multiple * math.ceil(x / multiple)
 
 
 def _unstack_m(x: paddle.Tensor, mesh: None) -> paddle.Tensor:
@@ -277,7 +283,8 @@ def _unstack_m(x: paddle.Tensor, mesh: None) -> paddle.Tensor:
         return unstack(x)
 
     assert x.ndim in {2, 3}, x.shape
-    return unstack(x)  
+    return unstack(x)
+
 
 def _stack_m(x: paddle.Tensor, mesh: None) -> paddle.Tensor:
     """Stack a separate "sign" dimension into single dimension for `m`."""
@@ -290,9 +297,12 @@ def _stack_m(x: paddle.Tensor, mesh: None) -> paddle.Tensor:
         return stack(x)
 
     assert x.ndim in {3, 4}, x.shape
-    return stack(x)  
+    return stack(x)
 
-def _fourier_derivative_for_real_basis_with_zero_imag(x: paddle.Tensor, mesh: None) -> paddle.Tensor:
+
+def _fourier_derivative_for_real_basis_with_zero_imag(
+    x: paddle.Tensor, mesh: None
+) -> paddle.Tensor:
     """Calculate a Fourier basis derivative."""
 
     if mesh is None:
@@ -305,7 +315,7 @@ def _fourier_derivative_for_real_basis_with_zero_imag(x: paddle.Tensor, mesh: No
 @dataclasses.dataclass(frozen=True)
 class FastSphericalHarmonics(SphericalHarmonics):
     """Fast implementation of spherical harmonic transformation for PaddlePaddle.
-    
+
     No stability guarantees are made about the shapes of arrays in the modal
     representation.
 
@@ -315,30 +325,30 @@ class FastSphericalHarmonics(SphericalHarmonics):
     MXU.
 
     """
+
     base_shape_multiple: int | None = None
     reverse_einsum_arg_order: bool | None = None
     stacked_fourier_transforms: bool | None = None
     spmd_mesh: None = None
-    transform_precision: str = 'tensorfloat32'
-    
+    transform_precision: str = "tensorfloat32"
 
     def __post_init__(self):
         model_parallelism = self.spmd_mesh is not None and any(
-            self.spmd_mesh.shape[dim] > 1 for dim in 'zxy'
+            self.spmd_mesh.shape[dim] > 1 for dim in "zxy"
         )
 
         if self.base_shape_multiple is None:
             shape_multiple = 8 if model_parallelism else 1
-            object.__setattr__(self, 'base_shape_multiple', shape_multiple)
+            object.__setattr__(self, "base_shape_multiple", shape_multiple)
 
         if self.reverse_einsum_arg_order is None:
-            object.__setattr__(self, 'reverse_einsum_arg_order', model_parallelism)
+            object.__setattr__(self, "reverse_einsum_arg_order", model_parallelism)
 
         if self.stacked_fourier_transforms is None:
             unstacked_matmuls = math.ceil(self.longitude_wavenumbers / 128)
             stacked_matmuls = 2 * math.ceil(self.longitude_wavenumbers / 256)
             stack = stacked_matmuls <= unstacked_matmuls
-            object.__setattr__(self, 'stacked_fourier_transforms', stack)
+            object.__setattr__(self, "stacked_fourier_transforms", stack)
 
     @functools.cached_property
     def nodal_limits(self) -> tuple[int, int]:
@@ -350,23 +360,9 @@ class FastSphericalHarmonics(SphericalHarmonics):
 
     def _mesh_shape(self) -> tuple[int, int]:
         if self.spmd_mesh is not None:
-            return (self.spmd_mesh.shape['x'], self.spmd_mesh.shape['y'])
+            return (self.spmd_mesh.shape["x"], self.spmd_mesh.shape["y"])
         else:
             return (1, 1)
-
-    @functools.cached_property
-    def nodal_shape(self) -> tuple[int, int]:
-        base = self.base_shape_multiple or 1
-        x_shards, y_shards = self._mesh_shape()
-        shape_multiples = (base * x_shards, base * y_shards)
-        return tuple(map(_round_to_multiple, self.nodal_limits, shape_multiples))
-
-    @functools.cached_property
-    def modal_shape(self) -> tuple[int, int]:
-        base = self.base_shape_multiple or 1
-        x_shards, y_shards = self._mesh_shape()
-        shape_multiples = (2 * base * x_shards, base * y_shards)
-        return tuple(map(_round_to_multiple, self.modal_limits, shape_multiples))
 
     @functools.cached_property
     def nodal_padding(self) -> tuple[int, int]:
@@ -381,9 +377,7 @@ class FastSphericalHarmonics(SphericalHarmonics):
         nodal_pad_x, nodal_pad_y = self.nodal_padding
         longitude, _ = fourier.quadrature_nodes(self.longitude_nodes)
         longitude = paddle.to_tensor(np.pad(longitude, [(0, nodal_pad_x)]))
-        sin_latitude, _ = get_latitude_nodes(
-            self.latitude_nodes, self.latitude_spacing
-        )
+        sin_latitude, _ = get_latitude_nodes(self.latitude_nodes, self.latitude_spacing)
         sin_latitude = paddle.to_tensor(np.pad(sin_latitude, [(0, nodal_pad_y)]))
         return longitude, sin_latitude
 
@@ -392,12 +386,12 @@ class FastSphericalHarmonics(SphericalHarmonics):
         modal_pad_x, modal_pad_y = self.modal_padding
         m_pos = paddle.arange(1, self.longitude_wavenumbers)
         m_pos_neg = paddle.concat([m_pos, -m_pos], axis=0).reshape([-1, 2]).flatten()
-        lon_wavenumbers = paddle.to_tensor(np.pad(
-            np.concatenate([[0, 0], m_pos_neg.numpy()]), [(0, modal_pad_x)]
-        ))
-        tot_wavenumbers = paddle.to_tensor(np.pad(
-            np.arange(self.total_wavenumbers), [(0, modal_pad_y)]
-        ))
+        lon_wavenumbers = paddle.to_tensor(
+            np.pad(np.concatenate([[0, 0], m_pos_neg.numpy()]), [(0, modal_pad_x)])
+        )
+        tot_wavenumbers = paddle.to_tensor(
+            np.pad(np.arange(self.total_wavenumbers), [(0, modal_pad_y)])
+        )
         return lon_wavenumbers, tot_wavenumbers
 
     @functools.cached_property
@@ -406,8 +400,10 @@ class FastSphericalHarmonics(SphericalHarmonics):
 
     @functools.cached_property
     def mask(self) -> paddle.Tensor:
-        m, l = paddle.meshgrid(*self.modal_axes, indexing='ij')
-        i, j = paddle.meshgrid(*(paddle.arange(s) for s in self.modal_shape), indexing='ij')
+        m, l = paddle.meshgrid(*self.modal_axes, indexing="ij")
+        i, j = paddle.meshgrid(
+            *(paddle.arange(s) for s in self.modal_shape), indexing="ij"
+        )
         i_lim, j_lim = self.modal_limits
         return (paddle.abs(m) <= l) & (i != 1) & (i < i_lim) & (j < j_lim)
 
@@ -441,7 +437,7 @@ class FastSphericalHarmonics(SphericalHarmonics):
         )
         f = np.pad(f, [(0, nodal_pad_x), (0, modal_pad_x)])
         if self.stacked_fourier_transforms:
-            f = np.reshape(f, (-1, 2, f.shape[-1] // 2), order='F')
+            f = np.reshape(f, (-1, 2, f.shape[-1] // 2), order="F")
 
         _, wf = fourier.quadrature_nodes(self.longitude_nodes)
         x, wp = get_latitude_nodes(self.latitude_nodes, self.latitude_spacing)
@@ -459,22 +455,21 @@ class FastSphericalHarmonics(SphericalHarmonics):
         p = self.basis.p
         f = self.basis.f
         mesh = self.spmd_mesh
-        einsum_args = (self.reverse_einsum_arg_order, self.transform_precision)
 
         # TODO(shoyer): consider supporting a "stacked" modal representation with
         # positive & negative values of `m` separated. This would allow for omitting
         # this call to _unstack_m().
         x = _unstack_m(x, mesh)
-        x = paddle.einsum('mjl,...sml->...smj', p, x)
+        x = paddle.einsum("mjl,...sml->...smj", p, x)
 
         if self.stacked_fourier_transforms:
             # note: explicit matrix multiplication seems to be faster than using an
             # explicit FFT at the resolutions we use.
-            x = paddle.einsum('ism,...smj->...ij', f, x)
+            x = paddle.einsum("ism,...smj->...ij", f, x)
         else:
             x = _stack_m(x, mesh)
-            x = paddle.einsum('im,...mj->...ij', f, x)
-        
+            x = paddle.einsum("im,...mj->...ij", f, x)
+
         return x
 
     def transform(self, x):
@@ -482,15 +477,14 @@ class FastSphericalHarmonics(SphericalHarmonics):
         f = self.basis.f
         p = self.basis.p
         mesh = self.spmd_mesh
-        einsum_args = (self.reverse_einsum_arg_order, self.transform_precision)
 
         x = w * x
         if self.stacked_fourier_transforms:
-            x = paddle.einsum('ism,...ij->...smj', f, x)
+            x = paddle.einsum("ism,...ij->...smj", f, x)
         else:
-            x = paddle.einsum('im,...ij->...mj', f, x)
+            x = paddle.einsum("im,...ij->...mj", f, x)
             x = _unstack_m(x, mesh)
-        x = paddle.einsum('mjl,...smj->...sml', p, x)
+        x = paddle.einsum("mjl,...smj->...sml", p, x)
         x = _stack_m(x, mesh)
         return x
 
@@ -502,17 +496,20 @@ class FastSphericalHarmonics(SphericalHarmonics):
 class RealSphericalHarmonicsWithZeroImag(FastSphericalHarmonics):
     """Deprecated alias for `FastSphericalHarmonics`."""
 
+
 def _vertical_pad(
     field: paddle.Tensor, mesh: None  # PaddlePaddle 不支持 mesh 分片
 ) -> Tuple[paddle.Tensor, int | None]:
     if field.ndim < 3 or field.shape[0] == 1 or mesh is None:
         return field, None
 
+
 def _vertical_crop(field: paddle.Tensor, padding: int | None) -> paddle.Tensor:
     if not padding:
         return field
     assert field.ndim == 3, field.shape
-    return field[:field.shape[0] - padding, :, :]
+    return field[: field.shape[0] - padding, :, :]
+
 
 def _with_vertical_padding(
     f: Callable[[paddle.Tensor], paddle.Tensor], mesh: None
@@ -536,6 +533,7 @@ def _with_vertical_padding(
 
     return g
 
+
 def numpy_tree_map(f: Callable[[np.ndarray], np.ndarray], x: Any) -> Any:
     if isinstance(x, dict):
         return {k: numpy_tree_map(f, v) for k, v in x.items()}
@@ -546,26 +544,32 @@ def numpy_tree_map(f: Callable[[np.ndarray], np.ndarray], x: Any) -> Any:
     else:
         return f(x)
 
+
 def tree_map_over_nonscalars(
     f: Callable[[Union[np.ndarray, float]], Union[np.ndarray, float]],
     x: Any,
     *,
-    scalar_fn: Callable[[Union[np.ndarray, float]], Union[np.ndarray, float]] = lambda x: x,
-    backend: str = 'numpy',
+    scalar_fn: Callable[
+        [Union[np.ndarray, float]], Union[np.ndarray, float]
+    ] = lambda x: x,
+    backend: str = "numpy",
 ) -> Any:
     """Map `f` over nonscalar pytree leaves, but use `scalar_fn` on scalars."""
     as_array_fn = np.asarray
+
     def g(x: Union[np.ndarray, float]) -> Union[np.ndarray, float]:
         x = as_array_fn(x)
         return f(x) if x.ndim else scalar_fn(x)
+
     return numpy_tree_map(g, x)
 
 
-SPHERICAL_HARMONICS_IMPL_KEY = 'spherical_harmonics_impl'
-SPMD_MESH_KEY = 'spmd_mesh'
+SPHERICAL_HARMONICS_IMPL_KEY = "spherical_harmonics_impl"
+SPMD_MESH_KEY = "spmd_mesh"
 
 
 SphericalHarmonicsImpl = Callable[..., SphericalHarmonics]
+
 
 @dataclasses.dataclass(frozen=True)
 class Grid:
@@ -601,40 +605,41 @@ class Grid:
         (SPMD) paradigm with distributed JAX arrays, if any. Required if using
         model parallelism.
     """
+
     longitude_wavenumbers: int = 0
     total_wavenumbers: int = 0
     longitude_nodes: int = 0
     latitude_nodes: int = 0
-    latitude_spacing: str = 'gauss'
+    latitude_spacing: str = "gauss"
     longitude_offset: float = 0.0
     radius: float | None = None
     spherical_harmonics_impl: SphericalHarmonicsImpl = RealSphericalHarmonics
-    spmd_mesh:  None = None
+    spmd_mesh: None = None
 
     def __post_init__(self):
         if self.radius is None:
             # 默认半径设置为 1.0
-            object.__setattr__(self, 'radius', 1.0)
+            object.__setattr__(self, "radius", 1.0)
 
         if self.latitude_spacing not in LATITUDE_SPACINGS:
             raise ValueError(
                 f'Unsupported `latitude_spacing` "{self.latitude_spacing}". '
-                f'Supported values are: {list(LATITUDE_SPACINGS)}.'
+                f"Supported values are: {list(LATITUDE_SPACINGS)}."
             )
 
     @classmethod
     def with_wavenumbers(
         cls,
         longitude_wavenumbers: int,
-        dealiasing: str = 'quadratic',
-        latitude_spacing: str = 'gauss',
+        dealiasing: str = "quadratic",
+        latitude_spacing: str = "gauss",
         longitude_offset: float = 0.0,
         spherical_harmonics_impl: SphericalHarmonicsImpl = RealSphericalHarmonics,
         radius: Optional[float] = None,
-    ) -> 'Grid':
+    ) -> "Grid":
         """Construct a `Grid` by specifying only wavenumbers."""
 
-        order = {'linear': 2, 'quadratic': 3, 'cubic': 4}.get(dealiasing)
+        order = {"linear": 2, "quadratic": 3, "cubic": 4}.get(dealiasing)
 
         longitude_nodes = order * longitude_wavenumbers + 1
         latitude_nodes = math.ceil(longitude_nodes / 2)
@@ -655,11 +660,11 @@ class Grid:
         cls,
         max_wavenumber: int,
         gaussian_nodes: int,
-        latitude_spacing: str = 'gauss',
+        latitude_spacing: str = "gauss",
         longitude_offset: float = 0.0,
         radius: Optional[float] = None,
         spherical_harmonics_impl: SphericalHarmonicsImpl = RealSphericalHarmonics,
-    ) -> 'Grid':
+    ) -> "Grid":
         """Construct a `Grid` by specifying max wavenumber & the number of nodes.
 
         Args:
@@ -707,44 +712,44 @@ class Grid:
     # sometimes calls these "TQ" (truncated quadratic) grids.
 
     @classmethod
-    def T21(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=21, gaussian_nodes=16, **kwargs)
+    def T21(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=21, gaussian_nodes=16, **kwargs)
 
     @classmethod
-    def T31(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=31, gaussian_nodes=24, **kwargs)
+    def T31(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=31, gaussian_nodes=24, **kwargs)
 
     @classmethod
-    def T42(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=42, gaussian_nodes=32, **kwargs)
+    def T42(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=42, gaussian_nodes=32, **kwargs)
 
     @classmethod
-    def T85(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=85, gaussian_nodes=64, **kwargs)
+    def T85(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=85, gaussian_nodes=64, **kwargs)
 
     @classmethod
-    def T106(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=106, gaussian_nodes=80, **kwargs)
+    def T106(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=106, gaussian_nodes=80, **kwargs)
 
     @classmethod
-    def T119(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=119, gaussian_nodes=90, **kwargs)
+    def T119(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=119, gaussian_nodes=90, **kwargs)
 
     @classmethod
-    def T170(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=170, gaussian_nodes=128, **kwargs)
+    def T170(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=170, gaussian_nodes=128, **kwargs)
 
     @classmethod
-    def T213(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=213, gaussian_nodes=160, **kwargs)
+    def T213(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=213, gaussian_nodes=160, **kwargs)
 
     @classmethod
-    def T340(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=340, gaussian_nodes=256, **kwargs)
+    def T340(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=340, gaussian_nodes=256, **kwargs)
 
     @classmethod
-    def T425(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=425, gaussian_nodes=320, **kwargs)
+    def T425(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=425, gaussian_nodes=320, **kwargs)
 
     # TL* grids do not truncate any frequencies, and hence can only model linear
     # terms exactly. ECMWF used "TL" (truncated linear) grids for semi-Lagrangian
@@ -753,44 +758,44 @@ class Grid:
     # https://www.ecmwf.int/sites/default/files/elibrary/2016/17262-new-grid-ifs.pdf
 
     @classmethod
-    def TL31(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=31, gaussian_nodes=16, **kwargs)
+    def TL31(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=31, gaussian_nodes=16, **kwargs)
 
     @classmethod
-    def TL47(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=47, gaussian_nodes=24, **kwargs)
+    def TL47(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=47, gaussian_nodes=24, **kwargs)
 
     @classmethod
-    def TL63(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=63, gaussian_nodes=32, **kwargs)
+    def TL63(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=63, gaussian_nodes=32, **kwargs)
 
     @classmethod
-    def TL95(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=95, gaussian_nodes=48, **kwargs)
+    def TL95(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=95, gaussian_nodes=48, **kwargs)
 
     @classmethod
-    def TL127(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=127, gaussian_nodes=64, **kwargs)
+    def TL127(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=127, gaussian_nodes=64, **kwargs)
 
     @classmethod
-    def TL159(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=159, gaussian_nodes=80, **kwargs)
+    def TL159(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=159, gaussian_nodes=80, **kwargs)
 
     @classmethod
-    def TL179(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=179, gaussian_nodes=90, **kwargs)
+    def TL179(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=179, gaussian_nodes=90, **kwargs)
 
     @classmethod
-    def TL255(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=255, gaussian_nodes=128, **kwargs)
+    def TL255(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=255, gaussian_nodes=128, **kwargs)
 
     @classmethod
-    def TL639(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=639, gaussian_nodes=320, **kwargs)
+    def TL639(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=639, gaussian_nodes=320, **kwargs)
 
     @classmethod
-    def TL1279(cls, **kwargs) -> 'Grid':
-      return cls.construct(max_wavenumber=1279, gaussian_nodes=640, **kwargs)
+    def TL1279(cls, **kwargs) -> "Grid":
+        return cls.construct(max_wavenumber=1279, gaussian_nodes=640, **kwargs)
 
     # pylint:enable=invalid-name
 
@@ -798,7 +803,7 @@ class Grid:
         """Returns grid attributes as a dictionary."""
         items = dataclasses.asdict(self)
         items[SPHERICAL_HARMONICS_IMPL_KEY] = self.spherical_harmonics_impl.__name__
-        items[SPMD_MESH_KEY] = ''  # PaddlePaddle 不支持 mesh
+        items[SPMD_MESH_KEY] = ""  # PaddlePaddle 不支持 mesh
         return items
 
     @functools.lru_cache(maxsize=None)
@@ -838,7 +843,7 @@ class Grid:
 
     @functools.lru_cache(maxsize=None)
     def nodal_mesh(self) -> Tuple[np.ndarray, np.ndarray]:
-        return np.meshgrid(*self.nodal_axes(), indexing='ij')
+        return np.meshgrid(*self.nodal_axes(), indexing="ij")
 
     @functools.lru_cache(maxsize=None)
     def modal_axes(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -861,7 +866,7 @@ class Grid:
     @functools.lru_cache(maxsize=None)
     def modal_mesh(self) -> Tuple[np.ndarray, np.ndarray]:
         """Mesh of longitudinal and total wavenumbers (m, l) for the modal basis."""
-        return np.meshgrid(*self.spherical_harmonics.modal_axes, indexing='ij')
+        return np.meshgrid(*self.spherical_harmonics.modal_axes, indexing="ij")
 
     @functools.lru_cache(maxsize=None)
     def cos_lat(self) -> np.ndarray:
@@ -900,7 +905,7 @@ class Grid:
         """Computes `(∇²)⁻¹(x)` in the spectral basis."""
         inverse_eigenvalues = paddle.to_tensor(1 / self.laplacian_eigenvalues)
         inverse_eigenvalues[0] = 0
-        inverse_eigenvalues[self.total_wavenumbers:] = 0
+        inverse_eigenvalues[self.total_wavenumbers :] = 0
         assert not paddle.isnan(inverse_eigenvalues).any()
         return x * inverse_eigenvalues
 
@@ -961,14 +966,18 @@ class Grid:
         """Computes `k ✕ v`, where k is the normal unit vector."""
         return (-v[1], v[0])
 
-    def div_cos_lat(self, v: paddle.Tensor | tuple[paddle.Tensor, ...], clip: bool = True) -> paddle.Tensor:
+    def div_cos_lat(
+        self, v: paddle.Tensor | tuple[paddle.Tensor, ...], clip: bool = True
+    ) -> paddle.Tensor:
         """Computes `∇ · (v cosθ)` where θ denotes latitude."""
         raw = (self.d_dlon(v[0]) + self.sec_lat_d_dlat_cos2(v[1])) / self.radius
         if clip:
             return self.clip_wavenumbers(raw)
         return raw
 
-    def curl_cos_lat(self, v: paddle.Tensor | tuple[paddle.Tensor, ...], clip: bool = True) -> paddle.Tensor:
+    def curl_cos_lat(
+        self, v: paddle.Tensor | tuple[paddle.Tensor, ...], clip: bool = True
+    ) -> paddle.Tensor:
         """Computes `k · ∇ ✕ (v cosθ)` where θ denotes latitude."""
         raw = (self.d_dlon(v[1]) - self.sec_lat_d_dlat_cos2(v[0])) / self.radius
         if clip:
@@ -983,4 +992,4 @@ class Grid:
     def integrate(self, z: paddle.Tensor) -> paddle.Tensor:
         """Approximates the integral of nodal values `z` over the sphere."""
         w = self.spherical_harmonics.basis.w * self.radius**2
-        return paddle.einsum('y,...xy->...', w, z)
+        return paddle.einsum("y,...xy->...", w, z)

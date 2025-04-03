@@ -15,23 +15,25 @@
 
 import dataclasses
 import functools
-from typing import Any, cast, Optional, Tuple
-
-from dinosaur import spherical_harmonic
+from typing import Any
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import xarray
 import xarray_tree
+from dinosaur import spherical_harmonic
 
 # Some useful constants useful when dealing with Earth's geometry.
 # The earth isn't really a sphere so these are only approximate, this is the
 # average radius according to https://en.wikipedia.org/wiki/Earth_radius,
 # with the actual value varying from 6378 to 6357km.
-EARTH_RADIUS_KM = 6371.
+EARTH_RADIUS_KM = 6371.0
 # And this is also approximate, but we've chosen to make it consistent with the
 # radius above when modelling the earth as a sphere. This gives a value of
 # around 40030; the actual value varies from 40008 to 40075.
 EARTH_CIRCUMFERENCE_KM = EARTH_RADIUS_KM * 2 * np.pi
+
 
 @dataclasses.dataclass(frozen=True)
 class _ArrayGrid:
@@ -48,24 +50,26 @@ class _ArrayGrid:
         cls,
         lat: np.ndarray,
         lon: np.ndarray,
-    ) -> '_ArrayGrid':
+    ) -> "_ArrayGrid":
         """_ArrayGrid for use with data in specified lat/lon grid (in degrees)."""
 
         latitude_nodes = lat.shape[0]
         longitude_nodes = lon.shape[0]
         latitude_spacing = _infer_latitude_spacing(lat)
-        if latitude_spacing in ['equiangular', 'gauss']:
+        if latitude_spacing in ["equiangular", "gauss"]:
             if longitude_nodes != 2 * latitude_nodes:
                 raise ValueError(
-                    'Unexpected number of longitude nodes. '
-                    f'Expected {2 * latitude_nodes}, got {longitude_nodes}')
-        elif latitude_spacing == 'equiangular_with_poles':
+                    "Unexpected number of longitude nodes. "
+                    f"Expected {2 * latitude_nodes}, got {longitude_nodes}"
+                )
+        elif latitude_spacing == "equiangular_with_poles":
             if longitude_nodes != 2 * (latitude_nodes - 1):
                 raise ValueError(
-                    'Unexpected number of longitude nodes. '
-                    f'Expected {2 * (latitude_nodes - 1)}, got {longitude_nodes}')
+                    "Unexpected number of longitude nodes. "
+                    f"Expected {2 * (latitude_nodes - 1)}, got {longitude_nodes}"
+                )
         else:
-            raise ValueError(f'Unexpected latitude_spacing={latitude_spacing}')
+            raise ValueError(f"Unexpected latitude_spacing={latitude_spacing}")
         max_wavenumber = int(longitude_nodes // 2) - 1
         grid = cls(
             longitude_wavenumbers=max_wavenumber + 1,
@@ -100,30 +104,37 @@ class _ArrayGrid:
 
 
 def _infer_latitude_spacing(lat: np.ndarray) -> str:
-  """Infers the type of latitude spacing given the latitude."""
-  if not np.all(np.diff(lat) > 0.):
-    raise ValueError('Latitude values are expected to be sorted.')
+    """Infers the type of latitude spacing given the latitude."""
+    if not np.all(np.diff(lat) > 0.0):
+        raise ValueError("Latitude values are expected to be sorted.")
 
-  if np.allclose(np.diff(lat), lat[1] - lat[0]):
-    if np.isclose(max(lat), 90.):
-      spacing = 'equiangular_with_poles'
+    if np.allclose(np.diff(lat), lat[1] - lat[0]):
+        if np.isclose(max(lat), 90.0):
+            spacing = "equiangular_with_poles"
+        else:
+            spacing = "equiangular"
     else:
-      spacing = 'equiangular'
-  else:
-    spacing = 'gauss'
-  return spacing
+        spacing = "gauss"
+    return spacing
 
-def _verify_nodal_axes(lat_coords: np.ndarray, lon_coords: np.ndarray,
-                       nodal_axes: Tuple[np.ndarray, np.ndarray]):
+
+def _verify_nodal_axes(
+    lat_coords: np.ndarray,
+    lon_coords: np.ndarray,
+    nodal_axes: Tuple[np.ndarray, np.ndarray],
+):
     nodal_axes_lon, nodal_axes_sin_lat = nodal_axes
     if not np.allclose(nodal_axes_sin_lat, np.sin(np.deg2rad(lat_coords))):
         raise ValueError(
             "Latitude coords don't match those used by "
-            "spherical_harmonic.SphericalHarmonicBasis.")
+            "spherical_harmonic.SphericalHarmonicBasis."
+        )
     if not np.allclose(nodal_axes_lon, np.deg2rad(lon_coords)):
         raise ValueError(
             "Longitude coords don't match those used by "
-            "spherical_harmonic.SphericalHarmonicBasis.")
+            "spherical_harmonic.SphericalHarmonicBasis."
+        )
+
 
 class Grid:
     """xarray wrapper around _ArrayGrid."""
@@ -132,7 +143,7 @@ class Grid:
     def for_nodal_data(
         cls,
         nodal_data: xarray.DataArray,
-        ) -> 'Grid':
+    ) -> "Grid":
         """A Grid for use with a given shape of nodal (lat/lon grid) data.
 
         This uses the maximum number of spherical harmonics that the grid is able
@@ -156,16 +167,13 @@ class Grid:
         """
 
         grid = _ArrayGrid.with_lat_lon(
-            nodal_data.coords['lat'].data,
-            nodal_data.coords['lon'].data)
-        return cls(grid,
-                nodal_data.coords['lat'].data,
-                nodal_data.coords['lon'].data)
+            nodal_data.coords["lat"].data, nodal_data.coords["lon"].data
+        )
+        return cls(grid, nodal_data.coords["lat"].data, nodal_data.coords["lon"].data)
 
-    def __init__(self,
-                grid: _ArrayGrid,
-                lat_coords: np.ndarray,
-                lon_coords: np.ndarray):
+    def __init__(
+        self, grid: _ArrayGrid, lat_coords: np.ndarray, lon_coords: np.ndarray
+    ):
         _verify_nodal_axes(lat_coords, lon_coords, grid.nodal_axes)
         self._underlying = grid
         # Record the exact original lat/lon coords so we can return them exactly
@@ -173,27 +181,30 @@ class Grid:
         # are off by a rounding error.
         self._lat_coords = lat_coords
         self._lon_coords = lon_coords
-        self._longitude_wavenumber_coords, self._total_wavenumber_coords = (
-            grid.modal_axes)
+        (
+            self._longitude_wavenumber_coords,
+            self._total_wavenumber_coords,
+        ) = grid.modal_axes
 
     @property
     def total_wavenumber_coords(self) -> xarray.DataArray:
         """Coords that must be used for 'total_wavenumber' dimension."""
         return xarray.DataArray(
             data=self._total_wavenumber_coords,
-            dims=('total_wavenumber',),
-            coords={'total_wavenumber': self._total_wavenumber_coords})
+            dims=("total_wavenumber",),
+            coords={"total_wavenumber": self._total_wavenumber_coords},
+        )
 
     @property
     def longitude_wavenumber_coords(self) -> xarray.DataArray:
         """Coords that must be used for 'longitude_wavenumber' dimension."""
         return xarray.DataArray(
             data=self._longitude_wavenumber_coords,
-            dims=('longitude_wavenumber',),
-            coords={'longitude_wavenumber': self._longitude_wavenumber_coords})
+            dims=("longitude_wavenumber",),
+            coords={"longitude_wavenumber": self._longitude_wavenumber_coords},
+        )
 
-    def to_nodal(
-                self, modal_data: xarray.DataArray) -> xarray.DataArray:
+    def to_nodal(self, modal_data: xarray.DataArray) -> xarray.DataArray:
         """Applies the inverse spherical harmonic transform.
 
         Args:
@@ -207,23 +218,28 @@ class Grid:
         Corresponding tree where the 'longitude_wavenumber' and
         'total_wavenumber' dimensions are replaced by 'lat', 'lon' dimensions.
         """
+
         def inverse_transform(modal: xarray.DataArray) -> xarray.DataArray:
-            if (not np.all(modal.coords['longitude_wavenumber'] ==
-                            self._longitude_wavenumber_coords) or
-                not np.all(modal.coords['total_wavenumber'] ==
-                            self._total_wavenumber_coords)):
-                raise ValueError('Wavenumber coords don\'t follow required convention.')
+            if not np.all(
+                modal.coords["longitude_wavenumber"]
+                == self._longitude_wavenumber_coords
+            ) or not np.all(
+                modal.coords["total_wavenumber"] == self._total_wavenumber_coords
+            ):
+                raise ValueError("Wavenumber coords don't follow required convention.")
 
             return xarray.apply_ufunc(
-                self._underlying.to_nodal, modal,
-                input_core_dims=[['longitude_wavenumber', 'total_wavenumber']],
-                output_core_dims=[['lon', 'lat']],
+                self._underlying.to_nodal,
+                modal,
+                input_core_dims=[["longitude_wavenumber", "total_wavenumber"]],
+                output_core_dims=[["lon", "lat"]],
             ).assign_coords(
                 lon=self._lon_coords,
                 lat=self._lat_coords,
             )
 
         return xarray_tree.map_structure(inverse_transform, modal_data)
+
 
 def sample(
     key: np.ndarray,  # PaddlePaddle doesn't have jax.random, so using numpy
@@ -262,26 +278,37 @@ def sample(
     if grid is None:
         grid = Grid.for_nodal_data(template)
 
-    dims = [d for d in template.dims if d not in ('lat', 'lon')]
+    dims = [d for d in template.dims if d not in ("lat", "lon")]
     shape = [template.sizes[d] for d in dims]
-    coords = {name: coord for name, coord in template.coords.items()
-              if name not in ('lat', 'lon')}
-    dims.extend(('total_wavenumber', 'longitude_wavenumber'))
-    shape.extend((len(grid.total_wavenumber_coords),
-                  len(grid.longitude_wavenumber_coords)))
-    coords.update({'total_wavenumber': grid.total_wavenumber_coords,
-                   'longitude_wavenumber': grid.longitude_wavenumber_coords})
+    coords = {
+        name: coord
+        for name, coord in template.coords.items()
+        if name not in ("lat", "lon")
+    }
+    dims.extend(("total_wavenumber", "longitude_wavenumber"))
+    shape.extend(
+        (len(grid.total_wavenumber_coords), len(grid.longitude_wavenumber_coords))
+    )
+    coords.update(
+        {
+            "total_wavenumber": grid.total_wavenumber_coords,
+            "longitude_wavenumber": grid.longitude_wavenumber_coords,
+        }
+    )
 
     # Use PaddlePaddle to generate random normal data
-    random_data = np.random.normal(size = shape)
-    coeffs = xarray.DataArray(
-        data=random_data, dims=dims, coords=coords)
+    random_data = np.random.normal(size=shape)
+    coeffs = xarray.DataArray(data=random_data, dims=dims, coords=coords)
 
     # Mask out coefficients which are out of range
-    mask = (abs(coeffs.longitude_wavenumber) <= coeffs.total_wavenumber).astype(np.float32)
+    mask = (abs(coeffs.longitude_wavenumber) <= coeffs.total_wavenumber).astype(
+        np.float32
+    )
 
     # Normalize the coefficients
-    multiplier = mask * np.sqrt(power_spectrum / mask.sum('longitude_wavenumber', skipna=False))
+    multiplier = mask * np.sqrt(
+        power_spectrum / mask.sum("longitude_wavenumber", skipna=False)
+    )
     multiplier *= np.sqrt(4 * np.pi)
 
     # Multiply by coeffs
@@ -293,35 +320,31 @@ def sample(
 
     return result.transpose(*template.dims)
 
+
 def spherical_white_noise_like(template: xarray.Dataset) -> xarray.Dataset:
     """Samples isotropic mean 0 variance 1 white noise on the sphere."""
-    
-    def spherical_white_noise_like_dataarray(data_array: xarray.DataArray) -> xarray.DataArray:
+
+    def spherical_white_noise_like_dataarray(
+        data_array: xarray.DataArray,
+    ) -> xarray.DataArray:
         num_wavenumbers = data_array.lon.shape[0] // 2
         # PaddlePaddle doesn't have hk.next_rng_key(), using numpy for random key generation
         key = np.random.randint(low=0, high=2**32, size=(2,), dtype=np.uint32)
-        
+
         # Create power spectrum
-        power_spectrum_data = np.array([1 / num_wavenumbers for _ in range(num_wavenumbers)])
+        power_spectrum_data = np.array(
+            [1 / num_wavenumbers for _ in range(num_wavenumbers)]
+        )
         power_spectrum = xarray.DataArray(
-            data=power_spectrum_data,
-            dims=['total_wavenumber']
+            data=power_spectrum_data, dims=["total_wavenumber"]
         )
-        
-        return sample(
-            key=key,
-            power_spectrum=power_spectrum,
-            template=data_array
-        )
-    
+
+        return sample(key=key, power_spectrum=power_spectrum, template=data_array)
+
     return template.map(spherical_white_noise_like_dataarray)
 
 
-def rho_inverse_cdf(
-    min_value: float,
-    max_value: float,
-    rho: float,
-    cdf: Any) -> Any:
+def rho_inverse_cdf(min_value: float, max_value: float, rho: float, cdf: Any) -> Any:
     """Quantiles of rho distribution used for noise levels at sampling time.
 
     This is parameterised by rho as in Eqn 5 from the Elucidating paper
@@ -348,9 +371,9 @@ def rho_inverse_cdf(
       Quantiles of the distribution, with same shape/type as `cdf`.
     """
     return (
-        min_value**(1 / rho) + cdf *
-        (max_value**(1 / rho) - min_value**(1 / rho))
-    )**rho
+        min_value ** (1 / rho) + cdf * (max_value ** (1 / rho) - min_value ** (1 / rho))
+    ) ** rho
+
 
 def tree_where(cond: np.ndarray, xs: Any, ys: Any) -> Any:
     """
@@ -376,35 +399,38 @@ def tree_where(cond: np.ndarray, xs: Any, ys: Any) -> Any:
         # Base case: apply np.where directly
         return np.where(cond, xs, ys)
 
+
 def noise_schedule(
-    max_noise_level: float = 80.,
+    max_noise_level: float = 80.0,
     min_noise_level: float = 0.002,
     num_noise_levels: int = 30,
-    rho: float = 7.,
+    rho: float = 7.0,
 ) -> np.ndarray:
     """Computes a descending noise schedule for sampling, ending with zero."""
     noise_levels = rho_inverse_cdf(
         min_value=min_noise_level,
         max_value=max_noise_level,
         rho=rho,
-        cdf=np.linspace(1, 0, num_noise_levels))
-    return np.append(noise_levels, 0.)
+        cdf=np.linspace(1, 0, num_noise_levels),
+    )
+    return np.append(noise_levels, 0.0)
+
 
 def stochastic_churn_rate_schedule(
     noise_levels: np.ndarray,
-    stochastic_churn_rate: float = 0.,
+    stochastic_churn_rate: float = 0.0,
     churn_min_noise_level: float = 0.05,
     churn_max_noise_level: float = 50.0,
 ) -> np.ndarray:
     """Computes a stochastic churn rate for each noise level."""
     num_noise_levels = len(noise_levels) - 1
-    per_step_churn_rate = min(stochastic_churn_rate / num_noise_levels,
-                              np.sqrt(2) - 1)
+    per_step_churn_rate = min(stochastic_churn_rate / num_noise_levels, np.sqrt(2) - 1)
 
     return (
-        (churn_min_noise_level <= noise_levels[:-1]) &
-        (noise_levels[:-1] <= float(churn_max_noise_level))
+        (churn_min_noise_level <= noise_levels[:-1])
+        & (noise_levels[:-1] <= float(churn_max_noise_level))
     ) * per_step_churn_rate
+
 
 def apply_stochastic_churn(
     x: np.ndarray,

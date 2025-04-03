@@ -1,12 +1,12 @@
-# defaults:
-#   - ppsci_default
-#   - TRAIN: train_default
-#   - TRAIN/ema: ema_default
-#   - TRAIN/swa: swa_default
-#   - EVAL: eval_default
-#   - INFER: infer_default
-#   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
-#   - _self_
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
 
 hydra:
   run:
@@ -15,9 +15,9 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
-  # callbacks:
-  #   init_callback:
-  #     _target_: ppsci.utils.callbacks.InitCallback
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -30,15 +30,15 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 num_ensemble_members: 8
 input_duration: "24h"
-target_lead_times: "12h" 
+target_lead_times: "12h"
 
 type: gencast
-data_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/dataset/source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc
-stddev_diffs_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/stats/gencast_stats_diffs_stddev_by_level.nc
-stddev_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/stats/gencast_stats_stddev_by_level.nc
-mean_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/stats/gencast_stats_mean_by_level.nc
-min_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/stats/gencast_stats_min_by_level.nc
-param_path: /workspace/workspace/PaddleScience/jointContribution/graphcast/data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
+data_path: data/dataset/source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc
+stddev_diffs_path: data/stats/gencast_stats_diffs_stddev_by_level.nc
+stddev_path: data/stats/gencast_stats_stddev_by_level.nc
+mean_path: data/stats/gencast_stats_mean_by_level.nc
+min_path: data/stats/gencast_stats_min_by_level.nc
+param_path: data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
 
 sampler_config:
   max_noise_level: 80.0
@@ -109,4 +109,3 @@ denoiser_architecture_config:
   grid_node_num: 65160
   resolution: 1.0
   name: gencast
-

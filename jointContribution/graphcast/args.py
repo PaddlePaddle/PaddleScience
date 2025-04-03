@@ -191,9 +191,15 @@ TASK_13_PRECIP_OUT_pressure_levels = PRESSURE_LEVELS_WEATHERBENCH_13
 TASK_13_PRECIP_OUT_input_duration = ("12h",)
 
 TASK_gencast_input_variables = (
-    TARGET_SURFACE_NO_PRECIP_VARS + ('sea_surface_temperature',) + TARGET_ATMOSPHERIC_VARS + GENERATED_FORCING_VARS + STATIC_VARS
+    TARGET_SURFACE_NO_PRECIP_VARS
+    + ("sea_surface_temperature",)
+    + TARGET_ATMOSPHERIC_VARS
+    + GENERATED_FORCING_VARS
+    + STATIC_VARS
 )
-TASK_gencast_target_variables = TARGET_SURFACE_12h_VARS + ('sea_surface_temperature',) + TARGET_ATMOSPHERIC_VARS
+TASK_gencast_target_variables = (
+    TARGET_SURFACE_12h_VARS + ("sea_surface_temperature",) + TARGET_ATMOSPHERIC_VARS
+)
 TASK_gencast_forcing_variables = GENERATED_FORCING_VARS
 TASK_gencast_pressure_levels = PRESSURE_LEVELS_WEATHERBENCH_13
 TASK_gencast_input_duration = ("24h",)

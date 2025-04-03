@@ -17,9 +17,9 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
+import paddle
 import scipy
 import xarray
-import paddle
 
 
 def get_graph_spatial_features(
@@ -617,7 +617,7 @@ def fourier_features(
     values: paddle.Tensor,
     base_period: float,
     num_frequencies: int,
-    ) -> paddle.Tensor:
+) -> paddle.Tensor:
     """Maps values to sin/cos features for a range of frequencies.
 
     Args:
@@ -640,6 +640,9 @@ def fourier_features(
     angular_frequencies = paddle.to_tensor(2 * np.pi * frequencies, dtype=values.dtype)
     values_times_angular_freqs = values.unsqueeze(-1) * angular_frequencies
     return paddle.concat(
-        [paddle.cos(values_times_angular_freqs),
-         paddle.sin(values_times_angular_freqs)],
-        axis=-1)
+        [
+            paddle.cos(values_times_angular_freqs),
+            paddle.sin(values_times_angular_freqs),
+        ],
+        axis=-1,
+    )

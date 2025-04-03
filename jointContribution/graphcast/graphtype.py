@@ -14,13 +14,13 @@
 import itertools
 import typing
 
-from graphcast import datasets
 import numpy as np
 import paddle
 import scipy
 import trimesh
-from graphcast import utils
 import xarray
+from graphcast import datasets
+from graphcast import utils
 from scipy import sparse
 
 
@@ -45,7 +45,7 @@ class GraphGridMesh(object):
         grid2mesh_edge_feat=None,
         mesh2grid_edge_feat=None,
         global_norm_conditioning=None,
-        adj_mat = None,
+        adj_mat=None,
     ):
         """_summary_
 
@@ -70,9 +70,11 @@ class GraphGridMesh(object):
         """
 
         self.config = config
-        if config.name == 'graphcast':
-            self.meshes = get_hierarchy_of_triangular_meshes_for_sphere(config.mesh_size)
-        elif config.name == 'gencast':
+        if config.name == "graphcast":
+            self.meshes = get_hierarchy_of_triangular_meshes_for_sphere(
+                config.mesh_size
+            )
+        elif config.name == "gencast":
             meshes = get_last_triangular_mesh_for_sphere(config.mesh_size)
             self.meshes = _permute_mesh_to_banded(mesh=meshes)
 
@@ -104,7 +106,7 @@ class GraphGridMesh(object):
                 self._get_max_edge_distance(self.finest_mesh)
                 * config.radius_query_fraction_edge_length
             )
-            if config.name == 'graphcast':
+            if config.name == "graphcast":
                 self._mesh2grid_edge_normalization_factor = (
                     config.mesh2grid_edge_normalization_factor
                 )
@@ -159,9 +161,9 @@ class GraphGridMesh(object):
 
     @property
     def finest_mesh(self):
-        if self.config.name == 'graphcast':
+        if self.config.name == "graphcast":
             return self.meshes[-1]
-        elif self.config.name == 'gencast':
+        elif self.config.name == "gencast":
             return self.meshes
 
     def init_mesh_properties(self):
@@ -235,9 +237,9 @@ class GraphGridMesh(object):
 
     def _init_mesh_graph(self):
         """Build Mesh graph."""
-        if self.config.name == 'graphcast':
+        if self.config.name == "graphcast":
             merged_mesh = merge_meshes(self.meshes)
-        elif self.config.name == 'gencast':
+        elif self.config.name == "gencast":
             merged_mesh = self.meshes
         # Work simply on the mesh edges.
         senders, receivers = faces_to_edges(merged_mesh.faces)
@@ -397,9 +399,11 @@ def get_hierarchy_of_triangular_meshes_for_sphere(
         output_meshes.append(current_mesh)
     return output_meshes
 
+
 def get_last_triangular_mesh_for_sphere(splits: int) -> TriangularMesh:
     return get_hierarchy_of_triangular_meshes_for_sphere(splits=splits)[-1]
-    
+
+
 def _two_split_unit_sphere_triangle_faces(
     triangular_mesh: TriangularMesh,
 ) -> TriangularMesh:
@@ -628,6 +632,7 @@ def in_mesh_triangle_indices(
 
     return grid_edge_indices, mesh_edge_indices
 
+
 def _permute_mesh_to_banded(mesh):
     """Permutes the mesh nodes such that adjacency matrix has banded structure."""
     # Build adjacency matrix.
@@ -646,8 +651,10 @@ def _permute_mesh_to_banded(mesh):
     vertex_permutation_map = {j: i for i, j in enumerate(mesh_permutation)}
     permute_func = np.vectorize(lambda x: vertex_permutation_map[x])
     return TriangularMesh(
-        vertices=merged_mesh.vertices[mesh_permutation], faces=permute_func(merged_mesh.faces)
+        vertices=merged_mesh.vertices[mesh_permutation],
+        faces=permute_func(merged_mesh.faces),
     )
+
 
 def convert_np_to_tensor(graph: GraphGridMesh):
     graph.mesh2mesh_src_index = paddle.to_tensor(

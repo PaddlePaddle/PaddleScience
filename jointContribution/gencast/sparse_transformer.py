@@ -23,24 +23,23 @@ The basic model structure of the transformer and some functions were adapted
 from xlm's transformer_simple.py.
 """
 
-import dataclasses
-import logging
-from typing import Any, Callable, Literal, Optional, Tuple
+import warnings
+from typing import Tuple
 
+import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-import numpy as np
 from graphcast import graphtype
 from scipy import sparse
-import warnings
 from scipy.sparse import SparseEfficiencyWarning
 
-warnings.simplefilter('ignore', SparseEfficiencyWarning)
+warnings.simplefilter("ignore", SparseEfficiencyWarning)
 
 
 class FeedForwardBlock(nn.Layer):
     """Feed-forward block."""
+
     def __init__(self, cfg):
         super(FeedForwardBlock, self).__init__()
         self.cfg = cfg
@@ -52,49 +51,62 @@ class FeedForwardBlock(nn.Layer):
         x = getattr(F, self.cfg.activation)(x)
         return self.ffw_down(x)
 
+
 class MultiheadLinear(nn.Layer):
     def __init__(self, qkv, cfg):
         super(MultiheadLinear, self).__init__()
         self.cfg = cfg
         self.qkv = qkv
-        head_size = self.cfg.value_size if qkv == 'v' else self.cfg.key_size
+        head_size = self.cfg.value_size if qkv == "v" else self.cfg.key_size
 
         self.linear = nn.Linear(
             cfg.num_heads * head_size,
             cfg.num_heads * head_size,
-            bias_attr=False  # with_bias=False
+            bias_attr=False,  # with_bias=False
         )
 
     def forward(self, x):
         out = self.linear(x)
 
-        shape = list(out.shape[:-1]) + [self.cfg.num_heads, self.cfg.value_size if self.qkv == 'v' else self.cfg.key_size]
+        shape = list(out.shape[:-1]) + [
+            self.cfg.num_heads,
+            self.cfg.value_size if self.qkv == "v" else self.cfg.key_size,
+        ]
         return paddle.reshape(out, shape)
 
 
 def get_mask_block_size(mask: sparse.csr_matrix) -> int:
     """Get blocksize of the adjacency matrix (attn mask) for the permuted mesh."""
     # sub-diagonal bandwidth
-    lbandwidth = (
-        np.arange(mask.shape[0]) - (mask != 0).argmax(axis=0) + 1).max()
+    lbandwidth = (np.arange(mask.shape[0]) - (mask != 0).argmax(axis=0) + 1).max()
     # super-diagonal bandwidth
     ubandwidth = (
-        (mask.shape[0]-1) - np.argmax(mask[::-1,:] != 0, axis=0
-                                    ) - np.arange(mask.shape[0]) + 1).max()
+        (mask.shape[0] - 1)
+        - np.argmax(mask[::-1, :] != 0, axis=0)
+        - np.arange(mask.shape[0])
+        + 1
+    ).max()
     block_size = np.maximum(lbandwidth, ubandwidth)
     return block_size
 
 
-def triblockdiag_softmax(logits: Tuple[paddle.Tensor, paddle.Tensor, paddle.Tensor]
-                         ) -> Tuple[paddle.Tensor, paddle.Tensor, paddle.Tensor]:
+def triblockdiag_softmax(
+    logits: Tuple[paddle.Tensor, paddle.Tensor, paddle.Tensor]
+) -> Tuple[paddle.Tensor, paddle.Tensor, paddle.Tensor]:
     """Softmax given the diag, upper diag, and lower diag logit blocks."""
 
     logits_d, logits_u, logits_l = logits
 
-    m = paddle.max(paddle.stack([
-        paddle.max(logits_d, axis=-1, keepdim=True),
-        paddle.max(logits_u, axis=-1, keepdim=True),
-        paddle.max(logits_l, axis=-1, keepdim=True)]), axis=0)
+    m = paddle.max(
+        paddle.stack(
+            [
+                paddle.max(logits_d, axis=-1, keepdim=True),
+                paddle.max(logits_u, axis=-1, keepdim=True),
+                paddle.max(logits_l, axis=-1, keepdim=True),
+            ]
+        ),
+        axis=0,
+    )
 
     unnormalized_d = paddle.exp(logits_d - m)
     unnormalized_u = paddle.exp(logits_u - m)
@@ -113,27 +125,35 @@ def triblockdiag_softmax(logits: Tuple[paddle.Tensor, paddle.Tensor, paddle.Tens
     return (logits_d, logits_u, logits_l)
 
 
-
-def layernorm(x: paddle.Tensor, create_scale: bool, create_offset: bool) -> paddle.Tensor:
+def layernorm(
+    x: paddle.Tensor, create_scale: bool, create_offset: bool
+) -> paddle.Tensor:
     """Layer normalization using PaddlePaddle."""
     layer_norm = paddle.nn.LayerNorm(
         normalized_shape=x.shape[-1],  # Normalize across the last dimension
-        weight_attr=paddle.ParamAttr(initializer=paddle.nn.initializer.Constant(1.0) if create_scale else None),
-        bias_attr=paddle.ParamAttr(initializer=paddle.nn.initializer.Constant(0.0) if create_offset else None),
-        epsilon=1e-5
+        weight_attr=paddle.ParamAttr(
+            initializer=paddle.nn.initializer.Constant(1.0) if create_scale else None
+        ),
+        bias_attr=paddle.ParamAttr(
+            initializer=paddle.nn.initializer.Constant(0.0) if create_offset else None
+        ),
+        epsilon=1e-5,
     )
     return layer_norm(x)
 
-def mask_block_diags(mask: sparse.csr_matrix,
-                     num_padding_nodes: int,
-                     block_size: int) -> paddle.Tensor:
+
+def mask_block_diags(
+    mask: sparse.csr_matrix, num_padding_nodes: int, block_size: int
+) -> paddle.Tensor:
     """Pad and reshape mask diag, super-diag and sub-diag blocks."""
     # Add zero padding to the mask
     mask_padding_rows = sparse.csr_matrix(
-        (num_padding_nodes, mask.shape[1]), dtype=np.int32)
+        (num_padding_nodes, mask.shape[1]), dtype=np.int32
+    )
     mask = sparse.vstack([mask, mask_padding_rows])
     mask_padding_cols = sparse.csr_matrix(
-        (mask.shape[0], num_padding_nodes), dtype=np.int32)
+        (mask.shape[0], num_padding_nodes), dtype=np.int32
+    )
     mask = sparse.hstack([mask, mask_padding_cols])
 
     assert (mask.shape[-1] % block_size) == 0
@@ -141,24 +161,47 @@ def mask_block_diags(mask: sparse.csr_matrix,
     # Convert the sparse mask to a dense format for manipulation
     mask_dense = mask.toarray()
 
-    mask_diag_blocks = paddle.stack([
-        paddle.to_tensor(mask_dense[i * block_size:(i + 1) * block_size, i * block_size:(i + 1) * block_size])
-        for i in range(mask_dense.shape[0] // block_size)
-    ])
+    mask_diag_blocks = paddle.stack(
+        [
+            paddle.to_tensor(
+                mask_dense[
+                    i * block_size : (i + 1) * block_size,
+                    i * block_size : (i + 1) * block_size,
+                ]
+            )
+            for i in range(mask_dense.shape[0] // block_size)
+        ]
+    )
 
     mask_upper_diag_blocks = paddle.stack(
-        [paddle.to_tensor(mask_dense[i * block_size:(i + 1) * block_size, (i + 1) * block_size:(i + 2) * block_size])
-         for i in range(mask_dense.shape[0] // block_size - 1)] +
-        [paddle.zeros((block_size, block_size), dtype=mask_diag_blocks.dtype)]
+        [
+            paddle.to_tensor(
+                mask_dense[
+                    i * block_size : (i + 1) * block_size,
+                    (i + 1) * block_size : (i + 2) * block_size,
+                ]
+            )
+            for i in range(mask_dense.shape[0] // block_size - 1)
+        ]
+        + [paddle.zeros((block_size, block_size), dtype=mask_diag_blocks.dtype)]
     )
 
     mask_lower_diag_blocks = paddle.stack(
-        [paddle.zeros((block_size, block_size), dtype=mask_diag_blocks.dtype)] +
-        [paddle.to_tensor(mask_dense[(i + 1) * block_size:(i + 2) * block_size, i * block_size:(i + 1) * block_size])
-         for i in range(mask_dense.shape[0] // block_size - 1)]
+        [paddle.zeros((block_size, block_size), dtype=mask_diag_blocks.dtype)]
+        + [
+            paddle.to_tensor(
+                mask_dense[
+                    (i + 1) * block_size : (i + 2) * block_size,
+                    i * block_size : (i + 1) * block_size,
+                ]
+            )
+            for i in range(mask_dense.shape[0] // block_size - 1)
+        ]
     )
 
-    mask = paddle.stack([mask_diag_blocks, mask_upper_diag_blocks, mask_lower_diag_blocks])
+    mask = paddle.stack(
+        [mask_diag_blocks, mask_upper_diag_blocks, mask_lower_diag_blocks]
+    )
     mask = paddle.unsqueeze(mask, axis=(0, 3))
     return mask
 
@@ -198,12 +241,10 @@ class LinearNormConditioning(nn.Layer):
         super(LinearNormConditioning, self).__init__()
         self.linear = nn.Linear(
             in_features,
-            out_features*2,
+            out_features * 2,
         )
 
     def forward(self, inputs: paddle.Tensor, norm_conditioning: paddle.Tensor):
-        #print('inputs',inputs)
-        feature_size = inputs.shape[-1]
 
         conditional_scale_offset = self.linear(norm_conditioning)
         scale_minus_one, offset = paddle.split(conditional_scale_offset, 2, axis=-1)
@@ -217,33 +258,40 @@ class Block(nn.Layer):
     def __init__(self, config):
         super(Block, self).__init__()
         self._cfg = config
-        
-        self.norm_conditioning = LinearNormConditioning(config.norm_conditioning_feat, config.mesh_node_emb_dim)
-        self.norm_conditioning_1 = LinearNormConditioning(config.norm_conditioning_feat, config.mesh_node_emb_dim)
+
+        self.norm_conditioning = LinearNormConditioning(
+            config.norm_conditioning_feat, config.mesh_node_emb_dim
+        )
+        self.norm_conditioning_1 = LinearNormConditioning(
+            config.norm_conditioning_feat, config.mesh_node_emb_dim
+        )
         self.ffw = FeedForwardBlock(config)
-        
-        self.mha_final_layer = nn.Linear(config.num_heads * config.value_size, config.d_model)
-        self.mha_proj_q = MultiheadLinear('q', config)
-        self.mha_proj_k = MultiheadLinear('k', config)
-        self.mha_proj_v = MultiheadLinear('v', config)
+
+        self.mha_final_layer = nn.Linear(
+            config.num_heads * config.value_size, config.d_model
+        )
+        self.mha_proj_q = MultiheadLinear("q", config)
+        self.mha_proj_k = MultiheadLinear("k", config)
+        self.mha_proj_v = MultiheadLinear("v", config)
 
     def forward(self, graph):
         # x shape is (batch, num_nodes, feature_dim)
-        
-        mask = graph.adj_mat ** self._cfg.attention_k_hop
+
+        mask = graph.adj_mat**self._cfg.attention_k_hop
         self.mask_block_size = get_mask_block_size(mask)
 
-        self.num_padding_nodes = int(np.ceil(
-                mask.shape[0]/self.mask_block_size)*self.mask_block_size
-                                        - mask.shape[0])
-        self.mask = mask_block_diags(
-            mask, self.num_padding_nodes, self.mask_block_size)
+        self.num_padding_nodes = int(
+            np.ceil(mask.shape[0] / self.mask_block_size) * self.mask_block_size
+            - mask.shape[0]
+        )
+        self.mask = mask_block_diags(mask, self.num_padding_nodes, self.mask_block_size)
 
         x = graph.mesh_node_feat
         x = paddle.transpose(x, perm=[1, 0, 2])
         num_nodes = x.shape[1]
+
         def attn(x):
-            if self._cfg.attention_type == 'triblockdiag_mha':
+            if self._cfg.attention_type == "triblockdiag_mha":
                 # We pad -> reshape -> compute attn -> reshape -> select at each block
                 # so as to avoid complications involved in making the norm layers and
                 # ffw blocks account for the padding. However, this might be decreasing
@@ -251,36 +299,41 @@ class Block(nn.Layer):
 
                 # Add padding so that number of nodes is divisible into blocks
                 x = F.pad(x, [0, 0, 0, self.num_padding_nodes, 0, 0])
-                x = x.reshape([x.shape[0],
-                               x.shape[1] // self.mask_block_size,
-                               self.mask_block_size,
-                               x.shape[-1]])
+                x = x.reshape(
+                    [
+                        x.shape[0],
+                        x.shape[1] // self.mask_block_size,
+                        self.mask_block_size,
+                        x.shape[-1],
+                    ]
+                )
                 x = self.triblockdiag_mha(x, x, mask=self.mask, cfg=self._cfg)
-                x = x.reshape([x.shape[0],
-                               num_nodes + self.num_padding_nodes,
-                               x.shape[-1]])
+                x = x.reshape(
+                    [x.shape[0], num_nodes + self.num_padding_nodes, x.shape[-1]]
+                )
                 return x[:, :num_nodes, :]
             else:
                 raise NotImplementedError()
 
         norm_conditioning_layer = self.norm_conditioning(
-                layernorm(x, create_scale=False, create_offset=False),
-                norm_conditioning=paddle.unsqueeze(graph.global_norm_conditioning, axis=1)
-            )
+            layernorm(x, create_scale=False, create_offset=False),
+            norm_conditioning=paddle.unsqueeze(graph.global_norm_conditioning, axis=1),
+        )
 
         x = x + attn(norm_conditioning_layer)
 
         norm_conditioning_layer = self.norm_conditioning_1(
-                layernorm(x, create_scale=False, create_offset=False),
-                norm_conditioning=paddle.unsqueeze(graph.global_norm_conditioning, axis=1)
-            )
+            layernorm(x, create_scale=False, create_offset=False),
+            norm_conditioning=paddle.unsqueeze(graph.global_norm_conditioning, axis=1),
+        )
         x = x + self.ffw(norm_conditioning_layer)
         x = paddle.transpose(x, perm=[1, 0, 2])
         graph.mesh_node_feat = x
         return graph
 
-    def triblockdiag_mha(self, q_input: paddle.Tensor, kv_input: paddle.Tensor,
-                     mask: paddle.Tensor, cfg) -> paddle.Tensor:
+    def triblockdiag_mha(
+        self, q_input: paddle.Tensor, kv_input: paddle.Tensor, mask: paddle.Tensor, cfg
+    ) -> paddle.Tensor:
         """Triblockdiag multihead attention."""
 
         # q_inputs, kv_input: (batch, num_blocks, block_size, num_heads, d_model)
@@ -288,11 +341,11 @@ class Block(nn.Layer):
         k = self.mha_proj_k(kv_input)
         v = self.mha_proj_v(kv_input)
 
-        k = F.pad(k, [0, 0, 0, 0, 1, 1], data_format='NDHWC')
-        v = F.pad(v, [0, 0, 0, 0, 1, 1], data_format='NDHWC')
+        k = F.pad(k, [0, 0, 0, 0, 1, 1], data_format="NDHWC")
+        v = F.pad(v, [0, 0, 0, 0, 1, 1], data_format="NDHWC")
 
         def qk_prod(queries, keys):
-            return paddle.einsum('bnqhd,bnkhd->bnhqk', queries, keys)
+            return paddle.einsum("bnqhd,bnkhd->bnhqk", queries, keys)
 
         # q shape is (batch, num_blocks, block_size, num_heads, qk_dim)
         # k shape is (batch, num_blocks + 2, block_size, num_heads, qk_dim)
@@ -305,10 +358,12 @@ class Block(nn.Layer):
         logits_u = paddle.where(mask[:, 1, ...], logits_u, paddle.to_tensor(-1e30))
         logits_l = paddle.where(mask[:, 2, ...], logits_l, paddle.to_tensor(-1e30))
 
-        logits_d, logits_u, logits_l = triblockdiag_softmax((logits_d, logits_u, logits_l))
+        logits_d, logits_u, logits_l = triblockdiag_softmax(
+            (logits_d, logits_u, logits_l)
+        )
 
         def av_prod(attn_weights, values):
-            return paddle.einsum('bnhqk,bnkhd->bnqhd', attn_weights, values)
+            return paddle.einsum("bnhqk,bnkhd->bnqhd", attn_weights, values)
 
         out_d = av_prod(logits_d, v[:, 1:-1, ...])
         out_u = av_prod(logits_u, v[:, 2:, ...])
@@ -329,8 +384,7 @@ class Transformer(nn.Layer):
     Outputs an embedding for each 'node'/'position' rather than logits.
     """
 
-    def __init__(self,
-                 config):
+    def __init__(self, config):
         super(Transformer, self).__init__()
 
         self.block = nn.Sequential()
@@ -340,11 +394,13 @@ class Transformer(nn.Layer):
                 Block(config),
             )
 
-        self.final_norm_conditioning = LinearNormConditioning(config.norm_conditioning_feat, config.mesh_node_emb_dim)
+        self.final_norm_conditioning = LinearNormConditioning(
+            config.norm_conditioning_feat, config.mesh_node_emb_dim
+        )
 
     def forward(self, x: graphtype.GraphGridMesh):
         # node_features expected to have shape (batch, num_nodes, d)
-        adj_mat=_get_adj_matrix_for_edge_set(
+        adj_mat = _get_adj_matrix_for_edge_set(
             graph=x,
             add_self_edges=True,
         )
@@ -355,9 +411,9 @@ class Transformer(nn.Layer):
         node_features = x.mesh_node_feat
         node_features = paddle.transpose(node_features, perm=[1, 0, 2])
         node_features = self.final_norm_conditioning(
-                layernorm(node_features, create_scale=False, create_offset=False),
-                norm_conditioning=paddle.unsqueeze(x.global_norm_conditioning, axis=1)
-            )
+            layernorm(node_features, create_scale=False, create_offset=False),
+            norm_conditioning=paddle.unsqueeze(x.global_norm_conditioning, axis=1),
+        )
         node_features = paddle.transpose(node_features, perm=[1, 0, 2])
         x.mesh_node_feat = node_features
 

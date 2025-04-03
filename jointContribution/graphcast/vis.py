@@ -162,4 +162,3 @@ def log_images(
         fig_title += f" at {level} hPa"
 
     plot_data(data, fig_title, plot_size, robust, file=file)
-

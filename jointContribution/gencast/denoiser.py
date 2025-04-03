@@ -13,35 +13,35 @@
 # limitations under the License.
 """Support for wrapping a general Predictor to act as a Denoiser."""
 
-import os
-import dataclasses
 import copy
-from typing import Any, Callable, Mapping, Optional, Sequence, Tuple
+import os
+import pickle
+from typing import Optional
+from typing import Sequence
 
-from graphcast import utils 
-
+import numpy as np
 import paddle
 import paddle.nn as nn
-import numpy as np
 import xarray as xr
+from graphcast import datasets
 from graphcast import graphcast
-from graphcast import datasets 
-import pickle
 from graphcast import graphtype
-
+from graphcast import utils
 
 
 class FourierFeaturesMLP(nn.Layer):
     """A simple MLP applied to Fourier features of values or their logarithms."""
 
-    def __init__(self,
-                 base_period: float,
-                 num_frequencies: int,
-                 output_sizes: Sequence[int],
-                 apply_log_first: bool = False,
-                 w_init: Optional[nn.initializer.Initializer] = None,
-                 activation: Optional[nn.Layer] = nn.GELU(),
-                 **mlp_kwargs):
+    def __init__(
+        self,
+        base_period: float,
+        num_frequencies: int,
+        output_sizes: Sequence[int],
+        apply_log_first: bool = False,
+        w_init: Optional[nn.initializer.Initializer] = None,
+        activation: Optional[nn.Layer] = nn.GELU(),
+        **mlp_kwargs,
+    ):
         """Initializes the module.
 
         Args:
@@ -76,18 +76,18 @@ class FourierFeaturesMLP(nn.Layer):
             if i < num_layers - 1:
                 layers.append(activation)
             input_size = output_size
-        
+
         self._mlp = nn.Sequential(*layers)
 
     def forward(self, values: paddle.Tensor) -> paddle.Tensor:
         if self._apply_log_first:
             values = paddle.log(values)
-        features = utils.fourier_features(values, self._base_period, self._num_frequencies)
+        features = utils.fourier_features(
+            values, self._base_period, self._num_frequencies
+        )
 
         return self._mlp(features)
 
-
-  
 
 class Denoiser(nn.Layer):
     """Wraps a general deterministic Predictor to act as a Denoiser.
@@ -118,7 +118,8 @@ class Denoiser(nn.Layer):
         noisy_targets: xr.Dataset,
         noise_levels: xr.DataArray,
         forcings: Optional[xr.Dataset] = None,
-        **kwargs) -> xr.Dataset:
+        **kwargs,
+    ) -> xr.Dataset:
 
         if forcings is None:
             forcings = xr.Dataset()
@@ -126,17 +127,15 @@ class Denoiser(nn.Layer):
 
         if noise_levels.dims != ("batch",):
             raise ValueError("noise_levels expected to be shape (batch,).")
-        
+
         noise_level_encodings = self._noise_level_encoder(
             paddle.to_tensor(noise_levels.values)
         )
 
         stacked_inputs = datasets.dataset_to_stacked(inputs)
-        
+
         stacked_forcings = datasets.dataset_to_stacked(forcings)
-        stacked_inputs = xr.concat(
-            [stacked_inputs, stacked_forcings], dim="channels"
-        )
+        stacked_inputs = xr.concat([stacked_inputs, stacked_forcings], dim="channels")
 
         stacked_inputs = stacked_inputs.transpose("lat", "lon", ...)
         lat_dim, lon_dim, batch_dim, feat_dim = stacked_inputs.shape
@@ -148,7 +147,9 @@ class Denoiser(nn.Layer):
         if os.path.exists(graph_template_path):
             graph_template = pickle.load(open(graph_template_path, "rb"))
         else:
-            graph_template = graphtype.GraphGridMesh(self.cfg.denoiser_architecture_config)
+            graph_template = graphtype.GraphGridMesh(
+                self.cfg.denoiser_architecture_config
+            )
         graph = copy.deepcopy(graph_template)
 
         graph.grid_node_feat = np.concatenate(
@@ -160,11 +161,11 @@ class Denoiser(nn.Layer):
         )
         graph.global_norm_conditioning = noise_level_encodings
 
-        predictor = self._predictor(
-            graph=graphtype.convert_np_to_tensor(graph)
-        )
+        predictor = self._predictor(graph=graphtype.convert_np_to_tensor(graph))
 
         grid_node_outputs = predictor.grid_node_feat
-        raw_predictions = predictor.grid_node_outputs_to_prediction(grid_node_outputs, noisy_targets)
+        raw_predictions = predictor.grid_node_outputs_to_prediction(
+            grid_node_outputs, noisy_targets
+        )
 
         return raw_predictions

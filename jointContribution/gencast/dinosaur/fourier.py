@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """Real Fourier basis evaluation, and derivative coefficients."""
-import paddle
 import numpy as np
+import paddle
 import scipy.linalg
 
 
@@ -41,8 +41,8 @@ def real_basis(wavenumbers: int, nodes: int) -> np.ndarray:
     """
     if nodes < wavenumbers:
         raise ValueError(
-            '`real_basis` requires nodes >= wavenumbers; '
-            f'got m = {nodes} and n = {wavenumbers}.'
+            "`real_basis` requires nodes >= wavenumbers; "
+            f"got m = {nodes} and n = {wavenumbers}."
         )
 
     dft = scipy.linalg.dft(nodes)[:, :wavenumbers] / np.sqrt(np.pi)
@@ -68,9 +68,9 @@ def real_basis_derivative(u: paddle.Tensor, axis: int = -1) -> paddle.Tensor:
         The derivative of `u` along `axis`.
     """
     if u.shape[axis] % 2 != 1:
-        raise ValueError(f'{u.shape=} along {axis=} is not odd')
+        raise ValueError(f"{u.shape=} along {axis=} is not odd")
     if axis >= 0:
-        raise ValueError('axis must be negative')
+        raise ValueError("axis must be negative")
 
     i = paddle.arange(u.shape[axis]).reshape((-1,) + (1,) * (-1 - axis))
     j = (i + 1) // 2
@@ -85,8 +85,8 @@ def real_basis_with_zero_imag(wavenumbers: int, nodes: int) -> np.ndarray:
     """Real basis with a zero imaginary part."""
     if nodes < wavenumbers:
         raise ValueError(
-            '`real_basis` requires nodes >= wavenumbers; '
-            f'got m = {nodes} and n = {wavenumbers}.'
+            "`real_basis` requires nodes >= wavenumbers; "
+            f"got m = {nodes} and n = {wavenumbers}."
         )
 
     dft = scipy.linalg.dft(nodes)[:, :wavenumbers] / np.sqrt(np.pi)
@@ -106,11 +106,11 @@ def real_basis_derivative_with_zero_imag(
     u: paddle.Tensor, axis: int = -1, frequency_offset: int = 0
 ) -> paddle.Tensor:
     """Calculate the derivative along a real basis with zero imaginary part using PaddlePaddle."""
-    
+
     if u.shape[axis] % 2:
-        raise ValueError(f'{u.shape=} along {axis=} is not even')
+        raise ValueError(f"{u.shape=} along {axis=} is not even")
     if axis >= 0:
-        raise ValueError('axis must be negative')
+        raise ValueError("axis must be negative")
 
     i = paddle.arange(u.shape[axis]).reshape((-1,) + (1,) * (-1 - axis))
     j = frequency_offset + i // 2
@@ -123,8 +123,7 @@ def real_basis_derivative_with_zero_imag(
 
 def quadrature_nodes(nodes: int) -> tuple[np.ndarray, np.ndarray]:
     """Returns nodes and weights for the trapezoidal rule."""
-    
+
     xs = np.linspace(0, 2 * np.pi, nodes, endpoint=False)
     weights = 2 * np.pi / nodes
     return xs, weights
-

@@ -15,13 +15,11 @@
 
 from typing import Optional
 
-import samplers_utils as utils
-import samplers_base as base
 import paddle
-import xarray as xr
-import numpy as np
 import paddle.nn as nn
-
+import samplers_base as base
+import samplers_utils as utils
+import xarray as xr
 
 
 class Sampler(base.Sampler):
@@ -41,17 +39,18 @@ class Sampler(base.Sampler):
     https://arxiv.org/abs/2206.00364
     """
 
-    def __init__(self,
-                 denoiser: nn.Layer,
-                 max_noise_level: float,
-                 min_noise_level: float,
-                 num_noise_levels: int,
-                 rho: float,
-                 stochastic_churn_rate: float,
-                 churn_min_noise_level: float,
-                 churn_max_noise_level: float,
-                 noise_level_inflation_factor: float
-                 ):
+    def __init__(
+        self,
+        denoiser: nn.Layer,
+        max_noise_level: float,
+        min_noise_level: float,
+        num_noise_levels: int,
+        rho: float,
+        stochastic_churn_rate: float,
+        churn_min_noise_level: float,
+        churn_max_noise_level: float,
+        noise_level_inflation_factor: float,
+    ):
         """Initializes the sampler.
 
           Args:
@@ -80,11 +79,15 @@ class Sampler(base.Sampler):
         """
         super().__init__(denoiser)
         self._noise_levels = utils.noise_schedule(
-            max_noise_level, min_noise_level, num_noise_levels, rho)
+            max_noise_level, min_noise_level, num_noise_levels, rho
+        )
         self._stochastic_churn = stochastic_churn_rate > 0
         self._per_step_churn_rates = utils.stochastic_churn_rate_schedule(
-            self._noise_levels, stochastic_churn_rate, churn_min_noise_level,
-            churn_max_noise_level)
+            self._noise_levels,
+            stochastic_churn_rate,
+            churn_min_noise_level,
+            churn_max_noise_level,
+        )
         self._noise_level_inflation_factor = noise_level_inflation_factor
 
     def __call__(
@@ -92,27 +95,30 @@ class Sampler(base.Sampler):
         inputs: xr.Dataset,
         targets_template: xr.Dataset,
         forcings: Optional[xr.Dataset] = None,
-        **kwargs) -> xr.Dataset:
+        **kwargs
+    ) -> xr.Dataset:
 
-        dtype = 'float32'
+        dtype = "float32"
         noise_levels = paddle.to_tensor(self._noise_levels, dtype=dtype)
         per_step_churn_rates = paddle.to_tensor(self._per_step_churn_rates, dtype=dtype)
 
         def denoiser(noise_level: paddle.Tensor, x: xr.Dataset) -> xr.Dataset:
             """Computes D(x, sigma, y)."""
             bcast_noise_level = xr.DataArray(
-                paddle.tile(noise_level, [x.sizes['batch']]), dims=('batch',))
+                paddle.tile(noise_level, [x.sizes["batch"]]), dims=("batch",)
+            )
             # Estimate the expectation of the fully-denoised target x0, conditional on
             # inputs/forcings, noisy targets and their noise level:
             return self._denoiser(
                 inputs=inputs,
                 noisy_targets=x,
                 noise_levels=bcast_noise_level,
-                forcings=forcings)
+                forcings=forcings,
+            )
 
         def body_fn(i: int, x: xr.Dataset) -> xr.Dataset:
             """One iteration of the sampling algorithm.
-            
+
             Args:
               i: Sampling iteration.
               x: Noisy targets at iteration i, these will have noise level
@@ -121,8 +127,11 @@ class Sampler(base.Sampler):
             Returns:
               Noisy targets at the next lowest noise level self._noise_levels[i+1].
             """
+
             def init_noise(template):
-                return noise_levels[0].numpy() * utils.spherical_white_noise_like(template)
+                return noise_levels[0].numpy() * utils.spherical_white_noise_like(
+                    template
+                )
 
             # Initialise the inputs if i == 0.
             # This is done here to ensure both noise sampler calls can use the same
@@ -138,9 +147,11 @@ class Sampler(base.Sampler):
             if self._stochastic_churn:
                 # We increase the noise level of x a bit before taking it down again:
                 x, noise_level = utils.apply_stochastic_churn(
-                    x, noise_level,
+                    x,
+                    noise_level,
                     stochastic_churn_rate=per_step_churn_rates[i],
-                    noise_level_inflation_factor=self._noise_level_inflation_factor)
+                    noise_level_inflation_factor=self._noise_level_inflation_factor,
+                )
 
             # Apply one step of the ODE solver to take x down to the next lowest
             # noise level.
@@ -161,15 +172,21 @@ class Sampler(base.Sampler):
 
             mid_over_current = mid_noise_level / noise_level
             # x = xr.open_dataset('/workspace/workspace/graphcast/x.nc')
-            
+
             x_denoised = denoiser(noise_level, x)
             # This turns out to be a convex combination of current and denoised x,
             # which isn't entirely apparent from the paper formulae:
-            x_mid = mid_over_current.numpy() * x + (1 - mid_over_current.numpy()) * x_denoised
+            x_mid = (
+                mid_over_current.numpy() * x
+                + (1 - mid_over_current.numpy()) * x_denoised
+            )
 
             next_over_current = next_noise_level / noise_level
             x_mid_denoised = denoiser(mid_noise_level, x_mid)
-            x_next = next_over_current.numpy() * x + (1 - next_over_current.numpy()) * x_mid_denoised
+            x_next = (
+                next_over_current.numpy() * x
+                + (1 - next_over_current.numpy()) * x_mid_denoised
+            )
 
             # For the final step to noise level 0, we do an Euler update which
             # corresponds to just returning the denoiser's prediction directly.
@@ -188,5 +205,3 @@ class Sampler(base.Sampler):
         for i in range(0, len(noise_levels) - 1):
             noise_val = body_fn(i, noise_val)
         return noise_val
-
-      

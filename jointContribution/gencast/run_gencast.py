@@ -12,38 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+import logging
 import os
-import pickle
-from typing import Dict
-from graphcast import args
-from graphcast import datasets
+
 import gencast
-from graphcast import graphtype
+import hydra
 import numpy as np
 import paddle
-import hydra
-from graphcast import utils
-import numpy as np
-from omegaconf import DictConfig
-from graphcast import vis
 import xarray
-import logging
+from graphcast import datasets
+from graphcast import utils
+from graphcast import vis
+from omegaconf import DictConfig
 
 
-def crps(targets, predictions, bias_corrected = True):
+def crps(targets, predictions, bias_corrected=True):
     if predictions.sizes.get("sample", 1) < 2:
-        raise ValueError(
-            "predictions must have dim 'sample' with size at least 2.")
+        raise ValueError("predictions must have dim 'sample' with size at least 2.")
     sum_dims = ["sample", "sample2"]
     preds2 = predictions.rename({"sample": "sample2"})
     num_samps = predictions.sizes["sample"]
     num_samps2 = (num_samps - 1) if bias_corrected else num_samps
-    mean_abs_diff = np.abs(
-        predictions - preds2).sum(
-            dim=sum_dims, skipna=False) / (num_samps * num_samps2)
-    mean_abs_err = np.abs(targets - predictions).sum(dim="sample", skipna=False) / num_samps
+    mean_abs_diff = np.abs(predictions - preds2).sum(dim=sum_dims, skipna=False) / (
+        num_samps * num_samps2
+    )
+    mean_abs_err = (
+        np.abs(targets - predictions).sum(dim="sample", skipna=False) / num_samps
+    )
     return mean_abs_err - 0.5 * mean_abs_diff
+
 
 def eval(cfg: DictConfig):
 
@@ -64,21 +61,29 @@ def eval(cfg: DictConfig):
         dataset = datasets.ERA5Data(config=cfg)
 
         # Generate predictions using the model; targets are initialized to NaN
-        pred = model(dataset.inputs_template,dataset.targets_template * np.nan, dataset.forcings_template)
+        pred = model(
+            dataset.inputs_template,
+            dataset.targets_template * np.nan,
+            dataset.forcings_template,
+        )
 
-        # Denormalize the predictions 
+        # Denormalize the predictions
         stacked_pred = datasets.dataset_to_stacked(pred)
         stacked_pred = stacked_pred.transpose("lat", "lon", ...)
         lat_dim, lon_dim, batch_dim, feat_dim = stacked_pred.shape
         stacked_pred = stacked_pred.data.reshape(lat_dim * lon_dim, batch_dim, -1)
         stacked_pred_denormalized = dataset.denormalize(stacked_pred)
-        outputs_lat_lon_leading = stacked_pred_denormalized.reshape((lat_dim, lon_dim)+stacked_pred_denormalized.shape[1:])
+        outputs_lat_lon_leading = stacked_pred_denormalized.reshape(
+            (lat_dim, lon_dim) + stacked_pred_denormalized.shape[1:]
+        )
         dims = ("lat", "lon", "batch", "channels")
         xarray_lat_lon_leading = xarray.DataArray(
-                data=outputs_lat_lon_leading, dims=dims
-            )
+            data=outputs_lat_lon_leading, dims=dims
+        )
         pred_xarray = utils.restore_leading_axes(xarray_lat_lon_leading)
-        pred_denormalized = datasets.stacked_to_dataset(pred_xarray.variable, dataset.targets_template)
+        pred_denormalized = datasets.stacked_to_dataset(
+            pred_xarray.variable, dataset.targets_template
+        )
 
         # Add new dimensions and coordinates to each data variable
         sample_coord = xarray.DataArray([i], dims="sample")
@@ -87,16 +92,22 @@ def eval(cfg: DictConfig):
 
     predictions = xarray.combine_by_coords(chunks)
     # Save the predictions to a NetCDF file
-    predictions.to_netcdf(os.path.join(cfg.output_dir, 'predictions.nc'))
+    predictions.to_netcdf(os.path.join(cfg.output_dir, "predictions.nc"))
 
     # Calculate RMSE for each variable in the predictions
-    pred_mean = predictions.mean(dim='sample')
+    pred_mean = predictions.mean(dim="sample")
     rmse = np.sqrt(((pred_mean - dataset.targets_template) ** 2).mean())
     logging.info(f"RMSE: {rmse.values}")
 
     # Visualize and save the result images
-    vis.log_images(dataset.targets_template, pred_mean, "2m_temperature", level=50, file="result.png")
-    
+    vis.log_images(
+        dataset.targets_template,
+        pred_mean,
+        "2m_temperature",
+        level=50,
+        file="result.png",
+    )
+
 
 @hydra.main(version_base=None, config_path="./conf", config_name="gencast.yaml")
 def main(cfg: DictConfig):
