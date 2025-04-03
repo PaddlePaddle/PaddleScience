@@ -3,8 +3,8 @@ import os
 import pickle
 import typing
 
-import args
-import graphtype
+from graphcast import args
+from graphcast import graphtype
 import numpy as np
 import paddle
 import pandas as pd
@@ -330,6 +330,12 @@ class ERA5Data(paddle.io.Dataset):
             self.forcing_variables = args.TASK_13_PRECIP_OUT_forcing_variables
             self.target_variables = args.TASK_13_PRECIP_OUT_target_variables
             self.level_variables = args.PRESSURE_LEVELS[13]
+        elif config.type == "gencast":
+            self.input_variables = args.TASK_gencast_input_variables
+            self.forcing_variables = args.TASK_gencast_forcing_variables
+            self.target_variables = args.TASK_gencast_target_variables
+            self.level_variables = args.PRESSURE_LEVELS[13]
+
 
         # 数据
         nc_dataset = xarray.open_dataset(config.data_path)
@@ -357,7 +363,7 @@ class ERA5Data(paddle.io.Dataset):
         )
 
         inputs, targets = extract_input_target_times(
-            nc_dataset, input_duration="12h", target_lead_times="6h"
+            nc_dataset, input_duration=config.input_duration, target_lead_times=config.target_lead_times
         )
 
         # 统计数据
@@ -389,13 +395,29 @@ class ERA5Data(paddle.io.Dataset):
         inputs = inputs[list(self.input_variables)]
         forcings = targets[list(self.forcing_variables)]
         targets = targets[list(self.target_variables)]
+
+        if config.type == "gencast":
+            min_data = xarray.open_dataset(config.min_path).sel(
+                level=list(self.level_variables)
+            )
+            intputs_sst = inputs['sea_surface_temperature']
+            intputs_fillna = inputs.assign(
+                {'sea_surface_temperature': intputs_sst.fillna(min_data['sea_surface_temperature'])}
+            ) 
+            inputs = intputs_fillna
+         
         inputs = self.normalize(inputs, stddev_data, mean_data)
         forcings = self.normalize(forcings, stddev_data, mean_data)
 
         self.targets_template = targets
+        self.inputs_template = inputs
+        self.forcings_template = forcings
 
         stacked_inputs = dataset_to_stacked(inputs)
-        stacked_forcings = dataset_to_stacked(forcings)
+        if config.type == "gencast":
+            stacked_forcings = dataset_to_stacked(forcings,preserved_dims=("batch", "lon"))
+        else:
+            stacked_forcings = dataset_to_stacked(forcings)
         stacked_targets = dataset_to_stacked(targets)
         stacked_inputs = xarray.concat(
             [stacked_inputs, stacked_forcings], dim="channels"
@@ -423,7 +445,10 @@ class ERA5Data(paddle.io.Dataset):
         if os.path.exists(graph_template_path):
             graph_template = pickle.load(open(graph_template_path, "rb"))
         else:
-            graph_template = graphtype.GraphGridMesh(config)
+            if config.type == "gencast":
+                graph_template = graphtype.GraphGridMesh(config.denoiser_architecture_config)
+            else:
+                graph_template = graphtype.GraphGridMesh(config)
 
         graph = copy.deepcopy(graph_template)
         graph.grid_node_feat = np.concatenate(

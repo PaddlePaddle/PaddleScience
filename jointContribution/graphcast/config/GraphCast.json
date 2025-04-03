@@ -23,5 +23,8 @@
   "resolution": 0.25,
   "stddev_diffs_path": "data/stats/diffs_stddev_by_level.nc",
   "stddev_path": "data/stats/stddev_by_level.nc",
-  "type": "graphcast"
+  "type": "graphcast",
+  "name": "graphcast",
+  "input_duration": "12h",
+  "target_lead_times": "6h"
 }
