@@ -208,9 +208,9 @@ examples/allen_cahn/allen_cahn_piratenet.py:132:136
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="138"
+``` py linenums="146"
 --8<--
-examples/allen_cahn/allen_cahn_piratenet.py:138:156
+examples/allen_cahn/allen_cahn_piratenet.py:146:164
 --8<--
 ```
 
@@ -218,9 +218,9 @@ examples/allen_cahn/allen_cahn_piratenet.py:138:156
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="158"
+``` py linenums="166"
 --8<--
-examples/allen_cahn/allen_cahn_piratenet.py:158:184
+examples/allen_cahn/allen_cahn_piratenet.py:166:192
 --8<--
 ```
 
@@ -247,3 +247,4 @@ examples/allen_cahn/allen_cahn_piratenet.py
 
 - [PIRATENETS: PHYSICS-INFORMED DEEP LEARNING WITHRESIDUAL ADAPTIVE NETWORKS](https://arxiv.org/pdf/2402.00326.pdf)
 - [Allen-Cahn equation](https://github.com/PredictiveIntelligenceLab/jaxpi/blob/main/examples/allen_cahn/README.md)
+- [Gradient Alignment in Physics-informed Neural Networks: A Second-Order Optimization Perspective](https://arxiv.org/abs/2502.00604)

@@ -44,10 +44,10 @@
     | 流固耦合 | [涡激振动](./examples/viv.md) | ✅ | | | ✅ |
     | 多相流 | [气液两相流](./examples/bubble.md) | ✅ | | | ✅ |
     | 流场高分辨率重构 | [2D 湍流流场重构](./examples/tempoGAN.md) | ✅ | | | ✅ |
-    | 求解器耦合 | [CFD-GCN](./examples/cfdgcn.md) | ✅ | | | |
+    | 求解器耦合 | [CFD-GCN](./examples/cfdgcn.md) | ✅ | | | ✅ |
     | 受力分析 | [1D 欧拉梁变形](./examples/euler_beam.md) | ✅ | | ✅ | ✅ |
     | 受力分析 | [2D 平板变形](./examples/biharmonic2d.md) | ✅ | | | ✅ |
-    | 受力分析 | [3D 连接件变形](./examples/bracket.md) | ✅ | | | |
+    | 受力分析 | [3D 连接件变形](./examples/bracket.md) | ✅ | | | ✅ |
     | 受力分析 | [结构震动模拟](./examples/phylstm.md) | ✅ | | | ✅ |
     | 受力分析 | [2D 弹塑性结构](./examples/epnn.md) | ✅ | | | ✅ |
     | 受力分析和逆问题 | [3D 汽车控制臂变形](./examples/control_arm.md) | ✅ | | | ✅ |
@@ -58,7 +58,7 @@
     | 热仿真 | [2D 芯片热仿真](./examples/chip_heat.md) | ✅ | | | |
     | 算子学习 | [NeuralOperator](./examples/neuraloperator.md) | ✅ | | | |
     | 汽车表面阻力预测 | [DrivAerNetPlusPlus](./examples/drivaernetplusplus.md) | ✅ | | | |
-    | 求解器耦合 | [NSFNets](./examples/nsfnet.md) | ✅ | | | |
+    | 求解器耦合 | [NSFNets](./examples/nsfnet.md) | ✅ | | | ✅ |
     | 流场高分辨率重构 | [PhyCRNet](./examples/phycrnet.md) | ✅ | | | |
     | 求解器耦合 | [NSFNet4](./examples/nsfnet4.md) | ✅ | | | |
 
@@ -80,16 +80,16 @@
     | 天气预报 | [DGMR 气象预报](./examples/dgmr.md) | ✅ | | | |
     | 地震波形反演 | [VelocityGAN 地震波形反演](./examples/velocity_gan.md) | ✅ | | | ✅ |
     | 交通预测 | [TGCN 交通流量预测](./examples/tgcn.md) | ✅ | | | ✅ |
-    | 天气预报 | [EarthFormer 气象预报](./examples/earthformer.md) | ✅ | | | |
+    | 天气预报 | [EarthFormer 气象预报](./examples/earthformer.md) | ✅ | | | ✅ |
     | 交通预测 | [IOPS 交通流量预测](./examples/iops.md) | ✅ | | | ✅ |
-    | 天气预报 | [Pang-Weather 气象预报](./examples/pangu_weather.md) | ✅ | | | |
-    | 天气预报 | [FengWu 气象预报](./examples/fengwu.md) | ✅ | | | |
+    | 天气预报 | [Pang-Weather 气象预报](./examples/pangu_weather.md) | ✅ | | |  ✅|
+    | 天气预报 | [FengWu 气象预报](./examples/fengwu.md) | ✅ | | | ✅ |
 
 === "化学科学 (AI for Chemistry)"
 
     | 问题类型 | 案例名称 | NVIDIA | 海光 | 太初 | 沐曦 |
     |-----|-----|-----|-----|-----|-----|
-    | 化学分子生成 | [Moflow](./examples/moflow.md) | ✅ | | | |
+    | 化学分子生成 | [Moflow](./examples/moflow.md) | ✅ | | | ✅ |
     | 化学反应预测 | [IFM](./examples/ifm.md) | ✅ | | | ✅ |
 
 ## 2. 运行指南

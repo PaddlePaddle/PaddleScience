@@ -90,6 +90,7 @@
 | 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 | 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator3d.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 | 符号回归 | [Transformer4SR](./zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
+| 算子学习 | [隐空间神经算子LNO](https://github.com/L-I-M-I-T/LatentNeuralOperator) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2406.03923)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -138,6 +139,7 @@
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 材料设计 | [散射板设计(反问题)](./zh/examples/hpinns.md) | 机理驱动 | Transformer | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 晶体材料属性预测 | [CGCNN](./zh/examples/cgcnn.md) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>

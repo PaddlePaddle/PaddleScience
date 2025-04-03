@@ -54,6 +54,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 域分解 | [XPINN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/xpinns) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 | 布鲁塞尔扩散系统 | [3D-Brusselator](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/brusselator3d) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 | 符号回归 | [Transformer4SR](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
+| 算子学习 | [隐空间神经算子LNO](https://github.com/L-I-M-I-T/LatentNeuralOperator) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2406.03923)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -102,6 +103,10 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 材料设计 | [散射板设计(反问题)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/hpinns) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 晶体材料属性预测 | [CGCNN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/cgcnn/) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
+| 分子生成 | [MoFlow](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/moflow/) | 数据驱动 | Flow Model | 监督学习 | [qm9/ zink250k](https://aistudio.baidu.com/datasetdetail/282687) | [Paper](https://arxiv.org/abs/2006.10137v1) |
+| 分子属性预测 | [IFM](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/) | 数据驱动 | MLP | 监督学习 | [tox21/sider/hiv/bace/bbbp](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/#:~:text=molecules%20%E6%95%B0%E6%8D%AE%E9%9B%86-,dataset.zip,-%EF%BC%8C%E6%88%96Google%20Drive) | [Paper](https://openreview.net/pdf?id=NLFqlDeuzt) |
+
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>
@@ -152,7 +157,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>3.0-beta 或 develop</b></font> 版的 PaddlePaddle。
+请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 
@@ -211,7 +216,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - 设置 PYTHONPATH 并手动安装 requirements
 
-        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内临时将环境变量 `PYTHONPATH` 设置为 PaddleScience 的**绝对路径**，如下所示。
 
         ``` shell
         cd PaddleScience
@@ -265,7 +270,7 @@ python -c "import paddle; paddle.utils.run_check()"
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
 
-如使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 提出建议，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
+如在使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 中提出，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
 <!-- --8<-- [end:support] -->
 
 <!-- --8<-- [start:contribution] -->
