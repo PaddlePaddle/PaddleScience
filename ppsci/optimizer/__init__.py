@@ -17,6 +17,7 @@ import copy
 from ppsci.optimizer import lr_scheduler
 from ppsci.optimizer.optimizer import LBFGS
 from ppsci.optimizer.optimizer import SGD
+from ppsci.optimizer.optimizer import SOAP
 from ppsci.optimizer.optimizer import Adam
 from ppsci.optimizer.optimizer import AdamW
 from ppsci.optimizer.optimizer import Momentum
@@ -32,6 +33,7 @@ __all__ = [
     "RMSProp",
     "OptimizerList",
     "lr_scheduler",
+    "SOAP",
 ]
 
 

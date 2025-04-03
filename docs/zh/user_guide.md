@@ -24,7 +24,7 @@ pip install hydra-core
 
 !!! warning
 
-    注意本教程内的打印运行配置方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
+    请注意，本教程中的打印运行配置方法**仅用于调试**，hydra 默认在打印完配置后会立即结束程序。因此，在正常运行程序时请勿加上 `-c job` 参数。
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
@@ -78,7 +78,7 @@ TRAIN:
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
-    这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
+    这种方式通过命令行参数临时重载运行配置，而不会修改 bracket.yaml 文件本身，能够灵活地控制运行时的配置，确保不同实验之间互不干扰。
 
 !!! tip "设置含转义字符的参数值"
 
@@ -185,7 +185,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
     少数案例尚未支持导出功能，因此对应文档中未给出导出命令。
 
-在训练完毕后，我们通常需要将模型导出为 `*.pdmodel`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
+在训练完毕后，我们通常需要将模型导出为 `*.json`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
 
 ``` sh
 python aneurysm.py mode=export \
@@ -200,15 +200,19 @@ python aneurysm.py mode=export \
 
 ``` log
 ...
-ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.pdmodel, *.pdiparams and *.pdiparams.info files.
+ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.json, *.pdiparams files.
 ```
 
 ``` sh
 ./inference/
-├── aneurysm.pdiparams
+├── aneurysm.json
 ├── aneurysm.pdiparams.info
-└── aneurysm.pdmodel
 ```
+
+!!! Warning
+
+    在 Paddle 3.0 及之后的版本中，PIR 被设置为默认的静态图执行模式，因此 `*.pdmodel` 格式的文件被移除，改由 `*.json` 文件代替。
+    为此 PaddleScience 进行了适配([deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L105-L107))，用户无需关心后缀格式，会根据 Paddle 版本是否支持 PIR，在加载上述文件时，自动替换为正确的后缀名。
 
 #### 1.2.2 ONNX 推理模型导出
 
@@ -364,11 +368,11 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 
 PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
-|  | Native | ONNX | TensorRT | MKLDNN |
-| :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| / | ✅ |
-| GPU | ✅ | ✅ | ✅ | / |
-| XPU | TODO | / | / | / |
+|  | Native | ONNX | TensorRT | macaRT | MKLDNN |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Intel(CPU) | ✅ | ✅ | / | / | ✅ |
+| NVIDIA | ✅ | ✅ | ✅ | / | / |
+| MetaX | ✅ | ✅ | / | ✅ | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -407,7 +411,38 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         export LD_LIBRARY_PATH=/PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH
         ```
 
-    3. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
+    3. [可选] 确保安装了带有 TensorRT 推理功能的 PaddlePaddle。
+
+        === "pip 安装"
+
+            ``` sh
+            # cuda 11.8
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu118/
+            # cuda 12.3
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu123/
+            ```
+
+        === "源码编译"
+
+            ``` sh hl_lines="11 12"
+            git clone https://github.com/PaddlePaddle/Paddle.git -b develop && cd Paddle/
+            mkdir build && cd build
+
+            cmake .. -DPY_VERSION=3.9 \
+                -DPYTHON_EXECUTABLE=$(which python3) \
+                -DWITH_GPU=ON \
+                -DWITH_DISTRIBUTE=ON \
+                -DWITH_TESTING=OFF \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+                -DPYTHON_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.so \
+                -DWITH_TENSORRT=ON \
+                -DTENSORRT_ROOT=$TRT_PATH
+
+            pip install python/dist/paddlepaddle_gpu-0.0.0-cp*
+            ```
+
+    4. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
 
         ``` sh
         # 运行前需设置指定GPU，否则可能无法启动 TensorRT
@@ -447,7 +482,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
@@ -484,7 +519,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.checkpoint_path` 为 `latest.*` 的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.checkpoint_path` 为 `latest.*` 的所在路径（建议用`\'`包裹），再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.checkpoint_path=\'/path/to/latest\'++}
@@ -515,7 +550,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.pretrained_model_path` 为预训练权重的所在路径（建议用`\'`包裹），再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.pretrained_model_path` 为预训练权重的所在路径（建议用`\'`包裹），再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.pretrained_model_path=\'/path/to/pretrain\'++}
@@ -607,7 +642,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_tbd` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_tbd`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_tbd=True++}
@@ -655,7 +690,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_vdl` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_vdl`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_vdl=True++}
@@ -709,7 +744,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
         === "方式1: 命令行指定[推荐]"
 
-            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `use_wandb` 再执行训练命令即可，免去修改案例代码。
+            若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `use_wandb`，再执行即可，免去修改案例代码。
 
             ``` sh
             python example.py {++use_wandb=True++}
@@ -797,7 +832,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
     3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
     4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
     5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
-    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    6. `n_jobs: 1`：这设置了可并行运行的试验数量。值为 1 表示试验将顺序执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
     7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
     8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
     9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
@@ -861,7 +896,7 @@ best_value: 0.02460772916674614
 
 #### 2.2.1 数据并行
 
-接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
+接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
 1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
@@ -889,8 +924,8 @@ best_value: 0.02460772916674614
 
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
-
-    EPOCHS = 3000 if not args.epochs else args.epochs
+    ...
+    ...
     ```
 
 2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例
@@ -941,7 +976,7 @@ TODO -->
 
 === "方式1: 命令行指定[推荐]"
 
-    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以通过命令行指定 `TRAIN.update_freq` 再执行训练命令即可，免去修改案例代码。
+    若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.update_freq` 再执行即可，免去修改案例代码。
 
     ``` sh
     python example.py {++TRAIN.update_freq=2++}
@@ -960,7 +995,7 @@ TODO -->
 
 ### 2.5 多任务学习
 
-在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
+在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 
 1. 实例化一个多任务学习方法的对象
 
@@ -990,6 +1025,40 @@ TODO -->
     !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
+
+### 2.6 模型平均
+
+模型平均是一种成本较低的模型集成方法，主要原理是将训练过程中的多个模型权重快照进行加权平均，这一“平均模型”相比单个 epoch 训练得到的模型可能具有更好的泛化性。
+
+PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(SWA)](./api/utils/ema.md#ppsci.utils.ema.StochasticWeightAverage) 和 [Exponential moving average(EMA)](./api/utils/ema.md#ppsci.utils.ema.ExponentialMovingAverage)，若在案例代码中，为 `Solver` 构建时传递了 `cfg` 参数，则可以在训练命令后指定 `TRAIN.swa` 或 `TRAIN.ema` 相关的几个必要参数，再执行即可。
+
+=== "EMA"
+
+    ``` sh
+    python example.py TRAIN.epochs=100 \  # (1)
+       TRAIN.ema.use_ema=True \  # (2)
+       TRAIN.ema.decay=0.99 \  # (3)
+       TRAIN.ema.avg_freq=1  # (4)
+    ```
+
+    1. 假设训练轮数为 100
+    2. 开启 EMA 功能
+    3. 设置指数平均衰减系数为 0.99
+    4. 设置平均间隔为 1 个 epoch
+
+=== "SWA"
+
+    ``` sh
+    python example.py TRAIN.epochs=100 \  # (1)
+       TRAIN.swa.use_swa=True \  # (2)
+       TRAIN.swa.avg_freq=1 \  # (3)
+       TRAIN.swa.avg_range=[75,100]  # (4)
+    ```
+
+    1. 假设训练轮数为 100
+    2. 开启 SWA 功能
+    3. 设置平均间隔为 1 个 epoch
+    4. 设置平均的起始和终止 epoch 为 75 至 100
 
 ## 3. 使用 Nsight 进行性能分析
 

@@ -25,6 +25,7 @@ from ppsci.geometry.geometry_3d import Sphere
 from ppsci.geometry.geometry_nd import Hypercube
 from ppsci.geometry.geometry_nd import Hypersphere
 from ppsci.geometry.mesh import Mesh
+from ppsci.geometry.mesh import SDFMesh
 from ppsci.geometry.pointcloud import PointCloud
 from ppsci.geometry.timedomain import TimeDomain
 from ppsci.geometry.timedomain import TimeXGeometry
@@ -40,6 +41,7 @@ __all__ = [
     "Hypersphere",
     "Interval",
     "Mesh",
+    "SDFMesh",
     "Polygon",
     "Rectangle",
     "Sphere",

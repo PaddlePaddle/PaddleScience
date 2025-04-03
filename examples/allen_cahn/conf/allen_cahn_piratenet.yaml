@@ -54,6 +54,7 @@ TRAIN:
   save_freq: 10
   eval_during_train: true
   eval_freq: 10
+  optim: adam
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
@@ -61,6 +62,7 @@ TRAIN:
     gamma: 0.9
     decay_steps: 5000
     by_epoch: false
+    warmup_epoch: 0
   batch_size: 8192
   pretrained_model_path: null
   checkpoint_path: null

@@ -95,6 +95,13 @@ class InitCallback(Callback):
             full_cfg.log_level,
         )
 
+        # set device before running into example function
+        if "device" in full_cfg:
+            import paddle
+
+            if isinstance(full_cfg.device, str):
+                paddle.device.set_device(full_cfg.device)
+
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):
             # Mostly for compiler running with dy2st.

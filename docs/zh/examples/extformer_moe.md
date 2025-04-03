@@ -1,14 +1,18 @@
 # Extformer-MoE
 
-开始训练、评估前，请先下载，并对应修改 yaml 配置文件中的 FILE_PATH
+!!! note
 
-[ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)
+    1. 开始训练、评估前，请先下载 [ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)，并对应修改 yaml 配置文件中的 `FILE_PATH` 为解压后的数据集路径。
+    2. 开始训练、评估前，请安装 `xarray` 和 `h5netcdf`：`pip install requirements.txt`
+    3. 若训练时显存不足，可指定 `MODEL.checkpoint_level` 为 `1` 或 `2`，此时使用 recompute 模式运行，以训练时间换取显存。
 
 === "模型训练命令"
 
     ``` sh
     # ICAR-ENSO 数据预训练模型: Extformer-MoE
     python extformer_moe_enso_train.py
+    # python extformer_moe_enso_train.py MODEL.checkpoint_level=1 # using recompute to run in device with small GPU memory
+    # python extformer_moe_enso_train.py MODEL.checkpoint_level=2 # using recompute to run in device with small GPU memory
     ```
 
 === "模型评估命令"
@@ -45,7 +49,6 @@ Earthformer，一种用于地球系统预测的时空转换器。为了更好地
 气象数据的不均衡分布会导致模型偏向于预测频繁出现的正常气象状况，而低估了观测值稀少的极端状况，因为模型训练中常用的回归损失函数比如均方误差（MSE）损失会导致预测结果的过平滑现象。与具有离散标签空间的不平衡分类问题不同，不平衡回归问题具有连续的标签空间，为极端预测问题带来了更大的挑战。
 
 Rank-N-Contrast（RNC）是一种表征学习方法，旨在学习一种回归感知的样本表征，该表征以连续标签空间中的距离为依据，对嵌入空间中的样本间距离进行排序，然后利用它来预测最终连续的标签。在地球系统极端预测问题中，RNC 可以对气象数据的表征进行规范，使其满足嵌入空间的连续性，和标签空间对齐，最终缓解极端事件的预测结果的过平滑问题。
-
 
 ## 2. 模型原理
 
@@ -122,9 +125,9 @@ EarthFFormer 模型对于 ICAR-ENSO 数据集的训练中，只对其中海面�
 
 数据加载的代码如下:
 
-``` py linenums="35" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="25" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:35:56
+examples/extformer_moe/extformer_moe_enso_train.py:25:47
 --8<--
 ```
 
@@ -132,9 +135,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:35:56
 
 定义监督约束的代码如下：
 
-``` py linenums="58" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="49" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:58:64
+examples/extformer_moe/extformer_moe_enso_train.py:49:55
 --8<--
 ```
 
@@ -148,9 +151,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:58:64
 
 在该案例中，海面温度模型基于 ExtFormerMoECuboid 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="97" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="88" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:97:101
+examples/extformer_moe/extformer_moe_enso_train.py:88:92
 --8<--
 ```
 
@@ -169,9 +172,9 @@ examples/extformer_moe/conf/extformer_moe_enso_pretrain.yaml:47:129
 本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 `2e-4`。优化器使用 `AdamW`，并将参数进行分组，使用不同的
 `weight_decay`,用 PaddleScience 代码表示如下：
 
-``` py linenums="103" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="94" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:103:128
+examples/extformer_moe/extformer_moe_enso_train.py:94:119
 --8<--
 ```
 
@@ -179,9 +182,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:103:128
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="68" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="59" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:68:95
+examples/extformer_moe/extformer_moe_enso_train.py:59:86
 --8<--
 ```
 
@@ -191,9 +194,9 @@ examples/extformer_moe/extformer_moe_enso_train.py:68:95
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="130" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="121" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:130:151
+examples/extformer_moe/extformer_moe_enso_train.py:121:137
 --8<--
 ```
 
@@ -201,17 +204,17 @@ examples/extformer_moe/extformer_moe_enso_train.py:130:151
 
 构建模型的代码为：
 
-``` py linenums="184" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="138" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:184:188
+examples/extformer_moe/extformer_moe_enso_train.py:138:139
 --8<--
 ```
 
 构建评估器的代码为：
 
-``` py linenums="155" title="examples/extformer_moe/extformer_moe_enso_train.py"
+``` py linenums="142" title="examples/extformer_moe/extformer_moe_enso_train.py"
 --8<--
-examples/extformer_moe/extformer_moe_enso_train.py:155:182
+examples/extformer_moe/extformer_moe_enso_train.py:142:182
 --8<--
 ```
 

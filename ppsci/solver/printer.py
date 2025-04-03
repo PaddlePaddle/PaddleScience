@@ -12,13 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import datetime
 from typing import TYPE_CHECKING
 from typing import Dict
+from typing import Optional
 
 from paddle import device
 
@@ -114,7 +111,7 @@ def log_train_info(
 def log_eval_info(
     solver: "solver.Solver",
     batch_size: int,
-    epoch_id: int,
+    epoch_id: Optional[int],
     iters_per_epoch: int,
     iter_id: int,
 ):
@@ -149,8 +146,8 @@ def log_eval_info(
         )
 
     # reset time information after printing
-    for key in solver.train_time_info:
-        solver.train_time_info[key].reset()
+    for key in solver.eval_time_info:
+        solver.eval_time_info[key].reset()
 
     # logger.scalar(
     #     {

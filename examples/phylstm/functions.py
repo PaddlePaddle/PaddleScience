@@ -181,4 +181,11 @@ class Dataset:
                     np.asarray(0.0, dtype=paddle.get_default_dtype())
                 )
 
+        def to_numpy_dict(dct):
+            return {k: np.asarray(v, dtype="float32") for k, v in dct.items()}
+
+        input_dict_train = to_numpy_dict(input_dict_train)
+        label_dict_train = to_numpy_dict(label_dict_train)
+        input_dict_val = to_numpy_dict(input_dict_val)
+        label_dict_val = to_numpy_dict(label_dict_val)
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val

@@ -54,6 +54,8 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 if TYPE_CHECKING:
+    from types import ModuleType
+
     from paddle.static import InputSpec
 
 
@@ -67,7 +69,9 @@ class Solver:
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
         epochs (int, optional): Training epoch(s). Defaults to 5.
-        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. If set to -1,
+            than will be automatically set to the length of dataloader of given constraint.
+            Defaults to 20.
         update_freq (int, optional): Update frequency of parameters. Defaults to 1.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
         log_freq (int, optional): Logging frequency. Defaults to 10.
@@ -79,7 +83,7 @@ class Solver:
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
         use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
-        device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
+        device (Literal["cpu", "gpu", "xpu", "sdaa", None], optional): Runtime device. Defaults to None, which means use default device on current platform.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
@@ -141,7 +145,7 @@ class Solver:
         use_wandb: bool = False,
         use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
-        device: Literal["cpu", "gpu", "xpu"] = "gpu",
+        device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None,
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
@@ -213,6 +217,18 @@ class Solver:
             self.start_eval_epoch = start_eval_epoch
             self.eval_freq = eval_freq
 
+        if self.iters_per_epoch == -1 and self.constraint is not None:
+            if len(self.constraint) != 1:
+                raise NotImplementedError(
+                    f"Multiple({len(self.constraint)}) constraints are detected, "
+                    "which is not supported yet, when 'iters_per_epoch' is set to -1."
+                )
+            self.iters_per_epoch = len(next(iter(self.constraint.values())).data_loader)
+            logger.message(
+                "Detected 'iters_per_epoch' is set to -1, 'iters_per_epoch' is now "
+                f"reset to the length of dataloader({self.iters_per_epoch}) of given constraint."
+            )
+
         # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
@@ -231,10 +247,15 @@ class Solver:
         # set running device
         if not cfg:
             self.device = device
+        if self.device is None:
+            # set to default device if not specified
+            self.device: str = paddle.device.get_device()
+
         if self.device != "cpu" and paddle.device.get_device() == "cpu":
+            # fall back to cpu if no other device available
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
             self.device = "cpu"
-        self.device = paddle.set_device(self.device)
+        self.device = paddle.device.set_device(self.device)
 
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
@@ -264,6 +285,18 @@ class Solver:
                         f"{self.compute_metric_by_batch} when compute_metric_by_batch="
                         f"{self.compute_metric_by_batch}."
                     )
+            # check metric name uniqueness over all validators
+            _count = {}
+            for _validator in validator.values():
+                for metric_name in _validator.metric:
+                    if metric_name in _count:
+                        logger.warning(
+                            f"Metric name({metric_name}) is duplicated, please ensure "
+                            "all metric names are unique over all given validators."
+                        )
+                    _count[metric_name] = 1
+            del _count
+
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         if not cfg:
             self.eval_with_no_grad = eval_with_no_grad
@@ -299,11 +332,21 @@ class Solver:
                 self.model, self.pretrained_model_path, self.equation
             )
 
+        self.cur_metric = float("inf")
         # initialize an dict for tracking best metric during training
         self.best_metric = {
             "metric": float("inf"),
             "epoch": 0,
         }
+
+        # use loss aggregator, use Sum if None
+        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
+            raise ValueError(
+                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
+                "please set use_amp=False."
+            )
+        self.loss_aggregator = loss_aggregator or mtl.Sum()
+
         # load model checkpoint, usually used for resume training
         if not cfg:
             self.checkpoint_path = checkpoint_path
@@ -320,6 +363,7 @@ class Solver:
                 self.scaler,
                 self.equation,
                 self.ema_model,
+                self.loss_aggregator,
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -396,6 +440,7 @@ class Solver:
         self.wandb_writer = None
         if not cfg:
             self.use_wandb = use_wandb
+            self.wandb_config = {}
         if self.use_wandb:
             try:
                 import wandb
@@ -405,7 +450,7 @@ class Solver:
                 )
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
-                    self.wandb_writer = wandb.init(**wandb_config)
+                    self.wandb_writer = wandb.init(**self.wandb_config)
 
         # set TensorBoardX tool
         self.tbd_writer = None
@@ -436,7 +481,7 @@ class Solver:
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
                     f"Detected paddlepaddle version is '{paddle_version}', "
-                    "currently it is recommended to use release 2.6 or develop version."
+                    "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
         else:
             paddle_version = f"develop({paddle.version.commit[:7]})"
@@ -446,16 +491,12 @@ class Solver:
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass. Defaults to False
-        jit.enable_to_static(to_static)
-        logger.message(f"Set to_static={to_static} for computational optimization.")
-
-        # use loss aggregator, use Sum if None
-        if isinstance(loss_aggregator, (mtl.AGDA, mtl.PCGrad)) and self.use_amp:
-            raise ValueError(
-                "Auto Mix Precision do not support AGDA, PCGrad loss aggregator yet, "
-                "please set use_amp=False."
-            )
-        self.loss_aggregator = loss_aggregator or mtl.Sum()
+        if not cfg:
+            self.to_static = to_static
+        jit.enable_to_static(self.to_static)
+        logger.message(
+            f"Set to_static={self.to_static} for computational optimization."
+        )
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -488,10 +529,11 @@ class Solver:
                     for name in container.output_expr:
                         if isinstance(container.output_expr[name], sp.Basic):
                             container.output_expr[name] = funcs[ind]
-                            if self.world_size > 1:
-                                container.output_expr[name] = dist_wrapper(
-                                    container.output_expr[name]
-                                )
+                            # FIXME: Equation with parameter not support yet.
+                            # if self.world_size > 1:
+                            #     container.output_expr[name] = dist_wrapper(
+                            #         container.output_expr[name]
+                            #     )
                             ind += 1
 
         if self.constraint:
@@ -534,16 +576,15 @@ class Solver:
             if self.ema_model and epoch_id % self.avg_freq == 0:
                 self.ema_model.update()
 
-            cur_metric = float("inf")
             # evaluate during training
             if (
                 self.eval_during_train
                 and epoch_id % self.eval_freq == 0
                 and epoch_id >= self.start_eval_epoch
             ):
-                cur_metric, metric_dict_group = self.eval(epoch_id)
-                if cur_metric < self.best_metric["metric"]:
-                    self.best_metric["metric"] = cur_metric
+                self.cur_metric, metric_dict_group = self.eval(epoch_id)
+                if self.cur_metric < self.best_metric["metric"]:
+                    self.best_metric["metric"] = self.cur_metric
                     self.best_metric["epoch"] = epoch_id
                     save_load.save_checkpoint(
                         self.model,
@@ -553,6 +594,7 @@ class Solver:
                         self.output_dir,
                         "best_model",
                         self.equation,
+                        aggregator=self.loss_aggregator,
                     )
                 logger.info(
                     f"[Eval][Epoch {epoch_id}]"
@@ -613,25 +655,27 @@ class Solver:
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
-                    {"metric": cur_metric, "epoch": epoch_id},
+                    {"metric": self.cur_metric, "epoch": epoch_id},
                     self.scaler,
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
                     ema_model=self.ema_model,
+                    aggregator=self.loss_aggregator,
                 )
 
             # save the latest model for convenient resume training
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
-                {"metric": cur_metric, "epoch": epoch_id},
+                {"metric": self.cur_metric, "epoch": epoch_id},
                 self.scaler,
                 self.output_dir,
                 "latest",
                 self.equation,
                 print_log=(epoch_id == start_epoch),
                 ema_model=self.ema_model,
+                aggregator=self.loss_aggregator,
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
@@ -696,7 +740,7 @@ class Solver:
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
         expr_dict: Optional[Dict[str, Callable]] = None,
-        batch_size: int = 64,
+        batch_size: Optional[int] = 64,
         no_grad: bool = True,
         return_numpy: bool = False,
     ) -> Dict[str, Union[paddle.Tensor, np.ndarray]]:
@@ -706,7 +750,9 @@ class Solver:
             input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Input data in dict.
             expr_dict (Optional[Dict[str, Callable]]): Expression dict, which guide to
                 compute equation variable with callable function. Defaults to None.
-            batch_size (int, optional): Predicting by batch size. Defaults to 64.
+            batch_size (Optional[int]): Predicting by batch size. If None, data in
+                `input_dict` will be used directly for inference without any batch slicing.
+                Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
             return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
@@ -759,26 +805,32 @@ class Solver:
             if self.world_size > 1
             else input_dict
         )
-        local_batch_num = (local_num_samples_pad + (batch_size - 1)) // batch_size
+        local_batch_num = (
+            (local_num_samples_pad + (batch_size - 1)) // batch_size
+            if batch_size is not None
+            else 1
+        )
 
         pred_dict = misc.Prettydefaultdict(list)
         with self.no_grad_context_manager(no_grad), self.no_sync_context_manager(
             self.world_size > 1, self.model
         ):
             for batch_id in range(local_batch_num):
-                batch_input_dict = {}
-                st = batch_id * batch_size
-                ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
-
-                # prepare batch input dict
-                for key in local_input_dict:
-                    if not paddle.is_tensor(local_input_dict[key]):
+                # prepare local batch input
+                if batch_size is not None:
+                    st = batch_id * batch_size
+                    ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
+                    batch_input_dict = {
+                        k: v[st:ed] for k, v in local_input_dict.items()
+                    }
+                else:
+                    batch_input_dict = {**local_input_dict}
+                # Keep dtype unchanged as all dtype be correct when given into predict function
+                for key in batch_input_dict:
+                    if not paddle.is_tensor(batch_input_dict[key]):
                         batch_input_dict[key] = paddle.to_tensor(
-                            local_input_dict[key][st:ed], paddle.get_default_dtype()
+                            batch_input_dict[key], stop_gradient=no_grad
                         )
-                    else:
-                        batch_input_dict[key] = local_input_dict[key][st:ed]
-                    batch_input_dict[key].stop_gradient = no_grad
 
                 # forward
                 with self.autocast_context_manager(self.use_amp, self.amp_level):
@@ -786,21 +838,21 @@ class Solver:
                         expr_dict, batch_input_dict, self.model
                     )
 
-                # collect batch data
+                # collect local batch output
                 for key, batch_output in batch_output_dict.items():
                     pred_dict[key].append(
                         batch_output.detach() if no_grad else batch_output
                     )
 
-            # concatenate local predictions
+            # concatenate local output
             pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
             if self.world_size > 1:
-                # gather global predictions from all devices if world_size > 1
+                # gather global output from all devices if world_size > 1
                 pred_dict = {
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
-                # rearrange predictions as the same order of input_dict according
+                # rearrange output as the same order of input_dict according
                 # to inverse permutation
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(
@@ -811,7 +863,7 @@ class Solver:
                 perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
                 perm_inv = paddle.to_tensor(perm_inv)
                 pred_dict = {key: value[perm_inv] for key, value in pred_dict.items()}
-                # then discard predictions of padding data at the end if num_pad > 0
+                # then discard output of padding data at the end if num_pad > 0
                 if num_pad > 0:
                     pred_dict = {
                         key: value[:num_samples] for key, value in pred_dict.items()
@@ -832,28 +884,41 @@ class Solver:
     @misc.run_on_eval_mode
     def export(
         self,
-        input_spec: List["InputSpec"],
+        input_spec: List[Dict[str, InputSpec]],
         export_path: str,
         with_onnx: bool = False,
         skip_prune_program: bool = False,
+        *,
+        full_graph: bool = True,
+        ignore_modules: Optional[List[ModuleType]] = None,
     ):
         """
         Convert model to static graph model and export to files.
 
         Args:
-            input_spec (List[InputSpec]): InputSpec describes the signature information
-                of the model input.
+            input_spec (List[Dict[str, InputSpec]]): InputSpec describes the signature
+                information of the model input.
             export_path (str): The path prefix to save model.
             with_onnx (bool, optional): Whether to export model into onnx after
                 paddle inference models are exported. Defaults to False.
             skip_prune_program (bool, optional): Whether prune program, pruning program
                 may cause unexpectable result, e.g. llm-inference. Defaults to False.
+            full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
+                when set to True, where otherwise use Abstract Syntax Tree(AST) if False.
+                Defaults to True.
+            ignore_modules (List[ModuleType]): Adds modules that should be ignored during
+                conversion. Builtin modules that have been ignored are collections, pdb,
+                copy, inspect, re, numpy, logging, six. For example, einops can be added
+                here. Defaults to None.
         """
+        if ignore_modules is not None:
+            jit.ignore_module(ignore_modules)
+
         jit.enable_to_static(True)
 
         if self.pretrained_model_path is None:
             logger.warning(
-                "'pretrained_model_path' is not given, so the weights of exported "
+                "'INFER.pretrained_model_path' is not given, so the weights of exported "
                 "model will be random initialized."
             )
 
@@ -861,7 +926,7 @@ class Solver:
         static_model = jit.to_static(
             self.model,
             input_spec=input_spec,
-            full_graph=True,
+            full_graph=full_graph,
         )
 
         # save static graph model to disk
@@ -873,11 +938,18 @@ class Solver:
             raise e
         logger.message(
             f"Inference model has been exported to: {export_path}, including "
-            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            + (
+                "*.json, *.pdiparams files."
+                if paddle.framework.use_pir_api()
+                else "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+            )
         )
         jit.enable_to_static(False)
 
         if with_onnx:
+            # TODO: support pir + onnx
+            if paddle.framework.use_pir_api():
+                raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
                     "Please install paddle2onnx with `pip install paddle2onnx`"

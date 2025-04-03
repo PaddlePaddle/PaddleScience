@@ -1,3 +1,13 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -5,15 +15,6 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
@@ -35,7 +36,7 @@ FILE_PATH: ./datasets/darcyflow/
 DATASET:
   label_keys: ["y"]
   train_resolution: 16
-  test_resolutions: [16,32]
+  test_resolutions: [16, 32]
   grid_boundaries: [[0, 1], [0, 1]]
   positional_encoding: True
   encode_input: False
@@ -52,9 +53,9 @@ MODEL:
   hidden_channels: 64
   projection_channels: 64
   n_layers: 5
-  uno_out_channels: [32,64,64,64,32]
-  uno_n_modes: [[16,16],[8,8],[8,8],[8,8],[16,16]]
-  uno_scalings: [[1.0,1.0],[0.5,0.5],[1,1],[2,2],[1,1]]
+  uno_out_channels: [32, 64, 64, 64, 32]
+  uno_n_modes: [[16, 16], [8, 8], [8, 8], [8, 8], [16, 16]]
+  uno_scalings: [[1.0, 1.0], [0.5, 0.5], [1, 1], [2, 2], [1, 1]]
   horizontal_skips_map: null
   incremental_n_modes: null
 
@@ -75,9 +76,8 @@ MODEL:
   implementation: "factorized"
   domain_padding: 0.2 #0.078125
   domain_padding_mode: "one-sided" #symmetric
-  fft_norm: 'forward'
+  fft_norm: "forward"
   patching_levels: 0
-
 
 # training settings
 TRAIN:
@@ -103,7 +103,6 @@ TRAIN:
   # /home/aistudio/darcy_flow_small.pdparams
   pretrained_model_path: null
   checkpoint_path: null
-
 
 # evaluation settings
 EVAL:

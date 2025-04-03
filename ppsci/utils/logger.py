@@ -43,7 +43,7 @@ _COLORLOG_CONFIG = {
     "DEBUG": "green",
     "WARNING": "yellow",
     "ERROR": "red",
-    "MESSAGE": "cyan",
+    "MESSAGE": "bold_cyan",
 }
 
 __all__ = [

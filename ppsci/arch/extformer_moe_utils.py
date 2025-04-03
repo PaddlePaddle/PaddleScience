@@ -1,11 +1,12 @@
 import math
 
 import paddle
+from paddle import nn
 
 # MoE Gating
 
 
-class GatingNet(paddle.nn.Layer):
+class GatingNet(nn.Layer):
     def __init__(self, moe_config, input_shape, in_channels):
         super().__init__()
 
@@ -16,12 +17,12 @@ class GatingNet(paddle.nn.Layer):
         assert len(input_shape) == 4
         self.input_shape = input_shape
 
-        self.noise_lin = paddle.nn.Linear(
+        self.noise_lin = nn.Linear(
             in_features=in_channels, out_features=self.num_experts, bias_attr=False
         )
         self.noise_eps = 1e-2
-        self.softplus = paddle.nn.Softplus()
-        self.softmax = paddle.nn.Softmax(axis=-1)
+        self.softplus = nn.Softplus()
+        self.softmax = nn.Softmax(axis=-1)
 
         self.importance_weight = moe_config["importance_weight"]
         self.load_weight = moe_config["load_weight"]
@@ -178,7 +179,7 @@ class LinearGatingNet(GatingNet):
         assert len(input_shape) == 4
         T, H, W, C = input_shape
 
-        self.lin = paddle.nn.Linear(
+        self.lin = nn.Linear(
             in_features=in_channels, out_features=self.num_experts, bias_attr=False
         )
 
@@ -199,7 +200,7 @@ class SpatialLatentGatingNet(GatingNet):
         self.routing_weights = paddle.create_parameter(
             shape=[H, W, self.num_experts],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
 
     def gating(self, x, t_map=None):
@@ -222,16 +223,16 @@ class SpatialLatentLinearGatingNet(GatingNet):
         self.spatial_routing_weights = paddle.create_parameter(
             shape=[H, W, self.num_experts],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
-        self.lin = paddle.nn.Linear(
+        self.lin = nn.Linear(
             in_features=in_channels, out_features=self.num_experts, bias_attr=False
         )
 
         self.combine_weight = paddle.create_parameter(
             shape=[H, W, self.num_experts, 2],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
 
     def gating(self, x, t_map=None):
@@ -262,7 +263,7 @@ class CuboidLatentGatingNet(GatingNet):
         self.routing_weights = paddle.create_parameter(
             shape=[T, H, W, self.num_experts],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
 
     def gating(self, x, t_map=None):
@@ -285,17 +286,17 @@ class CuboidLatentLinearGatingNet(GatingNet):
         self.cuboid_routing_weights = paddle.create_parameter(
             shape=[T, H, W, self.num_experts],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
 
-        self.lin = paddle.nn.Linear(
+        self.lin = nn.Linear(
             in_features=in_channels, out_features=self.num_experts, bias_attr=False
         )
 
         self.combine_weight = paddle.create_parameter(
             shape=[T, H, W, self.num_experts, 2],
             dtype="float32",
-            default_initializer=paddle.nn.initializer.Uniform(-bound, bound),
+            default_initializer=nn.initializer.Uniform(-bound, bound),
         )
 
     def gating(self, x, t_map=None):
@@ -418,7 +419,7 @@ class DenseDispatcher(object):
 # RNC
 
 
-class LabelDifference(paddle.nn.Layer):
+class LabelDifference(nn.Layer):
     def __init__(self, distance_type="l1"):
         super().__init__()
         self.distance_type = distance_type
@@ -435,7 +436,7 @@ class LabelDifference(paddle.nn.Layer):
             raise ValueError(self.distance_type)
 
 
-class FeatureSimilarity(paddle.nn.Layer):
+class FeatureSimilarity(nn.Layer):
     def __init__(self, similarity_type="l2", temperature=2):
         super().__init__()
         self.similarity_type = similarity_type
@@ -454,7 +455,7 @@ class FeatureSimilarity(paddle.nn.Layer):
             logits -= logits_max.detach()
             return logits
         elif self.similarity_type == "cosine":
-            cos_func = paddle.nn.CosineSimilarity(axis=-1)
+            cos_func = nn.CosineSimilarity(axis=-1)
             logits = cos_func(features[:, :, None, :], features[:, None, :, :])
             logits /= self.t
             return logits
@@ -462,7 +463,7 @@ class FeatureSimilarity(paddle.nn.Layer):
             raise ValueError(self.similarity_type)
 
 
-class RnCLoss(paddle.nn.Layer):
+class RnCLoss(nn.Layer):
     def __init__(self, rnc_config):
         super().__init__()
 
@@ -474,7 +475,7 @@ class RnCLoss(paddle.nn.Layer):
         )
         self.rnc_weight = rnc_config["rank_reg_coeff"]
         self.loss_cal_mode = rnc_config["loss_cal_style"]
-        self.softmax_cri = paddle.nn.Softmax(axis=-1)
+        self.softmax_cri = nn.Softmax(axis=-1)
 
     def cal_loss(self, features, labels):
 

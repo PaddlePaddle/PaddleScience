@@ -82,21 +82,25 @@
     # sfno 模型推理
     python train_sfno.py mode=infer
     ```
-| 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
-| :-- | :-- | :-- | :-- | :-- |
-| [tfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams) | 0.13113 | 0.08514 | 0.30353 | 0.12408
 
 | 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
 | :-- | :-- | :-- | :-- | :-- |
-| [uno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams) | 0.18360 | 0.11040 | 0.74840 | 0.60193
+| [tfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_tfno.pdparams) | 0.13113 | 0.08514 | 0.30353 | 0.12408 |
 
-| 模型 | 32x64_l2 | 64x128_l2 |
-| :-- | :-- | :-- |
-| [sfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams) | 1.01075 | 2.33481 |
+| 模型 | 16_h1 | 16_l2 | 32_h1 | 32_l2 |
+| :-- | :-- | :-- | :-- | :-- |
+| [uno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_uno.pdparams) | 0.18360 | 0.11040 | 0.74840 | 0.60193 |
+
+| 模型                                                                                                           | 32x64_l2 | 64x128_l2 |
+|:-- |:-- | :-- |
+| [sfno 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/neuraloperator/neuraloperator_sfno.pdparams) | 1.01075  | 2.33481   |
 
 ## 1. 背景简介
+
 许多科学和工程问题，如分子动力学、微力学和湍流流动，都需要反复求解复杂的偏微分方程（PDE）系统，以便获取某些参数的不同值。为了准确捕捉所模拟的现象，这些系统通常需要进行精细的离散化。然而，这也导致了传统数值求解器运行缓慢，有时甚至效率低下。在这种情况下，机器学习方法有望通过提供快速求解器来革新科学领域，这些求解器能够近似或增强传统方法。但值得注意的是，经典神经网络是在有限维空间之间进行映射，因此它们只能学习与特定离散化相关的解决方案，这在实际应用中是一个限制。为了克服这一限制，最近的一项新研究提出了使用神经网络来学习无网格、无限维的算子。这种神经算子通过生成一组用于不同离散化且与网格无关的参数，解决了有限维算子方法中的网格依赖性问题。该研究通过直接在傅里叶空间中参数化积分核，制定了一个新的神经算子，从而创建了一个富有表现力和高效的架构。论文中对 Burgers 方程、Darcy 流和 Navier-Stokes 方程进行了实验验证。值得一提的是，傅里叶神经算子作为首个基于机器学习的方法，成功地以零样本超分辨率模拟了湍流，其速度比传统PDE求解器快达三个数量级。
+
 ## 2. 模型原理
+
 本章节仅对 NeuralOperator 的模型原理进行简单地介绍，详细的理论推导请阅读[Fourier Neural Operator for Parametric Partial Differential Equations](https://arxiv.org/abs/2010.08895)。
 NeuralOperator 引入了傅里叶神经算子 (Fourier neural operator)，这是一种新颖的深度学习架构，能够学习函数之间无限维空间的映射；积分算子被限制为卷积，并通过傅里叶域中的线性变换实例化。傅里叶神经算子是第一个学习湍流状态下 Navier-Stokes 方程族的分辨率不变解算子的工作，其中以前基于图形的神经算子不收敛。该方法共享相同的学习网络参数，而不考虑输入和输出空间上使用的离散化。
 

@@ -775,8 +775,8 @@ def lambdify(
         Args:
             single_expr (sp.Basic): Single sympy expression, such as "a+b*c".
             graph_filename_ (Optional[str]): Save computational graph to
-            `/path/to/graph_filename.png` for given `expr`, if `graph_filename` is not
-            None and a valid string, such as 'momentum_x'. Defaults to None.
+                `/path/to/graph_filename.png` for given `expr`, if `graph_filename` is not
+                None and a valid string, such as 'momentum_x'. Defaults to None.
 
         Returns:
             List[Node]: Sequence of callable nodes.

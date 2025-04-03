@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from paddle import optimizer
 
     from ppsci import equation
+    from ppsci.loss import mtl
     from ppsci.utils import ema
 
 
@@ -42,7 +43,9 @@ __all__ = [
 
 
 def _load_pretrain_from_path(
-    path: str, model: nn.Layer, equation: Optional[Dict[str, equation.PDE]] = None
+    path: str,
+    model: nn.Layer,
+    equation: Optional[Dict[str, equation.PDE]] = None,
 ):
     """Load pretrained model from given path.
 
@@ -79,7 +82,9 @@ def _load_pretrain_from_path(
 
 
 def load_pretrain(
-    model: nn.Layer, path: str, equation: Optional[Dict[str, equation.PDE]] = None
+    model: nn.Layer,
+    path: str,
+    equation: Optional[Dict[str, equation.PDE]] = None,
 ):
     """
     Load pretrained model from given path or url.
@@ -131,6 +136,7 @@ def load_checkpoint(
     grad_scaler: Optional[amp.GradScaler] = None,
     equation: Optional[Dict[str, equation.PDE]] = None,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ) -> Dict[str, Any]:
     """Load from checkpoint.
 
@@ -141,6 +147,7 @@ def load_checkpoint(
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -166,6 +173,7 @@ def load_checkpoint(
             equation_dict = paddle.load(f"{path}.pdeqn")
 
     # set state dict
+    logger.message(f"* Loading model checkpoint from {path}.pdparams")
     missing_keys, unexpected_keys = model.set_state_dict(param_dict)
     if missing_keys:
         logger.warning(
@@ -178,16 +186,25 @@ def load_checkpoint(
             "and corresponding weights will be ignored."
         )
 
+    logger.message(f"* Loading optimizer checkpoint from {path}.pdopt")
     optimizer.set_state_dict(optim_dict)
     if grad_scaler is not None:
+        logger.message(f"* Loading grad scaler checkpoint from {path}.pdscaler")
         grad_scaler.load_state_dict(scaler_dict)
     if equation is not None and equation_dict is not None:
+        logger.message(f"* Loading equation checkpoint from {path}.pdeqn")
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
     if ema_model:
+        logger.message(f"* Loading EMA checkpoint from {path}_ema.pdparams")
         avg_param_dict = paddle.load(f"{path}_ema.pdparams")
         ema_model.set_state_dict(avg_param_dict)
+
+    if aggregator is not None and aggregator.should_persist:
+        logger.message(f"* Loading loss aggregator checkpoint from {path}.pdagg")
+        aggregator_dict = paddle.load(f"{path}.pdagg")
+        aggregator.set_state_dict(aggregator_dict)
 
     logger.message(f"Finish loading checkpoint from {path}")
     return metric_dict
@@ -203,6 +220,7 @@ def save_checkpoint(
     equation: Optional[Dict[str, equation.PDE]] = None,
     print_log: bool = True,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """
     Save checkpoint, including model params, optimizer params, metric information.
@@ -219,6 +237,7 @@ def save_checkpoint(
             keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
             Defaults to True.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -257,6 +276,9 @@ def save_checkpoint(
 
     if ema_model:
         paddle.save(ema_model.state_dict(), f"{ckpt_path}_ema.pdparams")
+
+    if aggregator and aggregator.should_persist:
+        paddle.save(aggregator.state_dict(), f"{ckpt_path}.pdagg")
 
     if print_log:
         log_str = f"Finish saving checkpoint to: {ckpt_path}"

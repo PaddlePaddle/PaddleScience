@@ -14,6 +14,7 @@
 
 import copy
 
+from ppsci.loss import mtl
 from ppsci.loss.base import Loss
 from ppsci.loss.chamfer import ChamferLoss
 from ppsci.loss.func import FunctionalLoss
@@ -46,6 +47,7 @@ __all__ = [
     "MSELossWithL2Decay",
     "PeriodicMSELoss",
     "KLLoss",
+    "mtl",
 ]
 
 

@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from typing import Optional
 from typing import Tuple
 
+import paddle
 from paddle import inference as paddle_inference
 from typing_extensions import Literal
 
@@ -37,7 +38,7 @@ class Predictor:
     Args:
         pdmodel_path (Optional[str]): Path to the PaddlePaddle model file. Defaults to None.
         pdiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
-        device (Literal["gpu", "cpu", "npu", "xpu"], optional): Device to use for inference. Defaults to "cpu".
+        device (Literal["cpu", "gpu", "npu", "xpu", "sdaa"], optional): Device to use for inference. Defaults to "cpu".
         engine (Literal["native", "tensorrt", "onnx", "mkldnn"], optional): Inference engine to use. Defaults to "native".
         precision (Literal["fp32", "fp16", "int8"], optional): Precision to use for inference. Defaults to "fp32".
         onnx_path (Optional[str], optional): Path to the ONNX model file. Defaults to None.
@@ -53,7 +54,7 @@ class Predictor:
         pdmodel_path: Optional[str] = None,
         pdiparams_path: Optional[str] = None,
         *,
-        device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu",
+        device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu",
         engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
         precision: Literal["fp32", "fp16", "int8"] = "fp32",
         onnx_path: Optional[str] = None,
@@ -94,20 +95,26 @@ class Predictor:
         )
 
     def predict(self, input_dict):
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"Method 'predict' is should be implemented in {self.__class__.__name__} class."
+        )
 
     def _create_paddle_predictor(
         self,
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
+        if paddle.framework.use_pir_api():
+            # NOTE: Using 'json' as suffix instead of 'pdmodel' in PIR mode
+            self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json", 1)
+
         if not osp.exists(self.pdmodel_path):
             raise FileNotFoundError(
                 f"Given 'pdmodel_path': {self.pdmodel_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdmodel_path is correct."
             )
         if not osp.exists(self.pdiparams_path):
             raise FileNotFoundError(
                 f"Given 'pdiparams_path': {self.pdiparams_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdiparams_path is correct."
             )
 
         config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
@@ -207,9 +214,9 @@ class Predictor:
         return predictor, config
 
     def _check_device(self, device: str):
-        if device not in ["gpu", "cpu", "npu", "xpu"]:
+        if device not in ["cpu", "gpu", "npu", "xpu", "sdaa"]:
             raise ValueError(
-                "Inference only supports 'gpu', 'cpu', 'npu' and 'xpu' devices, "
+                "Inference only supports 'gpu', 'cpu', 'npu', 'xpu' and 'sdaa' devices, "
                 f"but got {device}."
             )
 

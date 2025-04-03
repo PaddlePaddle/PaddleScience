@@ -1,10 +1,10 @@
+import enso_metric
 import hydra
 import paddle
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 from paddle import nn
 
-import examples.extformer_moe.enso_metric as enso_metric
 import ppsci
 
 

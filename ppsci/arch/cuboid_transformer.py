@@ -16,7 +16,7 @@ from ppsci.utils import initializer
 """A space-time Transformer with Cuboid Attention"""
 
 
-class InitialEncoder(paddle.nn.Layer):
+class InitialEncoder(nn.Layer):
     def __init__(
         self,
         dim,
@@ -38,16 +38,14 @@ class InitialEncoder(paddle.nn.Layer):
         for i in range(num_conv_layers):
             if i == 0:
                 conv_block.append(
-                    paddle.nn.Conv2D(
+                    nn.Conv2D(
                         kernel_size=(3, 3),
                         padding=(1, 1),
                         in_channels=dim,
                         out_channels=out_dim,
                     )
                 )
-                conv_block.append(
-                    paddle.nn.GroupNorm(num_groups=16, num_channels=out_dim)
-                )
+                conv_block.append(nn.GroupNorm(num_groups=16, num_channels=out_dim))
                 conv_block.append(
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
@@ -55,22 +53,20 @@ class InitialEncoder(paddle.nn.Layer):
                 )
             else:
                 conv_block.append(
-                    paddle.nn.Conv2D(
+                    nn.Conv2D(
                         kernel_size=(3, 3),
                         padding=(1, 1),
                         in_channels=out_dim,
                         out_channels=out_dim,
                     )
                 )
-                conv_block.append(
-                    paddle.nn.GroupNorm(num_groups=16, num_channels=out_dim)
-                )
+                conv_block.append(nn.GroupNorm(num_groups=16, num_channels=out_dim))
                 conv_block.append(
                     act_mod.get_activation(activation)
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(NEGATIVE_SLOPE)
                 )
-        self.conv_block = paddle.nn.Sequential(*conv_block)
+        self.conv_block = nn.Sequential(*conv_block)
         if isinstance(downsample_scale, int):
             patch_merge_downsample = (1, downsample_scale, downsample_scale)
         elif len(downsample_scale) == 2:
@@ -121,7 +117,7 @@ class InitialEncoder(paddle.nn.Layer):
         return x
 
 
-class FinalDecoder(paddle.nn.Layer):
+class FinalDecoder(nn.Layer):
     def __init__(
         self,
         target_thw: Tuple[int, ...],
@@ -142,20 +138,20 @@ class FinalDecoder(paddle.nn.Layer):
         conv_block = []
         for i in range(num_conv_layers):
             conv_block.append(
-                paddle.nn.Conv2D(
+                nn.Conv2D(
                     kernel_size=(3, 3),
                     padding=(1, 1),
                     in_channels=dim,
                     out_channels=dim,
                 )
             )
-            conv_block.append(paddle.nn.GroupNorm(num_groups=16, num_channels=dim))
+            conv_block.append(nn.GroupNorm(num_groups=16, num_channels=dim))
             conv_block.append(
                 act_mod.get_activation(activation)
                 if activation != "leaky_relu"
                 else nn.LeakyReLU(NEGATIVE_SLOPE)
             )
-        self.conv_block = paddle.nn.Sequential(*conv_block)
+        self.conv_block = nn.Sequential(*conv_block)
         self.upsample = cuboid_decoder.Upsample3DLayer(
             dim=dim,
             out_dim=dim,
@@ -196,7 +192,7 @@ class FinalDecoder(paddle.nn.Layer):
         return x
 
 
-class InitialStackPatchMergingEncoder(paddle.nn.Layer):
+class InitialStackPatchMergingEncoder(nn.Layer):
     def __init__(
         self,
         num_merge: int,
@@ -220,8 +216,8 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
         self.downsample_scale_list = downsample_scale_list[:num_merge]
         self.num_conv_per_merge_list = num_conv_per_merge_list
         self.num_group_list = [max(1, out_dim // 4) for out_dim in self.out_dim_list]
-        self.conv_block_list = paddle.nn.LayerList()
-        self.patch_merge_list = paddle.nn.LayerList()
+        self.conv_block_list = nn.LayerList()
+        self.patch_merge_list = nn.LayerList()
         for i in range(num_merge):
             if i == 0:
                 in_dim = in_dim
@@ -236,7 +232,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
                 else:
                     conv_in_dim = out_dim
                 conv_block.append(
-                    paddle.nn.Conv2D(
+                    nn.Conv2D(
                         kernel_size=(3, 3),
                         padding=(1, 1),
                         in_channels=conv_in_dim,
@@ -244,7 +240,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
                     )
                 )
                 conv_block.append(
-                    paddle.nn.GroupNorm(
+                    nn.GroupNorm(
                         num_groups=self.num_group_list[i], num_channels=out_dim
                     )
                 )
@@ -253,7 +249,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(NEGATIVE_SLOPE)
                 )
-            conv_block = paddle.nn.Sequential(*conv_block)
+            conv_block = nn.Sequential(*conv_block)
             self.conv_block_list.append(conv_block)
             patch_merge = cuboid_encoder.PatchMerging3D(
                 dim=out_dim,
@@ -303,7 +299,7 @@ class InitialStackPatchMergingEncoder(paddle.nn.Layer):
         return x
 
 
-class FinalStackUpsamplingDecoder(paddle.nn.Layer):
+class FinalStackUpsamplingDecoder(nn.Layer):
     def __init__(
         self,
         target_shape_list: Tuple[Tuple[int, ...]],
@@ -326,8 +322,8 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
         self.in_dim = in_dim
         self.num_conv_per_up_list = num_conv_per_up_list
         self.num_group_list = [max(1, out_dim // 4) for out_dim in self.out_dim_list]
-        self.conv_block_list = paddle.nn.LayerList()
-        self.upsample_list = paddle.nn.LayerList()
+        self.conv_block_list = nn.LayerList()
+        self.upsample_list = nn.LayerList()
         for i in range(self.num_upsample):
             if i == 0:
                 in_dim = in_dim
@@ -349,7 +345,7 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
                 else:
                     conv_in_dim = out_dim
                 conv_block.append(
-                    paddle.nn.Conv2D(
+                    nn.Conv2D(
                         kernel_size=(3, 3),
                         padding=(1, 1),
                         in_channels=conv_in_dim,
@@ -357,7 +353,7 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
                     )
                 )
                 conv_block.append(
-                    paddle.nn.GroupNorm(
+                    nn.GroupNorm(
                         num_groups=self.num_group_list[i], num_channels=out_dim
                     )
                 )
@@ -366,7 +362,7 @@ class FinalStackUpsamplingDecoder(paddle.nn.Layer):
                     if activation != "leaky_relu"
                     else nn.LeakyReLU(NEGATIVE_SLOPE)
                 )
-            conv_block = paddle.nn.Sequential(*conv_block)
+            conv_block = nn.Sequential(*conv_block)
             self.conv_block_list.append(conv_block)
         self.reset_parameters()
 
@@ -686,7 +682,7 @@ class CuboidTransformer(base.Arch):
             embed_dim=base_units, typ=pos_embed_type, maxH=H_in, maxW=W_in, maxT=T_in
         )
         mem_shapes = self.encoder.get_mem_shapes()
-        self.z_proj = paddle.nn.Linear(
+        self.z_proj = nn.Linear(
             in_features=mem_shapes[-1][-1], out_features=mem_shapes[-1][-1]
         )
         self.dec_pos_embed = cuboid_decoder.PosEmbed(
@@ -799,7 +795,7 @@ class CuboidTransformer(base.Arch):
             new_input_shape = self.initial_encoder.patch_merge.get_out_shape(
                 self.input_shape
             )
-            self.dec_final_proj = paddle.nn.Linear(
+            self.dec_final_proj = nn.Linear(
                 in_features=self.base_units, out_features=C_out
             )
         elif self.initial_downsample_type == "stack_conv":
@@ -839,7 +835,7 @@ class CuboidTransformer(base.Arch):
                 linear_init_mode=self.down_up_linear_init_mode,
                 norm_init_mode=self.norm_init_mode,
             )
-            self.dec_final_proj = paddle.nn.Linear(
+            self.dec_final_proj = nn.Linear(
                 in_features=dec_target_shape_list[-1][-1], out_features=C_out
             )
             new_input_shape = self.initial_encoder.get_out_shape_list(self.input_shape)[
@@ -892,7 +888,7 @@ class CuboidTransformer(base.Arch):
                 shape=[B, -1, -1, -1, -1]
             )
         elif self.z_init_method == "nearest_interp":
-            initial_z = paddle.nn.functional.interpolate(
+            initial_z = nn.functional.interpolate(
                 x=final_mem.transpose(perm=[0, 4, 1, 2, 3]),
                 size=(T_out, final_mem.shape[2], final_mem.shape[3]),
             ).transpose(perm=[0, 2, 3, 4, 1])

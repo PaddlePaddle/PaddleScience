@@ -28,4 +28,11 @@
         - DGMRDataset
         - DarcyFlowDataset
         - SphericalSWEDataset
+        - SEVIRDataset
+        - MOlFLOWDataset
+        - CGCNNDataset
+        - PEMSDataset
+        - DrivAerNetDataset
+        - DrivAerNetPlusPlusDataset
+        - IFMMoeDataset
       show_root_heading: true

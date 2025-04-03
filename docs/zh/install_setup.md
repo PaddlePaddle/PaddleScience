@@ -10,7 +10,7 @@
     # pull image
     docker pull hydrogensulfate/paddlescience
 
-    # create a container named 'paddlescience_container' based on pulled image
+    # create a container named 'paddlescience_container' using the pulled image
     ## docker version < 19.03
     nvidia-docker run --name paddlescience_container --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
 
@@ -40,7 +40,7 @@
 
 如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
 
-1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包，并手动安装。
+1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包并手动安装。
 2. 创建 python 3.9 环境，并进入该环境。
 
     ``` sh
@@ -79,6 +79,14 @@
     ./README.md:pip_install
     --8<--
 
+=== "conda 安装"
+
+    执行以下命令以 conda 的方式安装 release / nightly build 版本的 PaddleScience。
+
+    --8<--
+    ./README.md:conda_install
+    --8<--
+
 === "设置 PYTHONPATH"
 
     如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
@@ -88,48 +96,55 @@
         ``` sh
         cd PaddleScience/
         export PYTHONPATH=$PYTHONPATH:$PWD
-        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
     === "Windows"
 
         ``` sh
         cd PaddleScience/
-        set PYTHONPATH=%cd%
-        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        set PYTHONPATH=%PYTHONPATH%;%CD%
+        python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
 
     上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
 
-#### 1.4.2 安装额外功能[可选]
+#### 1.4.2 安装Mesh几何[可选]
 
-如需使用 `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh` 等复杂几何文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
-pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动**中已安装上述依赖库)。
+PaddleScience 提供了两种复杂几何类型，如下所示：
 
-否则无法使用 `ppsci.geometry.Mesh` 等基于复杂几何文件的 API，因此也无法运行如 [Aneurysm](./examples/aneurysm.md) 等依赖 `ppsci.geometry.Mesh` API 的复杂案例。
+| API 名称 | 支持的文件类型 | 安装方式 | 使用方式 |
+| -- | -- | -- | -- |
+|[`ppsci.geometry.Mesh`](./api/geometry.md#ppsci.geometry.Mesh) | `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh`| 参考下方的 "PyMesh 安装命令"| `ppsci.geometry.Mesh(mesh_path)`|
+|[`ppsci.geometry.SDFMesh`](./api/geometry.md#ppsci.geometry.SDFMesh "实验性功能") | `.stl` | `pip install warp-lang 'numpy-stl>=2.16,<2.17'` | `ppsci.geometry.SDFMesh.from_stl(stl_path)` |
+
+!!! warning "相关案例运行说明"
+
+    [Bracket](./examples/aneurysm.md)、[Aneurysm](./examples/aneurysm.md) 等个别案例使用了 `ppsci.geometry.Mesh` 接口构建复杂几何，因此这些案例运行前需要按照下方给出的命令，安装 open3d、
+    pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动**中已安装上述依赖库）。如使用 `ppsci.geometry.SDFMesh` 接口构建复杂几何，则只需要安装 `warp-lang` 即可。
 
 === "open3d 安装命令"
 
     ``` sh
-    pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
+    python -m pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 === "pybind11 安装命令"
 
     ``` sh
-    pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
+    python -m pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 === "pysdf 安装命令"
 
     ``` sh
-    pip install pysdf
+    python -m pip install pysdf
     ```
 
 === "PyMesh 安装命令"
 
     在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否已安装 cmake。
-    如未安装，可按照下列命令下载、解压 cmake 包，并添加到 `PATH` 变量中即可完成安装。
+    如果未安装，可以按照下列命令下载并解压 cmake 包，然后将其添加到 PATH 变量中以完成安装。
 
     ``` sh
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
@@ -143,7 +158,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
     # CMake suite maintained and supported by Kitware (kitware.com/cmake).
     ```
 
-    PyMesh 库需要以 setup 的方式进行安装，命令如下：
+    推荐以 setup 的方式安装 PyMesh 库，命令如下：
 
     ``` sh
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
@@ -189,6 +204,54 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
 
         3. 由于自测工具 nose 未适配 Python>=3.10，因此执行 `pymesh.test()` 会报错，**但这不影响 pymesh 正常使用**。
 
+#### 1.4.3 安装第三方库[可选]
+
+PaddleScience 提供了多种第三方库供用户在开发时使用，这些库位于 `ppsci/externals` 目录下，可以通过 `git submodule` 命令进行下载，然后根据需要进行安装和使用。以下是具体操作步骤：
+
+=== "下载"
+
+    ``` sh
+    cd PaddleScience
+
+    # 下载全部第三方库
+    git submodule update --init ppsci/externals/
+
+    # 下载指定第三方库(以 tensorly 为例)
+    git submodule update --init ppsci/externals/tensorly
+    ```
+
+=== "安装"
+
+    以 `tensorly` 为例，安装方法如下：
+
+    ``` sh
+    cd ppsci/externals/tensorly
+    pip install -e .
+    ```
+
+    其他库的安装方法请参考相应的 GitHub 项目主页上的说明。
+
+=== "使用"
+
+    以 `tensorly` 为例，使用方法如下：
+
+    ``` python
+    >>> from ppsci import externals
+    >>> print(externals.__all__)
+    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'tensorly', 'warp']
+
+    >>> tl = externals.tensorly
+    >>> tl.set_backend("paddle")
+
+    >>> x = tl.tensor(np.ones((3, 3)))
+    Tensor(shape=[3, 3], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+       [[1., 1., 1.],
+        [1., 1., 1.],
+        [1., 1., 1.]])
+    ```
+
+请根据以上步骤下载、安装和使用您所需的第三方库。
+
 ## 2. 验证安装
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
@@ -199,7 +262,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
 
     如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
 
-- [可选]如果已按照 [1.4.2 安装额外依赖](#142) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+- [可选]如果已按照 [1.4.2 安装Mesh几何](#142-mesh) 正确安装了 4 个依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
     ``` sh

@@ -15,7 +15,7 @@ from ppsci.utils import initializer
 NEGATIVE_SLOPE = 0.1
 
 
-class PatchMerging3D(paddle.nn.Layer):
+class PatchMerging3D(nn.Layer):
     """Patch Merging Layer
 
     Args:
@@ -47,7 +47,7 @@ class PatchMerging3D(paddle.nn.Layer):
         self.out_dim = out_dim
         self.downsample = downsample
         self.padding_type = padding_type
-        self.reduction = paddle.nn.Linear(
+        self.reduction = nn.Linear(
             in_features=downsample[0] * downsample[1] * downsample[2] * dim,
             out_features=out_dim,
             bias_attr=False,
@@ -125,7 +125,7 @@ class PatchMerging3D(paddle.nn.Layer):
         return x
 
 
-class PositionwiseFFN(paddle.nn.Layer):
+class PositionwiseFFN(nn.Layer):
     """The Position-wise FFN layer used in Transformer-like architectures
 
     If pre_norm is True:
@@ -183,20 +183,20 @@ class PositionwiseFFN(paddle.nn.Layer):
                 ("pre_norm", pre_norm),
             ]
         )
-        self.dropout_layer = paddle.nn.Dropout(p=dropout)
-        self.activation_dropout_layer = paddle.nn.Dropout(p=activation_dropout)
-        self.ffn_1 = paddle.nn.Linear(
+        self.dropout_layer = nn.Dropout(p=dropout)
+        self.activation_dropout_layer = nn.Dropout(p=activation_dropout)
+        self.ffn_1 = nn.Linear(
             in_features=units, out_features=hidden_size, bias_attr=True
         )
         if self._gated_proj:
-            self.ffn_1_gate = paddle.nn.Linear(
+            self.ffn_1_gate = nn.Linear(
                 in_features=units, out_features=hidden_size, bias_attr=True
             )
         if activation == "leaky_relu":
             self.activation = nn.LeakyReLU(NEGATIVE_SLOPE)
         else:
             self.activation = act_mod.get_activation(activation)
-        self.ffn_2 = paddle.nn.Linear(
+        self.ffn_2 = nn.Linear(
             in_features=hidden_size, out_features=units, bias_attr=True
         )
         self.layer_norm = cuboid_utils.get_norm_layer(
@@ -400,9 +400,9 @@ def masked_softmax(att_score, mask, axis: int = -1):
             att_score = att_score.masked_fill(paddle.logical_not(mask), -1e4)
         else:
             att_score = att_score.masked_fill(paddle.logical_not(mask), -1e18)
-        att_weights = paddle.nn.functional.softmax(x=att_score, axis=axis) * mask
+        att_weights = nn.functional.softmax(x=att_score, axis=axis) * mask
     else:
-        att_weights = paddle.nn.functional.softmax(x=att_score, axis=axis)
+        att_weights = nn.functional.softmax(x=att_score, axis=axis)
     return att_weights
 
 
@@ -451,7 +451,7 @@ def cuboid_reorder_reverse(data, cuboid_size, strategy, orig_data_shape):
     return data
 
 
-class CuboidSelfAttentionLayer(paddle.nn.Layer):
+class CuboidSelfAttentionLayer(nn.Layer):
     """Implements the cuboid self attention.
 
     The idea of Cuboid Self Attention is to divide the input tensor (T, H, W) into several non-overlapping cuboids.
@@ -588,49 +588,47 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
             self.register_buffer(
                 name="relative_position_index", tensor=relative_position_index
             )
-        self.qkv = paddle.nn.Linear(
-            in_features=dim, out_features=dim * 3, bias_attr=qkv_bias
-        )
-        self.attn_drop = paddle.nn.Dropout(p=attn_drop)
+        self.qkv = nn.Linear(in_features=dim, out_features=dim * 3, bias_attr=qkv_bias)
+        self.attn_drop = nn.Dropout(p=attn_drop)
         if self.use_global_vector:
             if self.separate_global_qkv:
-                self.l2g_q_net = paddle.nn.Linear(
+                self.l2g_q_net = nn.Linear(
                     in_features=dim, out_features=dim, bias_attr=qkv_bias
                 )
-                self.l2g_global_kv_net = paddle.nn.Linear(
+                self.l2g_global_kv_net = nn.Linear(
                     in_features=global_dim_ratio * dim,
                     out_features=dim * 2,
                     bias_attr=qkv_bias,
                 )
-                self.g2l_global_q_net = paddle.nn.Linear(
+                self.g2l_global_q_net = nn.Linear(
                     in_features=global_dim_ratio * dim,
                     out_features=dim,
                     bias_attr=qkv_bias,
                 )
-                self.g2l_k_net = paddle.nn.Linear(
+                self.g2l_k_net = nn.Linear(
                     in_features=dim, out_features=dim, bias_attr=qkv_bias
                 )
-                self.g2l_v_net = paddle.nn.Linear(
+                self.g2l_v_net = nn.Linear(
                     in_features=dim,
                     out_features=global_dim_ratio * dim,
                     bias_attr=qkv_bias,
                 )
                 if self.use_global_self_attn:
-                    self.g2g_global_qkv_net = paddle.nn.Linear(
+                    self.g2g_global_qkv_net = nn.Linear(
                         in_features=global_dim_ratio * dim,
                         out_features=global_dim_ratio * dim * 3,
                         bias_attr=qkv_bias,
                     )
             else:
-                self.global_qkv = paddle.nn.Linear(
+                self.global_qkv = nn.Linear(
                     in_features=dim, out_features=dim * 3, bias_attr=qkv_bias
                 )
-            self.global_attn_drop = paddle.nn.Dropout(p=attn_drop)
+            self.global_attn_drop = nn.Dropout(p=attn_drop)
         if use_final_proj:
-            self.proj = paddle.nn.Linear(in_features=dim, out_features=dim)
-            self.proj_drop = paddle.nn.Dropout(p=proj_drop)
+            self.proj = nn.Linear(in_features=dim, out_features=dim)
+            self.proj_drop = nn.Dropout(p=proj_drop)
             if self.use_global_vector:
-                self.global_proj = paddle.nn.Linear(
+                self.global_proj = nn.Linear(
                     in_features=global_dim_ratio * dim,
                     out_features=global_dim_ratio * dim,
                 )
@@ -955,7 +953,7 @@ class CuboidSelfAttentionLayer(paddle.nn.Layer):
             return x
 
 
-class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
+class StackCuboidSelfAttentionBlock(nn.Layer):
     """
     - "use_inter_ffn" is True
         x --> attn1 -----+-------> ffn1 ---+---> attn2 --> ... --> ffn_k --> out
@@ -1055,7 +1053,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
         self.use_global_self_attn = use_global_self_attn
         self.global_dim_ratio = global_dim_ratio
         if self.use_inter_ffn:
-            self.ffn_l = paddle.nn.LayerList(
+            self.ffn_l = nn.LayerList(
                 sublayers=[
                     PositionwiseFFN(
                         units=dim,
@@ -1073,7 +1071,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
                 ]
             )
             if self.use_global_vector_ffn and self.use_global_vector:
-                self.global_ffn_l = paddle.nn.LayerList(
+                self.global_ffn_l = nn.LayerList(
                     sublayers=[
                         PositionwiseFFN(
                             units=global_dim_ratio * dim,
@@ -1091,7 +1089,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
                     ]
                 )
         else:
-            self.ffn_l = paddle.nn.LayerList(
+            self.ffn_l = nn.LayerList(
                 sublayers=[
                     PositionwiseFFN(
                         units=dim,
@@ -1108,7 +1106,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
                 ]
             )
             if self.use_global_vector_ffn and self.use_global_vector:
-                self.global_ffn_l = paddle.nn.LayerList(
+                self.global_ffn_l = nn.LayerList(
                     sublayers=[
                         PositionwiseFFN(
                             units=global_dim_ratio * dim,
@@ -1124,7 +1122,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
                         )
                     ]
                 )
-        self.attn_l = paddle.nn.LayerList(
+        self.attn_l = nn.LayerList(
             sublayers=[
                 CuboidSelfAttentionLayer(
                     dim=dim,
@@ -1233,7 +1231,7 @@ class StackCuboidSelfAttentionBlock(paddle.nn.Layer):
             return x
 
 
-class CuboidTransformerEncoder(paddle.nn.Layer):
+class CuboidTransformerEncoder(nn.Layer):
     """Encoder of the CuboidTransformer
 
     x --> attn_block --> patch_merge --> attn_block --> patch_merge --> ... --> out
@@ -1346,7 +1344,7 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         self.block_units = block_units
         if self.num_blocks > 1:
             if downsample_type == "patch_merge":
-                self.down_layers = paddle.nn.LayerList(
+                self.down_layers = nn.LayerList(
                     sublayers=[
                         PatchMerging3D(
                             dim=self.block_units[i],
@@ -1362,9 +1360,9 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
             else:
                 raise NotImplementedError(f"{downsample_type} is invalid.")
             if self.use_global_vector:
-                self.down_layer_global_proj = paddle.nn.LayerList(
+                self.down_layer_global_proj = nn.LayerList(
                     sublayers=[
-                        paddle.nn.Linear(
+                        nn.Linear(
                             in_features=global_dim_ratio * self.block_units[i],
                             out_features=global_dim_ratio * self.block_units[i + 1],
                         )
@@ -1410,9 +1408,9 @@ class CuboidTransformerEncoder(paddle.nn.Layer):
         self.block_cuboid_size = block_cuboid_size
         self.block_strategy = block_strategy
         self.block_shift_size = block_shift_size
-        self.blocks = paddle.nn.LayerList(
+        self.blocks = nn.LayerList(
             sublayers=[
-                paddle.nn.Sequential(
+                nn.Sequential(
                     *[
                         StackCuboidSelfAttentionBlock(
                             dim=self.block_units[i],

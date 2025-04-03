@@ -323,7 +323,7 @@ examples/deephpms/burgers.py:187:196
 --8<--
 ```
 
-各个参数含义与 [第一阶段约束构建](#361) 一致，唯一的区别是这个约束中的第二个参数，损失函数，采用 PaddleScience 预留的自定义 loss 函数类 `FunctionalLoss`，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法。本约束中的自定义 loss 函数代码请参考 [自定义 loss 和 metric](#38)。
+各个参数含义与 [第一阶段约束构建](#361) 一致，唯一的区别是这个约束中的第二个参数，损失函数，采用 PaddleScience 预留的自定义 loss 函数类 `FunctionalLoss`，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法。本约束中的自定义 loss 函数代码请参考 [自定义 loss 和 metric](#38-loss-metric)。
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
@@ -355,7 +355,7 @@ examples/deephpms/burgers.py:148:155
 
 #### 3.7.2 第二阶段评估器构建
 
-评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38)。
+评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38-loss-metric)。
 
 ``` py linenums="209"
 --8<--

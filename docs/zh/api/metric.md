@@ -6,12 +6,14 @@
       members:
         - Metric
         - FunctionalMetric
-        - MAE
-        - MSE
-        - RMSE
         - L2Rel
-        - MeanL2Rel
         - LatitudeWeightedACC
         - LatitudeWeightedRMSE
+        - MAE
+        - MeanL2Rel
+        - MSE
+        - RMSE
+        - MaxAE
+        - R2Score
       show_root_heading: true
       heading_level: 3

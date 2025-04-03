@@ -4,13 +4,15 @@
     handler: python
     options:
       members:
-        - Linear
         - Cosine
-        - Step
-        - Piecewise
-        - MultiStepDecay
-        - ExponentialDecay
         - CosineWarmRestarts
+        - ExponentialDecay
+        - LambdaDecay
+        - Linear
+        - MultiStepDecay
         - OneCycleLR
+        - Piecewise
+        - Step
+        - ReduceOnPlateau
       show_root_heading: true
       heading_level: 3

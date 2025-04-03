@@ -15,6 +15,8 @@
 import copy
 import random
 from functools import partial
+from typing import Callable
+from typing import Optional
 
 import numpy as np
 import paddle.distributed as dist
@@ -101,9 +103,11 @@ def build_dataloader(_dataset, cfg):
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
-    collate_fn = None
+    collate_fn: Optional[Callable] = cfg.pop("collate_fn", None)
     if isinstance(batch_transforms_cfg, (list, tuple)):
-        collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
+        collate_fn = batch_transform.build_batch_transforms(
+            batch_transforms_cfg, collate_fn
+        )
 
     # build init function
     _DEFAULT_NUM_WORKERS = 1
@@ -152,27 +156,36 @@ def build_dataloader(_dataset, cfg):
         if (
             cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
             is False
-            and "transforms" not in cfg["dataset"]
         ):
-            # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
-            # which can speed up the process of batch samples indexing from dataset. See
-            # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
-            batch_sampler = io.BatchSampler(sampler=batch_sampler, batch_size=1)
-            if collate_fn is not None:
+            if "transforms" in cfg["dataset"] and "auto_collation" not in cfg:
                 logger.warning(
-                    "Detected collate_fn is not None, which will be ignored when "
-                    "'auto_collation' is False"
+                    "'transforms' and batch indexing(auto_collation=False) are both "
+                    "enabled. If you do want to apply transforms to the batch samples, "
+                    "please explicitly set 'auto_collation' to False in dataloader_cfg;"
+                    " otherwise, the 'transforms' will be retained, but batch indexing "
+                    "will be disabled."
                 )
-            # 2. disable auto collation by given identity collate_fn which return the first
-            # (also the only) batch data in batch list, or there will be a redundant
-            # axis at the first dimension returned by dataloader. This step is necessary
-            # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
-            collate_fn = lambda batch: batch[0]  # noqa: E731
-            _DEFAULT_NUM_WORKERS = 0
-            logger.info(
-                "Auto collation is disabled and set num_workers to "
-                f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
-            )
+            else:
+                # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
+                # which can speed up the process of batch samples indexing from dataset. See
+                # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
+                batch_sampler = io.BatchSampler(sampler=batch_sampler, batch_size=1)
+                if collate_fn is not None:
+                    raise NotImplementedError(
+                        "Detected collate_fn is not None for 'batch_transforms' might "
+                        "be specified in 'dataloader_cfg', which is not supported yet "
+                        "with 'auto_collation' is False at the same time"
+                    )
+                # 2. disable auto collation by given identity collate_fn which return the first
+                # (also the only) batch data in batch list, or there will be a redundant
+                # axis at the first dimension returned by dataloader. This step is necessary
+                # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
+                collate_fn = lambda batch: batch[0]  # noqa: E731
+                _DEFAULT_NUM_WORKERS = 0
+                logger.info(
+                    "Auto collation is disabled and set num_workers to "
+                    f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
+                )
 
         dataloader_ = io.DataLoader(
             dataset=_dataset,

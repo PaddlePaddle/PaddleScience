@@ -13,7 +13,7 @@ import ppsci.arch.extformer_moe_utils as moe_utils
 from ppsci.utils import initializer
 
 
-class PosEmbed(paddle.nn.Layer):
+class PosEmbed(nn.Layer):
     """pose embeding
 
     Args:
@@ -46,20 +46,12 @@ class PosEmbed(paddle.nn.Layer):
         self.maxW = maxW
         self.embed_dim = embed_dim
         if self.typ == "t+h+w":
-            self.T_embed = paddle.nn.Embedding(
-                num_embeddings=maxT, embedding_dim=embed_dim
-            )
-            self.H_embed = paddle.nn.Embedding(
-                num_embeddings=maxH, embedding_dim=embed_dim
-            )
-            self.W_embed = paddle.nn.Embedding(
-                num_embeddings=maxW, embedding_dim=embed_dim
-            )
+            self.T_embed = nn.Embedding(num_embeddings=maxT, embedding_dim=embed_dim)
+            self.H_embed = nn.Embedding(num_embeddings=maxH, embedding_dim=embed_dim)
+            self.W_embed = nn.Embedding(num_embeddings=maxW, embedding_dim=embed_dim)
         elif self.typ == "t+hw":
-            self.T_embed = paddle.nn.Embedding(
-                num_embeddings=maxT, embedding_dim=embed_dim
-            )
-            self.HW_embed = paddle.nn.Embedding(
+            self.T_embed = nn.Embedding(num_embeddings=maxT, embedding_dim=embed_dim)
+            self.HW_embed = nn.Embedding(
                 num_embeddings=maxH * maxW, embedding_dim=embed_dim
             )
         else:
@@ -177,7 +169,7 @@ def compute_cuboid_cross_attention_mask(
     return attn_mask
 
 
-class CuboidCrossAttentionLayer(paddle.nn.Layer):
+class CuboidCrossAttentionLayer(nn.Layer):
     """Implements the cuboid cross attention.
 
     The idea of Cuboid Cross Attention is to extend the idea of cuboid self attention to work for the
@@ -317,21 +309,19 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
             self.register_buffer(
                 name="relative_position_index", tensor=relative_position_index
             )
-        self.q_proj = paddle.nn.Linear(
-            in_features=dim, out_features=dim, bias_attr=qkv_bias
-        )
-        self.kv_proj = paddle.nn.Linear(
+        self.q_proj = nn.Linear(in_features=dim, out_features=dim, bias_attr=qkv_bias)
+        self.kv_proj = nn.Linear(
             in_features=dim, out_features=dim * 2, bias_attr=qkv_bias
         )
-        self.attn_drop = paddle.nn.Dropout(p=attn_drop)
-        self.proj = paddle.nn.Linear(in_features=dim, out_features=dim)
-        self.proj_drop = paddle.nn.Dropout(p=proj_drop)
+        self.attn_drop = nn.Dropout(p=attn_drop)
+        self.proj = nn.Linear(in_features=dim, out_features=dim)
+        self.proj_drop = nn.Dropout(p=proj_drop)
         if self.use_global_vector:
             if self.separate_global_qkv:
-                self.l2g_q_net = paddle.nn.Linear(
+                self.l2g_q_net = nn.Linear(
                     in_features=dim, out_features=dim, bias_attr=qkv_bias
                 )
-                self.l2g_global_kv_net = paddle.nn.Linear(
+                self.l2g_global_kv_net = nn.Linear(
                     in_features=global_dim_ratio * dim,
                     out_features=dim * 2,
                     bias_attr=qkv_bias,
@@ -556,7 +546,7 @@ class CuboidCrossAttentionLayer(paddle.nn.Layer):
         return x
 
 
-class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
+class StackCuboidCrossAttentionBlock(nn.Layer):
     """A stack of cuboid cross attention layers.
 
     The advantage of cuboid attention is that we can combine cuboid attention building blocks with different
@@ -661,7 +651,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
         self.use_global_vector = use_global_vector
         if self.use_inter_ffn:
             if moe_config["use_ffn_moe"]:
-                self.ffn_l = paddle.nn.LayerList(
+                self.ffn_l = nn.LayerList(
                     sublayers=[
                         cuboid_encoder.MixtureFFN(
                             units=dim,
@@ -681,7 +671,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                     ]
                 )
             else:
-                self.ffn_l = paddle.nn.LayerList(
+                self.ffn_l = nn.LayerList(
                     sublayers=[
                         cuboid_encoder.PositionwiseFFN(
                             units=dim,
@@ -702,7 +692,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                 )
         else:
             if moe_config["use_ffn_moe"]:
-                self.ffn_l = paddle.nn.LayerList(
+                self.ffn_l = nn.LayerList(
                     sublayers=[
                         cuboid_encoder.MixtureFFN(
                             units=dim,
@@ -721,7 +711,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                     ]
                 )
             else:
-                self.ffn_l = paddle.nn.LayerList(
+                self.ffn_l = nn.LayerList(
                     sublayers=[
                         cuboid_encoder.PositionwiseFFN(
                             units=dim,
@@ -741,7 +731,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                 )
 
         if moe_config["use_attn_moe"]:
-            self.attn_l = paddle.nn.LayerList(
+            self.attn_l = nn.LayerList(
                 sublayers=[
                     MixtureCrossAttention(
                         dim=dim,
@@ -778,7 +768,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
                 ]
             )
         else:
-            self.attn_l = paddle.nn.LayerList(
+            self.attn_l = nn.LayerList(
                 sublayers=[
                     CuboidCrossAttentionLayer(
                         dim=dim,
@@ -854,7 +844,7 @@ class StackCuboidCrossAttentionBlock(paddle.nn.Layer):
         return x
 
 
-class Upsample3DLayer(paddle.nn.Layer):
+class Upsample3DLayer(nn.Layer):
     """Upsampling based on nn.UpSampling and Conv3x3.
 
     If the temporal dimension remains the same:
@@ -889,12 +879,10 @@ class Upsample3DLayer(paddle.nn.Layer):
         self.out_dim = out_dim
         self.temporal_upsample = temporal_upsample
         if temporal_upsample:
-            self.up = paddle.nn.Upsample(size=target_size, mode="nearest")
+            self.up = nn.Upsample(size=target_size, mode="nearest")
         else:
-            self.up = paddle.nn.Upsample(
-                size=(target_size[1], target_size[2]), mode="nearest"
-            )
-        self.conv = paddle.nn.Conv2D(
+            self.up = nn.Upsample(size=(target_size[1], target_size[2]), mode="nearest")
+        self.conv = nn.Conv2D(
             in_channels=dim,
             out_channels=out_dim,
             kernel_size=(kernel_size, kernel_size),
@@ -955,7 +943,7 @@ class Upsample3DLayer(paddle.nn.Layer):
                 )
 
 
-class CuboidTransformerDecoder(paddle.nn.Layer):
+class CuboidTransformerDecoder(nn.Layer):
     """Decoder of the CuboidTransformer.
 
     For each block, we first apply the StackCuboidSelfAttention and then apply the StackCuboidCrossAttention
@@ -1169,8 +1157,8 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 )
                 for _ in range(ele_depth)
             ]
-            self_blocks.append(paddle.nn.LayerList(sublayers=stack_cuboid_blocks))
-        self.self_blocks = paddle.nn.LayerList(sublayers=self_blocks)
+            self_blocks.append(nn.LayerList(sublayers=stack_cuboid_blocks))
+        self.self_blocks = nn.LayerList(sublayers=self_blocks)
 
         if block_cross_attn_patterns is not None:
             if isinstance(block_cross_attn_patterns, (tuple, list)):
@@ -1229,10 +1217,10 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
                 assert (
                     len(block_cross_n_temporal) == self.num_blocks
                 ), f"Incorrect input format! Received block_cross_n_temporal={block_cross_n_temporal}"
-        self.cross_blocks = paddle.nn.LayerList()
+        self.cross_blocks = nn.LayerList()
         assert self.cross_start == 0
         for i in range(self.cross_start, self.num_blocks):
-            cross_block = paddle.nn.LayerList(
+            cross_block = nn.LayerList(
                 sublayers=[
                     StackCuboidCrossAttentionBlock(
                         dim=self.mem_shapes[i][-1],
@@ -1268,7 +1256,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
             self.cross_blocks.append(cross_block)
         if self.num_blocks > 1:
             if self.upsample_type == "upsample":
-                self.upsample_layers = paddle.nn.LayerList(
+                self.upsample_layers = nn.LayerList(
                     sublayers=[
                         Upsample3DLayer(
                             dim=self.mem_shapes[i + 1][-1],
@@ -1285,7 +1273,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
             else:
                 raise NotImplementedError(f"{self.upsample_type} is invalid.")
             if self.hierarchical_pos_embed:
-                self.hierarchical_pos_embed_l = paddle.nn.LayerList(
+                self.hierarchical_pos_embed_l = nn.LayerList(
                     sublayers=[
                         PosEmbed(
                             embed_dim=self.mem_shapes[i][-1],
@@ -1368,7 +1356,7 @@ class CuboidTransformerDecoder(paddle.nn.Layer):
         return x
 
 
-class MixtureCrossAttention(paddle.nn.Layer):
+class MixtureCrossAttention(nn.Layer):
     def __init__(
         self,
         dim,
@@ -1424,7 +1412,7 @@ class MixtureCrossAttention(paddle.nn.Layer):
         else:
             raise NotImplementedError
 
-        self.experts = paddle.nn.LayerList(
+        self.experts = nn.LayerList(
             [
                 CuboidCrossAttentionLayer(
                     dim=dim,

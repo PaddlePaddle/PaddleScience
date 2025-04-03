@@ -22,6 +22,7 @@ from ppsci.equation.pde import PDE
 from ppsci.equation.pde import AllenCahn
 from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import HeatExchanger
+from ppsci.equation.pde import Helmholtz
 from ppsci.equation.pde import Laplace
 from ppsci.equation.pde import LinearElasticity
 from ppsci.equation.pde import NavierStokes
@@ -37,6 +38,7 @@ __all__ = [
     "AllenCahn",
     "Biharmonic",
     "HeatExchanger",
+    "Helmholtz",
     "Laplace",
     "LinearElasticity",
     "NavierStokes",

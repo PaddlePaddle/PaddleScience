@@ -103,7 +103,7 @@ class PeriodEmbedding(nn.Layer):
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }
-        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
+        self.freqs = nn.ParameterList(list(self.freqs_dict.values()))
 
     def forward(self, x: Dict[str, paddle.Tensor]):
         y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
@@ -595,9 +595,21 @@ class PirateNetBlock(nn.Layer):
             ],
             default_initializer=nn.initializer.Constant(0),
         )
-        self.act1 = act_mod.get_activation(activation)
-        self.act2 = act_mod.get_activation(activation)
-        self.act3 = act_mod.get_activation(activation)
+        self.act1 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act2 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act3 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
 
     def forward(self, x, u, v):
         f = self.act1(self.linear1(x))

@@ -51,7 +51,7 @@ class Swish(nn.Layer):
         super().__init__()
         self.beta = self.create_parameter(
             shape=[],
-            default_initializer=paddle.nn.initializer.Constant(beta),
+            default_initializer=nn.initializer.Constant(beta),
         )
 
     def forward(self, x):

@@ -2,6 +2,10 @@
 
 <!-- <a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
+!!! info "注意事项"
+
+    本案例运行前需通过 `pip install -r requirements.txt` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [PyAMG](https://github.com/pyamg/pyamg) 代数多重网格工具。
+
 === "模型训练命令"
 
     === "amgnet_airfoil"
@@ -81,10 +85,6 @@
 
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
-
-!!! info "注意事项"
-
-    本案例运行前需通过 `pip install pgl pyamg` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [PyAMG](https://github.com/pyamg/pyamg) 代数多重网格工具。
 
 ### 3.1 数据集下载
 
@@ -183,17 +183,17 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` yaml linenums="41"
+    ``` yaml linenums="50"
     --8<--
-    examples/amgnet/conf/amgnet_airfoil.yaml:41:51
+    examples/amgnet/conf/amgnet_airfoil.yaml:50:52
     --8<--
     ```
 
 === "cylinder"
 
-    ``` yaml linenums="41"
+    ``` yaml linenums="50"
     --8<--
-    examples/amgnet/conf/amgnet_cylinder.yaml:41:51
+    examples/amgnet/conf/amgnet_cylinder.yaml:50:52
     --8<--
     ```
 
@@ -280,14 +280,14 @@ unzip data.zip
 
     ``` py linenums="138"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:138:
+    examples/amgnet/amgnet_airfoil.py:138:151
     --8<--
     ```
 === "cylinder"
 
     ``` py linenums="138"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:138:
+    examples/amgnet/amgnet_cylinder.py:138:151
     --8<--
     ```
 

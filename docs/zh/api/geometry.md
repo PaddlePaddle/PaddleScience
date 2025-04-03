@@ -5,18 +5,19 @@
     options:
       members:
         - Geometry
-        - Interval
-        - Disk
-        - Polygon
-        - Rectangle
-        - Triangle
         - Cuboid
-        - Sphere
+        - Disk
         - Hypercube
         - Hypersphere
+        - Interval
         - Mesh
+        - SDFMesh
         - PointCloud
+        - Polygon
+        - Rectangle
+        - Sphere
         - TimeDomain
         - TimeXGeometry
+        - Triangle
       show_root_heading: true
       heading_level: 3
