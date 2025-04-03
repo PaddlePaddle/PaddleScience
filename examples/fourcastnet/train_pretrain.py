@@ -347,6 +347,7 @@ def inference(cfg: DictConfig):
                 f"output_{hour}h": lambda d, hour=hour: d[f"output_{hour}h"],
             }
         )
+
     visualizer_weather = ppsci.visualize.VisualizerWeather(
         vis_dict,
         plot_expr_dict,
