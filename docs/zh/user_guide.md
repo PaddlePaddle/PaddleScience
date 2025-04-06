@@ -216,39 +216,46 @@ ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, inclu
 
 #### 1.2.2 ONNX 推理模型导出
 
-在导出 ONNX 推理模型前，需要完成 [1.2.1 Paddle 推理模型导出](#121-paddle) 的步骤，得到`inference/aneurysm.pdiparams`和`inference/aneurysm.pdmodel`。
+在导出 ONNX 推理模型前，需要完成 [1.2.1 Paddle 推理模型导出](#121-paddle) 的步骤，得到`inference/aneurysm.json`和`inference/aneurysm.pdiparams`。
 
-然后安装 paddle2onnx。
+接着安装 `paddle2onnx>=2.0.0`。
+
+> 更多详细使用方式请参考 [**paddle2onnx 官方文档**](https://github.com/PaddlePaddle/Paddle2ONNX)。
 
 ``` sh
-pip install paddle2onnx
+pip install "paddle2onnx>=2.0.0"
 ```
 
-接下来仍然以 aneurysm 案例为例，介绍命令行直接导出和 PaddleScience 导出两种方式。
+以 aneurysm 案例为例，介绍命令行直接导出和 PaddleScience 导出两种方式。
 
 === "命令行导出"
 
     ``` sh
     paddle2onnx \
         --model_dir=./inference/ \
-        --model_filename=aneurysm.pdmodel \
+        --model_filename=aneurysm.json \
         --params_filename=aneurysm.pdiparams \
         --save_file=./inference/aneurysm.onnx \
-        --opset_version=13 \
+        --opset_version=19 \
         --enable_onnx_checker=True
     ```
 
-    若导出成功，输出信息如下所示
+    若导出成功，输出信息如下所示。
 
     ``` log
     [Paddle2ONNX] Start to parse PaddlePaddle model...
-    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
-    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
-    [Paddle2ONNX] Start to parsing Paddle model...
-    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.json
+    [Paddle2ONNX] Parameters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model saved in pir program format...
+    [Paddle2ONNX] Start to parsing Paddle Pir model...
+    [Paddle2ONNX] PIR Program:
+    ...
+
+    [Paddle2ONNX] Load PaddlePaddle pir model successfully
+    [Paddle2ONNX] Start getting paramas value name from pir::program
+    ...
+    [Paddle2ONNX] Construct operation : builtin_split
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
-    2024-03-02 05:45:12 [INFO]      ===============Make PaddlePaddle Better!================
-    2024-03-02 05:45:12 [INFO]      A little survey: https://iwenjuan.baidu.com/?code=r8hu2s
     ```
 
 === "PaddleScience 导出"
@@ -271,12 +278,25 @@ pip install paddle2onnx
     若导出成功，输出信息如下所示。
 
     ``` log
-    ...
+    ppsci MESSAGE: Found /root/.paddlesci/weights/aneurysm_pretrained.pdparams already in /root/.paddlesci/weights, skip downloading.
+    ppsci MESSAGE: Finish loading pretrained model from: /root/.paddlesci/weights/aneurysm_pretrained.pdparams
+    ppsci INFO: Using paddlepaddle 3.0.0 on device Place(gpu:0)
+    ppsci MESSAGE: Set to_static=False for computational optimization.
+    /workspace/hesensen/anaconda3/envs/conda_py310/lib/python3.10/site-packages/paddle/jit/api.py:662: UserWarning: Found 'dict' in given outputs, the values will be returned in a sequence sorted in lexicographical order by their keys.
+    warnings.warn(
+    ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.json, *.pdiparams files.
     [Paddle2ONNX] Start to parse PaddlePaddle model...
-    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
-    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
-    [Paddle2ONNX] Start to parsing Paddle model...
-    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.json
+    [Paddle2ONNX] Parameters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model saved in pir program format...
+    [Paddle2ONNX] Start to parsing Paddle Pir model...
+    [Paddle2ONNX] PIR Program:
+    ...
+
+    [Paddle2ONNX] Load PaddlePaddle pir model successfully
+    [Paddle2ONNX] Start getting paramas value name from pir::program
+    [Paddle2ONNX] Getting paramas value name from pir::program successfully
+    ...
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
     ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
     ```
