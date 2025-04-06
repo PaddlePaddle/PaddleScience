@@ -1,0 +1,42 @@
+default:
+  train_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o15_20_train.h5'
+  test_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o15_20_test.h5'
+  # scales_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o15_20_train_scale.npy'
+  # datapath: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o16_test.h5'
+  # datapath: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o15_test.h5'
+  # datapath: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o16_tensor15_test.h5'
+  # datapath: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
+  scales_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
+
+  num_data_workers: 1
+  subsample: 1
+  # num_demos: 0
+  shuffle: False
+  nx: 64
+  nt: 64
+  Lx: !!float 1.0
+  Ly: !!float 1.0
+  pack_data: !!bool False
+
+  model: 'fno'
+  layers: [64, 64, 64, 64, 64]
+  modes1: [65, 65, 65, 65]
+  modes2: [65, 65, 65, 65]
+  fc_dim: 128
+
+  in_dim: 3
+  out_dim: 1
+  mode_cut: 32
+  embed_cut: 64
+  fc_cut: 2
+  dropout: 0
+
+  fix_backbone: True
+
+  loss_func: mse
+
+  batch_size: 1
+  loss_style: sum
+
+  log_to_wandb: !!bool False
+  logdir: ./log
