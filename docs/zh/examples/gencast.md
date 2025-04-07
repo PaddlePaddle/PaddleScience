@@ -1,14 +1,15 @@
 # GenCast
 
-该目录包含用于推理天气模型[GenCast](https://arxiv.org/abs/2312.15796)的示例代码.
+开始评估前，请在 [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/dm_graphcast) 上获取相关数据，并将之放到`gencast.yaml`文件中数据配置的路径下。
 
-它还提供了预训练模型的权重、归一化统计数据和示例输入数据，这些内容可以在 [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/dm_graphcast) 上获取。
+=== "模型评估命令"
 
-完整的模型训练需要下载 [ERA5](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) 数据集，该数据集可以从 [ECMWF](https://www.ecmwf.int/) 获取。通过 [Weatherbench2 的 ERA5 数据](https://weatherbench2.readthedocs.io/en/latest/data-guide.html#era5) 以 Zarr 格式访问这些数据是最佳选择。
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
 
-用于操作性微调的数据可以通过 [Weatherbench2 的 HRES 第0帧数据](https://weatherbench2.readthedocs.io/en/latest/data-guide.html#ifs-hres-t-0-analysis) 访问。
-
-请注意，这些数据集可能受制于不同的条款和条件或许可条款。您使用这些第三方材料需遵循相关条款，使用前请确认您能够遵守任何适用的限制或条款和条件。
+    python run_gencast.py
+    ```
 
 ## 1. 背景简介
 
@@ -38,7 +39,7 @@ GenCast 实现为一个条件扩散模型，这是一种生成式机器学习模
 
 GenCast 在40年的ERA5再分析数据上进行训练，时间范围从1979年到2018年，使用标准的扩散模型去噪目标。重要的是，尽管只在单步预测任务上直接训练GenCast，但它可以通过自回归展开来生成15天的集合预报。
 
-## 3. 快速运行
+## 3. 模型构建
 
 ### 3.1 环境依赖
 
@@ -50,20 +51,42 @@ GenCast 在40年的ERA5再分析数据上进行训练，时间范围从1979年�
 * scipy （用于球谐变换过程中的稀疏矩阵操作）
 * math （用于球谐变换过程中的数学计算）
 
-### 3.2 数据准备
+### 3.2 模型相关文件说明
 
-在 [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/dm_graphcast) 上获取相关数据，并将之放到`gencast.yaml`文件中数据配置的路径下。
+- **xarray_tree.py**: 一种适用于 xarray 的 tree.map_structure 实现。
 
-### 3.3 模型评估命令
+- **denoiser.py**: 用于一步预测的 GenCast 去噪器。
 
-    ``` sh
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
+- **dpm_solver_plus_plus_2s.py**: 使用 [1] 中的 DPM-Solver++ 2S 的采样器。
 
-    python run_gencast.py
-    ```
+- **gencast.py**: 将 GenCast 模型架构与采样器结合，作为去噪器封装以生成预测。
+
+- **samplers_base.py**: 定义采样器的接口。
+
+- **samplers_utils.py**: 采样器的实用方法。
+
+- **sparse_transformer.py**: 通用稀疏变压器，作用于 TypedGraph，其中输入和输出都是每个节点和边的特征平坦向量。`predictor.py` 使用其中一个用于网格图神经网络（GNN）。
+
+- **spherical_harmonic.py**: 球面谐波基础评估和微分算子。
+
+- **main.py**: 评估和可视化脚本。
+
+[1] DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models, https://arxiv.org/abs/2211.01095
+
+## 4. 结果展示
+
+下图展示了2米温度的真值结果、预测结果和误差。
+
+<figure markdown>
+  ![gencast_2m_t.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/gencast/gencast_2m_t.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>真值结果（"targets"）、预测结果（"prediction"）和误差（"diff"）</figcaption>
+</figure>
+
+可以看到模型预测结果与真实结果基本一致。
 
 ## 4. 参考资料
 
 * [GenCast: Diffusion-based ensemble forecasting for medium-range weather](https://arxiv.org/abs/2312.15796)
+* [GraphCast: Learning skillful medium-range global weather forecasting](https://arxiv.org/abs/2212.12794)
 * [GenCast Github地址](https://github.com/deepmind/graphcast)
+* [dinosaur Github地址](https://github.com/neuralgcm/dinosaur)
