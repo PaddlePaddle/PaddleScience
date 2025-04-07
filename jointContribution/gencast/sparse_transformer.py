@@ -354,9 +354,21 @@ class Block(nn.Layer):
         logits_l = qk_prod(q, k[:, :-2, ...]) * (cfg.key_size**-0.5)
 
         # apply mask
-        logits_d = paddle.where(mask[:, 0, ...], logits_d, paddle.to_tensor(-1e30))
-        logits_u = paddle.where(mask[:, 1, ...], logits_u, paddle.to_tensor(-1e30))
-        logits_l = paddle.where(mask[:, 2, ...], logits_l, paddle.to_tensor(-1e30))
+        logits_d = paddle.where(
+            paddle.cast(mask[:, 0, ...], dtype="bool"),
+            logits_d,
+            paddle.to_tensor(-1e30),
+        )
+        logits_u = paddle.where(
+            paddle.cast(mask[:, 1, ...], dtype="bool"),
+            logits_u,
+            paddle.to_tensor(-1e30),
+        )
+        logits_l = paddle.where(
+            paddle.cast(mask[:, 2, ...], dtype="bool"),
+            logits_l,
+            paddle.to_tensor(-1e30),
+        )
 
         logits_d, logits_u, logits_l = triblockdiag_softmax(
             (logits_d, logits_u, logits_l)

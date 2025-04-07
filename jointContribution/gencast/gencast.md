@@ -2,12 +2,19 @@
 
 开始评估前，请在 [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/dm_graphcast) 上获取相关数据，并将之放到`gencast.yaml`文件中数据配置的路径下。
 
+- 下载目录`dm_graphcast/gencast/stats`下的所有文件放入`./data/stats/`目录下。
+- 下载目录`dm_graphcast/gencast/dataset`下的任意或所有文件（例如：source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc）放入`./data/dataset/`目录下。
+
 === "模型评估命令"
 
     ``` sh
-    # linux
+    # 设置路径到 PaddleScience/jointContribution 文件夹
+    cd PaddleScience/jointContribution
+    export PYTHONPATH=$PWD:$PYTHONPAT
+    # 下载模型参数
+    cd gencast/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
-
+    # 运行评估脚本
     python run_gencast.py
     ```
 
@@ -69,7 +76,7 @@ GenCast 在40年的ERA5再分析数据上进行训练，时间范围从1979年�
 
 - **spherical_harmonic.py**: 球面谐波基础评估和微分算子。
 
-- **main.py**: 评估和可视化脚本。
+- **run_gencast.py**: 评估和可视化脚本。
 
 [1] DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models, https://arxiv.org/abs/2211.01095
 
