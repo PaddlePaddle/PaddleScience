@@ -59,10 +59,9 @@ extend-exclude = [
 ]
 
 [tool.setuptools_scm]
-version_scheme = "python-simplified-semver"
+version_scheme = "no-guess-dev"
 local_scheme = "node-and-date"
 fallback_version = "1.4.0"
-write_to = "ppsci/_version.py"
 root = "."
 tag_regex = "^v(\\d+\\.\\d+\\.\\d+)$"  # 匹配标签格式 vX.Y.Z
 

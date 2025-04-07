@@ -55,11 +55,6 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
         install_requires=get_requirements(),
-        use_scm_version={
-            "version_scheme": "python-simplified-semver",
-            "local_scheme": "node-and-date",
-            "root": ".",
-            "relative_to": __file__,
-        },
+        use_scm_version=True,  # 直接启用 pyproject.toml 中的配置
         setup_requires=["setuptools_scm"],
     )
