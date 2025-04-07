@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: infer # running mode: train/eval
+mode: infer # running mode: train/eval/export/infer
 seed: 1024
 output_dir: ${hydra:run.dir}
 log_freq: 20

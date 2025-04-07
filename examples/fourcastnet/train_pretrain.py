@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import os
 from os import path as osp
 
 import hydra
@@ -335,7 +337,6 @@ def inference(cfg: DictConfig):
         hour = (i + 1) * 6
         wind_ = [(data[0][i][0] ** 2 + data[0][i][1] ** 2) ** 0.5]
         target_dict[f"target_{hour}h"] = np.asarray(wind_)
-    # target_dict = {"target_6h": np.array(wind_pred)}
 
     vis_dict = {**pred_dict, **target_dict}
 
@@ -363,8 +364,9 @@ def inference(cfg: DictConfig):
         prefix="wind",
     )
     visualizer_weather.save(cfg.INFER.export_path, vis_dict)
-    save_path = save_path = f"{cfg.INFER.export_path}/predict.npz"
-    np.save(save_path, **output_dict)
+    save_path = osp.join(cfg.INFER.export_path, "predict.npy")
+    os.makedirs(cfg.INFER.export_path, exist_ok=True)
+    np.save(save_path, output_dict[cfg.MODEL.afno.output_keys[0]])
 
 
 @hydra.main(
