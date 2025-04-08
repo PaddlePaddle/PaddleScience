@@ -53,4 +53,6 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
         install_requires=get_requirements(),
+        use_scm_version=True,
+        setup_requires=["setuptools_scm"],
     )
