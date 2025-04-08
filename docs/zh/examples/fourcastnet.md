@@ -30,22 +30,27 @@
 
     ``` sh
     # 风速预训练模型导出
-    python train_pretrain.py mode==export
+    python train_pretrain.py mode=export
     # 风速微调模型导出
-    python train_finetune.py mode==export
+    python train_finetune.py mode=export
     # 降水量模型导出
-    python train_precip.py mode==export
+    python train_precip.py mode=export
     ```
 
 === "模型推理命令"
 
     ``` sh
+    # 下载风速预测小样本数据
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6_precip.npy -P ./datasets/era5/test/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6.npy -P ./datasets/era5/test/
     # 风速预训练模型推理
-    python train_pretrain.py mode==infer
+    python train_pretrain.py mode=infer
     # 风速微调模型推理
-    python train_finetune.py mode==infer
+    python train_finetune.py mode=infer
+    # 下载降水量预测小样本数据
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-09-08_n32.npy -P ./datasets/era5/test/
     # 降水量模型推理
-    python train_precip.py mode==infer
+    python train_precip.py mode=infer
     ```
 
 
