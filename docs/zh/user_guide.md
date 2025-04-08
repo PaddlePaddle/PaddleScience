@@ -360,7 +360,7 @@ pip install "paddle2onnx>=2.0.0"
 
     少数案例尚未支持导出、推理功能，因此对应文档中未给出导出、推理命令。
 
-首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.pdmodel`, `*.pdiparams` 两个文件。
+首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.json`, `*.pdiparams` 两个文件。
 
 以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件以 `./inference/aneurysm.*` 的形式保存，则推理代码示例如下。
 
@@ -478,7 +478,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
     ONNX 是微软开源的深度学习推理框架，PaddleScience 支持了 ONNX 推理功能。
 
-    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.pdmodel` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
+    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.json` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
     然后根据硬件环境，安装 CPU 或 GPU 版的 onnxruntime：
 
     ``` sh
