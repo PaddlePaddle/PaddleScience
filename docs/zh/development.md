@@ -782,7 +782,7 @@ solver = ppsci.solver.Solver(
         INFER: # (42)
           pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams" # (43)
           export_path: ./inference/viv # (44)
-          pdmodel_path: ${INFER.export_path}.pdmodel # (45)
+          pdmodel_path: ${INFER.export_path}.json # (45)
           pdiparams_path: ${INFER.export_path}.pdiparams # (46)
           input_keys: ${MODEL.input_keys} # (47)
           output_keys: ["eta", "f"] # (48)
@@ -843,7 +843,7 @@ solver = ppsci.solver.Solver(
         42. `INFER:` - 开始定义推理（推断）相关的设置。
         43. `pretrained_model_path: "https://..."` - 指定预训练模型的路径，可以是实际路径或 url，用于推理。
         44. `export_path: ./inference/viv` - 设置模型导出路径，即推理所需的模型文件保存位置。
-        45. `pdmodel_path: ${INFER.export_path}.pdmodel` - 指定Paddle模型的结构文件路径。
+        45. `pdmodel_path: ${INFER.export_path}.json` - 指定Paddle模型的结构文件路径，后缀名可以是`.json`或`.pdmodel`。
         46. `pdiparams_path: ${INFER.export_path}.pdiparams` - 指定Paddle模型的参数文件路径。
         47. `input_keys: ${MODEL.input_keys}` - 推理时使用的输入键与模型定义时相同。
         48. `output_keys: ["eta", "f"]` - 设置推理时的输出键，包括"eta"和"f"。

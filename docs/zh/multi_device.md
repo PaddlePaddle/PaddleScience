@@ -32,11 +32,11 @@
     | 一维线性对流问题 | [1D 线性对流](./examples/adv_cvit.md) | ✅ | | | ✅ |
     | 非定常不可压流体 | [2D 方腔浮力驱动流](./examples/ns_cvit.md) | ✅ | | | ✅ |
     | 定常不可压流体 | [Re3200 2D 定常方腔流](./examples/ldc2d_steady.md) | ✅ | | | ✅ |
-    | 定常不可压流体 | [2D 达西流](./examples/darcy2d.md) | ✅ | | | ✅ |
+    | 定常不可压流体 | [2D 达西流](./examples/darcy2d.md) | ✅ | | ✅ | ✅ |
     | 定常不可压流体 | [2D 管道流](./examples/labelfree_DNN_surrogate.md) | ✅ | | | ✅ |
     | 定常不可压流体 | [3D 颅内动脉瘤](./examples/aneurysm.md) | ✅ | | | ✅ |
-    | 定常不可压流体 | [任意 2D 几何体绕流](./examples/deepcfd.md) | ✅ | | | ✅ |
-    | 非定常不可压流体 | [2D 非定常方腔流](./examples/ldc2d_unsteady.md) | ✅ | | | ✅ |
+    | 定常不可压流体 | [任意 2D 几何体绕流](./examples/deepcfd.md) | ✅ | | ✅ | ✅ |
+    | 非定常不可压流体 | [2D 非定常方腔流](./examples/ldc2d_unsteady.md) | ✅ | | ✅ | ✅ |
     | 非定常不可压流体 | [Re100 2D 圆柱绕流](./examples/cylinder2d_unsteady.md) | ✅ | | | ✅ |
     | 非定常不可压流体 | [Re100~750 2D 圆柱绕流](./examples/cylinder2d_unsteady_transformer_physx.md) | ✅ | | | ✅ |
     | 可压缩流体 | [2D 空气激波](./examples/shock_wave.md) | ✅ | | | ✅ |
