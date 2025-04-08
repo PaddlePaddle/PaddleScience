@@ -56,12 +56,12 @@ if __name__ == "__main__":
         ],
         install_requires=get_requirements(),
         use_scm_version={
-            "version_scheme": "release-branch-semver",  # 确保发布分支生成干净版本
-            "local_scheme": "node-and-date",  # 本地开发版本包含日期和提交信息
+            "version_scheme": "release-branch-semver",
+            "local_scheme": "node-and-date",
             "version_file": "ppsci/_version.py",
             "fallback_version": "1.4.0",
             "root": "..",
-            "tag_regex": r"^v(\d+\.\d+\.\d+)$",  # 严格匹配标签格式 vX.Y.Z
+            "tag_regex": r"^v(\d+\.\d+\.\d+)$",
         },
-        setup_requires=["setuptools_scm"],  # 确保 setuptools_scm 可用
+        setup_requires=["setuptools_scm"],
     )
