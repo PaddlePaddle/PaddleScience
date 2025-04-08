@@ -55,13 +55,6 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
         install_requires=get_requirements(),
-        use_scm_version={
-            "version_scheme": "release-branch-semver",
-            "local_scheme": "node-and-date",
-            "version_file": "ppsci/_version.py",
-            "fallback_version": "1.4.0",
-            "root": "..",
-            "tag_regex": r"^v(\d+\.\d+\.\d+)$",
-        },
+        use_scm_version=True,
         setup_requires=["setuptools_scm"],
     )
