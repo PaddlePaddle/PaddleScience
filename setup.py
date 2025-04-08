@@ -38,6 +38,8 @@ if __name__ == "__main__":
                 "test_tipc",
                 "test",
                 "tools",
+                "ppsci/externals*",
+                "ppsci/externals/*",
             )
         ),
         classifiers=[
@@ -53,6 +55,13 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
         install_requires=get_requirements(),
-        use_scm_version=True,
+        use_scm_version={
+            "version_scheme": "release-branch-semver",
+            "local_scheme": "node-and-date",
+            "version_file": "ppsci/_version.py",
+            "fallback_version": "1.4.0",
+            "root": "..",
+            "tag_regex": r"^v(\d+\.\d+\.\d+)$",
+        },
         setup_requires=["setuptools_scm"],
     )

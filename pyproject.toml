@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=65", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -46,6 +46,8 @@ exclude = [
     "test_tipc*",
     "test*",
     "tools*",
+    "ppsci/externals*",
+    "ppsci/externals/*",
 ]
 
 [tool.ruff]
