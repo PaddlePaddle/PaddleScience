@@ -421,9 +421,9 @@ def inference(cfg: DictConfig):
     visualizer_weather = ppsci.visualize.VisualizerWeather(
         vis_dict,
         plot_expr_dict,
-        xticks=np.linspace(0, 1439, 13),
+        xticks=np.linspace(0, cfg.IMG_W - 1, 13),
         xticklabels=[str(i) for i in range(360, -1, -30)],
-        yticks=np.linspace(0, 719, 7),
+        yticks=np.linspace(0, cfg.IMG_H - 1, 7),
         yticklabels=[str(i) for i in range(90, -91, -30)],
         vmin=0,
         vmax=25,

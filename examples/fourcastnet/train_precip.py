@@ -363,7 +363,6 @@ def export(cfg: DictConfig):
 
 
 def inference(cfg: DictConfig):
-
     output_keys = tuple(f"output_{i}" for i in range(cfg.INFER.num_timestamps))
     model_cfg = dict(cfg.MODEL.precip)
     model_cfg.update(
@@ -421,9 +420,9 @@ def inference(cfg: DictConfig):
     visualizer_weather = ppsci.visualize.VisualizerWeather(
         plot_dict,
         plot_expr_dict,
-        xticks=np.linspace(0, 1439, 13),
+        xticks=np.linspace(0, cfg.IMG_W - 1, 13),
         xticklabels=[str(i) for i in range(360, -1, -30)],
-        yticks=np.linspace(0, 719, 7),
+        yticks=np.linspace(0, cfg.IMG_H - 1, 7),
         yticklabels=[str(i) for i in range(90, -91, -30)],
         vmin=0.001,
         vmax=130,
