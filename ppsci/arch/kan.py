@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+from typing import Callable
 from typing import Tuple
 
 import paddle
@@ -36,13 +37,13 @@ class KANLinear(paddle.nn.Layer):
         out_features: int,
         grid_size: int = 5,
         spline_order: int = 3,
-        scale_noise=0.1,
-        scale_base=1.0,
-        scale_spline=1.0,
+        scale_noise: float = 0.1,
+        scale_base: float = 1.0,
+        scale_spline: float = 1.0,
         enable_standalone_scale_spline: bool = True,
-        base_activation=paddle.nn.Silu,
-        grid_eps=0.02,
-        grid_range=[-1, 1],
+        base_activation: Callable[[paddle.Tensor], paddle.Tensor] = paddle.nn.Silu,
+        grid_eps: float = 0.02,
+        grid_range: Tuple[float, float] = (-1, 1),
     ):
         super().__init__()
         self.in_features = in_features
@@ -293,8 +294,9 @@ class KANLinear(paddle.nn.Layer):
 
 class KAN(base.Arch):
     """Kolmogorov-Arnold Network (KAN).
+
     Args:
-        layers_hidden (List[int, ...]): The number of hidden neurons in each layer.
+        layers_hidden (Tuple[int, ...]): The number of hidden neurons in each layer.
         input_keys (Tuple[str, ...]): The keys of the input dictionary.
         output_keys (Tuple[str, ...]): The keys of the output dictionary.
         grid_size (int): The size of the grid used by the spline basis functions. Default: 5.
@@ -304,15 +306,15 @@ class KAN(base.Arch):
         scale_spline (float): The scaling factor for the b-spline output. Default: 1.0.
         base_activation (Callable[[paddle.Tensor], paddle.Tensor]): The base activation function. Default: paddle.nn.Silu.
         grid_eps (float): The epsilon value used to initialize the grid. Default: 0.02.
-        grid_range (List[float, float]): The domain range of the grid for b-spline interpolation. Default: [-1, 1].
+        grid_range (Tuple[float, float]): The domain range of the grid for b-spline interpolation. Default: (-1, 1).
 
     Examples:
         >>> import paddle
         >>> import ppsci
         >>> model = ppsci.arch.KAN(
-        ...     layers_hidden=[2, 5, 5, 1],
-        ...     input_keys=["x", "y"],
-        ...     output_keys=["z"],
+        ...     layers_hidden=(2, 5, 5, 1),
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("z"),
         ...     grid_size=5,
         ...     spline_order=3
         >>> )
@@ -333,9 +335,9 @@ class KAN(base.Arch):
         scale_noise: float = 0.1,
         scale_base: float = 1.0,
         scale_spline: float = 1.0,
-        base_activation=paddle.nn.Silu,
+        base_activation: Callable[[paddle.Tensor], paddle.Tensor] = paddle.nn.Silu,
         grid_eps: float = 0.02,
-        grid_range: Tuple[float, float] = [-1, 1],
+        grid_range: Tuple[float, float] = (-1, 1),
     ):
         super().__init__()
         self.input_keys = input_keys
