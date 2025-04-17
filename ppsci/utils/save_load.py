@@ -162,7 +162,9 @@ def load_checkpoint(
     # load state dict
     param_dict = paddle.load(f"{path}.pdparams")
     optim_dict = paddle.load(f"{path}.pdopt")
-    metric_dict = paddle.load(f"{path}.pdstates")
+    metric_dict = {}
+    if os.path.exists(f"{path}.pdstates"):
+        metric_dict = paddle.load(f"{path}.pdstates")
     if grad_scaler is not None:
         scaler_dict = paddle.load(f"{path}.pdscaler")
     if equation is not None:
@@ -213,7 +215,7 @@ def load_checkpoint(
 def save_checkpoint(
     model: nn.Layer,
     optimizer: Optional[optimizer.Optimizer],
-    metric: Dict[str, float],
+    metric: Optional[Dict[str, float]] = None,
     grad_scaler: Optional[amp.GradScaler] = None,
     output_dir: Optional[str] = None,
     prefix: str = "model",
@@ -228,7 +230,7 @@ def save_checkpoint(
     Args:
         model (nn.Layer): Model with parameters.
         optimizer (Optional[optimizer.Optimizer]): Optimizer for model.
-        metric (Dict[str, float]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}.
+        metric (Optional[Dict[str, float]]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}. Defaults to None.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
@@ -261,7 +263,8 @@ def save_checkpoint(
     paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
     if optimizer:
         paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
-    paddle.save(metric, f"{ckpt_path}.pdstates")
+    if metric is not None:
+        paddle.save(metric, f"{ckpt_path}.pdstates")
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
     if equation is not None:

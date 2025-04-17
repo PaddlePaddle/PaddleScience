@@ -1,0 +1,3 @@
+meshio
+open3d==0.17.0
+paddlesci

@@ -1,0 +1,46 @@
+output_dir: outputs_Cd
+
+# model setting
+mode: "train"
+model: "UNet"
+in_channels: 4
+out_channels: 3 # velociy x, velociy y, velociy z
+num_levels: 4
+hidden_channels: 64
+use_position_input: True
+
+# dataset setting
+train_data_dir: ./data/Training/Dataset_2/
+test_data_dir: ./data/Test/Dataset_2/
+data_path: "car-dataset"
+data_module: "CFDSDFDataModule"
+n_train: 10
+n_test: 50
+sdf_spatial_resolution: [64, 64, 64]
+point_data_pos: "press on mesh points"
+
+# train setting
+num_epochs: 10
+train_batch_size: 1
+save_interval: 50
+
+# optimizer
+opt:
+  lr: 0.001
+  scheduler: "StepLR"
+  step_size: 50
+  gamma: 0.5
+  weight_decay: 1.0e-4
+
+# eval setting
+write_to_vtk: false
+out_keys: ["Cd"]
+track : "Dataset_2_Cd"
+eval_batch_size: 1
+eval_interval: 50 # epoch
+pretrain_ckpt: null
+
+# plot setting
+test_plot_interval: 20  # save image for every N'th test data
+run_name: "UNetShapeNetCar"
+project_name: "ShapeNetCar"
