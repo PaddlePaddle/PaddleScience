@@ -64,7 +64,7 @@ class DataAugmentation:
         translated_pointcloud = np.add(np.multiply(pointcloud, xyz1), xyz2).astype(
             "float32"
         )
-        return translated_pointcloud.astype("float32")
+        return paddle.to_tensor(data=translated_pointcloud, dtype="float32")
 
     @staticmethod
     def jitter_pointcloud(
@@ -82,8 +82,8 @@ class DataAugmentation:
             Jittered point cloud as a np.ndarray.
         """
         N, C = tuple(pointcloud.shape)
-        jittered_pointcloud = pointcloud + np.clip(
-            x=sigma * np.random.randn(N, C), a_min=-clip, a_max=clip
+        jittered_pointcloud = pointcloud + paddle.clip(
+            x=sigma * paddle.randn(shape=[N, C]), min=-clip, max=clip
         )
         return jittered_pointcloud
 
@@ -219,13 +219,13 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
         return normalized_data
 
     def _sample_or_pad_vertices(
-        self, vertices: np.ndarray, num_points: int
-    ) -> np.ndarray:
+        self, vertices: paddle.Tensor, num_points: int
+    ) -> paddle.Tensor:
         """
         Subsamples or pads the vertices of the model to a fixed number of points.
 
         Args:
-            vertices: The vertices of the 3D model as a np.ndarray.
+            vertices: The vertices of the 3D model as a paddle.Tensor.
             num_points: The desired number of points for the model.
 
         Returns:
@@ -236,15 +236,17 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
             indices = np.random.choice(num_vertices, num_points, replace=False)
             vertices = vertices[indices]
         elif num_vertices < num_points:
-            padding = np.zeros(shape=(num_points - num_vertices, 3), dtype="float32")
-            vertices = np.concatenate(x=(vertices, padding), axis=0)
+            padding = paddle.zeros(
+                shape=(num_points - num_vertices, 3), dtype="float32"
+            )
+            vertices = paddle.concat(x=(vertices, padding), axis=0)
         return vertices
 
     def _load_point_cloud(self, design_id: str):
         load_path = os.path.join(self.root_dir, f"{design_id}.paddle_tensor")
         if os.path.exists(load_path) and os.path.getsize(load_path) > 0:
             try:
-                vertices = paddle.load(path=load_path).numpy()
+                vertices = paddle.load(path=str(load_path))
             except (EOFError, RuntimeError, ValueError) as e:
                 raise Exception(
                     f"Error loading point cloud from {load_path}: {e}"
@@ -253,7 +255,7 @@ class DrivAerNetPlusPlusDataset(paddle.io.Dataset):
 
             if num_vertices > self.num_points:
                 indices = np.random.choice(num_vertices, self.num_points, replace=False)
-                vertices = vertices[indices]
+                vertices = vertices.numpy()[indices]
 
             return vertices
 
