@@ -216,10 +216,10 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/deepali
         # install from source(recommended)
-        pip install -e ppsci/externals/deepali
+        python -m pip install -e ppsci/externals/deepali
 
         # install from whl
-        pip install https://paddle-qa.bj.bcebos.com/deepali/whl/latest/dist/hf_deepali-0.1.0-py3-none-any.whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/deepali/whl/latest/dist/hf_deepali-0.1.0-py3-none-any.whl
         ```
 
     === "open3d"
@@ -228,9 +228,9 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/deepali
         # install from whl(cuda 118)(recommended)
-        pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda11.8/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda11.8/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
         # install from whl(cuda 123)(recommended)
-        pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda12.3/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda12.3/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
 
         # install from source: https://github.com/PFCCLab/Open3D?tab=readme-ov-file#build-and-install
         ```
@@ -241,10 +241,10 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_harmonics
         # install from source(recommended)
-        pip install -e ppsci/externals/paddle_harmonics
+        python -m pip install -e ppsci/externals/paddle_harmonics
 
         # install from whl(cuda 118)
-        pip install https://paddle-qa.bj.bcebos.com/paddle_harmonics/whl/latest/dist/paddle_harmonics-0.1.0-py3-none-any.whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/paddle_harmonics/whl/latest/dist/paddle_harmonics-0.1.0-py3-none-any.whl
         ```
 
     === "paddle_scatter"
@@ -253,7 +253,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_scatter
         # install from source(recommended)
-        pip install -e ppsci/externals/paddle_scatter
+        python -m pip install -e ppsci/externals/paddle_scatter
         ```
 
     === "tensorly"
@@ -262,10 +262,10 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/tensorly
         # install from source(recommended)
-        pip install -e ppsci/externals/tensorly
+        python -m pip install -e ppsci/externals/tensorly
 
         # install from whl
-        pip install https://paddle-qa.bj.bcebos.com/tensorly/whl/latest/dist/tensorly-0.9.0-py3-none-any.whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/tensorly/whl/latest/dist/tensorly-0.9.0-py3-none-any.whl
         ```
 
     === "warp"
@@ -277,7 +277,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         python -m pip install -e ppsci/externals/warp
 
         # install from whl, see: https://nvidia.github.io/warp/installation.html#
-        pip install warp-lang
+        python -m pip install warp-lang
         ```
 
 === "使用"
