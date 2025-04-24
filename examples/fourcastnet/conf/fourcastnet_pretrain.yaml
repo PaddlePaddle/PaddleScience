@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: train # running mode: train/eval/export/infer
 seed: 1024
 output_dir: ${hydra:run.dir}
 log_freq: 20
@@ -45,6 +45,9 @@ DATA_TIME_MEAN_PATH: ./datasets/era5/stat/time_means.npy
 
 # set evaluate data path
 VALID_FILE_PATH: ./datasets/era5/test
+
+# set inference data path
+INFER_FILE_PATH: ./datasets/era5/test/2018-09-08_n32.npy
 
 # model settings
 MODEL:
@@ -72,3 +75,23 @@ EVAL:
   compute_metric_by_batch: true
   eval_with_no_grad: true
   batch_size: 8
+
+
+INFER:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/pretrain.pdparams"
+  export_path: ./inference/fourcastnet_pretrain
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  batch_size: ${TRAIN.batch_size}
+  output_keys: ${MODEL.afno.output_keys}
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  num_timestamps: 32
