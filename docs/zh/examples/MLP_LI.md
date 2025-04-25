@@ -28,16 +28,16 @@
 |-----------------------------------|
 | [MLP_LI_pretrained.pdparams]( https://paddle-org.bj.bcebos.com/paddlescience%2Fmodels%2FMLP_LI_pretrained.pdparams) |
 
- 
+
 ## 模型训练命令
 === "模型训练命令"
 
-    ``` sh    
+    ``` sh  
     # 训练模型
     python MLP_LI.py --train
-    
+
     # 下载预训练模型（如果需要）
-    wget "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams" -O ./checkpoints/MLP_LI_pretrained.pdparams
+    wget "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams"
 
     # 使用预训练模型进行评估
     python MLP_LI.py --evaluate --model_path ./checkpoints/MLP_LI_pretrained.pdparams
