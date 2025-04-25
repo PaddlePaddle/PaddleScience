@@ -25,17 +25,23 @@ class EEquation(base.PDE):
     r"""Linear elasticity equations.
     Use either (E, nu) or (lambda_, mu) to define the material properties.
 
+    2D:
     $$
     \begin{cases}
-        stress\_disp_{xx} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial u}{\partial x} - \sigma_{xx} \\
-        stress\_disp_{yy} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial v}{\partial y} - \sigma_{yy} \\
-        stress\_disp_{zz} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial w}{\partial z} - \sigma_{zz} \\
-        traction_{x} = n_x \sigma_{xx} + n_y \sigma_{xy} + n_z \sigma_{xz} \\
-        traction_{y} = n_y \sigma_{yx} + n_y \sigma_{yy} + n_z \sigma_{yz} \\
-        traction_{z} = n_z \sigma_{zx} + n_y \sigma_{zy} + n_z \sigma_{zz} \\
-        navier_{x} = \rho(\dfrac{\partial^2 u}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 u}{\partial x^2}+\dfrac{\partial^2 v}{\partial y \partial x} + \dfrac{\partial^2 w}{\partial z \partial x}) - \mu(\dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} + \dfrac{\partial^2 u}{\partial z^2}) \\
-        navier_{y} = \rho(\dfrac{\partial^2 v}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 v}{\partial x \partial y}+\dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 w}{\partial z \partial y}) - \mu(\dfrac{\partial^2 v}{\partial x^2} + \dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 v}{\partial z^2}) \\
-        navier_{z} = \rho(\dfrac{\partial^2 w}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 w}{\partial x \partial z}+\dfrac{\partial^2 v}{\partial y \partial z} + \dfrac{\partial^2 w}{\partial z^2}) - \mu(\dfrac{\partial^2 w}{\partial x^2} + \dfrac{\partial^2 w}{\partial y^2} + \dfrac{\partial^2 w}{\partial z^2}) \\
+        \sigma_{xx} = \mu \dfrac{\partial u}{\partial x} + \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y})
+        \sigma_{xy} = \dfrac{\mu}{2}(\dfrac{\partial u}{\partial y} + \dfrac{\partial v}{\partial x})
+        \sigma_{yy} = \mu \dfrac{\partial v}{\partial y} + \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y})
+        E_{xy} = \dfrac{1}{2}(\dfrac{\partial u}{\partial x}\sigma_{xx} + (\dfrac{\partial u}{\partial y} + \dfrac{\partial v}{\partial x})\sigma_{xy} + \dfrac{\partial v}{\partial y}\sigma_{yy}) \\
+    \end{cases}
+    $$
+
+    3D:
+    $$
+    \begin{cases}
+        \epsilon_{xy} = \dfrac{1}{2}(\dfrac{\partial u}{\partial y} + \dfrac{\partial v}{\partial x})
+        \epsilon_{xz} = \dfrac{1}{2}(\dfrac{\partial u}{\partial z} + \dfrac{\partial w}{\partial x})
+        \epsilon_{zy} = \dfrac{1}{2}(\dfrac{\partial v}{\partial z} + \dfrac{\partial w}{\partial y})
+        E_{xyz} = \dfrac{\lambda}{2}(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z})^2 + \mu (\dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 w}{\partial z^2}) + 2\mu (\epsilon_{xy}^2 + \epsilon_{xz}^2 + \epsilon_{yz}^2) \\
     \end{cases}
     $$
 

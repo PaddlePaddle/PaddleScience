@@ -5,7 +5,6 @@ import paddle.nn.functional as F
 from skimage.filters import gaussian
 
 import ppsci
-from ppsci.autodiff import jacobian
 from ppsci.utils import logger
 
 
@@ -223,34 +222,16 @@ class Problems:
     def gaussian_filter(self, sensitivities):
         sensitivities = paddle.reshape(sensitivities, self.batch_size)
         sensitivities_blur = gaussian(sensitivities.numpy(), 3).reshape([-1, 1])
-
         return paddle.to_tensor(sensitivities_blur, dtype=paddle.get_default_dtype())
 
     # loss functions
-    def gen_E_equation_param(self, out_, in_):
-        param_dict = {"lambda_": self.lambda_, "mu": self.mu}
-        x, y = in_["x"], in_["y"]
-        u, v = out_["u"], out_["v"]
-        param_dict["u__x"] = jacobian(u, x).detach().clone()
-        param_dict["u__y"] = jacobian(u, y).detach().clone()
-        param_dict["v__x"] = jacobian(v, x).detach().clone()
-        param_dict["v__y"] = jacobian(v, y).detach().clone()
-        ppsci.autodiff.clear()
-        if self.dim == 3:
-            z = in_["z"]
-            w = out_["w"]
-            param_dict["u__z"] = jacobian(u, z).detach().clone()
-            param_dict["v__z"] = jacobian(v, z).detach().clone()
-            param_dict["w__x"] = jacobian(w, x).detach().clone()
-            param_dict["w__y"] = jacobian(w, y).detach().clone()
-            param_dict["w__z"] = jacobian(w, z).detach().clone()
-            ppsci.autodiff.clear()
-        return pdb_module.EEquation(param_dict, self.dim)
-
     def disp_loss_func(
-        self, output_dict, label_dict=None, weight_dict={}, input_dict=None
+        self,
+        output_dict,
+        label_dict=None,
+        weight_dict={},
     ):
-        densities = self.density_net(input_dict)["densities"].detach().clone()
+        densities = output_dict["densities"].detach().clone()
         E = output_dict["E_xy"] if self.dim == 2 else output_dict["E_xyz"]
         loss_E = self.compute_E(densities, E)
         loss_force = self.compute_force()
@@ -269,23 +250,13 @@ class Problems:
 
         if not isinstance(output_dicts_list, list):
             output_dicts_list = [output_dicts_list]
-            input_dicts_list = [input_dicts_list]
 
         for i, output_dict in enumerate(output_dicts_list):
-            input_dict = input_dicts_list[i]
             if isinstance(output_dict, list):
                 output_dict = output_dict[0]
-                input_dict = input_dict[0]
 
             densities = output_dict["densities"]
-            output_dict_disp = self.disp_net(input_dict)
-            E_no_backward = self.gen_E_equation_param(output_dict_disp, input_dict)
-            key_E = "E_xy" if self.dim == 2 else "E_xyz"
-            E = E_no_backward.equations[key_E]({})
-            # TODO: OOM
-            # E = self.equation["EEquation"].equations[key_E](
-            #     {**output_dict_disp, **input_dict}
-            # )
+            E = output_dict["E_xy"] if self.dim == 2 else output_dict["E_xyz"]
             ppsci.autodiff.clear()
 
             loss_E = self.compute_E(densities, E, reverse_grad=True)
@@ -307,8 +278,11 @@ class Problems:
             ppsci.autodiff.clear()
 
         if not self.use_mmse:
-            return loss_list
+            return {"loss_density": loss_list[0]}
         else:
+            if input_dicts_list is None:
+                raise ValueError("When use mmse, 'input_dicts_list' should not be None")
+
             target_densities_list = self.compute_target_densities(
                 densities_list, sensitivities_list
             )
@@ -317,7 +291,12 @@ class Problems:
             )
 
             def oc_loss_func(model, i):
-                densities_i = model(input_dicts_list[i][0])["densities"]
+                # cannot use `output_dict["densities"]` to get densities_i
+                # because model is updated every time before entering this function
+                input_dict = input_dicts_list[i]
+                if isinstance(input_dict, list):
+                    input_dict = input_dict[0]
+                densities_i = model(input_dict)["densities"]
                 loss = F.mse_loss(densities_i, target_densities_list[i], "mean")
                 return loss
 

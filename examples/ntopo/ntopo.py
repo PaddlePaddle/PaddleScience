@@ -14,16 +14,10 @@ import problems as problems_module
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 from ppsci.utils import save_load
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # make dirs
     makedirs(cfg.output_dir_disp, exist_ok=True)
     makedirs(cfg.output_dir_density, exist_ok=True)
@@ -40,6 +34,8 @@ def train(cfg: DictConfig):
     problem.disp_net.register_output_transform(problem.transform_out_disp)
     problem.density_net.register_input_transform(problem.transform_in)
     problem.density_net.register_output_transform(problem.transform_out_density)
+
+    model_list = ppsci.arch.ModelList((problem.disp_net, problem.density_net))
 
     # set optimizer
     optimizer_disp = ppsci.optimizer.Adam(**cfg.TRAIN.disp_net.optimizer)(
@@ -62,9 +58,7 @@ def train(cfg: DictConfig):
     train_dataloader_cfg = {
         "dataset": "NamedArrayDataset",
         "sampler": {
-            "name": "DistributedBatchSampler"
-            if cfg.TRAIN.enable_parallel
-            else "BatchSampler",
+            "name": "BatchSampler",
             "drop_last": True,
             "shuffle": False,
         },
@@ -108,9 +102,7 @@ def train(cfg: DictConfig):
             "batch_size": int(np.prod(problem.batch_size) * problem.batch_raito),
         },
         func_module.FunctionalLossBatch(problem.density_loss_func),
-        {
-            "densities": lambda out: out["densities"],
-        },
+        output_expr=problem.equation["EEquation"].equations,
         name="INTERIOR_DENSITY",
     )
 
@@ -147,7 +139,7 @@ def train(cfg: DictConfig):
 
     # initialize solver
     solver_disp = ppsci.solver.Solver(
-        model=problem.disp_net,
+        model=model_list,
         constraint=constraint_disp,
         output_dir=cfg.output_dir_disp,
         optimizer=optimizer_disp,
@@ -166,7 +158,7 @@ def train(cfg: DictConfig):
     )
 
     solver_density = ppsci.solver.Solver(
-        model=problem.density_net,
+        model=model_list,
         constraint=constraint_density,
         output_dir=cfg.output_dir_density,
         optimizer=optimizer_density,
@@ -210,9 +202,7 @@ def train(cfg: DictConfig):
                 "batch_size": int(np.prod(problem.batch_size) * problem.batch_raito),
             },
             func_module.FunctionalLossBatch(problem.density_loss_func),
-            {
-                "densities": lambda out: out["densities"],
-            },
+            output_expr=problem.equation["EEquation"].equations,
             name="INTERIOR_DENSITY",
         )
         solver_density.constraint["INTERIOR_DENSITY"] = interior_density
@@ -243,11 +233,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set problem
     problem = getattr(problems_module, cfg.PROBLEM)(cfg)
 
