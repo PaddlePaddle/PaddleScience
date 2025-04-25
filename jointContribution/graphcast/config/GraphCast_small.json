@@ -6,6 +6,7 @@
   "grid_node_dim": 186,
   "grid_node_num": 65160,
   "hidden_layers": 1,
+  "input_duration": "12h",
   "latent_size": 512,
   "level": 13,
   "mean_path": "data/stats/mean_by_level.nc",
@@ -17,11 +18,13 @@
   "mesh_node_dim": 186,
   "mesh_node_num": 10242,
   "mesh_size": 5,
+  "name": "graphcast",
   "node_output_dim": 83,
   "param_path": "data/params/GraphCast_small---ERA5-1979-2015---resolution-1.0---pressure-levels-13---mesh-2to5---precipitation-input-and-output.pdparams",
   "radius_query_fraction_edge_length": 0.6,
   "resolution": 1.0,
   "stddev_diffs_path": "data/stats/diffs_stddev_by_level.nc",
   "stddev_path": "data/stats/stddev_by_level.nc",
+  "target_lead_times": "6h",
   "type": "graphcast_small"
 }

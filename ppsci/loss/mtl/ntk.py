@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import List
+from typing import Dict
 
 import paddle
 
@@ -27,7 +27,35 @@ if TYPE_CHECKING:
 
 
 class NTK(base.LossAggregator):
+    r"""Weighted Neural Tangent Kernel.
+
+    reference: [https://github.com/PredictiveIntelligenceLab/jaxpi/blob/main/jaxpi/models.py#L148-L158](https://github.com/PredictiveIntelligenceLab/jaxpi/blob/main/jaxpi/models.py#L148-L158)
+
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
+
+    Args:
+        model (nn.Layer): Training model.
+        num_losses (int, optional): Number of losses. Defaults to 1.
+        update_freq (int, optional): Weight updating frequency. Defaults to 1000.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.loss import mtl
+        >>> model = paddle.nn.Linear(3, 4)
+        >>> loss_aggregator = mtl.NTK(model, num_losses=2)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
+    """
     should_persist: ClassVar[bool] = True
+    weight: paddle.Tensor
 
     def __init__(
         self,
@@ -41,18 +69,20 @@ class NTK(base.LossAggregator):
         self.update_freq = update_freq
         self.register_buffer("weight", paddle.ones([num_losses]))
 
-    def _compute_weight(self, losses):
+    def _compute_weight(self, losses: Dict[str, paddle.Tensor]):
         ntk_sum = 0
         ntk_value = []
-        for loss in losses:
-            loss.backward(retain_graph=True)  # NOTE: Keep graph for loss backward
+        for loss in losses.values():
+            grads = paddle.grad(
+                loss,
+                self.model.parameters(),
+                create_graph=False,
+                retain_graph=True,
+                allow_unused=True,
+            )
             with paddle.no_grad():
                 grad = paddle.concat(
-                    [
-                        p.grad.reshape([-1])
-                        for p in self.model.parameters()
-                        if p.grad is not None
-                    ]
+                    [grad.reshape([-1]) for grad in grads if grad is not None]
                 )
                 ntk_value.append(
                     paddle.sqrt(
@@ -65,7 +95,9 @@ class NTK(base.LossAggregator):
 
         return ntk_weight
 
-    def __call__(self, losses: List["paddle.Tensor"], step: int = 0) -> "paddle.Tensor":
+    def __call__(
+        self, losses: Dict[str, "paddle.Tensor"], step: int = 0
+    ) -> "paddle.Tensor":
         assert len(losses) == self.num_losses, (
             f"Length of given losses({len(losses)}) should be equal to "
             f"num_losses({self.num_losses})."
@@ -73,9 +105,9 @@ class NTK(base.LossAggregator):
         self.step = step
 
         # compute current loss with moving weights
-        loss = self.weight[0] * losses[0]
-        for i in range(1, len(losses)):
-            loss += self.weight[i] * losses[i]
+        loss = 0
+        for i, (k, v) in enumerate(losses.items()):
+            loss = loss + self.weight[i] * v
 
         # update moving weights every 'update_freq' steps
         if self.step % self.update_freq == 0:

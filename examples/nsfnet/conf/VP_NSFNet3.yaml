@@ -5,8 +5,8 @@ output_dir: ./output_NSFNet3
 iters_per_epoch: 1
 
 MODEL:
-  input_keys: ["x", "y","z","t"]
-  output_keys: ["u", "v", "w","p"]
+  input_keys: ["x", "y", "z", "t"]
+  output_keys: ["u", "v", "w", "p"]
   num_layers: 10
   hidden_size: 100
   activation: "tanh"

@@ -24,7 +24,7 @@ pip install hydra-core
 
 !!! warning
 
-    注意本教程内的打印运行配置方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
+    请注意，本教程中的打印运行配置方法**仅用于调试**，hydra 默认在打印完配置后会立即结束程序。因此，在正常运行程序时请勿加上 `-c job` 参数。
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
@@ -78,7 +78,7 @@ TRAIN:
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
-    这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
+    这种方式通过命令行参数临时重载运行配置，而不会修改 bracket.yaml 文件本身，能够灵活地控制运行时的配置，确保不同实验之间互不干扰。
 
 !!! tip "设置含转义字符的参数值"
 
@@ -211,44 +211,51 @@ ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, inclu
 
 !!! Warning
 
-    Paddle 在 3.0 以及之后的版本中将 PIR 设置为默认的静态图执行模式，因此移除了 `*.pdmodel` 和 `*.pdiparams` 格式的文件，而由 `*.json` 文件代替。
+    在 Paddle 3.0 及之后的版本中，PIR 被设置为默认的静态图执行模式，因此 `*.pdmodel` 格式的文件被移除，改由 `*.json` 文件代替。
     为此 PaddleScience 进行了适配([deploy/python_infer/base.py](https://github.com/PaddlePaddle/PaddleScience/blob/develop/deploy/python_infer/base.py#L105-L107))，用户无需关心后缀格式，会根据 Paddle 版本是否支持 PIR，在加载上述文件时，自动替换为正确的后缀名。
 
 #### 1.2.2 ONNX 推理模型导出
 
-在导出 ONNX 推理模型前，需要完成 [1.2.1 Paddle 推理模型导出](#121-paddle) 的步骤，得到`inference/aneurysm.pdiparams`和`inference/aneurysm.pdmodel`。
+在导出 ONNX 推理模型前，需要完成 [1.2.1 Paddle 推理模型导出](#121-paddle) 的步骤，得到`inference/aneurysm.json`和`inference/aneurysm.pdiparams`。
 
-然后安装 paddle2onnx。
+接着安装 `paddle2onnx>=2.0.0`。
+
+> 更多详细使用方式请参考 [**paddle2onnx 官方文档**](https://github.com/PaddlePaddle/Paddle2ONNX)。
 
 ``` sh
-pip install paddle2onnx
+pip install "paddle2onnx>=2.0.0"
 ```
 
-接下来仍然以 aneurysm 案例为例，介绍命令行直接导出和 PaddleScience 导出两种方式。
+以 aneurysm 案例为例，介绍命令行直接导出和 PaddleScience 导出两种方式。
 
 === "命令行导出"
 
     ``` sh
     paddle2onnx \
         --model_dir=./inference/ \
-        --model_filename=aneurysm.pdmodel \
+        --model_filename=aneurysm.json \
         --params_filename=aneurysm.pdiparams \
         --save_file=./inference/aneurysm.onnx \
-        --opset_version=13 \
+        --opset_version=19 \
         --enable_onnx_checker=True
     ```
 
-    若导出成功，输出信息如下所示
+    若导出成功，输出信息如下所示。
 
     ``` log
     [Paddle2ONNX] Start to parse PaddlePaddle model...
-    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
-    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
-    [Paddle2ONNX] Start to parsing Paddle model...
-    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.json
+    [Paddle2ONNX] Parameters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model saved in pir program format...
+    [Paddle2ONNX] Start to parsing Paddle Pir model...
+    [Paddle2ONNX] PIR Program:
+    ...
+
+    [Paddle2ONNX] Load PaddlePaddle pir model successfully
+    [Paddle2ONNX] Start getting paramas value name from pir::program
+    ...
+    [Paddle2ONNX] Construct operation : builtin_split
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
-    2024-03-02 05:45:12 [INFO]      ===============Make PaddlePaddle Better!================
-    2024-03-02 05:45:12 [INFO]      A little survey: https://iwenjuan.baidu.com/?code=r8hu2s
     ```
 
 === "PaddleScience 导出"
@@ -271,12 +278,25 @@ pip install paddle2onnx
     若导出成功，输出信息如下所示。
 
     ``` log
-    ...
+    ppsci MESSAGE: Found /root/.paddlesci/weights/aneurysm_pretrained.pdparams already in /root/.paddlesci/weights, skip downloading.
+    ppsci MESSAGE: Finish loading pretrained model from: /root/.paddlesci/weights/aneurysm_pretrained.pdparams
+    ppsci INFO: Using paddlepaddle 3.0.0 on device Place(gpu:0)
+    ppsci MESSAGE: Set to_static=False for computational optimization.
+    /workspace/hesensen/anaconda3/envs/conda_py310/lib/python3.10/site-packages/paddle/jit/api.py:662: UserWarning: Found 'dict' in given outputs, the values will be returned in a sequence sorted in lexicographical order by their keys.
+    warnings.warn(
+    ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.json, *.pdiparams files.
     [Paddle2ONNX] Start to parse PaddlePaddle model...
-    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
-    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
-    [Paddle2ONNX] Start to parsing Paddle model...
-    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.json
+    [Paddle2ONNX] Parameters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model saved in pir program format...
+    [Paddle2ONNX] Start to parsing Paddle Pir model...
+    [Paddle2ONNX] PIR Program:
+    ...
+
+    [Paddle2ONNX] Load PaddlePaddle pir model successfully
+    [Paddle2ONNX] Start getting paramas value name from pir::program
+    [Paddle2ONNX] Getting paramas value name from pir::program successfully
+    ...
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
     ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
     ```
@@ -340,7 +360,7 @@ pip install paddle2onnx
 
     少数案例尚未支持导出、推理功能，因此对应文档中未给出导出、推理命令。
 
-首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.pdmodel`, `*.pdiparams` 两个文件。
+首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.json`, `*.pdiparams` 两个文件。
 
 以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件以 `./inference/aneurysm.*` 的形式保存，则推理代码示例如下。
 
@@ -368,11 +388,11 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 
 PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
-|  | Native | ONNX | TensorRT | MKLDNN |
-| :--- | :--- | :--- | :--- | :--- |
-| CPU | ✅ | ✅| / | ✅ |
-| GPU | ✅ | ✅ | ✅ | / |
-| XPU | TODO | / | / | / |
+|  | Native | ONNX | TensorRT | macaRT | MKLDNN |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Intel(CPU) | ✅ | ✅ | / | / | ✅ |
+| NVIDIA | ✅ | ✅ | ✅ | / | / |
+| MetaX | ✅ | ✅ | / | ✅ | / |
 
 接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
 
@@ -416,24 +436,29 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         === "pip 安装"
 
             ``` sh
-            pip install paddlepaddle-gpu==2.3.0rc1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/
+            # cuda 11.8
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu118/
+            # cuda 12.3
+            pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu123/
             ```
 
         === "源码编译"
 
-            ``` sh
+            ``` sh hl_lines="11 12"
             git clone https://github.com/PaddlePaddle/Paddle.git -b develop && cd Paddle/
             mkdir build && cd build
+
             cmake .. -DPY_VERSION=3.9 \
                 -DPYTHON_EXECUTABLE=$(which python3) \
                 -DWITH_GPU=ON \
-                -WITH_DISTRIBUTE=ON \
+                -DWITH_DISTRIBUTE=ON \
                 -DWITH_TESTING=OFF \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
                 -DPYTHON_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.so \
                 -DWITH_TENSORRT=ON \
                 -DTENSORRT_ROOT=$TRT_PATH
+
             pip install python/dist/paddlepaddle_gpu-0.0.0-cp*
             ```
 
@@ -453,7 +478,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
     ONNX 是微软开源的深度学习推理框架，PaddleScience 支持了 ONNX 推理功能。
 
-    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.pdmodel` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
+    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.json` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
     然后根据硬件环境，安装 CPU 或 GPU 版的 onnxruntime：
 
     ``` sh
@@ -477,7 +502,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
 
 === "使用 MKLDNN 推理"
 
-    MKLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    MKLDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
 
     运行以下命令进行推理：
 
@@ -827,7 +852,7 @@ hydra 的自动化实验功能可以与 [optuna](https://optuna.readthedocs.io/e
     3. `direction: minimize`：这指定了优化的目标方向。minimize 表示我们希望最小化目标函数（例如模型的验证损失）。如果我们希望最大化某个指标（例如准确率），则可以设置为 maximize。
     4. `study_name: viv_optuna`：这设置了 Optuna 研究（Study）的名称。这个名称用于标识和引用特定的研究，有助于在以后的分析或继续优化时跟踪结果。
     5. `n_trials: 20`：这指定了要运行的总试验次数。在这个例子中，Optuna 将执行 20 次独立的试验来寻找最佳的超参数组合。
-    6. `n_jobs: 1`：这设置了可以并行运行的试验数量。值为 1 意味着试验将依次执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
+    6. `n_jobs: 1`：这设置了可并行运行的试验数量。值为 1 表示试验将顺序执行，而不是并行。如果你的系统有多个 CPU 核心，并且希望并行化以加速搜索过程，可以将这个值设置为更高的数字或 -1（表示使用所有可用的 CPU 核心）。
     7. `params:`： 这一节定义了要优化的超参数以及它们的搜索空间。
     8. `MODEL.num_layers: choice(2, 3, 4, 5, 6, 7)`：这指定了模型层数的可选值。choice 函数表示 Optuna 在 2, 3, 4, 5, 6, 和 7 中随机选择一个值。
     9. `TRAIN.lr_scheduler.learning_rate: interval(0.0001, 0.005)`：这指定了学习率的搜索范围。interval 表示学习率的值将在 0.0001 和 0.005 之间均匀分布地选择。
@@ -891,7 +916,7 @@ best_value: 0.02460772916674614
 
 #### 2.2.1 数据并行
 
-接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
+接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
 1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
@@ -919,8 +944,8 @@ best_value: 0.02460772916674614
 
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
-
-    EPOCHS = 3000 if not args.epochs else args.epochs
+    ...
+    ...
     ```
 
 2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例

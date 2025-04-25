@@ -23,12 +23,14 @@
 === "模型导出命令"
 
     ``` sh
+    pip install einops==0.8.1 # Check if einops has been updated to 0.8.1, see: https://github.com/arogozhnikov/einops/pull/353
     python ns_cvit.py mode=export
     ```
 
 === "模型推理命令"
 
     ``` sh
+    pip install einops==0.8.1 # Check if einops has been updated to 0.8.1, see: https://github.com/arogozhnikov/einops/pull/353
     # download data
     git lfs install
     git clone https://huggingface.co/datasets/pdearena/NavierStokes-2D
@@ -37,7 +39,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [ns_cvit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cvit/ns_cvit_pretrained.pdparams) | 4-step l2_error: 0.0398 |
+| [ns_cvit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cvit/ns_cvit_pretrained.pdparams) | 4-step l2_error: 0.0396 |
 
 ## 1. 背景简介
 

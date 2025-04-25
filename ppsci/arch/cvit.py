@@ -867,10 +867,10 @@ class CVit1D(base.Arch):
 
         # decoder
         for i, block in enumerate(self.cross_attn_blocks):
-            x = block(coords, x)
+            coords = block(coords, x)
 
         # mlp
-        x = self.block_norm(x)
+        x = self.block_norm(coords)
         x = self.final_mlp(x)
 
         return x
@@ -1070,10 +1070,10 @@ class CVit(base.Arch):
 
         # decoder
         for i, block in enumerate(self.cross_attn_blocks):
-            x = block(coords, x)
+            coords = block(coords, x)
 
         # mlp
-        x = self.block_norm(x)
+        x = self.block_norm(coords)
         x = self.final_mlp(x)
 
         return x

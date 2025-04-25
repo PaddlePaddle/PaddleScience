@@ -83,7 +83,7 @@ class Solver:
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
         use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
-        device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
+        device (Literal["cpu", "gpu", "xpu", "sdaa", None], optional): Runtime device. Defaults to None, which means use default device on current platform.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
@@ -145,7 +145,7 @@ class Solver:
         use_wandb: bool = False,
         use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
-        device: Literal["cpu", "gpu", "xpu"] = "gpu",
+        device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None,
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
@@ -247,7 +247,12 @@ class Solver:
         # set running device
         if not cfg:
             self.device = device
+        if self.device is None:
+            # set to default device if not specified
+            self.device: str = paddle.device.get_device()
+
         if self.device != "cpu" and paddle.device.get_device() == "cpu":
+            # fall back to cpu if no other device available
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
             self.device = "cpu"
         self.device = paddle.device.set_device(self.device)
@@ -943,8 +948,6 @@ class Solver:
 
         if with_onnx:
             # TODO: support pir + onnx
-            if paddle.framework.use_pir_api():
-                raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
                     "Please install paddle2onnx with `pip install paddle2onnx`"
@@ -952,11 +955,13 @@ class Solver:
                 )
             import paddle2onnx
 
-            DEFAULT_OPSET_VERSION = 13
+            DEFAULT_OPSET_VERSION = 19
 
             paddle2onnx.export(
-                model_file=export_path + ".pdmodel",
-                params_file=export_path + ".pdiparams",
+                model_filename=export_path + ".json"
+                if paddle.framework.use_pir_api()
+                else ".pdmodel",
+                params_filename=export_path + ".pdiparams",
                 save_file=export_path + ".onnx",
                 opset_version=DEFAULT_OPSET_VERSION,
                 enable_onnx_checker=True,

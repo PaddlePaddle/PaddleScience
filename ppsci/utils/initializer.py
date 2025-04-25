@@ -445,7 +445,7 @@ def linear_init_(module: nn.Layer) -> None:
         >>> layer = paddle.nn.Linear(128, 256)
         >>> ppsci.utils.initializer.linear_init_(layer)
     """
-    kaiming_uniform_(module.weight, a=math.sqrt(5))
+    kaiming_uniform_(module.weight, a=math.sqrt(5), reverse=True)
     if module.bias is not None:
         fan_in, _ = _calculate_fan_in_and_fan_out(module.weight, reverse=True)
         bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0

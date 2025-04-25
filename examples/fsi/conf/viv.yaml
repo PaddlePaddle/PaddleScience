@@ -5,6 +5,7 @@ defaults:
   - TRAIN/swa: swa_default
   - EVAL: eval_default
   - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
   - _self_
 
 hydra:
