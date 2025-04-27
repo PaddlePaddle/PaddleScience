@@ -28,11 +28,11 @@ python wgangp_toy.py model=eval
 ```
 
 
-| 预训练模型                                                                                                                                 |
-|:--------------------------------------------------------------------------------------------------------------------------------------|
-| [wgangp_cifar10_pretrained.pdparams]() |
-| [wgangp_mnist_pretrained.pdparams]()     |   
-| [wgangp_toy_pretrained.pdparams]()                                                                                                    |
+| 预训练模型                              |
+|:-----------------------------------|
+| wgangp_cifar10_pretrained.pdparams |
+| wgangp_mnist_pretrained.pdparams   |   
+| wgangp_toy_pretrained.pdparams     |                                                                                                  
 ## 1. 背景简介
 在数字图像处理和机器学习领域，生成对抗网络（GANs）因其卓越的图像生成能力而受到广泛关注。然而，传统的GAN架构在训练过程中可能会遇到不稳定的问题，尤其是在生成高分辨率或复杂场景的图像时。为了解决这些问题，研究人员提出了带有梯度惩罚的Wasserstein生成对抗网络（WGAN-GP），它不仅增强了训练过程的稳定性，还显著提升了生成图像的质量。
 
@@ -42,8 +42,6 @@ WGAN-GP通过改进损失函数来最小化真实数据分布与生成数据分�
 WGAN-GP提出一种替代权重剪裁的方法：对评论者输入梯度的范数施加惩罚。在几乎无需超参数调整的情况下稳定训练多种GAN架构.
 
 ### 2.1 模型结构
-
-
 
 WGAN-GP是一个条件对抗网络，包含了一个noise-to-image的生成器和一个CNN的判别器。下面显示了模型的整体结构。
 
@@ -80,18 +78,17 @@ $$
 
 ### 3.1 数据集介绍
 
-
 数据集采用了[Cifar10](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)数据集、[MNIST](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)和玩具数据集(swissroll/8gaussians/25gaussians)。
 
 Cifar10数据集包含60000张32x32彩色图像，共分为10个类别，每个类别6000张图像。
 
 Cifar10数据集有3个版本
 
-| Version | Size   | md5sum |
-| :--------- |:-----|:-------|
-| CIFAR-100 python  | 161 MB  |    eb9058c3a382ffc7106e4002c42a8d85    |
-|  CIFAR-100 Matlab |   175 MB  |6a4bfa1dcd5c9453dda6bb54194911f4|
-|  CIFAR-100 binary|161 MB|03b5dce01913d631647c71ecec9e9cb8|
+| Version          | Size        | md5sum                               |
+|:-----------------|:------------|:-------------------------------------|
+| CIFAR-100 python | 161 MB      | eb9058c3a382ffc7106e4002c42a8d85     |
+| CIFAR-100 Matlab | 175 MB      | 6a4bfa1dcd5c9453dda6bb54194911f4     |
+| CIFAR-100 binary | 161 MB      | 03b5dce01913d631647c71ecec9e9cb8     |
 
 本实现使用的为CIFAR-100 python版本
 
@@ -344,7 +341,7 @@ examples/wgangp/wgangp_toy.py:56:66
 
 ## 4. 完整代码
 
-``` py linenums="1" title="velocityGAN.py"
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py
 examples/wgangp/wgangp_mnist.py
@@ -352,10 +349,7 @@ examples/wgangp/wgangp_toy.py
 --8<--
 ```
 
-
-
-
-## 5. 参考文献
+## 6. 参考文献
 
 - [Improved Training of Wasserstein GANs 论文](https://arxiv.org/abs/1704.00028)
 
