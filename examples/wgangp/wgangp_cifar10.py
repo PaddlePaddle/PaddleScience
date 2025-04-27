@@ -3,11 +3,11 @@ import platform
 
 import hydra
 import paddle
-from functions import Cifar10GenFuncs
 from functions import Cifar10DisFuncs
+from functions import Cifar10GenFuncs
 from functions import InceptionScore
-from functions import show_save_image
 from functions import load_cifar10
+from functions import show_save_image
 from model import WganGpCifar10Discriminator
 from model import WganGpCifar10Generator
 from omegaconf import DictConfig
@@ -25,7 +25,7 @@ def evaluate(cfg: DictConfig):
     generator_model = WganGpCifar10Generator(**cfg["MODEL"]["gen_net"])
     discriminator_model = WganGpCifar10Discriminator(**cfg["MODEL"]["dis_net"])
     if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
-            cfg.EVAL.pretrained_dis_model_path
+        cfg.EVAL.pretrained_dis_model_path
     ):
         discriminator_model.load_dict(paddle.load(cfg.EVAL.pretrained_dis_model_path))
 
@@ -47,7 +47,7 @@ def evaluate(cfg: DictConfig):
         "use_shared_memory": cfg["EVAL"]["use_shared_memory"],
         "num_workers": cfg["EVAL"]["num_workers"]
         if platform.system() != "Windows"
-        else 0
+        else 0,
     }
 
     # set validator
@@ -81,9 +81,9 @@ def evaluate(cfg: DictConfig):
                     break
                 fake_image = generator_model(input_)["fake_data"]
                 for i in range(
-                        cfg["EVAL"]["batch_size"]
-                        if cfg["EVAL"]["batch_size"] < cfg.VIS.num
-                        else cfg.VIS.num
+                    cfg["EVAL"]["batch_size"]
+                    if cfg["EVAL"]["batch_size"] < cfg.VIS.num
+                    else cfg.VIS.num
                 ):
                     show_save_image(
                         fake_image[i],
@@ -189,11 +189,11 @@ def train(cfg: DictConfig):
     # save model weight
     paddle.save(
         generator_model.state_dict(),
-        os.path.join(cfg.output_dir, "model_generator.pdparams")
+        os.path.join(cfg.output_dir, "model_generator.pdparams"),
     )
     paddle.save(
         discriminator_model.state_dict(),
-        os.path.join(cfg.output_dir, "model_discriminator.pdparams")
+        os.path.join(cfg.output_dir, "model_discriminator.pdparams"),
     )
 
 
