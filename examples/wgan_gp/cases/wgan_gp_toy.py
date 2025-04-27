@@ -1,5 +1,4 @@
 import os
-import sys
 import paddle
 import matplotlib.pyplot as plt
 import numpy as np
