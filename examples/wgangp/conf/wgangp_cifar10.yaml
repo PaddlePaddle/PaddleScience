@@ -100,7 +100,7 @@ TRAIN:
   drop_last: true
   pretrained_gen_model_path:
   pretrained_dis_model_path:
-
+  
 # evaluation settings
 EVAL:
   dataset:
@@ -111,5 +111,5 @@ EVAL:
   batch_size: 8
   use_shared_memory: true
   num_workers: 0
-  pretrained_gen_model_path: 
+  pretrained_gen_model_path:
   pretrained_dis_model_path:
