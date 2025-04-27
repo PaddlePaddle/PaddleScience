@@ -1,9 +1,7 @@
 import os
 import sys
-
-import matplotlib.pyplot as plt
-import numpy as np
 import paddle
+import matplotlib.pyplot as plt
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
 
