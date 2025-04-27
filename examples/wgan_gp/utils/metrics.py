@@ -1,59 +1,66 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 
 
-def inception_score(generated_images, model=None, batch_size=32, splits=10):
+def save_image_grid(images, path, nrow=8, padding=2, normalize=True):
     """
-    Calculate Inception Score for generated images.
+    Save a grid of images to a file.
 
     Args:
-        generated_images: Generated images to evaluate
-        model: Pre-trained model for feature extraction (default: None, will use a simple classifier)
-        batch_size: Batch size for inference (default: 32)
-        splits: Number of splits to calculate mean and std (default: 10)
-
-    Returns:
-        Mean and standard deviation of the Inception Score
+        images: Tensor of images to display
+        path: Path to save the image grid
+        nrow: Number of images per row (default: 8)
+        padding: Padding between images (default: 2)
+        normalize: Whether to normalize images to [0, 1] (default: True)
     """
-    n_images = len(generated_images)
-    split_scores = []
+    if isinstance(images, paddle.Tensor):
+        images = images.numpy()
 
-    for k in range(splits):
-        part = generated_images[k * (n_images // splits): (k + 1) * (n_images // splits)]
-        py = np.random.rand(len(part), 10)  # Simulated softmax outputs
-        scores = []
-        for i in range(len(part)):
-            p_y = py[i]
-            p_y = p_y / np.sum(p_y)
-            score = np.sum(p_y * np.log(p_y + 1e-8))
-            scores.append(score)
-        split_scores.append(np.exp(np.mean(scores)))
+    if normalize:
+        images = (images - images.min()) / (images.max() - images.min() + 1e-8)
 
-    return np.mean(split_scores), np.std(split_scores)
+    nmaps = images.shape[0]
+    xmaps = min(nrow, nmaps)
+    ymaps = int(np.ceil(float(nmaps) / xmaps))
+    height, width = int(images.shape[1] + padding), int(images.shape[2] + padding)
+
+    grid = np.zeros((height * ymaps + padding, width * xmaps + padding, 3), dtype=np.uint8)
+    k = 0
+    for y in range(ymaps):
+        for x in range(xmaps):
+            if k >= nmaps:
+                break
+            image = images[k]
+            if image.shape[-1] == 1:
+                image = np.repeat(image, 3, axis=-1)
+            image = (image * 255).astype(np.uint8)
+            grid[y * height + padding:(y + 1) * height,
+                 x * width + padding:(x + 1) * width] = image
+            k += 1
+
+    plt.figure(figsize=(10, 10))
+    plt.imshow(grid)
+    plt.axis('off')
+    plt.savefig(path, bbox_inches='tight')
+    plt.close()
 
 
-def frechet_inception_distance(real_features, generated_features):
+def plot_loss_curves(g_losses, d_losses, path):
     """
-    Calculate Fréchet Inception Distance (FID) between real and generated images.
+    Plot generator and discriminator loss curves.
 
     Args:
-        real_features: Features extracted from real images
-        generated_features: Features extracted from generated images
-
-    Returns:
-        FID score (lower is better)
+        g_losses: List of generator losses
+        d_losses: List of discriminator losses
+        path: Path to save the plot
     """
-    mu1, sigma1 = np.mean(real_features, axis=0), np.cov(real_features, rowvar=False)
-    mu2, sigma2 = np.mean(generated_features, axis=0), np.cov(generated_features, rowvar=False)
-
-    ssdiff = np.sum((mu1 - mu2) ** 2.0)
-
-    covmean = np.sqrt(sigma1 @ sigma2)
-
-    if not np.isfinite(covmean).all():
-        offset = np.eye(sigma1.shape[0]) * 1e-6
-        covmean = np.sqrt((sigma1 + offset) @ (sigma2 + offset))
-
-    fid = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
-
-    return fid
+    plt.figure(figsize=(10, 5))
+    plt.plot(g_losses, label='Generator Loss')
+    plt.plot(d_losses, label='Discriminator Loss')
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(path)
+    plt.close()
