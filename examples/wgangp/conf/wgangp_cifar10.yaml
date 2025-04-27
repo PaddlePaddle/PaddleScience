@@ -88,7 +88,6 @@ TRAIN:
     iters_per_epoch: 1
     learning_rate: 2e-4
     end_lr: 1e-4
-
     by_epoch: true
   batch_size: 8
   use_shared_memory: true
