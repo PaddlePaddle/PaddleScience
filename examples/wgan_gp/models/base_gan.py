@@ -1,6 +1,7 @@
+import abc
+
 import paddle
 import paddle.nn as nn
-import abc
 
 class BaseGAN(abc.ABC):
     """
