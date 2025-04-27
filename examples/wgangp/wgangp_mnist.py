@@ -3,11 +3,16 @@ import platform
 
 import hydra
 import paddle
+from functions import MnistGenFuncs
+from functions import MnistDisFuncs
+from functions import load_mnist
+from functions import show_mnist
+from functions import invalid_metric
+from model import WganGpMnistDiscriminator
+from model import WganGpMnistGenerator
 from omegaconf import DictConfig
 
 import ppsci
-from functions import MnistGenFuncs, MnistDisFuncs, load_mnist, show_mnist, invalid_metric
-from model import WganGpMnistDiscriminator, WganGpMnistGenerator
 from ppsci.utils import logger
 
 
@@ -15,7 +20,9 @@ def evaluate(cfg: DictConfig):
     # set model
     generator_model = WganGpMnistGenerator(**cfg["MODEL"]["gen_net"])
     discriminator_model = WganGpMnistDiscriminator(**cfg["MODEL"]["dis_net"])
-    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(cfg.EVAL.pretrained_dis_model_path):
+    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
+            cfg.EVAL.pretrained_dis_model_path
+    ):
         discriminator_model.load_dict(paddle.load(cfg.EVAL.pretrained_dis_model_path))
 
     # set Loss
@@ -30,14 +37,18 @@ def evaluate(cfg: DictConfig):
         },
         "batch_size": cfg["EVAL"]["batch_size"],
         "use_shared_memory": cfg["EVAL"]["use_shared_memory"],
-        "num_workers": cfg["EVAL"]["num_workers"] if platform.system() != 'Windows' else 0
+        "num_workers": cfg["EVAL"]["num_workers"]
+        if platform.system() != "Windows"
+        else 0
     }
 
     # set validator
     validator = ppsci.validate.SupervisedValidator(
         dataloader_cfg=valid_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(generator_funcs.loss),
-        metric={"MAE": ppsci.metric.FunctionalMetric(invalid_metric), },
+        metric={
+            "MAE": ppsci.metric.FunctionalMetric(invalid_metric),
+        },
         name="val",
     )
     validator_dict = {validator.name: validator}
@@ -60,7 +71,11 @@ def evaluate(cfg: DictConfig):
                 if batch_idx + 1 > cfg.VIS.batch:
                     break
                 fake_data = generator_model(input_)["fake_data"]
-                for i in range(cfg["EVAL"]["batch_size"] if cfg["EVAL"]["batch_size"] < cfg.VIS.num else cfg.VIS.num):
+                for i in range(
+                        cfg["EVAL"]["batch_size"]
+                        if cfg["EVAL"]["batch_size"] < cfg.VIS.num
+                        else cfg.VIS.num
+                ):
                     show_mnist(
                         fake_data[i],
                         f"{cfg.output_dir}/image{batch_idx}_{i}.png",
@@ -75,7 +90,9 @@ def train(cfg: DictConfig):
 
     # set Loss
     generator_funcs = MnistGenFuncs(discriminator_model=discriminator_model)
-    discriminator_funcs = MnistDisFuncs(**cfg["LOSS"]["dis"], discriminator_model=discriminator_model)
+    discriminator_funcs = MnistDisFuncs(
+        **cfg["LOSS"]["dis"], discriminator_model=discriminator_model
+    )
 
     # set dataloader
     inputs = load_mnist(**cfg["DATA"])
@@ -107,12 +124,12 @@ def train(cfg: DictConfig):
         output_expr={"real_data": lambda out: out["real_data"]},
         name="constraint_discriminator",
     )
-    constraint_discriminator_dict = {constraint_discriminator.name: constraint_discriminator}
+    constraint_discriminator_dict = {
+        constraint_discriminator.name: constraint_discriminator
+    }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(
-        **cfg["TRAIN"]["optimizer"]
-    )
+    optimizer = ppsci.optimizer.Adam(**cfg["TRAIN"]["optimizer"])
     optimizer_generator = optimizer(generator_model)
     optimizer_discriminator = optimizer(discriminator_model)
 
@@ -144,17 +161,21 @@ def train(cfg: DictConfig):
 
     # save model weight
     paddle.save(
-        generator_model.state_dict(), os.path.join(cfg.output_dir, "model_generator.pdparams")
+        generator_model.state_dict(),
+        os.path.join(cfg.output_dir, "model_generator.pdparams")
     )
     paddle.save(
-        discriminator_model.state_dict(), os.path.join(cfg.output_dir, "model_discriminator.pdparams")
+        discriminator_model.state_dict(),
+        os.path.join(cfg.output_dir, "model_discriminator.pdparams")
     )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="wgangp_mnist.yaml")
 def main(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg["seed"])
-    logger.init_logger(cfg.LOGGER.name, log_file=os.path.join(cfg.output_dir, cfg.LOGGER.log_file))
+    logger.init_logger(
+        cfg.LOGGER.name, log_file=os.path.join(cfg.output_dir, cfg.LOGGER.log_file)
+    )
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
