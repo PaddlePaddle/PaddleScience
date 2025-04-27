@@ -1,9 +1,8 @@
 import os
 import sys
-import paddle
 import matplotlib.pyplot as plt
-import numpy as np
 import paddle.nn as nn
+import paddle.vision.transforms as transforms
 from ..models.wgan_gp import WGAN_GP
 
 class MNISTGenerator(nn.Layer):
