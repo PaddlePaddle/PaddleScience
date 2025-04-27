@@ -4,10 +4,7 @@ import paddle
 import matplotlib.pyplot as plt
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import models
-from models.wgan_gp import WGAN_GP
+from ..models.wgan_gp import WGAN_GP
 
 class CIFAR10Generator(nn.Layer):
     """
