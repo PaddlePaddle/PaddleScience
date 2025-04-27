@@ -4,10 +4,7 @@ import paddle
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle.nn as nn
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import models
-from models.wgan_gp import WGAN_GP
+from ..models.wgan_gp import WGAN_GP
 
 class MNISTGenerator(nn.Layer):
     """
