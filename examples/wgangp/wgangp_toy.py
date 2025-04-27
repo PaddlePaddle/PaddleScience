@@ -3,18 +3,25 @@ import platform
 
 import hydra
 import paddle
+from functions import ToyGenFuncs
+from functions import ToyDisFuncs
+from functions import load_toy_data
+from functions import generate_toy_image
+from functions import invalid_metric
+from model import WganGpToyDiscriminator
+from model import WganGpToyGenerator
 from omegaconf import DictConfig
 
 import ppsci
-from functions import ToyGenFuncs, ToyDisFuncs, load_toy_data, generate_toy_image, invalid_metric
-from model import WganGpToyDiscriminator, WganGpToyGenerator
 from ppsci.utils import logger
 
 
 def evaluate(cfg: DictConfig):
     # set model
     discriminator_model = WganGpToyDiscriminator(**cfg["MODEL"]["dis_net"])
-    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(cfg.EVAL.pretrained_dis_model_path):
+    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
+            cfg.EVAL.pretrained_dis_model_path
+    ):
         discriminator_model.load_dict(paddle.load(cfg.EVAL.pretrained_dis_model_path))
     generator_model = WganGpToyGenerator(**cfg["MODEL"]["gen_net"])
 
@@ -30,7 +37,9 @@ def evaluate(cfg: DictConfig):
         },
         "batch_size": cfg["EVAL"]["batch_size"],
         "use_shared_memory": cfg["EVAL"]["use_shared_memory"],
-        "num_workers": cfg["EVAL"]["num_workers"] if platform.system() != 'Windows' else 0
+        "num_workers": cfg["EVAL"]["num_workers"]
+        if platform.system() != "Windows"
+        else 0
     }
 
     # set validator
@@ -61,7 +70,7 @@ def evaluate(cfg: DictConfig):
             generate_toy_image(
                 true_dist=real_data,
                 discriminator=discriminator_model,
-                path=os.path.join(cfg.output_dir, f"image.png")
+                path=os.path.join(cfg.output_dir, "image.png"),
             )
         print(f"The visualizations are saved to {cfg.output_dir}")
 
@@ -73,7 +82,9 @@ def train(cfg: DictConfig):
 
     # set Loss
     generator_funcs = ToyGenFuncs(discriminator_model=discriminator_model)
-    discriminator_funcs = ToyDisFuncs(**cfg["LOSS"]["dis"], discriminator_model=discriminator_model)
+    discriminator_funcs = ToyDisFuncs(
+        **cfg["LOSS"]["dis"], discriminator_model=discriminator_model
+    )
 
     # set dataloader
     inputs = load_toy_data(**cfg["DATA"])
@@ -105,12 +116,12 @@ def train(cfg: DictConfig):
         output_expr={"real_data": lambda out: out["real_data"]},
         name="constraint_discriminator",
     )
-    constraint_discriminator_dict = {constraint_discriminator.name: constraint_discriminator}
+    constraint_discriminator_dict = {
+        constraint_discriminator.name: constraint_discriminator
+    }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(
-        **cfg["TRAIN"]["optimizer"]
-    )
+    optimizer = ppsci.optimizer.Adam(**cfg["TRAIN"]["optimizer"])
 
     optimizer_generator = optimizer(generator_model)
     optimizer_discriminator = optimizer(discriminator_model)
@@ -143,17 +154,21 @@ def train(cfg: DictConfig):
 
     # save model weight
     paddle.save(
-        generator_model.state_dict(), os.path.join(cfg.output_dir, "model_generator.pdparams")
+        generator_model.state_dict(),
+        os.path.join(cfg.output_dir, "model_generator.pdparams")
     )
     paddle.save(
-        discriminator_model.state_dict(), os.path.join(cfg.output_dir, "model_discriminator.pdparams")
+        discriminator_model.state_dict(),
+        os.path.join(cfg.output_dir, "model_discriminator.pdparams")
     )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="wgangp_toy.yaml")
 def main(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg["seed"])
-    logger.init_logger(cfg.LOGGER.name, log_file=os.path.join(cfg.output_dir, cfg.LOGGER.log_file))
+    logger.init_logger(
+        cfg.LOGGER.name, log_file=os.path.join(cfg.output_dir, cfg.LOGGER.log_file)
+    )
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
