@@ -716,7 +716,9 @@ class WganGpToyDiscriminator(Arch):
 
     """
 
-    def __init__(self, input_keys: Tuple[str, ...], output_keys: Tuple[str, ...], dim: int):
+    def __init__(
+        self, input_keys: Tuple[str, ...], output_keys: Tuple[str, ...], dim: int
+    ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
