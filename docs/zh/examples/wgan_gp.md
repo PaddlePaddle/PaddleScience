@@ -159,7 +159,7 @@ examples/wgangp/wgangp_toy.py:78:92
 
 模型的构建代码如下：
 
-``` py 
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py:84:85
 examples/wgangp/wgangp_mnist.py:73:74
@@ -169,7 +169,7 @@ examples/wgangp/wgangp_toy.py:71:72
 
 参数配置如下：
 
-``` yaml 
+``` yaml
 --8<--
 examples/wgangp/conf/wgangp_cifar10.yaml:29:43
 examples/wgangp/conf/wgangp_mnist.yaml:29:38
@@ -233,7 +233,7 @@ examples/wgangp/functions.py:226:259
 
 构建代码如下：
 
-``` py 
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py:108:123
 examples/wgangp/wgangp_mnist.py:96:110
@@ -245,7 +245,7 @@ examples/wgangp/wgangp_toy.py:94:108
 
 WGANGP使用Adam优化器，可直接调用`ppsci.optimizer.Adam`构建，代码如下：
 
-``` py 
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py:125:138
 examples/wgangp/wgangp_mnist.py:112:117
@@ -257,7 +257,7 @@ examples/wgangp/wgangp_toy.py:110:116
 
 将构建好的模型、约束、优化器和其它参数传递给 `ppsci.solver.Solver`。
 
-``` py 
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py:140:158
 examples/wgangp/wgangp_mnist.py:119:135
@@ -307,7 +307,7 @@ examples/wgangp/functions.py:348:350
 
 本案例使用`ppsci.validate.SupervisedValidator`构建评估器。
 
-``` py 
+``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py:45:54
 examples/wgangp/wgangp_mnist.py:36:43
