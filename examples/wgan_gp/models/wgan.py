@@ -1,5 +1,4 @@
 import paddle
-import paddle.nn as nn
 from .base_gan import BaseGAN
 
 class WGAN(BaseGAN):
