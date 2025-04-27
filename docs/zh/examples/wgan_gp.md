@@ -31,7 +31,7 @@ python wgangp_toy.py model=eval
 | 预训练模型                                                                                                                                 |
 |:--------------------------------------------------------------------------------------------------------------------------------------|
 | [wgangp_cifar10_pretrained.pdparams]() |
-| [wgangp_mnist_pretrained.pdparams]()     |   |
+| [wgangp_mnist_pretrained.pdparams]()     |   
 | [wgangp_toy_pretrained.pdparams]()                                                                                                    |
 ## 1. 背景简介
 在数字图像处理和机器学习领域，生成对抗网络（GANs）因其卓越的图像生成能力而受到广泛关注。然而，传统的GAN架构在训练过程中可能会遇到不稳定的问题，尤其是在生成高分辨率或复杂场景的图像时。为了解决这些问题，研究人员提出了带有梯度惩罚的Wasserstein生成对抗网络（WGAN-GP），它不仅增强了训练过程的稳定性，还显著提升了生成图像的质量。
@@ -355,7 +355,7 @@ examples/wgangp/wgangp_toy.py
 
 
 
-## 6. 参考文献
+## 5. 参考文献
 
 - [Improved Training of Wasserstein GANs 论文](https://arxiv.org/abs/1704.00028)
 
