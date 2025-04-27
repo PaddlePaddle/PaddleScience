@@ -19,7 +19,7 @@ class ConvMeanPool(nn.Layer):
         kernel_size: int,
         he_init: bool = True,
         biases: bool = True,
-     ):
+    ):
         super().__init__()
         self.conv2D = nn.Conv2D(
             in_channels=in_channels,
@@ -62,7 +62,7 @@ class MeanPoolConv(nn.Layer):
             out_channels=out_channels,
             kernel_size=kernel_size,
             padding="same",
-            bias_attr=biases
+            bias_attr=biases,
         )
         self.avgpool2d = nn.AvgPool2D(kernel_size=2, stride=2)
         if he_init:
@@ -120,7 +120,7 @@ class ConditionalBatchNorm(nn.Layer):
     """
 
     def __init__(
-            self, n_labels: int, channels: int, eps: int = 1e-5, momentum: int = 0.1
+        self, n_labels: int, channels: int, eps: int = 1e-5, momentum: int = 0.1
     ):
         super().__init__()
         self.channels = channels
@@ -186,7 +186,8 @@ class LayerNorm(nn.Layer):
         if self.training:
             mean = paddle.mean(x, axis=[1, 2, 3], keepdim=True)
             var = paddle.sum(paddle.square(x - mean), [1, 2, 3], keepdim=True) / (
-                        x.shape[1] * x.shape[2] * x.shape[3] - 1)
+                x.shape[1] * x.shape[2] * x.shape[3] - 1
+            )
             self.mean = (
                 1 - self.momentum
             ) * self.mean + self.momentum * mean.mean().squeeze().squeeze().numpy()
@@ -392,7 +393,7 @@ class Cifar10Generator(nn.Layer):
         output_dim: int,
         batch_size: int,
         label_num: int,
-        use_label: bool = True
+        use_label: bool = True,
     ):
         super().__init__()
         self.linear1 = nn.Linear(128, 4 * 4 * channels)
@@ -470,13 +471,13 @@ class Cifar10Discriminator(nn.Layer):
         self.ResidualBlocks = nn.LayerList(
             [
                 ResidualBlock(
-                dim,
-                dim,
-                3,
-                resample="down",
-                normalize_mode="Discriminator",
-                use_label=use_label,
-                label_num=label_num,
+                    dim,
+                    dim,
+                    3,
+                    resample="down",
+                    normalize_mode="Discriminator",
+                    use_label=use_label,
+                    label_num=label_num,
                 ),
                 ResidualBlock(
                     dim,
@@ -552,7 +553,7 @@ class WganGpCifar10Generator(Arch):
             output_dim,
             batch_size=batch_size,
             use_label=use_label,
-            label_num=label_num
+            label_num=label_num,
         )
         self.use_label = use_label
 
@@ -628,7 +629,7 @@ class RuLULayer(nn.Layer):
         self.linear = nn.Linear(input_dim, output_dim)
         self.relu = nn.ReLU()
         init_uniform = paddle.nn.initializer.Uniform(
-            low=- (math.sqrt(6. / input_dim)),high=(math.sqrt(6. / input_dim))
+            low=-(math.sqrt(6.0 / input_dim)), high=(math.sqrt(6.0 / input_dim))
         )
         init_uniform(self.linear.weight)
 
@@ -691,12 +692,7 @@ class WganGpToyGenerator(Arch):
 
     """
 
-    def __init__(
-        self,
-        output_keys: Tuple[str, ...],
-        dim: int,
-        batch_size: int
-    ):
+    def __init__(self, output_keys: Tuple[str, ...], dim: int, batch_size: int):
         super().__init__()
         self.output_keys = output_keys
         self.generator = ToyGenerator(dim)
@@ -720,12 +716,7 @@ class WganGpToyDiscriminator(Arch):
 
     """
 
-    def __init__(
-        self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
-        dim: int
-    ):
+    def __init__(self, input_keys: Tuple[str, ...], output_keys: Tuple[str, ...], dim: int):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
@@ -757,7 +748,7 @@ class LeakyReLULayer(nn.Layer):
         self.linear = nn.Linear(input_dim, output_dim)
         self.leaky_relu = nn.LeakyReLU()
         init_uniform = paddle.nn.initializer.Uniform(
-            low=- (math.sqrt(6. / input_dim)), high=(math.sqrt(6. / input_dim))
+            low=-(math.sqrt(6.0 / input_dim)), high=(math.sqrt(6.0 / input_dim))
         )
         init_uniform(self.linear.weight)
 
