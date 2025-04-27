@@ -3,11 +3,11 @@ import platform
 
 import hydra
 import paddle
-from functions import ToyGenFuncs
 from functions import ToyDisFuncs
-from functions import load_toy_data
+from functions import ToyGenFuncs
 from functions import generate_toy_image
 from functions import invalid_metric
+from functions import load_toy_data
 from model import WganGpToyDiscriminator
 from model import WganGpToyGenerator
 from omegaconf import DictConfig
@@ -20,7 +20,7 @@ def evaluate(cfg: DictConfig):
     # set model
     discriminator_model = WganGpToyDiscriminator(**cfg["MODEL"]["dis_net"])
     if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
-            cfg.EVAL.pretrained_dis_model_path
+        cfg.EVAL.pretrained_dis_model_path
     ):
         discriminator_model.load_dict(paddle.load(cfg.EVAL.pretrained_dis_model_path))
     generator_model = WganGpToyGenerator(**cfg["MODEL"]["gen_net"])
@@ -39,7 +39,7 @@ def evaluate(cfg: DictConfig):
         "use_shared_memory": cfg["EVAL"]["use_shared_memory"],
         "num_workers": cfg["EVAL"]["num_workers"]
         if platform.system() != "Windows"
-        else 0
+        else 0,
     }
 
     # set validator
@@ -155,11 +155,11 @@ def train(cfg: DictConfig):
     # save model weight
     paddle.save(
         generator_model.state_dict(),
-        os.path.join(cfg.output_dir, "model_generator.pdparams")
+        os.path.join(cfg.output_dir, "model_generator.pdparams"),
     )
     paddle.save(
         discriminator_model.state_dict(),
-        os.path.join(cfg.output_dir, "model_discriminator.pdparams")
+        os.path.join(cfg.output_dir, "model_discriminator.pdparams"),
     )
 
 
