@@ -12,11 +12,22 @@ class ConvMeanPool(nn.Layer):
     a convolutional layer followed by average pooling
     """
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, he_init: bool = True,
-                 biases: bool = True):
+    def __init__(
+            self,
+             in_channels: int,
+             out_channels: int,
+             kernel_size: int,
+             he_init: bool = True,
+             biases: bool = True
+     ):
         super().__init__()
-        self.conv2D = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                padding='same', bias_attr=biases)
+        self.conv2D = nn.Conv2D(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding="same",
+            bias_attr=biases
+        )
         self.AvgPool2d = nn.AvgPool2D(kernel_size=2, stride=2)
 
         if he_init:
@@ -37,11 +48,22 @@ class MeanPoolConv(nn.Layer):
     average pooling followed by a convolutional layer
     """
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, he_init: bool = True,
-                 biases: bool = True):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            kernel_size: int,
+            he_init: bool = True,
+            biases: bool = True
+    ):
         super().__init__()
-        self.conv2D = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                padding='same', bias_attr=biases)
+        self.conv2D = nn.Conv2D(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding="same",
+            bias_attr=biases
+        )
         self.avgpool2d = nn.AvgPool2D(kernel_size=2, stride=2)
         if he_init:
             xavier_uniform = nn.initializer.XavierUniform(gain=math.sqrt(2))
@@ -61,12 +83,23 @@ class UpsampleConv(nn.Layer):
     a PixelShuffle layer followed by a convolutional layer
     """
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, he_init: bool = True,
-                 biases: bool = True):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            kernel_size: int,
+            he_init: bool = True,
+            biases: bool = True
+    ):
         super().__init__()
         self.PixelShuffle = nn.PixelShuffle(upscale_factor=2)
-        self.conv2D = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                padding='same', bias_attr=biases)
+        self.conv2D = nn.Conv2D(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding="same",
+            bias_attr=biases
+        )
         if he_init:
             xavier_uniform = nn.initializer.XavierUniform(gain=math.sqrt(2))
             xavier_uniform(self.conv2D.weight)
@@ -86,16 +119,24 @@ class ConditionalBatchNorm(nn.Layer):
     conditional batch normalization layer
     """
 
-    def __init__(self, n_labels: int, channels: int, eps: int = 1e-5, momentum: int = 0.1):
+    def __init__(
+            self, n_labels: int, channels: int, eps: int = 1e-5, momentum: int = 0.1
+    ):
         super().__init__()
         self.channels = channels
         self.eps = eps
-        self.scale = self.create_parameter(shape=[n_labels, channels], dtype='float32',
-                                           default_initializer=paddle.nn.initializer.Constant(1.0))
-        self.offset = self.create_parameter(shape=[n_labels, channels], dtype='float32',
-                                            default_initializer=paddle.nn.initializer.Constant(0.0))
-        self.register_buffer('mean', paddle.zeros([channels], dtype='float32'))
-        self.register_buffer('var', paddle.ones([channels], dtype='float32'))
+        self.scale = self.create_parameter(
+            shape=[n_labels, channels],
+            dtype="float32",
+            default_initializer=paddle.nn.initializer.Constant(1.0)
+        )
+        self.offset = self.create_parameter(
+            shape=[n_labels, channels],
+            dtype="float32",
+            default_initializer=paddle.nn.initializer.Constant(0.0)
+        )
+        self.register_buffer("mean", paddle.zeros([channels], dtype="float32"))
+        self.register_buffer("var", paddle.ones([channels], dtype="float32"))
         self.momentum = momentum
 
     def forward(self, x, labels):
@@ -103,9 +144,14 @@ class ConditionalBatchNorm(nn.Layer):
 
             mean = paddle.mean(x, axis=[0, 2, 3], keepdim=True)
             var = paddle.sum(paddle.square(x - mean), [0, 2, 3], keepdim=True) / (
-                        x.shape[0] * x.shape[2] * x.shape[3] - 1)
-            self.mean = (1 - self.momentum) * self.mean + self.momentum * mean.squeeze().numpy()
-            self.var = (1 - self.momentum) * self.var + self.momentum * var.squeeze().numpy()
+                    x.shape[0] * x.shape[2] * x.shape[3] - 1
+            )
+            self.mean = (
+                    1 - self.momentum
+            ) * self.mean + self.momentum * mean.squeeze().numpy()
+            self.var = (
+                1 - self.momentum
+            ) * self.var + self.momentum * var.squeeze().numpy()
         else:
             mean = self.mean.reshape([1, -1, 1, 1])
             var = self.var.reshape([1, -1, 1, 1])
@@ -130,10 +176,10 @@ class LayerNorm(nn.Layer):
     def __init__(self, eps: int = 1e-5, momentum: int = 0.1):
         super().__init__()
         self.eps = eps
-        self.scale = self.create_parameter(shape=[1], dtype='float32')
-        self.offset = self.create_parameter(shape=[1], dtype='float32')
-        self.register_buffer('mean', paddle.zeros([1], dtype='float32'))
-        self.register_buffer('var', paddle.ones([1], dtype='float32'))
+        self.scale = self.create_parameter(shape=[1], dtype="float32")
+        self.offset = self.create_parameter(shape=[1], dtype="float32")
+        self.register_buffer("mean", paddle.zeros([1], dtype="float32"))
+        self.register_buffer("var", paddle.ones([1], dtype="float32"))
         self.momentum = momentum
 
     def forward(self, x):
@@ -141,8 +187,12 @@ class LayerNorm(nn.Layer):
             mean = paddle.mean(x, axis=[1, 2, 3], keepdim=True)
             var = paddle.sum(paddle.square(x - mean), [1, 2, 3], keepdim=True) / (
                         x.shape[1] * x.shape[2] * x.shape[3] - 1)
-            self.mean = (1 - self.momentum) * self.mean + self.momentum * mean.mean().squeeze().squeeze().numpy()
-            self.var = (1 - self.momentum) * self.var + self.momentum * var.mean().squeeze().squeeze().numpy()
+            self.mean = (
+                1 - self.momentum
+            ) * self.mean + self.momentum * mean.mean().squeeze().squeeze().numpy()
+            self.var = (
+                1 - self.momentum
+            ) * self.var + self.momentum * var.mean().squeeze().squeeze().numpy()
         else:
             mean = self.mean
             var = self.var
@@ -156,7 +206,9 @@ class Normalize(nn.Layer):
     normalization layer
     """
 
-    def __init__(self, channels: int, mode: str, label_num: int, use_label: bool = True):
+    def __init__(
+            self, channels: int, mode: str, label_num: int, use_label: bool = True
+    ):
         super().__init__()
         if mode == "Generator":
             if use_label:
@@ -180,37 +232,81 @@ class ResidualBlock(nn.Layer):
     residual block
     """
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, normalize_mode: str, label_num: int,
-                 resample: str | None = None, use_label: bool = True, ):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            kernel_size: int,
+            normalize_mode: str,
+            label_num: int,
+            resample: str | None = None,
+            use_label: bool = True,
+    ):
         super().__init__()
 
-        if resample == 'down':
-            self.conv_shortcut = ConvMeanPool(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                              he_init=False)
-            self.conv_1 = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                    padding='same')
-            self.conv_2 = ConvMeanPool(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size)
+        if resample == "down":
+            self.conv_shortcut = ConvMeanPool(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                he_init=False
+            )
+            self.conv_1 = nn.Conv2D(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                padding="same"
+            )
+            self.conv_2 = ConvMeanPool(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size
+            )
             channel1 = in_channels
             channel2 = out_channels
-        elif resample == 'up':
-            self.conv_shortcut = UpsampleConv(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                              he_init=False)
-            self.conv_1 = UpsampleConv(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size)
-            self.conv_2 = nn.Conv2D(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                    padding='same')
+        elif resample == "up":
+            self.conv_shortcut = UpsampleConv(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                he_init=False
+            )
+            self.conv_1 = UpsampleConv(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size
+            )
+            self.conv_2 = nn.Conv2D(
+                in_channels=out_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                padding="same"
+            )
             channel1 = in_channels
             channel2 = out_channels
         elif resample is None:
-            self.conv_shortcut = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                           padding='same')
-            self.conv_1 = nn.Conv2D(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size,
-                                    padding='same')
-            self.conv_2 = nn.Conv2D(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                    padding='same')
+            self.conv_shortcut = nn.Conv2D(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                padding="same"
+            )
+            self.conv_1 = nn.Conv2D(
+                in_channels=in_channels,
+                out_channels=in_channels,
+                kernel_size=kernel_size,
+                padding="same"
+            )
+            self.conv_2 = nn.Conv2D(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                padding="same"
+            )
             channel1 = in_channels
             channel2 = in_channels
         else:
-            raise Exception('invalid resample value')
+            raise Exception("invalid resample value")
         self.normalize1 = Normalize(channels=channel1, mode=normalize_mode, use_label=use_label, label_num=label_num)
         self.normalize2 = Normalize(channels=channel2, mode=normalize_mode, use_label=use_label, label_num=label_num)
         self.relu = nn.ReLU()
@@ -249,9 +345,13 @@ class OptimizedResBlockDisc1(nn.Layer):
 
     def __init__(self, dim: int):
         super().__init__()
-        self.conv_1 = nn.Conv2D(in_channels=3, out_channels=dim, kernel_size=3, padding='same')
+        self.conv_1 = nn.Conv2D(
+            in_channels=3, out_channels=dim, kernel_size=3, padding="same"
+        )
         self.conv_2 = ConvMeanPool(in_channels=dim, out_channels=dim, kernel_size=3)
-        self.conv_shortcut = MeanPoolConv(in_channels=3, out_channels=dim, kernel_size=1, he_init=False, biases=True)
+        self.conv_shortcut = MeanPoolConv(
+            in_channels=3, out_channels=dim, kernel_size=1, he_init=False, biases=True
+        )
         self.relu = nn.ReLU()
         xavier_uniform = nn.initializer.XavierUniform(gain=math.sqrt(2))
         xavier_uniform(self.conv_1.weight)
@@ -276,20 +376,54 @@ class Cifar10Generator(nn.Layer):
 
     """
 
-    def __init__(self, channels: int, output_dim: int, batch_size: int, label_num: int, use_label: bool = True):
+    def __init__(
+            self,
+            channels: int,
+            output_dim: int,
+            batch_size: int,
+            label_num: int,
+            use_label: bool = True
+    ):
         super().__init__()
         self.linear1 = nn.Linear(128, 4 * 4 * channels)
         self.ResidualBlocks = nn.LayerList(
-            [ResidualBlock(channels, channels, 3, resample='up', normalize_mode="Generator",
-                           use_label=use_label, label_num=label_num),
-             ResidualBlock(channels, channels, 3, resample='up', normalize_mode="Generator",
-                           use_label=use_label, label_num=label_num),
-             ResidualBlock(channels, channels, 3, resample='up', normalize_mode="Generator",
-                           use_label=use_label, label_num=label_num),
-             ])
-        self.Normalize = Normalize(channels=channels, mode="Generator", use_label=False, label_num=label_num)
+            [
+                ResidualBlock(
+                    channels,
+                    channels,
+                    3,
+                    resample="up",
+                    normalize_mode="Generator",
+                    use_label=use_label,
+                    label_num=label_num
+                ),
+                ResidualBlock(
+                    channels,
+                    channels,
+                    3,
+                    resample="up",
+                    normalize_mode="Generator",
+                    use_label=use_label,
+                    label_num=label_num
+                ),
+                ResidualBlock(
+                    channels,
+                    channels,
+                    3,
+                    resample="up",
+                    normalize_mode="Generator",
+                    use_label=use_label,
+                    label_num=label_num
+                ),
+            ]
+        )
+        self.Normalize = Normalize(
+            channels=channels, mode="Generator", use_label=False, label_num=label_num
+        )
         self.relu = nn.ReLU()
-        self.conv = nn.Conv2D(in_channels=channels, out_channels=3, kernel_size=3, padding='same')
+        self.conv = nn.Conv2D(
+            in_channels=channels, out_channels=3, kernel_size=3, padding="same"
+        )
         self.tanh = nn.Tanh()
         self.channels = channels
         self.output_dim = output_dim
@@ -323,13 +457,37 @@ class Cifar10Discriminator(nn.Layer):
     def __init__(self, dim: int, label_num: int, use_label: bool = True):
         super().__init__()
         self.optimized_resblock_disc1 = OptimizedResBlockDisc1(dim)
-        self.ResidualBlocks = nn.LayerList([ResidualBlock(dim, dim, 3, resample='down', normalize_mode="Discriminator",
-                                                          use_label=use_label, label_num=label_num),
-                                            ResidualBlock(dim, dim, 3, resample=None, normalize_mode="Discriminator",
-                                                          use_label=use_label, label_num=label_num),
-                                            ResidualBlock(dim, dim, 3, resample=None, normalize_mode="Discriminator",
-                                                          use_label=use_label, label_num=label_num),
-                                            ])
+        self.ResidualBlocks = nn.LayerList(
+            [
+                ResidualBlock(
+                dim,
+                dim,
+                3,
+                resample="down",
+                normalize_mode="Discriminator",
+                use_label=use_label,
+                label_num=label_num
+                ),
+                ResidualBlock(
+                    dim,
+                    dim,
+                    3,
+                    resample=None,
+                    normalize_mode="Discriminator",
+                    use_label=use_label,
+                    label_num=label_num
+                ),
+                ResidualBlock(
+                    dim,
+                    dim,
+                    3,
+                    resample=None,
+                    normalize_mode="Discriminator",
+                    use_label=use_label,
+                    label_num=label_num
+                ),
+            ]
+        )
         self.relu = nn.ReLU()
         self.linear = nn.Linear(dim, 1)
         self.linear2 = nn.Linear(dim, label_num)
@@ -367,21 +525,26 @@ class WganGpCifar10Generator(Arch):
     """
 
     def __init__(
-            self,
-            input_keys: Tuple[str, ...],
-            output_keys: Tuple[str, ...],
-            dim: int,
-            output_dim: int,
-            label_num: int,
-            batch_size: int,
-            use_label: bool = True,
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        dim: int,
+        output_dim: int,
+        label_num: int,
+        batch_size: int,
+        use_label: bool = True,
 
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.generator = Cifar10Generator(dim, output_dim, batch_size=batch_size, use_label=use_label,
-                                          label_num=label_num)
+        self.generator = Cifar10Generator(
+            dim,
+            output_dim,
+            batch_size=batch_size,
+            use_label=use_label,
+            label_num=label_num
+        )
         self.use_label = use_label
 
     def forward(self, x):
@@ -407,30 +570,38 @@ class WganGpCifar10Discriminator(Arch):
     """
 
     def __init__(
-            self,
-            input_keys: Tuple[str, ...],
-            output_keys: Tuple[str, ...],
-            dim: int,
-            label_num: int,
-            use_label: bool = True
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        dim: int,
+        label_num: int,
+        use_label: bool = True
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.discriminator = Cifar10Discriminator(dim, use_label=use_label, label_num=label_num)
+        self.discriminator = Cifar10Discriminator(
+            dim, use_label=use_label, label_num=label_num
+        )
         self.use_label = use_label
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        y = self.concat_to_tensor(x,
-                                  self.input_keys[:int(len(self.input_keys) // 2)], axis=0)
-        labels = self.concat_to_tensor(x,
-                                       self.input_keys[int(len(self.input_keys) // 2):], axis=0)
+        y = self.concat_to_tensor(
+            x, self.input_keys[:int(len(self.input_keys) // 2)], axis=0
+        )
+        labels = self.concat_to_tensor(
+            x, self.input_keys[int(len(self.input_keys) // 2):], axis=0
+        )
         y, y_acgan = self.discriminator(y, labels)
-        y = self.split_to_dict(y, self.output_keys[:len(self.output_keys) // 2], axis=0)
-        y_acgan = self.split_to_dict(y_acgan, self.output_keys[len(self.output_keys) // 2:], axis=0)
+        y = self.split_to_dict(
+            y, self.output_keys[:len(self.output_keys) // 2], axis=0
+        )
+        y_acgan = self.split_to_dict(
+            y_acgan, self.output_keys[len(self.output_keys) // 2:], axis=0
+        )
         y.update(y_acgan)
 
         if self._output_transform is not None:
@@ -447,8 +618,9 @@ class RuLULayer(nn.Layer):
         super().__init__()
         self.linear = nn.Linear(input_dim, output_dim)
         self.relu = nn.ReLU()
-        init_uniform = paddle.nn.initializer.Uniform(low=- (math.sqrt(6. / input_dim)),
-                                                     high=(math.sqrt(6. / input_dim)))
+        init_uniform = paddle.nn.initializer.Uniform(
+            low=- (math.sqrt(6. / input_dim)),high=(math.sqrt(6. / input_dim))
+        )
         init_uniform(self.linear.weight)
 
     def forward(self, x):
@@ -511,10 +683,10 @@ class WganGpToyGenerator(Arch):
     """
 
     def __init__(
-            self,
-            output_keys: Tuple[str, ...],
-            dim: int,
-            batch_size: int
+        self,
+        output_keys: Tuple[str, ...],
+        dim: int,
+        batch_size: int
     ):
         super().__init__()
         self.output_keys = output_keys
@@ -540,10 +712,10 @@ class WganGpToyDiscriminator(Arch):
     """
 
     def __init__(
-            self,
-            input_keys: Tuple[str, ...],
-            output_keys: Tuple[str, ...],
-            dim: int
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        dim: int
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -567,12 +739,17 @@ class LeakyReLULayer(nn.Layer):
 
     """
 
-    def __init__(self, input_dim, output_dim, ):
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+    ):
         super().__init__()
         self.linear = nn.Linear(input_dim, output_dim)
         self.leaky_relu = nn.LeakyReLU()
-        init_uniform = paddle.nn.initializer.Uniform(low=- (math.sqrt(6. / input_dim)),
-                                                     high=(math.sqrt(6. / input_dim)))
+        init_uniform = paddle.nn.initializer.Uniform(
+            low=- (math.sqrt(6. / input_dim)), high=(math.sqrt(6. / input_dim))
+        )
         init_uniform(self.linear.weight)
 
     def forward(self, x):
@@ -590,7 +767,9 @@ class MnistGenerator(nn.Layer):
         self.relu1 = nn.ReLU()
         self.conv2d_transpose1 = nn.Conv2DTranspose(4 * dim, 2 * dim, 5, [2, 2], "same")
         self.relu2 = nn.ReLU()
-        self.conv2d_transpose2 = nn.Conv2DTranspose(2 * dim, dim, 5, [2, 2], "same", output_padding=1)
+        self.conv2d_transpose2 = nn.Conv2DTranspose(
+            2 * dim, dim, 5, [2, 2], "same", output_padding=1
+        )
         self.relu3 = nn.ReLU()
         self.conv2d_transpose3 = nn.Conv2DTranspose(dim, 1, 5, [2, 2], "same")
         self.sigmoid = nn.Sigmoid()
@@ -630,9 +809,13 @@ class MnistDiscriminator(nn.Layer):
 
         self.conv2d_1 = nn.Conv2D(1, dim, kernel_size=5, padding="same", stride=[2, 2])
         self.leaky_relu1 = nn.LeakyReLU()
-        self.conv2d_2 = nn.Conv2D(dim, 2 * dim, kernel_size=5, padding="same", stride=[2, 2])
+        self.conv2d_2 = nn.Conv2D(
+            dim, 2 * dim, kernel_size=5, padding="same", stride=[2, 2]
+        )
         self.leaky_relu2 = nn.LeakyReLU()
-        self.conv2d_3 = nn.Conv2D(2 * dim, 4 * dim, kernel_size=5, padding="same", stride=[2, 2])
+        self.conv2d_3 = nn.Conv2D(
+            2 * dim, 4 * dim, kernel_size=5, padding="same", stride=[2, 2]
+        )
         self.leaky_relu3 = nn.LeakyReLU()
         self.linear = nn.Linear(4 * 4 * 4 * dim, 1)
         self.dim = dim
@@ -666,13 +849,7 @@ class WganGpMnistGenerator(Arch):
         output_dim: the output dimension of the generator
     """
 
-    def __init__(
-            self,
-            output_keys,
-            batch_size,
-            dim,
-            output_dim
-    ):
+    def __init__(self, output_keys, batch_size, dim, output_dim):
         super().__init__()
         self.output_keys = output_keys
         self.batch_size = batch_size
@@ -697,12 +874,7 @@ class WganGpMnistDiscriminator(Arch):
 
     """
 
-    def __init__(
-            self,
-            input_keys,
-            output_keys,
-            dim
-    ):
+    def __init__(self, input_keys, output_keys, dim):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
