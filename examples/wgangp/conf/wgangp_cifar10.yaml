@@ -100,7 +100,7 @@ TRAIN:
   drop_last: true
   pretrained_gen_model_path:
   pretrained_dis_model_path:
-  
+
 # evaluation settings
 EVAL:
   dataset:
