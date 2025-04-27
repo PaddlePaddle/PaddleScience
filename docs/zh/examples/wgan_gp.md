@@ -107,49 +107,49 @@ Swissroll：三维非线性流形数据集，呈现连续卷曲的螺旋结构�
 由于Cifar10数据集由5个数据文件组成，由于数据集组织方式，我们无法直接使用PaddleScience内置的dataset API，所以先把所有数据读取出来，再使用```ppsci.data.dataset.array_dataset.NamedArrayDataset```。
 
 下面给出Cifar10数据集读取的代码：
-``` py linenums="136"
+``` py linenums="152"
 --8<--
-examples/wgangp/functions.py:136:144
+examples/wgangp/functions.py:152:160
 --8<--
 ```
 其中`data_path`传入的是CIFAR-10的路径。
 
 下面给出dataloader的配置代码：
-``` py linenums="75"
+``` py linenums="108"
 --8<--
-examples/wgangp/wgangp_cifar10.py:91:106
+examples/wgangp/wgangp_cifar10.py:108:123
 --8<--
 ```
 
 由于MNIST数据集无法直接使用PaddleScience内置的dataset API，所以先把所有数据读取出来，再使用```ppsci.data.dataset.array_dataset.NamedArrayDataset```。
 
 下面给出MNIST数据集读取的代码：
-``` py linenums="330"
+``` py linenums="352"
 --8<--
-examples/wgangp/functions.py:330:336
+examples/wgangp/functions.py:352:361
 --8<--
 ```
 
 下面给出dataloader的配置代码：
-``` py linenums="80"
+``` py linenums="97"
 --8<--
-examples/wgangp/wgangp_mnist.py:80:94
+examples/wgangp/wgangp_mnist.py:97:111
 --8<--
 ```
 
 由于玩具数据集无法直接使用PaddleScience内置的dataset API，所以先把所有数据生成出来，再使用```ppsci.data.dataset.array_dataset.NamedArrayDataset```。
 
 下面给出玩具数据集的生成代码
-``` py linenums="161"
+``` py linenums="177"
 --8<--
-examples/wgangp/functions.py:161:206
+examples/wgangp/functions.py:177:219
 --8<--
 ```
 
 下面给出dataloader的配置代码：
-``` py linenums="78"
+``` py linenums="89"
 --8<--
-examples/wgangp/wgangp_toy.py:78:92
+examples/wgangp/wgangp_toy.py:89:103
 --8<--
 ```
 
@@ -161,9 +161,9 @@ examples/wgangp/wgangp_toy.py:78:92
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:84:85
-examples/wgangp/wgangp_mnist.py:73:74
-examples/wgangp/wgangp_toy.py:71:72
+examples/wgangp/wgangp_cifar10.py:96:98
+examples/wgangp/wgangp_mnist.py:87:89
+examples/wgangp/wgangp_toy.py:79:81
 --8<--
 ```
 
@@ -187,43 +187,43 @@ Cifar10_Generator的loss包含了对抗性损失和分类损失。这两项loss�
 
 ``` py linenums="16"
 --8<--
-examples/wgangp/functions.py:16:40
+examples/wgangp/functions.py:16:44
 --8<--
 ```
 
 MNIST_Generator的loss只包含了对抗性损失。
-``` py linenums="279"
+``` py linenums="297"
 --8<--
-examples/wgangp/functions.py:279:294
+examples/wgangp/functions.py:297:312
 --8<--
 ```
 Toy_Generator的loss只包含了对抗性损失。
-``` py linenums="208"
+``` py linenums="221"
 --8<--
-examples/wgangp/functions.py:208:224
+examples/wgangp/functions.py:221:237
 --8<--
 ```
 
 #### 3.4.2 Discriminator的loss
 
 Cifar10_Discriminator的loss包含了Wasserstein损失和梯度惩罚以及分类损失。其中，只有分类损失项有权重参数。
-``` py linenums="42"
+``` py linenums="46"
 --8<--
-examples/wgangp/functions.py:42:83
+examples/wgangp/functions.py:46:95
 --8<--
 ```
 
 MNIST_Discriminator的loss包含了Wasserstein损失和梯度惩罚。
-``` py linenums="296"
+``` py linenums="314"
 --8<--
-examples/wgangp/functions.py:296:328
+examples/wgangp/functions.py:314:350
 --8<--
 ```
 
 Toy_Discriminator的loss包含了Wasserstein损失和梯度惩罚。
-``` py linenums="68"
+``` py linenums="239"
 --8<--
-examples/wgangp/functions.py:226:259
+examples/wgangp/functions.py:239:275
 --8<--
 ```
 
@@ -235,9 +235,9 @@ examples/wgangp/functions.py:226:259
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:108:123
-examples/wgangp/wgangp_mnist.py:96:110
-examples/wgangp/wgangp_toy.py:94:108
+examples/wgangp/wgangp_cifar10.py:125:142
+examples/wgangp/wgangp_mnist.py:113:129
+examples/wgangp/wgangp_toy.py:105:121
 --8<--
 ```
 
@@ -247,9 +247,9 @@ WGANGP使用Adam优化器，可直接调用`ppsci.optimizer.Adam`构建，代码
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:125:138
-examples/wgangp/wgangp_mnist.py:112:117
-examples/wgangp/wgangp_toy.py:110:116
+examples/wgangp/wgangp_cifar10.py:114:159
+examples/wgangp/wgangp_mnist.py:131:134
+examples/wgangp/wgangp_toy.py:123:127
 --8<--
 ```
 
@@ -259,47 +259,40 @@ examples/wgangp/wgangp_toy.py:110:116
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:140:158
-examples/wgangp/wgangp_mnist.py:119:135
-examples/wgangp/wgangp_toy.py:118:134
+examples/wgangp/wgangp_cifar10.py:161:179
+examples/wgangp/wgangp_mnist.py:136:152
+examples/wgangp/wgangp_toy.py:129:145
 --8<--
 ```
 
 ### 3.8 模型训练
 
-``` py linenums="186"
+``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:161:166
-examples/wgangp/wgangp_mnist.py:137:143
-examples/wgangp/wgangp_toy.py:136:142
+examples/wgangp/wgangp_cifar10.py:182:187
+examples/wgangp/wgangp_mnist.py:154:160
+examples/wgangp/wgangp_toy.py:147:153
 --8<--
 ```
 
 ### 3.9 自定义metric
 
-案例中只有针对Cifar10的案例有评估指标为Inception Score和Frechet Inception Distance，MNIST和Toy案例没有评估指标。由于metric为空会报错所以自定义了一个无效metric
-所以我们额外实现了三个metric
+案例中只有针对Cifar10的案例有评估指标为Inception Score，MNIST和Toy案例没有评估指标。由于metric为空会报错所以自定义了一个无效metric
+所以我们额外实现了两个metric
 
 PaddleScience提供了用于自定metric函数的API——`ppsci.metric.FunctionalMetric`。方法为先定义metric函数，再将函数名作为参数传给 `FunctionalMetric`。需要注意，自定义metric函数的输入输出需要是字典的格式。
 
 Inception Score的实现代码如下：
-``` py linenums="85"
+``` py linenums="97"
 --8<--
-examples/wgangp/functions.py:85:122
---8<--
-```
-
-Frechet Inception Distance的实现代码如下
-``` py linenums="352"
---8<--
-examples/wgangp/functions.py:352:404
+examples/wgangp/functions.py:97:139
 --8<--
 ```
 
 invalid_metric的代码如下
-``` py linenums="199"
+``` py linenums="373"
 --8<--
-examples/wgangp/functions.py:348:350
+examples/wgangp/functions.py:373:374
 --8<--
 ```
 
@@ -309,9 +302,9 @@ examples/wgangp/functions.py:348:350
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:45:54
-examples/wgangp/wgangp_mnist.py:36:43
-examples/wgangp/wgangp_toy.py:36:43
+examples/wgangp/wgangp_cifar10.py:53:63
+examples/wgangp/wgangp_mnist.py:45:54
+examples/wgangp/wgangp_toy.py:45:52
 --8<--
 ```
 
@@ -319,11 +312,11 @@ examples/wgangp/wgangp_toy.py:36:43
 
 将模型、评估器和权重路径传递给`ppsci.solver.Solver`后，通过`solver.eval()`启动评估。
 
-``` py linenums="70"
+``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:56:62
-examples/wgangp/wgangp_mnist.py:45:51
-examples/wgangp/wgangp_toy.py:45:51
+examples/wgangp/wgangp_cifar10.py:65:74
+examples/wgangp/wgangp_mnist.py:56:65
+examples/wgangp/wgangp_toy.py:54:63
 --8<--
 ```
 
@@ -333,9 +326,9 @@ examples/wgangp/wgangp_toy.py:45:51
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:67:79
-examples/wgangp/wgangp_mnist.py:56:68
-examples/wgangp/wgangp_toy.py:56:66
+examples/wgangp/wgangp_cifar10.py:76:92
+examples/wgangp/wgangp_mnist.py:67:83
+examples/wgangp/wgangp_toy.py:65:75
 --8<--
 ```
 
