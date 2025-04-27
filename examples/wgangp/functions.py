@@ -22,10 +22,11 @@ class Cifar10GenFuncs:
 
     """
 
-    def __init__(self,
-                 discriminator_model,
-                 acgan_scale_g=0.1,
-                 ):
+    def __init__(
+        self,
+        discriminator_model,
+        acgan_scale_g=0.1,
+    ):
         self.crossEntropyLoss = paddle.nn.CrossEntropyLoss()
         self.acgan_scale_g = acgan_scale_g
         self.discriminator_model = discriminator_model
@@ -86,7 +87,7 @@ class Cifar10DisFuncs:
             ],
             inputs=interpolates,
             create_graph=True,
-            retain_graph=False
+            retain_graph=False,
         )[0]
         slopes = paddle.sqrt(paddle.sum(paddle.square(gradients), axis=1))
         gradient_penalty = 10 * paddle.mean((slopes - 1.0) ** 2)
@@ -116,7 +117,7 @@ class InceptionScore:
             ]
         )
 
-    def inception_score(self, output_dict: Dict,label_dict, *args):
+    def inception_score(self, output_dict: Dict, label_dict, *args):
         with paddle.no_grad():
             images = output_dict["fake_data"]
             images = images.reshape((-1, 3, 32, 32))
@@ -187,7 +188,7 @@ def load_toy_data(input_keys, mode):
         np.random.shuffle(data)
         data /= 2.828  # stdev
     elif mode == "swissroll":
-        data = make_swiss_roll(n_samples=100000,noise=0.25)[0]
+        data = make_swiss_roll(n_samples=100000, noise=0.25)[0]
         data = data.astype("float32")[:, [0, 2]]
         data /= 7.5  # stdev plus a little
 
@@ -201,7 +202,7 @@ def load_toy_data(input_keys, mode):
             (1.0 / np.sqrt(2), 1.0 / np.sqrt(2)),
             (1.0 / np.sqrt(2), -1.0 / np.sqrt(2)),
             (-1.0 / np.sqrt(2), 1.0 / np.sqrt(2)),
-            (-1.0 / np.sqrt(2), -1.0 / np.sqrt(2))
+            (-1.0 / np.sqrt(2), -1.0 / np.sqrt(2)),
         ]
         centers = [(scale * x, scale * y) for x, y in centers]
         data = []
@@ -262,11 +263,11 @@ class ToyDisFuncs:
         differences = fake_data - real_data
         alpha = paddle.rand([fake_data.shape[0], 1])
         interpolates = real_data + (alpha * differences)
-        gradients =paddle.grad(
+        gradients = paddle.grad(
             outputs=self.discriminator_model({"data": interpolates})["score"],
             inputs=interpolates,
             create_graph=True,
-            retain_graph=False
+            retain_graph=False,
         )[0]
         slopes = paddle.sqrt(paddle.sum(paddle.square(gradients), axis=1))
         gradient_penalty = self.lamda * paddle.mean((slopes - 1.0) ** 2)
@@ -341,7 +342,7 @@ class MnistDisFuncs:
             outputs=self.discriminator_model({"data": interpolates})["score"],
             inputs=interpolates,
             create_graph=True,
-            retain_graph=False
+            retain_graph=False,
         )[0]
         slopes = paddle.sqrt(paddle.sum(paddle.square(gradients), axis=1))
         gradient_penalty = self.lamda * paddle.mean((slopes - 1.0) ** 2)
@@ -349,8 +350,8 @@ class MnistDisFuncs:
 
 
 def load_mnist(
-        data_path,
-        input_keys,
+    data_path,
+    input_keys,
 ):
     with gzip.open(data_path, "rb") as f:
         train_data, _, _ = pickle.load(f, encoding="latin1")
