@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import paddle
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
 from ..models.wgan_gp import WGAN_GP
