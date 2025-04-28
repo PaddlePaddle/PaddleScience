@@ -77,9 +77,16 @@ class BaseGAN(abc.ABC):
         noise = paddle.randn([num_samples, noise_dim])
         return self.generator(noise)
 
-    def train(self, train_data, batch_size=64, iterations=10000,
-              g_learning_rate=1e-4, d_learning_rate=1e-4,
-              save_interval=1000, save_path=None):
+    def train(
+        self,
+        train_data,
+        batch_size=64,
+        iterations=10000,
+        g_learning_rate=1e-4,
+        d_learning_rate=1e-4,
+        save_interval=1000,
+        save_path=None,
+    ):
         """
         Train the GAN model.
 
@@ -96,7 +103,9 @@ class BaseGAN(abc.ABC):
             Dictionary of training history
         """
         data_loader = paddle.io.DataLoader(
-            train_data, batch_size=batch_size, shuffle=True,
+            train_data,
+            batch_size=batch_size,
+            shuffle=True,
         )
 
         g_optimizer = paddle.optimizer.Adam(
@@ -114,8 +123,8 @@ class BaseGAN(abc.ABC):
         )
 
         history = {
-            'g_loss': [],
-            'd_loss': [],
+            "g_loss": [],
+            "d_loss": [],
         }
 
         data_loader_iter = iter(data_loader)
@@ -129,23 +138,23 @@ class BaseGAN(abc.ABC):
 
             step_results = self.train_step(real_data, g_optimizer, d_optimizer)
 
-            history['g_loss'].append(step_results['g_loss'])
-            history['d_loss'].append(step_results['d_loss'])
+            history["g_loss"].append(step_results["g_loss"])
+            history["d_loss"].append(step_results["d_loss"])
 
             if save_path is not None and iteration % save_interval == 0:
                 samples = self.generate(16)
 
                 from utils.visualization import save_image_grid
-                save_image_grid(
-                    samples, f"{save_path}/samples_{iteration}.png")
+
+                save_image_grid(samples, f"{save_path}/samples_{iteration}.png")
 
                 paddle.save(
                     self.generator.state_dict(),
-                    f"{save_path}/generator_{iteration}.pdparams"
+                    f"{save_path}/generator_{iteration}.pdparams",
                 )
                 paddle.save(
                     self.discriminator.state_dict(),
-                    f"{save_path}/discriminator_{iteration}.pdparams"
+                    f"{save_path}/discriminator_{iteration}.pdparams",
                 )
 
         return history

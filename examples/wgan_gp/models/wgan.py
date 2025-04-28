@@ -53,9 +53,7 @@ class WGAN(BaseGAN):
         Clip discriminator weights to enforce Lipschitz constraint.
         """
         for param in self.discriminator.parameters():
-            param.set_value(
-                paddle.clip(param, -self.clip_value, self.clip_value)
-            )
+            param.set_value(paddle.clip(param, -self.clip_value, self.clip_value))
 
     def train_step(self, real_data, g_optimizer, d_optimizer, critic_iters=5):
         """
@@ -103,6 +101,6 @@ class WGAN(BaseGAN):
         g_optimizer.step()
 
         return {
-            'g_loss': g_loss.item(),
-            'd_loss': d_loss_avg,
+            "g_loss": g_loss.item(),
+            "d_loss": d_loss_avg,
         }

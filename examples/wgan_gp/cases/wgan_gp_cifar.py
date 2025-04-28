@@ -65,13 +65,17 @@ def main():
     output_dir = "output/cifar10"
     os.makedirs(output_dir, exist_ok=True)
 
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        ]
+    )
 
     train_dataset = paddle.vision.datasets.Cifar10(
-        mode='train', transform=transform, download=True,
+        mode="train",
+        transform=transform,
+        download=True,
     )
 
     generator = CIFAR10Generator(noise_dim=100, output_channels=3)
@@ -85,7 +89,9 @@ def main():
     )
 
     data_loader = paddle.io.DataLoader(
-        train_dataset, batch_size=64, shuffle=True,
+        train_dataset,
+        batch_size=64,
+        shuffle=True,
     )
 
     g_optimizer = paddle.optimizer.Adam(
@@ -103,8 +109,8 @@ def main():
     )
 
     history = {
-        'g_loss': [],
-        'd_loss': [],
+        "g_loss": [],
+        "d_loss": [],
     }
 
     iterations = 50000
@@ -126,29 +132,35 @@ def main():
 
         step_results = wgan_gp.train_step(real_data, g_optimizer, d_optimizer)
 
-        history['g_loss'].append(step_results['g_loss'])
-        history['d_loss'].append(step_results['d_loss'])
+        history["g_loss"].append(step_results["g_loss"])
+        history["d_loss"].append(step_results["d_loss"])
 
         if iteration % 100 == 0:
-            print(f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}")
+            print(
+                f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}"
+            )
 
         if iteration % save_interval == 0 or iteration == iterations - 1:
             with paddle.no_grad():
                 samples = wgan_gp.generate(16)
 
             from utils.visualization import save_image_grid
+
             save_image_grid(samples, f"{output_dir}/samples_{iteration}.png")
 
-            paddle.save(generator.state_dict(),
-                        f"{output_dir}/generator_{iteration}.pdparams")
-            paddle.save(discriminator.state_dict(),
-                        f"{output_dir}/discriminator_{iteration}.pdparams")
+            paddle.save(
+                generator.state_dict(), f"{output_dir}/generator_{iteration}.pdparams"
+            )
+            paddle.save(
+                discriminator.state_dict(),
+                f"{output_dir}/discriminator_{iteration}.pdparams",
+            )
 
     plt.figure(figsize=(10, 5))
-    plt.plot(history['g_loss'], label='Generator Loss')
-    plt.plot(history['d_loss'], label='Discriminator Loss')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
+    plt.plot(history["g_loss"], label="Generator Loss")
+    plt.plot(history["d_loss"], label="Discriminator Loss")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{output_dir}/loss_curves.png")

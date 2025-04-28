@@ -68,8 +68,8 @@ class GaussianMixture(paddle.io.Dataset):
 
         for center in centers:
             samples = np.random.normal(
-                loc=center, scale=std, size=(
-                    samples_per_component, 2))
+                loc=center, scale=std, size=(samples_per_component, 2)
+            )
             self.data.append(samples)
 
         self.data = np.vstack(self.data).astype(np.float32)
@@ -97,13 +97,13 @@ def visualize_samples(real_samples, fake_samples, save_path=None):
 
     plt.subplot(1, 2, 1)
     plt.scatter(real_samples[:, 0], real_samples[:, 1], alpha=0.5)
-    plt.title('Real Samples')
+    plt.title("Real Samples")
     plt.xlim(-3, 3)
     plt.ylim(-3, 3)
 
     plt.subplot(1, 2, 2)
     plt.scatter(fake_samples[:, 0], fake_samples[:, 1], alpha=0.5)
-    plt.title('Generated Samples')
+    plt.title("Generated Samples")
     plt.xlim(-3, 3)
     plt.ylim(-3, 3)
 
@@ -137,7 +137,9 @@ def main():
     )
 
     data_loader = paddle.io.DataLoader(
-        dataset, batch_size=64, shuffle=True,
+        dataset,
+        batch_size=64,
+        shuffle=True,
     )
 
     g_optimizer = paddle.optimizer.Adam(
@@ -155,8 +157,8 @@ def main():
     )
 
     history = {
-        'g_loss': [],
-        'd_loss': [],
+        "g_loss": [],
+        "d_loss": [],
     }
 
     iterations = 10000
@@ -172,12 +174,13 @@ def main():
 
         step_results = wgan_gp.train_step(real_data, g_optimizer, d_optimizer)
 
-        history['g_loss'].append(step_results['g_loss'])
-        history['d_loss'].append(step_results['d_loss'])
+        history["g_loss"].append(step_results["g_loss"])
+        history["d_loss"].append(step_results["d_loss"])
 
         if iteration % 100 == 0:
             print(
-                f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}")
+                f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}"
+            )
 
         if iteration % save_interval == 0 or iteration == iterations - 1:
             with paddle.no_grad():
@@ -189,16 +192,19 @@ def main():
                 save_path=f"{output_dir}/samples_{iteration}.png",
             )
 
-            paddle.save(generator.state_dict(),
-                        f"{output_dir}/generator_{iteration}.pdparams")
-            paddle.save(discriminator.state_dict(),
-                        f"{output_dir}/discriminator_{iteration}.pdparams")
+            paddle.save(
+                generator.state_dict(), f"{output_dir}/generator_{iteration}.pdparams"
+            )
+            paddle.save(
+                discriminator.state_dict(),
+                f"{output_dir}/discriminator_{iteration}.pdparams",
+            )
 
     plt.figure(figsize=(10, 5))
-    plt.plot(history['g_loss'], label='Generator Loss')
-    plt.plot(history['d_loss'], label='Discriminator Loss')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
+    plt.plot(history["g_loss"], label="Generator Loss")
+    plt.plot(history["d_loss"], label="Discriminator Loss")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{output_dir}/loss_curves.png")

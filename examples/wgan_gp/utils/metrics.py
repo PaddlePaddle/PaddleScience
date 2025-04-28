@@ -23,18 +23,11 @@ def save_image_grid(images, path, nrow=8, padding=2, normalize=True):
     nmaps = images.shape[0]
     xmaps = min(nrow, nmaps)
     ymaps = int(np.ceil(float(nmaps) / xmaps))
-    height, width = int(
-        images.shape[1] + padding), int(images.shape[2] + padding)
+    height, width = int(images.shape[1] + padding), int(images.shape[2] + padding)
 
     grid = np.zeros(
-        (height *
-         ymaps +
-         padding,
-         width *
-         xmaps +
-         padding,
-         3),
-        dtype=np.uint8)
+        (height * ymaps + padding, width * xmaps + padding, 3), dtype=np.uint8
+    )
     k = 0
     for y in range(ymaps):
         for x in range(xmaps):
@@ -44,14 +37,16 @@ def save_image_grid(images, path, nrow=8, padding=2, normalize=True):
             if image.shape[-1] == 1:
                 image = np.repeat(image, 3, axis=-1)
             image = (image * 255).astype(np.uint8)
-            grid[y * height + padding:(y + 1) * height,
-                 x * width + padding:(x + 1) * width] = image
+            grid[
+                y * height + padding : (y + 1) * height,
+                x * width + padding : (x + 1) * width,
+            ] = image
             k += 1
 
     plt.figure(figsize=(10, 10))
     plt.imshow(grid)
-    plt.axis('off')
-    plt.savefig(path, bbox_inches='tight')
+    plt.axis("off")
+    plt.savefig(path, bbox_inches="tight")
     plt.close()
 
 
@@ -65,10 +60,10 @@ def plot_loss_curves(g_losses, d_losses, path):
         path: Path to save the plot
     """
     plt.figure(figsize=(10, 5))
-    plt.plot(g_losses, label='Generator Loss')
-    plt.plot(d_losses, label='Discriminator Loss')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
+    plt.plot(g_losses, label="Generator Loss")
+    plt.plot(d_losses, label="Discriminator Loss")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
     plt.savefig(path)

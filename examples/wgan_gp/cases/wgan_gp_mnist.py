@@ -60,13 +60,17 @@ def main():
     output_dir = "output/mnist"
     os.makedirs(output_dir, exist_ok=True)
 
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.5], [0.5]),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize([0.5], [0.5]),
+        ]
+    )
 
     train_dataset = paddle.vision.datasets.MNIST(
-        mode='train', transform=transform, download=True,
+        mode="train",
+        transform=transform,
+        download=True,
     )
 
     generator = MNISTGenerator(noise_dim=100, output_channels=1)
@@ -90,10 +94,10 @@ def main():
     )
 
     plt.figure(figsize=(10, 5))
-    plt.plot(history['g_loss'], label='Generator Loss')
-    plt.plot(history['d_loss'], label='Discriminator Loss')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
+    plt.plot(history["g_loss"], label="Generator Loss")
+    plt.plot(history["d_loss"], label="Discriminator Loss")
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{output_dir}/loss_curves.png")
@@ -103,6 +107,7 @@ def main():
         samples = wgan_gp.generate(16)
 
     from utils.visualization import save_image_grid
+
     save_image_grid(samples, f"{output_dir}/final_samples.png")
 
 
