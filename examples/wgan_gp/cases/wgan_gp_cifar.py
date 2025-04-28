@@ -1,9 +1,12 @@
 import os
-import paddle
+
 import matplotlib.pyplot as plt
+import paddle
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
+
 from ..models.wgan_gp import WGAN_GP
+
 
 class CIFAR10Generator(nn.Layer):
     """
@@ -31,6 +34,7 @@ class CIFAR10Generator(nn.Layer):
     def forward(self, x):
         return self.model(x)
 
+
 class CIFAR10Discriminator(nn.Layer):
     """
     Discriminator network for CIFAR-10 dataset.
@@ -52,6 +56,7 @@ class CIFAR10Discriminator(nn.Layer):
 
     def forward(self, x):
         return self.model(x)
+
 
 def main():
     """
@@ -110,12 +115,14 @@ def main():
         try:
             real_data = next(data_loader_iter)
             if isinstance(real_data, (list, tuple)):
-                real_data = real_data[0]  # Extract images from (images, labels) tuple
+                # Extract images from (images, labels) tuple
+                real_data = real_data[0]
         except StopIteration:
             data_loader_iter = iter(data_loader)
             real_data = next(data_loader_iter)
             if isinstance(real_data, (list, tuple)):
-                real_data = real_data[0]  # Extract images from (images, labels) tuple
+                # Extract images from (images, labels) tuple
+                real_data = real_data[0]
 
         step_results = wgan_gp.train_step(real_data, g_optimizer, d_optimizer)
 
@@ -123,7 +130,10 @@ def main():
         history['d_loss'].append(step_results['d_loss'])
 
         if iteration % 100 == 0:
-            print(f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}")
+            print(
+                f"Iteration {iteration}: g_loss = {
+                    step_results['g_loss']:.4f}, d_loss = {
+                    step_results['d_loss']:.4f}")
 
         if iteration % save_interval == 0 or iteration == iterations - 1:
             with paddle.no_grad():
@@ -132,8 +142,10 @@ def main():
             from utils.visualization import save_image_grid
             save_image_grid(samples, f"{output_dir}/samples_{iteration}.png")
 
-            paddle.save(generator.state_dict(), f"{output_dir}/generator_{iteration}.pdparams")
-            paddle.save(discriminator.state_dict(), f"{output_dir}/discriminator_{iteration}.pdparams")
+            paddle.save(generator.state_dict(),
+                        f"{output_dir}/generator_{iteration}.pdparams")
+            paddle.save(discriminator.state_dict(),
+                        f"{output_dir}/discriminator_{iteration}.pdparams")
 
     plt.figure(figsize=(10, 5))
     plt.plot(history['g_loss'], label='Generator Loss')
@@ -144,6 +156,7 @@ def main():
     plt.grid(True)
     plt.savefig(f"{output_dir}/loss_curves.png")
     plt.close()
+
 
 if __name__ == "__main__":
     main()

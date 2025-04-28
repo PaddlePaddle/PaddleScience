@@ -23,9 +23,18 @@ def save_image_grid(images, path, nrow=8, padding=2, normalize=True):
     nmaps = images.shape[0]
     xmaps = min(nrow, nmaps)
     ymaps = int(np.ceil(float(nmaps) / xmaps))
-    height, width = int(images.shape[1] + padding), int(images.shape[2] + padding)
+    height, width = int(
+        images.shape[1] + padding), int(images.shape[2] + padding)
 
-    grid = np.zeros((height * ymaps + padding, width * xmaps + padding, 3), dtype=np.uint8)
+    grid = np.zeros(
+        (height *
+         ymaps +
+         padding,
+         width *
+         xmaps +
+         padding,
+         3),
+        dtype=np.uint8)
     k = 0
     for y in range(ymaps):
         for x in range(xmaps):

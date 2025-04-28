@@ -1,5 +1,7 @@
 import paddle
+
 from .base_gan import BaseGAN
+
 
 class WGAN(BaseGAN):
     """

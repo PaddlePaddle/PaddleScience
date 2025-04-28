@@ -1,9 +1,12 @@
 import os
+
 import matplotlib.pyplot as plt
 import paddle
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
+
 from ..models.wgan_gp import WGAN_GP
+
 
 class MNISTGenerator(nn.Layer):
     """
@@ -28,6 +31,7 @@ class MNISTGenerator(nn.Layer):
     def forward(self, x):
         return self.model(x)
 
+
 class MNISTDiscriminator(nn.Layer):
     """
     Discriminator network for MNIST dataset.
@@ -47,6 +51,7 @@ class MNISTDiscriminator(nn.Layer):
 
     def forward(self, x):
         return self.model(x)
+
 
 def main():
     """
@@ -99,6 +104,7 @@ def main():
 
     from utils.visualization import save_image_grid
     save_image_grid(samples, f"{output_dir}/final_samples.png")
+
 
 if __name__ == "__main__":
     main()

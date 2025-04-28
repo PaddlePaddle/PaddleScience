@@ -62,6 +62,7 @@ class BaseGAN(abc.ABC):
             Dictionary of loss values and metrics
         """
         pass
+
     def generate(self, num_samples, noise_dim=100):
         """
         Generate samples using the generator.
@@ -135,7 +136,8 @@ class BaseGAN(abc.ABC):
                 samples = self.generate(16)
 
                 from utils.visualization import save_image_grid
-                save_image_grid(samples, f"{save_path}/samples_{iteration}.png")
+                save_image_grid(
+                    samples, f"{save_path}/samples_{iteration}.png")
 
                 paddle.save(
                     self.generator.state_dict(),

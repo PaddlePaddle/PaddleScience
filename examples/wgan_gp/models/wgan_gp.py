@@ -1,5 +1,7 @@
 import paddle
+
 from .base_gan import BaseGAN
+
 
 class WGAN_GP(BaseGAN):
     """
@@ -9,7 +11,12 @@ class WGAN_GP(BaseGAN):
     in the paper "Improved Training of Wasserstein GANs" by Gulrajani et al.
     """
 
-    def __init__(self, generator, discriminator, lambda_gp=10.0, critic_iters=5):
+    def __init__(
+            self,
+            generator,
+            discriminator,
+            lambda_gp=10.0,
+            critic_iters=5):
         """
         Initialize the WGAN-GP with generator and discriminator networks.
 
@@ -47,7 +54,8 @@ class WGAN_GP(BaseGAN):
         Returns:
             Discriminator loss value
         """
-        return paddle.mean(fake_output) - paddle.mean(real_output) + self.lambda_gp * gradient_penalty
+        return paddle.mean(fake_output) - paddle.mean(real_output) + \
+            self.lambda_gp * gradient_penalty
 
     def gradient_penalty(self, real_samples, fake_samples):
         """
@@ -77,7 +85,10 @@ class WGAN_GP(BaseGAN):
             retain_graph=True,
         )[0]
 
-        gradients_norm = paddle.sqrt(paddle.sum(paddle.square(gradients), axis=[1, 2, 3]))
+        gradients_norm = paddle.sqrt(
+            paddle.sum(
+                paddle.square(gradients), axis=[
+                    1, 2, 3]))
 
         gradient_penalty = paddle.mean(paddle.square(gradients_norm - 1.0))
 

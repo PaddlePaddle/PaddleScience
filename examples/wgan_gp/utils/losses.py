@@ -1,5 +1,6 @@
 import paddle
 
+
 def generator_loss(fake_output):
     """
     WGAN-GP generator loss function.
@@ -13,7 +14,11 @@ def generator_loss(fake_output):
     return -paddle.mean(fake_output)
 
 
-def discriminator_loss(real_output, fake_output, gradient_penalty, lambda_gp=10.0):
+def discriminator_loss(
+        real_output,
+        fake_output,
+        gradient_penalty,
+        lambda_gp=10.0):
     """
     WGAN-GP discriminator loss function with gradient penalty.
 
@@ -26,4 +31,5 @@ def discriminator_loss(real_output, fake_output, gradient_penalty, lambda_gp=10.
     Returns:
         Discriminator loss value
     """
-    return paddle.mean(fake_output) - paddle.mean(real_output) + lambda_gp * gradient_penalty
+    return paddle.mean(fake_output) - \
+        paddle.mean(real_output) + lambda_gp * gradient_penalty
