@@ -177,9 +177,7 @@ def main():
 
         if iteration % 100 == 0:
             print(
-                f"Iteration {iteration}: g_loss = {
-                    step_results['g_loss']:.4f}, d_loss = {
-                    step_results['d_loss']:.4f}")
+                f"Iteration {iteration}: g_loss = {step_results['g_loss']:.4f}, d_loss = {step_results['d_loss']:.4f}")
 
         if iteration % save_interval == 0 or iteration == iterations - 1:
             with paddle.no_grad():
