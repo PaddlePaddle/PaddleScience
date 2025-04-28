@@ -1,0 +1,105 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_chip_heat_kan/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set working condition
+DL: 1.0  # lenth of the domain
+DW: 1.0  # width of the domain
+NL: 20  # number of length
+NW: 20  # number of width
+NU: 500 # number of heat source
+NBC: 500 # number of BC
+
+# gaussian random field settings
+GRF:
+  alpha: 4.0
+  flag_normalize: true
+
+# model settings
+MODEL:
+  branch_input_keys: ['u']
+  BCtype_input_keys: ['bc']
+  BC_input_keys: ['bc_data']
+  trunk_input_keys: ["x", "y"]
+  output_keys: ["T"]
+  num_loc: 324 # (NL-2)*(NW-2)
+  bctype_loc: 1
+  BC_num_loc: 76 # (NL-1)*2 + (NW-2)
+  num_features: 64
+  branch_hidden_layers:
+  - 128
+  - 128
+  BC_hidden_layers:
+  - 128
+  - 64
+  BCtype_hidden_layers:
+  - 128
+  - 64
+  trunk_hidden_layers:
+  - 128
+  - 128
+  branch_grid_size: 15
+  branch_grid_range:
+  - 0
+  - 1
+  BCtype_grid_size: 10
+  BCtype_grid_range:
+  - 0
+  - 3
+  BC_grid_size: 15
+  BC_grid_range:
+  - -1.5
+  - 2.5
+  trunk_grid_size: 10
+  trunk_grid_range:
+  - 0
+  - 1
+  branch_activation: "tanh"
+  BC_activation: "tanh"
+  trunk_activation: "tanh"
+  use_bias: true
+  sup_res: false # super resoltion or not during evalution, note this should only be turned on for evalution mode.
+  N_sup: 128
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 200
+  learning_rate: 0.001
+  batch_size: 200
+  weight: 500
+  weight_decay: 0.00001
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: /shared/PaddleScience/outputs_chip_heat_kan/2025-04-21/11-08-51参数2e6decay1e-4-val metric1800/checkpoints/best_model.pdparams
+  bc_type: 0 # 0: Dirichlet, 1: Neumann, 2: convection，3: heat radiation
