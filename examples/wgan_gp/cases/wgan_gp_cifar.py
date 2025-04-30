@@ -5,7 +5,9 @@ import paddle
 import paddle.nn as nn
 import paddle.vision.transforms as transforms
 
-from ..models.wgan_gp import WGAN_GP
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_DIR)
+from models.wgan_gp import WGAN_GP
 
 
 class CIFAR10Generator(nn.Layer):
