@@ -8,9 +8,9 @@ from functions import MnistGenFuncs
 from functions import invalid_metric
 from functions import load_mnist
 from functions import show_mnist
+from omegaconf import DictConfig
 from wgangp_mnist_model import WganGpMnistDiscriminator
 from wgangp_mnist_model import WganGpMnistGenerator
-from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger

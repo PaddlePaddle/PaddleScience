@@ -154,7 +154,7 @@ def load_cifar10(input_keys, label_keys, data_path):
     datas = datas.astype("float32")
     datas_ = ((datas / 256.0) - 0.5) * 2
     random_uniform = np.random.uniform(size=[50000, 3072], low=0.0, high=1.0 / 128)
-    datas_ = (datas_+random_uniform).astype("float32")
+    datas_ = (datas_ + random_uniform).astype("float32")
     labels_ = np.array(labels, dtype="int32")
     labels = {label_keys[0]: datas_}
     datas = {input_keys[0]: labels_}
