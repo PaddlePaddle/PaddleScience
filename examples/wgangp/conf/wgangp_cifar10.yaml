@@ -107,7 +107,7 @@ EVAL:
     "name": "NamedArrayDataset"
   inceptionscore:
     eps: 1e-16
-    splits: 1
+    splits: 6
   batch_size: 64
   use_shared_memory: true
   num_workers: 0
