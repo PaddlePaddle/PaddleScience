@@ -10,7 +10,7 @@
     python wgangp_cifar10.py
 ```
 ```sh
-    python wgangp_minst.py
+    python wgangp_mnist.py
 ```
 ```sh
     python wgangp_toy.py
@@ -18,13 +18,13 @@
 
 === "模型评估命令"
 ```sh
-python wgangp_cifar10.py model=eval
+python wgangp_cifar10.py mode=eval
 ```
 ```sh
-python wgangp_mnist.py model=eval
+python wgangp_mnist.py mode=eval
 ```
 ```sh
-python wgangp_toy.py model=eval
+python wgangp_toy.py mode=eval
 ```
 
 
