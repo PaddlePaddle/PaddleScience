@@ -8,8 +8,8 @@ from functions import Cifar10GenFuncs
 from functions import InceptionScore
 from functions import load_cifar10
 from functions import show_save_image
-from model import WganGpCifar10Discriminator
-from model import WganGpCifar10Generator
+from wgamgp_cifar10_model import WganGpCifar10Discriminator
+from wgamgp_cifar10_model import WganGpCifar10Generator
 from omegaconf import DictConfig
 
 import ppsci
@@ -17,7 +17,6 @@ from ppsci.optimizer.lr_scheduler import Linear
 from ppsci.utils import logger
 
 os.environ["FLAGS_cudnn_deterministic"] = "1"
-os.environ["FLAGS_eager_delete_tensor_gb"] = "0.0"
 
 
 def evaluate(cfg: DictConfig):

@@ -8,8 +8,8 @@ from functions import ToyGenFuncs
 from functions import generate_toy_image
 from functions import invalid_metric
 from functions import load_toy_data
-from model import WganGpToyDiscriminator
-from model import WganGpToyGenerator
+from wgangp_toy_model import WganGpToyDiscriminator
+from wgangp_toy_model import WganGpToyGenerator
 from omegaconf import DictConfig
 
 import ppsci

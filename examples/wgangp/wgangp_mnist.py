@@ -8,8 +8,8 @@ from functions import MnistGenFuncs
 from functions import invalid_metric
 from functions import load_mnist
 from functions import show_mnist
-from model import WganGpMnistDiscriminator
-from model import WganGpMnistGenerator
+from wgangp_mnist_model import WganGpMnistDiscriminator
+from wgangp_mnist_model import WganGpMnistGenerator
 from omegaconf import DictConfig
 
 import ppsci
@@ -71,15 +71,14 @@ def evaluate(cfg: DictConfig):
                 if batch_idx + 1 > cfg.VIS.batch:
                     break
                 fake_data = generator_model(input_)["fake_data"]
-                for i in range(
-                    cfg["EVAL"]["batch_size"]
-                    if cfg["EVAL"]["batch_size"] < cfg.VIS.num
-                    else cfg.VIS.num
-                ):
-                    show_mnist(
-                        fake_data[i],
-                        f"{cfg.output_dir}/image{batch_idx}_{i}.png",
-                    )
+                show_mnist(
+                    fake_data[batch_idx],
+                    f"{cfg.output_dir}/image{batch_idx}_{batch_idx}.png",
+                )
+                show_mnist(
+                    input_["real_data"][batch_idx],
+                    f"{cfg.output_dir}/image_real_{batch_idx}_{batch_idx}.png",
+                )
         print(f"The visualizations are saved to {cfg.output_dir}")
 
 

@@ -121,8 +121,8 @@ class InceptionScore:
         with paddle.no_grad():
             images = output_dict["fake_data"]
             images = images.reshape((-1, 3, 32, 32))
-            images = (images + 1) * (255 / 2)
-            images = F.interpolate(images, size=(299, 299), mode="bilinear")
+            images = (images + 1.0) * (255.99 / 2)
+            images = F.interpolate(images, size=(199, 199), mode="bilinear")
             images = images / 255
             images = self.transform(images)
             predict = self.inception_v3(images)
@@ -140,7 +140,7 @@ class InceptionScore:
 
 def show_save_image(image_data, path):
     image_data = paddle.reshape(image_data, (3, 32, 32))
-    image_data = (image_data + 1) * (255 / 2)
+    image_data = (image_data + 1.0) * (255.0 / 2)
     image_data = paddle.unsqueeze(image_data, axis=0)
     image_data = paddle.squeeze(image_data, axis=0)
     image_data = paddle.transpose(image_data, [1, 2, 0])
@@ -152,7 +152,9 @@ def show_save_image(image_data, path):
 def load_cifar10(input_keys, label_keys, data_path):
     datas, labels = unpickle(data_path)
     datas = datas.astype("float32")
-    datas_ = (datas / 255.0) * 2 - 1
+    datas_ = ((datas / 256.0) - 0.5) * 2
+    random_uniform = np.random.uniform(size=[50000, 3072], low=0.0, high=1.0 / 128)
+    datas_ = (datas_+random_uniform).astype("float32")
     labels_ = np.array(labels, dtype="int32")
     labels = {label_keys[0]: datas_}
     datas = {input_keys[0]: labels_}
