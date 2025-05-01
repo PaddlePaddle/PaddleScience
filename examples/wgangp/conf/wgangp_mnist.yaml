@@ -29,7 +29,7 @@ seed: 42
 MODEL:
   gen_net:
     output_keys: [ "fake_data" ]
-    batch_size: 16
+    batch_size: 50
     dim: 64
     output_dim: 784
   dis_net:
@@ -51,7 +51,6 @@ DATA:
 VIS:
   vis: true
   batch: 1
-  num: 2
 
 LOSS:
   dis:
@@ -69,10 +68,10 @@ TRAIN:
     learning_rate: 1e-4
     beta1: 0.5
     beta2: 0.9
-  batch_size: 16
+  batch_size: 50
   use_shared_memory: true
   num_workers: 0
-  epochs: 2
+  epochs: 200000
   epochs_dis: 1
   iters_per_epoch_dis: 5
   epochs_gen: 1

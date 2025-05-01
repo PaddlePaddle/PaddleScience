@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: eval # running mode: train/eval
+mode: train # running mode: train/eval
 output_dir: ${hydra:run.dir}
 seed: 42
 
@@ -30,7 +30,7 @@ MODEL:
   gen_net:
     output_keys: [ "fake_data" ]
     dim: 512
-    batch_size: 16
+    batch_size: 256
   dis_net:
     input_keys: [ "data" ]
     output_keys: [ "score" ]
@@ -66,10 +66,10 @@ TRAIN:
     learning_rate: 1e-4
     beta1: 0.5
     beta2: 0.9
-  batch_size: 16
+  batch_size: 256
   use_shared_memory: true
   num_workers: 0
-  epochs: 2
+  epochs: 100000
   epochs_dis: 1
   iters_per_epoch_dis: 5
   epochs_gen: 1

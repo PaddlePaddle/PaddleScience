@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: eval # running mode: train/eval
+mode: train # running mode: train/eval
 output_dir: ${hydra:run.dir}
 seed: 42
 
@@ -33,14 +33,14 @@ MODEL:
     dim: 128
     output_dim: 3072
     label_num: 10
-    use_label: false
-    batch_size: 8
+    use_label: true
+    batch_size: 64
   dis_net:
     input_keys: [ "data", "labels" ]
     output_keys: [ "disc_fake", "disc_acgan" ]
     dim: 128
     label_num: 10
-    use_label: false
+    use_label: true
 
 # logger settings
 LOGGER:
@@ -57,7 +57,7 @@ DATA:
 VIS:
   vis: true
   batch: 1
-  num: 8
+  num: 64
 
 LOSS:
   gen:
@@ -78,23 +78,23 @@ TRAIN:
     beta1: 0.
     beta2: 0.9
   lr_scheduler_gen:
-    epochs: 5
+    epochs: 100000
     iters_per_epoch: 1
     learning_rate: 2e-4
-    end_lr: 1e-4
+    end_lr: 0.0
     by_epoch: true
   lr_scheduler_dis:
-    epochs: 5
-    iters_per_epoch: 1
+    epochs: 100000
+    iters_per_epoch: 5
     learning_rate: 2e-4
-    end_lr: 1e-4
+    end_lr: 0.0
     by_epoch: true
-  batch_size: 8
+  batch_size: 64
   use_shared_memory: true
   num_workers: 0
-  epochs: 5
+  epochs: 100000
   epochs_dis: 1
-  iters_per_epoch_dis: 1
+  iters_per_epoch_dis: 5
   epochs_gen: 1
   iters_per_epoch_gen: 1
   drop_last: true
@@ -108,7 +108,7 @@ EVAL:
   inceptionscore:
     eps: 1e-16
     splits: 1
-  batch_size: 8
+  batch_size: 64
   use_shared_memory: true
   num_workers: 0
   pretrained_gen_model_path:
