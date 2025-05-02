@@ -30,7 +30,7 @@ MODEL:
   gen_net:
     output_keys: [ "fake_data" ]
     dim: 512
-    batch_size: 256
+    batch_size: 8192
   dis_net:
     input_keys: [ "data" ]
     output_keys: [ "score" ]
@@ -44,7 +44,7 @@ LOGGER:
 
 DATA:
   input_keys: [ "real_data" ]
-  mode: 25gaussians #swissroll/8gaussians/25gaussians
+  mode: 8gaussians #swissroll/8gaussians/25gaussians
 
 # visualization settings
 VIS:
@@ -66,10 +66,10 @@ TRAIN:
     learning_rate: 1e-4
     beta1: 0.5
     beta2: 0.9
-  batch_size: 256
+  batch_size: 8192
   use_shared_memory: true
   num_workers: 0
-  epochs: 100000
+  epochs: 3125
   epochs_dis: 1
   iters_per_epoch_dis: 5
   epochs_gen: 1
@@ -80,7 +80,7 @@ TRAIN:
 EVAL:
   dataset:
     "name": "NamedArrayDataset"
-  batch_size: 16
+  batch_size: 8192
   use_shared_memory: true
   num_workers: 0
   pretrained_gen_model_path:

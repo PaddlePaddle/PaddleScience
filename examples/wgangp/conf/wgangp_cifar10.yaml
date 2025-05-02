@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: eval # running mode: train/eval
 output_dir: ${hydra:run.dir}
 seed: 42
 
@@ -107,7 +107,7 @@ EVAL:
     "name": "NamedArrayDataset"
   inceptionscore:
     eps: 1e-16
-    splits: 6
+    splits: 5
   batch_size: 64
   use_shared_memory: true
   num_workers: 0
