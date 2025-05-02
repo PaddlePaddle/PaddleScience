@@ -72,12 +72,12 @@ def evaluate(cfg: DictConfig):
                     break
                 fake_data = generator_model(input_)["fake_data"]
                 show_mnist(
-                    fake_data[batch_idx],
-                    f"{cfg.output_dir}/image{batch_idx}_{batch_idx}.png",
+                    fake_data[0],
+                    f"{cfg.output_dir}/image{batch_idx}.png",
                 )
                 show_mnist(
-                    input_["real_data"][batch_idx],
-                    f"{cfg.output_dir}/image_real_{batch_idx}_{batch_idx}.png",
+                    input_["real_data"][0],
+                    f"{cfg.output_dir}/image_real_{batch_idx}.png",
                 )
         print(f"The visualizations are saved to {cfg.output_dir}")
 

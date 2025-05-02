@@ -292,7 +292,6 @@ def generate_toy_image(true_dist, discriminator, path):
     x = y = np.linspace(-range_, range_, n_points)
     plt.contour(x, y, disc_map.reshape((n_points, n_points)).T)
     plt.scatter(true_dist[:, 0], true_dist[:, 1], c="orange", marker="+")
-    plt.show()
     plt.savefig(path)
 
 
