@@ -84,7 +84,7 @@ class FuXiPredictor(base.Predictor):
         self.output_dir = cfg.output_dir
 
     def predict(
-        self, input_data, tembs, global_step, num_step, data, batch_size: int = 1
+        self, input_data, tembs, global_step, stage, num_step, data, batch_size: int = 1
     ):
         """Predicts the output of the yinglong model for the given input.
 
@@ -101,7 +101,6 @@ class FuXiPredictor(base.Predictor):
                 f"FuXiPredictor only support batch_size=1, but got {batch_size}"
             )
 
-        # output_data_list = []
         # prepare input dict
         for _ in range(0, num_step):
             input_dict = {
@@ -113,10 +112,8 @@ class FuXiPredictor(base.Predictor):
             new_input = self.predictor.run(None, input_dict)[0]
             output = new_input[:, -1]
             save_like(output, data, global_step, self.output_dir)
-
-            # output_data_list.append(output_data)
             print(
-                f"global_step: {global_step+1:02d}, output: {input_data.min():.2f} {input_data.max():.2f}"
+                f"stage: {stage}, global_step: {global_step+1:02d}, output: {output.min():.2f} {output.max():.2f}"
             )
             input_data = new_input
             global_step += 1
@@ -168,6 +165,7 @@ def inference(cfg: DictConfig):
             input_data=input_data,
             tembs=tembs,
             global_step=step,
+            stage=i,
             num_step=num_step,
             data=data,
         )

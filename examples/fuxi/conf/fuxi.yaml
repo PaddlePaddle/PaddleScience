@@ -27,21 +27,3 @@ log_freq: 20
 input_file: 'FuXi_EC/20231012-06_input_grib.nc'
 num_steps: [20, 20, 20]
 fuxi_config_dir: './conf/'
-
-# inference settings
-INFER:
-  pretrained_model_path: null
-  export_path: inference/fengwu_v2
-  onnx_path: ${INFER.export_path}.onnx
-  device: gpu
-  engine: onnx
-  precision: fp32
-  ir_optim: false
-  min_subgraph_size: 30
-  gpu_mem: 100
-  gpu_id: 0
-  max_batch_size: 1
-  num_cpu_threads: 10
-  batch_size: 1
-  input_file: './data/input1.npy'
-  num_steps: [20, 20, 20]

@@ -1,4 +1,0 @@
-xarray
-dask
-netCDF4
-bottleneck

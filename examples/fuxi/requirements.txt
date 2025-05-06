@@ -1,0 +1,4 @@
+bottleneck
+dask
+netCDF4
+xarray
