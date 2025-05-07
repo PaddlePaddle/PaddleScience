@@ -20,7 +20,7 @@
     unzip Sample_Data.zip
     unzip FuXi_EC.zip
 
-    # inference
+    # modify the path of model and datasets in examples/fuxi/conf, and inference
     pip install -r requirements.txt
     python predict.py
     ```
@@ -40,6 +40,13 @@ FuXi模型开发的关键方面和背景包括：
 - 训练过程：FuXi的训练过程包括预训练和微调两个步骤。预训练步骤优化模型以预测单个时间步，而微调则涉及训练Cascade模型以用于它们各自的预报时间窗口。
 
 - 性能：FuXi系统在15天预报中表现出与ECMWF集合平均（EM）相当的性能，并且在有效预报时效方面优于ECMWF高分辨率预报（HRES）。
+
+模型的总体结构如图所示：
+
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/fuxi/fuxi.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>模型结构</figcaption>
+</figure>
 
 FuXi模型使用了第五代ECMWF再分析数据集ERA5。该数据集提供了从1940年1月至今的地表和高空参数的逐小时数据。ERA5数据集是通过同化使用ECMWF的集成预报系统（IFS）模型获得的高质量和丰富的全球观测资料而生成的。 ERA5数据被广泛认为是全面而准确的再分析档案，这使其适合作为训练FuXi模型的地面实况。对于FuXi模型，使用了ERA5数据集的一个子集，该子集跨越39年，具有0.25°的空间分辨率和6小时的时间分辨率。 该模型旨在预测13个压力层的5个高空大气变量和5个地表变量。
 数据集被分为训练集、验证集和测试集。训练集包含1979年至2015年的54020个样本，验证集包含2016年和2017年的2920个样本，样本外测试集包含2018年的1460个样本。此外，还创建了两个参考数据集HRES-fc0和ENS-fc0，以评估ECMWF高分辨率预报（HRES）和集合平均（EM）的性能。
@@ -72,7 +79,7 @@ FuXi采用级联模型结构，通过`fuxi_short.yaml`、`fuxi_medium.yaml`、`f
 
 ## 4. 结果可视化
 
-使用 ncvue 打开保存的 NetCDF 文件, ncvue 具体说明见[ncvue官方文档](https://github.com/mcuntz/ncvue)
+使用 `examples/fuxi/predict.py` 进行画图，进行结果可视化。
 
 ## 5. 完整代码
 
@@ -86,12 +93,18 @@ examples/fuxi/predict.py
 
 模型推理结果包含 60 个 NetCDF 文件，表示从预测时间点开始，未来 15 天内每个模型20个时间步的气象数据。
 
-1. 安装相关依赖
+使用 `examples/fuxi/predict.py` 进行画图，进行结果可视化。
+
 ```python
-pip install cdsapi netCDF4 ncvue
+python3.10 visualize.py --data_dir outputs_fuxi_pd/ --save_dir outputs_fuxi_pd/ --step 6
 ```
 
-2. 使用 ncvue 打开转换后的 NetCDF 文件, ncvue 具体说明见[ncvue官方文档](https://github.com/mcuntz/ncvue)
+下图展示了
+
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/fuxi/image.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>未来6小时天气预测结果</figcaption>
+</figure>
 
 ## 7. 参考资料
 
