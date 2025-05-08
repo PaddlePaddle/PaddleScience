@@ -75,7 +75,7 @@ def test_visualize(step, data_dir, save_dir):
     visualize(
         f"{save_dir}/{step:03d}.jpg",
         [ws850],
-        [f"Weather forecasting in 20230725-18+{step:03d}h"],
+        [f"850 hPa Wind Speed Forecasting (m/s) in 20231012-00+{step:03d}h"],
         vmin=0,
         vmax=30,
     )
