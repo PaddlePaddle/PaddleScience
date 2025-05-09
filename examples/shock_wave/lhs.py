@@ -71,7 +71,7 @@ def _shuffle(array: np.ndarray) -> np.ndarray:
     """Shuffle samples for each variable.
 
     Args:
-        array (np.ndarray): Array to be shuffled wit shape [n, m].
+        array (np.ndarray): Array to be shuffled with shape [n, m].
 
     Returns:
         np.ndarray: Shuffled array.
