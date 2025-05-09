@@ -86,7 +86,7 @@ class InitCallback(Callback):
         # fix random seed for reproducibility
         misc.set_random_seed(full_cfg.seed)
 
-        # initialze logger while creating output directory
+        # initialize logger while creating output directory
         logger.init_logger(
             "ppsci",
             osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")

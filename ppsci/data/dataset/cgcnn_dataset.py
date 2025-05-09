@@ -133,7 +133,7 @@ class GaussianDistance(object):
 
 class AtomInitializer(object):
     """
-    Base class for intializing the vector representation for atoms.
+    Base class for initializing the vector representation for atoms.
 
     !!! Use one AtomInitializer per dataset !!!
     """

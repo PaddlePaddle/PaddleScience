@@ -214,7 +214,7 @@ T=3
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/PhyGeoNet/heat_equation_bc_2.png)
 
 T=6
-![iamge](https://paddle-org.bj.bcebos.com/paddlescience/docs/PhyGeoNet/heat_equation_bc_3.png)
+![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/PhyGeoNet/heat_equation_bc_3.png)
 
 ## 6. 总结
 

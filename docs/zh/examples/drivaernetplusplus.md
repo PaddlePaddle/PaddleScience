@@ -345,7 +345,7 @@ export ep2=-----------------ID-----------------
 
 17. 下载数据，将 PubDAS 中的 License.txt 从 ep1 数据源传送到 ep2（自己路径下，第 8，9 步设置）。
 ``` sh
-# here is defaut path (your home path)
+# here is default path (your home path)
 globus transfer $ep1:License.txt $ep2:/~/License.txt
 Message: The transfer has been accepted and a task has been created and queued for execution
 Task ID: -----------------传送任务ID-----------------

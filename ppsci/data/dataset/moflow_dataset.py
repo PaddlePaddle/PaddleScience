@@ -83,7 +83,7 @@ class MolGraph:
         """Prepare `smiles` and `mol` used in following preprocessing.
         This method is called before `get_input_features` is called, by parser
         class.
-        This method may be overriden to support custom `smile`/`mol` extraction
+        This method may be overridden to support custom `smile`/`mol` extraction
         Args:
             mol (mol): mol instance
 
