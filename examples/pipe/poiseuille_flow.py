@@ -107,7 +107,7 @@ def train(cfg: DictConfig):
     # set optimizer
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
-    # set euqation
+    # set equation
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
             nu="nu", rho=cfg.RHO, dim=2, time=False
