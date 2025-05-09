@@ -27,7 +27,7 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set working condition
-DL: 1.0  # lenth of the domain
+DL: 1.0  # length of the domain
 cp_c: 1.0 # specific heat capacity of cold boundary
 cp_h: 1.0 # specific heat capacity of hot boundary
 cp_w: 1.0 # specific heat capacity of wall

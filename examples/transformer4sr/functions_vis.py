@@ -31,7 +31,7 @@ class VisualizeFuncs:
         self.complete_func = is_tree_complete
 
     def visualize_valid_data(self, data_targets, data_values, num_valid):
-        """Visulizing for given data and target."""
+        """Visualizing for given data and target."""
         for idx in range(min(num_valid, data_values.shape[0])):
             target_seq = paddle.to_tensor(
                 data_targets[idx : idx + 1, :-1], dtype=paddle.get_default_dtype()
@@ -46,7 +46,7 @@ class VisualizeFuncs:
             print("target", sympy_target, "pred:", sympy_pred)
 
     def visualize_demo(self):
-        """Visulizing for a demo of equation '25*x1 + x2*log(x1)'."""
+        """Visualizing for a demo of equation '25*x1 + x2*log(x1)'."""
         import sympy
 
         C, y, x1, x2, x3, x4, x5, x6 = sympy.symbols(
