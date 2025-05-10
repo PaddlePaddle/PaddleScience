@@ -33,7 +33,7 @@ def evaluate(cfg: DictConfig):
         **cfg["LOSS"]["gen"], discriminator_model=discriminator_model
     )
     eval_inception_score = InceptionScore(
-        **{**cfg["EVAL"]["inceptionscore"],"batch_size":cfg["EVAL"]["batch_size"]}
+        **{**cfg["EVAL"]["inceptionscore"], "batch_size":cfg["EVAL"]["batch_size"]}
     )
 
     # set data
