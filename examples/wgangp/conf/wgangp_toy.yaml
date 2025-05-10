@@ -11,7 +11,7 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_wgangp_cifar10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_wgangp_toy/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -28,41 +28,31 @@ seed: 42
 # model settings
 MODEL:
   gen_net:
-    input_keys: [ "labels" ]
     output_keys: [ "fake_data" ]
-    dim: 128
-    output_dim: 3072
-    label_num: 10
-    use_label: true
+    dim: 512
+    batch_size: 8192
   dis_net:
-    input_keys: [ "data", "labels" ]
-    output_keys: [ "disc_fake", "disc_acgan" ]
-    dim: 128
-    label_num: 10
-    use_label: true
+    input_keys: [ "data" ]
+    output_keys: [ "score" ]
+    dim: 512
 
 # logger settings
 LOGGER:
-  name: wgangp_cifar10
+  name: wgangp_toy
   level: INFO
-  log_file: wgangp_cifar10.log
+  log_file: wgangp_toy.log
 
 DATA:
-  input_keys: [ "labels" ]
-  label_keys: [ "real_data" ]
-  data_path: ./data/cifar-10-python.tar.gz
+  input_keys: [ "real_data" ]
+  mode: 8gaussians #swissroll/8gaussians/25gaussians
 
 # visualization settings
 VIS:
   vis: true
-  batch: 1
-  num: 64
 
 LOSS:
-  gen:
-    acgan_scale_g: 0.1
   dis:
-    acgan_scale: 1
+    lamda: 0.1
 
 # training settings
 TRAIN:
@@ -73,25 +63,13 @@ TRAIN:
     shuffle: true
     drop_last: true
   optimizer:
-    learning_rate: 2e-4
-    beta1: 0.
+    learning_rate: 1e-4
+    beta1: 0.5
     beta2: 0.9
-  lr_scheduler_gen:
-    epochs: 100000
-    iters_per_epoch: 1
-    learning_rate: 2e-4
-    end_lr: 0.0
-    by_epoch: true
-  lr_scheduler_dis:
-    epochs: 100000
-    iters_per_epoch: 5
-    learning_rate: 2e-4
-    end_lr: 0.0
-    by_epoch: true
-  batch_size: 64
+  batch_size: 8192
   use_shared_memory: true
   num_workers: 0
-  epochs: 100000
+  epochs: 3125
   epochs_dis: 1
   iters_per_epoch_dis: 5
   epochs_gen: 1
@@ -104,10 +82,7 @@ TRAIN:
 EVAL:
   dataset:
     "name": "NamedArrayDataset"
-  inceptionscore:
-    eps: 1e-16
-    splits: 10
-  batch_size: 64
+  batch_size: 8192
   use_shared_memory: true
   num_workers: 0
   pretrained_gen_model_path: null
