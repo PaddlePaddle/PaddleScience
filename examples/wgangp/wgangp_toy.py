@@ -139,7 +139,6 @@ def train(cfg: DictConfig):
         epochs=cfg.TRAIN.epochs_gen,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch_gen,
         pretrained_model_path=cfg.TRAIN.pretrained_gen_model_path,
-
     )
     solver_discriminator = ppsci.solver.Solver(
         model=generator_model,

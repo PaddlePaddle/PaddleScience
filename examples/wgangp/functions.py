@@ -125,7 +125,7 @@ class InceptionScore:
             images = (images + 1.0) * (255.99 / 2)
             predict = []
             for i in range(images.shape[0] // self.batch_size):
-                image = images[i * self.batch_size: (i + 1) * self.batch_size]
+                image = images[i * self.batch_size : (i + 1) * self.batch_size]
                 image = F.interpolate(image, size=(299, 299), mode="bilinear")
                 image = image / 255
                 image = self.transform(image)
