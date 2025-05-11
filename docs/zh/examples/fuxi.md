@@ -75,9 +75,9 @@ $$Attention(Q, K, V) = (cos(Q, K)/\tau +B)V$$
 
 在该案例中，实现了 FuXiPredictor用于ONNX模型的推理：
 
-``` py linenums="74" title="examples/fuxi/predict.py"
+``` py linenums="44" title="examples/fuxi/predict.py"
 --8<--
-examples/fuxi/predict.py:44:121
+examples/fuxi/predict.py:44:124
 --8<--
 ```
 

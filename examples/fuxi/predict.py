@@ -85,16 +85,19 @@ class FuXiPredictor(base.Predictor):
 
     def predict(
         self, input_data, tembs, global_step, stage, num_step, data, batch_size: int = 1
-    ):
+    ) -> tuple[np.ndarray, int]:
         """Predicts the output of the yinglong model for the given input.
 
         Args:
-            input_data_prev(np.ndarray): Atomospheric data at the first time moment.
-            input_data_next(np.ndarray): Atmospheric data six later.
+            input_data(np.ndarray): Atomospheric data of two preceding time steps
+            tembs(np.ndarray): Encoded timestamp.
+            global_step (int): The global step of forecast.
+            stage (int): The stage of forecast model.
+            num_step (int): The Number of forecast steps.
             batch_size (int, optional): Batch size, now only support 1. Defaults to 1.
 
         Returns:
-            List[np.ndarray]: Prediction for next 56 hours.
+            tuple[np.ndarray, int]: Prediction for one stage and the global step.
         """
         if batch_size != 1:
             raise ValueError(

@@ -73,7 +73,7 @@ def test_visualize(step, data_dir, save_dir):
     v850 = ds.sel(level="V850", step=step)
     ws850 = np.sqrt(u850**2 + v850**2)
     visualize(
-        f"{save_dir}/{step:03d}.jpg",
+        os.path.join(save_dir, f"{step:03d}.jpg"),
         [ws850],
         [f"850 hPa Wind Speed Forecasting (m/s) in 20231012-00+{step:03d}h"],
         vmin=0,
