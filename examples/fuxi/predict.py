@@ -93,7 +93,7 @@ class FuXiPredictor(base.Predictor):
             tembs(np.ndarray): Encoded timestamp.
             global_step (int): The global step of forecast.
             stage (int): The stage of forecast model.
-            num_step (int): The Number of forecast steps.
+            num_step (int): The number of forecast steps.
             batch_size (int, optional): Batch size, now only support 1. Defaults to 1.
 
         Returns:
