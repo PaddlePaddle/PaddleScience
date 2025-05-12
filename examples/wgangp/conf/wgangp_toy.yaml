@@ -30,7 +30,6 @@ MODEL:
   gen_net:
     output_keys: [ "fake_data" ]
     dim: 512
-    batch_size: 8192
   dis_net:
     input_keys: [ "data" ]
     output_keys: [ "score" ]
