@@ -105,7 +105,7 @@ class WganGpMnistGenerator(Arch):
         self.generator = MnistGenerator(dim, output_dim)
 
     def forward(self, x):
-        y = self.generator(x)
+        y = self.generator(next(iter(x.values())))
         y = self.split_to_dict(y, self.output_keys, axis=0)
         if self._output_transform is not None:
             y = self._output_transform(x, y)
