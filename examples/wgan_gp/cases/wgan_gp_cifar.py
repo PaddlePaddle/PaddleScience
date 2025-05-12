@@ -16,25 +16,29 @@ class CIFAR10Generator(nn.Layer):
     """
 
     def __init__(self, noise_dim=100, output_channels=3):
-        super(CIFAR10Generator, self).__init__()
+       super(CIFAR10Generator, self).__init__()
 
-        self.model = nn.Sequential(
-            nn.Linear(noise_dim, 512 * 4 * 4),
-            nn.BatchNorm1D(512 * 4 * 4),
-            nn.ReLU(),
-            lambda x: x.reshape([-1, 512, 4, 4]),
-            nn.Conv2DTranspose(512, 256, 4, 2, 1),
-            nn.BatchNorm2D(256),
-            nn.ReLU(),
-            nn.Conv2DTranspose(256, 128, 4, 2, 1),
-            nn.BatchNorm2D(128),
-            nn.ReLU(),
-            nn.Conv2DTranspose(128, output_channels, 4, 2, 1),
-            nn.Tanh(),
-        )
+       self.layers1 = nn.Sequential(
+          nn.Linear(noise_dim, 512 * 4 * 4),
+          nn.BatchNorm1D(512 * 4 * 4),
+          nn.ReLU(),
+      )
+       self.layers2 = nn.Sequential(
+          nn.Conv2DTranspose(512, 256, 4, 2, 1),
+          nn.BatchNorm2D(256),
+          nn.ReLU(),
+          nn.Conv2DTranspose(256, 128, 4, 2, 1),
+          nn.BatchNorm2D(128),
+          nn.ReLU(),
+          nn.Conv2DTranspose(128, output_channels, 4, 2, 1),
+          nn.Tanh(),
+      )
 
     def forward(self, x):
-        return self.model(x)
+        x = self.layers1(x)
+        x = x.reshape([-1, 512, 4, 4])
+        x = self.layers2(x)
+        return x
 
 
 class CIFAR10Discriminator(nn.Layer):
