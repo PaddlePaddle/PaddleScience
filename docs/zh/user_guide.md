@@ -952,8 +952,7 @@ best_value: 0.02460772916674614
 
     ``` sh
     # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    export CUDA_VISIBLE_DEVICES=0,1,2,3
-    python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
+    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch poiseuille_flow.py
     ```
 
 <!-- #### 2.2.2 模型并行
