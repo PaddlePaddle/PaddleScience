@@ -141,7 +141,6 @@ class ConditionalBatchNorm(nn.Layer):
 
     def forward(self, x, labels):
         if self.training:
-
             mean = paddle.mean(x, axis=[0, 2, 3], keepdim=True)
             var = paddle.sum(paddle.square(x - mean), [0, 2, 3], keepdim=True) / (
                 x.shape[0] * x.shape[2] * x.shape[3] - 1
@@ -369,7 +368,6 @@ class OptimizedResBlockDisc1(nn.Layer):
 
     def forward(self, x):
         shortcut = self.conv_shortcut(x)
-        x = x
         x = self.conv_1(x)
         x = self.relu(x)
         x = self.conv_2(x)

@@ -133,6 +133,13 @@ class InceptionScore:
                 image = image / 255
                 image = self.transform(image)
                 predict.append(self.inception_v3(image))
+            else:
+                image = images[(images.shape[0] // self.batch_size) * self.batch_size :]
+                if image.shape[0] != 0:
+                    image = F.interpolate(image, size=(299, 299), mode="bilinear")
+                    image = image / 255
+                    image = self.transform(image)
+                    predict.append(self.inception_v3(image))
             predict = paddle.concat(predict, axis=0)
             predict = self.softmax(predict) + self.eps
             scores = []
