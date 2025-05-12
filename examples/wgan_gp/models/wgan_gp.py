@@ -79,7 +79,7 @@ class WGAN_GP(BaseGAN):
             outputs=disc_interpolates,
             inputs=interpolates,
             grad_outputs=paddle.ones_like(disc_interpolates),
-            create_graph=True,
+            create_graph=False,
             retain_graph=True,
         )[0]
 
