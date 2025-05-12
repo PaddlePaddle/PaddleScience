@@ -222,7 +222,7 @@ examples/wgangp/functions.py:330:366
 ```
 
 Toy_Discriminator的loss包含了Wasserstein损失和梯度惩罚。
-``` py linenums="239"
+``` py linenums="256"
 --8<--
 examples/wgangp/functions.py:256:292
 --8<--
