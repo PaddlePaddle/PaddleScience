@@ -12,24 +12,28 @@ class MNISTGenerator(nn.Layer):
     """
     Generator network for MNIST dataset.
     """
+    def __init__(self, noise_dim=100, output_channels=3):
+      super(CIFAR10Generator, self).__init__()
 
-    def __init__(self, noise_dim=100, output_channels=1):
-        super(MNISTGenerator, self).__init__()
-
-        self.model = nn.Sequential(
-            nn.Linear(noise_dim, 128 * 7 * 7),
-            nn.BatchNorm1D(128 * 7 * 7),
-            nn.ReLU(),
-            lambda x: x.reshape([-1, 128, 7, 7]),
-            nn.Conv2DTranspose(128, 64, 4, 2, 1),
-            nn.BatchNorm2D(64),
-            nn.ReLU(),
-            nn.Conv2DTranspose(64, output_channels, 4, 2, 1),
-            nn.Tanh(),
-        )
+      self.layers1 = nn.Sequential(
+          nn.Linear(noise_dim,  128 * 7 * 7),
+          nn.BatchNorm1D(128 * 7 * 7),
+          nn.ReLU(),
+      )
+      self.layers2 = nn.Sequential(
+          nn.Conv2DTranspose(128, 64, 4, 2, 1),
+          nn.BatchNorm2D(64),
+          nn.ReLU(),
+          nn.Conv2DTranspose(64, output_channels, 4, 2, 1),
+          nn.Tanh(),
+      )
 
     def forward(self, x):
-        return self.model(x)
+        x = self.layers1(x)
+        x = x.reshape([-1, 128, 7, 7])
+        x = self.layers2(x)
+        return x
+        
 
 
 class MNISTDiscriminator(nn.Layer):
