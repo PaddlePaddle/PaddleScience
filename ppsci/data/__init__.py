@@ -60,10 +60,6 @@ def build_dataloader(_dataset, cfg):
     world_size = dist.get_world_size()
     # just return IterableDataset as dataloader
     if isinstance(_dataset, io.IterableDataset):
-        if world_size > 1:
-            raise ValueError(
-                f"world_size({world_size}) should be 1 when using IterableDataset."
-            )
         return _dataset
 
     cfg = copy.deepcopy(cfg)

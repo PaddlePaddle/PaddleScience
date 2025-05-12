@@ -20,10 +20,66 @@ from typing import Optional
 
 import numpy as np
 import paddle
+from paddle import distributed as dist
 from paddle import io
 from paddle import vision
 
 from ppsci.utils import logger
+
+
+def _group_array_into_ranks(
+    data: Optional[np.ndarray], rank: int, world_size: int
+) -> Optional[np.ndarray]:
+    """
+    Group data into different ranks. For example, if data is [1, 2, 3, 4, 5, 6, 7, 8, 9] and
+    world_size is 3, then the result will be rank0: [1, 4, 7], rank1: [2, 5, 8], rank2: [3, 6, 9].
+
+    Args:
+        data (Optional[np.ndarray]): Data to be grouped, can be np.ndarray or None.
+        rank (int): Rank number.
+        world_size (int): Number of workers.
+
+    Returns:
+        np.ndarray: Grouped data.
+    """
+    if data is None:
+        # skip grouping if data is None
+        return None
+
+    # check if data can be grouped evenly into different ranks
+    if len(data) < world_size:
+        raise ValueError(
+            f"Length of data to be grouped{len(data)} must be larger than world_size."
+        )
+    if len(data) % world_size != 0:
+        raise ValueError(
+            f"Length of data to be grouped{len(data)} must be divisible by world_size."
+        )
+
+    return data[rank::world_size]
+
+
+def _group_dict_into_ranks(
+    data_dict: Optional[Dict[str, Optional[np.ndarray]]], rank: int, world_size: int
+) -> Optional[Dict[str, Optional[np.ndarray]]]:
+    """
+    Group data dict into different ranks for each key-value pair.
+
+    Args:
+        data_dict (Dict[str, Optional[np.ndarray]]): Data to be grouped, can be Dict[str, Optional[np.ndarray]] or None.
+        rank (int): Rank number.
+        world_size (int): Number of workers.
+
+    Returns:
+        Optional[Dict[str, Optional[np.ndarray]]]: Grouped data dict.
+    """
+
+    if data_dict is None:
+        return data_dict
+
+    return {
+        k: _group_array_into_ranks(v, rank, world_size) for k, v in data_dict.items()
+    }
 
 
 class NamedArrayDataset(io.Dataset):
@@ -132,6 +188,8 @@ class IterableNamedArrayDataset(io.IterableDataset):
         )
         self._len = len(next(iter(self.input.values())))
         self.transforms = transforms
+        self.world_size_ = dist.get_world_size()
+        self.rank_ = dist.get_rank()
 
     @property
     def num_samples(self):
@@ -143,9 +201,15 @@ class IterableNamedArrayDataset(io.IterableDataset):
             input_, label_, weight_ = self.transforms(
                 self.input, self.label, self.weight
             )
-            yield input_, label_, weight_
         else:
-            yield self.input, self.label, self.weight
+            input_, label_, weight_ = self.input, self.label, self.weight
+
+        if self.world_size_ > 1:
+            input_ = _group_dict_into_ranks(input_, self.rank_, self.world_size_)
+            label_ = _group_dict_into_ranks(label_, self.rank_, self.world_size_)
+            weight_ = _group_dict_into_ranks(weight_, self.rank_, self.world_size_)
+
+        yield input_, label_, weight_
 
     def __len__(self):
         return 1
@@ -197,6 +261,8 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
 
         self.weight_fn = weight
         self.transforms = transforms
+        self.world_size_ = dist.get_world_size()
+        self.rank_ = dist.get_rank()
 
     @property
     def num_samples(self):
@@ -223,6 +289,18 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
                 input_batch, label_batch, weight_batch = self.transforms(
                     input_batch, label_batch, weight_batch
                 )
+
+            if self.world_size_ > 1:
+                input_batch = _group_dict_into_ranks(
+                    input_batch, self.rank_, self.world_size_
+                )
+                label_batch = _group_dict_into_ranks(
+                    label_batch, self.rank_, self.world_size_
+                )
+                weight_batch = _group_dict_into_ranks(
+                    weight_batch, self.rank_, self.world_size_
+                )
+
             yield to_tensor_dict(input_batch), to_tensor_dict(
                 label_batch
             ), to_tensor_dict(weight_batch)
