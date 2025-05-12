@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import functools
+import os
 import os.path as osp
 from typing import Tuple
 
@@ -330,6 +331,113 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    wind_model = ppsci.arch.AFNONet(**cfg.MODEL.afno)
+    ppsci.utils.save_load.load_pretrain(wind_model, path=cfg.INFER.WIND_MODEL_PATH)
+    output_keys = tuple(f"output_{i}" for i in range(cfg.INFER.num_timestamps))
+    model_cfg = dict(cfg.MODEL.precip)
+    model_cfg.update(
+        {
+            "output_keys": output_keys,
+            "num_timestamps": cfg.INFER.num_timestamps,
+            "wind_model": wind_model,
+        }
+    )
+    model = ppsci.arch.PrecipNet(**model_cfg)
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 20, cfg.IMG_H, cfg.IMG_W], "float32", name=key)
+            for key in model.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    output_keys = tuple(f"output_{i}" for i in range(cfg.INFER.num_timestamps))
+    model_cfg = dict(cfg.MODEL.precip)
+    model_cfg.update(
+        {
+            "output_keys": output_keys,
+        }
+    )
+
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        cfg.WIND_MEAN_PATH, cfg.WIND_STD_PATH, cfg.VARS_CHANNEL
+    )
+
+    wind_data = np.load(cfg.WIND_INFER_PATH)
+    data = np.load(cfg.INFER_FILE_PATH)
+
+    input_datas = (wind_data - data_mean) / data_std
+    input_dict = {cfg.MODEL.precip.input_keys[0]: input_datas}
+    vis_datas = {cfg.MODEL.precip.input_keys[0]: input_datas}
+
+    for t in range(cfg.INFER.num_timestamps):
+        hour = (t + 1) * 6
+        data_t = data[:, t] * 1000
+        vis_datas[f"target_{hour}h"] = np.asarray(data_t)
+
+    vis_output = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    re_dict = {
+        store_key: vis_output[infer_key]
+        for store_key, infer_key in zip(model_cfg["output_keys"], vis_output.keys())
+    }
+
+    plot_dict = vis_datas
+
+    output_dict = {}
+    for t in range(cfg.INFER.num_timestamps):
+        hour = (t + 1) * 6
+        output_dict[f"output_{t}"] = 1e-2 * np.expm1(re_dict[f"output_{t}"][0])
+        plot_dict[f"output_{hour}h"] = output_dict[f"output_{t}"]
+    output = np.concatenate(list(output_dict.values()), axis=0)
+    output_dict[cfg.MODEL.precip.output_keys[0]] = output
+
+    plot_expr_dict = {}
+    for hour in range(6, 6 + cfg.INFER.num_timestamps * 6, 6):
+        plot_expr_dict.update(
+            {
+                f"target_{hour}h": lambda d, hour=hour: d[f"target_{hour}h"],
+                f"output_{hour}h": lambda d, hour=hour: d[f"output_{hour}h"],
+            }
+        )
+
+    visualizer_weather = ppsci.visualize.VisualizerWeather(
+        plot_dict,
+        plot_expr_dict,
+        xticks=np.linspace(0, cfg.IMG_W - 1, 13),
+        xticklabels=[str(i) for i in range(360, -1, -30)],
+        yticks=np.linspace(0, cfg.IMG_H - 1, 7),
+        yticklabels=[str(i) for i in range(90, -91, -30)],
+        vmin=0.001,
+        vmax=130,
+        colorbar_label="mm",
+        log_norm=True,
+        batch_size=1,
+        num_timestamps=cfg.INFER.num_timestamps,
+        prefix="precip",
+    )
+    visualizer_weather.save(cfg.INFER.export_path, plot_dict)
+    save_path = osp.join(cfg.INFER.export_path, "predict.npy")
+    os.makedirs(cfg.INFER.export_path, exist_ok=True)
+    np.save(save_path, output_dict)
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="fourcastnet_precip.yaml"
 )
@@ -338,8 +446,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

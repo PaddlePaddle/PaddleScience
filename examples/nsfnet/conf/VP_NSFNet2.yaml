@@ -7,7 +7,7 @@ data_dir: ./data/cylinder_nektar_wake.mat
 iters_per_epoch: 1
 
 MODEL:
-  input_keys: ["x", "y","t"]
+  input_keys: ["x", "y", "t"]
   output_keys: ["u", "v", "p"]
   num_layers: 10
   hidden_size: 100

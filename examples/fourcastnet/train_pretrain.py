@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from os import path as osp
 
 import hydra
@@ -263,6 +264,111 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.AFNONet(**cfg.MODEL.afno)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 20, cfg.IMG_H, cfg.IMG_W], "float32", name=key)
+            for key in model.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
+    )
+
+    data = np.load(cfg.INFER_FILE_PATH)
+    input_0 = (data[:, 0] - data_mean) / data_std
+    all_data = input_0
+
+    for t in range(cfg.INFER.num_timestamps):
+        data_t = data[:, t + 1]
+        data_t = (data_t - data_mean) / data_std
+        all_data = np.concatenate((all_data, data_t), axis=0)
+
+    input_dict = {cfg.MODEL.afno.input_keys[0]: all_data}
+
+    vis_output = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    vis_dict = {
+        store_key: vis_output[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.afno.output_keys, vis_output.keys())
+    }
+
+    def output_wind_func(output, data_mean, data_std):
+        output = (output * data_std) + data_mean
+        wind_data = (output[0] ** 2 + output[1] ** 2) ** 0.5
+        return wind_data
+
+    wind_pred = []
+    pred_dict = {}
+    for i in range(cfg.INFER.num_timestamps):
+        hour = (i + 1) * 6
+        wind_ = [
+            output_wind_func(
+                vis_dict[cfg.MODEL.afno.output_keys[0]][i], data_mean, data_std
+            )
+        ]
+        wind_pred.append(wind_)
+        pred_dict[f"output_{hour}h"] = np.asarray(wind_)
+    output_dict = {cfg.MODEL.afno.output_keys[0]: np.array(wind_pred)}
+
+    wind_pred = []
+    target_dict = {}
+    for i in range(cfg.INFER.num_timestamps):
+        hour = (i + 1) * 6
+        wind_ = [(data[0][i][0] ** 2 + data[0][i][1] ** 2) ** 0.5]
+        target_dict[f"target_{hour}h"] = np.asarray(wind_)
+
+    vis_dict = {**pred_dict, **target_dict}
+
+    plot_expr_dict = {}
+    for hour in range(6, 6 + cfg.INFER.num_timestamps * 6, 6):
+        plot_expr_dict.update(
+            {
+                f"target_{hour}h": lambda d, hour=hour: d[f"target_{hour}h"],
+                f"output_{hour}h": lambda d, hour=hour: d[f"output_{hour}h"],
+            }
+        )
+
+    visualizer_weather = ppsci.visualize.VisualizerWeather(
+        vis_dict,
+        plot_expr_dict,
+        xticks=np.linspace(0, cfg.IMG_W - 1, 13),
+        xticklabels=[str(i) for i in range(360, -1, -30)],
+        yticks=np.linspace(0, cfg.IMG_H - 1, 7),
+        yticklabels=[str(i) for i in range(90, -91, -30)],
+        vmin=0,
+        vmax=25,
+        colorbar_label="m\s",
+        batch_size=1,
+        num_timestamps=cfg.INFER.num_timestamps,
+        prefix="wind",
+    )
+    visualizer_weather.save(cfg.INFER.export_path, vis_dict)
+    save_path = osp.join(cfg.INFER.export_path, "predict.npy")
+    os.makedirs(cfg.INFER.export_path, exist_ok=True)
+    np.save(save_path, output_dict[cfg.MODEL.afno.output_keys[0]])
+
+
 @hydra.main(
     version_base=None, config_path="./conf", config_name="fourcastnet_pretrain.yaml"
 )
@@ -271,8 +377,14 @@ def main(cfg: DictConfig):
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

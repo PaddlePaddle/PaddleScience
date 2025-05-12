@@ -100,7 +100,7 @@ def run_forward(
 
             if rank == 0:
                 # TODO Make the list integers on the C side
-                global_inds = np.array(global_inds, dtype=np.long)
+                global_inds = np.array(global_inds, dtype=np.int64)
                 if outputs[i].shape[0] != len(global_inds):
                     raise ValueError(
                         "Only full grid outputs supported by now (besides scalars)."
@@ -167,7 +167,7 @@ def run_adjoint(
                 global_inds = list(adjoint_driver.GetAllGlobalIndices())
 
             if rank == 0:
-                global_inds = np.array(global_inds, dtype=np.long)
+                global_inds = np.array(global_inds, dtype=np.int64)
                 if grads[i].shape[0] != len(global_inds):
                     raise ValueError(
                         "Only full grid outputs supported by now (besides scalars)."

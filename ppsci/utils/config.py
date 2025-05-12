@@ -88,7 +88,7 @@ if importlib.util.find_spec("pydantic") is not None:
             Schema of training config for pydantic validation.
             """
 
-            epochs: int = 0
+            epochs: int = 1
             iters_per_epoch: int = 20
             update_freq: int = 1
             save_freq: int = 0
@@ -212,7 +212,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdmodel_path: Optional[str] = None
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
-            device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu"
+            device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu"
             engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True
@@ -305,7 +305,7 @@ if importlib.util.find_spec("pydantic") is not None:
             use_tbd: bool = False
             wandb_config: Mapping = {}
             use_wandb: bool = False
-            device: Literal["cpu", "gpu", "xpu"] = "gpu"
+            device: Literal["cpu", "gpu", "xpu", "sdaa", None] = None
             use_amp: bool = False
             amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
             to_static: bool = False
@@ -442,9 +442,16 @@ if importlib.util.find_spec("pydantic") is not None:
     except ImportError as e:
         from ppsci.utils import logger
 
-        logger.warning(
-            f"{e}. paddlesci requires pydantic>=2.5.0; otherwise, "
-            "built-in examples may not run properly."
+        logger.error(e)
+        logger.error(
+            "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
         )
-    except Exception:
-        raise
+    except Exception as e:
+        raise e
+
+else:
+    from ppsci.utils import logger
+
+    logger.error(
+        "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
+    )

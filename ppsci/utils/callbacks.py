@@ -86,7 +86,7 @@ class InitCallback(Callback):
         # fix random seed for reproducibility
         misc.set_random_seed(full_cfg.seed)
 
-        # initialze logger while creating output directory
+        # initialize logger while creating output directory
         logger.init_logger(
             "ppsci",
             osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
@@ -99,7 +99,8 @@ class InitCallback(Callback):
         if "device" in full_cfg:
             import paddle
 
-            paddle.device.set_device(full_cfg.device)
+            if isinstance(full_cfg.device, str):
+                paddle.device.set_device(full_cfg.device)
 
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):

@@ -93,7 +93,7 @@ def generate_data(cfg: DictConfig):
     for i in tqdm(range(num_init_trials), desc="Initial expression trees"):
         exprs_init.append(gen_expr(MY_VOCAB))
 
-    # fliter nodes
+    # filter nodes
     num_nodes = cfg.DATA_GENERATE.num_nodes
     exprs_filter_nodes = []
     for expr in tqdm(exprs_init, desc="Check nodes number"):
@@ -101,7 +101,7 @@ def generate_data(cfg: DictConfig):
         if expr is not None:
             exprs_filter_nodes.append(expr)
 
-    # fliter nested
+    # filter nested
     num_nested_max = cfg.DATA_GENERATE.num_nested_max
     partial_fliter_nested = partial(fliter_nested, num_nested_max=num_nested_max)
     exprs_fliter_nested = []
@@ -124,7 +124,7 @@ def generate_data(cfg: DictConfig):
             except Exception:
                 continue
 
-    # fliter consts/vars/seq_length
+    # filter consts/vars/seq_length
     num_consts = cfg.DATA_GENERATE.num_consts
     num_vars = cfg.DATA_GENERATE.num_vars
     seq_length_max = cfg.DATA_GENERATE.seq_length_max

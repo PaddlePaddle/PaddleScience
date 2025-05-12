@@ -122,7 +122,7 @@ def test_ema_apply_restore():
     assert model.linears[-1].weight.name not in avg_model.params_shadow
     assert model.linears[-2].bias.name not in avg_model.params_shadow
 
-    # test if model paramter == backup
+    # test if model parameter == backup
     avg_model.apply_shadow()
     for k in orignal_param:
         if not orignal_param[k].stop_gradient:

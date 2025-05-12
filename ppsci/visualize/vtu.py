@@ -147,6 +147,92 @@ def save_vtu_from_dict(
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps)
 
 
+def save_vtp_from_dict(
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    coord_keys: Tuple[str, ...],
+    value_keys: Tuple[str, ...],
+    num_timestamps: int = 1,
+):
+    """Save dict data to '*.vtp' file.
+
+    Args:
+        filename (str): Output filename.
+        data_dict (Dict[str, np.ndarray]): Data in dict.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+        num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> filename = "path/to/file.vtp"
+        >>> data_dict = {
+        ...     "x": np.array([[1], [2], [3],[4]]),
+        ...     "y": np.array([[2], [3], [4],[4]]),
+        ...     "z": np.array([[3], [4], [5],[4]]),
+        ...     "u": np.array([[4], [5], [6],[4]]),
+        ...     "v": np.array([[5], [6], [7],[4]]),
+        ... }
+        >>> coord_keys = ("x","y","z")
+        >>> value_keys = ("u","v")
+        >>> ppsci.visualize.save_vtp_from_dict(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
+    """
+    import pyvista as pv
+
+    if len(coord_keys) not in [3]:
+        raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 3 in vtp format")
+
+    coord = [data_dict[k] for k in coord_keys if k not in ("t", "sdf")]
+    assert all([c.ndim == 2 for c in coord]), "array of each axis should be [*, 1]"
+    coord = np.concatenate(coord, axis=1)
+
+    if not isinstance(coord, np.ndarray):
+        raise ValueError(f"type of coord({type(coord)}) should be ndarray.")
+    if len(coord) % num_timestamps != 0:
+        raise ValueError(
+            f"coord length({len(coord)}) should be an integer multiple of "
+            f"num_timestamps({num_timestamps})"
+        )
+    if coord.shape[1] not in [3]:
+        raise ValueError(f"ndim of coord({coord.shape[1]}) should be 3 in vtp format.")
+
+    if len(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    npoint = len(coord)
+    nx = npoint // num_timestamps
+    if filename.endswith(".vtp"):
+        filename = filename[:-4]
+
+    for t in range(num_timestamps):
+        coord_ = coord[t * nx : (t + 1) * nx]
+        point_cloud = pv.PolyData(coord_)
+        for k in value_keys:
+            value_ = data_dict[k][t * nx : (t + 1) * nx]
+            if value_ is not None and not isinstance(value_, np.ndarray):
+                raise ValueError(f"type of value({type(value_)}) should be ndarray.")
+            if value_ is not None and len(coord_) != len(value_):
+                raise ValueError(
+                    f"coord length({len(coord_)}) should be equal to value length({len(value_)})"
+                )
+            point_cloud[k] = value_
+
+        if num_timestamps > 1:
+            width = len(str(num_timestamps - 1))
+            point_cloud.save(f"{filename}_t-{t:0{width}}.vtp")
+        else:
+            point_cloud.save(f"{filename}.vtp")
+
+    if num_timestamps > 1:
+        logger.message(
+            f"Visualization results are saved to: {filename}_t-{0:0{width}}.vtp ~ "
+            f"{filename}_t-{num_timestamps - 1:0{width}}.vtp"
+        )
+    else:
+        logger.message(f"Visualization result is saved to: {filename}.vtp")
+
+
 def save_vtu_to_mesh(
     filename: str,
     data_dict: Dict[str, np.ndarray],

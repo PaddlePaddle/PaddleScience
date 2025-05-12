@@ -15,6 +15,7 @@
         - VisualizerWeather
         - save_plot_from_1d_dict
         - save_plot_from_3d_dict
+        - save_vtp_from_dict
         - save_vtu_from_dict
         - save_vtu_to_mesh
       show_root_heading: true

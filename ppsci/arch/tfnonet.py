@@ -31,7 +31,7 @@ class FNONet(base.Arch):
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
-        ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.s
+        ada_in_features (int,optional): The input channels of the adaptive normalization.Defaults to None.s
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
             Defaults to "soft-gating".
@@ -511,4 +511,4 @@ class TFNO3dNet(FNONet):
         )
         self.n_modes_height = n_modes_height
         self.n_modes_width = n_modes_width
-        self.n_modes_height = n_modes_height
+        self.n_modes_depth = n_modes_depth

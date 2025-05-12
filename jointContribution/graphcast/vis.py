@@ -1,6 +1,22 @@
+# Copyright (c) 2024 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import datetime
 import math
+from typing import Dict
 from typing import Optional
+from typing import Tuple
 
 import IPython
 import matplotlib
@@ -34,7 +50,7 @@ def scale(
     data: xarray.Dataset,
     center: Optional[float] = None,
     robust: bool = False,
-) -> tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
+) -> Tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
     vmin = np.nanpercentile(data, (2 if robust else 0))
     vmax = np.nanpercentile(data, (98 if robust else 100))
     if center is not None:
@@ -49,12 +65,13 @@ def scale(
 
 
 def plot_data(
-    data: dict[str, xarray.Dataset],
+    data: Dict[str, xarray.Dataset],
     fig_title: str,
     plot_size: float = 5,
     robust: bool = False,
     cols: int = 4,
-) -> tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
+    file: str = "result.png",
+) -> Tuple[xarray.Dataset, matplotlib.colors.Normalize, str]:
 
     first_data = next(iter(data.values()))[0]
     max_steps = first_data.sizes.get("time", 1)
@@ -91,7 +108,7 @@ def plot_data(
         )
         images.append(im)
 
-    def update(frame):
+    def _update(frame):
         if "time" in first_data.dims:
             td = datetime.timedelta(
                 microseconds=first_data["time"][frame].item() / 1000
@@ -103,7 +120,45 @@ def plot_data(
             im.set_data(plot_data.isel(time=frame, missing_dims="ignore"))
 
     ani = animation.FuncAnimation(
-        fig=figure, func=update, frames=max_steps, interval=250
+        fig=figure, func=_update, frames=max_steps, interval=250
+    )
+    plt.savefig(
+        file,
+        bbox_inches="tight",
     )
     plt.close(figure.number)
     return IPython.display.HTML(ani.to_jshtml())
+
+
+def log_images(
+    target: xarray.Dataset,
+    pred: xarray.Dataset,
+    variable_name: str,
+    level: int,
+    robust=True,
+    file="result.png",
+):
+    plot_size = 5
+    plot_max_steps = pred.sizes["time"]
+
+    data = {
+        "Targets": scale(
+            select(target, variable_name, level, plot_max_steps), robust=robust
+        ),
+        "Predictions": scale(
+            select(pred, variable_name, level, plot_max_steps), robust=robust
+        ),
+        "Diff": scale(
+            (
+                select(target, variable_name, level, plot_max_steps)
+                - select(pred, variable_name, level, plot_max_steps)
+            ),
+            robust=robust,
+            center=0,
+        ),
+    }
+    fig_title = variable_name
+    if "level" in pred[variable_name].coords:
+        fig_title += f" at {level} hPa"
+
+    plot_data(data, fig_title, plot_size, robust, file=file)

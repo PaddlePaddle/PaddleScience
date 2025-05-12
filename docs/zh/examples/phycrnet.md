@@ -7,7 +7,6 @@
     ``` sh
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
-
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --create-dirs -o ./data/burgers_1501x2x128x128.mat
 
@@ -24,6 +23,7 @@
 
     python main.py mode=eval DATA_PATH=./data/burgers_1501x2x128x128.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams
     ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [phycrnet_burgers_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams) | a-RMSE: 3.20e-3 |
@@ -81,9 +81,9 @@ $$K_s = \begin{bmatrix}
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/phycrnet/Hard_IC_BC.png)
 
-``` py linenums="43"
+``` py linenums="15"
 --8<--
-examples/phycrnet/main.py:43:45
+examples/phycrnet/main.py:15:37
 --8<--
 ```
 
@@ -96,9 +96,9 @@ examples/phycrnet/conf/burgers_equations.yaml:34:42
 ### 3.2 数据载入
 我们使用RK4或者谱方法生成的数据（初值为使用正态分布生成），需要从.mat文件中将其读入，：
 
-``` py linenums="54"
+``` py linenums="38"
 --8<--
-examples/phycrnet/main.py:54:72
+examples/phycrnet/main.py:38:63
 --8<--
 ```
 
@@ -106,9 +106,9 @@ examples/phycrnet/main.py:54:72
 
 设置约束以及相关损失函数：
 
-``` py linenums="74"
+``` py linenums="65"
 --8<--
-examples/phycrnet/main.py:74:90
+examples/phycrnet/main.py:65:82
 --8<--
 ```
 
@@ -116,9 +116,9 @@ examples/phycrnet/main.py:74:90
 
 设置评估数据集和相关损失函数：
 
-``` py linenums="92"
+``` py linenums="84"
 --8<--
-examples/phycrnet/main.py:92:109
+examples/phycrnet/main.py:84:102
 --8<--
 ```
 
@@ -126,9 +126,9 @@ examples/phycrnet/main.py:92:109
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate`
 
-``` py linenums="112"
+``` py linenums="104"
 --8<--
-examples/phycrnet/main.py:112:116
+examples/phycrnet/main.py:104:106
 --8<--
 ```
 
@@ -142,33 +142,33 @@ $$
 
 这一步需要通过设置外界函数来进行，因此在训练过程中，我们使用`function.transform_out`来进行训练
 
-``` py linenums="47"
+``` py linenums="38"
 --8<--
-examples/phycrnet/main.py:47:51
+examples/phycrnet/main.py:38:42
 --8<--
 ```
 
 而在评估过程中，我们使用`function.tranform_output_val`来进行评估，并生成累计均方根误差。
 
-``` py linenums="142"
+``` py linenums="124"
 --8<--
-examples/phycrnet/main.py:142:142
+examples/phycrnet/main.py:124:125
 --8<--
 ```
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="117"
+``` py linenums="108"
 --8<--
-examples/phycrnet/main.py:117:129
+examples/phycrnet/main.py:108:120
 --8<--
 ```
 
 最后启动训练、评估即可：
 
-``` py linenums="132"
+``` py linenums="122"
 --8<--
-examples/phycrnet/main.py:132:140
+examples/phycrnet/main.py:122:126
 --8<--
 ```
 

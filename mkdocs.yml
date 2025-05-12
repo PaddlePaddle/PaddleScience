@@ -34,6 +34,7 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
+      - 多硬件支持: zh/multi_device.md
       - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
@@ -67,6 +68,7 @@ nav:
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
           - DrivAerNet: zh/examples/drivaernet.md
+          - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
@@ -83,6 +85,7 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+          - NTopo: zh/examples/ntopo.md
           - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
@@ -99,9 +102,13 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
+        - GenCast: zh/examples/gencast.md
         - VelocityGAN: zh/examples/velocity_gan.md
         - TGCN: zh/examples/tgcn.md
         - IOPS: zh/examples/iops.md
+        - Pang-Weather: zh/examples/pangu_weather.md
+        - FengWu: zh/examples/fengwu.md
+        - FuXi: zh/examples/fuxi.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
