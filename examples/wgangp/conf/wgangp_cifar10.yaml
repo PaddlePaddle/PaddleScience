@@ -55,7 +55,7 @@ DATA:
 # visualization settings
 VIS:
   vis: true
-  batch: 1
+  batch: 16
   num: 64
 
 LOSS:
@@ -105,8 +105,9 @@ EVAL:
   dataset:
     "name": "NamedArrayDataset"
   inceptionscore:
-    eps: 1e-16
+    eps: 0
     splits: 10
+    batch_size: 64
   batch_size: 64
   use_shared_memory: true
   num_workers: 0
