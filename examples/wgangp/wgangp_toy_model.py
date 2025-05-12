@@ -86,7 +86,7 @@ class WganGpToyGenerator(Arch):
         self.generator = ToyGenerator(dim)
 
     def forward(self, x):
-        y = self.generator(x.shape[0])
+        y = self.generator(next(iter(x.values())).shape[0])
         y = self.split_to_dict(y, self.output_keys, axis=-1)
         if self._output_transform is not None:
             y = self._output_transform(x, y)
