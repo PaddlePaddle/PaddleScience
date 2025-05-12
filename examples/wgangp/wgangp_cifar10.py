@@ -32,9 +32,7 @@ def evaluate(cfg: DictConfig):
     generator_funcs = Cifar10GenFuncs(
         **cfg["LOSS"]["gen"], discriminator_model=discriminator_model
     )
-    eval_inception_score = InceptionScore(
-        **{**cfg["EVAL"]["inceptionscore"], "batch_size": cfg["EVAL"]["batch_size"]}
-    )
+    eval_inception_score = InceptionScore(**cfg["EVAL"]["inceptionscore"])
 
     # set data
     inputs, labels = load_cifar10(**cfg["DATA"])

@@ -104,6 +104,9 @@ class InceptionScore:
 
     def __init__(self, eps=1e-16, splits=10, batch_size=64):
         self.inception_v3 = paddle.vision.inception_v3(pretrained=True)
+        self.inception_v3.fc.bias.set_value(
+            paddle.to_tensor(np.zeros(self.inception_v3.fc.bias.shape, dtype="float32"))
+        )
         self.inception_v3.eval()
         self.eps = eps
         self.splits = splits
