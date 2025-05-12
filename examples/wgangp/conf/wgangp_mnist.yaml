@@ -29,7 +29,6 @@ seed: 42
 MODEL:
   gen_net:
     output_keys: [ "fake_data" ]
-    batch_size: 100
     dim: 64
     output_dim: 784
   dis_net:
