@@ -9,7 +9,7 @@ from ppsci.arch import Arch
 
 class RuLULayer(nn.Layer):
     """
-    a linear layer with ReLU activation
+    A linear layer with ReLU activation
     """
 
     def __init__(self, input_dim, output_dim):
@@ -27,7 +27,7 @@ class RuLULayer(nn.Layer):
 
 class ToyGenerator(nn.Layer):
     """
-    the generator of WGAN GP for toy data
+    The generator of WGAN GP for toy data
     """
 
     def __init__(self, dim):
@@ -50,7 +50,7 @@ class ToyGenerator(nn.Layer):
 
 class ToyDiscriminator(nn.Layer):
     """
-    the discriminator of WGAN GP for toy data
+    The discriminator of WGAN GP for toy data
     """
 
     def __init__(self, dim):

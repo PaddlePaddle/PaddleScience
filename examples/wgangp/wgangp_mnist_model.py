@@ -8,7 +8,7 @@ from ppsci.arch import Arch
 
 class MnistGenerator(nn.Layer):
     """
-    the generator of WGAN GP for mnist data
+    The generator of WGAN GP for mnist data
     """
 
     def __init__(self, dim, output_dim):
@@ -49,7 +49,7 @@ class MnistGenerator(nn.Layer):
 
 class MnistDiscriminator(nn.Layer):
     """
-    the discriminator of WGAN GP for mnist data
+    The discriminator of WGAN GP for mnist data
 
     """
 
@@ -90,7 +90,7 @@ class MnistDiscriminator(nn.Layer):
 
 class WganGpMnistGenerator(Arch):
     """
-    the generator of WGAN GP for mnist data
+    The generator of WGAN GP for mnist data
     Args
         output_keys: the output keys of the generator
         batch_size: the batch size of the generator
@@ -114,7 +114,7 @@ class WganGpMnistGenerator(Arch):
 
 class WganGpMnistDiscriminator(Arch):
     """
-    the discriminator of WGAN GP for mnist data
+    The discriminator of WGAN GP for mnist data
     Args
         input_keys: the input keys of the discriminator
         output_keys: the output keys of the discriminator

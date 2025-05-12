@@ -9,7 +9,7 @@ from ppsci.arch import Arch
 
 class ConvMeanPool(nn.Layer):
     """
-    a convolutional layer followed by average pooling
+    A convolutional layer followed by average pooling
     """
 
     def __init__(
@@ -45,7 +45,7 @@ class ConvMeanPool(nn.Layer):
 
 class MeanPoolConv(nn.Layer):
     """
-    average pooling followed by a convolutional layer
+    Average pooling followed by a convolutional layer
     """
 
     def __init__(
@@ -80,7 +80,7 @@ class MeanPoolConv(nn.Layer):
 
 class UpsampleConv(nn.Layer):
     """
-    a PixelShuffle layer followed by a convolutional layer
+    A PixelShuffle layer followed by a convolutional layer
     """
 
     def __init__(
@@ -116,7 +116,7 @@ class UpsampleConv(nn.Layer):
 
 class ConditionalBatchNorm(nn.Layer):
     """
-    conditional batch normalization layer
+    Conditional batch normalization layer
     """
 
     def __init__(
@@ -170,7 +170,7 @@ class ConditionalBatchNorm(nn.Layer):
 
 class LayerNorm(nn.Layer):
     """
-    layer normalization layer
+    Layer normalization layer
     """
 
     def __init__(self, eps: int = 1e-5, momentum: int = 0.1):
@@ -204,7 +204,7 @@ class LayerNorm(nn.Layer):
 
 class Normalize(nn.Layer):
     """
-    normalization layer
+    Normalization layer
     """
 
     def __init__(
@@ -230,7 +230,7 @@ class Normalize(nn.Layer):
 
 class ResidualBlock(nn.Layer):
     """
-    residual block
+    Residual block
     """
 
     def __init__(
@@ -351,7 +351,7 @@ class ResidualBlock(nn.Layer):
 
 class OptimizedResBlockDisc1(nn.Layer):
     """
-    optimized residual block
+    Optimized residual block
     """
 
     def __init__(self, dim: int):
@@ -378,7 +378,7 @@ class OptimizedResBlockDisc1(nn.Layer):
 
 class Cifar10Generator(nn.Layer):
     """
-    a generator for Cifar10
+    A generator for Cifar10
 
     Args
         channels: the number of channels in the intermediate features
@@ -457,7 +457,7 @@ class Cifar10Generator(nn.Layer):
 
 class Cifar10Discriminator(nn.Layer):
     """
-    a discriminator for Cifar10
+    A discriminator for Cifar10
     Args
         dim: the number of channels in the intermediate features
         use_label: whether to use label
