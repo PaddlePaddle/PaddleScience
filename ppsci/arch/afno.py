@@ -165,7 +165,7 @@ class AFNO2D(nn.Layer):
         super().__init__()
         if hidden_size % num_blocks != 0:
             raise ValueError(
-                f"hidden_size({hidden_size}) should be divisble by num_blocks({num_blocks})."
+                f"hidden_size({hidden_size}) should be divisible by num_blocks({num_blocks})."
             )
 
         self.hidden_size = hidden_size
