@@ -1,11 +1,11 @@
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 import paddle.nn as nn
-
-from ..models.wgan_gp import WGAN_GP
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_DIR)
+from models.wgan_gp import WGAN_GP
 
 
 class ToyGenerator(nn.Layer):
