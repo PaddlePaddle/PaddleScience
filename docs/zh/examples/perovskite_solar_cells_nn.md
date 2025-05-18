@@ -42,7 +42,7 @@
 
 该方法的主要思想是通过人工神经网络建立光谱响应数据与短路电流密度（Jsc）之间的非线性映射关系。人工神经网络模型的总体结构如下图所示：
 
-![psc_nn_overview](images/ML/psc_nn_overview.png)
+![psc_nn_overview](psc_nn_overview.png)
 
 本案例采用多层感知机（MLP）作为基础模型架构，主要包括以下几个部分：
 
