@@ -24,8 +24,13 @@ from typing import Optional
 
 import denoiser
 import dpm_solver_plus_plus_2s
+import losses
+import numpy as np
+import paddle
 import paddle.nn as nn
+import samplers_utils
 import xarray as xr
+from graphcast import datasets
 
 
 class GenCast(nn.Layer):
@@ -54,6 +59,7 @@ class GenCast(nn.Layer):
         self._sampler_config = cfg.sampler_config
         self._sampler = None
         self._noise_config = cfg.noise_config
+        self.cfg = cfg
 
     def _c_in(self, noise_scale: xr.DataArray) -> xr.DataArray:
         """Scaling applied to the noisy targets input to the underlying network."""
@@ -81,7 +87,7 @@ class GenCast(nn.Layer):
     ) -> xr.Dataset:
         """The preconditioned denoising function D from the paper (Eqn 7)."""
         # Convert xarray DataArray to Paddle tensor for operations
-        raw_predictions = self._denoiser(
+        raw_predictions, grid_node_outputs = self._denoiser(
             inputs=inputs,
             noisy_targets=noisy_targets * self._c_in(noise_levels),
             noise_levels=noise_levels,
@@ -89,14 +95,87 @@ class GenCast(nn.Layer):
             **kwargs
         )
 
-        return raw_predictions * self._c_out(
-            noise_levels
-        ) + noisy_targets * self._c_skip(noise_levels)
+        stacked_noisy_targets = datasets.dataset_to_stacked(noisy_targets)
+        stacked_noisy_targets = stacked_noisy_targets.transpose("lat", "lon", ...)
+
+        out = grid_node_outputs * paddle.to_tensor(self._c_out(noise_levels).data)
+        skip = paddle.to_tensor(
+            stacked_noisy_targets.data * self._c_skip(noise_levels).data
+        )
+        grid_node_outputs = out + skip
+
+        return (
+            raw_predictions * self._c_out(noise_levels)
+            + noisy_targets * self._c_skip(noise_levels),
+            grid_node_outputs,
+        )
+
+    def loss(
+        self,
+        inputs: xr.Dataset,
+        targets: xr.Dataset,
+        forcings: Optional[xr.Dataset] = None,
+    ):
+
+        if self._noise_config is None:
+            raise ValueError("Noise config must be specified to train GenCast.")
+
+        grid_node_outputs, denoised_predictions, noise_levels = self.forward(
+            inputs, targets, forcings
+        )
+
+        loss, diagnostics = losses.weighted_mse_loss_from_xarray(
+            grid_node_outputs,
+            targets,
+            # Weights are same as we used for GraphCast.
+            per_variable_weights={
+                # Any variables not specified here are weighted as 1.0.
+                # A single-level variable, but an important headline variable
+                # and also one which we have struggled to get good performance
+                # on at short lead times, so leaving it weighted at 1.0, equal
+                # to the multi-level variables:
+                "2m_temperature": 1.0,
+                # New single-level variables, which we don't weight too highly
+                # to avoid hurting performance on other variables.
+                "10m_u_component_of_wind": 0.1,
+                "10m_v_component_of_wind": 0.1,
+                "mean_sea_level_pressure": 0.1,
+                "sea_surface_temperature": 0.1,
+                "total_precipitation_12hr": 0.1,
+            },
+        )
+        loss *= paddle.to_tensor(self._loss_weighting(noise_levels).data)
+        return loss, diagnostics
 
     def forward(self, inputs, targets_template, forcings=None, **kwargs):
-
-        if self._sampler is None:
-            self._sampler = dpm_solver_plus_plus_2s.Sampler(
-                self._preconditioned_denoiser, **self._sampler_config
+        if self.cfg.mode == "eval":
+            if self._sampler is None:
+                self._sampler = dpm_solver_plus_plus_2s.Sampler(
+                    self._preconditioned_denoiser, **self._sampler_config
+                )
+            return self._sampler(inputs, targets_template, forcings, **kwargs)
+        if self.cfg.mode == "train":
+            # Sample noise levels:
+            batch_size = inputs.sizes["batch"]
+            noise_levels = xr.DataArray(
+                data=samplers_utils.rho_inverse_cdf(
+                    min_value=self._noise_config.training_min_noise_level,
+                    max_value=self._noise_config.training_max_noise_level,
+                    rho=self._noise_config.training_noise_level_rho,
+                    cdf=np.random.uniform(size=(batch_size,)).astype("float32"),
+                ),
+                dims=("batch",),
             )
-        return self._sampler(inputs, targets_template, forcings, **kwargs)
+
+            # Sample noise and apply it to targets:
+            noise = (
+                samplers_utils.spherical_white_noise_like(targets_template)
+                * noise_levels
+            )
+
+            noisy_targets = targets_template + noise
+
+            denoised_predictions, grid_node_outputs = self._preconditioned_denoiser(
+                inputs, noisy_targets, noise_levels, forcings
+            )
+            return grid_node_outputs, denoised_predictions, noise_levels

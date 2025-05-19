@@ -14,6 +14,7 @@
 """Support for wrapping a general Predictor to act as a Denoiser."""
 
 import copy
+import math
 import os
 import pickle
 from typing import Optional
@@ -66,12 +67,16 @@ class FourierFeaturesMLP(nn.Layer):
         self._num_frequencies = num_frequencies
         self._apply_log_first = apply_log_first
 
-        # 创建 MLP
+        # Creating MLP
         layers = []
         input_size = 2 * num_frequencies
         num_layers = len(output_sizes)
         for i, output_size in enumerate(output_sizes):
-            linear_layer = nn.Linear(input_size, output_size)
+            limit = math.sqrt(6 / input_size)
+            weight_attr = paddle.framework.ParamAttr(
+                initializer=paddle.nn.initializer.Uniform(low=-limit, high=limit)
+            )
+            linear_layer = nn.Linear(input_size, output_size, weight_attr=weight_attr)
             layers.append(linear_layer)
             if i < num_layers - 1:
                 layers.append(activation)
@@ -168,4 +173,12 @@ class Denoiser(nn.Layer):
             grid_node_outputs, noisy_targets
         )
 
-        return raw_predictions
+        resolution = self.cfg.denoiser_architecture_config.resolution
+        grid_lat = np.arange(-90.0, 90.0 + resolution, resolution).astype(np.float32)
+        grid_lon = np.arange(0.0, 360.0, resolution).astype(np.float32)
+        grid_shape = [grid_lat.shape[0], grid_lon.shape[0]]
+        grid_outputs_lat_lon_leading = grid_node_outputs.reshape(
+            grid_shape + grid_node_outputs.shape[1:]
+        )
+
+        return raw_predictions, grid_outputs_lat_lon_leading
