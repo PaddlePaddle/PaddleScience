@@ -75,19 +75,15 @@ def evaluate(cfg: DictConfig):
     # visualization
     if cfg.VIS.vis:
         with solver.no_grad_context_manager(True):
+            generator_model.eval()
             for batch_idx, (input_, _, _) in enumerate(validator.data_loader):
                 if batch_idx + 1 > cfg.VIS.batch:
                     break
                 fake_image = generator_model(input_)["fake_data"]
-                for i in range(
-                    cfg["EVAL"]["batch_size"]
-                    if cfg["EVAL"]["batch_size"] < cfg.VIS.num
-                    else cfg.VIS.num
-                ):
-                    show_save_image(
-                        fake_image[i],
-                        f"{cfg.output_dir}/image{batch_idx}_{i}.png",
-                    )
+                show_save_image(
+                    fake_image[0],
+                    f"{cfg.output_dir}/image{batch_idx}.png",
+                )
         print(f"The visualizations are saved to {cfg.output_dir}")
 
 
@@ -95,8 +91,8 @@ def train(cfg: DictConfig):
     # set model
     generator_model = WganGpCifar10Generator(**cfg["MODEL"]["gen_net"])
     discriminator_model = WganGpCifar10Discriminator(**cfg["MODEL"]["dis_net"])
-    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
-        cfg.EVAL.pretrained_dis_model_path
+    if cfg.TRAIN.pretrained_dis_model_path and os.path.exists(
+        cfg.TRAIN.pretrained_dis_model_path
     ):
         discriminator_model.load_dict(paddle.load(cfg.TRAIN.pretrained_dis_model_path))
 
@@ -184,10 +180,10 @@ def train(cfg: DictConfig):
     # train
     for i in range(cfg.TRAIN.epochs):
         logger.message(f"\nEpoch: {i + 1}\n")
+        optimizer_discriminator.clear_grad()
         solver_discriminator.train()
         optimizer_generator.clear_grad()
         solver_generator.train()
-        optimizer_discriminator.clear_grad()
 
     # save model weight
     paddle.save(

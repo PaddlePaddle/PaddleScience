@@ -86,8 +86,8 @@ def train(cfg: DictConfig):
     # set model
     generator_model = WganGpMnistGenerator(**cfg["MODEL"]["gen_net"])
     discriminator_model = WganGpMnistDiscriminator(**cfg["MODEL"]["dis_net"])
-    if cfg.EVAL.pretrained_dis_model_path and os.path.exists(
-        cfg.EVAL.pretrained_dis_model_path
+    if cfg.TRAIN.pretrained_dis_model_path and os.path.exists(
+        cfg.TRAIN.pretrained_dis_model_path
     ):
         discriminator_model.load_dict(paddle.load(cfg.TRAIN.pretrained_dis_model_path))
 
@@ -159,10 +159,10 @@ def train(cfg: DictConfig):
     # train
     for i in range(cfg.TRAIN.epochs):
         logger.message(f"\nEpoch: {i + 1}\n")
+        optimizer_discriminator.clear_grad()
         solver_discriminator.train()
         optimizer_generator.clear_grad()
         solver_generator.train()
-        optimizer_discriminator.clear_grad()
 
     # save model weight
     paddle.save(
