@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # NOTE: Put config module import at the top level for register default config(s) in
-# ConfigStore at the begining of ppsci
+# ConfigStore at the beginning of ppsci
 from ppsci.utils import config  # isort:skip  # noqa: F401
 from ppsci.utils import ema
 from ppsci.utils import initializer

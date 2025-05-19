@@ -151,7 +151,7 @@ class MLP(base.Arch):
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
-            input in given channel will be period embeded if specified, each tuple of
+            input in given channel will be period embedded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
             e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
@@ -220,7 +220,7 @@ class MLP(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
@@ -384,7 +384,7 @@ class ModifiedMLP(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
@@ -653,7 +653,7 @@ class PirateNet(base.Arch):
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
-            input in given channel will be period embeded if specified, each tuple of
+            input in given channel will be period embedded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
             e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
@@ -712,7 +712,7 @@ class PirateNet(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 

@@ -44,8 +44,8 @@ class IFMMLP(base.Arch):
         embed_name (str): Embed name used in arch, such as "IMF", "None".
         inputs (int): Input dim.
         outputs (int): Output dim.
-        d_out (int): Embedding output dim for some architechture.
-        sigma (float): Hyper parameter for some architechture.
+        d_out (int): Embedding output dim for some architecture.
+        sigma (float): Hyper parameter for some architecture.
         dp_ratio (float): Dropout ratio.
         reg (bool): Regularization flag.
         first_omega_0 (float): Frequency factor used in first layer.
@@ -319,8 +319,8 @@ class GM_DNN(nn.Layer):
         inputs (int): Input dim.
         hidden_units (List[int]): Units num in hidden layers.
         outputs (int): Output dim.
-        d_out (int): Embedding output dim for some architechture.
-        sigma (float): Hyper parameter for some architechture.
+        d_out (int): Embedding output dim for some architecture.
+        sigma (float): Hyper parameter for some architecture.
         dp_ratio (float): Dropout ratio.
         reg (bool): Regularization flag.
     """
@@ -498,8 +498,8 @@ class SIM_DNN(nn.Layer):
         inputs (int): Input dim.
         hidden_units (List[int]): Units num in hidden layers.
         outputs (int): Output dim.
-        d_out (int): Embedding output dim for some architechture.
-        sigma (float): Hyper parameter for some architechture.
+        d_out (int): Embedding output dim for some architecture.
+        sigma (float): Hyper parameter for some architecture.
         dp_ratio (float): Dropout ratio.
         reg (bool): Regularization flag.
     """

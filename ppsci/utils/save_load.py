@@ -108,7 +108,7 @@ def load_pretrain(
         eqn_path = path.replace(".pdparams", ".pdeqn", 1)
         path = download.get_weights_path_from_url(path)
 
-        # automatically download additional equation weights if avaiable
+        # automatically download additional equation weights if available
         def is_url_accessible(url: str):
             try:
                 import requests

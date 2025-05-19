@@ -18,7 +18,7 @@ If you need to use the initialization method of PaddlePaddle, please refer to
 [paddle.nn.initializer](https://github.com/PaddlePaddle/Paddle/tree/develop/python/paddle/nn/initializer)
 
 This code is based on [torch.nn.init](https://github.com/pytorch/pytorch/blob/main/torch/nn/init.py)
-Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
+The copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
 """
 
 from __future__ import annotations
@@ -476,7 +476,7 @@ def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     """Modify tensor inplace using jax-style glorot_normal.
 
     Args:
-        tensor (paddle.Tensor): Paddle Tensor/Paramter.
+        tensor (paddle.Tensor): Paddle Tensor/Parameter.
 
     Returns:
         paddle.Tensor: Initialized tensor.

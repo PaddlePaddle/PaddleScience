@@ -85,6 +85,7 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+          - NTopo: zh/examples/ntopo.md
           - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
@@ -107,6 +108,7 @@ nav:
         - IOPS: zh/examples/iops.md
         - Pang-Weather: zh/examples/pangu_weather.md
         - FengWu: zh/examples/fengwu.md
+        - FuXi: zh/examples/fuxi.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md

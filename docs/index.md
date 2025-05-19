@@ -129,6 +129,7 @@
 | 受力分析和逆问题 | [3D 汽车控制臂变形](./zh/examples/control_arm.md) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析和逆问题 | [3D 心脏仿真](./zh/examples/heart.md) | 数理融合 | PINN | 监督学习 | - | - |
 | 拓扑优化 | [2D 拓扑优化](./zh/examples/topopt.md) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
+| 拓扑优化 | [2/3D 拓扑优化](./zh/examples/ntopo.md) | 机理驱动 | DenseSIRENModel | 无监督学习 | - | [Paper](https://arxiv.org/abs/2102.10782) |
 | 热仿真 | [1D 换热器热仿真](./zh/examples/heat_exchanger.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
 | 热仿真 | [2D 热仿真](./zh/examples/heat_pinn.md) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
 | 热仿真 | [2D 芯片热仿真](./zh/examples/chip_heat.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | [Paper](https://doi.org/10.1063/5.0194245)|
@@ -151,6 +152,7 @@
 | 天气预报 | [NowCastNet 气象预报](./zh/examples/nowcastnet.md) | 数据驱动 | GAN | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
 | 天气预报 | [GraphCast 气象预报](./zh/examples/graphcast.md) | 数据驱动 | GNN | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 天气预报 | [GenCast 气象预报](./zh/examples/gencast.md) | 数据驱动 | Diffusion+Graph transformer | 监督学习 | [Gencast](https://console.cloud.google.com/storage/browser/dm_graphcast) | [Paper](https://arxiv.org/abs/2312.15796) |
+| 天气预报 | [Fuxi 气象预报](./zh/examples/fuxi.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2306.12873) |
 | 天气预报 | [FengWu 气象预报](./zh/examples/fengwu.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2304.02948) |
 | 天气预报 | [Pangu-Weather 气象预报](./zh/examples/pangu_weather.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2211.02556) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |

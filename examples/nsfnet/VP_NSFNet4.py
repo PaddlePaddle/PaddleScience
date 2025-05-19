@@ -236,7 +236,7 @@ def train(cfg: DictConfig):
         name="Sup_ic",
     )
 
-    # set equation constarint s.t. ||F(u)||
+    # set equation constraint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
             nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
