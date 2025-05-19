@@ -1,14 +1,9 @@
 """ from original FNO repo """
-# from pdb import set_trace as bp
-# from turtle import forward
-
 import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from timm.models.layers import DropPath
 
-# from timm.models.vision_transformer import Mlp
 from .basics import SpectralConv2dV2
 from .basics import _get_act
 
@@ -291,14 +286,9 @@ class FNN2d(nn.Layer):
         demo_xs_aug = paddle.stack(demo_xs_aug, axis=0)
 
         J = demo_xs.shape[0]
-        # pred = self.forward(x) # B, H, W, T, 1
-        ######################
         pred0 = self.forward(x)  # B, H, W, T, 1
         pred = paddle.stack([self.forward(_x) for _x in x_aug], axis=-1)  # B, 1, H, W
         C = pred.shape[-1]
-        # pred = torch.stack([self.backbone(_x) for _x in x_aug], dim=-1) # B, 1, H, W TODO
-        # C = pred0.shape[-1]
-        ######################
         demo_pred = []
         idx = 0
         for _demo_xs_aug in demo_xs_aug:
@@ -306,10 +296,7 @@ class FNN2d(nn.Layer):
             _demo_pred = []
             while idx < _demo_xs_aug.shape[0]:
                 _x = _demo_xs_aug[idx : idx + B]
-                ##########
                 _pred = self.forward(_x)
-                # _pred = self.backbone(_x) # TODO
-                ##########
                 _demo_pred.append(_pred)
                 idx += _x.shape[0]
             demo_pred.append(paddle.concat(_demo_pred, axis=0))
@@ -341,16 +328,11 @@ class FNN2d(nn.Layer):
                     __b, _, __h, __w, _ = pred_flat.shape
                     pred_flat = pred_flat.view([-1, 1, C])
 
-                    # gap = (pred_flat - demo_pred_flat).pow(2) / pred_flat.pow(2)
                     gap = paddle.linalg.norm(
                         (pred_flat - demo_pred_flat).pow(2) / pred_flat.pow(2), axis=-1
                     )
-                    # cos = 1 - pairwise_cosine_similarity(pred_flat.squeeze(1), demo_pred_flat.squeeze(0))
-                    # gap = gap * cos
                     gap_re = gap.view([__b, __h, __w, -1])
-                    index = paddle.argsort(paddle.abs(gap_re), -1)[
-                        :, :, :, :topk
-                    ]  # TODO: spatial index of ascending sort by pred gap
+                    index = paddle.argsort(paddle.abs(gap_re), -1)[:, :, :, :topk]
                     _y_nn = paddle.stack(
                         [
                             paddle.take_along_axis(
@@ -370,15 +352,10 @@ class FNN2d(nn.Layer):
                         _b : _b + batch_b, :, _h : _h + batch_h, _w : _w + batch_w
                     ] = paddle.abs(_y_nn.std(-1) / _y_nn.mean(-1))
 
-                    # np.set_printoptions(precision=5)
-                    # print(_h, _w, sum(pred[_b, :2, _h+1, _w+1]-y_nn[_b, :2, _h+1, _w+1]).item(), np.round(pred[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist(), np.round(y_nn[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist())
-
                     _w += batch_w
                 _h += batch_h
             _b += batch_b
-        # bp()
-        # print(y_nn.mean(), demo_ys.mean())
-        # return y_nn
+
         mask = (stds_nn < stds_nn.mean()).astype(paddle.float32)  # TODO:
         return mask * y_nn + (1 - mask) * pred0
 
@@ -422,15 +399,11 @@ class FNN2d_FewShot_Baseline(nn.Layer):
             modes1, modes2, width, layers, in_dim, dropout, activation
         )
         self.dropout = nn.Dropout(p=dropout)
-        #########################
         self.num_heads = 8
         self.fc1 = nn.Linear(
             layers[-1] * (n_demos + 1) + out_dim * n_demos * self.num_heads, fc_dim
         )
-        self.fc2 = nn.Linear(
-            fc_dim, out_dim
-        )  # TODO compare fc_dim vs out_dim*n_demos*self.num_heads (demo's solutions)
-        #########################
+        self.fc2 = nn.Linear(fc_dim, out_dim)
         self.activation = _get_act(activation)
         self.mean_constraint = mean_constraint
         self.n_demos = n_demos
@@ -456,7 +429,6 @@ class FNN2d_FewShot_Baseline(nn.Layer):
         query_features = self.backbone(query_x).transpose(
             [0, 2, 3, 1]
         )  # B, C_fno, H, W
-        # B, J*C, H, W = demo_X.shape()
         demo_features = (
             self.backbone(demo_X.view([B, J, C, H, W]).view([B * J, C, H, W]))
             .view([B, J * self.C_fno, H, W])
@@ -500,7 +472,6 @@ class FNN2d_FewShot_Baseline(nn.Layer):
 
 # https://github.com/facebookresearch/deit/blob/main/models_v2.py#L42
 class TransformerBlock(nn.Layer):
-    # taken from https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
     def __init__(
         self,
         dim,
@@ -526,7 +497,7 @@ class TransformerBlock(nn.Layer):
             add_bias_kv=qkv_bias,
             batch_first=True,
         )
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        # self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp_block(
@@ -708,7 +679,6 @@ class FNN2d_FewShot_Spatial(nn.Layer):
             ],
             axis=0,
         )
-        # query_demo_features_down = torch.concat([query_features_down.unsqueeze(1), demo_features_down], dim=1)
         # TODO: chunk Xs into windows
         # windows = window_partition(query_demo_features_down, self.win_s) # B, J+1, n_win*n_win, C, win_s, win_s
         # n_win = int(windows.shape[2] ** 0.5)

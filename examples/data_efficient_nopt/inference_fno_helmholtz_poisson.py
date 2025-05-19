@@ -11,16 +11,11 @@ import numpy as np
 import paddle
 import paddle.distributed as dist
 import yaml
-
-# from utils.data_utils import get_data_loader
 from data_utils.pois_helm_datasets import get_data_loader
 from models.fno import build_fno
 from pretrain_basic import l2_err
 from scipy.stats import linregress
 from tqdm import tqdm
-
-# from utils.loss_utils import LossMSE
-# from utils.YParams import YParams
 
 
 @paddle.no_grad()
@@ -166,16 +161,11 @@ def get_pred(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, default="config/inference_helmholtz.yaml")
-    # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/p/puren93/neuralopt/expts/helm-64-o5_15_ft0/all_mask_m6/checkpoints/ckpt.tar')
     parser.add_argument(
         "--ckpt_path",
         type=str,
         default="/pscratch/sd/j/jsong/deff_archive/neuraloperators-foundation_/expts/helm-64-o5_15_ft0/b012_m6/checkpoints/ckpt.tar",
     )
-    # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/j/jsong/deff_archive/neuraloperators-foundation_/expts/helm-64-o5_15_ft0/b01_m6/checkpoints/ckpt.tar')
-    # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/j/jsong/neuraloperators-foundation/expts/pois-64-e5_15_ft9/b01_m0/checkpoints/ckpt.tar') # [X]
-    # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/j/jsong/deff_archive/neuraloperators-foundation_/expts/pois-64-e5_15_ft9/b01_m0_/checkpoints/ckpt.tar')
-    # parser.add_argument('--ckpt_path', type=str, default='/pscratch/sd/j/jsong/deff_archive/neuraloperators-foundation_/expts/pois-64-e5_15_ft9/b01_m0_r0/checkpoints/ckpt.tar')
     parser.add_argument("--num_demos", type=int, default=None)
     parser.add_argument(
         "--tqdm", action="store_true", default=False, help="Turn on the tqdm"

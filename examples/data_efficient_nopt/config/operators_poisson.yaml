@@ -78,11 +78,11 @@ poisson: &poisson
 
 poisson-64-scale-e5_15: &poisson_64_e5_15
   <<: *poisson
-  train_path:  '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train.h5'
-  val_path:    '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_val.h5'
-  test_path:   '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_test.h5'
-  scales_path: '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train_scale.npy'
-  train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
+  train_path:  'data/possion_64/poisson_64_e5_15_train.h5'
+  val_path:    'data/possion_64/poisson_64_e5_15_val.h5'
+  test_path:   'data/possion_64/poisson_64_e5_15_test.h5'
+  scales_path: 'data/possion_64/poisson_64_e5_15_train_scale.npy'
+  train_rand_idx_path: 'data/possion_64/train_rand_idx.npy'
   batch_size: 128
   log_to_wandb: !!bool False
   learning_rate: 1E-3
@@ -101,11 +101,11 @@ poisson-64-scale-e5_15: &poisson_64_e5_15
 
 pois-64-pretrain-e1_20: &pois_64_e1_20_pt
   <<: *poisson
-  train_path:   '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e1_20_train.h5'
-  val_path:     '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e1_20_val.h5'
-  test_path:    '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e1_20_test.h5'
-  scales_path:  '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e1_20_train_scale.npy'
-  train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
+  train_path:   'data/possion_64/poisson_64_e1_20_train.h5'
+  val_path:     'data/possion_64/poisson_64_e1_20_val.h5'
+  test_path:    'data/possion_64/poisson_64_e1_20_test.h5'
+  scales_path:  'data/possion_64/poisson_64_e1_20_train_scale.npy'
+  train_rand_idx_path: 'data/possion_64/train_rand_idx.npy'
   batch_size: 128
   log_to_wandb: !!bool False
   mode_cut: 32
@@ -122,11 +122,11 @@ pois-64-pretrain-e1_20: &pois_64_e1_20_pt
 
 pois-64-finetune-e5_15: &pois_64_e5_15_ft
   <<: *poisson
-  train_path:   '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train.h5'
-  val_path:     '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_val.h5'
-  test_path:    '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_test.h5'
-  scales_path:  '/home/aistudio/data_efficient_nopt/data/possion_64/poisson_64_e5_15_train_scale.npy'
-  train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/possion_64/train_rand_idx.npy'
+  train_path:   'data/possion_64/poisson_64_e5_15_train.h5'
+  val_path:     'data/possion_64/poisson_64_e5_15_val.h5'
+  test_path:    'data/possion_64/poisson_64_e5_15_test.h5'
+  scales_path:  'data/possion_64/poisson_64_e5_15_train_scale.npy'
+  train_rand_idx_path: 'data/possion_64/train_rand_idx.npy'
   batch_size: 128
   log_to_wandb: !!bool False
   mode_cut: 32

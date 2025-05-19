@@ -1,13 +1,7 @@
 """
   loss functions
 # """
-# import logging
-# import time
-
-# import numpy as np
 import paddle
-
-# import torchvision
 
 
 class LossMSE:

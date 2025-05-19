@@ -303,11 +303,6 @@ def PDELoss(model, x, t, nu):
 
 
 def get_forcing(S):
-    # x1 = (
-    #     torch.tensor(np.linspace(0, 2 * np.pi, S, endpoint=False), dtype=torch.float)
-    #     .reshape(S, 1)
-    #     .repeat(1, S)
-    # )
     x2 = (
         paddle.to_tensor(
             np.linspace(0, 2 * np.pi, S, endpoint=False), dtype=paddle.float32

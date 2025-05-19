@@ -1,42 +1,25 @@
 import argparse
 import gc
-
-# import logging
 import os
-
-# import pickle as pkl
 import random
 import time
-
-# from adan_pytorch import Adan
 from collections import OrderedDict
 
-# import numpy as np
 import paddle
 import paddle.amp as amp
 import paddle.distributed as dist
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-from dadaptation import DAdaptAdam
-
-# from dadaptation import DAdaptAdan
 from einops import rearrange
 from models.fno import fno_pretrain
 from models.gaussian_blur import gaussian_blur
 from models.vmae import build_vmae
-
-# from paddle import DataParallel
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap as ruamelDict
 from utils import logging_utils
-
-# from utils.load_ckpt_utils import load_ckpt
 from utils.YParams import YParams
 from visualdl import LogWriter
-
-# from collections import defaultdict
-# from pdb import set_trace as bp
 
 
 def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
@@ -230,23 +213,10 @@ class Trainer:
             self.model, self.params.weight_decay
         )  # Dont use weight decay on bias/scaling terms
         if params.optimizer == "adam":
-            if self.params.learning_rate < 0:
-                self.optimizer = DAdaptAdam(
-                    parameters,
-                    learning_rate=1.0,
-                    growth_rate=1.05,
-                    log_every=100,
-                    decouple=True,
-                )
-            else:
-                self.optimizer = optim.AdamW(
-                    parameters=parameters, learning_rate=params.learning_rate
-                )
+            self.optimizer = optim.AdamW(
+                parameters=parameters, learning_rate=params.learning_rate
+            )
         elif params.optimizer == "adan":
-            # if self.params.learning_rate < 0:
-            #     self.optimizer =  DAdaptAdan(parameters, learning_rate=1., growth_rate=1.05, log_every=100)
-            # else:
-            #     self.optimizer = Adan(parameters, learning_rate=params.learning_rate)
             raise NotImplementedError("Adan not implemented yet")
         elif params.optimizer == "sgd":
             self.optimizer = optim.SGD(
@@ -267,12 +237,6 @@ class Trainer:
             sched_epochs = params.max_epochs
         if params.scheduler == "cosine":
             if self.params.learning_rate < 0:
-                # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                #     self.optimizer,
-                #     last_epoch=(self.startEpoch * params.epoch_size) - 1,
-                #     T_max=sched_epochs * params.epoch_size,
-                #     eta_min=params.learning_rate / 100,
-                # )
                 self.scheduler = paddle.optimizer.lr.CosineAnnealingDecay(
                     learning_rate=self.optimizer.get_lr(),
                     last_epoch=(self.startEpoch * params.epoch_size) - 1,
@@ -283,9 +247,6 @@ class Trainer:
             else:
                 k = params.warmup_steps
                 if (self.startEpoch * params.epoch_size) < k:
-                    # warmup = torch.optim.lr_scheduler.LinearLR(
-                    #     self.optimizer, start_factor=0.01, end_factor=1.0, total_iters=k
-                    # )
                     warmup = paddle.optimizer.lr.LinearLR(
                         learning_rate=self.optimizer.get_lr(),
                         start_factor=0.01,
@@ -293,11 +254,6 @@ class Trainer:
                         total_iters=k,
                     )
                     self.optimizer.set_lr_scheduler(warmup)
-                    # decay = torch.optim.lr_scheduler.CosineAnnealingLR(
-                    #     self.optimizer,
-                    #     eta_min=params.learning_rate / 100,
-                    #     T_max=sched_epochs,
-                    # )
                     decay = paddle.optimizer.lr.CosineAnnealingDecay(
                         learning_rate=self.optimizer.get_lr(),
                         eta_min=params.learning_rate / 100,
@@ -305,31 +261,13 @@ class Trainer:
                     )
                     self.optimizer.set_lr_scheduler(decay)
 
-                    # [TODO] how to set the scheduler for paddle
                     raise NotImplementedError("Scheduler not implemented yet")
-                    # self.scheduler = torch.optim.lr_scheduler.SequentialLR(
-                    #     self.optimizer,
-                    #     [warmup, decay],
-                    #     [k],
-                    #     last_epoch=(params.epoch_size * self.startEpoch) - 1,
-                    # )
                 else:
-                    # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                    #     self.optimizer, T_max=sched_epochs
-                    # )
                     self.scheduler = paddle.optimizer.lr.CosineAnnealingDecay(
                         learning_rate=self.optimizer.get_lr(), T_max=sched_epochs
                     )
                     self.optimizer.set_lr_scheduler(self.scheduler)
         elif params.scheduler == "reducelr":
-            # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            #     self.optimizer,
-            #     "min",
-            #     patience=params.patience,
-            #     verbose=True,
-            #     min_lr=1e-3 * 1e-5,
-            #     factor=0.2,
-            # )
             self.scheduler = paddle.optimizer.lr.ReduceOnPlateau(
                 learning_rate=self.optimizer.get_lr(),
                 mode="min",

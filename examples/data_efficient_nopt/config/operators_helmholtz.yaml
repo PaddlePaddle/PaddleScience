@@ -78,11 +78,10 @@ helmholtz: &helmholtz
 
 helm-64-scale-o5_15: &helm_64_o5_15
   <<: *helmholtz
-  train_path:   '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
-  val_path:     '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
-  test_path:    '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
-  scales_path:  '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
-  # train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/old_gen/train_rand_idx.npy'
+  train_path:   'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
+  val_path:     'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
+  test_path:    'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
+  scales_path:  'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
   batch_size: 128
   in_dim: 3
   out_dim: 1
@@ -101,11 +100,11 @@ helm-64-scale-o5_15: &helm_64_o5_15
 
 helm-64-pretrain-o1_20: &helm_64_o1_20_pt
   <<: *helmholtz
-  train_path:   '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train.h5'
-  val_path:     '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_val.h5'
-  test_path:    '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_test.h5'
-  scales_path:  '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train_scale.npy'
-  train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/train_rand_idx.npy'
+  train_path:   'data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train.h5'
+  val_path:     'data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_val.h5'
+  test_path:    'data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_test.h5'
+  scales_path:  'data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train_scale.npy'
+  train_rand_idx_path: 'data_efficient_nopt/data/helmholtz_64/helmholtz_64/train_rand_idx.npy'
   batch_size: 128
   in_dim: 3
   out_dim: 1
@@ -128,11 +127,11 @@ helm-64-pretrain-o1_20_ft: &helm_64_o1_20_ft
 
 helm-64-finetune-o5_15: &helm_64_o5_15_ft
   <<: *helmholtz
-  train_path:   '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
-  val_path:     '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
-  test_path:    '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
-  scales_path:  '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
-  train_rand_idx_path: '/home/aistudio/data_efficient_nopt/data/helmholtz_64/helmholtz_64/train_rand_idx.npy'
+  train_path:   'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
+  val_path:     'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
+  test_path:    'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
+  scales_path:  'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
+  train_rand_idx_path: 'data/helmholtz_64/helmholtz_64/train_rand_idx.npy'
   batch_size: 128
   in_dim: 3  #normal helmholtz has 3 dim, joint has 4
   out_dim: 1

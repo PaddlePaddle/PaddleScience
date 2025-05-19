@@ -1,4 +1,3 @@
-# import math
 from collections import OrderedDict
 from functools import partial
 
@@ -7,12 +6,15 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 from einops import rearrange
-from timm.models.layers import drop_path
-from timm.models.layers import to_2tuple
-from timm.models.layers import trunc_normal_
-from timm.models.layers import trunc_normal_ as __call_trunc_normal_
 
-# from timm.models.registry import register_model
+try:
+    from timm.models.layers import drop_path
+    from timm.models.layers import to_2tuple
+    from timm.models.layers import trunc_normal_
+    from timm.models.layers import trunc_normal_ as __call_trunc_normal_
+except ImportError:
+    pass
+
 from tqdm import tqdm
 from utils.eval import LossGenerator
 
@@ -802,15 +804,6 @@ class PretrainVisionTransformer(nn.Layer):
                     index = paddle.argsort(paddle.abs(gap_re), -1)[
                         :, :, :, :topk
                     ]  # TODO: spatial index of ascending sort by pred gap
-                    # index1 = paddle.argsort(paddle.abs(gap_re), -1)[
-                    #     :, :, :, :topk1
-                    # ]  # TODO: spatial index of ascending sort by pred gap
-
-                    # div_flat = div[_b:_b+batch_b, :, _h:_h+batch_h, _w:_w+batch_w].view(-1, 1)
-                    # gap_div = (div_flat - demo_div_flat).pow(2) / div_flat.pow(2)
-                    # gap_re_div = torch.take_along_dim(gap_div, index1.view(__b*__h*__w, -1), dim=1).view(__b, __h, __w, -1)
-                    # index = torch.take_along_dim(index1.view(__b*__h*__w, -1), torch.argsort(torch.abs(gap_re_div), -1)[:, :, :, :topk].view(__b*__h*__w, -1), dim=-1).view(__b, __h, __w, -1)
-
                     _y_nn = 0
                     for _k in range(topk):
                         _y_nn += (

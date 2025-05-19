@@ -54,6 +54,7 @@ nav:
         - NeuralOperator: zh/examples/neuraloperator.md
         - Brusselator3D: zh/examples/brusselator3d.md
         - Transformer4SR: zh/examples/transformer4sr.md
+        - DataEffcientNopt: zh/examples/data_efficient_nopt.md
       - 技术科学(AI for Technology):
         - 流体:
           - Catheter: zh/examples/catheter.md
