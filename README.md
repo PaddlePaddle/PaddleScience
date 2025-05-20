@@ -98,6 +98,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_exchanger) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
 | 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_pinn) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
 | 热仿真 | [2D 芯片热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/chip_heat) | 机理驱动 | PI-DeepONet | 无监督学习 | - | [Paper](https://doi.org/10.1063/5.0194245)|
+| 外流空气动力学 | [DoMINO](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/domino) | 数据驱动 | FNO | 监督学习 | [Data](https://caemldatasets.org/drivaerml/) | [Paper](https://arxiv.org/abs/2501.13350)|
 
 <br>
 <p align="center"><b>材料科学(AI for Material)</b></p>

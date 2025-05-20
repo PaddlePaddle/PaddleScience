@@ -1,4 +1,6 @@
 hydra-core
 importlib_metadata
 pyvista==0.34.2
+termcolor
+treelib
 warp-lang
