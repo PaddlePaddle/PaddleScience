@@ -952,8 +952,7 @@ best_value: 0.02460772916674614
 
     ``` sh
     # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    export CUDA_VISIBLE_DEVICES=0,1,2,3
-    python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
+    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch poiseuille_flow.py
     ```
 
 <!-- #### 2.2.2 模型并行
@@ -1079,6 +1078,53 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     2. 开启 SWA 功能
     3. 设置平均间隔为 1 个 epoch
     4. 设置平均的起始和终止 epoch 为 75 至 100
+
+### 2.7 回调(callback)注册与调用指南
+
+在深度学习模型的训练过程中，能够在特定的时机执行自定义逻辑是非常有用的。PaddleScience 的 `Solver` 类提供了一种相对灵活的机制，允许用户在**训练的不同阶段**注册和调用回调函数。
+
+具体地，我们提供了如下四种注册回调函数的接口：
+
+``` py
+Solver.register_callback_on_epoch_begin # 在每个 epoch 开始时调用
+Solver.register_callback_on_epoch_end # 在每个 epoch 结束时调用
+Solver.register_callback_on_iter_begin # 在每个 iteration 开始时调用
+Solver.register_callback_on_iter_end # 在每个 iteration 结束时调用
+```
+
+它们在训练过程中的调用时机如下示例所示：
+
+``` py hl_lines="3 6 8 10"
+for epoch_id in range(1, num_epochs + 1):
+    # train one epoch...
+    _invoke_callbacks_on_epoch_begin() # 此处按注册顺序, 自动调用通过 register_callback_on_epoch_begin 注册的回调函数
+
+    for iter_id in range(1, num_iters + 1)
+        _invoke_callbacks_on_iter_begin() # 此处按注册顺序, 自动调用通过 register_callback_on_iter_begin 注册的回调函数
+        # train one iteration...
+        _invoke_callbacks_on_iter_end() # 此处按注册顺序, 自动调用通过 register_callback_on_iter_end 注册的回调函数
+
+    _invoke_callbacks_on_epoch_end() # 此处按注册顺序, 自动调用通过 register_callback_on_epoch_end 注册的回调函数
+```
+
+以 `examples/fsi/viv.py` 为例，假设希望在训练时，每隔 100 个 epoch 打印出方程中的可学习参数 `k1`, `k2`，那么可以按照如下示例代码，添加回调函数：
+
+``` py hl_lines="11 12 13 14 15"
+# initialize solver
+solver = ppsci.solver.Solver(
+    model,
+    constraint,
+    optimizer=optimizer,
+    equation=equation,
+    validator=validator,
+    visualizer=visualizer,
+    cfg=cfg,
+)
+def show_learnable_params(slv):
+    if slv.global_step % 100 == 0:
+        ppsci.utils.logger.message(f"{equation['VIV'].k1.item():.5f}, {equation['VIV'].k2.item():.5f}")
+solver.register_callback_on_iter_begin(show_learnable_params)
+```
 
 ## 3. 使用 Nsight 进行性能分析
 
