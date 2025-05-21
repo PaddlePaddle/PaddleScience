@@ -115,9 +115,9 @@ examples/wgangp/functions.py:167:177
 其中`data_path`传入的是CIFAR-10的路径。
 
 下面给出dataloader的配置代码：
-``` py linenums="112"
+``` py linenums="108"
 --8<--
-examples/wgangp/wgangp_cifar10.py:112:126
+examples/wgangp/wgangp_cifar10.py:108:122
 --8<--
 ```
 
@@ -161,7 +161,7 @@ examples/wgangp/wgangp_toy.py:94:107
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:96:98
+examples/wgangp/wgangp_cifar10.py:92:93
 examples/wgangp/wgangp_mnist.py:87:88
 examples/wgangp/wgangp_toy.py:80:81
 --8<--
@@ -236,7 +236,7 @@ examples/wgangp/functions.py:256:292
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:129:145
+examples/wgangp/wgangp_cifar10.py:124:141
 examples/wgangp/wgangp_mnist.py:117:132
 examples/wgangp/wgangp_toy.py:110:125
 --8<--
@@ -248,8 +248,8 @@ WGANGP使用Adam优化器，可直接调用`ppsci.optimizer.Adam`构建，代码
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:148:162
-examples/wgangp/wgangp_mnist.py:134:137
+examples/wgangp/wgangp_cifar10.py:144:158
+examples/wgangp/wgangp_mnist.py:135:137
 examples/wgangp/wgangp_toy.py:128:131
 --8<--
 ```
@@ -260,7 +260,7 @@ examples/wgangp/wgangp_toy.py:128:131
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:164:182
+examples/wgangp/wgangp_cifar10.py:161:178
 examples/wgangp/wgangp_mnist.py:139:157
 examples/wgangp/wgangp_toy.py:134:151
 --8<--
@@ -270,7 +270,7 @@ examples/wgangp/wgangp_toy.py:134:151
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:185:190
+examples/wgangp/wgangp_cifar10.py:181:186
 examples/wgangp/wgangp_mnist.py:160:165
 examples/wgangp/wgangp_toy.py:154:159
 --8<--
@@ -303,7 +303,7 @@ examples/wgangp/functions.py:389:391
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:53:70
+examples/wgangp/wgangp_cifar10.py:53:62
 examples/wgangp/wgangp_mnist.py:46:54
 examples/wgangp/wgangp_toy.py:46:52
 --8<--
@@ -327,7 +327,7 @@ examples/wgangp/wgangp_toy.py:55:63
 
 ``` py
 --8<--
-examples/wgangp/wgangp_cifar10.py:76:92
+examples/wgangp/wgangp_cifar10.py:76:87
 examples/wgangp/wgangp_mnist.py:67:83
 examples/wgangp/wgangp_toy.py:65:75
 --8<--
