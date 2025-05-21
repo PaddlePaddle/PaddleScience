@@ -10,7 +10,7 @@
     ``` sh
     # 设置路径到 PaddleScience/jointContribution 文件夹
     cd PaddleScience/jointContribution
-    export PYTHONPATH=$PWD:$PYTHONPAT
+    export PYTHONPATH=$PWD:$PYTHONPATH
     # 运行训练脚本
     python run_gencast.py mode=train
     ```
@@ -20,7 +20,7 @@
     ``` sh
     # 设置路径到 PaddleScience/jointContribution 文件夹
     cd PaddleScience/jointContribution
-    export PYTHONPATH=$PWD:$PYTHONPAT
+    export PYTHONPATH=$PWD:$PYTHONPATH
     # 下载模型参数
     cd gencast/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/

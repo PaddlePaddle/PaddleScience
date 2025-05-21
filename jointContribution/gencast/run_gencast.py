@@ -28,7 +28,7 @@ from omegaconf import DictConfig
 
 class CustomDataLoader(paddle.io.Dataset):
     def __init__(self, target_lead_times, cfg):
-        super(CustomDataLoader, self).__init__()
+        super().__init__()
 
         self.target_lead_times = target_lead_times
         self.cfg = cfg
