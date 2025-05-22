@@ -96,7 +96,6 @@ TRAIN:
 
 #### 1.1.3 自动化运行实验
 
-
     如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
 
     假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
