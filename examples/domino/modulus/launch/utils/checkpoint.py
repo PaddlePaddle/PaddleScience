@@ -67,7 +67,7 @@ def _get_checkpoint_filename(
     saving : bool, optional
         Get filename for saving a new checkpoint, by default False
     model_type : str
-        Model type, by default "mdlus" for Modulus models and "pdparams" for PyTorch models
+        Model type, by default "mdlus" for Modulus models and "pdparams" for models
 
 
     Returns
@@ -296,7 +296,7 @@ def load_checkpoint(
     path : str
         Path to training checkpoint
     models : Union[paddle.nn.Layer, List[paddle.nn.Layer], None], optional
-        A single or list of PyTorch models, by default None
+        A single or list of models, by default None
     optimizer : Union[optimizer, None], optional
         Optimizer, by default None
     scheduler : Union[scheduler, None], optional

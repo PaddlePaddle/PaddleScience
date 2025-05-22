@@ -26,8 +26,6 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-import torch
-import torch.cuda.profiler as profiler
 from modulus.distributed import DistributedManager
 from modulus.distributed import reduce_loss
 
@@ -97,14 +95,7 @@ class LaunchLogger(object):
         if DistributedManager.is_initialized():
             self.root = DistributedManager().rank == 0
         # Profiler utils
-        if torch.cuda.is_available():
-            self.profiler = torch.autograd.profiler.emit_nvtx(
-                enabled=cls.enable_profiling
-            )
-            self.start_event = torch.cuda.Event(enable_timing=True)
-            self.end_event = torch.cuda.Event(enable_timing=True)
-        else:
-            self.profiler = None
+        self.profiler = None
 
         return self
 
@@ -203,13 +194,9 @@ class LaunchLogger(object):
         if self.profile and self.profiler:
             self.logger.warning(f"Starting profile for epoch {self.epoch}")
             self.profiler.__enter__()
-            profiler.start()
 
         # Timing stuff
-        if torch.cuda.is_available():
-            self.start_event.record()
-        else:
-            self.start_event = time.time()
+        self.start_event = time.time()
 
         if self.mlflow_backend:
             self.mlflow_client.update_run(self.mlflow_run.info.run_id, "RUNNING")
@@ -250,18 +237,10 @@ class LaunchLogger(object):
         if self.profile and self.profiler:
             self.logger.warning("Ending profile")
             self.profiler.__exit__()
-            profiler.end()
 
         # Timing stuff, TODO: histograms not line plots
-        if torch.cuda.is_available():
-            self.end_event.record()
-            torch.cuda.synchronize()
-            # Returns milliseconds
-            # https://pytorch.org/docs/stable/generated/torch.cuda.Event.html#torch.cuda.Event.elapsed_time
-            epoch_time = self.start_event.elapsed_time(self.end_event) / 1000.0
-        else:
-            end_event = time.time()
-            epoch_time = end_event - self.start_event
+        end_event = time.time()
+        epoch_time = end_event - self.start_event
 
         # Return MS for time / iter
         time_per_iter = 1000 * epoch_time / max([1, self.mini_batch_index])

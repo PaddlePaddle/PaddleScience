@@ -172,7 +172,6 @@ class GeoConvOut(nn.Layer):
 
         # paddle does not support multiplication with boolean tensors,
         # so we convert the mask to float
-        # x = torch.sum(x * mask, 2)
         x = paddle.sum(x * mask.to(dtype=x.dtype), 2)
 
         x = paddle.reshape(x, (batch_size, x.shape[-1], nx, ny, nz))
@@ -440,23 +439,6 @@ class AggregationModel(nn.Layer):
         return out
 
 
-# @dataclass
-# class MetaData(ModelMetaData):
-#     name: str = "DoMINO"
-#     # Optimization
-#     jit: bool = False
-#     cuda_graphs: bool = True
-#     amp: bool = True
-#     # Inference
-#     onnx_cpu: bool = True
-#     onnx_gpu: bool = True
-#     onnx_runtime: bool = True
-#     # Physics informed
-#     var_dim: int = 1
-#     func_torch: bool = False
-#     auto_grad: bool = False
-
-
 class DoMINO(nn.Layer):
     """DoMINO model architecture
     Parameters
@@ -473,10 +455,9 @@ class DoMINO(nn.Layer):
     Example
     -------
     >>> from modulus.models.domino.model import DoMINO
-    >>> import torch, os
+    >>> import os
     >>> from hydra import compose, initialize
     >>> from omegaconf import OmegaConf
-    >>> device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     >>> cfg = OmegaConf.register_new_resolver("eval", eval)
     >>> with initialize(version_base="1.3", config_path="examples/cfd/external_aerodynamics/domino/src/conf"):
     ...    cfg = compose(config_name="config")
@@ -537,7 +518,6 @@ class DoMINO(nn.Layer):
     >>> output = model(input_dict)
     Module ...
     >>> print(f"{output[0].shape}, {output[1].shape}")
-    torch.Size([1, 100, 5]), torch.Size([1, 100, 4])
     """
 
     def __init__(
@@ -726,9 +706,6 @@ class DoMINO(nn.Layer):
             [batch_size, volume_mesh_centers.shape[1], geo_encoding_long.shape[2]]
         )
 
-        # geo_encoding_sampled = torch.gather(geo_encoding, 2, mapping) * mask
-        # sdf_encoding_sampled = torch.gather(sdf_encoding, 2, mapping) * mask
-        # geo_encoding_long_sampled = torch.gather(geo_encoding_long, 2, mapping) * mask
         geo_encoding_sampled = paddle.take_along_axis(
             geo_encoding, axis=2, indices=mapping
         ) * mask.to(dtype=geo_encoding.dtype)
@@ -778,9 +755,6 @@ class DoMINO(nn.Layer):
             [batch_size, volume_mesh_centers.shape[1], geo_encoding_long.shape[2]]
         )
 
-        # geo_encoding_sampled = torch.gather(geo_encoding, 2, mapping) * mask
-        # sdf_encoding_sampled = torch.gather(sdf_encoding, 2, mapping) * mask
-        # geo_encoding_long_sampled = torch.gather(geo_encoding_long, 2, mapping) * mask
         geo_encoding_sampled = paddle.take_along_axis(
             geo_encoding, axis=2, indices=mapping
         ) * mask.to(dtype=geo_encoding.dtype)

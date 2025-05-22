@@ -200,7 +200,7 @@ class DistributedManager(object):
 
     @property
     def broadcast_buffers(self):
-        """broadcast_buffers in PyTorch DDP"""
+        """broadcast_buffers in DDP"""
         return self._broadcast_buffers
 
     @broadcast_buffers.setter
@@ -210,7 +210,7 @@ class DistributedManager(object):
 
     @property
     def find_unused_parameters(self):
-        """find_unused_parameters in PyTorch DDP"""
+        """find_unused_parameters in DDP"""
         return self._find_unused_parameters
 
     @find_unused_parameters.setter
@@ -315,8 +315,7 @@ class DistributedManager(object):
         Initialize distributed manager
 
         Current supported initialization methods are:
-            `ENV`: PyTorch environment variable initialization
-                 https://pytorch.org/docs/stable/distributed.html#environment-variable-initialization
+            `ENV`: Environment variable initialization
             `SLURM`: Initialization on SLURM systems.
                    Uses `SLURM_PROCID`, `SLURM_NPROCS`, `SLURM_LOCALID` and
                    `SLURM_LAUNCH_NODE_IPADDR` environment variables.
@@ -335,7 +334,6 @@ class DistributedManager(object):
 
         addr = os.getenv("MASTER_ADDR", "localhost")
         port = os.getenv("MASTER_PORT", "12355")
-        # https://pytorch.org/docs/master/notes/cuda.html#id5
         os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "0"
         initialization_method = os.getenv("MODULUS_DISTRIBUTED_INITIALIZATION_METHOD")
         if initialization_method is None:
@@ -379,7 +377,7 @@ class DistributedManager(object):
         backend="nccl",
         method="env",
     ):
-        """Set up PyTorch distributed process group and update manager attributes"""
+        """Set up distributed process group and update manager attributes"""
         os.environ["MASTER_ADDR"] = addr
         os.environ["MASTER_PORT"] = str(port)
 
@@ -443,7 +441,7 @@ class DistributedManager(object):
             raise AssertionError(
                 "paddle.distributed is unavailable. "
                 "Check paddle build to ensure the distributed package is available. "
-                "If building PyTorch from source, set `USE_DISTRIBUTED=1` "
+                "If building from source, set `USE_DISTRIBUTED=1` "
                 "to enable the distributed package"
             )
 
@@ -513,7 +511,7 @@ class DistributedManager(object):
             raise AssertionError(
                 "paddle.distributed is unavailable. "
                 "Check paddle build to ensure the distributed package is available. "
-                "If building PyTorch from source, set `USE_DISTRIBUTED=1` "
+                "If building from source, set `USE_DISTRIBUTED=1` "
                 "to enable the distributed package"
             )
 

@@ -802,9 +802,6 @@ def main(cfg: DictConfig) -> None:
         output_features_surf=num_surf_vars,
         model_parameters=cfg.model,
     )
-    # model = torch.compile(model, disable=True)  # TODO make this configurable
-
-    # Print model summary (structure and parmeter count).
 
     if dist.world_size > 1:
         model = DataParallel(
