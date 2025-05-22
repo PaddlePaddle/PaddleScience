@@ -37,8 +37,8 @@ from paddle.io import Dataset
 
 from ...utils.domino.utils import KDTree
 from ...utils.domino.utils import area_weighted_shuffle_array
+from ...utils.domino.utils import cal_normal_positional_encoding
 from ...utils.domino.utils import calculate_center_of_mass
-from ...utils.domino.utils import calculate_normal_positional_encoding
 from ...utils.domino.utils import create_grid
 from ...utils.domino.utils import get_filenames
 from ...utils.domino.utils import normalize
@@ -276,12 +276,12 @@ class DoMINODataPipe(Dataset):
                 sdf_node_closest_point = sdf_node_closest_point.numpy()
 
                 if self.positional_encoding:
-                    pos_normals_closest_vol = calculate_normal_positional_encoding(
+                    pos_normals_closest_vol = cal_normal_positional_encoding(
                         volume_coordinates,
                         sdf_node_closest_point,
                         cell_length=[dx, dy, dz],
                     )
-                    pos_normals_com_vol = calculate_normal_positional_encoding(
+                    pos_normals_com_vol = cal_normal_positional_encoding(
                         volume_coordinates, center_of_mass, cell_length=[dx, dy, dz]
                     )
                 else:
@@ -377,7 +377,7 @@ class DoMINODataPipe(Dataset):
                 )
 
                 if self.positional_encoding:
-                    pos_normals_com_surface = calculate_normal_positional_encoding(
+                    pos_normals_com_surface = cal_normal_positional_encoding(
                         surface_coordinates, center_of_mass, cell_length=[dx, dy, dz]
                     )
                 else:

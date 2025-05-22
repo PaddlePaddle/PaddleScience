@@ -35,26 +35,27 @@ import paddle
 import pyvista as pv
 import vtk
 from hydra.utils import to_absolute_path
-from modulus.distributed import DistributedManager
-from modulus.models.model import DoMINO
-from modulus.utils.domino.utils import KDTree
-from modulus.utils.domino.utils import calculate_center_of_mass
-from modulus.utils.domino.utils import calculate_normal_positional_encoding
-from modulus.utils.domino.utils import create_directory
-from modulus.utils.domino.utils import create_grid
-from modulus.utils.domino.utils import get_fields
-from modulus.utils.domino.utils import get_filenames
-from modulus.utils.domino.utils import get_node_to_elem
-from modulus.utils.domino.utils import get_volume_data
-from modulus.utils.domino.utils import normalize
-from modulus.utils.domino.utils import unnormalize
-from modulus.utils.domino.utils import write_to_vtp
-from modulus.utils.domino.utils import write_to_vtu
-from modulus.utils.sdf import signed_distance_field
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 from paddle import DataParallel
 from vtk.util import numpy_support
+
+from ppsci.arch.physicsnemo.distributed import DistributedManager
+from ppsci.arch.physicsnemo.models.model import DoMINO
+from ppsci.arch.physicsnemo.utils.domino.utils import KDTree
+from ppsci.arch.physicsnemo.utils.domino.utils import cal_normal_positional_encoding
+from ppsci.arch.physicsnemo.utils.domino.utils import calculate_center_of_mass
+from ppsci.arch.physicsnemo.utils.domino.utils import create_directory
+from ppsci.arch.physicsnemo.utils.domino.utils import create_grid
+from ppsci.arch.physicsnemo.utils.domino.utils import get_fields
+from ppsci.arch.physicsnemo.utils.domino.utils import get_filenames
+from ppsci.arch.physicsnemo.utils.domino.utils import get_node_to_elem
+from ppsci.arch.physicsnemo.utils.domino.utils import get_volume_data
+from ppsci.arch.physicsnemo.utils.domino.utils import normalize
+from ppsci.arch.physicsnemo.utils.domino.utils import unnormalize
+from ppsci.arch.physicsnemo.utils.domino.utils import write_to_vtp
+from ppsci.arch.physicsnemo.utils.domino.utils import write_to_vtu
+from ppsci.arch.physicsnemo.utils.sdf import signed_distance_field
 
 AIR_DENSITY = 1.205
 STREAM_VELOCITY = 30.00
@@ -484,7 +485,7 @@ def main(cfg: DictConfig):
             )
 
             if cfg.model.positional_encoding:
-                pos_surface_center_of_mass = calculate_normal_positional_encoding(
+                pos_surface_center_of_mass = cal_normal_positional_encoding(
                     surface_coordinates, center_of_mass, cell_length=[dx, dy, dz]
                 )
             else:
@@ -562,10 +563,10 @@ def main(cfg: DictConfig):
             sdf_node_closest_point = sdf_node_closest_point.numpy()
 
             if cfg.model.positional_encoding:
-                pos_volume_closest = calculate_normal_positional_encoding(
+                pos_volume_closest = cal_normal_positional_encoding(
                     volume_coordinates, sdf_node_closest_point, cell_length=[dx, dy, dz]
                 )
-                pos_volume_center_of_mass = calculate_normal_positional_encoding(
+                pos_volume_center_of_mass = cal_normal_positional_encoding(
                     volume_coordinates, center_of_mass, cell_length=[dx, dy, dz]
                 )
             else:

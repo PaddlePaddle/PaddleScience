@@ -29,7 +29,6 @@ specify batch size, number of epochs and other training parameters.
 
 import os
 import re
-import sys
 import time
 
 import hydra
@@ -44,16 +43,13 @@ from paddle.amp import auto_cast
 from paddle.io import DataLoader
 from paddle.io import DistributedBatchSampler
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-from modulus.datapipes.cae.domino_datapipe import DoMINODataPipe  # noqa: E402
-from modulus.distributed import DistributedManager  # noqa: E402
-from modulus.launch.utils import load_checkpoint  # noqa: E402
-from modulus.launch.utils import save_checkpoint  # noqa: E402
-from modulus.models.model import DoMINO  # noqa: E402
-from modulus.utils.domino.utils import create_directory  # noqa: E402
-from modulus.utils.domino.utils import mean_std_sampling  # noqa: E402
+from ppsci.arch.physicsnemo.datapipes.cae.domino_datapipe import DoMINODataPipe
+from ppsci.arch.physicsnemo.distributed import DistributedManager
+from ppsci.arch.physicsnemo.launch.utils import load_checkpoint
+from ppsci.arch.physicsnemo.launch.utils import save_checkpoint
+from ppsci.arch.physicsnemo.models.model import DoMINO
+from ppsci.arch.physicsnemo.utils.domino.utils import create_directory
+from ppsci.arch.physicsnemo.utils.domino.utils import mean_std_sampling
 
 
 def relative_loss_fn(output, target, padded_value=-10):

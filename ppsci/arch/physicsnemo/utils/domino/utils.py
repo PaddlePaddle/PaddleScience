@@ -229,9 +229,7 @@ def get_surface_data(polydata, variables):
     return vertices, fields, edges
 
 
-def calculate_normal_positional_encoding(
-    coordinates_a, coordinates_b=None, cell_length=[]
-):
+def cal_normal_positional_encoding(coordinates_a, coordinates_b=None, cell_length=[]):
     """Function to get normal positional encoding"""
     dx = cell_length[0]
     dy = cell_length[1]

@@ -28,16 +28,13 @@ import paddle
 from paddle.amp import GradScaler
 from paddle.optimizer.lr import LRScheduler
 
-from ...distributed import DistributedManager
-from ...launch.logging import PythonLogger
+from ppsci.utils import logger
 
-# from modulus.utils.capture import _StaticCapture
+from ...distributed import DistributedManager
 
 optimizer = NewType("optimizer", paddle.optimizer)
 scheduler = NewType("scheduler", LRScheduler)
 scaler = NewType("scaler", GradScaler)
-
-checkpoint_logging = PythonLogger("checkpoint")
 
 
 def _get_checkpoint_filename(
@@ -80,7 +77,7 @@ def _get_checkpoint_filename(
     # model_parallel_rank should be the same as the process rank itself and
     # only rank 0 saves
     if not DistributedManager.is_initialized():
-        checkpoint_logging.warning(
+        logger.warning(
             "`DistributedManager` not initialized already. Initializing now, but this might lead to unexpected errors"
         )
         DistributedManager.initialize()
@@ -219,7 +216,7 @@ def save_checkpoint(
     """
     # Create checkpoint directory if it does not exist
     if not Path(path).is_dir():
-        checkpoint_logging.warning(
+        logger.warning(
             f"Output directory {path} does not exist, will " "attempt to create"
         )
         Path(path).mkdir(parents=True, exist_ok=True)
@@ -240,7 +237,7 @@ def save_checkpoint(
 
             # Save state dictionary
             paddle.save(model.state_dict(), file_name)
-            checkpoint_logging.success(f"Saved model state dictionary: {file_name}")
+            logger.info(f"Saved model state dictionary: {file_name}")
 
     # == Saving training checkpoint ==
     checkpoint_dict = {}
@@ -273,7 +270,7 @@ def save_checkpoint(
             checkpoint_dict,
             output_filename,
         )
-        checkpoint_logging.success(f"Saved training checkpoint: {output_filename}")
+        logger.info(f"Saved training checkpoint: {output_filename}")
 
 
 def load_checkpoint(
@@ -316,7 +313,7 @@ def load_checkpoint(
     """
     # Check if checkpoint directory exists
     if not Path(path).is_dir():
-        checkpoint_logging.warning(
+        logger.warning(
             f"Provided checkpoint directory {path} does not exist, skipping load"
         )
         return 0
@@ -335,46 +332,40 @@ def load_checkpoint(
                 path, name, index=epoch, model_type=model_type
             )
             if not Path(file_name).exists():
-                checkpoint_logging.error(
+                logger.error(
                     f"Could not find valid model file {file_name}, skipping load"
                 )
                 continue
             # Load state dictionary
             model.set_state_dict(paddle.load(file_name))
 
-            checkpoint_logging.success(f"Loaded model state dictionary {file_name}")
+            logger.info(f"Loaded model state dictionary {file_name}")
 
     # == Loading training checkpoint ==
     checkpoint_filename = _get_checkpoint_filename(
         path, index=epoch, model_type="pdparams"
     )
     if not Path(checkpoint_filename).is_file():
-        checkpoint_logging.warning(
-            "Could not find valid checkpoint file, skipping load"
-        )
+        logger.warning("Could not find valid checkpoint file, skipping load")
         return 0
 
     checkpoint_dict = paddle.load(checkpoint_filename)
-    checkpoint_logging.success(f"Loaded checkpoint file {checkpoint_filename}")
+    logger.info(f"Loaded checkpoint file {checkpoint_filename}")
 
     # Optimizer state dict
     if optimizer and "optimizer_state_dict" in checkpoint_dict:
         optimizer.set_state_dict(checkpoint_dict["optimizer_state_dict"])
-        checkpoint_logging.success("Loaded optimizer state dictionary")
+        logger.info("Loaded optimizer state dictionary")
 
     # Scheduler state dict
     if scheduler and "scheduler_state_dict" in checkpoint_dict:
         scheduler.set_state_dict(checkpoint_dict["scheduler_state_dict"])
-        checkpoint_logging.success("Loaded scheduler state dictionary")
+        logger.info("Loaded scheduler state dictionary")
 
     # Scaler state dict
     if scaler and "scaler_state_dict" in checkpoint_dict:
         scaler.load_state_dict(checkpoint_dict["scaler_state_dict"])
-        checkpoint_logging.success("Loaded grad scaler state dictionary")
-
-    # if "static_capture_state_dict" in checkpoint_dict:
-    #     _StaticCapture.set_state_dict(checkpoint_dict["static_capture_state_dict"])
-    #     checkpoint_logging.success("Loaded static capture state dictionary")
+        logger.info("Loaded grad scaler state dictionary")
 
     epoch = 0
     if "epoch" in checkpoint_dict:
