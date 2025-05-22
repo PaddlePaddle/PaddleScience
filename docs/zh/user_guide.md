@@ -96,84 +96,116 @@ TRAIN:
 
 #### 1.1.3 自动化运行实验
 
-如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
 
-假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
+    如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
 
-| 实验编号 | seed | epochs |
-| :------- | :--- | :----- |
-| 1        | 42   | 10     |
-| 2        | 42   | 20     |
-| 3        | 1024 | 10     |
-| 4        | 1024 | 20     |
+    假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
 
-执行如下命令即可按顺序自动运行这 4 组实验。
+    | 实验编号 | seed | epochs |
+    | :------- | :--- | :----- |
+    | 1        | 42   | 10     |
+    | 2        | 42   | 20     |
+    | 3        | 1024 | 10     |
+    | 4        | 1024 | 20     |
 
-``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
-[HYDRA] Launching 4 jobs locally
-[HYDRA]        #0 : seed=42 TRAIN.epochs=10
-...
-[HYDRA]        #1 : seed=42 TRAIN.epochs=20
-...
-[HYDRA]        #2 : seed=1024 TRAIN.epochs=10
-...
-[HYDRA]        #3 : seed=1024 TRAIN.epochs=20
-...
-```
+=== "串行实验"
 
-多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
+    执行如下命令即可按顺序，以串行的方式自动运行这 4 组实验。
 
-``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
-PaddleScience/examples/bracket/outputs_bracket/
-└── 2023-10-14 # (1)
-    └── 04-01-52 # (2)
-        ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
-        │   └── multirun.yaml # multirun 配置文件 (3)
-        ├── {==TRAIN.epochs=10,seed=1024==} # 实验编号3的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        ├── {==TRAIN.epochs=10,seed=42==} # 实验编号1的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        ├── {==TRAIN.epochs=20,seed=1024==} # 实验编号4的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        └── {==TRAIN.epochs=20,seed=42==} # 实验编号2的保存目录
-            ├── checkpoints
-            │   ├── latest.pdeqn
-            │   ├── latest.pdopt
-            │   ├── latest.pdparams
-            │   └── latest.pdstates
-            ├── train.log
-            └── visual
-                └── epoch_0
-                    └── result_u_v_w_sigmas.vtu
-```
+    ``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+    [HYDRA] Launching 4 jobs locally
+    [HYDRA]        #0 : seed=42 TRAIN.epochs=10
+    ...
+    [HYDRA]        #1 : seed=42 TRAIN.epochs=20
+    ...
+    [HYDRA]        #2 : seed=1024 TRAIN.epochs=10
+    ...
+    [HYDRA]        #3 : seed=1024 TRAIN.epochs=20
+    ...
+    ```
 
-1. 该文件夹是程序运行时根据日期自动创建得到，此处表示2023年10月14日
-2. 该文件夹是程序运行时根据运行时刻(世界标准时间,UTC)自动创建得到，此处表示04点01分52秒
-3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
+    多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
+
+    ``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
+    PaddleScience/examples/bracket/outputs_bracket/
+    └── 2023-10-14 # (1)
+        └── 04-01-52 # (2)
+            ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
+            │   └── multirun.yaml # multirun 配置文件 (3)
+            ├── {==TRAIN.epochs=10,seed=1024==} # 实验编号3的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            ├── {==TRAIN.epochs=10,seed=42==} # 实验编号1的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            ├── {==TRAIN.epochs=20,seed=1024==} # 实验编号4的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            └── {==TRAIN.epochs=20,seed=42==} # 实验编号2的保存目录
+                ├── checkpoints
+                │   ├── latest.pdeqn
+                │   ├── latest.pdopt
+                │   ├── latest.pdparams
+                │   └── latest.pdstates
+                ├── train.log
+                └── visual
+                    └── epoch_0
+                        └── result_u_v_w_sigmas.vtu
+    ```
+
+    1. 该文件夹是程序运行时根据日期自动创建得到，此处表示2023年10月14日
+    2. 该文件夹是程序运行时根据运行时刻(世界标准时间,UTC)自动创建得到，此处表示04点01分52秒
+    3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
+
+=== "并行实验"
+
+    如果你的设备上有多个计算设备，则可以使用`hydra-joblib-launcher`插件实现并行实验，提高实验效率。
+
+    首先确认是否安装了`hydra-joblib-launcher`
+
+    ``` sh
+    pip install hydra-joblib-launcher --upgrade
+    ```
+
+    其次在你的运行配置 yaml 文件的开头位置，加入如下字段
+
+    ``` yaml title="xxx.yaml" hl_lines="3"
+    defaults:
+      - ...
+      - override hydra/launcher: joblib
+      - _self_
+    ```
+
+    最后执行如下命令即可在 3,4,5,6 这四个设备上，一次并行运行 4 个任务。
+
+    ``` sh
+    {++CUDA_VISIBLE_DEVICES=3,4,6,7++} \
+        python main_parallel.py -cn main_parallel -m seed=42,1024 TRAIN.epochs=10,20 \
+        {++hydra.launcher.n_jobs=4++}"
+    ```
+
+    注：设备数和并行任务数可以不相等，但建议单次并行的任务数小于等于设备数。
 
 考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。
 
