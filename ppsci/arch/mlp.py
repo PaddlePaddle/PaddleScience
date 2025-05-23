@@ -546,6 +546,7 @@ class PirateNetBlock(nn.Layer):
     $$
 
     Args:
+        input_dim (int): Input dimension.
         embed_dim (int): Embedding dimension.
         activation (str, optional): Name of activation function. Defaults to "tanh".
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
@@ -554,16 +555,17 @@ class PirateNetBlock(nn.Layer):
 
     def __init__(
         self,
+        input_dim: int,
         embed_dim: int,
         activation: str = "tanh",
         random_weight: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
         self.linear1 = (
-            nn.Linear(embed_dim, embed_dim)
+            nn.Linear(input_dim, embed_dim)
             if random_weight is None
             else RandomWeightFactorization(
-                embed_dim,
+                input_dim,
                 embed_dim,
                 mean=random_weight["mean"],
                 std=random_weight["std"],
@@ -721,6 +723,9 @@ class PirateNet(base.Arch):
                 cur_size, fourier["dim"], fourier["scale"]
             )
             cur_size = fourier["dim"]
+        else:
+            self.linear_emb = nn.Linear(cur_size, hidden_size[0])
+            cur_size = hidden_size[0]
 
         self.embed_u = nn.Sequential(
             (
@@ -769,6 +774,7 @@ class PirateNet(base.Arch):
             self.blocks.append(
                 PirateNetBlock(
                     cur_size,
+                    _size,
                     activation=activation,
                     random_weight=random_weight,
                 )
@@ -811,6 +817,8 @@ class PirateNet(base.Arch):
 
         if self.fourier:
             y = self.fourier_emb(y)
+        else:
+            y = self.linear_emb(y)
 
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)

@@ -5,17 +5,27 @@
 - 下载目录`dm_graphcast/gencast/stats`下的所有文件放入`./data/stats/`目录下。
 - 下载目录`dm_graphcast/gencast/dataset`下的任意或所有文件（例如：source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc）放入`./data/dataset/`目录下。
 
+=== "模型训练命令"
+
+    ``` sh
+    # 设置路径到 PaddleScience/jointContribution 文件夹
+    cd PaddleScience/jointContribution
+    export PYTHONPATH=$PWD:$PYTHONPATH
+    # 运行训练脚本
+    python run_gencast.py mode=train
+    ```
+
 === "模型评估命令"
 
     ``` sh
     # 设置路径到 PaddleScience/jointContribution 文件夹
     cd PaddleScience/jointContribution
-    export PYTHONPATH=$PWD:$PYTHONPAT
+    export PYTHONPATH=$PWD:$PYTHONPATH
     # 下载模型参数
     cd gencast/
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
     # 运行评估脚本
-    python run_gencast.py
+    python run_gencast.py mode=eval
     ```
 
 ## 1. 背景简介
