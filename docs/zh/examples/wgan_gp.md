@@ -27,12 +27,6 @@ python wgangp_mnist.py mode=eval
 python wgangp_toy.py mode=eval
 ```
 
-
-| 预训练模型                              |
-|:-----------------------------------|
-| wgangp_cifar10_pretrained.pdparams |
-| wgangp_mnist_pretrained.pdparams   |
-| wgangp_toy_pretrained.pdparams     |
 ## 1. 背景简介
 在数字图像处理和机器学习领域，生成对抗网络（GANs）因其卓越的图像生成能力而受到广泛关注。然而，传统的GAN架构在训练过程中可能会遇到不稳定的问题，尤其是在生成高分辨率或复杂场景的图像时。为了解决这些问题，研究人员提出了带有梯度惩罚的Wasserstein生成对抗网络（WGAN-GP），它不仅增强了训练过程的稳定性，还显著提升了生成图像的质量。
 
@@ -159,20 +153,46 @@ examples/wgangp/wgangp_toy.py:94:107
 
 模型的构建代码如下：
 
-``` py
+`WganGpCifar10Generator`和`WganGpCifar10Discriminator`
+``` py linenums="92"
 --8<--
 examples/wgangp/wgangp_cifar10.py:92:93
+--8<--
+```
+
+`WganGpMnistGenerator`和`WganGpMnistDiscriminator`
+``` py linenums="87"
+--8<--
 examples/wgangp/wgangp_mnist.py:87:88
+--8<--
+```
+
+`WganGpToyGenerator`和`WganGpToyDiscriminator`
+``` py linenums="80"
+--8<--
 examples/wgangp/wgangp_toy.py:80:81
 --8<--
 ```
 
 参数配置如下：
 
-``` yaml
+`WganGpCifar10Generator`和`WganGpCifar10Discriminator`
+```yaml linenums="29"
 --8<--
 examples/wgangp/conf/wgangp_cifar10.yaml:29:43
+--8<--
+```
+
+`WganGpMnistGenerator`和`WganGpMnistDiscriminator`
+```yaml linenums="29"
+--8<--
 examples/wgangp/conf/wgangp_mnist.yaml:29:38
+--8<--
+```
+
+`WganGpToyGenerator`和`WganGpToyDiscriminator`
+```yaml linenums="29"
+--8<--
 examples/wgangp/conf/wgangp_toy.yaml:29:37
 --8<--
 ```
@@ -184,7 +204,6 @@ WGAN-GP的损失函数较复杂，需要我们自定义实现。PaddleScience提
 #### 3.4.1 Generator的loss
 
 Cifar10_Generator的loss包含了对抗性损失和分类损失。这两项loss都有对应的权重，如果某一项 loss 的权重为 0，则表示训练中不添加该 loss 项。
-
 ``` py linenums="16"
 --8<--
 examples/wgangp/functions.py:16:44
@@ -234,10 +253,23 @@ examples/wgangp/functions.py:256:292
 
 构建代码如下：
 
-``` py
+针对Cifar10的实验
+``` py linenums="125"
 --8<--
-examples/wgangp/wgangp_cifar10.py:124:141
+examples/wgangp/wgangp_cifar10.py:125:141
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="117"
+--8<--
 examples/wgangp/wgangp_mnist.py:117:132
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="110"
+--8<--
 examples/wgangp/wgangp_toy.py:110:125
 --8<--
 ```
@@ -246,10 +278,23 @@ examples/wgangp/wgangp_toy.py:110:125
 
 WGANGP使用Adam优化器，可直接调用`ppsci.optimizer.Adam`构建，代码如下：
 
-``` py
+针对Cifar10的实验
+``` py linenums="144"
 --8<--
 examples/wgangp/wgangp_cifar10.py:144:158
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="135"
+--8<--
 examples/wgangp/wgangp_mnist.py:135:137
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="128"
+--8<--
 examples/wgangp/wgangp_toy.py:128:131
 --8<--
 ```
@@ -258,20 +303,46 @@ examples/wgangp/wgangp_toy.py:128:131
 
 将构建好的模型、约束、优化器和其它参数传递给 `ppsci.solver.Solver`。
 
-``` py
+针对Cifar10的实验
+``` py linenums="161"
 --8<--
 examples/wgangp/wgangp_cifar10.py:161:178
-examples/wgangp/wgangp_mnist.py:139:157
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="140"
+--8<--
+examples/wgangp/wgangp_mnist.py:140:157
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="134"
+--8<--
 examples/wgangp/wgangp_toy.py:134:151
 --8<--
 ```
 
 ### 3.8 模型训练
 
-``` py
+针对Cifar10的实验
+``` py linenums="181"
 --8<--
 examples/wgangp/wgangp_cifar10.py:181:186
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="160"
+--8<--
 examples/wgangp/wgangp_mnist.py:160:165
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="154"
+--8<--
 examples/wgangp/wgangp_toy.py:154:159
 --8<--
 ```
@@ -301,10 +372,23 @@ examples/wgangp/functions.py:389:391
 
 本案例使用`ppsci.validate.SupervisedValidator`构建评估器。
 
-``` py
+针对Cifar10的实验
+``` py linenums="53"
 --8<--
 examples/wgangp/wgangp_cifar10.py:53:62
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="46"
+--8<--
 examples/wgangp/wgangp_mnist.py:46:54
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="46"
+--8<--
 examples/wgangp/wgangp_toy.py:46:52
 --8<--
 ```
@@ -313,10 +397,23 @@ examples/wgangp/wgangp_toy.py:46:52
 
 将模型、评估器和权重路径传递给`ppsci.solver.Solver`后，通过`solver.eval()`启动评估。
 
-``` py
+针对Cifar10的实验
+``` py linenums="65"
 --8<--
 examples/wgangp/wgangp_cifar10.py:65:74
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="56"
+--8<--
 examples/wgangp/wgangp_mnist.py:56:65
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="55"
+--8<--
 examples/wgangp/wgangp_toy.py:55:63
 --8<--
 ```
@@ -325,20 +422,46 @@ examples/wgangp/wgangp_toy.py:55:63
 
 评估完成后，我们以图片的形式对结果进行可视化，代码如下：
 
-``` py
+针对Cifar10的实验
+``` py linenums="76"
 --8<--
 examples/wgangp/wgangp_cifar10.py:76:87
+--8<--
+```
+
+针对MNIST的实验
+``` py linenums="67"
+--8<--
 examples/wgangp/wgangp_mnist.py:67:83
+--8<--
+```
+
+针对玩具数据集的实验
+``` py linenums="65"
+--8<--
 examples/wgangp/wgangp_toy.py:65:75
 --8<--
 ```
 
 ## 4. 完整代码
 
+针对Cifar10的实验
 ``` py
 --8<--
 examples/wgangp/wgangp_cifar10.py
+--8<--
+```
+
+针对MNIST的实验
+``` py
+--8<--
 examples/wgangp/wgangp_mnist.py
+--8<--
+```
+
+针对玩具数据集的实验
+``` py
+--8<--
 examples/wgangp/wgangp_toy.py
 --8<--
 ```
