@@ -1,0 +1,22 @@
+import typing
+
+import torch
+from torch import Tensor
+
+import torch_geometric.typing
+{% for module in modules %}
+from {{module}} import *
+{%- endfor %}
+
+
+def forward(
+    self,
+{%- for param in signature.param_dict.values() %}
+    {{param.name}}: {{param.type_repr}},
+{%- endfor %}
+) -> {{signature.return_type_repr}}:
+
+{%- for child in children %}
+    {{child.return_names|join(', ')}} = self.{{child.name}}({{child.param_names|join(', ')}})
+{%- endfor %}
+    return {{children[-1].return_names|join(', ')}}
