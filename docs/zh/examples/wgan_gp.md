@@ -6,33 +6,48 @@
     2. 运行之前将[MINST](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)下载，并更新wgangp_mnist.yaml中的data_path
 
 === "模型训练命令"
-```sh
-    python wgangp_cifar10.py
-```
-```sh
-    python wgangp_mnist.py
-```
-```sh
-    python wgangp_toy.py
-```
+
+# CIFAR10实验
+
+python wgangp_cifar10.py
+
+# MNIST实验
+
+python wgangp_mnist.py
+
+# 玩具数据集实验
+
+python wgangp_toy.py
 
 === "模型评估命令"
-```sh
+
+# CIFAR10实验
+
 python wgangp_cifar10.py mode=eval
-```
-```sh
+
+# MNIST实验
+
 python wgangp_mnist.py mode=eval
-```
-```sh
+
+# 玩具数据集实验
+
 python wgangp_toy.py mode=eval
-```
+
+| 预训练模型                                                                                      | 指标      |
+|:-------------------------------------------------------------------------------------------|:--------|
+| [wgangp_cifar10_gen_pretrained.pdparams]() <br> [wgangp_cifar10_dis_pretrained.pdparams]() | IS: 7.9 |
+| [wgangp_mnist_gen_pretrained.pdparams]() <br> [wgangp_mnist_dis_pretrained.pdparams]()     | 无       |
+| [wgangp_toy_gen_pretrained.pdparams]() <br> [wgangp_toy_dis_pretrained.pdparams]()         | 无       |
+
 
 ## 1. 背景简介
+
 在数字图像处理和机器学习领域，生成对抗网络（GANs）因其卓越的图像生成能力而受到广泛关注。然而，传统的GAN架构在训练过程中可能会遇到不稳定的问题，尤其是在生成高分辨率或复杂场景的图像时。为了解决这些问题，研究人员提出了带有梯度惩罚的Wasserstein生成对抗网络（WGAN-GP），它不仅增强了训练过程的稳定性，还显著提升了生成图像的质量。
 
 WGAN-GP通过改进损失函数来最小化真实数据分布与生成数据分布之间的差异，并引入梯度惩罚机制以确保训练过程中的平滑性和稳定性。这种优化方法克服了传统GAN中常见的模式崩溃问题，同时促进了更高效的训练和更逼真的图像生成。
 
 ## 2. 模型原理
+
 WGAN-GP提出一种替代权重剪裁的方法：对评论者输入梯度的范数施加惩罚。在几乎无需超参数调整的情况下稳定训练多种GAN架构.
 
 ### 2.1 模型结构
@@ -59,11 +74,12 @@ $$
 
 其中$\mathbb{P}_g$是生成器的分布，$\mathbb{P}_r$是真实数据的分布，$\mathbb{P}_{\hat{x}}$是来自$\mathbb{P}_g$和$\mathbb{P}_r$的混合插值样本。
 
-生成器的损失函数是对抗性损失[$- \underset{\tilde{x} \sim \mathbb{P}_g}{\mathbb{E}}D(\tilde{x})$]和内容损失（MAE、MSE）的组合。其表达式为：
+生成器的损失函数是对抗性损失[$- \underset{\tilde{x} \sim \mathbb{P}_g}{\mathbb{E}}D(\tilde{x})$]。其表达式为：
 
 $$
 L_g = - \underset{\tilde{x} \sim \mathbb{P}_g}{\mathbb{E}}D(\tilde{x})
 $$
+
 其中$\mathbb{P}_g$是生成器的分布
 
 ## 3. 模型构建
@@ -350,6 +366,7 @@ examples/wgangp/wgangp_toy.py:154:159
 ### 3.9 自定义metric
 
 案例中只有针对Cifar10的案例有评估指标为Inception Score，MNIST和Toy案例没有评估指标。由于metric为空会报错所以自定义了一个无效metric
+
 所以我们额外实现了两个metric
 
 PaddleScience提供了用于自定metric函数的API——`ppsci.metric.FunctionalMetric`。方法为先定义metric函数，再将函数名作为参数传给 `FunctionalMetric`。需要注意，自定义metric函数的输入输出需要是字典的格式。
