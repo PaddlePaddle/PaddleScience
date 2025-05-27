@@ -35,9 +35,8 @@ python wgangp_toy.py mode=eval
 
 | 预训练模型                                                                                      | 指标      |
 |:-------------------------------------------------------------------------------------------|:--------|
-| [wgangp_cifar10_gen_pretrained.pdparams]() <br> [wgangp_cifar10_dis_pretrained.pdparams]() | IS: 7.9 |
-| [wgangp_mnist_gen_pretrained.pdparams]() <br> [wgangp_mnist_dis_pretrained.pdparams]()     | 无       |
-| [wgangp_toy_gen_pretrained.pdparams]() <br> [wgangp_toy_dis_pretrained.pdparams]()         | 无       |
+| [wgangp_cifar10_gen_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_generator_cifar10.pdparams) <br> [wgangp_cifar10_dis_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_discriminator_cifar10.pdparams) | IS: 5.2 |
+
 
 
 ## 1. 背景简介
