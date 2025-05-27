@@ -7,31 +7,25 @@
 
 === "模型训练命令"
 
+```sh
 # CIFAR10实验
-
 python wgangp_cifar10.py
-
 # MNIST实验
-
 python wgangp_mnist.py
-
 # 玩具数据集实验
-
 python wgangp_toy.py
+```
 
 === "模型评估命令"
 
+```sh
 # CIFAR10实验
-
-python wgangp_cifar10.py mode=eval
-
+python wgangp_cifar10.py mode=eval EVAL.pretrained_gen_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_generator_cifar10.pdparams EVAL.pretrained_dis_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_discriminator_cifar10.pdparams
 # MNIST实验
-
-python wgangp_mnist.py mode=eval
-
+python wgangp_mnist.py mode=eval EVAL.pretrained_gen_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_generator_mnist.pdparams EVAL.pretrained_dis_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_discriminator_mnist.pdparams
 # 玩具数据集实验
-
-python wgangp_toy.py mode=eval
+python wgangp_toy.py mode=eval EVAL.pretrained_gen_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_generator_toy_8gaussians.pdparams EVAL.pretrained_dis_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/wgangp/model_discriminator_toy_8gaussians.pdparams
+```
 
 | 预训练模型                                                                                      | 指标      |
 |:-------------------------------------------------------------------------------------------|:--------|
