@@ -1,18 +1,18 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 - 2024 NVIDIA CORPORATION & AFFILIATES.
-# SPDX-FileCopyrightText: All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# refs: https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/domino
 
 """
 This code provides the datapipe for reading the processed npy files,
@@ -26,6 +26,8 @@ pressure, wall-shear-stress for surface variables. The different parameters such
 variable names, domain resolution, sampling size etc. are configurable in config.yaml.
 """
 
+import os
+import time
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -34,18 +36,110 @@ from typing import Union
 
 import numpy as np
 from paddle.io import Dataset
+from scipy.spatial import KDTree
 
-from ...utils.domino.utils import KDTree
-from ...utils.domino.utils import area_weighted_shuffle_array
-from ...utils.domino.utils import cal_normal_positional_encoding
-from ...utils.domino.utils import calculate_center_of_mass
-from ...utils.domino.utils import create_grid
-from ...utils.domino.utils import get_filenames
-from ...utils.domino.utils import normalize
-from ...utils.domino.utils import pad
-from ...utils.domino.utils import shuffle_array
-from ...utils.domino.utils import standardize
-from ...utils.sdf import signed_distance_field
+from ppsci.utils.sdf import signed_distance_field
+
+
+def calculate_center_of_mass(stl_centers, stl_sizes):
+    """Function to calculate center of mass"""
+    stl_sizes = np.expand_dims(stl_sizes, -1)
+    center_of_mass = np.sum(stl_centers * stl_sizes, axis=0) / np.sum(stl_sizes, axis=0)
+    return center_of_mass
+
+
+def normalize(field, mx, mn):
+    """Function to normalize fields"""
+    return 2.0 * (field - mn) / (mx - mn) - 1.0
+
+
+def standardize(field, mean, std):
+    """Function to standardize fields"""
+    return (field - mean) / std
+
+
+def cal_normal_positional_encoding(coordinates_a, coordinates_b=None, cell_length=[]):
+    """Function to get normal positional encoding"""
+    dx = cell_length[0]
+    dy = cell_length[1]
+    dz = cell_length[2]
+    if coordinates_b is not None:
+        normals = coordinates_a - coordinates_b
+        pos_x = np.asarray(calculate_pos_encoding(normals[:, 0] / dx, d=4))
+        pos_y = np.asarray(calculate_pos_encoding(normals[:, 1] / dy, d=4))
+        pos_z = np.asarray(calculate_pos_encoding(normals[:, 2] / dz, d=4))
+        pos_normals = np.concatenate((pos_x, pos_y, pos_z), axis=0).reshape(-1, 12)
+    else:
+        normals = coordinates_a
+        pos_x = np.asarray(calculate_pos_encoding(normals[:, 0] / dx, d=4))
+        pos_y = np.asarray(calculate_pos_encoding(normals[:, 1] / dy, d=4))
+        pos_z = np.asarray(calculate_pos_encoding(normals[:, 2] / dz, d=4))
+        pos_normals = np.concatenate((pos_x, pos_y, pos_z), axis=0).reshape(-1, 12)
+
+    return pos_normals
+
+
+def pad(arr, npoin, pad_value=0.0):
+    """Function for padding"""
+    arr_pad = pad_value * np.ones(
+        (npoin - arr.shape[0], arr.shape[1]), dtype=np.float32
+    )
+    arr_padded = np.concatenate((arr, arr_pad), axis=0)
+    return arr_padded
+
+
+def shuffle_array(arr, npoin):
+    """Function for shuffling arrays"""
+    np.random.seed(seed=int(time.time()))
+    idx = np.arange(arr.shape[0])
+    np.random.shuffle(idx)
+    idx = idx[:npoin]
+    return arr[idx], idx
+
+
+def get_filenames(filepath):
+    """Function to get filenames from a directory"""
+    if os.path.exists(filepath):
+        filenames = os.listdir(filepath)
+        return filenames
+    else:
+        FileNotFoundError()
+
+
+def calculate_pos_encoding(nx, d=8):
+    """Function for calculating positional encoding"""
+    vec = []
+    for k in range(int(d / 2)):
+        vec.append(np.sin(nx / 10000 ** (2 * (k) / d)))
+        vec.append(np.cos(nx / 10000 ** (2 * (k) / d)))
+    return vec
+
+
+def create_grid(mx, mn, nres):
+    """Function to create grid"""
+    dx = np.linspace(mn[0], mx[0], nres[0])
+    dy = np.linspace(mn[1], mx[1], nres[1])
+    dz = np.linspace(mn[2], mx[2], nres[2])
+
+    xv, yv, zv = np.meshgrid(dx, dy, dz)
+    xv = np.expand_dims(xv, -1)
+    yv = np.expand_dims(yv, -1)
+    zv = np.expand_dims(zv, -1)
+    grid = np.concatenate((xv, yv, zv), axis=-1)
+    grid = np.transpose(grid, (1, 0, 2, 3))
+
+    return grid
+
+
+def area_weighted_shuffle_array(arr, npoin, area):
+    factor = 1.0
+    total_area = np.sum(area**factor)
+    probs = area**factor / total_area
+    np.random.seed(seed=int(time.time()))
+    idx = np.arange(arr.shape[0])
+    np.random.shuffle(idx)
+    ids = np.random.choice(idx, npoin, p=probs[idx])
+    return arr[ids], ids
 
 
 class DoMINODataPipe(Dataset):

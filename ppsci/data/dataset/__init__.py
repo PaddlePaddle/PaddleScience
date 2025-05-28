@@ -27,6 +27,7 @@ from ppsci.data.dataset.csv_dataset import IterableCSVDataset
 from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
 from ppsci.data.dataset.darcyflow_dataset import DarcyFlowDataset
 from ppsci.data.dataset.dgmr_dataset import DGMRDataset
+from ppsci.data.dataset.domino_datapipe import DoMINODataPipe
 from ppsci.data.dataset.drivaernet_dataset import DrivAerNetDataset
 from ppsci.data.dataset.drivaernetplusplus_dataset import DrivAerNetPlusPlusDataset
 from ppsci.data.dataset.enso_dataset import ENSODataset
@@ -93,6 +94,7 @@ __all__ = [
     "DrivAerNetDataset",
     "DrivAerNetPlusPlusDataset",
     "IFMMoeDataset",
+    "DoMINODataPipe",
 ]
 
 

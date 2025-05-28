@@ -2,12 +2,15 @@ colorlog
 einops
 h5py
 hydra-core
+hydra-core
 imageio
+importlib_metadata
 matplotlib
 meshio==5.3.4
 numpy>=1.20.0,<2.0.0
 pydantic>=2.5.0
 pyevtk
+pyvista==0.34.2
 pyyaml
 requests
 scikit-learn<1.5.0
@@ -15,6 +18,9 @@ scikit-optimize
 scipy
 seaborn
 sympy
+termcolor
 tqdm
+treelib
 typing-extensions
+warp-lang
 wget

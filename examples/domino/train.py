@@ -1,31 +1,18 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 - 2024 NVIDIA CORPORATION & AFFILIATES.
-# SPDX-FileCopyrightText: All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""
-This code defines a distributed pipeline for training the DoMINO model on
-CFD datasets. It includes the computation of scaling factors, instantiating
-the DoMINO model and datapipe, automatically loading the most recent checkpoint,
-training the model in parallel using DistributedDataParallel across multiple
-GPUs, calculating the loss and updating model parameters using mixed precision.
-This is a common recipe that enables training of combined models for surface and
-volume as well either of them separately. Validation is also conducted every epoch,
-where predictions are compared against ground truth values. The code logs training
-and validation metrics to TensorBoard. The train tab in config.yaml can be used to
-specify batch size, number of epochs and other training parameters.
-"""
+#
+# refs: https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/domino
 
 import os
 import re
@@ -34,6 +21,7 @@ import time
 import hydra
 import numpy as np
 import paddle
+import paddle.distributed as dist
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
@@ -43,13 +31,14 @@ from paddle.amp import auto_cast
 from paddle.io import DataLoader
 from paddle.io import DistributedBatchSampler
 
-from ppsci.arch.physicsnemo.datapipes.cae.domino_datapipe import DoMINODataPipe
-from ppsci.arch.physicsnemo.distributed import DistributedManager
-from ppsci.arch.physicsnemo.launch.utils import load_checkpoint
-from ppsci.arch.physicsnemo.launch.utils import save_checkpoint
-from ppsci.arch.physicsnemo.models.model import DoMINO
-from ppsci.arch.physicsnemo.utils.domino.utils import create_directory
-from ppsci.arch.physicsnemo.utils.domino.utils import mean_std_sampling
+from ppsci.arch.physicsnemo import DoMINO
+from ppsci.arch.physicsnemo import create_directory
+from ppsci.arch.physicsnemo import load_checkpoint
+from ppsci.arch.physicsnemo import mean_std_sampling
+from ppsci.arch.physicsnemo import save_checkpoint
+from ppsci.data.dataset.domino_datapipe import DoMINODataPipe
+
+paddle.set_device("gpu")
 
 
 def relative_loss_fn(output, target, padded_value=-10):
@@ -685,9 +674,7 @@ def main(cfg: DictConfig) -> None:
     input_path_val = cfg.data.input_dir_val
     model_type = cfg.model.model_type
 
-    # initialize distributed manager
-    DistributedManager.initialize()
-    dist = DistributedManager()
+    dist.init_parallel_env()
 
     print(f"Config summary:\n{OmegaConf.to_yaml(cfg, sort_keys=True)}")
 
@@ -772,20 +759,23 @@ def main(cfg: DictConfig) -> None:
         bounding_box_dims_surf=cfg.data.bounding_box_surface,
         num_surface_neighbors=cfg.model.num_surface_neighbors,
     )
-
+    print(f">>>>>> paddle.distributed.get_rank(): {paddle.distributed.get_rank()}")
+    print(
+        f">>>>>> paddle.distributed.get_world_size(): {paddle.distributed.get_world_size()}"
+    )
     train_sampler = DistributedBatchSampler(
         train_dataset,
         batch_size=1,
-        num_replicas=dist.world_size,
-        rank=dist.rank,
+        num_replicas=paddle.distributed.get_world_size(),
+        rank=paddle.distributed.get_rank(),
         **cfg.train.sampler,
     )
 
     val_sampler = DistributedBatchSampler(
         val_dataset,
         batch_size=1,
-        num_replicas=dist.world_size,
-        rank=dist.rank,
+        num_replicas=paddle.distributed.get_world_size(),
+        rank=paddle.distributed.get_rank(),
         **cfg.val.sampler,
     )
 
@@ -799,10 +789,9 @@ def main(cfg: DictConfig) -> None:
         model_parameters=cfg.model,
     )
 
-    if dist.world_size > 1:
+    if paddle.distributed.get_world_size() > 1:
         model = DataParallel(
             model,
-            find_unused_parameters=dist.find_unused_parameters,
         )
 
     optimizer = paddle.optimizer.Adam(
@@ -823,12 +812,12 @@ def main(cfg: DictConfig) -> None:
     model_save_path = os.path.join(cfg.output, "models")
     param_save_path = os.path.join(cfg.output, "param")
     best_model_path = os.path.join(model_save_path, "best_model")
-    if dist.rank == 0:
+    if paddle.distributed.get_rank() == 0:
         create_directory(model_save_path)
         create_directory(param_save_path)
         create_directory(best_model_path)
 
-    if dist.world_size > 1:
+    if paddle.distributed.get_world_size() > 1:
         paddle.distributed.barrier()
 
     init_epoch = load_checkpoint(
@@ -857,7 +846,7 @@ def main(cfg: DictConfig) -> None:
 
     for epoch in range(init_epoch, cfg.train.epochs):
         start_time = time.time()
-        print(f"Device {dist.device}, epoch {epoch_number}:")
+        print(f"Device {paddle.distributed.get_rank()}, epoch {epoch_number}:")
 
         train_sampler.set_epoch(epoch)
         val_sampler.set_epoch(epoch)
@@ -871,7 +860,7 @@ def main(cfg: DictConfig) -> None:
             optimizer=optimizer,
             scaler=scaler,
             epoch_index=epoch,
-            device=dist.device,
+            device=paddle.distributed.get_rank(),
             integral_scaling_factor=initial_integral_factor,
             loss_fn_type=cfg.model.loss_function,
         )
@@ -880,7 +869,7 @@ def main(cfg: DictConfig) -> None:
         avg_vloss = validation_step(
             dataloader=val_dataloader,
             model=model,
-            device=dist.device,
+            device=paddle.distributed.get_rank(),
             use_sdf_basis=cfg.model.use_sdf_in_basis_func,
             use_surface_normals=cfg.model.use_surface_normals,
             integral_scaling_factor=initial_integral_factor,
@@ -889,14 +878,14 @@ def main(cfg: DictConfig) -> None:
 
         scheduler.step()
         print(
-            f"Device {dist.device} "
+            f"Device {paddle.distributed.get_rank()} "
             f"LOSS train {avg_loss:.5f} "
             f"valid {avg_vloss:.5f} "
             f"Current lr {scheduler.get_lr()}"
             f"Integral factor {initial_integral_factor}"
         )
 
-        # if dist.rank == 0:
+        # if paddle.distributed.get_rank() == 0:
         #     writer.add_scalars(
         #         "Training vs. Validation Loss",
         #         {"Training": avg_loss, "Validation": avg_vloss},
@@ -905,27 +894,19 @@ def main(cfg: DictConfig) -> None:
         #     writer.flush()
 
         # Track best performance, and save the model's state
-        if dist.world_size > 1:
+        if paddle.distributed.get_world_size() > 1:
             paddle.distributed.barrier()
 
         if avg_vloss < best_vloss:  # This only considers GPU: 0, is that okay?
             best_vloss = avg_vloss
-            # if dist.rank == 0:
-            save_checkpoint(
-                to_absolute_path(best_model_path),
-                models=model,
-                optimizer=optimizer,
-                scheduler=scheduler,
-                scaler=scaler,
-                epoch=str(
-                    best_vloss.item()
-                ),  # hacky way of using epoch to store metadata
-            )
         print(
-            f"Device { dist.device}, Best val loss {best_vloss}, Time taken {time.time() - start_time}"
+            f"Device { paddle.distributed.get_rank()}, Best val loss {best_vloss}, Time taken {time.time() - start_time}"
         )
 
-        if dist.rank == 0 and (epoch + 1) % cfg.train.checkpoint_interval == 0.0:
+        if (
+            paddle.distributed.get_rank() == 0
+            and (epoch + 1) % cfg.train.checkpoint_interval == 0.0
+        ):
             save_checkpoint(
                 to_absolute_path(model_save_path),
                 models=model,

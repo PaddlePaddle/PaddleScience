@@ -35,6 +35,7 @@ from ppsci.utils.reader import load_vtk_with_time_file
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
+from ppsci.utils.sdf import signed_distance_field
 from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
@@ -63,4 +64,5 @@ __all__ = [
     "load_pretrain",
     "save_checkpoint",
     "lambdify",
+    "signed_distance_field",
 ]

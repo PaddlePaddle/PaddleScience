@@ -17,5 +17,6 @@ from ppsci.data.process import transform
 
 __all__ = [
     "batch_transform",
+    "openfoam",
     "transform",
 ]
