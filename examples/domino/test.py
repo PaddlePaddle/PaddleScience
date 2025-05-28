@@ -1,18 +1,30 @@
-# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
-
+# SPDX-FileCopyrightText: Copyright (c) 2023 - 2024 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# refs: https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/domino
+
+"""
+This code defines a distributed pipeline for testing the DoMINO model on
+CFD datasets. It includes the instantiating the DoMINO model and datapipe,
+automatically loading the most recent checkpoint, reading the VTP/VTU/STL
+testing files, calculation of parameters required for DoMINO model and
+evaluating the model in parallel using DataParallel across multiple
+GPUs. This is a common recipe that enables training of combined models for surface
+and volume as well either of them separately. The model predictions are loaded in
+the the VTP/VTU files and saved in the specified directory. The eval tab in
+config.yaml can be used to specify the input and output directories.
+"""
 
 import os
 import re
@@ -20,33 +32,35 @@ import re
 import hydra
 import numpy as np
 import paddle
+import paddle.distributed as dist
 import pyvista as pv
 import vtk
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 from paddle import DataParallel
+from scipy.spatial import KDTree
 from vtk.util import numpy_support
 
-from ppsci.arch.physicsnemo.distributed import DistributedManager
-from ppsci.arch.physicsnemo.models.model import DoMINO
-from ppsci.arch.physicsnemo.utils.domino.utils import KDTree
-from ppsci.arch.physicsnemo.utils.domino.utils import cal_normal_positional_encoding
-from ppsci.arch.physicsnemo.utils.domino.utils import calculate_center_of_mass
-from ppsci.arch.physicsnemo.utils.domino.utils import create_directory
-from ppsci.arch.physicsnemo.utils.domino.utils import create_grid
-from ppsci.arch.physicsnemo.utils.domino.utils import get_fields
-from ppsci.arch.physicsnemo.utils.domino.utils import get_filenames
-from ppsci.arch.physicsnemo.utils.domino.utils import get_node_to_elem
-from ppsci.arch.physicsnemo.utils.domino.utils import get_volume_data
-from ppsci.arch.physicsnemo.utils.domino.utils import normalize
-from ppsci.arch.physicsnemo.utils.domino.utils import unnormalize
-from ppsci.arch.physicsnemo.utils.domino.utils import write_to_vtp
-from ppsci.arch.physicsnemo.utils.domino.utils import write_to_vtu
-from ppsci.arch.physicsnemo.utils.sdf import signed_distance_field
+from ppsci.arch.physicsnemo import DoMINO
+from ppsci.arch.physicsnemo import create_directory
+from ppsci.arch.physicsnemo import get_fields
+from ppsci.arch.physicsnemo import get_node_to_elem
+from ppsci.arch.physicsnemo import get_volume_data
+from ppsci.arch.physicsnemo import write_to_vtp
+from ppsci.arch.physicsnemo import write_to_vtu
+from ppsci.data.dataset.domino_datapipe import cal_normal_positional_encoding
+from ppsci.data.dataset.domino_datapipe import calculate_center_of_mass
+from ppsci.data.dataset.domino_datapipe import create_grid
+from ppsci.data.dataset.domino_datapipe import get_filenames
+from ppsci.data.dataset.domino_datapipe import normalize
+from ppsci.data.dataset.domino_datapipe import unnormalize
+from ppsci.utils.sdf import signed_distance_field
 
 AIR_DENSITY = 1.205
 STREAM_VELOCITY = 30.00
+
+paddle.set_device("gpu")
 
 
 def loss_fn(output, target):
@@ -303,9 +317,7 @@ def main(cfg: DictConfig):
 
     model_type = cfg.model.model_type
 
-    # initialize distributed manager
-    DistributedManager.initialize()
-    dist = DistributedManager()
+    dist.init_parallel_env()
 
     if model_type == "volume" or model_type == "combined":
         volume_variable_names = list(cfg.variables.volume.solution.keys())
@@ -357,10 +369,9 @@ def main(cfg: DictConfig):
 
     print("Model loaded")
 
-    if dist.world_size > 1:
+    if paddle.distributed.get_world_size() > 1:
         model = DataParallel(
             model,
-            find_unused_parameters=dist.find_unused_parameters,
         )
 
     dirnames_per_gpu = get_filenames(input_path)
@@ -657,7 +668,12 @@ def main(cfg: DictConfig):
         }
 
         prediction_vol, prediction_surf = test_step(
-            data_dict, model, dist.device, cfg, vol_factors, surf_factors
+            data_dict,
+            model,
+            paddle.distributed.get_rank(),
+            cfg,
+            vol_factors,
+            surf_factors,
         )
 
         if prediction_surf is not None:

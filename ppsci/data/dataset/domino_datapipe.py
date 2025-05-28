@@ -53,6 +53,11 @@ def normalize(field, mx, mn):
     return 2.0 * (field - mn) / (mx - mn) - 1.0
 
 
+def unnormalize(field, mx, mn):
+    """Function to unnormalize fields"""
+    return (field + 1.0) * (mx - mn) * 0.5 + mn
+
+
 def standardize(field, mean, std):
     """Function to standardize fields"""
     return (field - mean) / std
