@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from ppsci.data.process import batch_transform
+from ppsci.data.process import openfoam
 from ppsci.data.process import transform
 
 __all__ = [
     "batch_transform",
-    "openfoam",
     "transform",
+    "openfoam",
 ]

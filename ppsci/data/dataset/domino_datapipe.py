@@ -27,6 +27,7 @@ variable names, domain resolution, sampling size etc. are configurable in config
 """
 
 import os
+import random
 import time
 from pathlib import Path
 from typing import Literal
@@ -39,6 +40,24 @@ from paddle.io import Dataset
 from scipy.spatial import KDTree
 
 from ppsci.utils.sdf import signed_distance_field
+
+try:
+    import pyvista as pv
+
+    PV_AVAILABLE = True
+except ImportError:
+    PV_AVAILABLE = False
+try:
+    import vtk
+    from vtk import vtkDataSetTriangleFilter
+    from vtk.util import numpy_support
+
+    VTK_AVAILABLE = True
+except ImportError:
+    VTK_AVAILABLE = False
+
+AIR_DENSITY = 1.205
+STREAM_VELOCITY = 30.00
 
 
 def calculate_center_of_mass(stl_centers, stl_sizes):
@@ -61,6 +80,173 @@ def unnormalize(field, mx, mn):
 def standardize(field, mean, std):
     """Function to standardize fields"""
     return (field - mean) / std
+
+
+def unstandardize(field, mean, std):
+    """Function to unstandardize fields"""
+    return field * std + mean
+
+
+def write_to_vtp(polydata, filename):
+    """Function to write polydata to vtp"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    writer = vtk.vtkXMLPolyDataWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(polydata)
+    writer.Write()
+
+
+def write_to_vtu(polydata, filename):
+    """Function to write polydata to vtu"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    writer = vtk.vtkXMLUnstructuredGridWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(polydata)
+    writer.Write()
+
+
+def extract_surface_triangles(tet_mesh):
+    """Extracts the surface triangles from a triangular mesh."""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    if not PV_AVAILABLE:
+        raise ImportError("PyVista is not installed. This function cannot be used.")
+    surface_filter = vtk.vtkDataSetSurfaceFilter()
+    surface_filter.SetInputData(tet_mesh)
+    surface_filter.Update()
+
+    surface_mesh = pv.wrap(surface_filter.GetOutput())
+    triangle_indices = []
+    faces = surface_mesh.faces.reshape((-1, 4))
+    for face in faces:
+        if face[0] == 3:
+            triangle_indices.extend([face[1], face[2], face[3]])
+        else:
+            raise ValueError("Face is not a triangle")
+
+    return triangle_indices
+
+
+def convert_to_tet_mesh(polydata):
+    """Function to convert tet to stl"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    # Create a VTK DataSetTriangleFilter object
+    tet_filter = vtkDataSetTriangleFilter()
+    tet_filter.SetInputData(polydata)
+    tet_filter.Update()  # Update to apply the filter
+
+    # Get the output as an UnstructuredGrid
+    # tet_mesh = pv.wrap(tet_filter.GetOutput())
+    tet_mesh = tet_filter.GetOutput()
+    return tet_mesh
+
+
+def get_node_to_elem(polydata):
+    """Function to convert node to elem"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    c2p = vtk.vtkPointDataToCellData()
+    c2p.SetInputData(polydata)
+    c2p.Update()
+    cell_data = c2p.GetOutput()
+    return cell_data
+
+
+def get_fields_from_cell(ptdata, var_list):
+    """Function to get fields from elem"""
+    fields = []
+    for var in var_list:
+        variable = ptdata.GetArray(var)
+        num_tuples = variable.GetNumberOfTuples()
+        cell_fields = []
+        for j in range(num_tuples):
+            variable_value = np.array(variable.GetTuple(j))
+            cell_fields.append(variable_value)
+        cell_fields = np.asarray(cell_fields)
+        fields.append(cell_fields)
+    fields = np.transpose(np.asarray(fields), (1, 0))
+
+    return fields
+
+
+def get_fields(data, variables):
+    """Function to get fields from VTP/VTU"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    fields = []
+    for array_name in variables:
+        try:
+            array = data.GetArray(array_name)
+        except ValueError:
+            raise ValueError(
+                f"Failed to get array {array_name} from the unstructured grid."
+            )
+        array_data = numpy_support.vtk_to_numpy(array).reshape(
+            array.GetNumberOfTuples(), array.GetNumberOfComponents()
+        )
+        fields.append(array_data)
+    return fields
+
+
+def get_vertices(polydata):
+    """Function to get vertices"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    points = polydata.GetPoints()
+    vertices = numpy_support.vtk_to_numpy(points.GetData())
+    return vertices
+
+
+def get_volume_data(polydata, variables):
+    """Function to get volume data"""
+    vertices = get_vertices(polydata)
+    point_data = polydata.GetPointData()
+
+    fields = get_fields(point_data, variables)
+
+    return vertices, fields
+
+
+def get_surface_data(polydata, variables):
+    """Function to get surface data"""
+    if not VTK_AVAILABLE:
+        raise ImportError("VTK or is not installed. This function cannot be used.")
+    points = polydata.GetPoints()
+    vertices = np.array([points.GetPoint(i) for i in range(points.GetNumberOfPoints())])
+
+    point_data = polydata.GetPointData()
+    fields = []
+    for array_name in variables:
+        try:
+            array = point_data.GetArray(array_name)
+        except ValueError:
+            raise ValueError(
+                f"Failed to get array {array_name} from the unstructured grid."
+            )
+        array_data = np.zeros(
+            (points.GetNumberOfPoints(), array.GetNumberOfComponents())
+        )
+        for j in range(points.GetNumberOfPoints()):
+            array.GetTuple(j, array_data[j])
+        fields.append(array_data)
+
+    polys = polydata.GetPolys()
+    if polys is None:
+        raise ValueError("Failed to get polygons from the polydata.")
+    polys.InitTraversal()
+    edges = []
+    id_list = vtk.vtkIdList()
+    for _ in range(polys.GetNumberOfCells()):
+        polys.GetNextCell(id_list)
+        num_ids = id_list.GetNumberOfIds()
+        edges = [
+            (id_list.GetId(j), id_list.GetId((j + 1) % num_ids)) for j in range(num_ids)
+        ]
+
+    return vertices, fields, edges
 
 
 def cal_normal_positional_encoding(coordinates_a, coordinates_b=None, cell_length=[]):
@@ -643,10 +829,175 @@ class DoMINODataPipe(Dataset):
             }
 
 
-if __name__ == "__main__":
-    fm_data = DoMINODataPipe(
-        data_path="/code/processed_data/new_models_1/",
-        phase="train",
-        sampling=False,
-        sample_in_bbox=False,
-    )
+class DriveSimPaths:
+    @staticmethod
+    def geometry_path(car_dir: Path) -> Path:
+        return car_dir / "body.stl"
+
+    @staticmethod
+    def volume_path(car_dir: Path) -> Path:
+        return car_dir / "VTK/simpleFoam_steady_3000/internal.vtu"
+
+    @staticmethod
+    def surface_path(car_dir: Path) -> Path:
+        return car_dir / "VTK/simpleFoam_steady_3000/boundary/aero_suv.vtp"
+
+
+class DrivAerAwsPaths:
+    @staticmethod
+    def _get_index(car_dir: Path) -> str:
+        return car_dir.name.removeprefix("run_")
+
+    @staticmethod
+    def geometry_path(car_dir: Path) -> Path:
+        return car_dir / f"drivaer_{DrivAerAwsPaths._get_index(car_dir)}.stl"
+
+    @staticmethod
+    def volume_path(car_dir: Path) -> Path:
+        return car_dir / f"volume_{DrivAerAwsPaths._get_index(car_dir)}.vtu"
+
+    @staticmethod
+    def surface_path(car_dir: Path) -> Path:
+        return car_dir / f"boundary_{DrivAerAwsPaths._get_index(car_dir)}.vtp"
+
+
+class OpenFoamDataset(Dataset):
+    """
+    Datapipe for converting openfoam dataset to npy
+
+    """
+
+    def __init__(
+        self,
+        data_path: Union[str, Path],
+        kind: Literal["drivesim", "drivaer_aws"] = "drivesim",
+        surface_variables: Optional[list] = [
+            "pMean",
+            "wallShearStress",
+        ],
+        volume_variables: Optional[list] = ["UMean", "pMean"],
+        device: int = 0,
+        model_type=None,
+    ):
+        if isinstance(data_path, str):
+            data_path = Path(data_path)
+        data_path = data_path.expanduser()
+
+        self.data_path = data_path
+
+        supported_kinds = ["drivesim", "drivaer_aws"]
+        assert (
+            kind in supported_kinds
+        ), f"kind should be one of {supported_kinds}, got {kind}"
+        self.path_getter = DriveSimPaths if kind == "drivesim" else DrivAerAwsPaths
+
+        assert self.data_path.exists(), f"Path {self.data_path} does not exist"
+
+        assert self.data_path.is_dir(), f"Path {self.data_path} is not a directory"
+
+        self.filenames = get_filenames(self.data_path)
+        random.shuffle(self.filenames)
+        self.indices = np.array(len(self.filenames))
+
+        self.surface_variables = surface_variables
+        self.volume_variables = volume_variables
+        self.device = device
+        self.model_type = model_type
+
+    def __len__(self):
+        return len(self.filenames)
+
+    def __getitem__(self, idx):
+        cfd_filename = self.filenames[idx]
+        car_dir = self.data_path / cfd_filename
+
+        stl_path = self.path_getter.geometry_path(car_dir)
+        reader = pv.get_reader(stl_path)
+        mesh_stl = reader.read()
+        stl_vertices = mesh_stl.points
+        stl_faces = np.array(mesh_stl.faces).reshape((-1, 4))[
+            :, 1:
+        ]  # Assuming triangular elements
+        mesh_indices_flattened = stl_faces.flatten()
+        stl_sizes = mesh_stl.compute_cell_sizes(length=False, area=True, volume=False)
+        stl_sizes = np.array(stl_sizes.cell_data["Area"])
+        stl_centers = np.array(mesh_stl.cell_centers().points)
+
+        length_scale = np.amax(np.amax(stl_vertices, 0) - np.amin(stl_vertices, 0))
+
+        if self.model_type == "volume" or self.model_type == "combined":
+            filepath = self.path_getter.volume_path(car_dir)
+            reader = vtk.vtkXMLUnstructuredGridReader()
+            reader.SetFileName(filepath)
+            reader.Update()
+
+            # Get the unstructured grid data
+            polydata = reader.GetOutput()
+            volume_coordinates, volume_fields = get_volume_data(
+                polydata, self.volume_variables
+            )
+            volume_fields = np.concatenate(volume_fields, axis=-1)
+
+            # Non-dimensionalize volume fields
+            volume_fields[:, :3] = volume_fields[:, :3] / STREAM_VELOCITY
+            volume_fields[:, 3:4] = volume_fields[:, 3:4] / (
+                AIR_DENSITY * STREAM_VELOCITY**2.0
+            )
+
+            volume_fields[:, 4:] = volume_fields[:, 4:] / (
+                STREAM_VELOCITY * length_scale
+            )
+        else:
+            volume_fields = None
+            volume_coordinates = None
+
+        if self.model_type == "surface" or self.model_type == "combined":
+            surface_filepath = self.path_getter.surface_path(car_dir)
+            reader = vtk.vtkXMLPolyDataReader()
+            reader.SetFileName(surface_filepath)
+            reader.Update()
+            polydata = reader.GetOutput()
+
+            celldata_all = get_node_to_elem(polydata)
+            celldata = celldata_all.GetCellData()
+            surface_fields = get_fields(celldata, self.surface_variables)
+            surface_fields = np.concatenate(surface_fields, axis=-1)
+
+            mesh = pv.PolyData(polydata)
+            surface_coordinates = np.array(mesh.cell_centers().points)
+
+            surface_normals = np.array(mesh.cell_normals)
+            surface_sizes = mesh.compute_cell_sizes(
+                length=False, area=True, volume=False
+            )
+            surface_sizes = np.array(surface_sizes.cell_data["Area"])
+
+            # Normalize cell normals
+            surface_normals = (
+                surface_normals / np.linalg.norm(surface_normals, axis=1)[:, np.newaxis]
+            )
+
+            # Non-dimensionalize surface fields
+            surface_fields = surface_fields / (AIR_DENSITY * STREAM_VELOCITY**2.0)
+        else:
+            surface_fields = None
+            surface_coordinates = None
+            surface_normals = None
+            surface_sizes = None
+
+        # Add the parameters to the dictionary
+        return {
+            "stl_coordinates": np.float32(stl_vertices),
+            "stl_centers": np.float32(stl_centers),
+            "stl_faces": np.float32(mesh_indices_flattened),
+            "stl_areas": np.float32(stl_sizes),
+            "surface_mesh_centers": np.float32(surface_coordinates),
+            "surface_normals": np.float32(surface_normals),
+            "surface_areas": np.float32(surface_sizes),
+            "volume_fields": np.float32(volume_fields),
+            "volume_mesh_centers": np.float32(volume_coordinates),
+            "surface_fields": np.float32(surface_fields),
+            "filename": cfd_filename,
+            "stream_velocity": STREAM_VELOCITY,
+            "air_density": AIR_DENSITY,
+        }

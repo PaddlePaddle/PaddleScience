@@ -14,7 +14,7 @@
 #
 # refs: https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/domino
 
-from ppsci.data.process.openfoam import process_files
+from ppsci.data.process.openfoam.preprocess import process_files
 
 __all__ = [
     "process_files",

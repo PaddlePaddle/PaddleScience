@@ -11,10 +11,11 @@
     # 2. Specify the configuration settings in `examples/domino/conf/config.yaml`.
 
     # 3. Run process_data.py. This will process VTP/VTU files and save them as npy for faster processing in DoMINO datapipe. Modify data_processor key in config file. Additionally, run cache_data.py to save outputs of DoMINO datapipe in the .npy files. The DoMINO datapipe is set up to calculate Signed Distance Field and Nearest Neighbor interpolations on-the-fly during training. Caching will save these as a preprocessing step and should be used in cases where the STL surface meshes are upwards of 30 million cells. The final processed dataset should be divided and saved into 2 directories, for training and validation. Specify these directories in conf/config.yaml.
-    python3 process_data.py
+    # specify mode using `process`, set path to data_processor.output_dir and data_processor.input_dir
+    python3 domino.py
 
-    # 4. run train
-    python3 train.py
+    # 4. run train, specify mode using `train`, set path to data.input_dir and data.input_dir_val
+    python3 domino.py
     ```
 
 === "模型评估命令"
@@ -29,7 +30,8 @@
 
     ``` sh
     cd examples/domino
-    python3 test.py
+    # specify mode using `eval`, and set path to eval.test_path, eval.save_path and eval.checkpoint_name
+    python3 domino.py
     ```
 
 ## 1. 背景简介
@@ -70,15 +72,9 @@ DOMINO模型通过这种分解式、多尺度和迭代的方法，能够有效�
 
 ## 3. 完整代码
 
-``` py linenums="1" title="examples/domino/train.py"
+``` py linenums="1" title="examples/domino/domino.py"
 --8<--
-examples/domino/train.py
---8<--
-```
-
-``` py linenums="1" title="examples/domino/test.py"
---8<--
-examples/domino/test.py
+examples/domino/domino.py
 --8<--
 ```
 

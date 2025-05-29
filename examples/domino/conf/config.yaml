@@ -17,6 +17,7 @@
 project: # Project name
   name: AWS_Dataset
 
+mode: train # process, train, eval
 seed: 42
 exp_tag: 1 # Experiment tag
 # Main output directory.
