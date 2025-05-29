@@ -60,6 +60,8 @@ from ppsci.utils.sdf import signed_distance_field
 AIR_DENSITY = 1.205
 STREAM_VELOCITY = 30.00
 
+paddle.set_device("gpu")
+
 
 def process(cfg: DictConfig):
     print(f"Config summary:\n{OmegaConf.to_yaml(cfg, sort_keys=True)}")
