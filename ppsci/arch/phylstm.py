@@ -145,13 +145,23 @@ class DeepPhyLSTM(base.Arch):
         return result_dict
 
     def _forward_type_2(self, x):
-        output = self.lstm_model(x["ag"])
+        output = x["ag"]
+        for layer in self.lstm_model:
+            output = layer(output)
+            if isinstance(output, tuple):
+                output = output[0]
+
         eta_pred = output[:, :, 0 : self.output_size]
         eta_dot_pred = output[:, :, self.output_size : 2 * self.output_size]
         g_pred = output[:, :, 2 * self.output_size :]
 
         # for ag_c
-        output_c = self.lstm_model(x["ag_c"])
+        output_c = x["ag_c"]
+        for layer in self.lstm_model:
+            output_c = layer(output_c)
+            if isinstance(output_c, tuple):
+                output_c = output_c[0]
+
         eta_pred_c = output_c[:, :, 0 : self.output_size]
         eta_dot_pred_c = output_c[:, :, self.output_size : 2 * self.output_size]
         g_pred_c = output_c[:, :, 2 * self.output_size :]
@@ -159,7 +169,12 @@ class DeepPhyLSTM(base.Arch):
         eta_tt_pred_c = paddle.matmul(x["phi"], eta_dot_pred_c)
         eta_dot1_pred_c = eta_dot_pred_c[:, :, 0:1]
         tmp = paddle.concat([eta_pred_c, eta_dot1_pred_c, g_pred_c], 2)
-        f = self.lstm_model_f(tmp)
+        f = tmp
+        for layer in self.lstm_model_f:
+            f = layer(f)
+            if isinstance(f, tuple):
+                f = f[0]
+
         lift_pred_c = eta_tt_pred_c + f
 
         return {
@@ -173,12 +188,22 @@ class DeepPhyLSTM(base.Arch):
 
     def _forward_type_3(self, x):
         # physics informed neural networks
-        output = self.lstm_model(x["ag"])
+        output = x["ag"]
+        for layer in self.lstm_model:
+            output = layer(output)
+            if isinstance(output, tuple):
+                output = output[0]
+
         eta_pred = output[:, :, 0 : self.output_size]
         eta_dot_pred = output[:, :, self.output_size : 2 * self.output_size]
         g_pred = output[:, :, 2 * self.output_size :]
 
-        output_c = self.lstm_model(x["ag_c"])
+        output_c = x["ag_c"]
+        for layer in self.lstm_model:
+            output_c = layer(output_c)
+            if isinstance(output_c, tuple):
+                output_c = output_c[0]
+
         eta_pred_c = output_c[:, :, 0 : self.output_size]
         eta_dot_pred_c = output_c[:, :, self.output_size : 2 * self.output_size]
         g_pred_c = output_c[:, :, 2 * self.output_size :]
@@ -187,11 +212,20 @@ class DeepPhyLSTM(base.Arch):
         eta_tt_pred_c = paddle.matmul(x["phi"], eta_dot_pred_c)
         g_t_pred_c = paddle.matmul(x["phi"], g_pred_c)
 
-        f = self.lstm_model_f(paddle.concat([eta_pred_c, eta_dot_pred_c, g_pred_c], 2))
+        f = paddle.concat([eta_pred_c, eta_dot_pred_c, g_pred_c], 2)
+        for layer in self.lstm_model_f:
+            f = layer(f)
+            if isinstance(f, tuple):
+                f = f[0]
+
         lift_pred_c = eta_tt_pred_c + f
 
         eta_dot1_pred_c = eta_dot_pred_c[:, :, 0:1]
-        g_dot_pred_c = self.lstm_model_g(paddle.concat([eta_dot1_pred_c, g_pred_c], 2))
+        g_dot_pred_c = paddle.concat([eta_dot1_pred_c, g_pred_c], 2)
+        for layer in self.lstm_model_g:
+            g_dot_pred_c = layer(g_dot_pred_c)
+            if isinstance(g_dot_pred_c, tuple):
+                g_dot_pred_c = g_dot_pred_c[0]
 
         return {
             "eta_pred": eta_pred,

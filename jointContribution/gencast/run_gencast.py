@@ -26,20 +26,88 @@ from graphcast import vis
 from omegaconf import DictConfig
 
 
-def crps(targets, predictions, bias_corrected=True):
-    if predictions.sizes.get("sample", 1) < 2:
-        raise ValueError("predictions must have dim 'sample' with size at least 2.")
-    sum_dims = ["sample", "sample2"]
-    preds2 = predictions.rename({"sample": "sample2"})
-    num_samps = predictions.sizes["sample"]
-    num_samps2 = (num_samps - 1) if bias_corrected else num_samps
-    mean_abs_diff = np.abs(predictions - preds2).sum(dim=sum_dims, skipna=False) / (
-        num_samps * num_samps2
+class CustomDataLoader(paddle.io.Dataset):
+    def __init__(self, target_lead_times, cfg):
+        super().__init__()
+
+        self.target_lead_times = target_lead_times
+        self.cfg = cfg
+
+    def __len__(self):
+        # Return the number of time steps in target_lead_times
+        return len(self.target_lead_times)
+
+    def __getitem__(self, index):
+        # Select a specific time step
+        time_step = self.target_lead_times[index]
+
+        # Multiply by 12 to get 'a'
+        a = time_step * 12
+
+        # Create a string in the format 'ah'
+        ah_str = f"{a}h"
+
+        # Update the config with this new 'ah' string
+        self.cfg["target_lead_times"] = ah_str
+
+        # Call the ERA5Data function/class
+        # Assuming ERA5Data is a function or class that processes this config
+        data = datasets.ERA5Data(config=self.cfg)
+
+        return data
+
+
+def train(cfg: DictConfig):
+    # Initialize the GenCast model with the given configuration.
+    model = gencast.GenCast(cfg)
+    model.train()
+
+    # set optimizer
+    optimizer = paddle.optimizer.AdamW(
+        parameters=model.parameters(),
+        learning_rate=cfg.train.learning_rate,
+        weight_decay=cfg.train.weight_decay,
     )
-    mean_abs_err = (
-        np.abs(targets - predictions).sum(dim="sample", skipna=False) / num_samps
+    # Load the dataset using the given configuration.
+    nc_dataset = xarray.open_dataset(cfg.data_path)
+    time_total = len(nc_dataset.time.data)
+    train_loader = CustomDataLoader(
+        target_lead_times=list(range(1, time_total - 1)),
+        cfg=cfg,
     )
-    return mean_abs_err - 0.5 * mean_abs_diff
+
+    best_loss = float("inf")
+    for epoch in range(cfg.train.num_epochs):
+        epoch_loss = 0
+        for dataset in train_loader:
+            # Forward pass and compute loss
+            loss, diagnostics = model.loss(
+                dataset.inputs_template,
+                dataset.targets_template,
+                dataset.forcings_template,
+            )
+            # Backward pass and optimization
+            loss.backward()
+            optimizer.step()
+            optimizer.clear_grad()
+
+            epoch_loss += loss.item()
+
+        # Average loss for the epoch
+        epoch_loss /= len(train_loader)
+        logging.info(f"Epoch {epoch}: Loss = {epoch_loss:.6f}")
+        if epoch % cfg.train.snapshot_freq == 0 or epoch == 1:
+            model_save_path = os.path.join(
+                cfg.output_dir, f"last_model_epoch_{epoch}.pdparams"
+            )
+            paddle.save(model.state_dict(), model_save_path)
+
+        # Save model if it has the best loss
+        if epoch_loss < best_loss:
+            best_loss = epoch_loss
+            model_save_path = os.path.join(cfg.output_dir, "best_model_epoch.pdparams")
+            paddle.save(model.state_dict(), model_save_path)
+            logging.info(f"Best model saved at epoch {epoch} with loss {best_loss:.6f}")
 
 
 def eval(cfg: DictConfig):
@@ -113,6 +181,8 @@ def eval(cfg: DictConfig):
 def main(cfg: DictConfig):
     if cfg.mode == "eval":
         eval(cfg)
+    elif cfg.mode == "train":
+        train(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['eval'], but got '{cfg.mode}'")
 
