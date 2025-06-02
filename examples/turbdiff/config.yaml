@@ -1,0 +1,57 @@
+# TurbDiff model configuration
+
+# Variables to model
+variables:
+  - name: U
+    dims: 3  # Velocity vector field (u, v, w)
+  - name: p
+    dims: 1  # Pressure scalar field
+
+# Model architecture configuration
+model:
+  dim: 64  # Base dimension for feature maps
+  u_net_levels: 4  # Number of U-Net downsampling/upsampling levels
+  actfn: SiLU  # Activation function
+  norm_type: instance  # Normalization type: instance, batch, layer, or none
+  with_geometry_embedding: true  # Whether to use geometry embedding
+  cell_type_features: true  # Whether to use cell type conditioning
+  cell_type_embedding_type: learned  # Type of cell embedding: learned or fixed
+  cell_type_embedding_dim: 8  # Dimension of cell type embedding
+  cell_pos_features: true  # Whether to use cell position features
+  num_cell_types: 5  # Number of different cell types
+
+# Diffusion process configuration
+diffusion:
+  timesteps: 1000  # Number of diffusion timesteps
+  loss_type: l2  # Loss type: l1, l2, or huber
+  beta_schedule: sigmoid  # Schedule for noise variance: linear, cosine, or sigmoid
+  clip_denoised: false  # Whether to clip denoised values to [-1, 1]
+  noise_bcs: true  # Whether to add noise to boundary conditions
+  learned_variances: false  # Whether to predict variance
+  elbo_weight: null  # Weight for evidence lower bound term
+  detach_elbo_mean: true  # Whether to detach mean for ELBO calculation
+
+# Data configuration
+data:
+  normalization_mode: mean-std  # Normalization mode: mean-std, min-max, or none
+  num_workers: 4  # Number of data loader workers
+
+# Training configuration
+training:
+  learning_rate: 1.0e-4  # Base learning rate
+  min_learning_rate: 1.0e-5  # Minimum learning rate for scheduler
+  warmup_steps: 1000  # Number of warmup steps for learning rate
+  weight_decay: 1.0e-4  # Weight decay for regularization
+  beta1: 0.9  # Adam beta1
+  beta2: 0.999  # Adam beta2
+  gradient_clip_val: 1.0  # Gradient clipping value
+  save_interval: 10  # Save checkpoint every N epochs
+  val_interval: 5  # Validate every N epochs
+
+# Inference configuration
+inference:
+  num_timesteps: 100  # Number of timesteps for fast sampling
+  metrics:
+    - mse  # Mean squared error
+    - psnr  # Peak signal-to-noise ratio
+    - ssim  # Structural similarity
