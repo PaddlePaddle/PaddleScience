@@ -26,7 +26,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [solar_cell_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams) | RMSE: 3.91798 |
+| [solar_cell_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams) | RMSE: 4.64047 |
 
 ## 1. 背景简介
 
@@ -59,7 +59,7 @@
 
 ### 3.1 数据集介绍
 
-本案例使用的数据集包含 Perovskite Database Project(PDP) 数据。数据集分为以下几个部分：
+本案例使用的数据集包含 [Perovskite Database Project(PDP) 数据](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fpsc%2Fdata.zip)。数据集分为以下几个部分：
 
 1. 训练集：
    - 特征数据：`data/cleaned/training.csv`

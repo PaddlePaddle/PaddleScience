@@ -1,4 +1,4 @@
-paddlepaddle-gpu>=3.0.0
+# paddlepaddle-gpu>=3.0.0
 paddlesci>=0.0.1
 numpy>=1.26.0
 pandas>=2.2.0
