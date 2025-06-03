@@ -1,3 +1,5 @@
+# MatterSim for Paddle
+
 > [!IMPORTANT]
 > This repo experimentally integrates [Paddle backend](https://www.paddlepaddle.org.cn/en/install/quick?docurl=/documentation/docs/en/develop/install/pip/linux-pip_en.html) to MatterSim.
 >
@@ -18,6 +20,12 @@ python -m pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/
 
 # install paddle on CUDA 11.8
 python -m pip install --pre paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/nightly/cu118/
+
+# install paddle-ema
+pip install git+https://github.com/BeingGod/paddle_ema.git
+
+# install paddle-geometric
+pip install git+https://github.com/BeingGod/paddle_geometric.git
 
 # install mattersim
 pip install . -v
@@ -79,142 +87,6 @@ python src/mattersim/training/finetune_mattersim.py --load_model_path pretrained
 
 * Not support distributed finetune.
 * Not support gradient calculation of stress and strains when training.
-
-# Below is MatterSim's original README
-
-<h1>
-<p align="center">
-    <img src="https://github.com/microsoft/mattersim/blob/main/docs/_static/mattersim-banner.png?raw=true" alt="MatterSim logo" width="600"/>
-</p>
-</h1>
-
-<!-- <h1 align="center">MatterSim</h1> -->
-
-<h4 align="center">
-
-[![arXiv](https://img.shields.io/badge/arXiv-2405.04967-blue?logo=arxiv&logoColor=white.svg)](https://arxiv.org/abs/2405.04967)
-[![Requires Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg?logo=python&logoColor=white)](https://python.org/downloads)
-[![PyPI Downloads](https://static.pepy.tech/badge/mattersim)](https://pepy.tech/projects/mattersim)
-</h4>
-
-
-MatterSim is a deep learning atomistic model across elements, temperatures and pressures.
-
-## Documentation
-
-This README provides a quick start guide. For more comprehensive information, please refer to the [MatterSim documentation](https://microsoft.github.io/mattersim/).
-
-## Installation
-
-### Prerequisite
-* `Python >= 3.9`
-
-
-### Install from PyPI
-> [!TIP]
-> While not mandatory, we recommend creating a clean conda environment before installing MatterSim to avoid potential package conflicts. You can create and activate a conda environment with the following commands:
->
-> ```bash
-> # create the environment
-> conda create -n mattersim python=3.9
->
-> # activate the environment
-> conda activate mattersim
-> ```
->
-> Although MatterSim can be installed with `Python > 3.9`, we recommend using `Python == 3.9` for optimal compatibility.
-
-To install MatterSim, use the following command. Please note that downloading the dependencies may take some time:
-```bash
-pip install mattersim
-```
-
-In case you want to install the package with the latest version, you can run the following command:
-
-```bash
-pip install git+https://github.com/microsoft/mattersim.git
-```
-
-### Install from source code
-1. Download the source code of MatterSim and change to the directory
-
-```bash
-git clone git@github.com:microsoft/mattersim.git
-cd mattersim
-```
-
-2. Install MatterSim
-
-> [!WARNING]
-> We strongly recommend that users install MatterSim using [mamba or micromamba](https://mamba.readthedocs.io/en/latest/index.html), because *conda* can be significantly slower when resolving the dependencies in environment.yaml.
-
-To install the package, run the following command under the root of the folder:
-
-```bash
-mamba env create -f environment.yaml
-mamba activate mattersim
-uv pip install -e .
-```
-
-## Pre-trained Models
-
-We currently offer two pre-trained **MatterSim-v1** models based on the **M3GNet** architecture in the [pretrained_models](./pretrained_models/) folder:
-
-1. **MatterSim-v1.0.0-1M**: A mini version of the model that is faster to run.
-2. **MatterSim-v1.0.0-5M**: A larger version of the model that is more accurate.
-
-These models have been trained using the data generated through the workflows
-introduced in the [MatterSim manuscript](https://arxiv.org/abs/2405.04967), which provides an in-depth
-explanation of the methodologies underlying the MatterSim model.
-
-More advanced and fully-supported pretrained versions of MatterSim,
-and additional materials capabilities are available in
-**[Azure Quantum Elements](https://quantum.microsoft.com/en-us/solutions/azure-quantum-elements)**.
-
-## Usage
-
-> [!TIP]
-> **Note for macOS Users:** If you are using macOS with Apple Silicon, please be aware of potential numerical instability with the MPS backend. We recommend using the CPU device for MatterSim on Mac to avoid these issues.
-
-### A minimal test
-```python
-import torch
-from loguru import logger
-from ase.build import bulk
-from ase.units import GPa
-from mattersim.forcefield import MatterSimCalculator
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-logger.info(f"Running MatterSim on {device}")
-
-si = bulk("Si", "diamond", a=5.43)
-si.calc = MatterSimCalculator(device=device)
-logger.info(f"Energy (eV)                 = {si.get_potential_energy()}")
-logger.info(f"Energy per atom (eV/atom)   = {si.get_potential_energy()/len(si)}")
-logger.info(f"Forces of first atom (eV/A) = {si.get_forces()[0]}")
-logger.info(f"Stress[0][0] (eV/A^3)       = {si.get_stress(voigt=False)[0][0]}")
-logger.info(f"Stress[0][0] (GPa)          = {si.get_stress(voigt=False)[0][0] / GPa}")
-```
-
-In this release, we provide two checkpoints: `MatterSim-v1.0.0-1M.pth` and `MatterSim-v1.0.0-5M.pth`. By default, the `1M` version is loaded.
-To switch to the `5M` version, manually set the `load_path` of `MatterSimCalculator` as shown below:
-
-```python
-MatterSimCalculator(load_path="MatterSim-v1.0.0-5M.pth", device=device)
-```
-
-## Finetune
-> [!TIP]
-> MatterSim provides a finetune script to finetune the pre-trained MatterSim model on a custom dataset.
-> Please refer to the [MatterSim documentation](https://microsoft.github.io/mattersim/) for more details.
-
-### A minimal finetune example
-
-```bash
-torchrun --nproc_per_node=1 src/mattersim/training/finetune_mattersim.py --load_model_path mattersim-v1.0.0-1m --train_data_path tests/data/high_level_water.xyz
-```
-
-
 
 
 ## Reference

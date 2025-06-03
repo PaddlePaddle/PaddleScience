@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mattersim"
-dynamic = ["version"]
+version = "1.1.2"
 description = "MatterSim: A Deep Learning Atomistic Model Across Elements, Temperatures and Pressures."
 authors = [
     { name = "Han Yang", email = "hanyang@microsoft.com" },
@@ -27,22 +27,17 @@ classifiers = [
 ]
 dependencies = [
     "ase>=3.23.0",
-    "azure-identity",
-    "azure-storage-blob",
     "scikit-learn",
     "deprecated",
-    "e3nn>=0.5.0",
     "atomate2",
     "emmet-core>=0.84; python_version >= '3.10'",
     "emmet-core<0.84; python_version < '3.10'",
     "loguru",
     "mp-api",
     "numpy<2",
-    "opt_einsum_fx",
     "pydantic>=2.9.2",
     "pymatgen",
     "seekpath",
-    "phonopy",
     "wandb",
 ]
 
@@ -77,10 +72,6 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["mattersim", "mattersim.*"]
-
-[tool.setuptools_scm]
-version_scheme = "guess-next-dev"
-local_scheme = "dirty-tag"
 
 [tool.cibuildwheel]
 # Limit the build to Python 3.9
