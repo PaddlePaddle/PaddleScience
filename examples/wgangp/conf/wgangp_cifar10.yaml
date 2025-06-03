@@ -1,0 +1,115 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_wgangp_cifar10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+output_dir: ${hydra:run.dir}
+seed: 42
+
+# model settings
+MODEL:
+  gen_net:
+    input_keys: [ "labels" ]
+    output_keys: [ "fake_data" ]
+    dim: 128
+    output_dim: 3072
+    label_num: 10
+    use_label: true
+  dis_net:
+    input_keys: [ "data", "labels" ]
+    output_keys: [ "disc_fake", "disc_acgan" ]
+    dim: 128
+    label_num: 10
+    use_label: true
+
+# logger settings
+LOGGER:
+  name: wgangp_cifar10
+  level: INFO
+  log_file: wgangp_cifar10.log
+
+DATA:
+  input_keys: [ "labels" ]
+  label_keys: [ "real_data" ]
+  data_path: ./data/cifar-10-python.tar.gz
+
+# visualization settings
+VIS:
+  vis: true
+  batch: 16
+  num: 64
+
+LOSS:
+  gen:
+    acgan_scale_g: 0.1
+  dis:
+    acgan_scale: 1
+
+# training settings
+TRAIN:
+  dataset:
+    "name": "NamedArrayDataset"
+  sampler:
+    name: "BatchSampler"
+    shuffle: true
+    drop_last: true
+  optimizer:
+    learning_rate: 2e-4
+    beta1: 0.
+    beta2: 0.9
+  lr_scheduler_gen:
+    epochs: 100000
+    iters_per_epoch: 1
+    learning_rate: 2e-4
+    end_lr: 0.0
+    by_epoch: true
+  lr_scheduler_dis:
+    epochs: 100000
+    iters_per_epoch: 5
+    learning_rate: 2e-4
+    end_lr: 0.0
+    by_epoch: true
+  batch_size: 64
+  use_shared_memory: true
+  num_workers: 0
+  epochs: 100000
+  epochs_dis: 1
+  iters_per_epoch_dis: 5
+  epochs_gen: 1
+  iters_per_epoch_gen: 1
+  drop_last: true
+  pretrained_gen_model_path: null
+  pretrained_dis_model_path: null
+
+# evaluation settings
+EVAL:
+  dataset:
+    "name": "NamedArrayDataset"
+  inceptionscore:
+    eps: 0
+    splits: 10
+    batch_size: 64
+  batch_size: 64
+  use_shared_memory: true
+  num_workers: 0
+  pretrained_gen_model_path: null
+  pretrained_dis_model_path: null

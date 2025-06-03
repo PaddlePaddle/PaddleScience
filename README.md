@@ -1,6 +1,7 @@
 # PaddleScience
 
 <!-- --8<-- [start:status] -->
+![paddlescience_icon](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2Fpaddlescience_icon.png)
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
 [![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
@@ -54,6 +55,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 域分解 | [XPINN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/xpinns) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
 | 布鲁塞尔扩散系统 | [3D-Brusselator](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/brusselator3d) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
 | 符号回归 | [Transformer4SR](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
+| 算子学习 | [隐空间神经算子LNO](https://github.com/L-I-M-I-T/LatentNeuralOperator) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2406.03923)|
 
 <br>
 <p align="center"><b>技术科学(AI for Technology)</b></p>
@@ -92,6 +94,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 受力分析和逆问题 | [3D 汽车控制臂变形](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/control_arm) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析和逆问题 | [3D 心脏仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heart.md) | 数理融合 | PINN | 监督学习 | - | - |
 | 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/topopt) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
+| 拓扑优化 | [2/3D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ntopo.md) | 机理驱动 | DenseSIRENModel | 无监督学习 | - | [Paper](https://arxiv.org/abs/2102.10782) |
 | 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_exchanger) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
 | 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/heat_pinn) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
 | 热仿真 | [2D 芯片热仿真](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/chip_heat) | 机理驱动 | PI-DeepONet | 无监督学习 | - | [Paper](https://doi.org/10.1063/5.0194245)|
@@ -102,25 +105,34 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 材料设计 | [散射板设计(反问题)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/hpinns) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 晶体材料属性预测 | [CGCNN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/cgcnn/) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
+| 分子生成 | [MoFlow](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/moflow/) | 数据驱动 | Flow Model | 监督学习 | [qm9/ zink250k](https://aistudio.baidu.com/datasetdetail/282687) | [Paper](https://arxiv.org/abs/2006.10137v1) |
+| 分子属性预测 | [IFM](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/) | 数据驱动 | MLP | 监督学习 | [tox21/sider/hiv/bace/bbbp](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/#:~:text=molecules%20%E6%95%B0%E6%8D%AE%E9%9B%86-,dataset.zip,-%EF%BC%8C%E6%88%96Google%20Drive) | [Paper](https://openreview.net/pdf?id=NLFqlDeuzt) |
+
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
-| 天气预报 | [Extformer-MoE 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/extformer_moe.md) | 数据驱动 | FourCastNet | 监督学习 | [enso](https://tianchi.aliyun.com/dataset/98942) | - |
-| 天气预报 | [FourCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fourcastnet) | 数据驱动 | FourCastNet | 监督学习 | [ERA5](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
-| 天气预报 | [NowCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nowcastnet) | 数据驱动 | NowCastNet | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
-| 天气预报 | [GraphCast 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/graphcast) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
+| 天气预报 | [Extformer-MoE 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/extformer_moe.md) | 数据驱动 | Transformer | 监督学习 | [enso](https://tianchi.aliyun.com/dataset/98942) | - |
+| 天气预报 | [FourCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fourcastnet) | 数据驱动 | AFNO | 监督学习 | [ERA5](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 天气预报 | [NowCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nowcastnet) | 数据驱动 | GAN | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
+| 天气预报 | [GraphCast 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/graphcast) | 数据驱动 | GNN | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
+| 天气预报 | [GenCast 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/gencast) | 数据驱动 | Diffusion+Graph transformer | 监督学习 | [Gencast](https://console.cloud.google.com/storage/browser/dm_graphcast) | [Paper](https://arxiv.org/abs/2312.15796) |
+| 天气预报 | [Fuxi 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fuxi) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2306.12873) |
 | 天气预报 | [FengWu 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fengwu) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2304.02948) |
 | 天气预报 | [Pangu-Weather 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/pangu_weather) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2211.02556) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
-| 天气预报 | [DGMR 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/dgmr.md) | 数据驱动 | DGMR | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
+| 天气预报 | [DGMR 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/dgmr.md) | 数据驱动 | GAN | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
 | 地震波形反演 | [VelocityGAN 地震波形反演](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
+| 交通预测 | [TGCN 交通流量预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
+| 生成模型| [图像生成中的梯度惩罚应用](./zh/examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
 
+- [沐曦MetaX](https://www.metax-tech.com/) 和 [太初元碁Tecorigin](http://www.tecorigin.com/cn/index.html) 完成与 PaddleScience 的第一阶段适配工作，详见：[多硬件支持](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/multi_device/)。
 - 基于 PaddleScience 的 ADR 方程求解方法 [Physics-informed neural networks for advection–diffusion–Langmuir adsorption processes](https://doi.org/10.1063/5.0221924) 被 Physics of Fluids 2024 接受。
 - 添加 [IJCAI 2024: 任意三维几何外形车辆的风阻快速预测竞赛](https://competition.atomgit.com/competitionInfo?id=7f3f276465e9e845fd3a811d2d6925b5)，track A, B, C 的 paddle/pytorch 代码链接。
 - 添加 SPINN(基于 Helmholtz3D 方程求解) [helmholtz3d](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/spinn/)。
@@ -152,7 +164,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>3.0-beta 或 develop</b></font> 版的 PaddlePaddle。
+请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 
@@ -211,7 +223,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
     - 设置 PYTHONPATH 并手动安装 requirements
 
-        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内临时将环境变量 `PYTHONPATH` 设置为 PaddleScience 的**绝对路径**，如下所示。
 
         ``` shell
         cd PaddleScience
@@ -265,7 +277,7 @@ python -c "import paddle; paddle.utils.run_check()"
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
 
-如使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 提出建议，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
+如在使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 中提出，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
 <!-- --8<-- [end:support] -->
 
 <!-- --8<-- [start:contribution] -->

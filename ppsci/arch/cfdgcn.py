@@ -194,7 +194,7 @@ class CFDGCN(nn.Layer):
         config_file (str): Name of configuration file for su2 module.
         coarse_mesh (str): Path of coarse mesh file.
         fine_marker_dict (Dict[str, List[List[int]]]): Dict of fine marker.
-        process_sim (Callable, optional): Preprocess funtion. Defaults to `lambda x, y: x`.
+        process_sim (Callable, optional): Preprocess function. Defaults to `lambda x, y: x`.
         freeze_mesh (bool, optional): Whether set `stop_gradient=True` for nodes. Defaults to False.
         num_convs (int, optional): Number of conv layers. Defaults to 6.
         num_end_convs (int, optional): Number of end conv layers. Defaults to 3.

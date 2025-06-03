@@ -552,6 +552,12 @@ class Solver:
         self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
         self.forward_helper.nvtx_flag = self.nvtx_flag
 
+        # for callbacks
+        self.callbacks_on_epoch_begin: List[Callable[[Solver]]] = []
+        self.callbacks_on_epoch_end: List[Callable[[Solver]]] = []
+        self.callbacks_on_iter_begin: List[Callable[[Solver]]] = []
+        self.callbacks_on_iter_end: List[Callable[[Solver]]] = []
+
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
@@ -569,7 +575,10 @@ class Solver:
             core.nvprof_enable_record_event()
 
         for epoch_id in range(start_epoch, self.epochs + 1):
+            self._invoke_callbacks_on_epoch_begin()  # [optional]
             self.train_epoch_func(self, epoch_id, self.log_freq)
+            self._invoke_callbacks_on_epoch_end()  # [optional]
+
             self.train_output_info.clear()
 
             # update average model if exist
@@ -948,8 +957,6 @@ class Solver:
 
         if with_onnx:
             # TODO: support pir + onnx
-            if paddle.framework.use_pir_api():
-                raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
                     "Please install paddle2onnx with `pip install paddle2onnx`"
@@ -957,11 +964,13 @@ class Solver:
                 )
             import paddle2onnx
 
-            DEFAULT_OPSET_VERSION = 13
+            DEFAULT_OPSET_VERSION = 19
 
             paddle2onnx.export(
-                model_file=export_path + ".pdmodel",
-                params_file=export_path + ".pdiparams",
+                model_filename=export_path + ".json"
+                if paddle.framework.use_pir_api()
+                else ".pdmodel",
+                params_filename=export_path + ".pdiparams",
                 save_file=export_path + ".onnx",
                 opset_version=DEFAULT_OPSET_VERSION,
                 enable_onnx_checker=True,
@@ -1124,3 +1133,87 @@ class Solver:
             self.pretrained_model_path = cfg.EVAL.pretrained_model_path
         elif cfg.mode in ["export", "infer"]:
             self.pretrained_model_path = cfg.INFER.pretrained_model_path
+
+    def register_callback_on_epoch_begin(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the beginning of each training epoch.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the start of every epoch.
+        """
+        self.callbacks_on_epoch_begin.append(callback_fn)
+
+    def register_callback_on_epoch_end(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the end of each training epoch.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the end of every epoch.
+        """
+        self.callbacks_on_epoch_end.append(callback_fn)
+
+    def register_callback_on_iter_begin(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the beginning of each training iteration.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the start of every iteration.
+        """
+        self.callbacks_on_iter_begin.append(callback_fn)
+
+    def register_callback_on_iter_end(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the end of each training iteration.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the end of every iteration.
+
+        Returns:
+        -------
+        None
+        """
+        self.callbacks_on_iter_end.append(callback_fn)
+
+    def _invoke_callbacks_on_epoch_begin(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the beginning of an epoch.
+        """
+        for callback in self.callbacks_on_epoch_begin:
+            callback(self)
+
+    def _invoke_callbacks_on_epoch_end(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the end of an epoch.
+        """
+        for callback in self.callbacks_on_epoch_end:
+            callback(self)
+
+    def _invoke_callbacks_on_iter_begin(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the beginning of an iteration.
+        """
+        for callback in self.callbacks_on_iter_begin:
+            callback(self)
+
+    def _invoke_callbacks_on_iter_end(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the end of an iteration.
+        """
+        for callback in self.callbacks_on_iter_end:
+            callback(self)

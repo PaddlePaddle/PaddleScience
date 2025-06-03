@@ -13,13 +13,13 @@ from ppsci.utils import initializer
 
 
 class PosEmbed(nn.Layer):
-    """Pose embeding
+    """Pose embedding
 
     Args:
-        embed_dim (int): The dimension of embeding.
-        maxT (int): The embeding max time.
-        maxH (int): The embeding max height.
-        maxW (int): The embeding max width.
+        embed_dim (int): The dimension of embedding.
+        maxT (int): The embedding max time.
+        maxH (int): The embedding max height.
+        maxW (int): The embedding max width.
         typ (str):
             The type of the positional embedding.
             - t+h+w:
@@ -180,7 +180,7 @@ class CuboidCrossAttentionLayer(nn.Layer):
     The complexity of the layer is O((T2 / n_t * Bh * Bw) * (T1 / n_t * Bh * Bw) * n_t (H / Bh) (W / Bw)) = O(T2 * T1 / n_t H W Bh Bw)
 
     Args:
-        dim (int): The dimention of input tensor.
+        dim (int): The dimension of input tensor.
         num_heads (int): The number of head.
         n_temporal (int, optional): The num of temporal. Defaults to 1.
         cuboid_hw (tuple, optional): The height and width of cuboid. Defaults to (7, 7).
@@ -880,7 +880,7 @@ class CuboidTransformerDecoder(nn.Layer):
         norm_layer (str, optional): The normalization layer. Defaults to "layer_norm".
         use_inter_ffn (bool, optional): Whether to use inter FFN. Defaults to False.
         hierarchical_pos_embed (bool, optional): Whether to use hierarchical pos_embed. Defaults to False.
-        pos_embed_type (str, optional): The type of pos embeding. Defaults to "t+hw".
+        pos_embed_type (str, optional): The type of pos embedding. Defaults to "t+hw".
         max_temporal_relative (int, optional): The max number of teemporal relative. Defaults to 50.
         padding_type (str, optional): The type of padding. Defaults to "ignore".
         checkpoint_level (bool, optional):  Whether to enable gradient checkpointing. Defaults to True.

@@ -30,7 +30,7 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set working condition
-DL: 1.0  # lenth of the domain
+DL: 1.0  # length of the domain
 DW: 1.0  # width of the domain
 NL: 20  # number of length
 NW: 20  # number of width

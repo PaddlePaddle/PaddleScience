@@ -2,13 +2,15 @@ import copy
 import os
 import pickle
 import typing
+from typing import Any
+from typing import Callable
 
-import args
-import graphtype
 import numpy as np
 import paddle
 import pandas as pd
 import xarray
+from graphcast import args
+from graphcast import graphtype
 
 _SEC_PER_HOUR = 3600
 _HOUR_PER_DAY = 24
@@ -18,6 +20,32 @@ AVG_SEC_PER_YEAR = SEC_PER_DAY * _AVG_DAY_PER_YEAR
 
 DAY_PROGRESS = "day_progress"
 YEAR_PROGRESS = "year_progress"
+
+
+def map_structure(func: Callable[..., Any], *structures: Any) -> Any:
+    """Maps func through given structures with xarrays. See tree.map_structure."""
+    if not callable(func):
+        raise TypeError(f"func must be callable, got: {func}")
+    if not structures:
+        raise ValueError("Must provide at least one structure")
+
+    first = structures[0]
+    if isinstance(first, xarray.Dataset):
+        data = {k: func(*[s[k] for s in structures]) for k in first.keys()}
+        if all(isinstance(a, (type(None), xarray.DataArray)) for a in data.values()):
+            data_arrays = [v.rename(k) for k, v in data.items() if v is not None]
+            try:
+                return xarray.merge(data_arrays, join="exact")
+            except ValueError:  # Exact join not possible.
+                pass
+        return data
+    if isinstance(first, dict):
+        return {
+            k: map_structure(func, *[s[k] for s in structures]) for k in first.keys()
+        }
+    if isinstance(first, (list, tuple, set)):
+        return type(first)(map_structure(func, *s) for s in zip(*structures))
+    return func(*structures)
 
 
 def get_year_progress(seconds_since_epoch: np.ndarray) -> np.ndarray:
@@ -50,7 +78,7 @@ def get_day_progress(
         point at which UNIX time starts).
       longitude: 1D array of longitudes at which day progress is computed.
     Returns:
-      2D array of day progress values normalized to be in the [0, 1) inverval
+      2D array of day progress values normalized to be in the [0, 1) interval
         for each time point at each longitude.
     """
     # [0.0, 1.0) Interval.
@@ -109,7 +137,7 @@ def extract_input_target_times(
     dataset = dataset.assign_coords(time=time + target_duration - time[-1])
 
     # Slice out targets:
-    targets = dataset.sel({"time": target_lead_times})
+    targets = dataset.sel({"time": ["12h"]}, method="nearest")
 
     input_duration = pd.Timedelta(input_duration)
     # Both endpoints are inclusive with label-based slicing, so we offset by a
@@ -330,6 +358,11 @@ class ERA5Data(paddle.io.Dataset):
             self.forcing_variables = args.TASK_13_PRECIP_OUT_forcing_variables
             self.target_variables = args.TASK_13_PRECIP_OUT_target_variables
             self.level_variables = args.PRESSURE_LEVELS[13]
+        elif config.type == "gencast":
+            self.input_variables = args.TASK_gencast_input_variables
+            self.forcing_variables = args.TASK_gencast_forcing_variables
+            self.target_variables = args.TASK_gencast_target_variables
+            self.level_variables = args.PRESSURE_LEVELS[13]
 
         # 数据
         nc_dataset = xarray.open_dataset(config.data_path)
@@ -357,7 +390,9 @@ class ERA5Data(paddle.io.Dataset):
         )
 
         inputs, targets = extract_input_target_times(
-            nc_dataset, input_duration="12h", target_lead_times="6h"
+            nc_dataset,
+            input_duration=config.input_duration,
+            target_lead_times=config.target_lead_times,
         )
 
         # 统计数据
@@ -370,6 +405,10 @@ class ERA5Data(paddle.io.Dataset):
         mean_data = xarray.open_dataset(config.mean_path).sel(
             level=list(self.level_variables)
         )
+        self._scales = stddev_data
+        self._locations = mean_data
+        self._residual_scales = stddev_diffs_data
+        self._residual_locations = None
 
         missing_variables = set(self.target_variables) - set(self.input_variables)
         exist_variables = set(self.target_variables) - missing_variables
@@ -389,13 +428,48 @@ class ERA5Data(paddle.io.Dataset):
         inputs = inputs[list(self.input_variables)]
         forcings = targets[list(self.forcing_variables)]
         targets = targets[list(self.target_variables)]
+
+        if config.type == "gencast":
+            min_data = xarray.open_dataset(config.min_path).sel(
+                level=list(self.level_variables)
+            )
+            intputs_sst = inputs["sea_surface_temperature"]
+            intputs_fillna = inputs.assign(
+                {
+                    "sea_surface_temperature": intputs_sst.fillna(
+                        min_data["sea_surface_temperature"]
+                    )
+                }
+            )
+            inputs = intputs_fillna
+            targets_sst = targets["sea_surface_temperature"]
+            targets_fillna = targets.assign(
+                {
+                    "sea_surface_temperature": targets_sst.fillna(
+                        min_data["sea_surface_temperature"]
+                    )
+                }
+            )
+            targets = targets_fillna
+
+        targets = map_structure(
+            lambda t: self._subtract_input_and_normalize_target(intputs_fillna, t),
+            targets,
+        )
         inputs = self.normalize(inputs, stddev_data, mean_data)
         forcings = self.normalize(forcings, stddev_data, mean_data)
 
         self.targets_template = targets
+        self.inputs_template = inputs
+        self.forcings_template = forcings
 
         stacked_inputs = dataset_to_stacked(inputs)
-        stacked_forcings = dataset_to_stacked(forcings)
+        if config.type == "gencast":
+            stacked_forcings = dataset_to_stacked(
+                forcings, preserved_dims=("batch", "lon")
+            )
+        else:
+            stacked_forcings = dataset_to_stacked(forcings)
         stacked_targets = dataset_to_stacked(targets)
         stacked_inputs = xarray.concat(
             [stacked_inputs, stacked_forcings], dim="channels"
@@ -423,7 +497,12 @@ class ERA5Data(paddle.io.Dataset):
         if os.path.exists(graph_template_path):
             graph_template = pickle.load(open(graph_template_path, "rb"))
         else:
-            graph_template = graphtype.GraphGridMesh(config)
+            if config.type == "gencast":
+                graph_template = graphtype.GraphGridMesh(
+                    config.denoiser_architecture_config
+                )
+            else:
+                graph_template = graphtype.GraphGridMesh(config)
 
         graph = copy.deepcopy(graph_template)
         graph.grid_node_feat = np.concatenate(
@@ -450,5 +529,30 @@ class ERA5Data(paddle.io.Dataset):
             ]
         return inputs_data
 
+    def normalize_target(self, inputs_data, stddev_data, mean_data):
+        if mean_data is not None:
+            inputs_data = (inputs_data - mean_data[inputs_data.name]) / stddev_data[
+                inputs_data.name
+            ]
+        else:
+            inputs_data = inputs_data / stddev_data[inputs_data.name]
+        return inputs_data
+
     def denormalize(self, inputs_data):
         return inputs_data * self.stacked_targets_stddev + self.stacked_targets_mean
+
+    def _subtract_input_and_normalize_target(self, inputs, target):
+        if target.sizes.get("time") != 1:
+            raise ValueError(
+                "normalization.InputsAndResiduals only supports wrapping predictors"
+                "that predict a single timestep."
+            )
+        if target.name in inputs:
+            target_residual = target
+            last_input = inputs[target.name].isel(time=-1)
+            target_residual = target_residual - last_input
+            return self.normalize_target(
+                target_residual, self._residual_scales, self._residual_locations
+            )
+        else:
+            return self.normalize_target(target, self._scales, self._locations)

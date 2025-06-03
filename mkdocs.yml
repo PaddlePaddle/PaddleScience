@@ -85,6 +85,7 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+          - NTopo: zh/examples/ntopo.md
           - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
@@ -101,11 +102,14 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
+        - GenCast: zh/examples/gencast.md
         - VelocityGAN: zh/examples/velocity_gan.md
         - TGCN: zh/examples/tgcn.md
         - IOPS: zh/examples/iops.md
         - Pang-Weather: zh/examples/pangu_weather.md
         - FengWu: zh/examples/fengwu.md
+        - FuXi: zh/examples/fuxi.md
+        - WGAN_GP: zh/examples/wgan_gp.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - TADF: zh/examples/TADF.md

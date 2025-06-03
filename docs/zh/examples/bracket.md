@@ -104,7 +104,7 @@ examples/bracket/bracket.py:15:19
 Bracket 案例涉及到以下线弹性方程，使用 PaddleScience 内置的 `LinearElasticity` 即可。
 
 --8<--
-ppsci/equation/pde/linear_elasticity.py:30:42
+ppsci/equation/pde/linear_elasticity.py:31:43
 --8<--
 
 对应的方程实例化代码如下：

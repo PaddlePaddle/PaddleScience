@@ -1,0 +1,88 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_wgangp_toy/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+output_dir: ${hydra:run.dir}
+seed: 42
+
+# model settings
+MODEL:
+  gen_net:
+    output_keys: [ "fake_data" ]
+    dim: 512
+  dis_net:
+    input_keys: [ "data" ]
+    output_keys: [ "score" ]
+    dim: 512
+
+# logger settings
+LOGGER:
+  name: wgangp_toy
+  level: INFO
+  log_file: wgangp_toy.log
+
+DATA:
+  input_keys: [ "real_data" ]
+  mode: 8gaussians #swissroll/8gaussians/25gaussians
+
+# visualization settings
+VIS:
+  vis: true
+
+LOSS:
+  dis:
+    lamda: 0.1
+
+# training settings
+TRAIN:
+  dataset:
+    "name": "NamedArrayDataset"
+  sampler:
+    name: "BatchSampler"
+    shuffle: true
+    drop_last: true
+  optimizer:
+    learning_rate: 1e-4
+    beta1: 0.5
+    beta2: 0.9
+  batch_size: 8192
+  use_shared_memory: true
+  num_workers: 0
+  epochs: 3125
+  epochs_dis: 1
+  iters_per_epoch_dis: 5
+  epochs_gen: 1
+  iters_per_epoch_gen: 1
+  drop_last: true
+  pretrained_gen_model_path: null
+  pretrained_dis_model_path: null
+
+# evaluation settings
+EVAL:
+  dataset:
+    "name": "NamedArrayDataset"
+  batch_size: 8192
+  use_shared_memory: true
+  num_workers: 0
+  pretrained_gen_model_path: null
+  pretrained_dis_model_path: null

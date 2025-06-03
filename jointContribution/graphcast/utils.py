@@ -17,6 +17,7 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
+import paddle
 import scipy
 import xarray
 
@@ -610,3 +611,38 @@ def get_bipartite_relative_position_in_receiver_local_coordinates(
     # we would lose information about the curvature of the mesh, which may be
     # important for very coarse meshes.
     return sender_pos_in_in_rotated_space - receiver_pos_in_rotated_space
+
+
+def fourier_features(
+    values: paddle.Tensor,
+    base_period: float,
+    num_frequencies: int,
+) -> paddle.Tensor:
+    """Maps values to sin/cos features for a range of frequencies.
+
+    Args:
+        values: Values to compute Fourier features for.
+        base_period: The base period to use. This should be greater or equal to the
+          range of the values, or to the period if the values have periodic
+          semantics (e.g. 2pi if they represent angles). Frequencies used will be
+          integer multiples of 1/base_period.
+        num_frequencies: The number of frequencies to use, we will use integer
+          multiples of 1/base_period from 1 up to num_frequencies inclusive. (We
+          don't include a zero frequency as this would just give constant features
+          which are redundant if a bias term is present).
+
+    Returns:
+        Array with same shape as values except with an extra trailing dimension
+        of size 2*num_frequencies, which contains a sin and a cos feature for each
+        frequency.
+    """
+    frequencies = np.arange(1, num_frequencies + 1) / base_period
+    angular_frequencies = paddle.to_tensor(2 * np.pi * frequencies, dtype=values.dtype)
+    values_times_angular_freqs = values.unsqueeze(-1) * angular_frequencies
+    return paddle.concat(
+        [
+            paddle.cos(values_times_angular_freqs),
+            paddle.sin(values_times_angular_freqs),
+        ],
+        axis=-1,
+    )

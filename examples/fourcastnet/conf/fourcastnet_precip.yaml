@@ -21,7 +21,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: train # running mode: train/eval/export/infer
 seed: 1024
 output_dir: ${hydra:run.dir}
 log_freq: 20
@@ -56,6 +56,10 @@ TEST_FILE_PATH: ./datasets/era5/precip/out_of_sample/2018.h5
 # set wind model path
 WIND_MODEL_PATH: outputs_fourcastnet_finetune/checkpoints/latest
 
+# set inference data path
+WIND_INFER_PATH: ./datasets/era5/test/2018-04-04_n6.npy
+INFER_FILE_PATH: ./datasets/era5/test/2018-04-04_n6_precip.npy
+
 # model settings
 MODEL:
   afno:
@@ -86,3 +90,23 @@ EVAL:
   compute_metric_by_batch: true
   eval_with_no_grad: true
   batch_size: 1
+
+INFER:
+  pretrained_model_path: "https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams"
+  WIND_MODEL_PATH: "https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams"
+  export_path: ./inference/fourcastnet_precip
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  batch_size: ${TRAIN.batch_size}
+  output_keys: ${MODEL.afno.output_keys}
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  num_timestamps: 6

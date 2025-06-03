@@ -99,7 +99,7 @@ def train(cfg: DictConfig):
         name="Sup",
     )
 
-    # parmas from dataset
+    # params from dataset
     inputs = sup_constraint.data_loader.dataset.data_tr_x.shape[1]
     tasks = sup_constraint.data_loader.dataset.task_dict[cfg.data_label]
     iters_per_epoch = len(sup_constraint.data_loader)

@@ -372,7 +372,7 @@ def evaluate(cfg: DictConfig):
         name="sup_validator_gen",
     )
 
-    # customized evalution
+    # customized evaluation
     def scale(data):
         smax = np.max(data)
         smin = np.min(data)

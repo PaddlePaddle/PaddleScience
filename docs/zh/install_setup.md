@@ -10,7 +10,7 @@
     # pull image
     docker pull hydrogensulfate/paddlescience
 
-    # create a container named 'paddlescience_container' based on pulled image
+    # create a container named 'paddlescience_container' using the pulled image
     ## docker version < 19.03
     nvidia-docker run --name paddlescience_container --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
 
@@ -40,7 +40,7 @@
 
 如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
 
-1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包，并手动安装。
+1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包并手动安装。
 2. 创建 python 3.9 环境，并进入该环境。
 
     ``` sh
@@ -113,7 +113,7 @@
 
 PaddleScience 提供了两种复杂几何类型，如下所示：
 
-| API 名称 | 支持文件类型 | 安装方式 | 使用方式 |
+| API 名称 | 支持的文件类型 | 安装方式 | 使用方式 |
 | -- | -- | -- | -- |
 |[`ppsci.geometry.Mesh`](./api/geometry.md#ppsci.geometry.Mesh) | `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh`| 参考下方的 "PyMesh 安装命令"| `ppsci.geometry.Mesh(mesh_path)`|
 |[`ppsci.geometry.SDFMesh`](./api/geometry.md#ppsci.geometry.SDFMesh "实验性功能") | `.stl` | `pip install warp-lang 'numpy-stl>=2.16,<2.17'` | `ppsci.geometry.SDFMesh.from_stl(stl_path)` |
@@ -144,7 +144,7 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 === "PyMesh 安装命令"
 
     在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否已安装 cmake。
-    如未安装，可按照下列命令下载、解压 cmake 包，并添加到 `PATH` 变量中即可完成安装。
+    如果未安装，可以按照下列命令下载并解压 cmake 包，然后将其添加到 PATH 变量中以完成安装。
 
     ``` sh
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
@@ -158,7 +158,7 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
     # CMake suite maintained and supported by Kitware (kitware.com/cmake).
     ```
 
-    PyMesh 库需要以 setup 的方式进行安装，命令如下：
+    推荐以 setup 的方式安装 PyMesh 库，命令如下：
 
     ``` sh
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
@@ -206,30 +206,91 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
 #### 1.4.3 安装第三方库[可选]
 
-PaddleScience 提供了多种第三方库供用户在开发时使用，这些库位于 `ppsci/externals` 目录下，可以通过 `git submodule` 命令进行下载，然后根据需要进行安装和使用。以下是具体操作步骤：
-
-=== "下载"
-
-    ``` sh
-    cd PaddleScience
-
-    # 下载全部第三方库
-    git submodule update --init ppsci/externals/
-
-    # 下载指定第三方库(以 tensorly 为例)
-    git submodule update --init ppsci/externals/tensorly
-    ```
+PaddleScience 提供了多种第三方库供用户在开发时使用，这些库位于 `ppsci/externals` 目录下，可以通过 `git submodule` 命令进行下载、安装，或者直接安装我们提供的 whl 包。以下是具体操作步骤：
 
 === "安装"
 
-    以 `tensorly` 为例，安装方法如下：
+    === "deepali"
 
-    ``` sh
-    cd ppsci/externals/tensorly
-    pip install -e .
-    ```
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/deepali
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/deepali
 
-    其他库的安装方法请参考相应的 GitHub 项目主页上的说明。
+        # install from whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/deepali/whl/latest/dist/hf_deepali-0.1.0-py3-none-any.whl
+        ```
+
+    === "neuraloperator"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/neuraloperator
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/neuraloperator
+
+        # install from whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/neuraloperator/whl/cuda11.8/latest/dist/neuraloperator-0.3.0-py3-none-any.whl
+        ```
+
+    === "open3d"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/Open3D
+        # install from whl(cuda 118)(recommended)
+        python -m pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda11.8/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
+        # install from whl(cuda 123)(recommended)
+        python -m pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda12.3/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
+
+        # install from source: https://github.com/PFCCLab/Open3D?tab=readme-ov-file#build-and-install
+        ```
+
+    === "paddle_harmonics"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/paddle_harmonics
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/paddle_harmonics
+
+        # install from whl(cuda 118)
+        python -m pip install https://paddle-qa.bj.bcebos.com/paddle_harmonics/whl/latest/dist/paddle_harmonics-0.1.0-py3-none-any.whl
+        ```
+
+    === "paddle_scatter"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/paddle_scatter
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/paddle_scatter
+        ```
+
+    === "tensorly"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/tensorly
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/tensorly
+
+        # install from whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/tensorly/whl/latest/dist/tensorly-0.9.0-py3-none-any.whl
+        ```
+
+    === "warp"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/warp
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/warp
+
+        # install from whl, see: https://nvidia.github.io/warp/installation.html#
+        python -m pip install warp-lang
+        ```
 
 === "使用"
 
@@ -238,7 +299,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
     ``` python
     >>> from ppsci import externals
     >>> print(externals.__all__)
-    ['deepali', 'open3d', 'paddle_harmonics', 'tensorly', 'warp']
+    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'tensorly', 'warp']
 
     >>> tl = externals.tensorly
     >>> tl.set_backend("paddle")

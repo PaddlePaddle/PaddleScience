@@ -21,6 +21,7 @@
         - FNO1d
         - Generator
         - HEDeepONets
+        - KAN
         - LorenzEmbedding
         - MLP
         - ModelList

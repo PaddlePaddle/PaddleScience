@@ -26,6 +26,34 @@
     python train_precip.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams WIND_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    # 风速预训练模型导出
+    python train_pretrain.py mode=export
+    # 风速微调模型导出
+    python train_finetune.py mode=export
+    # 降水量模型导出
+    python train_precip.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # 下载风速预测小样本数据
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6_precip.npy -P ./datasets/era5/test/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6.npy -P ./datasets/era5/test/
+    # 风速预训练模型推理
+    python train_pretrain.py mode=infer
+    # 风速微调模型推理
+    python train_finetune.py mode=infer
+    # 下载降水量预测小样本数据
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-09-08_n32.npy -P ./datasets/era5/test/
+    # 降水量模型推理
+    python train_precip.py mode=infer
+    ```
+
+
 | 模型 | 变量名称 | ACC/RMSE(6h) | ACC/RMSE(30h) | ACC/RMSE(60h) | ACC/RMSE(120h) | ACC/RMSE(192h) |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | [风速模型](https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams) | U10 | 0.991/0.567 | 0.963/1.130 | 0.891/1.930 | 0.645/3.438 | 0.371/4.915 |

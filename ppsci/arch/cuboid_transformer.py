@@ -491,7 +491,7 @@ class CuboidTransformer(base.Arch):
         gated_ffn (bool, optional): Whether to use gate FFN. Defaults to False.
         norm_layer (str, optional): The type of normilize. Defaults to "layer_norm".
         padding_type (str, optional): The type of padding. Defaults to "ignore".
-        pos_embed_type (str, optional): The type of pos embeding. Defaults to "t+hw".
+        pos_embed_type (str, optional): The type of pos embedding. Defaults to "t+hw".
         checkpoint_level (bool, optional): Whether to use checkpoint. Defaults to True.
         use_relative_pos (bool, optional): Whether to use relative pose. Defaults to True.
         self_attn_use_final_proj (bool, optional): Whether to use final projection. Defaults to True.
