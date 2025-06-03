@@ -517,10 +517,11 @@ def dot_product_attention_weights(
     """
     dtype = query.dtype
 
-    assert query.ndim == key.ndim, "q, k must have same rank."
-    assert query.shape[:-3] == key.shape[:-3], "q, k batch dims must match."
-    assert query.shape[-2] == key.shape[-2], "q, k num_heads must match."
-    assert query.shape[-1] == key.shape[-1], "q, k depths must match."
+    if paddle.in_dynamic_mode():
+        assert query.ndim == key.ndim, "q, k must have same rank."
+        assert query.shape[:-3] == key.shape[:-3], "q, k batch dims must match."
+        assert query.shape[-2] == key.shape[-2], "q, k num_heads must match."
+        assert query.shape[-1] == key.shape[-1], "q, k depths must match."
 
     # calculate attention matrix
     depth = query.shape[-1]
@@ -567,14 +568,15 @@ def dot_product_attention(
     Returns:
         paddle.Tensor: Output of shape [batch..., q_length, num_heads, v_depth_per_head].
     """
-    assert key.ndim == query.ndim == value.ndim, "q, k, v must have same rank."
-    assert (
-        query.shape[:-3] == key.shape[:-3] == value.shape[:-3]
-    ), "q, k, v batch dims must match."
-    assert (
-        query.shape[-2] == key.shape[-2] == value.shape[-2]
-    ), "q, k, v num_heads must match."
-    assert key.shape[-3] == value.shape[-3], "k, v lengths must match."
+    if paddle.in_dynamic_mode():
+        assert key.ndim == query.ndim == value.ndim, "q, k, v must have same rank."
+        assert (
+            query.shape[:-3] == key.shape[:-3] == value.shape[:-3]
+        ), "q, k, v batch dims must match."
+        assert (
+            query.shape[-2] == key.shape[-2] == value.shape[-2]
+        ), "q, k, v num_heads must match."
+        assert key.shape[-3] == value.shape[-3], "k, v lengths must match."
 
     # compute attention weights
     attn_weights = dot_product_attention_weights(
