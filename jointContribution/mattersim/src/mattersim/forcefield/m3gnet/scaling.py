@@ -59,8 +59,8 @@ class AtomScaling(paddle.nn.Layer):
                   default option is gaussian regression (NequIP)
                 - per_species_energy_mean_linear_reg :
                   an alternative choice is linear regression (M3GNet)
-            init_scale (torch.Tensor or float)
-            init_shift (torch.Tensor or float)
+            init_scale (paddle.Tensor or float)
+            init_shift (paddle.Tensor or float)
         """
         super().__init__()
         self.max_z = max_z

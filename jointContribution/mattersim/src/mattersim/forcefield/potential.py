@@ -49,7 +49,7 @@ class Potential(paddle.nn.Layer):
         Args:
             potential : a force field model
             lr : learning rate
-            scheduler : a torch scheduler
+            scheduler : a paddle scheduler
             normalizer : an energy normalization module
         """
         super().__init__()

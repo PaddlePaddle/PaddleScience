@@ -101,7 +101,7 @@ class M3Gnet(paddle.nn.Layer):
         rij = edge_length[three_body_indices[:, 0].clone()]
         rik = edge_length[three_body_indices[:, 1].clone()]
         cos_jik = paddle.sum(x=vij * vik, axis=1) / (rij * rik)
-        # eps = 1e-7 avoid nan in torch.acos function
+        # eps = 1e-7 avoid nan in paddle.acos function
         cos_jik = paddle.clip(x=cos_jik, min=-1.0 + 1e-07, max=1.0 - 1e-07)
         triple_edge_length = rik.view(-1)
         edge_length = edge_length.unsqueeze(axis=-1)

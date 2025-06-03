@@ -46,7 +46,7 @@ class BesselBasis(paddle.nn.Layer):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x : paddle.Tensor
             Input
         """
         numerator = paddle.sin(
@@ -67,7 +67,7 @@ class SmoothBesselBasis(paddle.nn.Layer):
         Ref:
             https://arxiv.org/pdf/1907.02374.pdf
         Args:
-            r_max: torch.Tensor distance tensor
+            r_max: paddle.Tensor distance tensor
             max_n: int, max number of basis, expanded by the zero roots
         Returns: expanded spherical harmonics with
                  derivatives smooth at boundary
@@ -120,7 +120,7 @@ class SmoothBesselBasis(paddle.nn.Layer):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x : paddle.Tensor
             Input
         """
         x_1 = x.unsqueeze(axis=-1) * self.n_1_pi_cutoff
