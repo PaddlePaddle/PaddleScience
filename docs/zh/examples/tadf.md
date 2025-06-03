@@ -15,7 +15,7 @@
 === "模型训练命令"
 
     ``` sh
-    #Est 预测  
+    #Est 预测:  
     cd TADF_angle
     python Est.py mode=train
     cd ../
@@ -38,7 +38,7 @@
     cd TADF_angle
     python Est.py
     cd ../
-    
+
     #f 评估:
     cd TADF_f
     python f.py
@@ -65,15 +65,15 @@
 ``` log
 tadf/
 ├──TADF_angle/
-│   ├── config/              
-│   │    └── angle.yaml            
-│   ├── angle_model.py       
-│   ├── angle.dat            
-│   ├── angle.py             
-│   └── smis.txt             
+│   ├── config/  
+│   │    └── angle.yaml  
+│   ├── angle_model.py  
+│   ├── angle.dat  
+│   ├── angle.py  
+│   └── smis.txt  
 ├── TADF_Est/
-│   └── ...            
-├── TADF_f/              
+│   └── ...  
+├── TADF_f/  
 │   └── ...
 └── requirements.txt
 ```

@@ -1,6 +1,5 @@
 import os
 
-import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
@@ -20,20 +19,19 @@ plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
 
 # 加载数据集
 def load_data(cfg):
-    data_dir = cfg.data_dir  
-    sim_dir = cfg.sim_dir  
-    angle_dat_path = os.path.join(data_dir)
+    data_dir = cfg.data_dir
+    sim_dir = cfg.sim_dir
+    f_dat_path = os.path.join(data_dir)
     smis_txt_path = os.path.join(sim_dir)
 
     data = []
-    with open(angle_dat_path) as f:
+    with open(f_dat_path) as f:
         for line in f:
             num = float(line.strip())
             data.append(num)
-
     smis = []
     with open(smis_txt_path) as f:
-        for line in f:
+        for line in open("./smis.txt"):
             smis.append(line.strip())
 
     return data, smis
@@ -54,8 +52,8 @@ def featurize_molecules(smis):
             del_mol.append(s)
     pca = PCA(n_components=0.99)
     pca.fit(vectors)
-    X = pca.transform(vectors)
-    return paddle.to_tensor(X, dtype="float32")
+    X = paddle.to_tensor(pca.transform(vectors))
+    return X
 
 
 def train(cfg: DictConfig, X, data):
@@ -74,7 +72,7 @@ def train(cfg: DictConfig, X, data):
             y_train = Y[0:val_start]
         return x_train, y_train, x_val, y_val
 
-    Y = paddle.to_tensor(data, dtype="float32")
+    Y = paddle.to_tensor(data)
     x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, X, Y)
     # 处理数据集
     x_train = paddle.to_tensor(x_train, dtype="float32")
@@ -99,13 +97,12 @@ def train(cfg: DictConfig, X, data):
         loss=ppsci.loss.MSELoss("mean"),
         name="bc_sup",
     )
-
     # 设置模型
     hidden_size = [587, 256]
     num_layers = None
-    
+
     # 实例化模型
-    model = ppsci.arch.DNN(
+    model = ppsci.arch.TADF(
         input_keys=tuple(x.keys()),
         hidden_size=hidden_size,
         num_layers=num_layers,
@@ -132,7 +129,7 @@ def train(cfg: DictConfig, X, data):
     try:
         solver.train()
     except Exception as ex:
-        print("error", ex)
+        print(ex)
     paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
 
 
@@ -177,10 +174,10 @@ def eval(cfg: DictConfig, X, data):
     # 可视化
     plt.scatter(ytest, ypred, s=15, color="royalblue", marker="s", linewidth=1)
     plt.plot([ytest.min(), ytest.max()], [ytest.min(), ytest.max()], "r-", lw=1)
-    plt.legend(title=f"R²={R2:.3f}\n\nMAE={MAE:.3f}")
-    plt.xlabel("Test ΔEst(eV)")
-    plt.ylabel("Predicted ΔEst(eV)")
-    save_path = "test_Est.png"
+    plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(R2, MAE))
+    plt.xlabel("Test f")
+    plt.ylabel("Predicted f")
+    save_path = "test_f.png"
     plt.savefig(save_path)
     print(f"图片已保存至：{save_path}")
     plt.show()

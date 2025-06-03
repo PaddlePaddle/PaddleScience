@@ -1,5 +1,7 @@
 import hydra
-from angle_model import train, eval, load_data, featurize_molecules
+from angle_model import eval
+from angle_model import featurize_molecules
+from angle_model import load_data
 from angle_model import train
 from omegaconf import DictConfig
 
