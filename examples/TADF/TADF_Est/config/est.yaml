@@ -21,12 +21,14 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval #
+mode: eval # running mode: train/eval #
 seed: 42 #
 output_dir: ${hydra:run.dir} #
 log_freq: 20 #
 use_tbd: false #
 VIV_DATA_PATH: "./Est.dat" #
+data_dir: "./Est.dat"
+sim_dir: "./smis.txt"
 
 # model settings
 MODEL: #
@@ -57,7 +59,7 @@ TRAIN: #
 # evaluation settings
 EVAL:
   test_size: 0.1
-  load_model_path: './est_model.pth'
+  load_model_path: './Est_pretrained.pdparams'
   seed: 20
 #  pretrained_model_path: null #
 #  batch_size: 32 #

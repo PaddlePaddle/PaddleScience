@@ -26,6 +26,8 @@ seed: 42 #
 output_dir: ${hydra:run.dir} #
 log_freq: 20 #
 use_tbd: false #
+data_dir: "./angle.dat"
+sim_dir: "./smis.txt"
 
 # model settings
 MODEL: #
@@ -41,7 +43,7 @@ TRAIN: #
   eval_during_train: False #
   batch_size: 8 #
   learning_rate: 0.01
-  save_model_path: './angle_model.pth'
+  save_model_path: './angle_model.pdparams'
   weight_decay: 1e-5
   pretrained_model_path: null #
   checkpoint_path: null #
@@ -51,7 +53,7 @@ TRAIN: #
 # evaluation settings
 EVAL:
   test_size: 0.1
-  load_model_path: './angle_model.pth'
+  load_model_path: './angle_pretrained.pdparams'
   seed: 20
   pretrained_model_path: null
 

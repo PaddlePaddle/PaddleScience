@@ -1,15 +1,19 @@
 import hydra
-from Est_model import eval
-from Est_model import train
+from Est_model import train, eval, load_data, featurize_molecules
 from omegaconf import DictConfig
 
 
 @hydra.main(version_base=None, config_path="./config", config_name="est.yaml")
 def main(cfg: DictConfig):
+    
+    data, smis = load_data(cfg)
+
+    X = featurize_molecules(smis)
+    
     if cfg.mode == "train":
-        train(cfg)
+        train(cfg, X, data)
     elif cfg.mode == "eval":
-        eval(cfg)
+        eval(cfg, X, data)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 

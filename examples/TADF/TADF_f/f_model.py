@@ -5,7 +5,7 @@ import numpy as np
 import paddle
 import rdkit.Chem as Chem
 from omegaconf import DictConfig
-from rdkit.Chem import AllChem
+from rdkit.Chem import rdFingerprintGenerator
 from sklearn.decomposition import PCA
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
@@ -18,29 +18,43 @@ plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
 
 # 加载数据集
-data = []
-for line in open("./f.dat"):
-    num = float(line.strip())
-    data.append(num)
-smis = []
-for line in open("./smis.txt"):
-    smis.append(line.strip())
-vectors = []
-del_mol = []
-for num in smis:
-    mol = Chem.MolFromSmiles(num)
-    try:
-        fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=2, nBits=2048)
-        _input = np.array(list(map(float, fp.ToBitString())))
-        vectors.append(_input)
-    except Exception:
-        del_mol.append(num)
-pca = PCA(n_components=0.99)
-pca.fit(vectors)
-Xlist = paddle.to_tensor(pca.transform(vectors))
+def load_data(cfg):
+    data_dir = cfg.data_dir  
+    sim_dir = cfg.sim_dir  
+    f_dat_path = os.path.join(data_dir)
+    smis_txt_path = os.path.join(sim_dir)
+    
+    data = []
+    with open(f_dat_path) as f:
+        for line in f:
+            num = float(line.strip())
+            data.append(num)
+    smis = []
+    with open(smis_txt_path) as f:
+        for line in open("./smis.txt"):
+            smis.append(line.strip())
+            
+    return data, smis
 
+def featurize_molecules(smis):
+    vectors = []
+    del_mol = []
+    for s in smis:
+        mol = Chem.MolFromSmiles(s)
+        try:
+            generator = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
+            fp = generator.GetFingerprint(mol)
+            _input = np.array(list(map(int, fp.ToBitString())))
+            vectors.append(_input)
+        except Exception as e:
+            print(f"Error processing {s}: {e}")
+            del_mol.append(s)
+    pca = PCA(n_components=0.99)
+    pca.fit(vectors)
+    X = paddle.to_tensor(pca.transform(vectors))
+    return X
 
-def train(cfg: DictConfig):
+def train(cfg: DictConfig, X, data):
     # 划分数据集
     def k_fold(k, i, X, Y):
         fold_size = tuple(X.shape)[0] // k
@@ -56,7 +70,8 @@ def train(cfg: DictConfig):
             y_train = Y[0:val_start]
         return x_train, y_train, x_val, y_val
 
-    x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, Xlist, data)
+    Y = paddle.to_tensor(data)
+    x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, X, Y)
     # 处理数据集
     x_train = paddle.to_tensor(x_train, dtype="float32")
     x = {
@@ -85,7 +100,7 @@ def train(cfg: DictConfig):
     num_layers = None
 
     # 实例化模型
-    model = ppsci.arch.DNN(
+    model = ppsci.arch.TADF(
         input_keys=tuple(x.keys()),
         hidden_size=hidden_size,
         num_layers=num_layers,
@@ -117,10 +132,11 @@ def train(cfg: DictConfig):
 
 
 # 进行测试
-def eval(cfg: DictConfig):
+def eval(cfg: DictConfig, X, data):
+    y = paddle.to_tensor(data)
     # 重新划分数据集
     x_train, x_test, y_train, y_test = train_test_split(
-        Xlist, data, test_size=cfg.EVAL.test_size, random_state=cfg.EVAL.seed
+        X.numpy(), y.numpy(), test_size=cfg.EVAL.test_size, random_state=cfg.EVAL.seed
     )
     x = {
         "key_{}".format(i): paddle.unsqueeze(
@@ -130,7 +146,7 @@ def eval(cfg: DictConfig):
     }
     hidden_size = [587, 256]
     num_layers = None
-    model = ppsci.arch.DNN(
+    model = ppsci.arch.TADF(
         input_keys=tuple(x.keys()),
         hidden_size=hidden_size,
         num_layers=num_layers,
@@ -159,4 +175,7 @@ def eval(cfg: DictConfig):
     plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(R2, MAE))
     plt.xlabel("Test f")
     plt.ylabel("Predicted f")
+    save_path = "test_f.png"
+    plt.savefig(save_path)
+    print(f"图片已保存至：{save_path}")
     plt.show()
