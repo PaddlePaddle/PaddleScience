@@ -6,7 +6,6 @@ Ref:
 import math
 
 import paddle
-
 from mattersim.utils.paddle_utils import dim2perm
 
 

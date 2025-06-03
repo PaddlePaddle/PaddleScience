@@ -8,8 +8,11 @@
 # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
 cimport numpy as np
+
 import numpy as np
-from libc.stdlib cimport free, malloc
+
+from libc.stdlib cimport free
+from libc.stdlib cimport malloc
 from libc.string cimport memset
 
 

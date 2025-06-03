@@ -1,10 +1,13 @@
 from typing import Dict
 
 import paddle
-
 from mattersim.utils.paddle_utils import scatter
 
-from .modules import MLP, GatedMLP, MainBlock, SmoothBesselBasis, SphericalBasisLayer
+from .modules import MLP
+from .modules import GatedMLP
+from .modules import MainBlock
+from .modules import SmoothBesselBasis
+from .modules import SphericalBasisLayer
 from .scaling import AtomScaling
 
 

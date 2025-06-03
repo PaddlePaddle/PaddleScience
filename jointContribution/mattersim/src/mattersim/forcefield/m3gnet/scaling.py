@@ -1,12 +1,12 @@
 """
 Atomic scaling module. Used for predicting extensive properties.
 """
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import numpy as np
 import paddle
 from ase import Atoms
-
 from mattersim.datasets.utils.regressor import solver
 from mattersim.utils.paddle_utils import scatter_mean
 

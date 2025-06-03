@@ -6,7 +6,10 @@ import pickle
 import random
 import time
 import warnings
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import paddle
@@ -15,12 +18,12 @@ from ase.calculators.calculator import Calculator
 from ase.constraints import full_3x3_to_voigt_6_stress
 from ase.units import GPa
 from deprecated import deprecated
-
 from mattersim.datasets.utils.build import build_dataloader
 from mattersim.forcefield.m3gnet.m3gnet import M3Gnet
 from mattersim.utils.download_utils import download_checkpoint
 from mattersim.utils.logger_utils import get_logger
-from mattersim.utils.paddle_utils import MeanMetric, split
+from mattersim.utils.paddle_utils import MeanMetric
+from mattersim.utils.paddle_utils import split
 from paddle_ema import ExponentialMovingAverage
 from paddle_geometric.loader import DataLoader
 

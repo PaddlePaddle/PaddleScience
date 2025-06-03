@@ -1,8 +1,9 @@
-import os
-
 """
 This module contains utility functions for downloading files.
 """
+
+import os
+
 import requests
 from loguru import logger
 

@@ -7,7 +7,9 @@ from typing import Optional
 import numpy as np
 import paddle
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import DotProduct, Hyperparameter, Kernel
+from sklearn.gaussian_process.kernels import DotProduct
+from sklearn.gaussian_process.kernels import Hyperparameter
+from sklearn.gaussian_process.kernels import Kernel
 
 
 def solver(X, y, regressor: Optional[str] = "NormalizedGaussianProcess", **kwargs):

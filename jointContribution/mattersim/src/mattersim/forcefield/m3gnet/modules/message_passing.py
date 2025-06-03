@@ -1,8 +1,10 @@
 import paddle
-
 from mattersim.utils.paddle_utils import scatter
 
-from .layers import GatedMLP, LinearLayer, SigmoidLayer, SwishLayer
+from .layers import GatedMLP
+from .layers import LinearLayer
+from .layers import SigmoidLayer
+from .layers import SwishLayer
 
 
 def polynomial(r: paddle.Tensor, cutoff: float) -> paddle.Tensor:

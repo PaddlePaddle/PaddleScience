@@ -3,7 +3,6 @@ from functools import lru_cache
 import numpy as np
 import paddle
 from ase import Atoms
-
 from paddle_geometric.data import Data
 
 

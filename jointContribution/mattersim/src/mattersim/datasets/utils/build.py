@@ -4,7 +4,6 @@ import warnings
 import numpy as np
 import paddle
 from ase import Atoms
-
 from mattersim.datasets.utils.convertor import GraphConvertor
 from mattersim.utils.paddle_utils import *  # noqa
 from paddle_geometric.loader import DataLoader as DataLoader_pyg

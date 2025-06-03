@@ -1,13 +1,13 @@
 import warnings
-from typing import Optional, Tuple
+from typing import Optional
+from typing import Tuple
 
 import ase
 import numpy as np
 import paddle
 from ase import Atoms
-from pymatgen.optimization.neighbors import find_points_in_spheres
-
 from paddle_geometric.data import Data
+from pymatgen.optimization.neighbors import find_points_in_spheres
 
 from .threebody_indices import compute_threebody as _compute_threebody
 

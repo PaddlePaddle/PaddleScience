@@ -7,7 +7,6 @@ import numpy as np
 import paddle
 import wandb
 from ase.units import GPa
-
 from mattersim.datasets.utils.build import build_dataloader
 from mattersim.forcefield.m3gnet.scaling import AtomScaling
 from mattersim.forcefield.potential import Potential
