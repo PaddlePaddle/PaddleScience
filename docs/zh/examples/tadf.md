@@ -15,7 +15,7 @@
 === "模型训练命令"
 
     ``` sh
-    #Est 预测:  
+    #Est 预测  
     cd TADF_angle
     python Est.py mode=train
     cd ../
