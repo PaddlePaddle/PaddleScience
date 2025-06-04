@@ -40,6 +40,7 @@ __all__ = [
     "PrettyOrderedDict",
     "Prettydefaultdict",
     "RankZeroOnly",
+    "RankZeroFirst",
     "Timer",
     "all_gather",
     "concat_dict_list",
@@ -187,6 +188,40 @@ class RankZeroOnly:
     def __exit__(self, exc_type, exc_value, traceback):
         if dist.get_world_size() > 1:
             dist.barrier()
+
+
+class RankZeroFirst(ContextDecorator):
+    """
+    A context manager that ensures the code inside it is only executed by the process
+    with rank zero first. All ranks will be synchronized by `dist.barrier()`.
+
+    Args:
+        rank (Optional[int]): The rank of the current process. If not provided,
+            it will be obtained from `dist.get_rank()`.
+
+    Examples:
+        >>> import paddle.distributed as dist
+        >>> with RankZeroFirst(dist.get_rank()):
+        ...     # code here which should be executed first in the master(rank-0) process
+        ...     pass
+    """
+
+    def __init__(self, rank: Optional[int] = None):
+        if dist.is_initialized():
+            self.rank = rank if rank is not None else dist.get_rank()
+            self.world_size = dist.get_world_size()
+        else:
+            self.rank = 0
+            self.world_size = 1
+        self.is_master = self.rank == 0
+
+    def __enter__(self):
+        if self.world_size > 1 and not self.is_master:
+            dist.barrier()  # Non-master processs wait for master to finish
+
+    def __exit__(self, type, value, traceback):
+        if self.world_size > 1 and self.is_master:
+            dist.barrier()  # Allow others to proceed
 
 
 class Timer(ContextDecorator):
