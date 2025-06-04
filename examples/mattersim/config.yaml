@@ -1,0 +1,40 @@
+# MatterSim model configuration
+
+# Model parameters
+model:
+  embedding_dim: 128
+  num_message_blocks: 3
+  hidden_dim: 256
+  num_radial_basis: 128
+  max_z: 94
+  cutoff_distance: 6.0
+  with_temperature: true
+  with_pressure: true
+
+# Training parameters
+training:
+  batch_size: 32
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-6
+  num_epochs: 100
+  save_interval: 10
+  checkpoint_path: null  # Path to model checkpoint to start from
+  output_dir: "./output"
+  
+# Data parameters
+data:
+  train_data_path: null  # Path to training data
+  val_data_path: null    # Path to validation data (optional)
+  num_workers: 4
+  
+# Inference parameters
+inference:
+  temperature: 300.0     # Temperature in Kelvin
+  pressure: 0.0          # Pressure in GPa
+  save_format: "all"     # Format to save inference results (all, json, xyz, png)
+  
+# Relaxation parameters
+relaxation:
+  max_steps: 100
+  step_size: 0.05
+  force_tol: 1.0e-3
