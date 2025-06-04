@@ -2,7 +2,6 @@ colorlog
 einops
 h5py
 hydra-core
-hydra-core
 imageio
 importlib_metadata
 matplotlib
