@@ -801,8 +801,6 @@ class Potential(paddle.nn.Layer):
                 logger.info(
                     "The pre-trained model is not found locally, attempting to download it from the server."
                 )
-                raise FileNotFoundError
-                # TODO: download model from baidu bos
                 download_checkpoint(
                     "mattersim-v1.0.0-1M.pdparams", save_folder=checkpoint_folder
                 )
@@ -816,8 +814,6 @@ class Potential(paddle.nn.Layer):
                 logger.info(
                     "The pre-trained model is not found locally, attempting to download it from the server."
                 )
-                raise FileNotFoundError
-                # TODO: download model from baidu bos
                 download_checkpoint(
                     "mattersim-v1.0.0-5M.pdparams", save_folder=checkpoint_folder
                 )

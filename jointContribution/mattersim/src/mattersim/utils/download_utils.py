@@ -35,10 +35,10 @@ def download_checkpoint(
         checkpoint_name (str): The name of the checkpoint to download.
         save_folder (str): The local folder to save the checkpoint to.
     """
-    GITHUB_CHECKPOINT_PREFIX = (
-        "https://raw.githubusercontent.com/microsoft/mattersim/main/pretrained_models/"
+    BOS_CHECKPOINT_PREFIX = (
+        "https://paddle-org.bj.bcebos.com/paddlescience/models/MatterSim/"
     )
-    checkpoint_url = GITHUB_CHECKPOINT_PREFIX + checkpoint_name.strip("/")
+    checkpoint_url = BOS_CHECKPOINT_PREFIX + checkpoint_name.strip("/")
     save_path = os.path.join(
         os.path.expanduser(save_folder), checkpoint_name.strip("/")
     )
