@@ -8,8 +8,8 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [Est.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams) | loss(MAE): 0.050 |
-| [f.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_pretrained.pdparams) | loss(MAE): 0.034 |
+| [Est.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams) | loss(MAE): 0.045 |
+| [f.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_pretrained.pdparams) | loss(MAE): 0.036 |
 | [angle.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_pretrained.pdparams) | loss(MAE): 0.041 |
 
 === "模型训练命令"
@@ -52,7 +52,7 @@
 
 ## 1. 背景简介
 
-有机发光二极管（OLED）具有高效率、结构灵活和低成本的优势，在先进显示和照明技术中受到广泛关注。在有机发光二极管器件中，电注入载流子以1：3的比例形成单线态和三线态激子。以纯荧光材料为发光材料构建的OLED发光效率IQE理论极限为25%。另一方面，有机金属复合物发光材料通过引入稀有金属（Ir，Pt等）带来强自旋轨道耦合（SOC），可以将单线态激子通过系间窜越过程转化成三线态激子，从而利用三线态激子发出磷光，其IQE可达100%，但是稀有金属价格昂贵，为推广使用带来了阻碍。热活化延迟荧光材料（TADF）为解决这些问题提供了新思路，并引起了广泛关注。在TADF中，三线态通过逆系间窜越过程（RISC）转化成单重态并发出荧光，从而实现100%的IQE，而RISC过程很大程度上取决于最低单线态（S1）和最低三线态（T1） 之间的能隙（ΔEST）。根据量子力学理论，ΔEST相当于HOMO和LUMO之间的交换积分的两倍。因此TADF分子的常见设计策略是将电子供体（D）和电子受体（A）以明显扭曲的二面角结合以实现HOMO和LUMO在空间上明显的分离。然而，与ΔEST相反，振子强度（f）需要较大的HOMO和LUMO之间的重叠积分，这二者之间的矛盾需要进一步平衡。
+有机发光二极管（OLED）具有高效率、结构灵活和低成本的优势，在先进显示和照明技术中受到广泛关注。在有机发光二极管器件中，电注入载流子以1：3的比例形成单线态和三线态激子。以纯荧光材料为发光材料构建的OLED发光效率IQE理论极限为25%。另一方面，有机金属复合物发光材料通过引入稀有金属（Ir，Pt等）带来强自旋轨道耦合（SOC），可以将单线态激子通过系间窜越过程转化成三线态激子，从而利用三线态激子发出磷光，其IQE可达100%，但是稀有金属价格昂贵，为推广使用带来了阻碍。热活化延迟荧光材料（TADF）为解决这些问题提供了新思路，并引起了广泛关注。在TADF中，三线态通过逆系间窜越过程（RISC）转化成单重态并发出荧光，从而实现100%的IQE，而RISC过程很大程度上取决于最低单线态（S1）和最低三线态（T1） 之间的能隙（$\Delta Est$）。根据量子力学理论，ΔEST相当于HOMO和LUMO之间的交换积分的两倍。因此TADF分子的常见设计策略是将电子供体（D）和电子受体（A）以明显扭曲的二面角结合以实现HOMO和LUMO在空间上明显的分离。然而，与$\Delta Est$相反，振子强度（$f$）需要较大的HOMO和LUMO之间的重叠积分，这二者之间的矛盾需要进一步平衡。
 
 ## 2. 模型原理
 
@@ -60,7 +60,7 @@
 
 ## 3. TADF性质预测模型的实现
 
-本样例包括对化学分子的电子供体与电子受体间的二面角angle, 能隙Est, 振子强度f三项性质的预测，接下来将以性质angle为例，开始讲解如何基于PaddleScience代码，实现对于TADF性质预测模型的构建、训练、测试和评估。案例的目录结构如下：
+本样例包括对化学分子的能隙($\Delta Est$)，振子强度($f$)，电子供体与电子受体间的二面角($angle$)三项性质的预测，接下来将以二面角$angle$为例，开始讲解如何基于PaddleScience代码，实现对于TADF性质预测模型的构建、训练、测试和评估。案例的目录结构如下：
 
 ``` log
 tadf/
@@ -104,7 +104,7 @@ examples/tadf/TADF_angle/angle_model.py:88:100
 
 ### 3.3 模型构建
 
-对于三个预测对象，设计了相同的深度神经网络，网络结构为含有两层隐藏层的神经网络，第一层隐藏层含有587个神经元，第二层隐藏层含有256个神经元，隐藏层之间加入Dropout。以angle预测为例，用 PaddleScience 代码表示如下
+对于三个预测对象，设计了相同的深度神经网络，网络结构为含有两层隐藏层的神经网络，第一层隐藏层含有587个神经元，第二层隐藏层含有256个神经元，隐藏层之间加入Dropout。以$angle$预测为例，用 PaddleScience 代码表示如下
 
 ``` py linenums="106" title="examples/tadf/TADF_angle/angle_model.py"
 --8<--
@@ -146,6 +146,25 @@ examples/tadf/TADF_angle/angle.py
 --8<--
 ```
 
-## 5. 参考文献
+## 5. 结果展示
+
+下图展示能隙($\Delta Est$)，振子强度($f$)，电子供体与电子受体间的二面角($angle$)三项性质的模型预测结果。
+
+<figure markdown>
+  ![test_est.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/Est/test_est.png){ loading=lazy }
+  <figcaption>能隙($\Delta Est$)的模型预测结果</figcaption>
+</figure>
+
+<figure markdown>
+  ![test_f.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/f/test_f.png){ loading=lazy }
+  <figcaption>振子强度($f$)的模型预测结果</figcaption>
+</figure>
+
+<figure markdown>
+  ![test_angle.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/f/test_angle.png){ loading=lazy }
+  <figcaption>电子供体与电子受体间的二面角($angle$)的模型预测结果</figcaption>
+</figure>
+
+## 6. 参考文献
 
 Yufei Bu, Qian Peng*, Designing Promising Thermally Activated Delayed Fluroscence Emitters via Machine Learning-Assisted High-Throughput Virtual Screening. J. Phys. Chem. C. 2023. DOI: 10.1021/acs.jpcc.3c05337.
