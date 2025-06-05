@@ -15,7 +15,9 @@
 import hydra
 import utils as utils
 from omegaconf import DictConfig
+
 import ppsci
+
 
 def train(cfg: DictConfig):
     # set train dataloader config
@@ -37,7 +39,6 @@ def train(cfg: DictConfig):
             "num_workers": 1,
         }
     else:
-        NUM_GPUS_PER_NODE = 8
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
@@ -116,31 +117,8 @@ def train(cfg: DictConfig):
     # evaluate after finished training
     solver.eval()
 
+
 def evaluate(cfg: DictConfig):
-    # set eval dataloader config
-    eval_dataloader_cfg = {
-        "dataset": {
-            "name": "ERA5MeteoDataset",
-            "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
-            "label_keys": cfg.MODEL.afno.output_keys,
-            "training": False,
-            "size": (cfg.IMG_H, cfg.IMG_W),
-        },
-        "batch_size": cfg.EVAL.batch_size,
-    }
-
-    # set validator
-    sup_validator = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg,
-        ppsci.loss.MSELoss(),
-        metric={
-            "MAE": ppsci.metric.MAE(keep_batch=True),
-        },
-        name="Sup_Validator",
-    )
-    validator = {sup_validator.name: sup_validator}
-
     # set model
     model = ppsci.arch.Meteoformer(**cfg.MODEL.afno)
 
@@ -156,6 +134,7 @@ def evaluate(cfg: DictConfig):
     # evaluate
     solver.eval()
 
+
 @hydra.main(version_base=None, config_path="./conf", config_name="train.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
@@ -164,6 +143,7 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
 
 if __name__ == "__main__":
     main()

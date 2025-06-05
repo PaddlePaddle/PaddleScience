@@ -43,7 +43,7 @@ VALID_FILE_PATH: /patch/to/ERA5/
 MODEL:
   input_keys: ["input"]
   output_keys: ["output"]
-  shape_in: 
+  shape_in:
     - 12
     - 12
     - ${IMG_H}

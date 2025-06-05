@@ -1,8 +1,11 @@
 from typing import Optional
 from typing import Tuple
+
 import numpy as np
 from paddle import nn
+
 from ppsci.arch import base
+
 
 def stride_generator(N, reverse=False):
     strides = [1, 2] * 10
@@ -10,6 +13,7 @@ def stride_generator(N, reverse=False):
         return list(reversed(strides[:N]))
     else:
         return strides[:N]
+
 
 class ConvSC(nn.Layer):
     def __init__(self, C_in: int, C_out: int, stride: int, transpose: bool = False):
@@ -42,6 +46,7 @@ class ConvSC(nn.Layer):
         y = self.conv(x)
         y = self.act(self.norm(y))
         return y
+
 
 class OverlapPatchEmbed(nn.Layer):
     """Image to Patch Embedding"""
@@ -79,6 +84,7 @@ class OverlapPatchEmbed(nn.Layer):
 
         return x, H, W
 
+
 class DWConv(nn.Layer):
     def __init__(self, dim: int = 768):
         super(DWConv, self).__init__()
@@ -91,6 +97,7 @@ class DWConv(nn.Layer):
         x = x.flatten(2).transpose(perm=[0, 2, 1])
 
         return x
+
 
 class Mlp(nn.Layer):
     def __init__(
@@ -118,6 +125,7 @@ class Mlp(nn.Layer):
         x = self.fc2(x)
         x = self.drop(x)
         return x
+
 
 class Attention(nn.Layer):
     def __init__(
@@ -188,6 +196,7 @@ class Attention(nn.Layer):
 
         return x
 
+
 class Block(nn.Layer):
     def __init__(
         self,
@@ -230,6 +239,7 @@ class Block(nn.Layer):
 
         return x
 
+
 class Encoder(nn.Layer):
     def __init__(self, C_in: int, C_hid: int, N_S: int):
         super(Encoder, self).__init__()
@@ -265,6 +275,7 @@ class Encoder(nn.Layer):
         latent.append(x)
 
         return latent
+
 
 class MidXnet(nn.Layer):
     def __init__(
@@ -313,6 +324,7 @@ class MidXnet(nn.Layer):
 
         return z
 
+
 # MultiDecoder
 class Decoder(nn.Layer):
     def __init__(self, C_hid: int, C_out: int, N_S: int):
@@ -330,6 +342,7 @@ class Decoder(nn.Layer):
             hid = self.dec[i](hid)
         Y = self.readout(hid)
         return Y
+
 
 class Meteoformer(base.Arch):
     """
@@ -420,5 +433,3 @@ class Meteoformer(base.Arch):
             y = self._output_transform(x, y)
 
         return y
-    
-

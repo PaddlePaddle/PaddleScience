@@ -115,7 +115,9 @@ class ERA5MeteoDataset(io.Dataset):
         for m in range(self.sq_length):
             x.append(self.load_data(global_idx + m * self.time_step))
         for n in range(self.sq_length):
-            future_data = self.load_data(global_idx + (self.sq_length + n) * self.time_step)
+            future_data = self.load_data(
+                global_idx + (self.sq_length + n) * self.time_step
+            )
             y_t.append(future_data[1])  # Temperature
             y_r.append(future_data[0])  # Humidity
             y_u.append(future_data[2])  # U-Wind
@@ -150,10 +152,18 @@ class ERA5MeteoDataset(io.Dataset):
         hour = str(self.time_table[indices].timetuple().tm_hour)
         if len(hour) == 1:
             hour = "0" + hour
-        r_data = np.load(os.path.join(self.file_path, year, f"r_{year}{mon}{day}{hour}.npy"))
-        t_data = np.load(os.path.join(self.file_path, year, f"t_{year}{mon}{day}{hour}.npy"))
-        u_data = np.load(os.path.join(self.file_path, year, f"u_{year}{mon}{day}{hour}.npy"))
-        v_data = np.load(os.path.join(self.file_path, year, f"v_{year}{mon}{day}{hour}.npy"))
+        r_data = np.load(
+            os.path.join(self.file_path, year, f"r_{year}{mon}{day}{hour}.npy")
+        )
+        t_data = np.load(
+            os.path.join(self.file_path, year, f"t_{year}{mon}{day}{hour}.npy")
+        )
+        u_data = np.load(
+            os.path.join(self.file_path, year, f"u_{year}{mon}{day}{hour}.npy")
+        )
+        v_data = np.load(
+            os.path.join(self.file_path, year, f"v_{year}{mon}{day}{hour}.npy")
+        )
 
         data = np.concatenate([r_data, t_data, u_data, v_data])
 
