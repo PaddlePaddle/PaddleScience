@@ -4,7 +4,7 @@
 
     1. 开始训练、评估前，请先确保性质数据文件(.dat)和SMILES(smis.txt)数据文件的存在，并对应修改 yaml 配置文件中的 `data_dir` 为性质数据文件路径，`sim_dir` 为SMILES数据文件路径。
     2. 如果需要使用预训练模型进行评估，请先下载预训练模型[Est.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams), [f.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_pretrained.pdparams), 并对应修改 yaml 配置文件中的 `load_model_path` 为模型参数路径。
-    3. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install requirements.txt`安装。
+    3. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install -r requirements.txt`安装。
 
 | 预训练模型  | 指标 |
 |:--| :--|
