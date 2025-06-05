@@ -23,6 +23,7 @@ The basic model structure of the transformer and some functions were adapted
 from xlm's transformer_simple.py.
 """
 
+import math
 import warnings
 from typing import Tuple
 
@@ -43,8 +44,22 @@ class FeedForwardBlock(nn.Layer):
     def __init__(self, cfg):
         super(FeedForwardBlock, self).__init__()
         self.cfg = cfg
-        self.ffw_up = nn.Linear(cfg.d_model, cfg.ffw_hidden)
-        self.ffw_down = nn.Linear(cfg.ffw_hidden, cfg.d_model)
+        stddev = math.sqrt(cfg.ffw_winit_mult / (cfg.num_layers * cfg.d_model))
+        stddev_final = math.sqrt(
+            cfg.ffw_winit_final_mult / (cfg.num_layers * cfg.ffw_hidden)
+        )
+        weight_attr = paddle.framework.ParamAttr(
+            initializer=paddle.nn.initializer.TruncatedNormal(mean=0.0, std=stddev)
+        )
+        weight_attr_final = paddle.framework.ParamAttr(
+            initializer=paddle.nn.initializer.TruncatedNormal(
+                mean=0.0, std=stddev_final
+            )
+        )
+        self.ffw_up = nn.Linear(cfg.d_model, cfg.ffw_hidden, weight_attr=weight_attr)
+        self.ffw_down = nn.Linear(
+            cfg.ffw_hidden, cfg.d_model, weight_attr=weight_attr_final
+        )
 
     def forward(self, x):
         x = self.ffw_up(x)
@@ -59,9 +74,17 @@ class MultiheadLinear(nn.Layer):
         self.qkv = qkv
         head_size = self.cfg.value_size if qkv == "v" else self.cfg.key_size
 
+        stddev = math.sqrt(
+            cfg.attn_winit_mult / (cfg.num_layers * cfg.num_heads * head_size)
+        )
+        weight_attr = paddle.framework.ParamAttr(
+            initializer=paddle.nn.initializer.TruncatedNormal(mean=0.0, std=stddev)
+        )
+
         self.linear = nn.Linear(
             cfg.num_heads * head_size,
             cfg.num_heads * head_size,
+            weight_attr=weight_attr,
             bias_attr=False,  # with_bias=False
         )
 
@@ -239,9 +262,13 @@ class LinearNormConditioning(nn.Layer):
 
     def __init__(self, in_features, out_features):
         super(LinearNormConditioning, self).__init__()
+        weight_attr = paddle.framework.ParamAttr(
+            initializer=paddle.nn.initializer.TruncatedNormal(std=1e-8)
+        )
         self.linear = nn.Linear(
             in_features,
             out_features * 2,
+            weight_attr=weight_attr,
         )
 
     def forward(self, inputs: paddle.Tensor, norm_conditioning: paddle.Tensor):
@@ -267,8 +294,17 @@ class Block(nn.Layer):
         )
         self.ffw = FeedForwardBlock(config)
 
+        stddev = math.sqrt(
+            config.attn_winit_final_mult
+            / (config.num_layers * config.num_heads * config.value_size)
+        )
+        weight_attr = paddle.framework.ParamAttr(
+            initializer=paddle.nn.initializer.TruncatedNormal(mean=0.0, std=stddev)
+        )
         self.mha_final_layer = nn.Linear(
-            config.num_heads * config.value_size, config.d_model
+            config.num_heads * config.value_size,
+            config.d_model,
+            weight_attr=weight_attr,
         )
         self.mha_proj_q = MultiheadLinear("q", config)
         self.mha_proj_k = MultiheadLinear("k", config)

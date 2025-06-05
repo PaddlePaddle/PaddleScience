@@ -18,9 +18,7 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import IPython
 import matplotlib
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray
@@ -119,15 +117,12 @@ def plot_data(
         for im, (plot_data, norm, cmap) in zip(images, data.values()):
             im.set_data(plot_data.isel(time=frame, missing_dims="ignore"))
 
-    ani = animation.FuncAnimation(
-        fig=figure, func=_update, frames=max_steps, interval=250
-    )
     plt.savefig(
         file,
         bbox_inches="tight",
     )
     plt.close(figure.number)
-    return IPython.display.HTML(ani.to_jshtml())
+    return file
 
 
 def log_images(

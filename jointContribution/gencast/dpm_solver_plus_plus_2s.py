@@ -173,7 +173,7 @@ class Sampler(base.Sampler):
             mid_over_current = mid_noise_level / noise_level
             # x = xr.open_dataset('/workspace/workspace/graphcast/x.nc')
 
-            x_denoised = denoiser(noise_level, x)
+            x_denoised, _ = denoiser(noise_level, x)
             # This turns out to be a convex combination of current and denoised x,
             # which isn't entirely apparent from the paper formulae:
             x_mid = (
@@ -182,7 +182,7 @@ class Sampler(base.Sampler):
             )
 
             next_over_current = next_noise_level / noise_level
-            x_mid_denoised = denoiser(mid_noise_level, x_mid)
+            x_mid_denoised, _ = denoiser(mid_noise_level, x_mid)
             x_next = (
                 next_over_current.numpy() * x
                 + (1 - next_over_current.numpy()) * x_mid_denoised
