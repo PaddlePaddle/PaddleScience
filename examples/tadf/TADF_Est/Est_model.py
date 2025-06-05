@@ -104,7 +104,7 @@ def train(cfg: DictConfig, X, data):
     num_layers = None
 
     # 实例化模型
-    model = ppsci.arch.DNN(
+    model = ppsci.arch.TADF(
         input_keys=tuple(x.keys()),
         hidden_size=hidden_size,
         num_layers=num_layers,
