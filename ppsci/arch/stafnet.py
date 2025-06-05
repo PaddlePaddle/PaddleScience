@@ -581,9 +581,6 @@ class STAFNet(base.Arch):
         self.output_attention = output_attention
 
     def aq_gat(self, G):
-        # x = G.x[:, -self.aq_gat_node_features:].to(self.device)
-        # edge_index = G.edge_index.to(self.device)
-        # edge_attr = G.edge_attr.to(self.device)
         g_batch = G.num_graph
         batch_size = int(g_batch/self.seq_len)
         gat_output = self.aq_GAT(G, G.node_feat["feature"][:, -self.aq_gat_node_features:])
@@ -593,9 +590,6 @@ class STAFNet(base.Arch):
         return gat_output
 
     def mete_gat(self, G):
-        # x = G.x[:, -self.mete_gat_node_features:].to(self.device)
-        # edge_index = G.edge_index.to(self.device)
-        # edge_attr = G.edge_attr.to(self.device)
         g_batch = G.num_graph
         batch_size = int(g_batch/self.seq_len)
         gat_output = self.mete_GAT(G, G.node_feat["feature"][:, -self.mete_gat_node_features:])
@@ -605,7 +599,6 @@ class STAFNet(base.Arch):
         return gat_output
 
     def norm_pos(self, A, B):
-        # paddle.mean(x)
         A_mean = paddle.mean(A, axis=0)
         A_std = paddle.std(A, axis=0)
 
@@ -614,29 +607,6 @@ class STAFNet(base.Arch):
         return A_norm, B_norm
 
     def forward(self, Data, mask=None):
-        # aq_G = Data['aq_G']
-        # mete_G = Data['mete_G']
-        # aq_gat_output = self.aq_gat(aq_G)
-        # mete_gat_output = self.mete_gat(mete_G)
-        # aq_pos, mete_pos = self.norm_pos(aq_G.node_feat["pos"], mete_G.node_feat["pos"])
-
- 
-        # aq_pos = self.pos_fc(aq_pos).reshape((-1, self.aq_gat_node_num, self.
-        #                                   gat_embed_dim))
-        # mete_pos = self.pos_fc(mete_pos).reshape((-1, self.mete_gat_node_num,
-        #                                       self.gat_embed_dim))
-        # fusion_out, attn = self.fusion_Attention(aq_pos, mete_pos, mete_gat_output, attn_mask=None)
-        # aq_gat_output = aq_gat_output + fusion_out
-        # aq_gat_output = aq_gat_output.reshape((-1, self.seq_len, self.
-        #     aq_gat_node_num, self.gat_embed_dim))
-        # x = aq_gat_output
-        # perm_0 = list(range(x.ndim))
-        # perm_0[1] = 2
-        # perm_0[2] = 1
-        # aq_gat_output = paddle.transpose(x=x, perm=perm_0)
-        # aq_gat_output = paddle.flatten(x=aq_gat_output, start_axis=0,
-        #     stop_axis=1)
-        
         train_data = Data['aq_train_data']
         batch_size =  train_data.shape[0]
         x = train_data
@@ -663,10 +633,5 @@ class STAFNet(base.Arch):
         dec_out = self.projection(enc_out)
         dec_out = dec_out * paddle.tile( stdev[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1))
         dec_out = dec_out +  paddle.tile(means[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1))
-        # dec_out = dec_out * stdev[:, 0, :].unsqueeze(axis=1).repeat(1, self
-        #     .pred_len + self.seq_len, 1)
-        # dec_out = dec_out + means[:, 0, :].unsqueeze(axis=1).repeat(1, self
-        #     .pred_len + self.seq_len, 1)
-        
 
         return {self.output_keys[0]: dec_out[  :,-self.pred_len:, -7:].reshape((batch_size, self.pred_len,-1,7))} 
