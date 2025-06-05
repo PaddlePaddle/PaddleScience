@@ -12,8 +12,81 @@ from mattersim.forcefield.m3gnet.scaling import AtomScaling
 from mattersim.forcefield.potential import Potential
 from mattersim.utils.atoms_utils import AtomsAdaptor
 from mattersim.utils.logger_utils import get_logger
+from paddle.framework import core
 
 logger = get_logger()
+
+EAGER_COMP_OP_BLACK_LIST = [
+    "abs_grad",
+    "cast_grad",
+    "concat_grad",
+    "cos_double_grad",
+    "cos_grad",
+    "cumprod_grad",
+    "cumsum_grad",
+    "dropout_grad",
+    "erf_grad",
+    "exp_grad",
+    "expand_grad",
+    "floor_grad",
+    "gather_grad",
+    "gather_nd_grad",
+    "gelu_grad",
+    "group_norm_grad",
+    "instance_norm_grad",
+    "layer_norm_grad",
+    "leaky_relu_grad",
+    "log_grad",
+    "max_grad",
+    "pad_grad",
+    "pow_double_grad",
+    "pow_grad",
+    "prod_grad",
+    "relu_grad",
+    "roll_grad",
+    "rsqrt_grad",
+    "scatter_grad",
+    "scatter_nd_add_grad",
+    "sigmoid_grad",
+    "silu_grad",
+    "sin_double_grad",
+    "sin_grad",
+    "slice_grad",
+    "split_grad",
+    "sqrt_grad",
+    "sum_grad",
+    "tanh_double_grad",
+    "tanh_grad",
+    "topk_grad",
+    "transpose_grad",
+    "add_double_grad",
+    "add_grad",
+    "batch_norm_grad",
+    "divide_grad",
+    "elementwise_pow_grad",
+    "maximum_grad",
+    "min_grad",
+    "minimum_grad",
+    "multiply_grad",
+    "subtract_grad",
+    "tile_grad",
+]
+
+EAGER_COMP_OP_BLACK_LIST = list(set(EAGER_COMP_OP_BLACK_LIST))
+
+
+def setting_eager_mode(enable=True, custom_list=None):
+    core.set_prim_eager_enabled(enable)
+    if enable:
+        if custom_list is None:
+            paddle.framework.core._set_prim_backward_blacklist(
+                *EAGER_COMP_OP_BLACK_LIST
+            )
+        else:
+            raise ValueError("custom_list must be None or 'v1'")
+
+
+setting_eager_mode()
 
 
 def main(args):
@@ -30,24 +103,29 @@ def main(args):
         wandb.init(project=args.wandb_project, name=args.run_name, config=args)
     if args.wandb:
         args_dict["wandb"] = wandb
+
     random.seed(args.seed)
     np.random.seed(args.seed)
     paddle.seed(seed=args.seed)
+
     if args.train_data_path.endswith(".pkl"):
         with open(args.train_data_path, "rb") as f:
             atoms_train = pkl.load(f)
     else:
         atoms_train = AtomsAdaptor.from_file(filename=args.train_data_path)
+
     energies = []
     forces = [] if args.include_forces else None
     stresses = [] if args.include_stresses else None
     logger.info("Processing training datasets...")
+
     for atoms in atoms_train:
         energies.append(atoms.get_potential_energy())
         if args.include_forces:
             forces.append(atoms.get_forces())
         if args.include_stresses:
             stresses.append(atoms.get_stress(voigt=False) / GPa)
+
     dataloader = build_dataloader(
         atoms_train,
         energies,
@@ -157,11 +235,10 @@ if __name__ == "__main__":
         default=10,
         help="step epoch for learning rate scheduler",
     )
-    # TODO: Default set `False` due to leave_grad op is not support now.
     parser.add_argument(
         "--include_forces",
         type=bool,
-        default=False,
+        default=True,
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
@@ -202,5 +279,7 @@ if __name__ == "__main__":
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb_api_key", type=str, default=None)
     parser.add_argument("--wandb_project", type=str, default="wandb_test")
+
     args = parser.parse_args()
+
     main(args)

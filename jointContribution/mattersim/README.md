@@ -86,7 +86,6 @@ python src/mattersim/training/finetune_mattersim.py --load_model_path pretrained
 ## **Known Issues**
 
 * Not support distributed finetune.
-* Not support gradient calculation of stress and strains when training.
 
 
 ## Reference

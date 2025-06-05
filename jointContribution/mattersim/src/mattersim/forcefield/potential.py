@@ -336,6 +336,7 @@ class Potential(paddle.nn.Layer):
             ):
                 break
 
+    @paddle.no_grad()
     def save_model(
         self,
         epoch,
@@ -376,6 +377,7 @@ class Potential(paddle.nn.Layer):
                 self.save(os.path.join(save_path, "last_model.pdparams"))
             return False
 
+    @paddle.no_grad()
     def save_model_ddp(
         self,
         epoch,
