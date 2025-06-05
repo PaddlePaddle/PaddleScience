@@ -50,11 +50,7 @@ class pygmmdataLoader(DataLoader):
         self.T = T
         self.t = t
         self.dataset = STAFNetDataset(args=args, file_path=file_path)
-        # if get_world_size() > 1:
-        #     sampler = paddle.io.DistributedBatchSampler(dataset=self.
-        #         dataset, shuffle=shuffle, batch_size=1)
-        # else:
-        #     sampler = None
+
         super().__init__(self.dataset, batch_size=batch_size, shuffle=shuffle, num_workers = num_workers,
              collate_fn=collate_fn) 
 
@@ -88,6 +84,8 @@ class STAFNetDataset(io.Dataset):
          seq_len: int = 72,
          pred_len: int = 48,
          use_edge_attr: bool = True,):
+
+        
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -111,7 +109,7 @@ class STAFNetDataset(io.Dataset):
         (self.mete_edge_index, self.mete_edge_attr, self.mete_node_coords) = (self.get_edge_attr(np.array(self.meteStation_imformation.loc[:, ['经度', '纬度']]).astype('float64')))
 
         self.lut = self.find_nearest_point(AQ_coords, mete_coords)
-        # self.AQdata = np.concatenate((self.AQdata, self.metedata[:, self.lut, -7:]), axis=2)
+         
 
 
     def __len__(self):
@@ -121,44 +119,16 @@ class STAFNetDataset(io.Dataset):
         input_data = {}
         aq_train_data = paddle.to_tensor(data=self.AQdata[idx:idx + self.seq_len + self.pred_len]).astype(dtype='float32')
         mete_train_data = paddle.to_tensor(data=self.metedata[idx:idx + self.seq_len + self.pred_len]).astype(dtype='float32')
-        aq_g_list = [pgl.Graph(num_nodes=s.shape[0],
-            edges=self.aq_edge_index,
-            node_feat={
-                "feature": s,
-                "pos": self.aq_node_coords.astype(dtype='float32')
-            },
-            edge_feat={
-                "edge_feature": self.aq_edge_attr.astype(dtype='float32')
-            })for s in aq_train_data[:self.seq_len]]
-        
-        mete_g_list = [pgl.Graph(num_nodes=s.shape[0],
-            edges=self.mete_edge_index,
-            node_feat={
-                "feature": s,
-                "pos": self.mete_node_coords.astype(dtype='float32')
-            },
-            edge_feat={
-                "edge_feature": self.mete_edge_attr.astype(dtype='float32')
-            })for s in mete_train_data[:self.seq_len]]
-        
-        # aq_g_list = [pgl.Graph(x=s, edge_index=self.aq_edge_index, edge_attr=self.aq_edge_attr.astype(dtype='float32'), pos=self.aq_node_coords.astype(dtype='float32')) for s in aq_train_data[:self.seq_len]]
-        # mete_g_list = [pgl.Graph((x=s, edge_index=self.
-        #     mete_edge_index, edge_attr=self.mete_edge_attr.astype(dtype=
-        #     'float32'), pos=self.mete_node_coords.astype(dtype='float32')) for
-        #     s in mete_train_data[:self.seq_len]]
-        
         
         label = aq_train_data[-self.pred_len:, :, -7:]
         data = {'aq_train_data': aq_train_data, 'mete_train_data': mete_train_data, 
-                # 'aq_g_list': aq_g_list, 'mete_g_list': mete_g_list
             }
-        input_item = {'aq_train_data': aq_train_data, 'mete_train_data': mete_train_data, 
-                # 'aq_g_list': aq_g_list, 'mete_g_list': mete_g_list
+        input_item = {'aq_train_data': aq_train_data, 'mete_train_data': mete_train_data
             }
         label_item = {self.label_keys[0]: aq_train_data[-self.pred_len:, :, -7:]}
 
         return input_item, label_item, {}
-        # return data, label,
+ 
 
     def get_edge_attr(self, node_coords, threshold=0.2):
         # node_coords = paddle.to_tensor(data=node_coords)
