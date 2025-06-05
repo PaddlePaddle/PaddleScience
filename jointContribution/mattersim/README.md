@@ -60,11 +60,7 @@ paddle.device.set_device(device)
 print(f"Running MatterSim on {device}")
 
 si = bulk("Si", "diamond", a=5.43)
-si.calc = MatterSimCalculator(
-    load_path=os.path.join(
-        current_dir, "pretrained_models/mattersim-v1.0.0-5M.pdparams"
-    )
-)
+si.calc = MatterSimCalculator()
 print(f"Energy (eV)                 = {si.get_potential_energy()}")
 print(f"Energy per atom (eV/atom)   = {si.get_potential_energy()/len(si)}")
 print(f"Forces of first atom (eV/A) = {si.get_forces()[0]}")
@@ -78,9 +74,9 @@ A Minimal finetune test.
 
 ```bash
 # 1MB
-python src/mattersim/training/finetune_mattersim.py --load_model_path pretrained_models/mattersim-v1.0.0-1M.pdparams --train_data_path tests/data/high_level_water.xyz
+python src/mattersim/training/finetune_mattersim.py --load_model_path mattersim-v1.0.0-1M.pdparams --train_data_path tests/data/high_level_water.xyz
 # 5MB
-python src/mattersim/training/finetune_mattersim.py --load_model_path pretrained_models/mattersim-v1.0.0-5M.pdparams --train_data_path tests/data/high_level_water.xyz
+python src/mattersim/training/finetune_mattersim.py --load_model_path mattersim-v1.0.0-5M.pdparams --train_data_path tests/data/high_level_water.xyz
 ```
 
 ## **Known Issues**
