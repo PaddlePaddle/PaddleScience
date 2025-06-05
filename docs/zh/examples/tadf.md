@@ -152,17 +152,17 @@ examples/tadf/TADF_angle/angle.py
 
 <figure markdown>
   ![test_est.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/Est/test_est.png){ loading=lazy }
-  <figcaption>能隙($\Delta Est$)的模型预测结果</figcaption>
+  <figcaption>能隙(ΔEst)的模型预测结果</figcaption>
 </figure>
 
 <figure markdown>
   ![test_f.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/f/test_f.png){ loading=lazy }
-  <figcaption>振子强度($f$)的模型预测结果</figcaption>
+  <figcaption>振子强度(f)的模型预测结果</figcaption>
 </figure>
 
 <figure markdown>
-  ![test_angle.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/f/test_angle.png){ loading=lazy }
-  <figcaption>电子供体与电子受体间的二面角($angle$)的模型预测结果</figcaption>
+  ![test_theta.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/TADF/angle/test_theta.png){ loading=lazy }
+  <figcaption>电子供体与电子受体间的二面角(angle)的模型预测结果</figcaption>
 </figure>
 
 ## 6. 参考文献
