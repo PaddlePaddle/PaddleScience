@@ -112,8 +112,8 @@ nav:
         - WGAN_GP: zh/examples/wgan_gp.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
-        - TADF: zh/examples/TADF.md
         - IFM: zh/examples/ifm.md
+        - TADF: zh/examples/tadf.md
 
   - API 文档:
     - ppsci:
