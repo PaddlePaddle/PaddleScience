@@ -1,14 +1,14 @@
 # STAFNet: Spatiotemporal-Aware Fusion Network for Air Quality Prediction
 
-| 预训练模型                                                   | 指标                   |
-| ------------------------------------------------------------ | ---------------------- |
-| [stafnet.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams) | AQI_MAE(1-48h) : 26.72 |
+| 预训练模型                                                   | 指标                 |
+| ------------------------------------------------------------ | -------------------- |
+| [stafnet.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams) | MAE(1-48h) : 8.70933 |
 
 === "模型训练命令"
 
 ````
 ``` sh
-python stafnet.py TRAIN_DIR="Your train dataset path" eval_data_path="Your evaluate dataset path"
+python stafnet.py DATASET.data_dir="Your train dataset path" EVAL.eval_data_path="Your evaluate dataset path"
 ```
 ````
 
@@ -16,6 +16,8 @@ python stafnet.py TRAIN_DIR="Your train dataset path" eval_data_path="Your evalu
 
 ````
 ``` sh
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl -P ./dataset/
+python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams"
 python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams" EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl"
 ```
 ````
@@ -28,7 +30,7 @@ python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bc
 
 针对空气质量预测提出了许多研究。早期的方法侧重于学习单个观测站观测数据的时间模式，而放弃了观测站之间的空间关系。最近，由于图神经网络（GNN）在处理非欧几里得图结构方面的有效性，越来越多的方法采用 GNN 来模拟空间依赖关系。这些方法将车站位置作为上下文特征，隐含地建立空间依赖关系模型，没有充分利用车站位置和车站之间关系所包含的宝贵空间信息。此外，现有的时空 GNN 缺乏在错位图中融合多个特征的能力。因此，大多数方法都需要额外的插值算法，以便在早期阶段将气象特征与 AQ 特征进行对齐和连接。这种方法消除了空气质量站和气象站之间的空间和结构信息，还可能引入噪声导致误差累积。此外，在空气质量预测中利用多周期性的问题仍未得到探索。
 
-该案例研究时空图网络网络在空气质量预测方向上的应用。
+该案例研究时空图网络在空气质量预测方向上的应用。
 
 ## 2. 模型原理
 
@@ -84,9 +86,9 @@ examples/stafnet/stafnet.py:11
 
 其中超参数`cfg.MODEL.gat_hidden_dim`、`cfg.MODEL.e_layers`、`cfg.MODEL.d_model`、`cfg.MODEL.top_k`等默认设定如下：
 
-```
+``` yaml linenums="39" title="examples/stafnet/conf/stafnet.yaml"
 --8<--
-examples/stafnet/conf/stafnet.yaml:38:62
+examples/stafnet/conf/stafnet.yaml:39:62
 --8<--
 ```
 
@@ -94,7 +96,7 @@ examples/stafnet/conf/stafnet.yaml:38:62
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-```
+``` py linenums="11" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py:64
 --8<--
@@ -102,7 +104,7 @@ examples/stafnet/stafnet.py:64
 
 其中学习率相关的设定如下：
 
-```
+``` yaml linenums="73" title="examples/stafnet/conf/stafnet.yaml"
 --8<--
 examples/stafnet/conf/stafnet.yaml:73:78
 --8<--
@@ -114,7 +116,7 @@ examples/stafnet/conf/stafnet.yaml:73:78
 
 在定义约束之前，我们需要指定数据集的路径等相关配置，将这些信息存放到对应的 YAML 文件中，如下所示。
 
-```
+``` yaml linenums="31" title="examples/stafnet/conf/stafnet.yaml"
 --8<--
 examples/stafnet/conf/stafnet.yaml:31:34
 --8<--
@@ -122,7 +124,7 @@ examples/stafnet/conf/stafnet.yaml:31:34
 
 最后构建监督约束，如下所示。
 
-```
+``` py linenums="53" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py:53:59
 --8<--
@@ -130,9 +132,9 @@ examples/stafnet/stafnet.py:53:59
 
 ### 3.7 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/cfdgcn.md#34) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#34) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
-```
+``` py linenums="30" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py:30:53
 --8<--
@@ -140,7 +142,7 @@ examples/stafnet/stafnet.py:30:53
 
 评估指标为预测结果和真实结果的MSE 值，因此需自定义指标计算函数，如下所示。
 
-```
+``` py linenums="30" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py:30:53
 --8<--
@@ -150,7 +152,7 @@ examples/stafnet/stafnet.py:30:53
 
 由于本问题为时序预测问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。完成述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。具体代码如下：
 
-```
+``` py linenums="125" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py:125:140
 --8<--
@@ -158,7 +160,7 @@ examples/stafnet/stafnet.py:125:140
 
 ## 4. 完整代码
 
-```python
+```python py linenums="1" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py
 --8<--
@@ -166,4 +168,4 @@ examples/stafnet/stafnet.py
 
 ## 5. 参考资料
 
-- [STAFNet: Spatiotemporal-Aware Fusion Network for Air Quality Prediction]([STAFNet: Spatiotemporal-Aware Fusion Network for Air Quality Prediction | SpringerLink](https://link.springer.com/chapter/10.1007/978-3-031-78186-5_22))
+- [STAFNet: Spatiotemporal-Aware Fusion Network for Air Quality Prediction](https://link.springer.com/chapter/10.1007/978-3-031-78186-5_22)
