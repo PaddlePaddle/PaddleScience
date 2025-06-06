@@ -35,7 +35,7 @@ DATASET:
 MODEL:
   input_keys: [aq_train_data, mete_train_data]
   output_keys: [label]
-  output_attention: True
+  output_attention: true
   seq_len: 72
   pred_len: 48
   aq_gat_node_features: 7
@@ -44,17 +44,17 @@ MODEL:
   mete_gat_node_num: 18
   gat_hidden_dim: 32
   gat_edge_dim: 3
-  e_layers: 2
+  e_layers: 1
   enc_in: 7
   dec_in: 7
   c_out: 7
-  d_model: 32
-  embed: "fixed"
-  freq: "t"
+  d_model: 16
+  embed: fixed
+  freq: t
   dropout: 0.05
   factor: 3
   n_heads: 4
-  d_ff: 64
+  d_ff: 32
   num_kernels: 6
   top_k: 4
   
