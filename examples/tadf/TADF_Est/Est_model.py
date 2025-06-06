@@ -181,5 +181,5 @@ def eval(cfg: DictConfig, X, data):
     plt.ylabel("Predicted ΔEst(eV)")
     save_path = "test_Est.png"
     plt.savefig(save_path)
-    # print(f"图片已保存至：{save_path}")
-    # plt.show()
+    print(f"图片已保存至：{save_path}")
+    plt.show()
