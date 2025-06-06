@@ -34,7 +34,6 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
-      - 多硬件支持: zh/multi_device.md
       - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
@@ -52,11 +51,8 @@ nav:
         - SPINN: zh/examples/spinn.md
         - XPINN: zh/examples/xpinns.md
         - NeuralOperator: zh/examples/neuraloperator.md
-        - Brusselator3D: zh/examples/brusselator3d.md
-        - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
-          - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
           - BubbleNet: zh/examples/bubble.md
@@ -67,8 +63,6 @@ nav:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
-          - DrivAerNet: zh/examples/drivaernet.md
-          - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
@@ -85,8 +79,6 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
-          - NTopo: zh/examples/ntopo.md
-          - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
           - Heat_PINN: zh/examples/heat_pinn.md
@@ -94,26 +86,14 @@ nav:
           - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
-        - CGCNN: zh/examples/cgcnn.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
+        - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
-        - GenCast: zh/examples/gencast.md
-        - VelocityGAN: zh/examples/velocity_gan.md
-        - TGCN: zh/examples/tgcn.md
-        - IOPS: zh/examples/iops.md
-        - Pang-Weather: zh/examples/pangu_weather.md
-        - FengWu: zh/examples/fengwu.md
-        - FuXi: zh/examples/fuxi.md
-        - WGAN_GP: zh/examples/wgan_gp.md
-      - 化学科学(AI for Chemistry):
-        - Moflow: zh/examples/moflow.md
-        - IFM: zh/examples/ifm.md
-
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
@@ -154,7 +134,6 @@ nav:
   - 开发与复现指南:
     - 开发指南: zh/development.md
     - 复现指南: zh/reproduction.md
-  - 学术成果: zh/academic.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
@@ -184,7 +163,6 @@ theme:
     - content.tabs.link
     - content.action.edit
     - content.action.view
-    - content.tooltips
   icon:
     edit: material/pencil
     view: material/eye
@@ -225,7 +203,6 @@ plugins:
 
 # Extensions
 markdown_extensions:
-  - abbr
   - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
