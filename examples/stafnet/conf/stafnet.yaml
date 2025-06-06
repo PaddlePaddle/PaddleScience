@@ -32,7 +32,6 @@ DATASET:
   label_keys: [label]
   data_dir: ./dataset/train_data.pkl
 
-
 MODEL:
   input_keys: [aq_train_data, mete_train_data]
   output_keys: [label]
@@ -78,7 +77,7 @@ TRAIN:
   checkpoint_path: null 
 
 EVAL:
-  eval_data_path: ./dataset/new_val_data.pkl
+  eval_data_path: ./dataset/val_data.pkl
   pretrained_model_path: null
   compute_metric_by_batch: false
   eval_with_no_grad: true
