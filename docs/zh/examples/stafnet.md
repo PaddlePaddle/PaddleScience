@@ -62,7 +62,7 @@ STAFNet 包含三个模块，分别将空间信息、气象信息和历史信息
 
 所有空气质量和气象观测数据每小时记录一次。数据集的收集时间为 2021 年 1 月 24 日至 2023 年 1 月 19 日，按 9:1的比例将数据分为训练集和测试集。空气质量观测数据来自国家城市空气质量实时发布平台，气象观测数据来自中国气象局。数据集的具体细节如下表所示：
 
-<div>			<!--块级封装-->     <center>	<!--将图片和文字居中-->     <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/stafnet/dataset.jpg" alt="image-20240530104042194" style="zoom: 25%;" />     <br>		<!--换行-->     北京空气质量数据集	<!--标题-->     </center> </div>
+<div>            <!--块级封装-->     <center>    <!--将图片和文字居中-->     <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/stafnet/dataset.jpg" alt="image-20240530104042194" style="zoom: 25%;" />     <br>        <!--换行-->     北京空气质量数据集    <!--标题-->     </center> </div>
 
 具体的数据集可从https://quotsoft.net/air/下载。
 
