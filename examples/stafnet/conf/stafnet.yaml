@@ -1,12 +1,12 @@
-defaults: 
-   - ppsci_default 
-   - TRAIN: train_default 
-   - TRAIN/ema: ema_default 
-   - TRAIN/swa: swa_default 
-   - EVAL: eval_default 
-   - INFER: infer_default 
-   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default 
-   - _self_ 
+defaults:
+   - ppsci_default
+   - TRAIN: train_default
+   - TRAIN/ema: ema_default
+   - TRAIN/swa: swa_default
+   - EVAL: eval_default
+   - INFER: infer_default
+   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+   - _self_
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -57,24 +57,24 @@ MODEL:
   d_ff: 32
   num_kernels: 6
   top_k: 4
-  
+
 # training settings
-TRAIN: 
-  epochs: 100 
-  iters_per_epoch: 400 
-  save_freq: 10 
-  eval_during_train: true 
-  eval_freq: 10 
-  batch_size: 32 
-  learning_rate: 0.0001  
-  lr_scheduler:  
-    epochs: ${TRAIN.epochs}  
-    iters_per_epoch: ${TRAIN.iters_per_epoch}  
-    learning_rate: 0.0005  
-    step_size: 20 
-    gamma: 0.95 
-  pretrained_model_path: null 
-  checkpoint_path: null 
+TRAIN:
+  epochs: 100
+  iters_per_epoch: 400
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 10
+  batch_size: 32
+  learning_rate: 0.0001
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.0005
+    step_size: 20
+    gamma: 0.95
+  pretrained_model_path: null
+  checkpoint_path: null
 
 EVAL:
   eval_data_path: ./dataset/val_data.pkl

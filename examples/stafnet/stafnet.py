@@ -1,13 +1,13 @@
-import ppsci
-from ppsci.utils import logger
-from omegaconf import DictConfig
-import hydra
-import paddle
 import multiprocessing
+
+import hydra
+from omegaconf import DictConfig
+
+import ppsci
 
 def train(cfg: DictConfig):
     # set model
-    model = ppsci.arch.STAFNet(**cfg.MODEL) 
+    model = ppsci.arch.STAFNet(**cfg.MODEL)
     train_dataloader_cfg = {
         "dataset": {
             "name": "STAFNetDataset",
@@ -16,7 +16,6 @@ def train(cfg: DictConfig):
             "label_keys": cfg.MODEL.output_keys,
             "seq_len": cfg.MODEL.seq_len,
             "pred_len": cfg.MODEL.pred_len,
-
         },
         "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
@@ -24,9 +23,9 @@ def train(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 0
+        "num_workers": 0,
     }
-    eval_dataloader_cfg= {
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "STAFNetDataset",
             "file_path": cfg.EVAL.eval_data_path,
@@ -41,7 +40,7 @@ def train(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 0
+        "num_workers": 0,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -57,8 +56,8 @@ def train(cfg: DictConfig):
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
-    
-     # set optimizer
+
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     ITERS_PER_EPOCH = len(sup_constraint.data_loader)
@@ -82,9 +81,10 @@ def train(cfg: DictConfig):
     # train model
     solver.train()
 
+
 def evaluate(cfg: DictConfig):
-    model = ppsci.arch.STAFNet(**cfg.MODEL) 
-    eval_dataloader_cfg= {
+    model = ppsci.arch.STAFNet(**cfg.MODEL)
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "STAFNetDataset",
             "file_path": cfg.EVAL.eval_data_path,
@@ -99,7 +99,7 @@ def evaluate(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 0
+        "num_workers": 0,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -131,6 +131,7 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
 
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
