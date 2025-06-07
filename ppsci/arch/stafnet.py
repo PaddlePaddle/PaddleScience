@@ -1,26 +1,30 @@
-import paddle
-import paddle.nn as nn
-import numpy as np
 import math
 from math import sqrt
-from ppsci.arch import base
-from pgl.nn.conv import GATv2Conv
-from typing import TYPE_CHECKING
-from typing import Dict
 from typing import Tuple
 
-class Inception_Block_V1(paddle.nn.Layer):
+import numpy as np
+import paddle
+from pgl.nn.conv import GATv2Conv
 
-    def __init__(self, in_channels, out_channels, num_kernels=6,
-        init_weight=True):
+from ppsci.arch import base
+
+
+class Inception_Block_V1(paddle.nn.Layer):
+    def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
         super(Inception_Block_V1, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.num_kernels = num_kernels
         kernels = []
         for i in range(self.num_kernels):
-            kernels.append(paddle.nn.Conv2D(in_channels=in_channels,
-                out_channels=out_channels, kernel_size=2 * i + 1, padding=i))
+            kernels.append(
+                paddle.nn.Conv2D(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=2 * i + 1,
+                    padding=i,
+                )
+            )
         self.kernels = paddle.nn.LayerList(sublayers=kernels)
         if init_weight:
             self._initialize_weights()
@@ -29,10 +33,11 @@ class Inception_Block_V1(paddle.nn.Layer):
         for m in self.sublayers():
             if isinstance(m, paddle.nn.Conv2D):
 
-                init_kaimingNormal = paddle.nn.initializer.KaimingNormal(fan_in=None,
-                            negative_slope=0.0, nonlinearity='relu')
+                init_kaimingNormal = paddle.nn.initializer.KaimingNormal(
+                    fan_in=None, negative_slope=0.0, nonlinearity="relu"
+                )
                 init_kaimingNormal(m.weight)
-                
+
                 if m.bias is not None:
                     init_Constant = paddle.nn.initializer.Constant(value=0)
                     init_Constant(m.bias)
@@ -44,22 +49,25 @@ class Inception_Block_V1(paddle.nn.Layer):
         res = paddle.stack(x=res_list, axis=-1).mean(axis=-1)
         return res
 
-class AttentionLayer(paddle.nn.Layer):
 
-    def __init__(self, attention, d_model, n_heads, d_keys=None, d_values=None
-        ):
+class AttentionLayer(paddle.nn.Layer):
+    def __init__(self, attention, d_model, n_heads, d_keys=None, d_values=None):
         super(AttentionLayer, self).__init__()
         d_keys = d_keys or d_model // n_heads
         d_values = d_values or d_model // n_heads
         self.inner_attention = attention
-        self.query_projection = paddle.nn.Linear(in_features=d_model,
-            out_features=d_keys * n_heads)
-        self.key_projection = paddle.nn.Linear(in_features=d_model,
-            out_features=d_keys * n_heads)
-        self.value_projection = paddle.nn.Linear(in_features=d_model,
-            out_features=d_values * n_heads)
-        self.out_projection = paddle.nn.Linear(in_features=d_values *
-            n_heads, out_features=d_model)
+        self.query_projection = paddle.nn.Linear(
+            in_features=d_model, out_features=d_keys * n_heads
+        )
+        self.key_projection = paddle.nn.Linear(
+            in_features=d_model, out_features=d_keys * n_heads
+        )
+        self.value_projection = paddle.nn.Linear(
+            in_features=d_model, out_features=d_values * n_heads
+        )
+        self.out_projection = paddle.nn.Linear(
+            in_features=d_values * n_heads, out_features=d_model
+        )
         self.n_heads = n_heads
 
     def forward(self, queries, keys, values, attn_mask):
@@ -73,10 +81,16 @@ class AttentionLayer(paddle.nn.Layer):
         out = out.reshape((B, L, -1))
         return self.out_projection(out), attn
 
-class ProbAttention(paddle.nn.Layer):
 
-    def __init__(self, mask_flag=True, factor=5, scale=None,
-        attention_dropout=0.1, output_attention=False):
+class ProbAttention(paddle.nn.Layer):
+    def __init__(
+        self,
+        mask_flag=True,
+        factor=5,
+        scale=None,
+        attention_dropout=0.1,
+        output_attention=False,
+    ):
         super(ProbAttention, self).__init__()
         self.factor = factor
         self.scale = scale
@@ -90,19 +104,27 @@ class ProbAttention(paddle.nn.Layer):
         K_expand = K.unsqueeze(axis=-3).expand(shape=[B, H, L_Q, L_K, E])
         index_sample = paddle.randint(low=0, high=L_K, shape=[L_Q, sample_k])
         # index_sample = torch.randint(L_K, (L_Q, sample_k))
-        K_sample = K_expand[:, :, paddle.arange(end=L_Q).unsqueeze(axis=1), index_sample, :]
+        K_sample = K_expand[
+            :, :, paddle.arange(end=L_Q).unsqueeze(axis=1), index_sample, :
+        ]
 
         x = K_sample
         perm_5 = list(range(x.ndim))
         perm_5[-2] = -1
         perm_5[-1] = -2
-        Q_K_sample = paddle.matmul(x=Q.unsqueeze(axis=-2), y=x.transpose(
-            perm=perm_5)).squeeze()
-        M = Q_K_sample.max(-1)[0] - paddle.divide(x=Q_K_sample.sum(axis=-1),
-            y=paddle.to_tensor(L_K,dtype ='float32') )
+        Q_K_sample = paddle.matmul(
+            x=Q.unsqueeze(axis=-2), y=x.transpose(perm=perm_5)
+        ).squeeze()
+        M = Q_K_sample.max(-1)[0] - paddle.divide(
+            x=Q_K_sample.sum(axis=-1), y=paddle.to_tensor(L_K, dtype="float32")
+        )
         M_top = M.topk(k=n_top, sorted=False)[1]
-        Q_reduce = Q[paddle.arange(end=B)[:, None, None], paddle.arange(end
-            =H)[None, :, None], M_top, :]
+        Q_reduce = Q[
+            paddle.arange(end=B)[:, None, None],
+            paddle.arange(end=H)[None, :, None],
+            M_top,
+            :,
+        ]
         x = K
         perm_6 = list(range(x.ndim))
         perm_6[-2] = -1
@@ -114,8 +136,11 @@ class ProbAttention(paddle.nn.Layer):
         B, H, L_V, D = tuple(V.shape)
         if not self.mask_flag:
             V_sum = V.mean(axis=-2)
-            contex = V_sum.unsqueeze(axis=-2).expand(shape=[B, H, L_Q,
-                tuple(V_sum.shape)[-1]]).clone()
+            contex = (
+                V_sum.unsqueeze(axis=-2)
+                .expand(shape=[B, H, L_Q, tuple(V_sum.shape)[-1]])
+                .clone()
+            )
         else:
             assert L_Q == L_V
             contex = V.cumsum(axis=-2)
@@ -124,17 +149,27 @@ class ProbAttention(paddle.nn.Layer):
     def _update_context(self, context_in, V, scores, index, L_Q, attn_mask):
         B, H, L_V, D = tuple(V.shape)
         if self.mask_flag:
-            attn_mask = ProbMask(B, H, L_Q, index, scores, device=V.place)
+            # attn_mask = ProbMask(B, H, L_Q, index, scores, device=V.place)
             scores.masked_fill_(mask=attn_mask.mask, value=-np.inf)
         attn = paddle.nn.functional.softmax(x=scores, axis=-1)
-        context_in[paddle.arange(end=B)[:, None, None], paddle.arange(end=H
-            )[None, :, None], index, :] = paddle.matmul(x=attn, y=V).astype(
-            dtype=context_in.dtype)
+        context_in[
+            paddle.arange(end=B)[:, None, None],
+            paddle.arange(end=H)[None, :, None],
+            index,
+            :,
+        ] = paddle.matmul(x=attn, y=V).astype(dtype=context_in.dtype)
         if self.output_attention:
-            attns = (paddle.ones(shape=[B, H, L_Q, L_V]) / L_V).astype(dtype
-                =attn.dtype).to(attn.place)
-            attns[paddle.arange(end=B)[:, None, None], paddle.arange(end=H)
-                [None, :, None], index, :] = attn
+            attns = (
+                (paddle.ones(shape=[B, H, L_Q, L_V]) / L_V)
+                .astype(dtype=attn.dtype)
+                .to(attn.place)
+            )
+            attns[
+                paddle.arange(end=B)[:, None, None],
+                paddle.arange(end=H)[None, :, None],
+                index,
+                :,
+            ] = attn
             return context_in, attns
         else:
             return context_in, None
@@ -157,18 +192,18 @@ class ProbAttention(paddle.nn.Layer):
         perm_9[2] = 1
         perm_9[1] = 2
         values = x.transpose(perm=perm_9)
-        U_part = self.factor * np.ceil(np.log(L_K)).astype('int').item()
-        u = self.factor * np.ceil(np.log(L_Q)).astype('int').item()
+        U_part = self.factor * np.ceil(np.log(L_K)).astype("int").item()
+        u = self.factor * np.ceil(np.log(L_Q)).astype("int").item()
         U_part = U_part if U_part < L_K else L_K
         u = u if u < L_Q else L_Q
-        scores_top, index = self._prob_QK(queries, keys, sample_k=U_part,
-            n_top=u)
+        scores_top, index = self._prob_QK(queries, keys, sample_k=U_part, n_top=u)
         scale = self.scale or 1.0 / sqrt(D)
         if scale is not None:
             scores_top = scores_top * scale
         context = self._get_initial_context(values, L_Q)
-        context, attn = self._update_context(context, values, scores_top,
-            index, L_Q, attn_mask)
+        context, attn = self._update_context(
+            context, values, scores_top, index, L_Q, attn_mask
+        )
         return context, attn
 
 
@@ -179,7 +214,9 @@ def FFT_for_Period(x, k=2):
     _, top_list = paddle.topk(k=k, x=frequency_list)
     top_list = top_list.detach().cpu().numpy()
     period = tuple(x.shape)[1] // top_list
-    return period, paddle.index_select(paddle.abs(xf).mean(axis=-1), paddle.to_tensor(top_list), axis=1)
+    return period, paddle.index_select(
+        paddle.abs(xf).mean(axis=-1), paddle.to_tensor(top_list), axis=1
+    )
 
 
 class TimesBlock(paddle.nn.Layer):
@@ -201,21 +238,25 @@ class TimesBlock(paddle.nn.Layer):
         >>> print(output.shape)
         [32, 120, 512]
     """
-    def __init__(self, 
-        seq_len: int, 
-        pred_len: int, 
-        top_k: int, 
+
+    def __init__(
+        self,
+        seq_len: int,
+        pred_len: int,
+        top_k: int,
         num_kernels: int,
         d_model: int,
-        d_ff: int, ):
+        d_ff: int,
+    ):
         super(TimesBlock, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.k = top_k
-        self.conv = paddle.nn.Sequential(Inception_Block_V1(d_model,
-            d_ff, num_kernels=num_kernels), paddle.nn.GELU(
-            ), Inception_Block_V1(d_ff, d_model,
-            num_kernels=num_kernels))
+        self.conv = paddle.nn.Sequential(
+            Inception_Block_V1(d_model, d_ff, num_kernels=num_kernels),
+            paddle.nn.GELU(),
+            Inception_Block_V1(d_ff, d_model, num_kernels=num_kernels),
+        )
 
     def forward(self, x):
         B, T, N = tuple(x.shape)
@@ -224,28 +265,33 @@ class TimesBlock(paddle.nn.Layer):
         for i in range(self.k):
             period = period_list[i]
             if (self.seq_len + self.pred_len) % period != 0:
-                length = ((self.seq_len + self.pred_len) // period + 1
-                    ) * period
-                padding = paddle.zeros(shape=[tuple(x.shape)[0], length - (
-                    self.seq_len + self.pred_len), tuple(x.shape)[2]])
+                length = ((self.seq_len + self.pred_len) // period + 1) * period
+                padding = paddle.zeros(
+                    shape=[
+                        tuple(x.shape)[0],
+                        length - (self.seq_len + self.pred_len),
+                        tuple(x.shape)[2],
+                    ]
+                )
                 out = paddle.concat(x=[x, padding], axis=1)
             else:
                 length = self.seq_len + self.pred_len
                 out = x
-            out = out.reshape((B, length // period, period, N)).transpose(perm=[0, 3, 1, 2])
+            out = out.reshape((B, length // period, period, N)).transpose(
+                perm=[0, 3, 1, 2]
+            )
             out = self.conv(out)
             out = out.transpose(perm=[0, 2, 3, 1]).reshape((B, -1, N))
-            res.append(out[:, :self.seq_len + self.pred_len, :])
+            res.append(out[:, : self.seq_len + self.pred_len, :])
         res = paddle.stack(x=res, axis=-1)
         period_weight_raw = period_weight
         period_weight = paddle.nn.functional.softmax(x=period_weight, axis=1)
-        period_weight = paddle.tile(period_weight.unsqueeze(axis=1).unsqueeze(axis=1
-            ), (1, T, N, 1))
+        period_weight = paddle.tile(
+            period_weight.unsqueeze(axis=1).unsqueeze(axis=1), (1, T, N, 1)
+        )
         res = paddle.sum(x=res * period_weight, axis=-1)
         res = res + x
         return res, period_list, period_weight_raw
-
-
 
 
 def compared_version(ver1, ver2):
@@ -254,10 +300,9 @@ def compared_version(ver1, ver2):
     :param ver2
     :return: ver1< = >ver2 False/True
     """
-    list1 = str(ver1).split('.')
-    list2 = str(ver2).split('.')
-    for i in (range(len(list1)) if len(list1) < len(list2) else range(len(
-        list2))):
+    list1 = str(ver1).split(".")
+    list2 = str(ver2).split(".")
+    for i in range(len(list1)) if len(list1) < len(list2) else range(len(list2)):
         if int(list1[i]) == int(list2[i]):
             pass
         elif int(list1[i]) < int(list2[i]):
@@ -273,36 +318,45 @@ def compared_version(ver1, ver2):
 
 
 class PositionalEmbedding(paddle.nn.Layer):
-
     def __init__(self, d_model, max_len=5000):
         super(PositionalEmbedding, self).__init__()
-        pe = paddle.zeros(shape=[max_len, d_model]).astype(dtype='float32')
+        pe = paddle.zeros(shape=[max_len, d_model]).astype(dtype="float32")
         pe.stop_gradient = True
-        position = paddle.arange(start=0, end=max_len).astype(dtype='float32'
-            ).unsqueeze(axis=1)
-        div_term = (paddle.arange(start=0, end=d_model, step=2).astype(
-            dtype='float32') * -(math.log(10000.0) / d_model)).exp()
+        position = (
+            paddle.arange(start=0, end=max_len)
+            .astype(dtype="float32")
+            .unsqueeze(axis=1)
+        )
+        div_term = (
+            paddle.arange(start=0, end=d_model, step=2).astype(dtype="float32")
+            * -(math.log(10000.0) / d_model)
+        ).exp()
         pe[:, 0::2] = paddle.sin(x=position * div_term)
         pe[:, 1::2] = paddle.cos(x=position * div_term)
         pe = pe.unsqueeze(axis=0)
-        self.register_buffer(name='pe', tensor=pe)
+        self.register_buffer(name="pe", tensor=pe)
 
     def forward(self, x):
-        return self.pe[:, :x.shape[1]]
+        return self.pe[:, : x.shape[1]]
 
 
 class TokenEmbedding(paddle.nn.Layer):
-
     def __init__(self, c_in, d_model):
         super(TokenEmbedding, self).__init__()
-        padding = 1 if compared_version(paddle.__version__, '1.5.0') else 2
-        self.tokenConv = paddle.nn.Conv1D(in_channels=c_in, out_channels=
-            d_model, kernel_size=3, padding=padding, padding_mode=
-            'circular', bias_attr=False)
+        padding = 1 if compared_version(paddle.__version__, "1.5.0") else 2
+        self.tokenConv = paddle.nn.Conv1D(
+            in_channels=c_in,
+            out_channels=d_model,
+            kernel_size=3,
+            padding=padding,
+            padding_mode="circular",
+            bias_attr=False,
+        )
         for m in self.sublayers():
             if isinstance(m, paddle.nn.Conv1D):
                 init_KaimingNormal = paddle.nn.initializer.KaimingNormal(
-                    nonlinearity='leaky_relu')
+                    nonlinearity="leaky_relu"
+                )
                 init_KaimingNormal(m.weight)
 
     def forward(self, x):
@@ -315,21 +369,25 @@ class TokenEmbedding(paddle.nn.Layer):
 
 
 class FixedEmbedding(paddle.nn.Layer):
-
     def __init__(self, c_in, d_model):
         super(FixedEmbedding, self).__init__()
-        w = paddle.zeros(shape=[c_in, d_model]).astype(dtype='float32')
+        w = paddle.zeros(shape=[c_in, d_model]).astype(dtype="float32")
         w.stop_gradient = True
-        position = paddle.arange(start=0, end=c_in).astype(dtype='float32'
-            ).unsqueeze(axis=1)
-        div_term = (paddle.arange(start=0, end=d_model, step=2).astype(
-            dtype='float32') * -(math.log(10000.0) / d_model)).exp()
+        position = (
+            paddle.arange(start=0, end=c_in).astype(dtype="float32").unsqueeze(axis=1)
+        )
+        div_term = (
+            paddle.arange(start=0, end=d_model, step=2).astype(dtype="float32")
+            * -(math.log(10000.0) / d_model)
+        ).exp()
         w[:, 0::2] = paddle.sin(x=position * div_term)
         w[:, 1::2] = paddle.cos(x=position * div_term)
-        self.emb = paddle.nn.Embedding(num_embeddings=c_in, embedding_dim=
-            d_model)
-        out_3 = paddle.create_parameter(shape=w.shape, dtype=w.numpy().
-            dtype, default_initializer=paddle.nn.initializer.Assign(w))
+        self.emb = paddle.nn.Embedding(num_embeddings=c_in, embedding_dim=d_model)
+        out_3 = paddle.create_parameter(
+            shape=w.shape,
+            dtype=w.numpy().dtype,
+            default_initializer=paddle.nn.initializer.Assign(w),
+        )
         out_3.stop_gradient = not False
         self.emb.weight = out_3
 
@@ -338,8 +396,7 @@ class FixedEmbedding(paddle.nn.Layer):
 
 
 class TemporalEmbedding(paddle.nn.Layer):
-
-    def __init__(self, d_model, embed_type='fixed', freq='h'):
+    def __init__(self, d_model, embed_type="fixed", freq="h"):
         super(TemporalEmbedding, self).__init__()
         minute_size = 4
         hour_size = 24
@@ -347,99 +404,109 @@ class TemporalEmbedding(paddle.nn.Layer):
         weekday_size = 7
         day_size = 32
         month_size = 13
-        Embed = (FixedEmbedding if embed_type == 'fixed' else paddle.nn.
-            Embedding)
-        if freq == 't':
+        Embed = FixedEmbedding if embed_type == "fixed" else paddle.nn.Embedding
+        if freq == "t":
             self.minute_embed = Embed(minute_size, d_model)
         self.hour_embed = Embed(hour_size, d_model)
         self.weekday_embed = Embed(weekday_size, d_model)
         self.weeknum_embed = Embed(weeknum_size, d_model)
         self.day_embed = Embed(day_size, d_model)
         self.month_embed = Embed(month_size, d_model)
-        self.Temporal_feature = ['month', 'day', 'week', 'weekday', 'hour']
+        self.Temporal_feature = ["month", "day", "week", "weekday", "hour"]
 
     def forward(self, x):
-        x = x.astype(dtype='int64')
+        x = x.astype(dtype="int64")
         for idx, freq in enumerate(self.Temporal_feature):
-            if freq == 'year':
+            if freq == "year":
                 pass
-            elif freq == 'month':
+            elif freq == "month":
                 month_x = self.month_embed(x[:, :, idx])
-            elif freq == 'day':
+            elif freq == "day":
                 day_x = self.day_embed(x[:, :, idx])
-            elif freq == 'week':
+            elif freq == "week":
                 weeknum_x = self.weeknum_embed(x[:, :, idx])
-            elif freq == 'weekday':
+            elif freq == "weekday":
                 weekday_x = self.weekday_embed(x[:, :, idx])
-            elif freq == 'hour':
+            elif freq == "hour":
                 hour_x = self.hour_embed(x[:, :, idx])
         return hour_x + weekday_x + weeknum_x + day_x + month_x
 
 
 class TimeFeatureEmbedding(paddle.nn.Layer):
-
-    def __init__(self, d_model, embed_type='timeF', freq='h'):
+    def __init__(self, d_model, embed_type="timeF", freq="h"):
         super(TimeFeatureEmbedding, self).__init__()
-        freq_map = {'h': 4, 't': 5, 's': 6, 'm': 1, 'a': 1, 'w': 2, 'd': 3,
-            'b': 3}
+        freq_map = {"h": 4, "t": 5, "s": 6, "m": 1, "a": 1, "w": 2, "d": 3, "b": 3}
         d_inp = freq_map[freq]
-        self.embed = paddle.nn.Linear(in_features=d_inp, out_features=
-            d_model, bias_attr=False)
+        self.embed = paddle.nn.Linear(
+            in_features=d_inp, out_features=d_model, bias_attr=False
+        )
 
     def forward(self, x):
         return self.embed(x)
 
 
 class DataEmbedding(paddle.nn.Layer):
-
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1
-        ):
+    def __init__(self, c_in, d_model, embed_type="fixed", freq="h", dropout=0.1):
         super(DataEmbedding, self).__init__()
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model,
-            embed_type=embed_type, freq=freq
-            ) if embed_type != 'timeF' else TimeFeatureEmbedding(d_model=
-            d_model, embed_type=embed_type, freq=freq)
+        self.temporal_embedding = (
+            TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
+            if embed_type != "timeF"
+            else TimeFeatureEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
+        )
         self.dropout = paddle.nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
-        x = self.value_embedding(x) #+ self.temporal_embedding(x_mark) + self.position_embedding(x)
+        x = self.value_embedding(
+            x
+        )  # + self.temporal_embedding(x_mark) + self.position_embedding(x)
         return self.dropout(x)
 
 
-
 class DataEmbedding_wo_pos(paddle.nn.Layer):
-
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1
-        ):
+    def __init__(self, c_in, d_model, embed_type="fixed", freq="h", dropout=0.1):
         super(DataEmbedding_wo_pos, self).__init__()
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model,
-            embed_type=embed_type, freq=freq
-            ) if embed_type != 'timeF' else TimeFeatureEmbedding(d_model=
-            d_model, embed_type=embed_type, freq=freq)
+        self.temporal_embedding = (
+            TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
+            if embed_type != "timeF"
+            else TimeFeatureEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
+        )
         self.dropout = paddle.nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
         x = self.value_embedding(x) + self.temporal_embedding(x_mark)
         return self.dropout(x)
 
-class GAT_Encoder(paddle.nn.Layer):
 
+class GAT_Encoder(paddle.nn.Layer):
     def __init__(self, input_dim, hid_dim, edge_dim, gnn_embed_dim, dropout):
         super(GAT_Encoder, self).__init__()
         self.input_dim = input_dim
         self.hid_dim = hid_dim
         self.relu = paddle.nn.ReLU()
         self.dropout = paddle.nn.Dropout(p=dropout)
-        self.conv1 = GATv2Conv(input_dim, hid_dim, )
-        self.conv2 = GATv2Conv(hid_dim, hid_dim * 2, )
-        self.conv3 = GATv2Conv(hid_dim * 2, gnn_embed_dim,)
+        self.conv1 = GATv2Conv(
+            input_dim,
+            hid_dim,
+        )
+        self.conv2 = GATv2Conv(
+            hid_dim,
+            hid_dim * 2,
+        )
+        self.conv3 = GATv2Conv(
+            hid_dim * 2,
+            gnn_embed_dim,
+        )
 
-    def forward(self,graph, feature, ):
-        x = self.conv1(graph, feature )
+    def forward(
+        self,
+        graph,
+        feature,
+    ):
+        x = self.conv1(graph, feature)
         x = self.relu(x)
         # x = x.relu()
         x = self.conv2(graph, x)
@@ -518,9 +585,9 @@ class STAFNet(base.Arch):
         >>> print(output_dict["v"].shape)
         [32, 48, 7]
     """
- 
+
     def __init__(
-       self,
+        self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
         seq_len: int,
@@ -549,52 +616,81 @@ class STAFNet(base.Arch):
         super(STAFNet, self).__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.device = str('cuda').replace('cuda', 'gpu')
+        self.device = str("cuda").replace("cuda", "gpu")
         self.output_attention = output_attention
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.dec_in = dec_in
         self.gat_embed_dim = enc_in
-        self.enc_embedding = DataEmbedding(enc_in, d_model,
-            embed, freq, dropout)
+        self.enc_embedding = DataEmbedding(enc_in, d_model, embed, freq, dropout)
         self.aq_gat_node_num = aq_gat_node_num
         self.aq_gat_node_features = aq_gat_node_features
-        self.aq_GAT = GAT_Encoder(aq_gat_node_features, 
-            gat_hidden_dim, gat_edge_dim, self.gat_embed_dim,
-            dropout).to(self.device)
+        self.aq_GAT = GAT_Encoder(
+            aq_gat_node_features,
+            gat_hidden_dim,
+            gat_edge_dim,
+            self.gat_embed_dim,
+            dropout,
+        ).to(self.device)
         self.mete_gat_node_num = mete_gat_node_num
         self.mete_gat_node_features = mete_gat_node_features
-        self.mete_GAT = GAT_Encoder(mete_gat_node_features, gat_hidden_dim, gat_edge_dim, self.gat_embed_dim,
-            dropout).to(self.device)
-        self.pos_fc = paddle.nn.Linear(in_features=2, out_features=
-            self.gat_embed_dim, bias_attr=True)
-        self.fusion_Attention = AttentionLayer(ProbAttention(False, factor, attention_dropout=dropout, output_attention=
-            self.output_attention), self.gat_embed_dim, n_heads)
-        self.model = paddle.nn.LayerList(sublayers=[TimesBlock( seq_len, pred_len, top_k, num_kernels,d_model,d_ff) for
-            _ in range(e_layers)])
+        self.mete_GAT = GAT_Encoder(
+            mete_gat_node_features,
+            gat_hidden_dim,
+            gat_edge_dim,
+            self.gat_embed_dim,
+            dropout,
+        ).to(self.device)
+        self.pos_fc = paddle.nn.Linear(
+            in_features=2, out_features=self.gat_embed_dim, bias_attr=True
+        )
+        self.fusion_Attention = AttentionLayer(
+            ProbAttention(
+                False,
+                factor,
+                attention_dropout=dropout,
+                output_attention=self.output_attention,
+            ),
+            self.gat_embed_dim,
+            n_heads,
+        )
+        self.model = paddle.nn.LayerList(
+            sublayers=[
+                TimesBlock(seq_len, pred_len, top_k, num_kernels, d_model, d_ff)
+                for _ in range(e_layers)
+            ]
+        )
         self.layer = e_layers
         self.layer_norm = paddle.nn.LayerNorm(normalized_shape=d_model)
-        self.predict_linear = paddle.nn.Linear(in_features=self.seq_len,
-            out_features=self.pred_len + self.seq_len)
-        self.projection = paddle.nn.Linear(in_features=d_model,
-            out_features=c_out, bias_attr=True)
+        self.predict_linear = paddle.nn.Linear(
+            in_features=self.seq_len, out_features=self.pred_len + self.seq_len
+        )
+        self.projection = paddle.nn.Linear(
+            in_features=d_model, out_features=c_out, bias_attr=True
+        )
         self.output_attention = output_attention
 
     def aq_gat(self, G):
         g_batch = G.num_graph
-        batch_size = int(g_batch/self.seq_len)
-        gat_output = self.aq_GAT(G, G.node_feat["feature"][:, -self.aq_gat_node_features:])
-        gat_output = gat_output.reshape((batch_size, self.seq_len, self.
-            aq_gat_node_num, self.gat_embed_dim))
+        batch_size = int(g_batch / self.seq_len)
+        gat_output = self.aq_GAT(
+            G, G.node_feat["feature"][:, -self.aq_gat_node_features :]
+        )
+        gat_output = gat_output.reshape(
+            (batch_size, self.seq_len, self.aq_gat_node_num, self.gat_embed_dim)
+        )
         gat_output = paddle.flatten(x=gat_output, start_axis=0, stop_axis=1)
         return gat_output
 
     def mete_gat(self, G):
         g_batch = G.num_graph
-        batch_size = int(g_batch/self.seq_len)
-        gat_output = self.mete_GAT(G, G.node_feat["feature"][:, -self.mete_gat_node_features:])
-        gat_output = gat_output.reshape((batch_size, self.seq_len, self.
-            mete_gat_node_num, self.gat_embed_dim))
+        batch_size = int(g_batch / self.seq_len)
+        gat_output = self.mete_GAT(
+            G, G.node_feat["feature"][:, -self.mete_gat_node_features :]
+        )
+        gat_output = gat_output.reshape(
+            (batch_size, self.seq_len, self.mete_gat_node_num, self.gat_embed_dim)
+        )
         gat_output = paddle.flatten(x=gat_output, start_axis=0, stop_axis=1)
         return gat_output
 
@@ -607,31 +703,41 @@ class STAFNet(base.Arch):
         return A_norm, B_norm
 
     def forward(self, Data, mask=None):
-        train_data = Data['aq_train_data']
-        batch_size =  train_data.shape[0]
+        train_data = Data["aq_train_data"]
+        batch_size = train_data.shape[0]
         x = train_data
         perm_1 = list(range(x.ndim))
         perm_1[1] = 2
         perm_1[2] = 1
         train_data = paddle.transpose(x=x, perm=perm_1)
         train_data = paddle.flatten(x=train_data, start_axis=0, stop_axis=1)
-        x_enc = train_data[:, :self.seq_len, -self.dec_in:]
-        x_mark_enc = train_data[:, :self.seq_len, 1:6]
+        x_enc = train_data[:, : self.seq_len, -self.dec_in :]
+        x_mark_enc = train_data[:, : self.seq_len, 1:6]
 
         means = x_enc.mean(axis=1, keepdim=True).detach()
         x_enc = x_enc - means
-        stdev = paddle.sqrt(x=paddle.var(x=x_enc, axis=1, keepdim=True,
-            unbiased=False) + 1e-05)
+        stdev = paddle.sqrt(
+            x=paddle.var(x=x_enc, axis=1, keepdim=True, unbiased=False) + 1e-05
+        )
         x_enc /= stdev
         # enc_out = self.enc_embedding(aq_gat_output, x_mark_enc)
         enc_out = self.enc_embedding(x_enc, x_mark_enc)
-        enc_out = self.predict_linear(enc_out.transpose(perm=[0, 2, 1])
-            ).transpose(perm=[0, 2, 1])
+        enc_out = self.predict_linear(enc_out.transpose(perm=[0, 2, 1])).transpose(
+            perm=[0, 2, 1]
+        )
         for i in range(self.layer):
             enc_out, period_list, period_weight = self.model[i](enc_out)
             enc_out = self.layer_norm(enc_out)
         dec_out = self.projection(enc_out)
-        dec_out = dec_out * paddle.tile( stdev[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1))
-        dec_out = dec_out +  paddle.tile(means[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1))
+        dec_out = dec_out * paddle.tile(
+            stdev[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1)
+        )
+        dec_out = dec_out + paddle.tile(
+            means[:, 0, :].unsqueeze(axis=1), (1, self.pred_len + self.seq_len, 1)
+        )
 
-        return {self.output_keys[0]: dec_out[  :,-self.pred_len:, -7:].reshape((batch_size, self.pred_len,-1,7))} 
+        return {
+            self.output_keys[0]: dec_out[:, -self.pred_len :, -7:].reshape(
+                (batch_size, self.pred_len, -1, 7)
+            )
+        }
