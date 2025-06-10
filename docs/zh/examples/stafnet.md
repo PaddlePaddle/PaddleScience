@@ -18,7 +18,6 @@ python stafnet.py DATASET.data_dir="Your train dataset path" EVAL.eval_data_path
 ``` sh
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl -P ./dataset/
 python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams"
-python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams" EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl"
 ```
 ````
 
@@ -76,9 +75,9 @@ STAFNet 包含三个模块，分别将空间信息、气象信息和历史信息
 
 在STAFNet模型中，输入过去72小时35个站点的空气质量数据，预测这35个站点未来48小时的空气质量。在本问题中，我们使用神经网络 `stafnet` 作为模型，其接收图结构数据，输出预测结果。
 
-```
+```py linenums="10" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:11
+examples/stafnet/stafnet.py:10
 --8<--
 ```
 
@@ -124,15 +123,15 @@ examples/stafnet/conf/stafnet.yaml:31:34
 
 最后构建监督约束，如下所示。
 
-``` py linenums="53" title="examples/stafnet/stafnet.py"
+``` py linenums="51" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:53:59
+examples/stafnet/stafnet.py:51:57
 --8<--
 ```
 
 ### 3.7 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建 3.6](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
 ``` py linenums="30" title="examples/stafnet/stafnet.py"
 --8<--
@@ -140,7 +139,7 @@ examples/stafnet/stafnet.py:30:53
 --8<--
 ```
 
-评估指标为预测结果和真实结果的MSE 值，因此需自定义指标计算函数，如下所示。
+评估指标为预测结果和真实结果的MAE 值，因此使用PaddleScience内置的`ppsci.metric.MAE()`，如下所示。
 
 ``` py linenums="30" title="examples/stafnet/stafnet.py"
 --8<--
@@ -152,9 +151,9 @@ examples/stafnet/stafnet.py:30:53
 
 由于本问题为时序预测问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。完成述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。具体代码如下：
 
-``` py linenums="125" title="examples/stafnet/stafnet.py"
+``` py linenums="46" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:125:140
+examples/stafnet/stafnet.py:46:84
 --8<--
 ```
 
