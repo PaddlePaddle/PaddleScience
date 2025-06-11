@@ -21,6 +21,9 @@ from utils import logging_utils
 from utils.YParams import YParams
 from visualdl import LogWriter
 
+from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
+from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
+
 
 def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
     x = paddle.sum((pred - target) ** 2, axis=spatial_dim) / paddle.sum(
@@ -143,20 +146,18 @@ class Trainer:
 
         if self.params.model_type == "fno":
             params.masking = ((params.nx, params.ny), params.mask_ratio)
-            from data_utils.pois_helm_datasets import get_data_loader
-
             (
                 self.train_data_loader,
                 self.train_dataset,
                 self.train_sampler,
-            ) = get_data_loader(
+            ) = PoisHelmDatasetLoader(
                 params, params.train_path, dist.is_initialized(), train=True
             )
             (
                 self.valid_data_loader,
                 self.valid_dataset,
                 self.valid_sampler,
-            ) = get_data_loader(
+            ) = PoisHelmDatasetLoader(
                 params, params.val_path, dist.is_initialized(), train=False
             )
         elif self.params.model_type == "vmae":
@@ -168,13 +169,12 @@ class Trainer:
                 ),
                 params.mask_ratio,
             )
-            from data_utils.datasets import get_data_loader
 
             (
                 self.train_data_loader,
                 self.train_dataset,
                 self.train_sampler,
-            ) = get_data_loader(
+            ) = MixedDatasetLoader(
                 params,
                 params.train_data_paths,
                 dist.is_initialized(),
@@ -182,7 +182,7 @@ class Trainer:
                 rank=in_rank,
                 train_offset=self.params.embedding_offset,
             )
-            self.valid_data_loader, self.valid_dataset, _ = get_data_loader(
+            self.valid_data_loader, self.valid_dataset, _ = MixedDatasetLoader(
                 params,
                 params.valid_data_paths,
                 dist.is_initialized(),
