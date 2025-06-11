@@ -306,13 +306,14 @@ class Trainer:
                 name = key[7:]
                 new_state_dict[name] = val
             self.model.set_state_dict(new_state_dict)
-        self.iters = checkpoint["iters"]
+
         if (
             self.params.resuming
         ):  # restore checkpoint is used for finetuning as well as resuming. If finetuning (i.e., not resuming), restore checkpoint does not load optimizer state, instead uses config specified lr.
             self.optimizer.set_state_dict(checkpoint["optimizer_state_dict"])
             self.startEpoch = checkpoint["epoch"]
             self.epoch = self.startEpoch
+            self.iters = checkpoint["iters"]
         else:
             self.iters = 0
         checkpoint = None
