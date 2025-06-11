@@ -85,9 +85,9 @@ examples/stafnet/stafnet.py:10
 
 其中超参数`cfg.MODEL.gat_hidden_dim`、`cfg.MODEL.e_layers`、`cfg.MODEL.d_model`、`cfg.MODEL.top_k`等默认设定如下：
 
-``` yaml linenums="39" title="examples/stafnet/conf/stafnet.yaml"
+``` yaml linenums="35" title="examples/stafnet/conf/stafnet.yaml"
 --8<--
-examples/stafnet/conf/stafnet.yaml:39:62
+examples/stafnet/conf/stafnet.yaml:35:59
 --8<--
 ```
 
@@ -95,17 +95,17 @@ examples/stafnet/conf/stafnet.yaml:39:62
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="11" title="examples/stafnet/stafnet.py"
+``` py linenums="62" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:64
+examples/stafnet/stafnet.py:62
 --8<--
 ```
 
 其中学习率相关的设定如下：
 
-``` yaml linenums="73" title="examples/stafnet/conf/stafnet.yaml"
+``` yaml linenums="70" title="examples/stafnet/conf/stafnet.yaml"
 --8<--
-examples/stafnet/conf/stafnet.yaml:73:78
+examples/stafnet/conf/stafnet.yaml:70:75
 --8<--
 ```
 
@@ -123,9 +123,9 @@ examples/stafnet/conf/stafnet.yaml:31:34
 
 最后构建监督约束，如下所示。
 
-``` py linenums="51" title="examples/stafnet/stafnet.py"
+``` py linenums="46" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:51:57
+examples/stafnet/stafnet.py:46:51
 --8<--
 ```
 
@@ -133,17 +133,17 @@ examples/stafnet/stafnet.py:51:57
 
 在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建 3.6](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
-``` py linenums="30" title="examples/stafnet/stafnet.py"
+``` py linenums="52" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:30:53
+examples/stafnet/stafnet.py:52:58
 --8<--
 ```
 
 评估指标为预测结果和真实结果的MAE 值，因此使用PaddleScience内置的`ppsci.metric.MAE()`，如下所示。
 
-``` py linenums="30" title="examples/stafnet/stafnet.py"
+``` py linenums="55" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:30:53
+examples/stafnet/stafnet.py:55
 --8<--
 ```
 
@@ -151,9 +151,9 @@ examples/stafnet/stafnet.py:30:53
 
 由于本问题为时序预测问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。完成述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。具体代码如下：
 
-``` py linenums="46" title="examples/stafnet/stafnet.py"
+``` py linenums="66" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:46:84
+examples/stafnet/stafnet.py:66:82
 --8<--
 ```
 
