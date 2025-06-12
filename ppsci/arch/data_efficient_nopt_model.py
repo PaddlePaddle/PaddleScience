@@ -1015,8 +1015,6 @@ class FNN2d(nn.Layer):
                 )
             mask = paddle.nn.functional.dropout(paddle.ones([1, C, H, W]), p=p)
             ######
-            from .gaussian_blur import gaussian_blur
-
             if sum(sigma_range) > 0:
                 _x_aug = gaussian_blur(
                     x.clone(), kernel_size=[_kernel, _kernel], sigma=sigma
