@@ -1,5 +1,5 @@
 # general settings
-mode: train # running mode: train/eval
+mode: train # running mode: train/infer
 seed: 42
 
 # training settings
@@ -10,7 +10,7 @@ yaml_config: config/operators_poisson.yaml
 sweep_id: ''
 
 # evaluation settings
-eval_config: config/inference_poisson.yaml
+infer_config: config/inference_poisson.yaml
 ckpt_path: data/pd_finetune_b01_m0_n8192.tar
 num_demos: 1
 tqdm: False

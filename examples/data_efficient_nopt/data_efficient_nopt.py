@@ -30,7 +30,6 @@ import paddle.optimizer as optim
 import yaml
 from einops import rearrange
 from omegaconf import DictConfig
-from pretrain_basic import l2_err
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap as ruamelDict
 from scipy.stats import linregress
@@ -45,6 +44,14 @@ from ppsci.arch.data_efficient_nopt_model import fno_pretrain
 from ppsci.arch.data_efficient_nopt_model import gaussian_blur
 from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
+
+
+def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
+    x = paddle.sum((pred - target) ** 2, axis=spatial_dim) / paddle.sum(
+        target**2, axis=spatial_dim
+    )
+    x = paddle.sqrt(x)
+    return paddle.mean(x)  # , dim=0)
 
 
 def grad_norm(parameters):
@@ -961,7 +968,7 @@ def get_pred(cfg):
     )
 
 
-def evaluate(cfg: DictConfig):
+def inference(cfg: DictConfig):
     get_pred(cfg)
 
 
@@ -971,8 +978,8 @@ def evaluate(cfg: DictConfig):
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
-    elif cfg.mode == "eval":
-        evaluate(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
         raise ValueError(
             f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"

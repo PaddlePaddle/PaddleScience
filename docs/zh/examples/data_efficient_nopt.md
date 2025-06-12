@@ -7,19 +7,20 @@
     # Download possion_64 data from https://drive.google.com/drive/folders/1crIsTZGxZULWhrXkwGDiWF33W6RHxJkf
     # Download helmholtz_64 data from https://drive.google.com/drive/folders/1UjIaF6FsjmN_xlGGSUX-1K2V3EF2Zalw
 
-    # Update the file paths in `config/operators_possion.yaml` or `config/operators_helmholtz.yaml` to specify `train_path`, `val_path`, `test_path`, `scales_path`, and `train_rand_idx_path`.
+    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `train`
+    # UPdate the file paths in config/operators_poisson.yaml or config/operators_helmholtz.yaml, specify to `train_path`, `val_path`, `test_path`, `scales_path` and `train_rand_idx_path`
 
-    # possion_64 pretrain
-    python pretrain_basic.py --run_name r0 --config pois-64-pretrain-e1_20_m3 --yaml_config ./config/operators_poisson.yaml
+    # possion_64 pretrain, specify as following:
+    #   run_name: r0
+    #   config: pois-64-pretrain-e1_20_m3
+    #   yaml_config: config/operators_poisson.yaml
+    python data_efficient_nopt.py
 
-    # possion_64 finetune
-    python pretrain_basic.py --run_name r0 --config pois-64-e5_15_b0 --yaml_config ./config/operators_poisson.yaml
-
-    # helmholtz_64 pretrain
-    python pretrain_basic.py --run_name r0 --config helm-64-pretrain-o1_20_m1 --yaml_config ./config/operators_helmholtz.yaml
-
-    # helmholtz_64 finetune
-    python pretrain_basic.py --run_name r0 --config helm-64-o5_15_ft5_r2 --yaml_config ./config/operators_helmholtz.yaml
+    # helmholtz_64 pretrain, specify as following:
+    #   run_name: r0
+    #   config: helm-64-pretrain-o1_20_m1
+    #   yaml_config: config/operators_helmholtz.yaml
+    python data_efficient_nopt.py
     ```
 
 === "模型评估命令"
@@ -34,9 +35,14 @@
 
     ``` sh
     cd examples/data_efficient_nopt
-    # Update the file paths in `config/operators_possion.yaml` or `config/operators_helmholtz.yaml` to specify `train_path`, `test_path`, and `scales_path`.
+    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `infer`
     # Use a fine-tuned model as the checkpoint in 'exp' or utilize `model_convert.py` to convert the official checkpoint.
-    python3 inference_fno_helmholtz_poisson.py --config ./config/inference_poisson.yaml --ckpt_path <ckpt_path> --num_demos 1
+    # UPdate the file paths in config/inference_poisson.yaml or config/inference_poisson.yaml, specify to `train_path`, `test_path` and `scales_path`
+
+    # possion_64 inference, specify as following:
+    #   evaluation: config/inference_poisson.yaml
+    #   ckpt_path: <ckpt_path>
+    python data_efficient_nopt.py
     ```
 
 ## 1. 背景简介
