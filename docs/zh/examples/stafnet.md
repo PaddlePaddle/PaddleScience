@@ -77,7 +77,7 @@ STAFNet 包含三个模块，分别将空间信息、气象信息和历史信息
 
 ```py linenums="10" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:10
+examples/stafnet/stafnet.py:10:10
 --8<--
 ```
 
@@ -97,7 +97,7 @@ examples/stafnet/conf/stafnet.yaml:35:59
 
 ``` py linenums="62" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:62
+examples/stafnet/stafnet.py:62:62
 --8<--
 ```
 
@@ -143,7 +143,7 @@ examples/stafnet/stafnet.py:52:58
 
 ``` py linenums="55" title="examples/stafnet/stafnet.py"
 --8<--
-examples/stafnet/stafnet.py:55
+examples/stafnet/stafnet.py:55:55
 --8<--
 ```
 
@@ -159,7 +159,7 @@ examples/stafnet/stafnet.py:66:82
 
 ## 4. 完整代码
 
-```python py linenums="1" title="examples/stafnet/stafnet.py"
+```py linenums="1" title="examples/stafnet/stafnet.py"
 --8<--
 examples/stafnet/stafnet.py
 --8<--
