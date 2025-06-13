@@ -860,9 +860,7 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(
-            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
-        )
+        raise ValueError(f"cfg.mode should in ['train', 'infer'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
