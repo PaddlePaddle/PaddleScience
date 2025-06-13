@@ -97,7 +97,7 @@ def evaluate(cfg: DictConfig):
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
-            "shuffle": True,
+            "shuffle": False,
         },
         "num_workers": 0,
     }
