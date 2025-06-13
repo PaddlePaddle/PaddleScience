@@ -78,16 +78,15 @@ class BaseHDF5DirectoryDataset(Dataset):
         super().__init__()
         self.path = path
         self.split = split
-        self.extra_specific = extra_specific  # Whether to use parameters in name
+        self.extra_specific = extra_specific
         if subname is None:
             self.subname = path.split("/")[-1]
         else:
             self.subname = subname
-        self.dt = dt  # TODO:
+        self.dt = dt
         self.rollout = rollout
         self.n_steps = n_steps
         self.include_string = include_string
-        # self.time_index, self.sample_index = self._set_specifics()
         self.train_val_test = train_val_test
         self.partition = {"train": 0, "val": 1, "test": 2}[split]
         (
@@ -117,8 +116,7 @@ class BaseHDF5DirectoryDataset(Dataset):
 
     @staticmethod
     def _specifics():
-        # Sets self.field_names, self.dataset_type
-        raise NotImplementedError  # Per dset
+        raise NotImplementedError
 
     def get_per_file_dsets(self):
         if self.split_level == "file" or len(self.files_paths) == 1:
@@ -140,13 +138,13 @@ class BaseHDF5DirectoryDataset(Dataset):
             return sub_dsets
 
     def _get_specific_stats(self, f):
-        raise NotImplementedError  # Per dset
+        raise NotImplementedError
 
     def _get_specific_bcs(self, f):
-        raise NotImplementedError  # Per dset
+        raise NotImplementedError
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
-        raise NotImplementedError  # Per dset - should be (x=(-history:local_idx+dt) so that get_item can split into x, y
+        raise NotImplementedError
 
     def _get_directory_stats(self, path):
         self.files_paths = glob.glob(path + "/*.h5") + glob.glob(path + "/*.hdf5")
@@ -159,7 +157,6 @@ class BaseHDF5DirectoryDataset(Dataset):
         self.offsets = [0]
         file_paths = []
         for file in self.files_paths:
-            # Total hack to avoid complications from folder with two sizes.
             if len(self.include_string) > 0 and self.include_string not in file:
                 continue
             elif file in broken_paths:
@@ -181,17 +178,13 @@ class BaseHDF5DirectoryDataset(Dataset):
                         self.file_nsteps.append(file_nsteps)
                         self.file_steps.append(steps - file_nsteps - (self.dt - 1))
                         if self.split_level == "sample":
-                            # Compute which are in the given partition
                             partition = self.partition
                             sample_per_part = np.ceil(
                                 np.absolute(np.array(self.train_val_test) * samples)
                             ).astype(int)
-                            # Make sure rounding works
                             sample_per_part[2] = max(
                                 samples - sample_per_part[0] - sample_per_part[1], 0
                             )
-                            # I forget where the file steps formula came from, but offset by steps per sample
-                            # * samples of previous partitions
                             if self.train_val_test[0] >= 0:
                                 self.split_offsets.append(
                                     self.file_steps[-1]
@@ -222,13 +215,11 @@ class BaseHDF5DirectoryDataset(Dataset):
                         )
                     )
                     raise RuntimeError("Failed to open file {}".format(file))
-        # print(self.file_steps, self.file_samples)
         self.files_paths = file_paths
-        self.offsets[0] = -1  # Just to make sure it doesn't put us in file -1
+        self.offsets[0] = -1
         self.files = [None for _ in self.files_paths]
         self.len = self.offsets[-1]
         if self.split_level == "file":
-            # Figure out our split offset - by sample
             if self.train_val_test is None:
                 print(
                     "WARNING: No train/val/test split specified. Using all data for training."
@@ -244,7 +235,7 @@ class BaseHDF5DirectoryDataset(Dataset):
                 ):
                     ideal_split_offsets = [
                         self.train_val_test[i] * total_samples for i in range(3)
-                    ]  # TODO: how many "files" to use
+                    ]
                     ideal_split_offsets = [
                         int(value) if value >= 1 else value
                         for value in ideal_split_offsets
@@ -252,18 +243,14 @@ class BaseHDF5DirectoryDataset(Dataset):
                 else:
                     ideal_split_offsets = [
                         int(self.train_val_test[i] * total_samples) for i in range(3)
-                    ]  # TODO: how many "files" to use
-                # Doing this the naive way because I only need to do it once
-                # Iterate through files until we get enough samples for set
+                    ]
                 if ideal_split_offsets[0] > 0:
                     end_ind = 0
                 elif ideal_split_offsets[0] == 0:
-                    # use fraction to indicate how many "sample" to use
                     ideal_split_offsets[0] = abs(self.train_val_test[0] * total_samples)
                     assert ideal_split_offsets[0] < 1 and ideal_split_offsets[0] > 0
                     end_ind = total_samples - round(sum(ideal_split_offsets[1:])) - 1
                 else:
-                    # negative means reverse indexing in this split (train)
                     ideal_split_offsets[0] = -ideal_split_offsets[0]
                     end_ind = (
                         total_samples
@@ -288,7 +275,6 @@ class BaseHDF5DirectoryDataset(Dataset):
                 start_ind, end_ind = int(start_ind), int(end_ind)
                 self.split_offset = start_ind
                 self.len = end_ind - start_ind
-            # else:
 
     def _open_file(self, file_ind):
         _file = h5py.File(self.files_paths[file_ind], "r")
@@ -297,14 +283,9 @@ class BaseHDF5DirectoryDataset(Dataset):
     def __getitem__(self, index):
         if self.split_level == "file":
             index = index + self.split_offset
-        file_idx = int(
-            np.searchsorted(self.offsets, index, side="right") - 1
-        )  # which file we are on
-        # print('sample from:', self.files_paths[file_idx])
-        nsteps = (
-            self.file_nsteps[file_idx] + self.rollout - 1
-        )  # Number of steps per sample in given file
-        local_idx = index - max(self.offsets[file_idx], 0)  # First offset is -1
+        file_idx = int(np.searchsorted(self.offsets, index, side="right") - 1)
+        nsteps = self.file_nsteps[file_idx] + self.rollout - 1
+        local_idx = index - max(self.offsets[file_idx], 0)
         if self.split_level == "sample":
             sample_idx = (local_idx + self.split_offsets[file_idx]) // self.file_steps[
                 file_idx
@@ -313,11 +294,9 @@ class BaseHDF5DirectoryDataset(Dataset):
             sample_idx = local_idx // self.file_steps[file_idx]
         time_idx = local_idx % self.file_steps[file_idx]
 
-        # open image file
         if self.files[file_idx] is None:
             self._open_file(file_idx)
 
-        # if we are on the last image in a file shift backward. Double counting until I bother fixing this.
         time_idx = (
             time_idx - self.dt if time_idx >= self.file_steps[file_idx] else time_idx
         )
@@ -329,7 +308,6 @@ class BaseHDF5DirectoryDataset(Dataset):
             trajectory = self._reconstruct_sample(
                 self.files[file_idx], sample_idx, time_idx, nsteps
             )
-            # bcs = self._get_specific_bcs(self.files[file_idx])
         except:  # noqa:
             raise RuntimeError(
                 f"Failed to reconstruct sample for file {self.files_paths[file_idx]} sample {sample_idx} time {time_idx}"
@@ -356,7 +334,7 @@ class SWEDataset(BaseHDF5DirectoryDataset):
         return len(samples), steps
 
     def _get_specific_bcs(self, f):
-        return [0, 0]  # Non-periodic
+        return [0, 0]
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
         samples = list(file.keys())
@@ -381,7 +359,7 @@ class DiffRe2DDataset(BaseHDF5DirectoryDataset):
         return len(samples), steps
 
     def _get_specific_bcs(self, f):
-        return [0, 0]  # Non-periodic
+        return [0, 0]
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
         samples = list(file.keys())
@@ -406,7 +384,7 @@ class IncompNSDataset(BaseHDF5DirectoryDataset):
 
     def _get_specific_stats(self, f):
         samples = f["velocity"].shape[0]
-        steps = f["velocity"].shape[1]  # Per dset
+        steps = f["velocity"].shape[1]
         return samples, steps
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
@@ -420,7 +398,7 @@ class IncompNSDataset(BaseHDF5DirectoryDataset):
         return comb.transpose((0, 3, 1, 2))
 
     def _get_specific_bcs(self, f):
-        return [0, 0]  # Non-periodic
+        return [0, 0]
 
 
 class PDEArenaINS(BaseHDF5DirectoryDataset):
@@ -439,7 +417,7 @@ class PDEArenaINS(BaseHDF5DirectoryDataset):
 
     def _get_specific_stats(self, f):
         samples = f["Vx"].shape[0]
-        steps = f["Vx"].shape[1]  # Per dset
+        steps = f["Vx"].shape[1]
         return samples, steps
 
     def more_specific_title(self, type, path, include_string):
@@ -458,10 +436,10 @@ class PDEArenaINS(BaseHDF5DirectoryDataset):
             sample_idx, time_idx - n_steps * self.dt : time_idx + self.dt
         ]
         comb = np.stack([vx, vy, density], 1)
-        return comb  # .transpose((0, 3, 1, 2))
+        return comb
 
     def _get_specific_bcs(self, f):
-        return [0, 0]  # Not Periodic
+        return [0, 0]
 
 
 class CompNSDataset(BaseHDF5DirectoryDataset):
@@ -480,7 +458,7 @@ class CompNSDataset(BaseHDF5DirectoryDataset):
 
     def _get_specific_stats(self, f):
         samples = f["Vx"].shape[0]
-        steps = f["Vx"].shape[1]  # Per dset
+        steps = f["Vx"].shape[1]
         return samples, steps
 
     def more_specific_title(self, type, path, include_string):
@@ -505,10 +483,10 @@ class CompNSDataset(BaseHDF5DirectoryDataset):
         ]
 
         comb = np.stack([vx, vy, density, p], 1)
-        return comb  # .transpose((0, 3, 1, 2))
+        return comb
 
     def _get_specific_bcs(self, f):
-        return [1, 1]  # Periodic
+        return [1, 1]
 
 
 class BurgersDataset(BaseHDF5DirectoryDataset):
@@ -527,19 +505,18 @@ class BurgersDataset(BaseHDF5DirectoryDataset):
 
     def _get_specific_stats(self, f):
         samples = f["tensor"].shape[0]
-        steps = f["tensor"].shape[1]  # Per dset
+        steps = f["tensor"].shape[1]
         return samples, steps
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
         vx = file["tensor"][
             sample_idx, time_idx - n_steps * self.dt : time_idx + self.dt
         ]
-        # print(vx.shape)
         vx = vx[:, None, :, None]
-        return vx  # .transpose((0, 3, 1, 2))
+        return vx
 
     def _get_specific_bcs(self, f):
-        return [1, 1]  # Periodic
+        return [1, 1]
 
 
 class DiffSorb1DDataset(BaseHDF5DirectoryDataset):
@@ -558,7 +535,7 @@ class DiffSorb1DDataset(BaseHDF5DirectoryDataset):
         return len(samples), steps
 
     def _get_specific_bcs(self, f):
-        return [0, 0]  # Non-periodic
+        return [0, 0]
 
     def _reconstruct_sample(self, file, sample_idx, time_idx, n_steps):
         samples = list(file.keys())
@@ -678,7 +655,6 @@ class MultisetSampler(Sampler[T_co]):
             index_sampled = paddle.randint(0, len(sampler_choices), shape=(1,)).item()
             dset_sampled = sampler_choices[index_sampled]
             offset = max(0, self.dataset.offsets[dset_sampled])
-            # Do drop last batch type logic - if you can get a full batch, yield it, otherwise move to next dataset
             try:
                 queue = []
                 for i in range(self.batch_size):
@@ -714,7 +690,6 @@ class MultisetSampler(Sampler[T_co]):
 
 
 def PoisHelmDatasetLoader(params, location, distributed, train=True):
-    # masking (float): %INVISIBLE pixels
     transform = paddle.to_tensor
     print(
         f"Current batch size for {'train' if train else 'val'} loader is {int(params.batch_size)}"
@@ -727,7 +702,7 @@ def PoisHelmDatasetLoader(params, location, distributed, train=True):
         dataset,
         batch_size=int(params.batch_size),
         num_workers=params.num_data_workers,
-        shuffle=False,  # (sampler is None),
+        shuffle=False,
         drop_last=True,
     )
     print(f"There are {len(dataset)} samples used")
@@ -744,10 +719,10 @@ class PoisHelmDataset(Dataset):
         if hasattr(self.params, "subsample") and (self.train):
             self.subsample = self.params.subsample
         else:
-            self.subsample = 1  # subsample only if training
+            self.subsample = 1
         self.scales = None
         self._get_files_stats()
-        if isinstance(self.masking, float):  # and self.masking > 0:
+        if isinstance(self.masking, float):
             self.mask_generator = MaskingGenerator(
                 (self.img_shape_x, self.img_shape_y), self.masking
             )
@@ -758,9 +733,7 @@ class PoisHelmDataset(Dataset):
                 self.train_rand_idx = np.load(self.params.train_rand_idx_path)
                 logging.info("Randomizing train dataset using given random index path")
             else:
-                self.train_rand_idx = range(
-                    self.data.shape[0]
-                )  # np.random.permutation(self.data.shape[0])
+                self.train_rand_idx = range(self.data.shape[0])
             self.train_rand_idx = self.train_rand_idx[self.pt_idxs[0] : self.pt_idxs[1]]
             self.data = self.data[()][self.train_rand_idx, ...]
             logging.info(
@@ -786,7 +759,6 @@ class PoisHelmDataset(Dataset):
                 self.img_shape_y = _f["fields"].shape[3]
                 self.in_channels = _f["fields"].shape[1] - 1
             elif len(_f["fields"].shape) == 5:
-                # if hasattr(self.params, "n_demos") and self.params.n_demos > 0:
                 self.n_demos = _f["fields"].shape[2]
                 assert self.n_demos >= self.params.n_demos
                 self.n_samples = _f["fields"].shape[0]
@@ -798,7 +770,7 @@ class PoisHelmDataset(Dataset):
             else:
                 self.tensor_shape = 0
         if self.train:
-            if hasattr(self.params, "pt_split"):  # pretrain-train split
+            if hasattr(self.params, "pt_split"):
                 self.pt_split = self.params.pt_split
             else:
                 self.pt_split = [0.9, 0.1]
@@ -807,19 +779,15 @@ class PoisHelmDataset(Dataset):
                     self.pt_split[0], self.pt_split[1]
                 )
             )
-            if hasattr(self.params, "pt"):  # pretrain or train
+            if hasattr(self.params, "pt"):
                 self.pt = self.params.pt
             else:
                 self.pt = "train"
             if int(sum(self.pt_split)) == 1:
-                self.n_samples *= self.pt_split[
-                    -1 if self.pt == "train" else 0
-                ]  # if split is float summed to 1, separate based on the two portions
+                self.n_samples *= self.pt_split[-1 if self.pt == "train" else 0]
             else:
                 assert int(sum(self.pt_split)) <= self.n_samples
-                self.n_samples = self.pt_split[
-                    -1 if self.pt == "train" else 0
-                ]  # if split is int, separate based on the two numbers
+                self.n_samples = self.pt_split[-1 if self.pt == "train" else 0]
             self.n_samples = int(self.n_samples)
             self.pt_idxs = (
                 [-self.n_samples, None] if self.pt == "train" else [0, self.n_samples]
@@ -863,10 +831,9 @@ class PoisHelmDataset(Dataset):
                 X = self.data[local_idx, 0 : self.in_channels, 0]
         else:
             if self.train:
-                # numpy choice => Tensor => paddle.take_along_axis
                 demo_indices = np.random.choice(
                     range(self.n_demos), self.params.n_demos, replace=False
-                )  # TODO: do we allow replace? (i.e. duplicated demos)
+                )
                 X = np.take(
                     self.data[local_idx, 0 : self.in_channels],
                     np.insert(demo_indices, 0, 0),
@@ -875,8 +842,8 @@ class PoisHelmDataset(Dataset):
             else:
                 X = self.data[
                     local_idx, 0 : self.in_channels, : self.params.n_demos + 1
-                ]  # +1 for query
-        if self.tensor is not None:  # append coefficient tensor to channels
+                ]
+        if self.tensor is not None:
             tensor = []
             for tidx in range(self.tensor_shape):
                 coef = np.full(
@@ -889,11 +856,7 @@ class PoisHelmDataset(Dataset):
         if self.scales is not None:
             f_norm = np.linalg.norm(X[0]) * self.measure
             f_scaling = f_norm / self.scales[0]
-            X = (
-                X / f_scaling
-            )  # ensures that 10f and 10k for example, have the same input
-            # scale the tensors
-            # we don't have tensors (coefficients) in input now
+            X = X / f_scaling
             X[self.in_channels :] = (
                 X[self.in_channels :]
                 / self.scales[
@@ -918,9 +881,7 @@ class PoisHelmDataset(Dataset):
                     1,
                 )
             else:
-                y = self.data[
-                    local_idx, self.in_channels :, : self.params.n_demos + 1
-                ]  # +1 for query
+                y = self.data[local_idx, self.in_channels :, : self.params.n_demos + 1]
         y = self.transform(y)
 
         if isinstance(self.masking, float):
@@ -932,7 +893,6 @@ class PoisHelmDataset(Dataset):
     def __getitem__(self, idx):
         local_idx = int(idx * self.subsample)
         if self.params.n_demos > 0 and self.n_demos is None:
-            # manually select demos from all samples; coefficients are different
             candidate_idx = list(range(self.n_samples))
             candidate_idx.remove(idx)
             idx_range = (
@@ -945,7 +905,6 @@ class PoisHelmDataset(Dataset):
                 .astype(int)
                 .tolist()
             )
-            # concatenate X and Y into channels
             idx_range.append(local_idx)
             X, Y, y = [], [], []
             _X, y = self._getitem_single(idx_range[-1])
@@ -965,7 +924,6 @@ class PoisHelmDataset(Dataset):
             else:
                 X, y, mask = _data
             if self.params.n_demos > 0:
-                # get demos with the same coefficients
                 X = paddle.concat(
                     [
                         X.view([-1, self.img_shape_x, self.img_shape_y]),
@@ -983,7 +941,6 @@ class PoisHelmDataset(Dataset):
 def MixedDatasetLoader(
     params, paths, distributed, split="train", rank=0, train_offset=0
 ):
-    # paths, types, include_string = zip(*paths)
     train_val_test = params.train_val_test
     if split == "pretrain":
         train_val_test = [
@@ -991,9 +948,8 @@ def MixedDatasetLoader(
             train_val_test[1],
             train_val_test[2],
         ]
-        split = "train"  # then restore to train split
+        split = "train"
     elif split == "train":
-        # negative means reverse indexing
         train_val_test = [
             -params.train_val_test[0]
             * params.pretrain_train[1]
@@ -1014,7 +970,6 @@ def MixedDatasetLoader(
         blur=params.blur if hasattr(params, "blur") else None,
         rollout=getattr(params, "rollout", 1),
     )
-    # dataset = IncompNSDataset(paths[0], n_steps=params.n_steps, train_val_test=params.train_val_test, split=split)
     if distributed:
         base_sampler = DistributedBatchSampler
     else:
@@ -1026,19 +981,17 @@ def MixedDatasetLoader(
         distributed=distributed,
         max_samples=params.epoch_size,
         rank=rank,
-    )  # , seed=seed)
-    # sampler = DistributedBatchSampler(dataset) if distributed else None
+    )
     dataloader = DataLoader(
         dataset,
         batch_size=int(params.batch_size),
         num_workers=params.num_data_workers,
-        shuffle=False,  # (sampler is None),
+        shuffle=False,
         drop_last=True,
     )
     return dataloader, dataset, sampler
 
 
-# IF YOU ADD A NEW DSET MAKE SURE TO UPDATE THIS MAPPING SO MIXED DSET KNOWS HOW TO USE IT
 DSET_NAME_TO_OBJECT = {
     "incompNS": IncompNSDataset,
     "diffre2d": DiffRe2DDataset,
@@ -1063,7 +1016,6 @@ class MixedDataset(Dataset):
         rollout=1,
     ):
         super().__init__()
-        # Global dicts used by Mixed DSET.
         self.train_offset = train_offset
         self.path_list, self.type_list, self.include_string = zip(*path_list)
         self.tie_fields = tie_fields
@@ -1087,7 +1039,6 @@ class MixedDataset(Dataset):
                 split=split,
                 rollout=self.rollout,
             )
-            # Check to make sure our dataset actually exists with these settings
             try:
                 len(subdset)
             except ValueError:
@@ -1100,12 +1051,12 @@ class MixedDataset(Dataset):
 
         self.subset_dict = self._build_subset_dict()
 
-        self.masking = masking  # None or ((#frames, height, width), mask_ratio)
+        self.masking = masking
         if (
             self.masking
             and type(self.masking) in [tuple, list]
             and len(self.masking) == 2
-        ):  # and self.masking[1] > 0.:
+        ):
             self.mask_generator = TubeMaskingGenerator(self.masking[0], self.masking[1])
         self.blur = blur
 
@@ -1119,15 +1070,14 @@ class MixedDataset(Dataset):
         else:
             visited = set()
             for dset in self.sub_dsets:
-                name = dset.get_name()  # Could use extended names here
+                name = dset.get_name()
                 if name not in visited:
                     visited.add(name)
                     name_list.append(dset.field_names)
-        return [f for fl in name_list for f in fl]  # Flatten the names
+        return [f for fl in name_list for f in fl]
 
     def _build_subset_dict(self):
-        # Maps fields to subsets of variables
-        if self.tie_fields:  # Hardcoded, but seems less effective anyway
+        if self.tie_fields:
             subset_dict = {
                 "swe": [3],
                 "incompNS": [0, 1, 2],
@@ -1154,9 +1104,7 @@ class MixedDataset(Dataset):
         return subset_dict
 
     def __getitem__(self, index):
-        file_idx = (
-            np.searchsorted(self.offsets, index, side="right") - 1
-        )  # which dataset are we are on
+        file_idx = np.searchsorted(self.offsets, index, side="right") - 1
         local_idx = index - max(self.offsets[file_idx], 0)
 
         x, y = self.sub_dsets[file_idx][local_idx]
@@ -1171,9 +1119,8 @@ class MixedDataset(Dataset):
             self.masking
             and type(self.masking) in [tuple, list]
             and len(self.masking) == 2
-        ):  # and self.masking[1] > 0.:
+        ):
             mask = self.mask_generator()
-            # return x, file_idx, paddle.to_tensor(self.subset_dict[self.sub_dsets[file_idx].get_name()]), bcs, y, mask, x_blur
             return x, y, mask
         else:
             return x, y

@@ -23,7 +23,7 @@ def torch2paddle():
 
     pdb.set_trace()
     for k in torch_state_dict:
-        if "num_batches_tracked" in k:  # 飞桨中无此参数，无需保存
+        if "num_batches_tracked" in k:
             continue
         v = torch_state_dict[k].detach().cpu().numpy()
         flag = [i in k for i in fc_names]
@@ -32,13 +32,12 @@ def torch2paddle():
             print(
                 f"name: {k}, ori shape: {v.shape}, new shape: {v.transpose(new_shape).shape}"
             )
-            v = v.transpose(new_shape)  # 转置 Linear 层的 weight 参数
-        # 将 torch.nn.BatchNorm2d 的参数名称改成 paddle.nn.BatchNorm2D 对应的参数名称
+            v = v.transpose(new_shape)
+        # translate params of torch.nn.BatchNorm2d to params of paddle.nn.BatchNorm2D
         k = k.replace("running_var", "_variance")
         k = k.replace("running_mean", "_mean")
         k = k.replace("module.", "")
-        # 添加到飞桨权重字典中
-        # k = k
+        # add it into dict of paddle weight
         print(f"k: {k}")
         paddle_state_dict[k] = v
     print(f"paddle_state_dict: {paddle_state_dict.keys()}")

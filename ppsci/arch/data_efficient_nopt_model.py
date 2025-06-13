@@ -27,7 +27,6 @@ from einops import rearrange
 try:
     from timm.models.layers import drop_path
     from timm.models.layers import to_2tuple
-    from timm.models.layers import trunc_normal_
     from timm.models.layers import trunc_normal_ as __call_trunc_normal_
 except ImportError:
     pass
@@ -59,12 +58,10 @@ def _get_act(activation):
 
 
 def compl_mul1d(a, b):
-    # (batch, in_channel, x ), (in_channel, out_channel, x) -> (batch, out_channel, x)
     return paddle.einsum("bix,iox->box", a, b)
 
 
 def compl_mul2d(a, b):
-    # (batch, in_channel, x,y,t ), (in_channel, out_channel, x,y,t) -> (batch, out_channel, x,y,t)
     return paddle.einsum("bixy,ioxy->boxy", a, b)
 
 
@@ -83,11 +80,6 @@ def compl_mul2d_v2(a: paddle.Tensor, b: paddle.Tensor) -> paddle.Tensor:
     )
 
 
-################################################################
-# 1d fourier layer
-################################################################
-
-
 class SpectralConv1d(nn.Layer):
     def __init__(self, in_channels, out_channels, modes1):
         super(SpectralConv1d, self).__init__()
@@ -98,7 +90,6 @@ class SpectralConv1d(nn.Layer):
 
         self.in_channels = in_channels
         self.out_channels = out_channels
-        # Number of Fourier modes to multiply, at most floor(N/2) + 1
         self.modes1 = modes1
 
         self.scale = 1 / (in_channels * out_channels)
@@ -110,10 +101,8 @@ class SpectralConv1d(nn.Layer):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = paddle.fft.rfftn(x, axes=[2])
 
-        # Multiply relevant Fourier modes
         out_ft = paddle.zeros(
             [batchsize, self.in_channels, x.size(-1) // 2 + 1], dtype=paddle.complex64
         )
@@ -121,14 +110,8 @@ class SpectralConv1d(nn.Layer):
             x_ft[:, :, : self.modes1], self.weights1
         )
 
-        # Return to physical space
         x = paddle.fft.irfft(out_ft, s=[x.size(-1)], axis=[2])
         return x
-
-
-################################################################
-# 2d fourier layer
-################################################################
 
 
 class SpectralConv2d(nn.Layer):
@@ -136,7 +119,6 @@ class SpectralConv2d(nn.Layer):
         super(SpectralConv2d, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
-        # Number of Fourier modes to multiply, at most floor(N/2) + 1
         self.modes1 = modes1
         self.modes2 = modes2
 
@@ -160,11 +142,9 @@ class SpectralConv2d(nn.Layer):
         batchsize = x.shape[0]
         size1 = x.shape[-2]
         size2 = x.shape[-1]
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = paddle.fft.rfftn(x, axes=[2, 3])
 
         if gridy is None:
-            # Multiply relevant Fourier modes
             out_ft = paddle.zeros(
                 [batchsize, self.out_channels, x.size(-2), x.size(-1) // 2 + 1],
                 dtype=paddle.complex64,
@@ -176,7 +156,6 @@ class SpectralConv2d(nn.Layer):
                 x_ft[:, :, -self.modes1 :, : self.modes2], self.weights2
             )
 
-            # Return to physical space
             x = paddle.fft.irfftn(out_ft, s=(x.size(-2), x.size(-1)), axes=[2, 3])
         else:
             factor1 = compl_mul2d(
@@ -191,17 +170,10 @@ class SpectralConv2d(nn.Layer):
         return x
 
     def ifft2d(self, gridy, coeff1, coeff2, k1, k2):
-
-        # y (batch, N, 2) locations in [0,1]*[0,1]
-        # coeff (batch, channels, kmax, kmax)
-
         batchsize = gridy.shape[0]
         N = gridy.shape[1]
-        # device = gridy.device
         m1 = 2 * k1
         m2 = 2 * k2 - 1
-
-        # wavenumber (m1, m2)
         k_x1 = (
             paddle.concat(
                 (
@@ -225,7 +197,6 @@ class SpectralConv2d(nn.Layer):
             .repeat([m1, 1])
         )
 
-        # K = <y, k_x>,  (batch, N, m1, m2)
         K1 = paddle.outer(gridy[:, :, 0].view(-1), k_x1.view(-1)).reshape(
             [batchsize, N, m1, m2]
         )
@@ -233,11 +204,7 @@ class SpectralConv2d(nn.Layer):
             [batchsize, N, m1, m2]
         )
         K = K1 + K2
-
-        # basis (N, m1, m2)
         basis = paddle.exp(1j * 2 * np.pi * K)
-
-        # coeff (batch, channels, m1, m2)
         coeff3 = coeff1[:, :, 1:, 1:].flip(-1, -2).conj()
         coeff4 = paddle.concat(
             [
@@ -250,7 +217,6 @@ class SpectralConv2d(nn.Layer):
         coeff43 = paddle.concat([coeff4, coeff3], axis=-2)
         coeff = paddle.concat([coeff12, coeff43], axis=-1)
 
-        # Y (batch, channels, N)
         Y = paddle.einsum("bcxy,bnxy->bcn", coeff, basis)
         Y = Y.real
         return Y
@@ -261,16 +227,13 @@ class SpectralConv2dV2(nn.Layer):
         super(SpectralConv2dV2, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.modes1 = (
-            modes1  # Number of Fourier modes to multiply, at most floor(N/2) + 1
-        )
+        self.modes1 = modes1
         self.modes2 = modes2
         self.scale = 1 / (in_channels * out_channels)
         self.weights1 = paddle.base.framework.EagerParamBase.from_tensor(
             self.scale
             * paddle.rand([in_channels, out_channels, self.modes1, self.modes2, 2])
         )
-        # self.weights1 = paddle.base.framework.EagerParamBase.from_tensor(self.scale * paddle.rand([in_channels, out_channels, self.modes1+1, self.modes2, 2]))
         self.weights2 = paddle.base.framework.EagerParamBase.from_tensor(
             self.scale
             * paddle.rand([in_channels, out_channels, self.modes1, self.modes2, 2])
@@ -280,9 +243,6 @@ class SpectralConv2dV2(nn.Layer):
         size_0 = x.shape[-2]
         size_1 = x.shape[-1]
         batchsize = x.shape[0]
-        # dtype = x.dtype
-
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = paddle.fft.rfft2(x.astype(paddle.float32), axes=(-2, -1), norm="ortho")
         x_ft = paddle.as_real(x_ft)
 
@@ -297,7 +257,6 @@ class SpectralConv2dV2(nn.Layer):
         )
         out_ft = paddle.as_complex(out_ft)
 
-        # Return to physical space
         x = paddle.fft.irfft2(out_ft, axes=(-2, -1), norm="ortho", s=(size_0, size_1))
 
         return x
@@ -308,9 +267,7 @@ class SpectralConv3d(nn.Layer):
         super(SpectralConv3d, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.modes1 = (
-            modes1  # Number of Fourier modes to multiply, at most floor(N/2) + 1
-        )
+        self.modes1 = modes1
         self.modes2 = modes2
         self.modes3 = modes3
 
@@ -346,9 +303,7 @@ class SpectralConv3d(nn.Layer):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = paddle.fft.rfftn(x, axes=[2, 3, 4])
-        # Multiply relevant Fourier modes
         out_ft = paddle.zeros(
             [batchsize, self.out_channels, x.size(2), x.size(3), x.size(4) // 2 + 1],
             dtype=paddle.complex64,
@@ -366,7 +321,6 @@ class SpectralConv3d(nn.Layer):
             x_ft[:, :, -self.modes1 :, -self.modes2 :, : self.modes3], self.weights4
         )
 
-        # Return to physical space
         x = paddle.fft.irfftn(
             out_ft, s=(x.size(2), x.size(3), x.size(4)), axes=[2, 3, 4]
         )
@@ -665,8 +619,6 @@ class FNO3d(nn.Layer):
         self.act = _get_act(act)
 
         self.num_demos = num_demos
-        # if self.num_demos and self.num_demos > 0:
-        #     self.lossgen = LossGenerator(dx=2.0*math.pi/512., kernel_size=3) # TODO:
 
     def forward(self, x):
         """
@@ -755,7 +707,6 @@ class FNO3d_MAE(nn.Layer):
         """
         x: (b, h, w, t, 4)
         """
-        # B, C, H, W = x.shape
         x_enc = self.encoder(x * mask)
         x_enc = self.encoder_to_decoder(x_enc.permute(0, 2, 3, 4, 1))
         x_dec = self.decoder(x_enc).permute(0, 2, 3, 4, 1)
@@ -776,20 +727,18 @@ def window_partition(x, window_size):
         x = x.view([B, C, H // window_size, window_size, W // window_size, window_size])
         windows = x.transpose([0, 2, 4, 1, 3, 5]).view(
             [B, -1, C, window_size, window_size]
-        )  # B, n_win*n_win, C, win_s, win_s
+        )
     elif len(x.shape) == 5:
         B, J, C, H, W = x.shape
-        # x = x.view(B*J, C, H, W)
         x = x.view(
             [B, J, C, H // window_size, window_size, W // window_size, window_size]
         )
         windows = x.transpose([0, 1, 3, 5, 2, 4, 6]).view(
             [B, J, -1, C, window_size, window_size]
-        )  # B, J, n_win*n_win, C, win_s, win_s
+        )
     return windows
 
 
-# https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer.py#L60
 def window_reverse(windows, window_size, H, W):
     """
     Args:
@@ -803,19 +752,16 @@ def window_reverse(windows, window_size, H, W):
     """
     B = windows.shape[0]
     if len(windows.shape) == 4:
-        # B, n_win_sq, self.win_s, self.win_s
         x = windows.view(
             [B, H // window_size, W // window_size, window_size, window_size]
         )
         x = x.transpose([0, 1, 3, 2, 4]).view([B, H, W])
     if len(windows.shape) == 5:
-        # B, n_win_sq, C, self.win_s, self.win_s
         x = windows.view(
             [B, H // window_size, W // window_size, -1, window_size, window_size]
         )
         x = x.transpose([0, 3, 1, 4, 2, 5]).contiguous().view([B, -1, H, W])
     elif len(windows.shape) == 6:
-        # B, J, n_win_sq, C, self.win_s, self.win_s
         J = windows.shape[1]
         x = windows.view(
             [B, J, H // window_size, W // window_size, -1, window_size, window_size]
@@ -824,7 +770,6 @@ def window_reverse(windows, window_size, H, W):
     return x
 
 
-# https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer.py#L26
 class Mlp(nn.Layer):
     def __init__(
         self,
@@ -879,7 +824,6 @@ class FNN2d_Backbone(nn.Layer):
         self.modes1 = modes1
         self.modes2 = modes2
         self.width = width
-        # input channel is 3: (a(x, y), x, y)
         if layers is None:
             self.layers = [width] * 4
         else:
@@ -915,7 +859,7 @@ class FNN2d_Backbone(nn.Layer):
         size_x, size_y = x.shape[2], x.shape[3]
 
         x = x.transpose([0, 2, 3, 1])
-        x = self.fc0(x)  # project
+        x = self.fc0(x)
 
         x = x.transpose([0, 3, 1, 2])
 
@@ -998,7 +942,6 @@ class FNN2d(nn.Layer):
         C_out = 1
         B, C, H, W = x.shape
 
-        # repeat = 20; p = 0.05; sigma_range = [0, 0]
         repeat = 1
         p = 0.0
         sigma_range = [0, 0]
@@ -1009,12 +952,10 @@ class FNN2d(nn.Layer):
                 import random
 
                 sigma = random.uniform(*sigma_range)
-                # https://github.com/scipy/scipy/blob/v1.11.4/scipy/ndimage/_filters.py#L232
                 _kernel = min(
                     int((sigma * 4 + 1) / 2) * 2 + 1, (x.shape[1] // 2) * 2 - 1
                 )
             mask = paddle.nn.functional.dropout(paddle.ones([1, C, H, W]), p=p)
-            ######
             if sum(sigma_range) > 0:
                 _x_aug = gaussian_blur(
                     x.clone(), kernel_size=[_kernel, _kernel], sigma=sigma
@@ -1023,7 +964,6 @@ class FNN2d(nn.Layer):
                 _x_aug = x.clone()
             _x_aug = _x_aug * mask
             x_aug.append(_x_aug)
-            ######
             _demo_xs_aug = []
             if sum(sigma_range) > 0:
                 _demo_xs_aug = gaussian_blur(
@@ -1037,8 +977,8 @@ class FNN2d(nn.Layer):
         demo_xs_aug = paddle.stack(demo_xs_aug, axis=0)
 
         J = demo_xs.shape[0]
-        pred0 = self.forward(x)  # B, H, W, T, 1
-        pred = paddle.stack([self.forward(_x) for _x in x_aug], axis=-1)  # B, 1, H, W
+        pred0 = self.forward(x)
+        pred = paddle.stack([self.forward(_x) for _x in x_aug], axis=-1)
         C = pred.shape[-1]
         demo_pred = []
         idx = 0
@@ -1063,7 +1003,7 @@ class FNN2d(nn.Layer):
         batch_w = 64
         _w = 0
 
-        topk = int(20 * (J**0.5))  # TODO:
+        topk = int(20 * (J**0.5))
         pbar = None
         while _b < B:
             _h = 0
@@ -1107,11 +1047,10 @@ class FNN2d(nn.Layer):
                 _h += batch_h
             _b += batch_b
 
-        mask = (stds_nn < stds_nn.mean()).astype(paddle.float32)  # TODO:
+        mask = (stds_nn < stds_nn.mean()).astype(paddle.float32)
         return mask * y_nn + (1 - mask) * pred0
 
 
-# channel-wise concatenating X_demo and Y_demo
 class FNN2d_FewShot_Baseline(nn.Layer):
     def __init__(
         self,
@@ -1177,9 +1116,7 @@ class FNN2d_FewShot_Baseline(nn.Layer):
         query_x: (b, c, h, w)
         -> (b,1,h,w)
         """
-        query_features = self.backbone(query_x).transpose(
-            [0, 2, 3, 1]
-        )  # B, C_fno, H, W
+        query_features = self.backbone(query_x).transpose([0, 2, 3, 1])
         demo_features = (
             self.backbone(demo_X.view([B, J, C, H, W]).view([B * J, C, H, W]))
             .view([B, J * self.C_fno, H, W])
@@ -1205,13 +1142,13 @@ class FNN2d_FewShot_Baseline(nn.Layer):
                 for _b in range(B)
             ],
             axis=0,
-        )  # b, h, w, (1+J)
+        )
         x = self.fc1(x)
         x = self.activation(x)
         x = self.dropout(x)
 
         x = self.fc2(x)
-        x = self.dropout(x)  # b, h, w, 1
+        x = self.dropout(x)
 
         x = x.transpose([0, 3, 1, 2])
 
@@ -1221,7 +1158,6 @@ class FNN2d_FewShot_Baseline(nn.Layer):
         return x
 
 
-# https://github.com/facebookresearch/deit/blob/main/models_v2.py#L42
 class TransformerBlock(nn.Layer):
     def __init__(
         self,
@@ -1239,7 +1175,6 @@ class TransformerBlock(nn.Layer):
     ):
         super().__init__()
         self.norm1 = norm_layer(dim)
-        # https://pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html#torch.nn.MultiheadAttention.forward
         self.attn = Attention_block(
             dim,
             num_heads,
@@ -1248,7 +1183,6 @@ class TransformerBlock(nn.Layer):
             add_bias_kv=qkv_bias,
             batch_first=True,
         )
-        # self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp_block(
@@ -1267,10 +1201,9 @@ class TransformerBlock(nn.Layer):
         if value is None:
             value = query
         query = self.norm1(query)
-        # x = x + self.drop_path(self.attn(x, x, x)[0])
         _query, attn_mat = self.attn(
             query, key, value, need_weights=True, average_attn_weights=True
-        )  # attn_mat: B,L,L
+        )
         query = query + self.drop_path(_query)
         query = query + self.drop_path(self.mlp(self.norm2(query)))
         return query, attn_mat
@@ -1287,14 +1220,10 @@ def simple_attention(query, key=None):
 class DownSample(nn.Layer):
     def __init__(self, C_in, C_2d, C_out, shape, k=7, s=4, p=2):
         super(DownSample, self).__init__()
-        # 7x7 2D conv and reduce the dimension down to 16x16x16, then flatten this and run it through a 1D conv
         self.conv2d = nn.Conv2D(C_in, C_2d, k, stride=s, padding=p)
         self.fc = nn.Linear(C_2d * (shape[0] // s) * (shape[1] // s), C_out)
 
     def forward(self, x):
-        # B, C_fno, H, W
-        # B, J, C_fno, H, W
-        # query_features_down = self.query_downsample(query_features.view(B, -1)).view(B, 1, -1)
         J = 1
         if len(x.shape) == 5:
             B, J, C, H, W = x.shape
@@ -1314,7 +1243,6 @@ class UpSample(nn.Layer):
         self.H, self.W = shape
 
     def forward(self, x):
-        # x: B, C' (just for the query)
         B, C = x.shape
         x = self.fc(x).view(B, 1, self.H, self.W)
         return x
@@ -1335,7 +1263,6 @@ class FNN2d_FewShot_Spatial(nn.Layer):
         mean_constraint=False,
         n_demos=7,
         l_attn=1,
-        # input_shape=(64, 64),
         down=1,
         win_s=8,
         c_attn_hidden=1024,
@@ -1374,7 +1301,6 @@ class FNN2d_FewShot_Spatial(nn.Layer):
         self.l_attn = l_attn
         self.fc1 = nn.Linear(self.C_fno, fc_dim)
         self.fc2 = nn.Linear(fc_dim, out_dim)
-        #########################
         self.activation = _get_act(activation)
         self.mean_constraint = mean_constraint
         self.n_demos = n_demos
@@ -1397,13 +1323,9 @@ class FNN2d_FewShot_Spatial(nn.Layer):
         query_x: (b, c, h, w)
         -> (b,1,h,w)
         """
-        # TODO:Ablation
-        # demo_X[:, :C] = query_x
-        # demo_Y[:, :1] = self.targets
-        # TODO:Ablation
 
         if not self.skip_backbone:
-            query_features = self.backbone(query_x)  # B, C_fno, H, W
+            query_features = self.backbone(query_x)
             demo_features = self.backbone(
                 demo_X.view([B, J, C, H, W]).view([B * J, C, H, W])
             ).view(B, J, self.C_fno, H, W)
@@ -1411,7 +1333,6 @@ class FNN2d_FewShot_Spatial(nn.Layer):
             query_features = query_x
             demo_features = demo_X.view([B, J, self.C_fno, H, W])
 
-        # TODO: downsample query_x, demo_X
         query_features_down = F.interpolate(
             query_features,
             size=(int(H) // self.down, int(W) // self.down),
@@ -1430,37 +1351,20 @@ class FNN2d_FewShot_Spatial(nn.Layer):
             ],
             axis=0,
         )
-        # TODO: chunk Xs into windows
-        # windows = window_partition(query_demo_features_down, self.win_s) # B, J+1, n_win*n_win, C, win_s, win_s
-        # n_win = int(windows.shape[2] ** 0.5)
-        # sequence = windows.permute(0, 1, 2, 4, 5, 3).view(B*(J+1)*n_win*n_win, self.win_s**2, self.C_fno) # N, L, C; N = B*(J+1)*n_win*n_win; L = win_s**2
-        query_windows = window_partition(
-            query_features_down, self.win_s
-        )  # B, n_win*n_win, C, win_s, win_s
-        demo_windows = window_partition(
-            demo_features_down, self.win_s
-        )  # B, J, n_win*n_win, C, win_s, win_s
+
+        query_windows = window_partition(query_features_down, self.win_s)
+        demo_windows = window_partition(demo_features_down, self.win_s)
         n_win = int(query_windows.shape[1] ** 0.5)
         query_windows = query_windows.transpose([0, 1, 3, 4, 2]).view(
             [B * n_win**2, self.win_s**2, self.C_fno]
-        )  # B*n_win*n_win, win_s*win_s, C
+        )
         demo_windows = demo_windows.transpose([0, 2, 1, 4, 5, 3]).view(
             [B * n_win**2, J * self.win_s**2, self.C_fno]
-        )  # B*n_win*n_win, J*win_s*win_s, C
+        )
 
         self._attn_mats = []
-        # # TODO: add position embedding
-        # for _l in range(self.l_attn):
-        #     # sequence, attn_mat = self.attns[_l](sequence)
-        #     # cross-attention
-        #     query_windows, attn_mat = self.attns[_l](query_windows, demo_windows)
-        #     self._attn_mats.append(attn_mat.detach().cpu().numpy()) # N, L, S; N = B*n_win*n_win; L = win_s**2; S = J*win_s**2
-
-        # TODO: simple attention
         attn_mat = simple_attention(query_windows, demo_windows)
-        self._attn_mats.append(
-            attn_mat.detach().cpu().numpy()
-        )  # N, L, S; N = B*n_win*n_win; L = win_s**2; S = J*win_s**2
+        self._attn_mats.append(attn_mat.detach().cpu().numpy())
 
         demo_Y_down = F.interpolate(
             demo_Y,
@@ -1468,7 +1372,6 @@ class FNN2d_FewShot_Spatial(nn.Layer):
             mode="bilinear",
             align_corners=True,
         )
-        # B, J, n_win*n_win, 1, win_s, win_s => B, J, n_win*n_win, win_s, win_s
         windows_Y = (
             window_partition(demo_Y_down.unsqueeze(2), self.win_s)
             .squeeze(3)
@@ -1480,29 +1383,23 @@ class FNN2d_FewShot_Spatial(nn.Layer):
         )
         demo_Y_reweighted = window_reverse(
             demo_Y_reweighted, self.win_s, int(H) // self.down, int(W) // self.down
-        )  # B 1, H_down, W_down
+        )
         demo_Y_reweighted = F.interpolate(
             demo_Y_reweighted, size=(H, W), mode="bilinear", align_corners=True
-        )  # B, 1, H, W
+        )
         self.query_score = demo_Y_reweighted[:, 0].detach().cpu().numpy()
 
-        # query_demo_features = self.upsample(sequence[:, 0]).view(B, 1, H, W).transpose([0, 2, 3, 1]) # B, 1, H, W => B, H, W, 1
-        # self.query_score = query_demo_features[:, :, :, 0].detach().cpu().numpy()
-
-        # query_features = query_features.transpose(0, 2, 3, 1) # B, C_fno, H, W => B, H, W, C_fno
-        y = self.fc1(
-            query_features.transpose([0, 2, 3, 1])
-        )  # B, C_fno, H, W => B, H, W, C_fno
+        y = self.fc1(query_features.transpose([0, 2, 3, 1]))
         y = self.activation(y)
         y = self.dropout(y)
         y = self.fc2(y)
-        y = self.dropout(y)  # b, h, w, 1
+        y = self.dropout(y)
 
         y = y.transpose([0, 3, 1, 2])
         if self.mean_constraint:
             y = y - paddle.mean(y, axis=(-2, -1), keepdim=True)
 
-        y = (y + demo_Y_reweighted) / 2  # TODO:
+        y = (y + demo_Y_reweighted) / 2
 
         return y
 
@@ -1522,7 +1419,6 @@ class FNN2d_FewShot_Spatial_v2(nn.Layer):
         mean_constraint=False,
         n_demos=7,
         l_attn=1,
-        # input_shape=(64, 64),
         down=1,
         win_s=8,
         c_attn_hidden=1024,
@@ -1584,13 +1480,9 @@ class FNN2d_FewShot_Spatial_v2(nn.Layer):
         query_x: (b, c, h, w)
         -> (b,1,h,w)
         """
-        # TODO:Ablation
-        # demo_X[:, :C] = query_x
-        # demo_Y[:, :1] = self.targets
-        # TODO:Ablation
 
         if not self.skip_backbone:
-            query_features = self.backbone(query_x)  # B, C_fno, H, W
+            query_features = self.backbone(query_x)
             demo_features = self.backbone(
                 demo_X.view([B, J, C, H, W]).view([B * J, C, H, W])
             ).view(B, J, self.C_fno, H, W)
@@ -1601,31 +1493,26 @@ class FNN2d_FewShot_Spatial_v2(nn.Layer):
         self.query_score = None
         self._attn_mats = [None]
 
-        y = self.fc1(
-            query_features.transpose([0, 2, 3, 1])
-        )  # B, C_fno, H, W => B, H, W, C_fno
+        y = self.fc1(query_features.transpose([0, 2, 3, 1]))
         y = self.activation(y)
         y = self.dropout(y)
         y = self.fc2(y)
-        y = self.dropout(y)  # b, h, w, 1
-        y = y.transpose([0, 3, 1, 2])  # b, 1, h, w
+        y = self.dropout(y)
+        y = y.transpose([0, 3, 1, 2])
         if self.mean_constraint:
             y = y - paddle.mean(y, axis=(-2, -1), keepdim=True)
 
-        y_demo = self.fc1(
-            demo_features.transpose([0, 1, 3, 4, 2])
-        )  # B, J, C_fno, H, W => B, J, H, W, C_fno
+        y_demo = self.fc1(demo_features.transpose([0, 1, 3, 4, 2]))
         y_demo = self.activation(y_demo)
         y_demo = self.dropout(y_demo)
         y_demo = self.fc2(y_demo)
-        y_demo = self.dropout(y_demo)  # b, j, h, w, 1
-        y_demo = y_demo.transpose([0, 1, 4, 2, 3])  # b, j, 1, h, w
+        y_demo = self.dropout(y_demo)
+        y_demo = y_demo.transpose([0, 1, 4, 2, 3])
         if self.mean_constraint:
             y_demo = y_demo - paddle.mean(y_demo, axis=(-2, -1), keepdim=True)
 
         B, C, H, W = y.shape
 
-        # # #########################################################
         y_flat = y.view([-1, 1])
         y_demo_flat = y_demo.view([1, -1])
         gap = y_flat - y_demo_flat
@@ -1638,7 +1525,7 @@ class FNN2d_FewShot_Spatial_v2(nn.Layer):
         for _k in range(topk):
             y_nn += paddle.take(demo_Y.view([-1, 1]), index[:, :, :, :, _k])
         y_nn /= topk
-        y = (y + y_nn) / 2  # TODO:
+        y = (y + y_nn) / 2
         return y_nn
 
 
@@ -1702,13 +1589,6 @@ def build_fno(params):
                     and ("feature_data" in params.train_path)
                 ),
             )
-        # else:
-        #     return FNN2d_FewShot(params.modes1, params.modes2, layers=params.layers, fc_dim=params.fc_dim,
-        #                 in_dim=input_dim, out_dim=params.out_dim, dropout=params.dropout,
-        #                 activation='gelu', mean_constraint=(params.loss_func == 'pde'), n_demos=params.n_demos, l_attn=params.l_attn,
-        #                 input_shape=(params.nx, params.ny), k_conv2d=params.k_conv2d, s_conv2d=params.s_conv2d, c_conv2d=params.c_conv2d, c_attn_hidden=params.c_attn_hidden,
-        #                 skip_backbone=(params.train_path.endswith("npy") and ("feature_data" in params.train_path))
-        #                 )
 
 
 class FNN2d_MAE(nn.Layer):
@@ -1755,7 +1635,6 @@ class FNN2d_MAE(nn.Layer):
         )
         self.dropout = nn.Dropout(p=dropout)
         self.encoder_to_decoder = nn.Linear(self.C_fno, self.C_fno)
-        #########################
         self.activation = _get_act(activation)
         self.mean_constraint = mean_constraint
 
@@ -1763,8 +1642,6 @@ class FNN2d_MAE(nn.Layer):
         """
         x: (b, c, h, w)
         """
-        # import
-        # B, C, H, W = x.shape
         if mask is None:
             x_enc = self.encoder(x)
         else:
@@ -1804,7 +1681,6 @@ def fno_pretrain(params):
 
 def _cast_squeeze_in(img: Tensor, req_dtypes: List[paddle.dtype]):
     need_squeeze = False
-    # make image NCHW
     if img.ndim < 4:
         img = img.unsqueeze(axis=0)
         need_squeeze = True
@@ -1853,7 +1729,6 @@ def _cast_squeeze_out(
             paddle.int32,
             paddle.int64,
         ):
-            # it is better to round before cast
             img = paddle.round(img)
         img = img.to(out_dtype)
 
@@ -1879,9 +1754,6 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
     for s in sigma:
         if s <= 0.0:
             raise ValueError(f"sigma should have positive values. Got {sigma}")
-    # print(f"img: {img}")
-    # if not (isinstance(img, Tensor)):
-    #     raise TypeError(f"img should be Tensor. Got {type(img)}")
 
     dtype = img.dtype if paddle.is_floating_point(img) else paddle.float32
     kernel = _get_gaussian_kernel2d(kernel_size, sigma, dtype=dtype)
@@ -1889,7 +1761,6 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
 
     img, need_cast, need_squeeze, out_dtype = _cast_squeeze_in(img, [kernel.dtype])
 
-    # padding = (left, right, top, bottom)
     padding = [
         kernel_size[0] // 2,
         kernel_size[0] // 2,
@@ -1903,12 +1774,11 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
     return img
 
 
-# https://github.com/erichson/SuperBench/blob/3719ef9010dc081c3f8e9644813764ef56420fc9/eval.py#L123
 class Conv2dDerivative(nn.Layer):
     def __init__(self, DerFilter, resol, kernel_size=3, name=""):
         super(Conv2dDerivative, self).__init__()
 
-        self.resol = resol  # constant in the finite difference
+        self.resol = resol
         self.name = name
         self.input_channels = 1
         self.output_channels = 1
@@ -1922,9 +1792,8 @@ class Conv2dDerivative(nn.Layer):
             1,
             padding=1,
             bias=False,
-        )  # TODO:
+        )
 
-        # Fixed gradient operator
         self.filter.weight = nn.Parameter(
             paddle.FloatTensor(DerFilter), requires_grad=False
         )
@@ -1940,7 +1809,6 @@ class LossGenerator(nn.Layer):
 
         self.delta_x = paddle.to_tensor(dx)
 
-        # https://en.wikipedia.org/wiki/Finite_difference_coefficient
         self.filter_y4 = [
             [
                 [
@@ -2002,39 +1870,20 @@ class LossGenerator(nn.Layer):
     def get_div_loss(self, output):
         """compute divergence loss"""
         u = output[:, 0:1, :, :]
-        # bu,xu,yu = u.shape
-        # u = u.reshape(bu,1,xu,yu)
-
         v = output[:, 1:2, :, :]
-        # bv,xv,yv = v.shape
-        # v = v.reshape(bv,1,xv,yv)
-
-        # w = output[:,0,:,:]
         u_x = self.dx(u)
         v_y = self.dy(v)
-        # div
         div = u_x + v_y
-
         return div
 
 
-def trunc_normal_(tensor, mean=0.0, std=1.0):  # noqa
+def trunc_normal_(tensor, mean=0.0, std=1.0):
     __call_trunc_normal_(tensor, mean=mean, std=std, a=-std, b=std)
-
-
-__all__ = [
-    # 'pretrain_videomae_small_patch16_224',
-    # "pretrain_videomae_base_patch16_224",
-    # 'pretrain_videomae_large_patch16_224',
-    # 'pretrain_videomae_huge_patch16_224',
-]
 
 
 def _cfg(url="", **kwargs):
     return {
-        # 'url': url,
-        # 'num_classes': 400,
-        "input_size": (3, 512, 512),  # TODO:
+        "input_size": (3, 512, 512),
         "pool_size": None,
         "crop_pct": 0.9,
         "interpolation": "bicubic",
@@ -2051,10 +1900,6 @@ def build_vmae(params):
     combine them in a model. Eventually the "stem" and "destem" should
     also be parameterized.
     """
-    # space_time_block = build_spacetime_block(params)
-    # processor_blocks=params.processor_blocks,
-    # n_states=params.n_states,
-    # override_block=space_time_block,)
     model = PretrainVisionTransformer(
         img_size=params.input_size,
         patch_size=params.patch_size,
@@ -2072,8 +1917,6 @@ def build_vmae(params):
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         num_frames=params.n_steps,
         num_demos=params.num_demos if hasattr(params, "num_demos") else 0,
-        # drop_path_rate=params.drop_path_rate, # TODO:
-        # n_states=params.n_states, # TODO:
     )
     model.default_cfg = _cfg()
     if params.vmae_pretrained:
@@ -2081,26 +1924,18 @@ def build_vmae(params):
         if "model" in checkpoint.keys():
             model.load_state_dict(checkpoint["model"])
         elif "model_state" in checkpoint.keys():
-            # model.load_state_dict(checkpoint["model_state"])
-            # state = {key[7:] if 'module' in key else key: value for key, value in checkpoint["model_state"].items()}
-            # model.load_state_dict(state)
 
             new_state_dict = OrderedDict()
             for key, val in checkpoint["model_state"].items():
                 name = key[7:] if "module" in key else key
                 new_state_dict[name] = val
             state = model.state_dict()
-            # 1. filter out unnecessary keys
             pretrained_dict = {
                 k: v
                 for k, v in new_state_dict.items()
                 if k in state and state[k].size() == new_state_dict[k].size()
             }
-            # 2. overwrite entries in the existing state dict
             state.update(pretrained_dict)
-            # 3. load the new state dict
-            # message = model.load_state_dict(state)
-            # self.model.load_state_dict(new_state_dict)
             unload_keys = [k for k in new_state_dict.keys() if k not in pretrained_dict]
             if len(unload_keys) > 0:
                 import warnings
@@ -2147,8 +1982,6 @@ class Mlp(nn.Layer):
     def forward(self, x):
         x = self.fc1(x)
         x = self.act(x)
-        # x = self.drop(x)
-        # commit this for the orignal BERT implement
         x = self.fc2(x)
         x = self.drop(x)
         return x
@@ -2196,14 +2029,13 @@ class Attention(nn.Layer):
             qkv_bias = paddle.concat(
                 (self.q_bias, paddle.zeros_like(self.v_bias), self.v_bias)
             )
-        # qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         qkv = F.linear(input=x, weight=self.qkv.weight, bias=qkv_bias)
         qkv = qkv.reshape([B, N, 3, self.num_heads, -1]).permute([2, 0, 3, 1, 4])
         q, k, v = (
             qkv[0],
             qkv[1],
             qkv[2],
-        )  # make torchscript happy (cannot use tensor as tuple)
+        )
 
         q = q * self.scale
         attn = q @ k.transpose(-2, -1)
@@ -2244,7 +2076,6 @@ class Block(nn.Layer):
             proj_drop=drop,
             attn_head_dim=attn_head_dim,
         )
-        # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
@@ -2308,19 +2139,16 @@ class PatchEmbed(nn.Layer):
 
     def forward(self, x, **kwargs):
         B, C, T, H, W = x.shape
-        # FIXME look at relaxing size constraints
         assert (
             H == self.img_size[0] and W == self.img_size[1]
         ), f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
-        x = self.proj(x).flatten(2).transpose(1, 2)  # BCTHW -> BC'T'H'W' -> BC'(T'H'W')
+        x = self.proj(x).flatten(2).transpose(1, 2)
         return x
 
 
-# sin-cos position encoding
-# https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/transformer/Models.py#L31
 def get_sinusoid_encoding_table(n_position, d_hid):
     """Sinusoid position encoding table"""
-    # TODO: make it with paddle instead of numpy
+
     def get_position_angle_vec(position):
         return [
             position / np.power(10000, 2 * (hid_j // 2) / d_hid)
@@ -2330,8 +2158,8 @@ def get_sinusoid_encoding_table(n_position, d_hid):
     sinusoid_table = np.array(
         [get_position_angle_vec(pos_i) for pos_i in range(n_position)]
     )
-    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
-    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])
+    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])
 
     return paddle.to_tensor(
         sinusoid_table, dtype=paddle.float32, stop_gradient=True
@@ -2365,9 +2193,7 @@ class PretrainVisionTransformerEncoder(nn.Layer):
     ):
         super().__init__()
         self.num_classes = num_classes
-        self.num_features = (
-            self.embed_dim
-        ) = embed_dim  # num_features for consistency with other models
+        self.num_features = self.embed_dim = embed_dim
         self.patch_embed = PatchEmbed(
             img_size=img_size,
             patch_size=patch_size,
@@ -2379,18 +2205,14 @@ class PretrainVisionTransformerEncoder(nn.Layer):
         num_patches = self.patch_embed.num_patches
         self.use_checkpoint = use_checkpoint
 
-        # TODO: Add the cls token
         if use_learnable_pos_emb:
             self.pos_embed = paddle.base.framework.EagerParamBase.from_tensor(
                 paddle.zeros([1, num_patches + 1, embed_dim])
             )
         else:
-            # sine-cosine positional embeddings
             self.pos_embed = get_sinusoid_encoding_table(num_patches, embed_dim)
 
-        dpr = [
-            x.item() for x in paddle.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in paddle.linspace(0, drop_path_rate, depth)]
         self.blocks = nn.LayerList(
             [
                 Block(
@@ -2454,7 +2276,7 @@ class PretrainVisionTransformerEncoder(nn.Layer):
 
         B, _, C = x.shape
         if mask is not None:
-            x_vis = x[~mask].reshape([B, -1, C])  # ~mask means visible
+            x_vis = x[~mask].reshape([B, -1, C])
         else:
             x_vis = x.reshape([B, -1, C])
 
@@ -2499,15 +2321,11 @@ class PretrainVisionTransformerDecoder(nn.Layer):
         super().__init__()
         self.num_classes = num_classes
         assert num_classes == 3 * tubelet_size * patch_size**2
-        self.num_features = (
-            self.embed_dim
-        ) = embed_dim  # num_features for consistency with other models
+        self.num_features = self.embed_dim = embed_dim
         self.patch_size = patch_size
         self.use_checkpoint = use_checkpoint
 
-        dpr = [
-            x.item() for x in paddle.linspace(0, drop_path_rate, depth)
-        ]  # stochastic depth decay rule
+        dpr = [x.item() for x in paddle.linspace(0, drop_path_rate, depth)]
         self.blocks = nn.LayerList(
             [
                 Block(
@@ -2569,9 +2387,7 @@ class PretrainVisionTransformerDecoder(nn.Layer):
                 x = blk(x)
 
         if return_token_num > 0:
-            x = self.head(
-                self.norm(x[:, -return_token_num:])
-            )  # only return the mask tokens predict pixels
+            x = self.head(self.norm(x[:, -return_token_num:]))
         else:
             x = self.head(self.norm(x))
 
@@ -2590,7 +2406,7 @@ class PretrainVisionTransformer(nn.Layer):
         encoder_embed_dim=768,
         encoder_depth=12,
         encoder_num_heads=12,
-        decoder_num_classes=1536,  #  decoder_num_classes=768,
+        decoder_num_classes=1536,
         decoder_embed_dim=512,
         decoder_depth=8,
         decoder_num_heads=8,
@@ -2605,8 +2421,8 @@ class PretrainVisionTransformer(nn.Layer):
         use_learnable_pos_emb=False,
         use_checkpoint=False,
         tubelet_size=2,
-        num_classes=0,  # avoid the error from create_fn in timm
-        in_chans=0,  # avoid the error from create_fn in timm
+        num_classes=0,
+        in_chans=0,
         num_frames=16,
         num_demos=0,
     ):
@@ -2670,8 +2486,7 @@ class PretrainVisionTransformer(nn.Layer):
 
         self.num_demos = num_demos
         if self.num_demos > 0:
-            self.lossgen = LossGenerator(dx=1 / 256, kernel_size=3)  # TODO:
-            # self.lossgen = LossGenerator(dx=2.0*math.pi/2048.0, kernel_size=3) # TODO:
+            self.lossgen = LossGenerator(dx=1 / 256, kernel_size=3)
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -2699,28 +2514,23 @@ class PretrainVisionTransformer(nn.Layer):
         T_in, B, C_in, H, W = x.shape
         x = x.permute(1, 2, 0, 3, 4)
         _, _, T, _, _ = x.shape
-        x_vis = self.encoder(x, mask)  # [B, N_vis, C_e]
-        x_vis = self.encoder_to_decoder(x_vis)  # [B, N_vis, C_d]
+        x_vis = self.encoder(x, mask)
+        x_vis = self.encoder_to_decoder(x_vis)
         B, N, C = x_vis.shape
-        # we don't unshuffle the correct visible token order,
-        # but shuffle the pos embedding accorddingly.
         expand_pos_embed = (
             self.pos_embed.expand(B, -1, -1).type_as(x).to(x.device).clone().detach()
         )
         if mask is not None:
             pos_emd_vis = expand_pos_embed[~mask].reshape([B, -1, C])
             if mask.sum() == 0:
-                # mask_ratio = 0: all tokens are visible
-                x_full = x_vis + pos_emd_vis  # [B, N, C_d]
-                x = self.decoder(x_full)  # [B, :, 3 * 16 * 16]
+                x_full = x_vis + pos_emd_vis
+                x = self.decoder(x_full)
             else:
                 pos_emd_mask = expand_pos_embed[mask].reshape([B, -1, C])
                 x_full = paddle.concat(
                     [x_vis + pos_emd_vis, self.mask_token + pos_emd_mask], axis=1
-                )  # [B, N, C_d]
-                x = self.decoder(
-                    x_full, pos_emd_mask.shape[1]
-                )  # [B, N_mask, 3 * 16 * 16]
+                )
+                x = self.decoder(x_full, pos_emd_mask.shape[1])
             return x
         else:
             x = self.decoder(x_vis)
@@ -2745,10 +2555,8 @@ class PretrainVisionTransformer(nn.Layer):
         demo_ys: J, H, W
         """
         _, B, _, H, W = x.shape
-        # J = demo_xs.shape[1]
-        pred = self.forward(x)  # B, 3, H, W
+        pred = self.forward(x)
         C = pred.shape[1]
-        # div = self.lossgen.get_div_loss(pred)
         demo_pred = []
         idx = 0
         demo_div = []
@@ -2763,7 +2571,6 @@ class PretrainVisionTransformer(nn.Layer):
         demo_div = paddle.concat(demo_div, axis=0)
 
         demo_pred_flat = demo_pred.permute(0, 2, 3, 1).view([1, -1, C])
-        # demo_div_flat = demo_div.view([1, -1])
         y_nn = paddle.zeros([B, C, H, W])
         gap_nn = paddle.zeros([B, H, W])
         batch_b = 1
@@ -2772,10 +2579,7 @@ class PretrainVisionTransformer(nn.Layer):
         _h = 0
         batch_w = 16
         _w = 0
-        # topk1 = round(0.2 * H * W * J) # TODO:
-        # topk1 = 20  # TODO:
-        # topk = round(0.02 * H * W * J) # TODO:
-        topk = 10  # TODO:
+        topk = 10
         pbar = tqdm(
             total=np.ceil(B / batch_b) * np.ceil(H / batch_h) * np.ceil(W / batch_w)
         )
@@ -2798,9 +2602,7 @@ class PretrainVisionTransformer(nn.Layer):
                     gap_nn[
                         _b : _b + batch_b, _h : _h + batch_h, _w : _w + batch_w
                     ] = paddle.mean(paddle.sort(gap_re, -1)[0][:, :, :, :topk], -1)
-                    index = paddle.argsort(paddle.abs(gap_re), -1)[
-                        :, :, :, :topk
-                    ]  # TODO: spatial index of ascending sort by pred gap
+                    index = paddle.argsort(paddle.abs(gap_re), -1)[:, :, :, :topk]
                     _y_nn = 0
                     for _k in range(topk):
                         _y_nn += (
@@ -2813,22 +2615,14 @@ class PretrainVisionTransformer(nn.Layer):
                             .permute(0, 3, 1, 2)
                         )
                     _y_nn /= topk
-                    # spatial_dims = (2, 3)
-                    # print("pred:", (((self.target[:, :, _h:_h+batch_h, _w:_w+batch_w] - pred[:, :, _h:_h+batch_h, _w:_w+batch_w]).pow(2).mean(spatial_dims, keepdim=True) / (1e-7 + self.target[:, :, _h:_h+batch_h, _w:_w+batch_w].pow(2).mean(spatial_dims, keepdim=True))).sqrt()).mean().item(), "    ICL:", (((self.target[:, :, _h:_h+batch_h, _w:_w+batch_w] - _y_nn).pow(2).mean(spatial_dims, keepdim=True) / (1e-7 + self.target[:, :, _h:_h+batch_h, _w:_w+batch_w].pow(2).mean(spatial_dims, keepdim=True))).sqrt()).mean().item())
                     y_nn[
                         _b : _b + batch_b, :, _h : _h + batch_h, _w : _w + batch_w
                     ] = _y_nn
-                    # np.set_printoptions(precision=5)
-                    # print(_h, _w, sum(pred[_b, :2, _h+1, _w+1]-y_nn[_b, :2, _h+1, _w+1]).item(), np.round(pred[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist(), np.round(y_nn[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist())
-
                     _w += batch_w
                 _h += batch_h
             _b += batch_b
-        # bp()
         print(y_nn.mean(), demo_ys.mean())
-        # return y_nn
-        # return (y_nn + pred) / 2
-        mask = (paddle.clip(gap_nn, 0, 1) ** 0.5 > 0.1).astype(paddle.float32)  # TODO:
+        mask = (paddle.clip(gap_nn, 0, 1) ** 0.5 > 0.1).astype(paddle.float32)
         return (1 - mask) * y_nn + mask * pred
 
 
@@ -2930,11 +2724,6 @@ def log_versions():
     logging.info("----------------------------------------")
 
 
-"""
-  loss functions
-# """
-
-
 class LossMSE:
     """mse loss"""
 
@@ -2950,11 +2739,9 @@ class LossMSE:
         return loss
 
     def bc(self, inputs, pred, targets):
-        # currently no BC
         return paddle.to_tensor(0.0).astype(dtype=paddle.float32)
 
     def pde(self, inputs, pred, targets):
-        # currently no PDE loss
         return paddle.to_tensor(0.0).astype(dtype=paddle.float32)
 
 
@@ -2965,16 +2752,8 @@ def FDM_Darcy(u, a, D=1):
     a = a.reshape(batchsize, size, size)
     dx = D / (size - 1)
     dy = dx
-
-    # ux: (batch, size-2, size-2)
     ux = (u[:, 2:, 1:-1] - u[:, :-2, 1:-1]) / (2 * dx)
     uy = (u[:, 1:-1, 2:] - u[:, 1:-1, :-2]) / (2 * dy)
-
-    # ax = (a[:, 2:, 1:-1] - a[:, :-2, 1:-1]) / (2 * dx)
-    # ay = (a[:, 1:-1, 2:] - a[:, 1:-1, :-2]) / (2 * dy)
-    # uxx = (u[:, 2:, 1:-1] -2*u[:,1:-1,1:-1] +u[:, :-2, 1:-1]) / (dx**2)
-    # uyy = (u[:, 1:-1, 2:] -2*u[:,1:-1,1:-1] +u[:, 1:-1, :-2]) / (dy**2)
-
     a = a[:, 1:-1, 1:-1]
     aux = a * ux
     auy = a * uy
@@ -3006,7 +2785,6 @@ def FDM_NS_vorticity(w, v=1 / 40, t_interval=1.0):
     w = w.reshape([batchsize, nx, ny, nt])
 
     w_h = paddle.fft.fft2(w, axes=[1, 2])
-    # Wavenumbers in y-direction
     k_max = nx // 2
     N = nx
     k_x = (
@@ -3033,7 +2811,6 @@ def FDM_NS_vorticity(w, v=1 / 40, t_interval=1.0):
         .repeat([N, 1])
         .reshape([1, N, N, 1])
     )
-    # Negative Laplacian in Fourier space
     lap = k_x**2 + k_y**2
     lap[0, 0, 0, 0] = 1.0
     f_h = w_h / lap
@@ -3053,7 +2830,7 @@ def FDM_NS_vorticity(w, v=1 / 40, t_interval=1.0):
     dt = t_interval / (nt - 1)
     wt = (w[:, :, :, 2:] - w[:, :, :, :-2]) / (2 * dt)
 
-    Du1 = wt + (ux * wx + uy * wy - v * wlap)[..., 1:-1]  # - forcing
+    Du1 = wt + (ux * wx + uy * wy - v * wlap)[..., 1:-1]
     return Du1
 
 
@@ -3071,12 +2848,10 @@ def Autograd_Burgers(u, grid, v=1 / 100):
 
 def AD_loss(u, u0, grid, index_ic=None, p=None, q=None):
     batchsize = u.size(0)
-    # lploss = LpLoss(size_average=True)
 
     Du, ux, uxx, ut = Autograd_Burgers(u, grid)
 
     if index_ic is None:
-        # u in on a uniform grid
         nt = u.size(1)
         nx = u.size(2)
         u = u.reshape(batchsize, nt, nx)
@@ -3086,19 +2861,12 @@ def AD_loss(u, u0, grid, index_ic=None, p=None, q=None):
         ).astype(paddle.int64)
         index_x = paddle.to_tensor(range(nx)).astype(paddle.int64)
         boundary_u = u[:, index_t, index_x]
-
-        # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
-        # loss_bc1 = F.mse_loss(ux[:, :, 0], ux[:, :, -1])
     else:
-        # u is randomly sampled, 0:p are BC, p:2p are ic, 2p:2p+q are interior
         boundary_u = u[:, :p]
         batch_index = (
             paddle.to_tensor(range(batchsize)).reshape([batchsize, 1]).repeat([1, p])
         )
         u0 = u0[batch_index, index_ic]
-
-        # loss_bc0 = F.mse_loss(u[:, p:p+p//2], u[:, p+p//2:2*p])
-        # loss_bc1 = F.mse_loss(ux[:, p:p+p//2], ux[:, p+p//2:2*p])
 
     loss_ic = F.mse_loss(boundary_u, u0)
     f = paddle.zeros(Du.shape)
@@ -3114,7 +2882,6 @@ class LpLoss(object):
     def __init__(self, d=2, p=2, size_average=True, reduction=True):
         super(LpLoss, self).__init__()
 
-        # Dimension and Lp-norm type are postive
         assert d > 0 and p > 0
 
         self.d = d
@@ -3125,7 +2892,6 @@ class LpLoss(object):
     def abs(self, x, y):
         num_examples = x.size()[0]
 
-        # Assume uniform mesh
         h = 1.0 / (x.size()[1] - 1.0)
 
         all_norms = (h ** (self.d / self.p)) * paddle.linalg.norm(
@@ -3164,13 +2930,9 @@ def FDM_Burgers(u, v, D=1):
     batchsize = u.size(0)
     nt = u.size(1)
     nx = u.size(2)
-
     u = u.reshape(batchsize, nt, nx)
     dt = D / (nt - 1)
-    # dx = D / (nx)
-
     u_h = paddle.fft.fft(u, axis=2)
-    # Wavenumbers in y-direction
     k_max = nx // 2
     k_x = paddle.concat(
         (
@@ -3194,7 +2956,6 @@ def PINO_loss(u, u0, v):
     nx = u.size(2)
 
     u = u.reshape(batchsize, nt, nx)
-    # lploss = LpLoss(size_average=True)
 
     index_t = paddle.zeros(
         nx,
@@ -3209,9 +2970,6 @@ def PINO_loss(u, u0, v):
     )
     loss_f = F.mse_loss(Du, f)
 
-    # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
-    # loss_bc1 = F.mse_loss((u[:, :, 1] - u[:, :, -1]) /
-    #                       (2/(nx)), (u[:, :, 0] - u[:, :, -2])/(2/(nx)))
     return loss_u, loss_f
 
 
@@ -3247,10 +3005,7 @@ def PDELoss(model, x, t, nu):
         - mean of residual : scalar
     """
     u = model(paddle.concat([x, t], axis=1))
-    # First backward to compute u_x (shape: N x 1), u_t (shape: N x 1)
     grad_x, grad_t = paddle.grad(outputs=[u.sum()], inputs=[x, t], create_graph=True)
-    # Second backward to compute u_{xx} (shape N x 1)
-
     (gradgrad_x,) = paddle.grad(outputs=[grad_x.sum()], inputs=[x], create_graph=True)
 
     residual = grad_t + u * grad_x - nu * gradgrad_x
@@ -3284,7 +3039,6 @@ def vor2vel(w, L=2 * np.pi):
     w = w.reshape(batchsize, nx, ny, nt)
 
     w_h = paddle.fft.fft2(w, axes=[1, 2])
-    # Wavenumbers in y-direction
     k_max = nx // 2
     N = nx
     k_x = (
@@ -3311,7 +3065,6 @@ def vor2vel(w, L=2 * np.pi):
         .repeat([N, 1])
         .reshape([1, N, N, 1])
     )
-    # Negative Laplacian in Fourier space
     lap = k_x**2 + k_y**2
     lap[0, 0, 0, 0] = 1.0
     f_h = w_h / lap
@@ -3325,21 +3078,16 @@ def vor2vel(w, L=2 * np.pi):
 
 
 def get_sample(N, T, s, p, q):
-    # sample p nodes from Initial Condition, p nodes from Boundary Condition, q nodes from Interior
-
-    # sample IC
     index_ic = paddle.randint(s, shape=(N, p))
     sample_ic_t = paddle.zeros([N, p])
     sample_ic_x = index_ic / s
 
-    # sample BC
     sample_bc = paddle.rand(shape=(N, p // 2))
     sample_bc_t = paddle.concat([sample_bc, sample_bc], axis=1)
     sample_bc_x = paddle.concat(
         [paddle.zeros([N, p // 2]), paddle.ones([N, p // 2])], axis=1
     )
 
-    # sample I
     sample_i_t = -paddle.cos(paddle.rand(shape=(N, q)) * np.pi / 2) + 1
     sample_i_x = paddle.rand(shape=(N, q))
 

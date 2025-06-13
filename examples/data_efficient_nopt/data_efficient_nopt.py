@@ -51,7 +51,7 @@ def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
         target**2, axis=spatial_dim
     )
     x = paddle.sqrt(x)
-    return paddle.mean(x)  # , dim=0)
+    return paddle.mean(x)
 
 
 def grad_norm(parameters):
@@ -124,7 +124,6 @@ class Trainer:
         self.world_size = int(os.environ.get("WORLD_SIZE", 1))
         self.sweep_id = sweep_id
         self.log_to_screen = params.log_to_screen
-        # Basic setup
         self.train_loss = nn.MSELoss()
         self.startEpoch = 0
         self.epoch = 0
@@ -150,7 +149,6 @@ class Trainer:
             self.restore_checkpoint(params.pretrained_ckpt_path)
             self.iters = 0
             self.startEpoch = 0
-        # Do scheduler after checking for resume so we don't warmup every time
         self.initialize_scheduler(self.params)
 
     def single_print(self, *text):
@@ -230,9 +228,7 @@ class Trainer:
         )
 
     def initialize_optimizer(self, params):
-        parameters = add_weight_decay(
-            self.model, self.params.weight_decay
-        )  # Dont use weight decay on bias/scaling terms
+        parameters = add_weight_decay(self.model, self.params.weight_decay)
         if params.optimizer == "adam":
             self.optimizer = optim.AdamW(
                 parameters=parameters, learning_rate=params.learning_rate
@@ -328,9 +324,7 @@ class Trainer:
                 new_state_dict[name] = val
             self.model.set_state_dict(new_state_dict)
 
-        if (
-            self.params.resuming
-        ):  # restore checkpoint is used for finetuning as well as resuming. If finetuning (i.e., not resuming), restore checkpoint does not load optimizer state, instead uses config specified lr.
+        if self.params.resuming:
             self.optimizer.set_state_dict(checkpoint["optimizer_state_dict"])
             self.startEpoch = checkpoint["epoch"]
             self.epoch = self.startEpoch
@@ -367,13 +361,11 @@ class Trainer:
                         inp_blur = []
                         for _inp in inp:
                             sigma = random.uniform(*self.params.blur)
-                            # https://github.com/scipy/scipy/blob/v1.11.4/scipy/ndimage/_filters.py#L232
                             _kernel = min(
                                 int((sigma * 4 + 1) / 2) * 2 + 1,
                                 (_inp.shape[2] // 2) * 2 - 1,
                             )
                             if _kernel >= 2:
-                                # [https://github.com/PaddlePaddle/Paddle/issues/26568]
                                 _inp = gaussian_blur(
                                     _inp, kernel_size=[_kernel, _kernel], sigma=sigma
                                 )
@@ -405,7 +397,6 @@ class Trainer:
                 output = self.model(inp_blur, mask)
 
                 if len(inp.shape) == 5:
-                    # inp: T, B, C, H, W
                     labels = rearrange(
                         inp.permute(1, 2, 0, 3, 4),
                         "b c t (h p1) (w p2) -> b (t h w) (p1 p2 c)",
@@ -417,23 +408,19 @@ class Trainer:
                     if mask is not None:
                         mask = mask.flatten(1).to(paddle.bool)
                         if mask.sum() == 0:
-                            # mask_ratio = 0.: all tokens are visible
                             labels = labels[~mask]
                         else:
                             labels = labels[mask]
                     labels = labels.reshape(
                         inp.shape[1], -1, inp.shape[2] * self.model.patch_size**2
                     )
-                    spatial_dims = tuple(range(output.ndim))[
-                        2:
-                    ]  # Assume 0, 1, 2 are T, B, C
+                    spatial_dims = tuple(range(output.ndim))[2:]
 
                     residuals = output - labels
                     inp_norm = 1e-7 + labels.pow(2).mean(spatial_dims, keepdim=True)
                     raw_loss = (residuals).pow(2).mean(
                         spatial_dims, keepdim=True
                     ) / inp_norm
-                    # Scale loss for accum
                     loss = raw_loss.mean() / self.params.accum_grad
 
                 elif len(inp.shape) == 4:
@@ -446,46 +433,29 @@ class Trainer:
 
                     residuals = output - labels
                     raw_loss = (residuals) ** 2
-                    # Scale loss for accum
                     loss = raw_loss.sum() / output.shape[0] / self.params.accum_grad
 
                 forward_end = time.time()
                 forward_time = forward_end - model_start
-                # Logging
                 with paddle.no_grad():
                     logs["train_l1"] += F.l1_loss(output, labels)
                     log_nrmse = raw_loss.sqrt().mean()
-                    logs[
-                        "train_nrmse"
-                    ] += log_nrmse  # ehh, not true nmse, but close enough
+                    logs["train_nrmse"] += log_nrmse
                     logs["train_rmse"] += (
                         residuals.pow(2).mean(spatial_dims).sqrt().mean()
                     )
                     logs["train_l2"] += l2_err(output, labels, spatial_dims)
                     logs["train_loss"] += loss
-                # Scaler is no op when not using AMP
                 self.gscaler.scale(loss).backward()
                 backward_end = time.time()
                 backward_time = backward_end - forward_end
-                # Check gradient info if we're in debug mode
-                # if self.debug_grad and ((1 + batch_idx) % self.params.accum_grad == 1):
-                #     with paddle.no_grad():
-                #         gnorm = self.params.accum_grad * grad_norm(
-                #             self.model.parameters()
-                #         )
-                #         last_grads = grad_clone(self.model.parameters())
-                # elif self.debug_grad:
-                #     with paddle.no_grad():
-                #         new_last_grads = grad_clone(self.model.parameters())
-                #         # new_grad = [p - g for p, g in zip(new_last_grads, last_grads)]
-                #         # gnorm = self.params.accum_grad * param_norm(new_grad)
-                #         last_grads = new_last_grads
+
                 if self.debug_grad and self.model.require_backward_grad_sync:
                     with paddle.no_grad():
                         self.gscaler.unscale_(self.optimizer)
                         grad_diff = grad_norm(self.model.parameters())
                         porig = [p.clone() for p in self.model.parameters()]
-                # Only take step once per accumulation cycle
+
                 optimizer_step = 0
                 if self.model.require_backward_grad_sync:
                     self.gscaler.unscale_(self.optimizer)
@@ -538,7 +508,6 @@ class Trainer:
                     )
                 data_start = time.time()
         logs = {k: v / steps for k, v in logs.items()}
-        # If distributed, do lots of logging things
         if dist.is_initialized():
             for key in sorted(logs.keys()):
                 dist.all_reduce(logs[key].detach())
@@ -560,7 +529,6 @@ class Trainer:
                 num_workers=self.params.num_data_workers,
             )
         else:
-            # Seed isn't important, just trying to mix up samples from different trajectories
             temp_loader = paddle.io.DataLoader(
                 subset,
                 batch_size=self.params.batch_size,
@@ -570,7 +538,6 @@ class Trainer:
             )
         count = 0
         for _, data in enumerate(temp_loader):
-            # Only do a few batches of each dataset if not doing full validation
             if count > cutoff:
                 del temp_loader
                 break
@@ -586,9 +553,7 @@ class Trainer:
             if self.params.model_type == "fno":
                 spatial_dims = tuple(range(output.ndim))[1:]
             elif self.params.model_type == "vmae":
-                spatial_dims = tuple(range(output.ndim))[
-                    2:
-                ]  # Assume 0, 1, 2 are T, B, C
+                spatial_dims = tuple(range(output.ndim))[2:]
 
             nmse = (
                 residuals.pow(2).mean(spatial_dims, keepdim=True)
@@ -620,7 +585,6 @@ class Trainer:
 
         Note: need to split datasets for meaningful metrics, but TBD.
         """
-        # Don't bother with full validation set between epochs
         self.model.eval()
         if full:
             cutoff = 999999999999
@@ -628,14 +592,11 @@ class Trainer:
             cutoff = 40
         self.single_print("STARTING VALIDATION!!!")
         with paddle.no_grad():
-            # There's something weird going on when i turn this off.
             with amp.auto_cast(enable=False, dtype=self.mp_type):
                 logs = {}
-                # Iterate through all folder specific datasets
                 if hasattr(self.valid_dataset, "sub_dsets"):
                     for subset_group in self.valid_dataset.sub_dsets:
                         for subset in subset_group.get_per_file_dsets():
-                            # Create data loader for each
                             logs = self.single_dset_val(subset, logs, cutoff)
                 else:
                     logs = self.single_dset_val(self.valid_dataset, logs, cutoff)
@@ -644,9 +605,7 @@ class Trainer:
 
             if dist.is_initialized():
                 for key in sorted(logs.keys()):
-                    dist.all_reduce(
-                        logs[key].detach()
-                    )  # There was a bug with means when I implemented this - dont know if fixed
+                    dist.all_reduce(logs[key].detach())
                     logs[key] = float(logs[key].item() / dist.get_world_size())
                     if "rmse" in key:
                         logs[key] = logs[key]
@@ -654,58 +613,13 @@ class Trainer:
         return logs
 
     def train(self):
-        # This is set up this way based on old code to allow wandb sweeps
-        # if self.params.log_to_wandb:
-        #     if self.sweep_id:
-        #         wandb.init(dir=self.params.experiment_dir)
-        #         hpo_config = wandb.config.as_dict()
-        #         self.params.update_params(hpo_config)
-        #         # params = self.params
-        #     else:
-        #         wandb.init(
-        #             dir=self.params.experiment_dir,
-        #             config=self.params,
-        #             name=self.params.name,
-        #             group=self.params.group,
-        #             project=self.params.project,
-        #             entity=self.params.entity,
-        #             resume=True,
-        #         )
-
-        # if self.sweep_id and dist.is_initialized():
-        #     param_file = f"temp_hpo_config_{os.environ['SLURM_JOBID']}.pkl"
-        #     if self.global_rank == 0:
-        #         with open(param_file, "wb") as f:
-        #             pkl.dump(hpo_config, f)
-        #     dist.barrier()  # Stop until the configs are written by hacky MPI sub
-        #     if self.global_rank != 0:
-        #         with open(param_file, "rb") as f:
-        #             hpo_config = pkl.load(f)
-        #     dist.barrier()  # Stop until the configs are written by hacky MPI sub
-        #     if self.global_rank == 0:
-        #         os.remove(param_file)
-        #     # If tuning batch size, need to go from global to local batch size
-        #     if "batch_size" in hpo_config:
-        #         hpo_config["batch_size"] = int(
-        #             hpo_config["batch_size"] // self.world_size
-        #         )
-        #     self.params.update_params(hpo_config)
-        #     # params = self.params
-        #     self.initialize_data(
-        #         self.params
-        #     )  # This is the annoying redundant part - but the HPs need to be set from wandb
-        #     self.initialize_model(self.params)
-        #     self.initialize_optimizer(self.params)
-        #     self.initialize_scheduler(self.params)
         self.single_print("Starting Training Loop...")
-        # Actually train now, saving checkpoints, logging time, and logging to wandb
-        # best_valid_loss = 1.0e6
+
         for epoch in range(self.startEpoch, self.params.max_epochs):
             if dist.is_initialized():
                 self.train_sampler.set_epoch(epoch)
             start = time.time()
 
-            # with torch.autograd.detect_anomaly(check_nan=True):
             tr_time, data_time, train_logs = self.train_one_epoch()
 
             valid_start = time.time()
@@ -713,13 +627,11 @@ class Trainer:
             train_logs["time/train_data_time"] = data_time
             train_logs["time/train_compute_time"] = tr_time
 
-            # # TODO: Only do full validation set on last epoch - don't waste time
             if epoch == self.params.max_epochs - 1:
                 valid_logs = self.validate_one_epoch(True)
             else:
                 valid_logs = self.validate_one_epoch()
             train_logs.update(valid_logs)
-            # train_logs['time/valid_time'] = post_start-valid_start
             post_start = time.time()
             gc.collect()
             paddle.device.cuda.empty_cache()
@@ -729,10 +641,6 @@ class Trainer:
                     self.save_checkpoint(self.params.checkpoint_path)
                 if epoch % self.params.checkpoint_save_interval == 0:
                     self.save_checkpoint(self.params.checkpoint_path + f"_epoch{epoch}")
-                # TODO:
-                # if valid_logs['valid_nrmse'] <= best_valid_loss:
-                #     self.save_checkpoint(self.params.best_checkpoint_path)
-                #     best_valid_loss = valid_logs['valid_nrmse']
 
                 cur_time = time.time()
                 self.single_print(
@@ -744,13 +652,11 @@ class Trainer:
                     )
                 )
                 self.single_print("Train loss: {}.".format(train_logs["train_nrmse"]))
-                # self.single_print('Valid loss: {}'.format(valid_logs['valid_nrmse'])) # TODO:
 
 
 def train(cfg: DictConfig):
     params = YParams(os.path.abspath(cfg.yaml_config), cfg.config)
     params.use_ddp = cfg.use_ddp
-    # Set up distributed training
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     global_rank = int(os.environ.get("RANK", 0))
     world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -760,20 +666,17 @@ def train(cfg: DictConfig):
     device = f"gpu:{local_rank}" if paddle.device.cuda.device_count() >= 1 else "cpu"
     paddle.set_device(device)
 
-    # Modify params
     params["batch_size"] = int(params.batch_size // world_size)
     params["startEpoch"] = 0
     if cfg.sweep_id:
-        jid = os.environ["SLURM_JOBID"]  # so different sweeps dont resume
+        jid = os.environ["SLURM_JOBID"]
         expDir = os.path.join(
             params.exp_dir, cfg.sweep_id, cfg.config, str(cfg.run_name), jid
         )
     else:
         expDir = os.path.join(params.exp_dir, cfg.config, str(cfg.run_name))
 
-    params[
-        "old_exp_dir"
-    ] = expDir  # I dont remember what this was for but not removing it yet
+    params["old_exp_dir"] = expDir
     params["experiment_dir"] = os.path.abspath(expDir)
     params["checkpoint_path"] = os.path.join(expDir, "training_checkpoints/ckpt.tar")
     params["best_checkpoint_path"] = os.path.join(
@@ -783,18 +686,13 @@ def train(cfg: DictConfig):
         params.old_exp_dir, "training_checkpoints/best_ckpt.tar"
     )
 
-    # Have rank 0 check for and/or make directory
     if global_rank == 0:
         if not os.path.isdir(expDir):
             os.makedirs(expDir)
             os.makedirs(os.path.join(expDir, "training_checkpoints/"))
     params["resuming"] = True if os.path.isfile(params.checkpoint_path) else False
 
-    # WANDB things
     params["name"] = str(cfg.run_name)
-    # params['group'] = params['group'] #+ cfg.config
-    # params['project'] = "pde_bench"
-    # params['entity'] = "flatiron-scipt"
     if global_rank == 0:
         logging_utils.log_to_file(
             logger_name=None, log_filename=os.path.join(expDir, "out.log")
@@ -855,19 +753,17 @@ def get_pred(cfg):
         params.local_valid_batch_size = 1
     dataloader, dataset, sampler = PoisHelmDatasetLoader(
         params, params.test_path, dist.is_initialized(), train=False
-    )  # , pack=data_param.pack_data)
+    )
     if cfg.num_demos is not None and cfg.num_demos != 0:
         params.subsample = 1
         params.local_valid_batch_size = cfg.num_demos
         dataloader_icl, dataset_icl, _ = PoisHelmDatasetLoader(
             params, params.train_path, dist.is_initialized(), train=False
-        )  # , pack=data_param.pack_data)
+        )
         input_demos, target_demos = next(iter(dataloader_icl))
         input_demos = input_demos
         target_demos = target_demos
 
-    # model_param = Namespace(**config['model'])
-    # model_param.n_demos = params.n_demos
     model = build_fno(params)
 
     if cfg.ckpt_path:
@@ -882,17 +778,13 @@ def get_pred(cfg):
                     name = name[7:]
                 new_state_dict[name] = val
             state = model.state_dict()
-            # 1. filter out unnecessary keys
             pretrained_dict = {
                 k: v
                 for k, v in new_state_dict.items()
                 if k in state and state[k].size() == new_state_dict[k].size()
             }
-            # 2. overwrite entries in the existing state dict
             state.update(pretrained_dict)
-            # 3. load the new state dict
-            # message = model.load_state_dict(state)
-            # self.model.load_state_dict(new_state_dict)
+
             unload_keys = [k for k in new_state_dict.keys() if k not in pretrained_dict]
             if len(unload_keys) > 0:
                 import warnings
@@ -902,31 +794,20 @@ def get_pred(cfg):
                     % (str(unload_keys))
                 )
 
-    # mseloss = LossMSE(params, None)
-
-    # metric
-    # lploss = LpLoss(size_average=True)
     model.eval()
     truth_list = []
     pred_list = []
     losses = []
     losses_normalized = []
     pbar = tqdm(dataloader, total=len(dataloader))
-    # if cfg.num_demos is not None and cfg.num_demos != 0:
-    #     pbar = tqdm([next(iter(dataloader))], total=1)
-    # for u, a_in in dataloader:
     for inputs, targets in pbar:
-        # if len(pred_list) > len(dataloader) // 100: break
         inputs, targets = inputs, targets
         if cfg.num_demos is None or cfg.num_demos == 0:
             u = model(inputs)
         else:
-            model.target = targets  # for debugging purpose
+            model.target = targets
             u = model.forward_icl(inputs, input_demos, target_demos, use_tqdm=cfg.tqdm)
-            # u = model.forward_icl_knn(inputs, input_demos, target_demos, use_tqdm=cfg.tqdm)
-            # out = model.forward_icl(inputs, input_demos, target_demos, use_tqdm=False)
-        # data_loss = lploss(out, u)
-        # data_loss = mseloss.data(inputs, u, targets)
+
         data_loss = l2_err(u.detach(), targets.detach())
         losses.append(data_loss.item())
         data_loss_normalized = l2_err(
@@ -934,11 +815,9 @@ def get_pred(cfg):
             targets.detach() / paddle.abs(targets).max(),
         )
         losses_normalized.append(data_loss_normalized.item())
-        # print(data_loss.item())
         truth_list.append(targets.cpu())
         pred_list.append(u.cpu())
 
-    # print(np.mean(losses))
     slope, intercept, r, p, se = linregress(
         paddle.concat(pred_list, axis=0).view([-1]).numpy(),
         paddle.concat(truth_list, axis=0).view([-1]).numpy(),

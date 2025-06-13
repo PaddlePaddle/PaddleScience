@@ -10,8 +10,6 @@ pydantic>=2.5.0
 pyevtk
 pyyaml
 requests
-ruamel.yaml==0.17.32
-ruamel.yaml.clib==0.2.7
 scikit-learn<1.5.0
 scikit-optimize
 scipy
@@ -20,4 +18,3 @@ sympy
 tqdm
 typing-extensions
 wget
-zarr==2.16.1
