@@ -34,8 +34,6 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap as ruamelDict
 from scipy.stats import linregress
 from tqdm import tqdm
-from utils import logging_utils
-from visualdl import LogWriter
 
 from ppsci.arch.data_efficient_nopt_model import YParams
 from ppsci.arch.data_efficient_nopt_model import build_fno
@@ -384,7 +382,6 @@ class Trainer:
                 inp = rearrange(inp, "b t c h w -> t b c h w")
                 inp_blur = rearrange(inp_blur, "b t c h w -> t b c h w")
 
-            logwriter = LogWriter(logdir="./runs/data_effient_nopt")
             data_time += time.time() - data_start
             dtime = time.time() - data_start
 
@@ -489,11 +486,6 @@ class Trainer:
                         f"Epoch {self.epoch} Batch {batch_idx} Train Loss {log_nrmse.item()}"
                     )
                 if self.log_to_screen:
-                    logwriter.add_scalar(
-                        "train_avg_loss",
-                        value=log_nrmse.item(),
-                        step=self.iters + steps - 1,
-                    )
                     print(
                         "Total Times. Global step: {}, Batch: {}, Rank: {}, Data Shape: {}, Data time: {}, Forward: {}, Backward: {}, Optimizer: {}".format(
                             self.iters + steps - 1,
@@ -666,8 +658,8 @@ def train(cfg: DictConfig):
     device = f"gpu:{local_rank}" if paddle.device.cuda.device_count() >= 1 else "cpu"
     paddle.set_device(device)
 
-    params["batch_size"] = int(params.batch_size // world_size)
-    params["startEpoch"] = 0
+    params.batch_size = int(params.batch_size // world_size)
+    params.startEpoch = 0
     if cfg.sweep_id:
         jid = os.environ["SLURM_JOBID"]
         expDir = os.path.join(
@@ -676,13 +668,13 @@ def train(cfg: DictConfig):
     else:
         expDir = os.path.join(params.exp_dir, cfg.config, str(cfg.run_name))
 
-    params["old_exp_dir"] = expDir
-    params["experiment_dir"] = os.path.abspath(expDir)
-    params["checkpoint_path"] = os.path.join(expDir, "training_checkpoints/ckpt.tar")
-    params["best_checkpoint_path"] = os.path.join(
+    params.old_exp_dir = expDir
+    params.experiment_dir = os.path.abspath(expDir)
+    params.checkpoint_path = os.path.join(expDir, "training_checkpoints/ckpt.tar")
+    params.best_checkpoint_path = os.path.join(
         expDir, "training_checkpoints/best_ckpt.tar"
     )
-    params["old_checkpoint_path"] = os.path.join(
+    params.old_checkpoint_path = os.path.join(
         params.old_exp_dir, "training_checkpoints/best_ckpt.tar"
     )
 
@@ -690,25 +682,9 @@ def train(cfg: DictConfig):
         if not os.path.isdir(expDir):
             os.makedirs(expDir)
             os.makedirs(os.path.join(expDir, "training_checkpoints/"))
-    params["resuming"] = True if os.path.isfile(params.checkpoint_path) else False
-
-    params["name"] = str(cfg.run_name)
-    if global_rank == 0:
-        logging_utils.log_to_file(
-            logger_name=None, log_filename=os.path.join(expDir, "out.log")
-        )
-        logging_utils.log_versions()
-        params.log()
-
-    if global_rank == 0:
-        logging_utils.log_to_file(
-            logger_name=None, log_filename=os.path.join(expDir, "out.log")
-        )
-        logging_utils.log_versions()
-        params.log()
-
-    params["log_to_wandb"] = (global_rank == 0) and params["log_to_wandb"]
-    params["log_to_screen"] = (global_rank == 0) and params["log_to_screen"]
+    params.resuming = True if os.path.isfile(params.checkpoint_path) else False
+    params.name = str(cfg.run_name)
+    params.log_to_screen = (global_rank == 0) and params.log_to_screen
 
     if global_rank == 0:
         hparams = ruamelDict()
@@ -728,7 +704,7 @@ def train(cfg: DictConfig):
 
 @paddle.no_grad()
 def get_pred(cfg):
-    with open(cfg.eval_config, "r") as stream:
+    with open(cfg.infer_config, "r") as stream:
         config = yaml.load(stream, yaml.FullLoader)
     if cfg.ckpt_path:
         save_dir = os.path.join("/".join(cfg.ckpt_path.split("/")[:-1]), "results_icl")
