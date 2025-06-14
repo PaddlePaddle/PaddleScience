@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+
 import paddle
 import torch
 
@@ -12,16 +14,26 @@ def save_checkpoint(checkpoint_path, model):
 
 
 def torch2paddle():
-    torch_path = "/home/aistudio/data_efficient_nopt/data/possion_64_inference/finetune_b01_m0_n8192.tar"
-    paddle_path = "./data/pd_finetune_b01_m0_n8192.tar"
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--pt-model",
+        type=str,
+        default="data/possion_64_inference/finetune_b01_m0_n8192.tar",
+    )
+    parser.add_argument(
+        "--pd-model",
+        type=str,
+        default="./data/pd_finetune_b01_m0_n8192.tar",
+    )
+    args = parser.parse_args()
+    torch_path = args.pt_model
+    paddle_path = args.pd_model
 
     torch_state_dict = torch.load(torch_path)["model_state"]
     # model.set_state_dict(checkpoint["model_state"])
     fc_names = ["classifier", "fc"]
     paddle_state_dict = {}
-    import pdb
 
-    pdb.set_trace()
     for k in torch_state_dict:
         if "num_batches_tracked" in k:
             continue
