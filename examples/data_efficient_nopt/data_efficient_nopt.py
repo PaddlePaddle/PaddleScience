@@ -27,7 +27,6 @@ import paddle.distributed as dist
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-import yaml
 from einops import rearrange
 from omegaconf import DictConfig
 from ruamel.yaml import YAML
@@ -647,7 +646,7 @@ class Trainer:
 
 
 def train(cfg: DictConfig):
-    params = YParams(os.path.abspath(cfg.yaml_config), cfg.config)
+    params = YParams(cfg.train_config, cfg.config)
     params.use_ddp = cfg.use_ddp
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     global_rank = int(os.environ.get("RANK", 0))
@@ -704,8 +703,7 @@ def train(cfg: DictConfig):
 
 @paddle.no_grad()
 def get_pred(cfg):
-    with open(cfg.infer_config, "r") as stream:
-        config = yaml.load(stream, yaml.FullLoader)
+    config = cfg.infer_config
     if cfg.ckpt_path:
         save_dir = os.path.join("/".join(cfg.ckpt_path.split("/")[:-1]), "results_icl")
     else:
@@ -720,7 +718,7 @@ def get_pred(cfg):
     else:
         paddle.set_device("cpu")
 
-    params = Namespace(**config["default"])
+    params = Namespace(**config)
     if not hasattr(params, "n_demos"):
         params.n_demos = 0
     if "batch_size" in config:
@@ -828,7 +826,9 @@ def inference(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./config", config_name="data_efficient_nopt.yaml"
+    version_base=None,
+    config_path="./config",
+    config_name="data_efficient_nopt_fno_poisson",
 )
 def main(cfg: DictConfig):
     if cfg.mode == "train":

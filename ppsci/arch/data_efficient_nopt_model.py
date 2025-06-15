@@ -36,7 +36,6 @@ import os
 from typing import List
 
 import paddle.tensor as Tensor
-from ruamel.yaml import YAML
 from tqdm import tqdm
 
 
@@ -3211,27 +3210,16 @@ def dict2str(log_dict):
 class YParams:
     """Yaml file parser"""
 
-    def __init__(self, yaml_filename, config_name, print_params=False):
-        self._yaml_filename = yaml_filename
+    def __init__(self, yaml_params, config_name):
         self._config_name = config_name
         self.params = {}
 
-        if print_params:
-            print("------------------ Configuration ------------------")
+        for key, val in yaml_params[config_name].items():
+            if val == "None":
+                val = None
 
-        with open(yaml_filename) as _file:
-
-            for key, val in YAML().load(_file)[config_name].items():
-                if print_params:
-                    print(key, val)
-                if val == "None":
-                    val = None
-
-                self.params[key] = val
-                self.__setattr__(key, val)
-
-        if print_params:
-            print("---------------------------------------------------")
+            self.params[key] = val
+            self.__setattr__(key, val)
 
     def __getitem__(self, key):
         return self.params[key]

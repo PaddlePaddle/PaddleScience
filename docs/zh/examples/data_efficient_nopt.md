@@ -15,20 +15,11 @@
     # Download possion_64 data from https://drive.google.com/drive/folders/1crIsTZGxZULWhrXkwGDiWF33W6RHxJkf
     # Download helmholtz_64 data from https://drive.google.com/drive/folders/1UjIaF6FsjmN_xlGGSUX-1K2V3EF2Zalw
 
-    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `train`
-    # UPdate the file paths in config/operators_poisson.yaml or config/operators_helmholtz.yaml, specify to `train_path`, `val_path`, `test_path`, `scales_path` and `train_rand_idx_path`
+    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `train`, and then specify to `train_path`, `val_path`, `test_path`, `scales_path` and `train_rand_idx_path`
 
-    # possion_64 or helmholtz_64 pretrain, for example, specify as following:
-    #   run_name: r0
-    #   config: helm-64-pretrain-o1_20_m1
-    #   yaml_config: config/operators_helmholtz.yaml
-    python data_efficient_nopt.py
-
-    # possion_64 or helmholtz_64 finetune, for example, specify as following:
-    #   run_name: r0
-    #   config: helm-64-o5_15_ft5_r2
-    #   yaml_config: config/operators_helmholtz.yaml
-    python data_efficient_nopt.py
+    # pretrain or finetune, for possion_64 or helmholtz_64.
+    # specify config_name to fno_possion using `data_efficient_nopt_fno_poisson`, or to fno_helmholtz using `data_efficient_nopt_fno_helmholtz`
+    python data_efficient_nopt.py --config-name=<config_name>
     ```
 
 === "模型评估命令"
@@ -43,17 +34,16 @@
 
     ``` sh
     cd examples/data_efficient_nopt
-    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `infer`
+    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `infer`, and then specify to `ckpt_path`, `train_path`, `test_path` and `scales_path`
     # Use a fine-tuned model as the checkpoint in 'exp' or utilize `model_convert.py` to convert the official checkpoint.
-    # UPdate the file paths in config/inference_poisson.yaml or config/inference_poisson.yaml, specify to `train_path`, `test_path` and `scales_path`
 
     # use your onw finetune checkpoints, or download checkpoint from [FNO-Poisson](https://drive.google.com/drive/folders/1ekmXqqvpaY6pNStTciw1SCAzF0gjFP_V) or [FNO-Helmholtz](https://drive.google.com/drive/folders/1k7US8ZAgB14Wj9bfdgO_Cjw6hOrG6UaZ) and then convert to paddlepaddle weights.
     python model_convert.py --pt-model <pt_checkpiont> --pd-model <pd_checkpiont>
 
-    # possion_64 inference, specify as following:
-    #   evaluation: config/inference_poisson.yaml
+    # inference for possion_64 or helmholtz_64, specify in config as following:
     #   ckpt_path: <ckpt_path>
-    python data_efficient_nopt.py
+    # specify config_name to fno_possion using `data_efficient_nopt_fno_poisson`, or to fno_helmholtz using `data_efficient_nopt_fno_helmholtz`
+    python data_efficient_nopt.py --config-name=<config_name>
     ```
 
 ## 1. 背景简介
@@ -88,6 +78,8 @@
 ### 3. 问题求解
 
 为了解决上述问题，论文提出了一种创新性的数据高效神经算子学习框架，该框架主要由两个阶段组成：*无监督预训练*和*情境学习推理*。
+
+![fig1](https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/fig1.png)
 
 #### 3.1 无监督预训练 (Unsupervised Pretraining)
 
@@ -160,6 +152,14 @@ examples/data_efficient_nopt/data_efficient_nopt.py
 - 情境学习的额外泛化优势 (Additional Generalization Advantage from In-Context Learning)：
     - 无需训练开销：情境学习在推理阶段灵活地引入相似示例，且不增加任何训练成本。
     - 持续性能提升：实验证明，通过增加情境示例的数量，神经算子在各种PDE上的OOD泛化能力能够持续得到提升。这为在模型部署后动态提升其在复杂未知情况下的性能提供了可能。尤其是在解决OOD问题时，情境示例能够帮助模型校准输出的量级和模式，使其更接近真实解。
+
+图2体现了在该方法下，在多种泛化场景下，数据效率使用的提升，有更好的收敛速度。
+
+![fig2](https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/fig3.png)
+
+图3体现该种方法在情景推理场景中，超越了现有的通用预训练模型，具有额外泛化优势。
+
+![fig3](https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/fig6.png)
 
 总而言之，这篇论文提出了一种创新且高效的神经算子学习框架，通过无监督预训练在大量廉价的无标签物理数据上学习通用表示，并通过情境学习在推理阶段利用少量相似案例来提升OOD泛化能力。这一框架显著降低了对昂贵模拟数据的需求，并提高了模型在复杂物理问题中的适应性和泛化性，为科学机器学习的数据高效发展开辟了新途径。
 
