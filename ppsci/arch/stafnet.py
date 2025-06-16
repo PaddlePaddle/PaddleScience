@@ -4,9 +4,14 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-from pgl.nn.conv import GATv2Conv
-
 from ppsci.arch import base
+try:
+    from pgl.nn.conv import GATv2Conv
+except ModuleNotFoundError as e:
+    logger.error("please install pgl with \'pip install pgl\'.") 
+    raise ModuleNotFoundError(str(e))
+    
+
 
 
 class Inception_Block_V1(paddle.nn.Layer):
