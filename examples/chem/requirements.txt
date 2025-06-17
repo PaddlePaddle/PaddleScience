@@ -1,0 +1,3 @@
+rdkit
+scikit-learn
+openpyxl
