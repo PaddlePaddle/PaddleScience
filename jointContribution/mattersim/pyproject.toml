@@ -1,0 +1,82 @@
+[build-system]
+requires = [
+    "Cython>=0.29.32",
+    "numpy<2",
+    "setuptools>=45",
+    "setuptools_scm",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mattersim"
+version = "1.1.2"
+description = "MatterSim: A Deep Learning Atomistic Model Across Elements, Temperatures and Pressures."
+authors = [
+    { name = "Han Yang", email = "hanyang@microsoft.com" },
+    { name = "Hongxia Hao", email = "hongxiahao@microsoft.com" },
+    { name = "Jielan Li", email = "jielanli@microsoft.com" },
+    { name = "Ziheng Lu", email = "zihenglu@microsoft.com" },
+]
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "ase>=3.23.0",
+    "scikit-learn",
+    "deprecated",
+    "atomate2",
+    "emmet-core>=0.84; python_version >= '3.10'",
+    "emmet-core<0.84; python_version < '3.10'",
+    "loguru",
+    "mp-api",
+    "numpy<2",
+    "pydantic>=2.9.2",
+    "pymatgen",
+    "seekpath",
+    "wandb",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "ipython",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "pytest-testmon",
+]
+
+docs = [
+    "nbconvert",
+    "nbsphinx",
+    "recommonmark",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+    "sphinx_book_theme",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/microsoft/mattersim"
+"Bug Tracker" = "https://github.com/microsoft/mattersim/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mattersim", "mattersim.*"]
+
+[tool.cibuildwheel]
+# Limit the build to Python 3.9
+build = "cp39-*"
+# Limit the build to manylinux
+manylinux-x86_64-image = "manylinux2014"
+# Include pure Python (none) wheels
+skip = "pp*,cp3{6,7,8,10,11}-*,*win*,*macos*"
