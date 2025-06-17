@@ -22,3 +22,6 @@
 [submodule "ppsci/externals/paddle_scatter"]
 	path = ppsci/externals/paddle_scatter
 	url = https://github.com/PFCCLab/paddle_scatter
+[submodule "ppsci/externals/paddle_sparse"]
+	path = ppsci/externals/paddle_sparse
+	url = https://github.com/PFCCLab/paddle_sparse.git
