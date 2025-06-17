@@ -8,6 +8,7 @@
         - PrettyOrderedDict
         - Prettydefaultdict
         - RankZeroOnly
+        - RankZeroFirst
         - Timer
         - all_gather
         - concat_dict_list
