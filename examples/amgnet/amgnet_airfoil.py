@@ -238,12 +238,12 @@ def inference(cfg: DictConfig):
             "data_dir": cfg.EVAL_DATA_DIR,
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
         },
-        "batch_size": cfg.EVAL.batch_size,  
+        "batch_size": cfg.INFER.batch_size,  
          "sampler": {
              "name": "BatchSampler",
              "drop_last": False,
              "shuffle": False,
-        },
+         },
     }
     dataset = ppsci.data.dataset.MeshAirfoilDataset(**eval_dataloader_cfg["dataset"])
     
