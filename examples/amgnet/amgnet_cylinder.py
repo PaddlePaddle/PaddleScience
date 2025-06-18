@@ -211,6 +211,92 @@ def evaluate(cfg: DictConfig):
                 "cylinder",
             )
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.AMGNet(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+    )
+    # export
+    from paddle.static import InputSpec
+    
+    input_spec = [
+        {"input": InputSpec([None, 2], "float32", name="input")},
+    ]
+    solver.export(input_spec, cfg.EVAL.export_path)
+    
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+    
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "MeshCylinderDataset",
+            "input_keys": ("input",),
+            "label_keys": ("label",),
+            "data_dir": cfg.EVAL_DATA_DIR,
+            "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
+        },
+        "batch_size": cfg.EVAL.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+    dataset = ppsci.data.dataset.MeshCylinderDataset(**eval_dataloader_cfg["dataset"])
+    
+    sample = dataset[0]
+    input_dict = {
+        "input": sample["input"].pos  
+    }
+
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.MODEL.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    
+    velocity_x = output_dict["pred"][:, 0:1]  
+    velocity_y = output_dict["pred"][:, 1:2]  
+    pressure = output_dict["pred"][:, 2:3]    
+    
+   
+    utils.log_images(
+        sample["input"].pos,
+        velocity_x,
+        sample["label"].y[:, 0:1],
+        dataset.elems_list,
+        0,
+        "cylinder_inference_x_velocity"
+    )
+    
+    
+    utils.log_images(
+        sample["input"].pos,
+        velocity_y,
+        sample["label"].y[:, 1:2],
+        dataset.elems_list,
+        1,
+        "cylinder_inference_y_velocity"
+    )
+    
+   
+    utils.log_images(
+        sample["input"].pos,
+        pressure,
+        sample["label"].y[:, 2:3],
+        dataset.elems_list,
+        2,
+        "cylinder_inference_pressure"
+    )
+    
 
 @hydra.main(version_base=None, config_path="./conf", config_name="amgnet_cylinder.yaml")
 def main(cfg: DictConfig):

@@ -29,6 +29,7 @@
         # unzip it
         unzip data.zip
         python amgnet_cylinder.py
+
         ```
 
 === "模型评估命令"
@@ -54,6 +55,46 @@
         # unzip it
         unzip data.zip
         python amgnet_cylinder.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
+        ```
+
+=== "模型导出命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        python amgnet_airfoil.py mode=export EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        ```
+
+    === "amgnet_cylinder"
+
+        ``` sh
+        python amgnet_cylinder.py mode=export EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
+        ```
+    
+=== "模型推理命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_airfoil.py mode=infer EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        ```
+
+    === "amgnet_cylinder"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_cylinder.py mode=infer EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
         ```
 
 | 预训练模型  | 指标 |
