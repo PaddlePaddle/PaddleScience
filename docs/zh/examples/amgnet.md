@@ -31,6 +31,23 @@
         python amgnet_cylinder.py
         ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python amgnet.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/amgnet/amgnet_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/amgnet/amgnet_dataset.tar --output amgnet_dataset.tar
+    # unzip it
+    tar -xvf amgnet_dataset.tar
+    python amgnet.py mode=infer
+    ```
 === "模型评估命令"
 
     === "amgnet_airfoil"
