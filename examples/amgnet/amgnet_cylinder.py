@@ -216,17 +216,15 @@ def export(cfg: DictConfig):
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 
     # initialize solver
-    solver = ppsci.solver.Solver(
-        model,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-    )
+    solver = ppsci.solver.Solver(model,cfg=cfg)
+    
     # export
     from paddle.static import InputSpec
     
     input_spec = [
         {"input": InputSpec([None, 2], "float32", name="input")},
     ]
-    solver.export(input_spec, cfg.EVAL.export_path)
+    solver.export(input_spec, cfg.INFER.export_path)
     
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
@@ -242,9 +240,9 @@ def inference(cfg: DictConfig):
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
+             "name": "BatchSampler",
+             "drop_last": False,
+             "shuffle": False,
         },
     }
     dataset = ppsci.data.dataset.MeshCylinderDataset(**eval_dataloader_cfg["dataset"])
@@ -262,12 +260,10 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
-    
     velocity_x = output_dict["pred"][:, 0:1]  
     velocity_y = output_dict["pred"][:, 1:2]  
     pressure = output_dict["pred"][:, 2:3]    
     
-   
     utils.log_images(
         sample["input"].pos,
         velocity_x,
@@ -276,7 +272,6 @@ def inference(cfg: DictConfig):
         0,
         "cylinder_inference_x_velocity"
     )
-    
     
     utils.log_images(
         sample["input"].pos,
@@ -287,7 +282,6 @@ def inference(cfg: DictConfig):
         "cylinder_inference_y_velocity"
     )
     
-   
     utils.log_images(
         sample["input"].pos,
         pressure,
@@ -297,7 +291,6 @@ def inference(cfg: DictConfig):
         "cylinder_inference_pressure"
     )
     
-
 @hydra.main(version_base=None, config_path="./conf", config_name="amgnet_cylinder.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":

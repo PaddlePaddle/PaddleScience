@@ -216,17 +216,15 @@ def export(cfg: DictConfig):
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 
     # initialize solver
-    solver = ppsci.solver.Solver(
-        model,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-    )
+    solver = ppsci.solver.Solver(model,cfg=cfg,)
+   
     # export
     from paddle.static import InputSpec
     
     input_spec = [
         {key: InputSpec([None,2],"float32",name=key) for key in model.input_keys},
     ]
-    solver.export(input_spec,cfg.EVAL.export_path)
+    solver.export(input_spec,cfg.INFER.export_path)
     
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
@@ -241,10 +239,10 @@ def inference(cfg: DictConfig):
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
         },
         "batch_size": cfg.EVAL.batch_size,  
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
+         "sampler": {
+             "name": "BatchSampler",
+             "drop_last": False,
+             "shuffle": False,
         },
     }
     dataset = ppsci.data.dataset.MeshAirfoilDataset(**eval_dataloader_cfg["dataset"])
@@ -266,8 +264,6 @@ def inference(cfg: DictConfig):
     velocity_y = output_dict["pred"][:, 1:2]  
     pressure = output_dict["pred"][:, 2:3]   
     
-
-   
     utils.log_images(
         sample["input"].pos,
         velocity_x,
@@ -276,7 +272,6 @@ def inference(cfg: DictConfig):
         0,
         "airfoil_inference_x_velocity"
     )
-    
     
     utils.log_images(
         sample["input"].pos,
@@ -287,7 +282,6 @@ def inference(cfg: DictConfig):
         "airfoil_inference_y_velocity"
     )
     
-   
     utils.log_images(
         sample["input"].pos,
         pressure,
@@ -296,8 +290,6 @@ def inference(cfg: DictConfig):
         2,
         "airfoil_inference_pressure"
     )
-    
-
     
 @hydra.main(version_base=None, config_path="./conf", config_name="amgnet_airfoil.yaml")
 def main(cfg: DictConfig):

@@ -29,7 +29,6 @@
         # unzip it
         unzip data.zip
         python amgnet_cylinder.py
-
         ```
 
 === "模型评估命令"
@@ -62,13 +61,13 @@
     === "amgnet_airfoil"
 
         ``` sh
-        python amgnet_airfoil.py mode=export EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        python amgnet_airfoil.py mode=export 
         ```
 
     === "amgnet_cylinder"
 
         ``` sh
-        python amgnet_cylinder.py mode=export EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
+        python amgnet_cylinder.py mode=export
         ```
     
 === "模型推理命令"
@@ -82,7 +81,7 @@
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
-        python amgnet_airfoil.py mode=infer EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        python amgnet_airfoil.py mode=infer 
         ```
 
     === "amgnet_cylinder"
@@ -94,7 +93,7 @@
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
         unzip data.zip
-        python amgnet_cylinder.py mode=infer EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
+        python amgnet_cylinder.py mode=infer 
         ```
 
 | 预训练模型  | 指标 |
