@@ -252,7 +252,7 @@ def inference(cfg: DictConfig):
         "input": sample["input"].pos
     }
 
-    output_dict = predictor.predict(input_dict, cfg.EVAL.batch_size)
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
 
      # mapping data to cfg.MODEL.output_keys
     output_dict = {
