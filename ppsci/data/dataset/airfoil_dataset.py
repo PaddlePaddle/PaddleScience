@@ -189,10 +189,10 @@ class MeshAirfoilDataset(io.Dataset):
             num_nodes=nodes.shape[0],
             edges=self.edges,
         )
-        data.x = nodes
-        data.y = fields
-        data.pos = self.nodes
-        data.edge_index = self.edges
+        data.x = paddle.to_tensor(nodes)
+        data.y = paddle.to_tensor(fields)
+        data.pos = paddle.to_tensor(self.nodes)
+        data.edge_index = paddle.to_tensor(self.edges)
 
         sender = data.x[data.edge_index[0]]
         receiver = data.x[data.edge_index[1]]
@@ -200,11 +200,11 @@ class MeshAirfoilDataset(io.Dataset):
         post = np.linalg.norm(relation_pos, ord=2, axis=1, keepdims=True).astype(
             paddle.get_default_dtype()
         )
-        data.edge_attr = post
+        data.edge_attr = paddle.to_tensor(post)
         std_epsilon = [1e-8]
-        a = np.mean(data.edge_attr, axis=0)
-        b = data.edge_attr.std(axis=0)
-        b = np.maximum(b, std_epsilon).astype(paddle.get_default_dtype())
+        a = paddle.mean(data.edge_attr, axis=0)
+        b = paddle.std(data.edge_attr, axis=0)
+        b = paddle.maximum(b, paddle.to_tensor(std_epsilon))
         data.edge_attr = (data.edge_attr - a) / b
         data.aoa = aoa
         data.norm_aoa = norm_aoa

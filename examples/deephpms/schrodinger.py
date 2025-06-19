@@ -535,14 +535,134 @@ def evaluate(cfg: DictConfig):
     )
 
 
+def export(cfg: DictConfig):
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # initialize boundaries
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.X_UB)
+
+    # initialize models
+    model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)
+    model_idn_v = ppsci.arch.MLP(**cfg.MODEL.idn_v_net)
+    model_pde_f = ppsci.arch.MLP(**cfg.MODEL.pde_f_net)
+    model_pde_g = ppsci.arch.MLP(**cfg.MODEL.pde_g_net)
+
+    # initialize transform
+    def transform_uv(_in):
+        t, x = _in["t"], _in["x"]
+        t = 2.0 * (t - t_lb) * paddle.pow((t_ub - t_lb), -1) - 1.0
+        x = 2.0 * (x - x_lb) * paddle.pow((x_ub - x_lb), -1) - 1.0
+        input_trans = {"t": t, "x": x}
+        return input_trans
+
+    # register transform
+    model_idn_u.register_input_transform(transform_uv)
+    model_idn_v.register_input_transform(transform_uv)
+
+    # initialize model list
+    model_list = ppsci.arch.ModelList(
+        (model_idn_u, model_idn_v, model_pde_f, model_pde_g)
+    )
+
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EXPORT.pretrained_model_path)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model_list,
+        pretrained_model_path=cfg.EXPORT.pretrained_model_path,
+    )
+
+    # export model
+    from paddle.static import InputSpec
+
+    # 为u和v模型创建输入规范，这些是我们需要导出的预测模型
+    input_spec = [
+        {
+            "t": InputSpec([None, 1], "float32", name="t"),
+            "x": InputSpec([None, 1], "float32", name="x"),
+        }
+    ]
+
+    solver.export(input_spec, cfg.EXPORT.export_path)
+    logger.info(f"Model exported to {cfg.EXPORT.export_path}")
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    # Initialize predictor
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # Create inference grid
+    t_min, t_max = cfg.T_LB, cfg.T_UB
+    x_min, x_max = cfg.X_LB, cfg.X_UB
+
+    # Create uniform grid
+    t_points = np.linspace(t_min, t_max, cfg.INFER.t_points)
+    x_points = np.linspace(x_min, x_max, cfg.INFER.x_points)
+    t_mesh, x_mesh = np.meshgrid(t_points, x_points)
+
+    # Prepare input data
+    input_dict = {
+        "t": t_mesh.flatten()[:, None],
+        "x": x_mesh.flatten()[:, None],
+    }
+
+    # Run prediction
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # Reshape outputs to grid shape
+    u_pred = output_dict["u_idn"].reshape(x_mesh.shape)
+    v_pred = output_dict["v_idn"].reshape(x_mesh.shape)
+
+    # Calculate wavefunction amplitude
+    uv_amplitude = np.sqrt(u_pred**2 + v_pred**2)
+
+    # Save results
+    result_dict = {
+        "t": t_mesh,
+        "x": x_mesh,
+        "u": u_pred,
+        "v": v_pred,
+        "amplitude": uv_amplitude,
+    }
+
+    # Save as numpy file
+    np.savez(osp.join(cfg.output_dir, "schrodinger_inference.npz"), **result_dict)
+
+    # Plot and save visualization
+    plot_func.draw_and_save(
+        figname="schrodinger_inference",
+        data_learned=uv_amplitude,
+        boundary=[t_min, t_max, x_min, x_max],
+        griddata_points=np.column_stack((input_dict["t"], input_dict["x"])),
+        griddata_xi=(t_mesh, x_mesh),
+        save_path=cfg.output_dir,
+    )
+
+    logger.info(f"Inference results saved to {cfg.output_dir}")
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="schrodinger.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

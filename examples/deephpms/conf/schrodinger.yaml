@@ -75,3 +75,14 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+
+#export settings
+EXPORT:
+  pretrained_model_path: ${output_dir}/checkpoints/latest
+  export_path: ${output_dir}/inference_model
+
+  INFER:
+  pretrained_model_path: ${output_dir}/inference_model
+  batch_size: 1024
+  t_points: 100  #
+  x_points: 100
