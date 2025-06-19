@@ -56,6 +56,46 @@
         python amgnet_cylinder.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
         ```
 
+=== "模型导出命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        python amgnet_airfoil.py mode=export 
+        ```
+
+    === "amgnet_cylinder"
+
+        ``` sh
+        python amgnet_cylinder.py mode=export
+        ```
+    
+=== "模型推理命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_airfoil.py mode=infer 
+        ```
+
+    === "amgnet_cylinder"
+
+        ``` sh
+        # linux
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_cylinder.py mode=infer 
+        ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [amgnet_airfoil_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams) | loss(RMSE_validator): 0.0001 <br> RMSE.RMSE(RMSE_validator): 0.01315 |
