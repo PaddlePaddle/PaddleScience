@@ -67,7 +67,6 @@ nav:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
-          - deephpms: zh/examples/deephpms.md
           - DrivAerNet: zh/examples/drivaernet.md
           - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md

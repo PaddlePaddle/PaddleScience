@@ -540,6 +540,10 @@ def export(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
+    # 设置使用CPU
+    paddle.set_device("cpu")
+    print(f"Using device: {paddle.get_device()}")
+
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
@@ -549,8 +553,6 @@ def export(cfg: DictConfig):
     # initialize models
     model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)
     model_idn_v = ppsci.arch.MLP(**cfg.MODEL.idn_v_net)
-    model_pde_f = ppsci.arch.MLP(**cfg.MODEL.pde_f_net)
-    model_pde_g = ppsci.arch.MLP(**cfg.MODEL.pde_g_net)
 
     # initialize transform
     def transform_uv(_in):
@@ -565,88 +567,158 @@ def export(cfg: DictConfig):
     model_idn_v.register_input_transform(transform_uv)
 
     # initialize model list
-    model_list = ppsci.arch.ModelList(
-        (model_idn_u, model_idn_v, model_pde_f, model_pde_g)
-    )
+    model_list = ppsci.arch.ModelList((model_idn_u, model_idn_v))
 
-    # load pretrained model
-    save_load.load_pretrain(model_list, cfg.EXPORT.pretrained_model_path)
+    # 加载预训练模型
+    save_load.load_pretrain(model_list, cfg.INFER.pretrained_model_path)
+    model_list.eval()
 
-    # initialize solver
-    solver = ppsci.solver.Solver(
-        model_list,
-        pretrained_model_path=cfg.EXPORT.pretrained_model_path,
-    )
+    # 确保导出目录存在
+    import json
+    import os
 
-    # export model
-    from paddle.static import InputSpec
+    export_dir = os.path.dirname(cfg.INFER.export_path)
+    if export_dir and not os.path.exists(export_dir):
+        os.makedirs(export_dir, exist_ok=True)
 
-    # 为u和v模型创建输入规范，这些是我们需要导出的预测模型
-    input_spec = [
-        {
-            "t": InputSpec([None, 1], "float32", name="t"),
-            "x": InputSpec([None, 1], "float32", name="x"),
-        }
-    ]
+    # 保存模型参数
+    params_save_path = cfg.INFER.export_path + "_params.pdparams"
+    paddle.save(model_list.state_dict(), params_save_path)
 
-    solver.export(input_spec, cfg.EXPORT.export_path)
-    logger.info(f"Model exported to {cfg.EXPORT.export_path}")
+    # 保存模型结构信息
+    model_info = {
+        "model_type": "PaddleScience_Schrodinger",
+        "input_keys": ["t", "x"],
+        "output_keys": ["u_idn", "v_idn"],
+        "boundaries": {
+            "T_LB": float(cfg.T_LB),
+            "T_UB": float(cfg.T_UB),
+            "X_LB": float(cfg.X_LB),
+            "X_UB": float(cfg.X_UB),
+        },
+    }
+
+    info_save_path = cfg.INFER.export_path + "_info.json"
+    with open(info_save_path, "w", encoding="utf-8") as f:
+        json.dump(model_info, f, indent=2, ensure_ascii=False)
+
+    logger.info(f"Model exported to {params_save_path} and {info_save_path}")
 
 
 def inference(cfg: DictConfig):
-    from deploy.python_infer import pinn_predictor
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # Initialize predictor
-    predictor = pinn_predictor.PINNPredictor(cfg)
+    # initialize boundaries
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.X_UB)
 
-    # Create inference grid
-    t_min, t_max = cfg.T_LB, cfg.T_UB
-    x_min, x_max = cfg.X_LB, cfg.X_UB
+    # initialize models - 只初始化需要的模型
+    model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)
+    model_idn_v = ppsci.arch.MLP(**cfg.MODEL.idn_v_net)
 
-    # Create uniform grid
-    t_points = np.linspace(t_min, t_max, cfg.INFER.t_points)
-    x_points = np.linspace(x_min, x_max, cfg.INFER.x_points)
-    t_mesh, x_mesh = np.meshgrid(t_points, x_points)
+    # initialize transform
+    def transform_uv(_in):
+        t, x = _in["t"], _in["x"]
+        t = 2.0 * (t - t_lb) * paddle.pow((t_ub - t_lb), -1) - 1.0
+        x = 2.0 * (x - x_lb) * paddle.pow((x_ub - x_lb), -1) - 1.0
+        input_trans = {"t": t, "x": x}
+        return input_trans
 
-    # Prepare input data
-    input_dict = {
-        "t": t_mesh.flatten()[:, None],
-        "x": x_mesh.flatten()[:, None],
-    }
+    # register transform
+    model_idn_u.register_input_transform(transform_uv)
+    model_idn_v.register_input_transform(transform_uv)
 
-    # Run prediction
-    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+    # initialize model list - 只包含需要的模型
+    model_list = ppsci.arch.ModelList((model_idn_u, model_idn_v))
 
-    # Reshape outputs to grid shape
-    u_pred = output_dict["u_idn"].reshape(x_mesh.shape)
-    v_pred = output_dict["v_idn"].reshape(x_mesh.shape)
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.INFER.pretrained_model_path)
 
-    # Calculate wavefunction amplitude
-    uv_amplitude = np.sqrt(u_pred**2 + v_pred**2)
+    # 尝试加载数据集以获得与eval相同的网格点
+    try:
+        dataset_path = getattr(cfg, "DATASET_PATH_SOL", "./datasets/NLS.mat")
+        if not osp.exists(dataset_path):
+            dataset_path = "./datasets/NLS.mat"
 
-    # Save results
-    result_dict = {
-        "t": t_mesh,
-        "x": x_mesh,
-        "u": u_pred,
-        "v": v_pred,
-        "amplitude": uv_amplitude,
-    }
+        dataset_val = reader.load_mat_file(
+            dataset_path,
+            keys=("t", "x", "uv_sol", "u_sol", "v_sol"),
+            alias_dict={
+                "t": "t_ori",
+                "x": "x_ori",
+                "uv_sol": "Exact_uv_ori",
+                "u_sol": "u_star",
+                "v_sol": "v_star",
+            },
+        )
 
-    # Save as numpy file
-    np.savez(osp.join(cfg.output_dir, "schrodinger_inference.npz"), **result_dict)
+        # 使用数据集中的网格点
+        t_mesh, x_mesh = np.meshgrid(
+            np.squeeze(dataset_val["t"]), np.squeeze(dataset_val["x"])
+        )
 
-    # Plot and save visualization
+    except Exception:
+        # 回退到默认网格
+        t_points = np.linspace(cfg.T_LB, cfg.T_UB, cfg.INFER.t_points)
+        x_points = np.linspace(cfg.X_LB, cfg.X_UB, cfg.INFER.x_points)
+        t_mesh, x_mesh = np.meshgrid(t_points, x_points)
+        dataset_val = None
+
+    t_flatten = paddle.to_tensor(
+        t_mesh.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    x_flatten = paddle.to_tensor(
+        x_mesh.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+
+    # 使用模型进行预测
+    pred = model_list({"t": t_flatten, "x": x_flatten})
+    u_pred = pred["u_idn"].numpy()
+    v_pred = pred["v_idn"].numpy()
+    uv_pred = np.sqrt(u_pred**2 + v_pred**2)
+
+    # 保存结果
+    np.savez(
+        osp.join(cfg.output_dir, "inference_results.npz"),
+        t=t_mesh.flatten(),
+        x=x_mesh.flatten(),
+        u=u_pred,
+        v=v_pred,
+        uv=uv_pred,
+    )
+
+    # 可视化
+    plot_points = paddle.concat([t_flatten, x_flatten], axis=-1).numpy()
+    data_exact = (
+        dataset_val["uv_sol"] if dataset_val is not None else np.zeros_like(uv_pred)
+    )
+    figname = (
+        "schrodinger_uv_infer_with_exact"
+        if dataset_val is not None
+        else "schrodinger_uv_infer"
+    )
+
     plot_func.draw_and_save(
-        figname="schrodinger_inference",
-        data_learned=uv_amplitude,
-        boundary=[t_min, t_max, x_min, x_max],
-        griddata_points=np.column_stack((input_dict["t"], input_dict["x"])),
+        figname=figname,
+        data_exact=data_exact,
+        data_learned=uv_pred,
+        boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
+        griddata_points=plot_points,
         griddata_xi=(t_mesh, x_mesh),
         save_path=cfg.output_dir,
     )
 
-    logger.info(f"Inference results saved to {cfg.output_dir}")
+    # 计算误差（如果有真实解）
+    if dataset_val is not None:
+        uv_exact = np.sqrt(dataset_val["u_sol"] ** 2 + dataset_val["v_sol"] ** 2)
+        error_uv = np.linalg.norm(uv_exact - uv_pred, 2) / np.linalg.norm(uv_exact, 2)
+        logger.info(f"Inference L2 error (vs exact solution): {error_uv}")
+
+    logger.info(f"Inference completed. Results saved to {cfg.output_dir}")
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="schrodinger.yaml")

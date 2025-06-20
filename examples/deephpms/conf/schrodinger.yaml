@@ -11,7 +11,7 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_schrodinger/${now:%Y-%m-%d}/${now:%H-%M-%S}/schrodinger_output
+    dir: outputs_schrodinger/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -76,13 +76,22 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
 
-#export settings
-EXPORT:
-  pretrained_model_path: ${output_dir}/checkpoints/latest
-  export_path: ${output_dir}/inference_model
-
-#inference settings
+# inference settings
 INFER:
+  pretrained_model_path: schrodinger_pretrained_model/schrodinger_pretrained.pdparams
+  export_path: ./inference/schrodinger
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
   batch_size: 1024
-  t_points: 100  #
+  t_points: 100
   x_points: 100
