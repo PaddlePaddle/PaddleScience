@@ -540,10 +540,6 @@ def export(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # 设置使用CPU
-    paddle.set_device("cpu")
-    print(f"Using device: {paddle.get_device()}")
-
     # initialize boundaries
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
@@ -640,7 +636,7 @@ def inference(cfg: DictConfig):
 
     # 尝试加载数据集以获得与eval相同的网格点
     try:
-        dataset_path = getattr(cfg, "DATASET_PATH_SOL", "./datasets/NLS.mat")
+        dataset_path = getattr(cfg, "INFER.pretrained_model_path", "./datasets/NLS.mat")
         if not osp.exists(dataset_path):
             dataset_path = "./datasets/NLS.mat"
 
@@ -711,12 +707,6 @@ def inference(cfg: DictConfig):
         griddata_xi=(t_mesh, x_mesh),
         save_path=cfg.output_dir,
     )
-
-    # 计算误差（如果有真实解）
-    if dataset_val is not None:
-        uv_exact = np.sqrt(dataset_val["u_sol"] ** 2 + dataset_val["v_sol"] ** 2)
-        error_uv = np.linalg.norm(uv_exact - uv_pred, 2) / np.linalg.norm(uv_exact, 2)
-        logger.info(f"Inference L2 error (vs exact solution): {error_uv}")
 
     logger.info(f"Inference completed. Results saved to {cfg.output_dir}")
 

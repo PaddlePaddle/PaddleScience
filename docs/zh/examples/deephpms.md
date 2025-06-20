@@ -148,7 +148,7 @@
 
     ``` sh
     # 案例8
-    python schrodinger.py mode=infer INFER.pretrained_model_path=./output/schrodinger/inference_model
+    python schrodinger.py mode=infer DATASET_PATH=./datasets/NLS.mat DATASET_PATH_SOL=./datasets/NLS.mat EXPORT.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams
     ```
 
 | 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | 指标 |
