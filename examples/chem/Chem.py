@@ -4,18 +4,13 @@ import os
 import paddle
 import ppsci
 import rdkit.Chem as Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import rdFingerprintGenerator
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 import hydra
 from omegaconf import DictConfig
 import pandas as pd
-from torch.utils.data import DataLoader, Dataset
-from torch.utils.data import random_split
-import torch
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-paddle.set_device("gpu:2")
 os.environ['HYDRA_FULL_ERROR'] = '1'
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
@@ -26,14 +21,19 @@ x_test = None
 y_train = None
 y_test = None
 
-def cal_print(smiles):
-	vectors = []
-	for smi in smiles:
-		mol = Chem.MolFromSmiles(smi)
-		fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=2048)
-		_input = np.array(list(map(float, fp.ToBitString())))
-		vectors.append(_input)
-	return vectors
+def load_data(cfg: DictConfig):
+	data_dir = cfg.data_dir
+	dataset = pd.read_excel(data_dir,skiprows=1)
+	x = dataset.iloc[:, 1:6]
+	y = dataset.iloc[:, 6]
+	x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+	return x_train, x_test, y_train, y_test
+
+def data_processed(x, y):
+	x = build_dataset(x)
+	y = paddle.to_tensor(y.to_numpy(dtype=np.float32))  
+	y = paddle.unsqueeze(y, axis=1)  
+	return x, y
 
 def build_dataset(data):
 	r1 = paddle.to_tensor(np.array(cal_print(data.iloc[:, 0])), dtype=paddle.float32)
@@ -43,25 +43,19 @@ def build_dataset(data):
 	solvent = paddle.to_tensor(np.array(cal_print(data.iloc[:, 4])), dtype=paddle.float32)
 	return paddle.concat([r1, r2, ligand, base, solvent], axis=1)
 
-def load_data(cfg: DictConfig):
-	data_dir = cfg.data_dir
-	dataset = pd.read_excel(data_dir,skiprows=1)
-	x = dataset.iloc[:, 1:6]  # 提取第2到第17列的数据，转换为NumPy数组并指定类型
-	y = dataset.iloc[:, 6]
-	x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
- 
-	return x_train, x_test, y_train, y_test
-
-def data_processed(x, y):
-	x = build_dataset(x)
-	y = paddle.to_tensor(y.to_numpy(dtype=np.float32))  # 将 NumPy 数组转换为 Paddle Tensor
-	y = paddle.unsqueeze(y, axis=1)  # 使用 unsqueeze 在指定轴上增加维度
-	return x, y
+def cal_print(smiles):
+	vectors = []
+	for smi in smiles:
+		mol = Chem.MolFromSmiles(smi)
+		generator = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
+		fp = generator.GetFingerprint(mol)
+		_input = np.array(list(map(float, fp.ToBitString())))
+		vectors.append(_input)
+	return vectors
 
 def train(cfg: DictConfig):
 	global x_train, y_train
 	x_train, y_train = data_processed(x_train, y_train)
-	# print(cfg)  # 调试输出，查看结构
  
 	# 构建约束
 	bc_sup = ppsci.constraint.SupervisedConstraint(
@@ -72,7 +66,7 @@ def train(cfg: DictConfig):
 				# "weight": {"W": param},
 				"name": "IterableNamedArrayDataset",
 			},
-			"batch_size": 8,
+			"batch_size": cfg.TRAIN.batch_size,
 		},
 		loss=ppsci.loss.MSELoss("mean"),
 		name="bc_sup",
@@ -85,9 +79,9 @@ def train(cfg: DictConfig):
 		**cfg.MODEL
 	)
 
-	optimizer = ppsci.optimizer.optimizer.Adam(1e-4
-		# cfg.TRAIN.learning_rate, beta1=(0.9, 0.99)[0], beta2=(0.9, 0.99)[1], weight_decay=cfg.TRAIN.weight_decay
+	optimizer = ppsci.optimizer.optimizer.Adam(cfg.TRAIN.learning_rate
 	)(model)
+ 
 	# 构建Solver
 	solver = ppsci.solver.Solver(
 		model,
@@ -95,8 +89,7 @@ def train(cfg: DictConfig):
 		optimizer=optimizer,
 		epochs=cfg.TRAIN.epochs,
 		eval_during_train=False,
-		# iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-		iters_per_epoch=20,
+		iters_per_epoch=cfg.TRAIN.iters_per_epoch,
 	)
 	try:
 		solver.train()
@@ -116,7 +109,6 @@ def eval(cfg: DictConfig):
 	model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
 	ypred = model(x_test)
 
-	
 	# 计算损失
 	loss = ppsci.metric.MAE()
 	MAE = loss(ypred, y_test).get("u").numpy()

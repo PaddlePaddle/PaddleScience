@@ -30,28 +30,20 @@ data_dir: "./data_set.xlsx" #
 
 # model settings
 MODEL: #
-#  input_keys: tuple(x.keys()) #
-#  output_keys: ["u"] #
-#  num_layers: None #
-#  hidden_size:
-#    - 587
-#    - 256 #
   input_dim : 2048  # Assuming x_train is your DataFrame
-  output_dim : 1  # Assuming you have a single output (regression)
-  hidden_dim : 512
-  hidden_dim2 : 1024  # Adjust this as needed
-  hidden_dim3 : 2048
-  hidden_dim4 : 1024
-#  activation: "relu" #
-#  dropout: 0.5
+  output_dim : 1  
+  hidden_dim : 512 
+  hidden_dim2 : 1024  
+  hidden_dim3 : 2048  
+  hidden_dim4 : 1024  
 
 # training settings
 TRAIN: #
   epochs: 1500 #
-  #  iters_per_epoch: 20 #
+  iters_per_epoch: 20 #
   #  save_freq: 100 #
   #  eval_during_train: False #
-  #  batch_size: 8 #
+  batch_size: 8 #
   learning_rate: 0.0001
   save_model_path: './chem_model.pdparams'
   #  weight_decay: 1e-5
@@ -66,24 +58,4 @@ EVAL:
   test_size: 0.1
   load_model_path: './chem_model.pdparams'
   seed: 20
-#  pretrained_model_path: null #
-#  batch_size: 32 #
 
-# inference settings
-#INFER: #
-#  pretrained_model_path: "https://github.com/YfB1125/PaddleScience/blob/dev_model/TADF/f/output/checkpoints/latest.pdparams" #
-#  export_path: ./inference/viv #
-#  pdmodel_path: ${INFER.export_path}.pdmodel #
-#  pdiparams_path: ${INFER.export_path}.pdiparams #
-#  input_keys: ${MODEL.input_keys} #
-#  output_keys: ["u"]  #
-#  device: cpu #
-#  engine: native #
-#  precision: fp32 #
-#  ir_optim: true #
-#  min_subgraph_size: 10 #
-#  gpu_mem: 4000 #
-#  gpu_id: 0 #
-#  max_batch_size: 64 #
-#  num_cpu_threads: 4 #
-#  batch_size: 16 #

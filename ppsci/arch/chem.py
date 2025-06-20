@@ -6,21 +6,17 @@ class ChemMultimodalMLP(base.Arch):
 	def __init__(self, input_dim, hidden_dim, hidden_dim2, hidden_dim3, hidden_dim4, output_dim):
 		super(ChemMultimodalMLP, self).__init__()
 		
-		# 图像模态处理
 		self.r1_fc = nn.Sequential(
 			nn.Linear(input_dim, hidden_dim),
 			nn.ReLU(),
-			# nn.Dropout(p=0.4),
 			nn.Linear(hidden_dim, hidden_dim2),
 			nn.ReLU(),
 			nn.Linear(hidden_dim2, hidden_dim3),
 		)
 		
-		# 文本模态处理
 		self.r2_fc = nn.Sequential(
 			nn.Linear(input_dim, hidden_dim),
 			nn.ReLU(),
-			# nn.Dropout(p=0.4),
 			nn.Linear(hidden_dim, hidden_dim2),
 			nn.ReLU(),
 			nn.Linear(hidden_dim2, hidden_dim3),
@@ -29,7 +25,6 @@ class ChemMultimodalMLP(base.Arch):
 		self.ligand_fc = nn.Sequential(nn.Linear(input_dim, hidden_dim),
 		                               nn.ReLU(),
 		                               nn.Linear(hidden_dim, hidden_dim2),
-		                               # nn.Dropout(p=0.4),
 		                               nn.ReLU(),
 		                               nn.Linear(hidden_dim2, hidden_dim3),
 		                               )
@@ -43,7 +38,6 @@ class ChemMultimodalMLP(base.Arch):
 		
 		self.solvent_fc = nn.Sequential(nn.Linear(input_dim, hidden_dim),
 		                                nn.ReLU(),
-		                                # nn.Dropout(p=0.4),
 		                                nn.Linear(hidden_dim, hidden_dim2),
 		                                nn.ReLU(),
 		                                nn.Linear(hidden_dim2, hidden_dim3),
@@ -55,8 +49,7 @@ class ChemMultimodalMLP(base.Arch):
 			dtype='float32',
 			default_initializer=paddle.nn.initializer.Assign(paddle.to_tensor([0.2, 0.2, 0.2, 0.2, 0.2]))
 		)
-		
-		# 结合两个模态的输出7
+
 		self.fc_combined = nn.Sequential(
 			nn.Linear(hidden_dim3, hidden_dim4),
 			nn.ReLU(),
@@ -64,17 +57,8 @@ class ChemMultimodalMLP(base.Arch):
 		)
 	
 	def weighted_average(self, features, weights):
-		"""
-		计算加权平均。
 
-		Args:
-			features (list of torch.Tensor): 每个模态的特征张量。
-			weights (list of float): 每个模态的权重。
-
-		Returns:
-			torch.Tensor: 加权平均后的特征张量。
-		"""
-		# 确保权重是 torch.Tensor 并且与特征的维度一致
+		# 确保权重与特征的维度一致
 		weights = weights.clone().detach()
 		
 		# 计算加权和
@@ -94,10 +78,8 @@ class ChemMultimodalMLP(base.Arch):
 		# 解包为 5 个变量
 		r1_input, r2_input, ligand_input, base_input, solvent_input = input_splits
   
-		# 处理图像输入
 		r1_features = self.r1_fc(r1_input)
 		
-		# 处理文本输入
 		r2_features = self.r2_fc(r2_input)
 		
 		ligand_features = self.ligand_fc(ligand_input)
@@ -108,9 +90,8 @@ class ChemMultimodalMLP(base.Arch):
 		
 		# 结合特征
 		features = [r1_features, r2_features, ligand_features, base_features, solvent_features]
-		# combined_features = torch.cat((r1_features, r2_features, ligand_features, base_features, solvent_features), dim=1)
+
 		combined_features = self.weighted_average(features, self.weights)
-		# print(combined_features.shape)  # 打印 combined_features 的形状
 		
 		# 最终预测
 		output = self.fc_combined(combined_features)
