@@ -174,4 +174,4 @@ examples/tadf/TADF_angle/angle.py
 
 ## 6. 参考文献
 
-Yufei Bu, Qian Peng*, Designing Promising Thermally Activated Delayed Fluroscence Emitters via Machine Learning-Assisted High-Throughput Virtual Screening. J. Phys. Chem. C. 2023. DOI: 10.1021/acs.jpcc.3c05337.
+[1] Yufei Bu, Qian Peng*, Designing Promising Thermally Activated Delayed Fluroscence Emitters via Machine Learning-Assisted High-Throughput Virtual Screening. J. Phys. Chem. C. 2023. DOI: 10.1021/acs.jpcc.3c05337.
