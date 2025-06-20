@@ -220,9 +220,7 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm
 
     kN = perm.shape[0]
     perm2 = perm.reshape((-1, 1))
-    # Ensure both tensors have the same dtype to avoid type promotion error
-    edge_index_0 = edge_index[0].astype(perm2.dtype)
-    mask = (edge_index_0 == perm2).sum(axis=0).astype("bool")
+    mask = (edge_index[0] == perm2).sum(axis=0).astype("bool")
 
     S0 = edge_index[1][mask].reshape((1, -1))
     S1 = edge_index[0][mask].reshape((1, -1))
@@ -274,9 +272,7 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_l
 
     kN = perm.shape[0]
     perm2 = perm.reshape((-1, 1))
-    # Ensure both tensors have the same dtype to avoid type promotion error
-    edge_index_0 = edge_index[0].astype(perm2.dtype)
-    mask = (edge_index_0 == perm2).sum(axis=0).astype("bool")
+    mask = (edge_index[0] == perm2).sum(axis=0).astype("bool")
     S0 = edge_index[1][mask].reshape((1, -1))
     S1 = edge_index[0][mask].reshape((1, -1))
 
