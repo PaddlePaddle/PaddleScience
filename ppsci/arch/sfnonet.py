@@ -408,7 +408,7 @@ class SFNONet(base.Arch):
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
-        ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.
+        ada_in_features (int,optional): The input channels of the adaptive normalization.Defaults to None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         fno_skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
             Defaults to "soft-gating".

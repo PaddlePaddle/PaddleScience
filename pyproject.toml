@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=65", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -46,6 +46,8 @@ exclude = [
     "test_tipc*",
     "test*",
     "tools*",
+    "ppsci/externals*",
+    "ppsci/externals/*",
 ]
 
 [tool.ruff]
@@ -59,8 +61,8 @@ extend-exclude = [
 [tool.setuptools_scm]
 version_file = "ppsci/_version.py"
 tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
-fallback_version = "0.0.0"
-version_scheme = "post-release"
+fallback_version = "1.4.0"
+version_scheme = "no-guess-dev"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

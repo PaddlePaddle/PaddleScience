@@ -28,6 +28,7 @@ from ppsci.visualize.visualizer import Visualizer3D  # isort:skip
 from ppsci.visualize.visualizer import VisualizerWeather  # isort:skip
 from ppsci.visualize.radar import VisualizerRadar  # isort:skip
 from ppsci.visualize.vtu import save_vtu_from_dict  # isort:skip
+from ppsci.visualize.vtu import save_vtp_from_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_1d_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_3d_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_weather_from_dict  # isort:skip
@@ -44,6 +45,7 @@ __all__ = [
     "VisualizerWeather",
     "VisualizerRadar",
     "save_vtu_from_dict",
+    "save_vtp_from_dict",
     "save_vtu_to_mesh",
     "save_plot_from_1d_dict",
     "save_plot_from_3d_dict",

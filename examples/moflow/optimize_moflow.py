@@ -72,7 +72,7 @@ def load_property_csv(filepath, normalize=True):
 
 
 def smiles_to_adj(mol_smiles, data_name="qm9"):
-    """Use simles to adj, atoms
+    """Use smiles to adj, atoms
 
     Args:
         mol_smiles: eg. CC(C)(C)c1ccc2occ(CC(=O)Nc3ccccc3F)c2c1

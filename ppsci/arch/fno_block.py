@@ -87,7 +87,7 @@ class DomainPadding(nn.Layer):
             # (so we must reverse the padding list)
             padding = padding[::-1]
 
-            # the F.pad(x, padding) funtion pads the tensor 'x' in reverse order of the "padding" list i.e. the last axis of tensor 'x' will be padded by the amount mention at the first position of the 'padding' vector. The details about F.pad can be found here:
+            # the F.pad(x, padding) function pads the tensor 'x' in reverse order of the "padding" list i.e. the last axis of tensor 'x' will be padded by the amount mention at the first position of the 'padding' vector. The details about F.pad can be found here:
             # https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/nn/functional/pad_cn.html
 
             if self.padding_mode == "symmetric":
@@ -249,7 +249,7 @@ class AdaIN(nn.Layer):
     def forward(self, x):
         assert (
             self.embedding is not None
-        ), "AdaIN: update embeddding before running forward"
+        ), "AdaIN: update embedding before running forward"
 
         weight, bias = paddle.split(
             self.mlp(self.embedding),
@@ -484,7 +484,7 @@ def resample(x, res_scale, axis, output_shape=None):
         else:
             res_scale = [res_scale] * len(axis)
     else:
-        assert len(res_scale) == len(axis), "leght of res_scale and axis are not same"
+        assert len(res_scale) == len(axis), "length of res_scale and axis are not same"
 
     old_size = x.shape[-len(axis) :]
     if output_shape is None:

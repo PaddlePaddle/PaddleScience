@@ -66,6 +66,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
+        solver._invoke_callbacks_on_iter_begin()
         if solver.nvtx_flag:  # only for nsight analysis
             core.nvprof_nvtx_push(
                 f"Training iteration {solver.global_step + 1}"
@@ -212,6 +213,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 core.nvprof_stop()
                 sys.exit(0)
 
+        solver._invoke_callbacks_on_iter_end()
+
 
 def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
@@ -226,6 +229,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
+        solver._invoke_callbacks_on_iter_begin()
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
         total_batch_size = 0
@@ -317,3 +321,4 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
+        solver._invoke_callbacks_on_iter_end()

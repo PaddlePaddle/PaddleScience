@@ -166,7 +166,7 @@ $$
 
 首先由于我们需要使用一阶微分这一操作，因此在代码开头处需导入一阶微分 API
 
-``` py linenums="1" hl_lines="2"
+``` py linenums="1" hl_lines="4"
 --8<--
 examples/quick_start/case2.py:1:5
 --8<--
