@@ -100,8 +100,8 @@ INFER:
   batch_size: 100
 
 Data:
-  data_path: /home/xinyang/store/projects/nfdiff/algo/elbow/uvp.npy
-  coor_path: /home/xinyang/store/projects/nfdiff/algo/elbow/coor.npy
+  data_path: ../case3/data.npy
+  coor_path: ../case3/coor.npy
   normalizer:
     method: "-11"
     dim: 0
