@@ -296,13 +296,13 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
     # 绘制损失图
     plt.figure(figsize=(10, 6))
-    plt.plot(range(cfg.TRAIN.epochs), losses, label='Training Loss')
+    plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
 
     # 添加标题和标签
-    plt.title('Training Loss over Epochs')
-    plt.xlabel('Epochs')
+    plt.title("Training Loss over Epochs")
+    plt.xlabel("Epochs")
     plt.xticks(rotation=45)
-    plt.ylabel('Loss')
+    plt.ylabel("Loss")
 
     # 添加图例
     plt.legend()
@@ -311,7 +311,7 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     plt.grid(True)
 
     # 保存为 PNG 格式
-    plt.savefig('case.png')
+    plt.savefig("case.png")
 
     # 显示图形
     plt.show()
@@ -410,13 +410,13 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
             paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
     # 绘制损失图
     plt.figure(figsize=(10, 6))
-    plt.plot(range(cfg.TRAIN.epochs), losses, label='Training Loss')
+    plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
 
     # 添加标题和标签
-    plt.title('Training Loss over Epochs')
-    plt.xlabel('Epochs')
+    plt.title("Training Loss over Epochs")
+    plt.xlabel("Epochs")
     plt.xticks(rotation=45)
-    plt.ylabel('Loss')
+    plt.ylabel("Loss")
 
     # 添加图例
     plt.legend()
@@ -425,7 +425,7 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     plt.grid(True)
 
     # 保存为 PNG 格式
-    plt.savefig('case.png')
+    plt.savefig("case.png")
 
     # 显示图形
     plt.show()
@@ -510,7 +510,7 @@ def inference(cfg):
     }
     output_dict = cnf_predictor.predict(input_dict, cfg.INFER.batch_size)
 
-    logger.info("Result is {}".format(output_dict["confild_output"]) )
+    logger.info("Result is {}".format(output_dict["confild_output"]))
 
 
 def export(cfg):

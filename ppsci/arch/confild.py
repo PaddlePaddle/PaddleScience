@@ -369,7 +369,11 @@ class LatentContainer(paddle.nn.Layer):
         x = batch_ids[self.input_keys[0]]
         selected_latents = paddle.gather(self.latents, x)
         if len(selected_latents.shape) > 1:
-            getShape = [tuple(selected_latents.shape)[0]] + self.dims + [tuple(selected_latents.shape)[1]]
+            getShape = (
+                [tuple(selected_latents.shape)[0]]
+                + self.dims
+                + [tuple(selected_latents.shape)[1]]
+            )
         else:
             getShape = [-1] + self.dims
         expanded_latents = selected_latents.reshape(getShape)
