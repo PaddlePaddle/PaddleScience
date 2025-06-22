@@ -317,7 +317,6 @@ def signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     plt.show()
 
 
-
 def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     fleet.init(is_collective=True)
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
