@@ -151,6 +151,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:feature] -->
 ## ✨特性
 
+- **支持自动化并行实验调度，一键串/并行启动实验任务([教程](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#113))**，提高科研效率。
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
 - 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。
@@ -269,7 +270,8 @@ python -c "import paddle; paddle.utils.run_check()"
 | [tensorly](https://github.com/tensorly/tensorly) | 张量运算库 | 全量支持 |
 | [Open3D](https://github.com/PFCCLab/Open3D.git) | 三维图形库 | 全量支持 |
 | [neuraloperator](https://github.com/PFCCLab/neuraloperator) | 神经算子库 | 全量支持 |
-| [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏计算库 | 全量支持 |
+| [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏聚合库 | 全量支持 |
+| [paddle_sparse](https://github.com/PFCCLab/paddle_sparse) | 张量稀疏计算库 | 全量支持 |
 | [paddle_harmonics](https://github.com/PFCCLab/paddle_harmonics.git) | 球面谐波变换库 | 全量支持 |
 | [deepali](https://github.com/PFCCLab/deepali) | 图像、点云配准库 | 全量支持 |
 | [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
