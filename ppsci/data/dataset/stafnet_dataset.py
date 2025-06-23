@@ -4,7 +4,11 @@ from typing import Tuple
 import numpy as np
 import paddle
 import pandas
-import pgl
+try:
+    import pgl
+except ModuleNotFoundError as e:
+    logger.error("please install pgl with \'pip install pgl\'.") 
+    raise ModuleNotFoundError(str(e))
 from paddle import io
 from paddle.io import DataLoader
 from scipy.spatial.distance import cdist
