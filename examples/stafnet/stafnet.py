@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 
 import ppsci
 
+
 def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.STAFNet(**cfg.MODEL)

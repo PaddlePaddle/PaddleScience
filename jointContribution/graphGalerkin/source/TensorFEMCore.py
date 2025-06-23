@@ -1,5 +1,4 @@
 import os
-import pdb
 import time
 
 import matplotlib.pyplot as plt
@@ -91,7 +90,7 @@ def create_fem_resjac(
     else:
         raise ValueError("FE space only support cg!")
     R = assemble_nobc_vec(Re, ldof2gdof_eqn)
-    if enforce_idx == None:
+    if enforce_idx is None:
         Rf = R[free_idx]
     else:
         Rf = R[enforce_idx]
@@ -128,7 +127,7 @@ def intg_elem_claw_vol(Ue, transf_data, elem, elem_data, e, parsfuncI=None, mode
             [nvar_per_elem, nvar * (ndim + 1)], order="F"
         )
         x = transf_data.xq[:, k, e]
-        if parsfuncI == None:
+        if parsfuncI is None:
             pars = elem_data.vol_pars[:, k, e]
         else:
             pars = parsfuncI(x)
@@ -178,7 +177,7 @@ def intg_elem_claw_extface(Ue, transf_data, elem, elem_data, e, parsfuncB=None):
             )
             Teqn = Double(Teqn)
             Tvar = Double(Tvar)
-            if parsfuncB == None:
+            if parsfuncB is None:
                 pars = elem_data.bnd_pars[:, k, f, e]
             else:
                 pars = parsfuncB(x)
@@ -207,7 +206,7 @@ def assemble_nobc_mat(Me, cooidx, lmat2gmat):
 def assemble_nobc_vec(Fe, ldof2gdof_eqn):
     """Assembly global residual of conservation law (!!very useful!!)"""
     ndof = np.max(ldof2gdof_eqn[:]) + 1
-    nelem = Fe.shape[1]
+    Fe.shape[1]
     F = np.zeros(shape=[ndof, 1])
     F = Double(F)
     F.stop_gradient = False
@@ -326,7 +325,6 @@ def trainmodel(
 ):
     model.train()
     er_0 = 0
-    loss_0 = 0
     erlist = []
     ReList = []
     optimizer.clear_grad()

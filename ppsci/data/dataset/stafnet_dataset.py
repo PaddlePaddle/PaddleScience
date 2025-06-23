@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 import paddle
 import pandas
+
 try:
     import pgl
 except ModuleNotFoundError:

@@ -195,7 +195,7 @@ class LinearElasticity:
         ax1.set_title("FEM solution")
         fig.tight_layout(pad=3.0)
 
-        idx_xcg = [
+        [
             i
             for i in range(xcg.shape[1])
             if 2 * i not in dbc_idx and 2 * i + 1 not in dbc_idx
@@ -264,7 +264,6 @@ class LinearElasticity:
         lims = np.asarray([[0, 1], [0, 1]])
         nel = [2, 2]
         porder = 2
-        nf = 4
         msh = mesh_hcube(etype, lims, nel, porder).getmsh()
         xcg = msh.xcg
         e2vcg = msh.e2vcg
@@ -338,7 +337,7 @@ class LinearElasticity:
             femsp_gcnn.spmat,
             dbc,
         )
-        fcn_fem = lambda u_: create_fem_resjac(
+        lambda u_: create_fem_resjac(
             "cg",
             u_,
             msh.transfdatacontiguous,

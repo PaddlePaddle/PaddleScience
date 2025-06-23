@@ -1,4 +1,3 @@
-import pdb
 import sys
 
 import matplotlib.pyplot as plt

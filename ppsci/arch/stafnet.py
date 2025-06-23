@@ -4,11 +4,14 @@ from typing import Tuple
 
 import numpy as np
 import paddle
+
 from ppsci.arch import base
+
 try:
-    import pgl
+    from pgl.nn.conv import GATv2Conv
 except ModuleNotFoundError:
     pass
+
 
 class Inception_Block_V1(paddle.nn.Layer):
     def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
