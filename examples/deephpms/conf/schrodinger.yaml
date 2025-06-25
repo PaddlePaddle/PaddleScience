@@ -83,11 +83,11 @@ INFER:
   pdmodel_path: ${INFER.export_path}.json
   pdiparams_path: ${INFER.export_path}.pdiparams
   onnx_path: ${INFER.export_path}.onnx
-  device: cpu
+  device: gpu
   engine: native
   precision: fp32
-  ir_optim: false
-  min_subgraph_size: 3
+  ir_optim: true
+  min_subgraph_size: 5
   gpu_mem: 2000
   gpu_id: 0
   max_batch_size: 1024
