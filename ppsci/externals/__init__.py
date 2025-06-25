@@ -8,7 +8,6 @@ EXTERNAL_PACKAGES_LIST = [
     "open3d",
     "paddle_harmonics",
     "paddle_scatter",
-    "paddle_sparse",
     "tensorly",
     "warp",
 ]
