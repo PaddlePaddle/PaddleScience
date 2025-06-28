@@ -70,8 +70,8 @@ def train(cfg: DictConfig):
     global x_train, y_train
     x_train, y_train = data_processed(x_train, y_train)
 
-    # 构建约束
-    bc_sup = ppsci.constraint.SupervisedConstraint(
+    # build supervised constraint
+    sup = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg={
             "dataset": {
                 "input": {"v": x_train},
@@ -82,17 +82,17 @@ def train(cfg: DictConfig):
             "batch_size": cfg.TRAIN.batch_size,
         },
         loss=ppsci.loss.MSELoss("mean"),
-        name="bc_sup",
+        name="sup",
     )
     constraint = {
-        "bc_sup": bc_sup,
+        "sup": sup,
     }
 
     model = ppsci.arch.ChemMultimodalMLP(**cfg.MODEL)
 
     optimizer = ppsci.optimizer.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
-    # 构建Solver
+    # Build solver
     solver = ppsci.solver.Solver(
         model,
         constraint=constraint,
@@ -100,26 +100,22 @@ def train(cfg: DictConfig):
         epochs=cfg.TRAIN.epochs,
         eval_during_train=False,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        cfg=cfg,
     )
-    try:
-        solver.train()
-    except Exception as ex:
-        print(ex)
-    paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
+    solver.train()
 
 
-# 进行测试
 def eval(cfg: DictConfig):
     global x_test, y_test
     x_test, y_test = data_processed(x_test, y_test)
-    # 重新划分数据集
+    # Reformat data for evaluation
     x_test = {"v": x_test}
     y_test = {"u": y_test}
     model = ppsci.arch.ChemMultimodalMLP(**cfg.MODEL)
     model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
     ypred = model(x_test)
 
-    # 计算损失
+    # Calculate evaluation metrics
     loss = ppsci.metric.MAE()
     MAE = loss(ypred, y_test).get("u").numpy()
     loss = ppsci.metric.RMSE()
@@ -131,7 +127,7 @@ def eval(cfg: DictConfig):
     print("RMSE", RMSE)
     print("R2", R2)
 
-    # 可视化
+    # Visualization
     plt.scatter(ytest, ypred, s=15, color="royalblue", marker="s", linewidth=1)
     plt.plot([ytest.min(), ytest.max()], [ytest.min(), ytest.max()], "r-", lw=1)
     plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(R2, MAE))
@@ -139,7 +135,7 @@ def eval(cfg: DictConfig):
     plt.ylabel("Predicted Yield(%)")
     save_path = "chem.png"
     plt.savefig(save_path)
-    print(f"图片已保存至：{save_path}")
+    print(f"Iamge saved to: {save_path}")
     plt.show()
 
 
