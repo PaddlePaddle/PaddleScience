@@ -10,7 +10,7 @@ sweep_id: ''
 
 train_config:
   default: &DEFAULT
-    num_data_workers: 0
+    num_data_workers: 4
     # model
     model: 'fno'
     depth: 5
@@ -131,7 +131,7 @@ train_config:
     blur: [0, 1]
 
 
-  pois_64_finetune_e5_15: &pois_64_e5_15_ft
+  pois-64-finetune-e5_15: &pois_64_e5_15_ft
     <<: *poisson
     train_path:   'data/possion_64/poisson_64_e5_15_train.h5'
     val_path:     'data/possion_64/poisson_64_e5_15_val.h5'
@@ -278,16 +278,19 @@ train_config:
 
 
 # inference settings
+ckpt_path: data/pd_finetune_b01_m0_n8192.tar
+num_demos: 1
 tqdm: False
+save_pred: False
 
 infer_config:
   train_path: 'data/possion_64/poisson_64_e15_50_train.h5' # pick demos
   test_path: 'data/possion_64/poisson_64_e15_50_test.h5'
   scales_path: 'data/possion_64/poisson_64_e5_15_train_scale.npy'
-  ckpt_path: checkpoint/finetune_b01_m0_n8192.pdparams
-  num_data_workers: 0
+
+  num_data_workers: 1
   subsample: 1
-  num_demos: 0
+  # num_demos: 0
   shuffle: False
   nx: 64
   nt: 64

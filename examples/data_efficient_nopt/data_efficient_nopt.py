@@ -20,7 +20,6 @@ from argparse import Namespace
 from collections import OrderedDict
 
 import hydra
-import logging
 import numpy as np
 import paddle
 import paddle.amp as amp
@@ -38,13 +37,10 @@ from tqdm import tqdm
 from ppsci.arch.data_efficient_nopt_model import YParams
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import build_vmae
-from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
+from ppsci.arch.data_efficient_nopt_model import fno_pretrain
 from ppsci.arch.data_efficient_nopt_model import gaussian_blur
 from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
-
-
-logger = logging.getLogger(__name__)
 
 
 def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
@@ -138,20 +134,23 @@ class Trainer:
 
         self.iters = 0
         self.initialize_data(self.params)
+        print(f"Initializing model on rank {self.global_rank}")
         self.initialize_model(self.params)
         self.initialize_optimizer(self.params)
         if params.resuming:
-            logger.info("Loading checkpoint %s" % params.checkpoint_path)
+            print("Loading checkpoint %s" % params.checkpoint_path)
+            print("LOADING CHECKPOINTTTTTT")
             self.restore_checkpoint(params.checkpoint_path)
-        elif params.resuming is False and params.pretrained:
-            logger.info("Starting from pretrained model at %s" % params.pretrained_ckpt_path)
+        if params.resuming is False and params.pretrained:
+            print("Starting from pretrained model at %s" % params.pretrained_ckpt_path)
             self.restore_checkpoint(params.pretrained_ckpt_path)
             self.iters = 0
             self.startEpoch = 0
-        else:
-            pass
-
         self.initialize_scheduler(self.params)
+
+    def single_print(self, *text):
+        if self.global_rank == 0 and self.log_to_screen:
+            print(" ".join([str(t) for t in text]))
 
     def initialize_data(self, params):
         if params.tie_batches:
@@ -162,8 +161,7 @@ class Trainer:
             print(f"Initializing data on rank {self.global_rank}")
 
         if self.params.model_type == "fno":
-            if params.mode == "train":
-                params.masking = ((params.nx, params.ny), params.mask_ratio)
+            params.masking = ((params.nx, params.ny), params.mask_ratio)
             (
                 self.train_data_loader,
                 self.train_dataset,
@@ -212,11 +210,7 @@ class Trainer:
 
     def initialize_model(self, params):
         if self.params.model_type == "fno":
-            if self.params.mode == "train":
-                self.model = fno(params)
-            elif self.params.mode == "finetune":
-                logger.info("Using Build FNO")
-                self.model = build_fno(params)
+            self.model = fno_pretrain(params)
         elif self.params.model_type == "vmae":
             self.model = build_vmae(params)
 
@@ -226,7 +220,7 @@ class Trainer:
                 find_unused_parameters=True,
             )
 
-        print(
+        self.single_print(
             f"Model parameter count: {sum([p.numel() for p in self.model.parameters()])}"
         )
 
@@ -340,6 +334,10 @@ class Trainer:
     def train_one_epoch(self):
         self.model.train()
         self.epoch += 1
+        tr_time = 0
+        data_time = 0
+        data_start = time.time()
+        self.model.train()
         logs = {
             "train_rmse": paddle.zeros([1]),
             "train_nrmse": paddle.zeros([1]),
@@ -348,57 +346,58 @@ class Trainer:
             "train_loss": paddle.zeros([1]),
         }
         steps = 0
-        n = len(self.train_data_loader)
+        self.single_print(
+            "train_loader_size", len(self.train_data_loader), len(self.train_dataset)
+        )
         for batch_idx, data in enumerate(self.train_data_loader):
             steps += 1
-            if len(data) == 3:
-                inp, label, mask = map(lambda x: x, data)
-                if sum(self.params.blur) > 0:
-                    inp_blur = []
-                    for _inp in inp:
-                        sigma = random.uniform(*self.params.blur)
-                        _kernel = min(
-                            int((sigma * 4 + 1) / 2) * 2 + 1,
-                            (_inp.shape[2] // 2) * 2 - 1,
-                        )
-                        if _kernel >= 2:
-                            _inp = gaussian_blur(
-                                _inp, kernel_size=[_kernel, _kernel], sigma=sigma
+            try:
+                if len(data) == 3:
+                    inp, _, mask = map(lambda x: x, data)
+                    if sum(self.params.blur) > 0:
+                        inp_blur = []
+                        for _inp in inp:
+                            sigma = random.uniform(*self.params.blur)
+                            _kernel = min(
+                                int((sigma * 4 + 1) / 2) * 2 + 1,
+                                (_inp.shape[2] // 2) * 2 - 1,
                             )
-                        inp_blur.append(_inp)
-                    inp_blur = paddle.stack(inp_blur, axis=0)
+                            if _kernel >= 2:
+                                _inp = gaussian_blur(
+                                    _inp, kernel_size=[_kernel, _kernel], sigma=sigma
+                                )
+                            inp_blur.append(_inp)
+                        inp_blur = paddle.stack(inp_blur, axis=0)
+                    else:
+                        inp_blur = inp.detach().clone()
                 else:
+                    inp, _ = map(lambda x: x, data)
+                    mask = None
                     inp_blur = inp.detach().clone()
-            else:
-                inp, label = map(lambda x: x, data)
-                mask = None
-                inp_blur = inp.detach().clone()
+            except:  # noqa
+                print("DATA FAILLL", inp.shape)
+                raise "s"
             if len(inp.shape) == 5:
                 inp = rearrange(inp, "b t c h w -> t b c h w")
                 inp_blur = rearrange(inp_blur, "b t c h w -> t b c h w")
+
+            data_time += time.time() - data_start
+            dtime = time.time() - data_start
 
             self.model.require_backward_grad_sync = (
                 1 + batch_idx
             ) % self.params.accum_grad == 0
             with amp.auto_cast(self.params.enable_amp, dtype=self.mp_type):
-                if self.params.mode == "train":
-                    output = self.model(inp_blur, mask)
-                elif self.params.mode == "finetune":
-                    output = self.model(inp)
-                else:
-                    raise ValueError(f"Invalid mode {self.params.mode}")
+                model_start = time.time()
 
-                if self.params.mode == "train":
-                    label = inp
-                else:
-                    label = label
+                output = self.model(inp_blur, mask)
 
-                if len(label.shape) == 5:
+                if len(inp.shape) == 5:
                     labels = rearrange(
-                        label.permute(1, 2, 0, 3, 4),
+                        inp.permute(1, 2, 0, 3, 4),
                         "b c t (h p1) (w p2) -> b (t h w) (p1 p2 c)",
-                        h=label.shape[3] // self.model.patch_size,
-                        w=label.shape[4] // self.model.patch_size,
+                        h=inp.shape[3] // self.model.patch_size,
+                        w=inp.shape[4] // self.model.patch_size,
                         p1=self.model.patch_size,
                         p2=self.model.patch_size,
                     )
@@ -409,7 +408,7 @@ class Trainer:
                         else:
                             labels = labels[mask]
                     labels = labels.reshape(
-                        label.shape[1], -1, label.shape[2] * self.model.patch_size**2
+                        inp.shape[1], -1, inp.shape[2] * self.model.patch_size**2
                     )
                     spatial_dims = tuple(range(output.ndim))[2:]
 
@@ -418,28 +417,34 @@ class Trainer:
                     raw_loss = (residuals).pow(2).mean(
                         spatial_dims, keepdim=True
                     ) / inp_norm
-                elif len(label.shape) == 4:
+                    loss = raw_loss.mean() / self.params.accum_grad
+
+                elif len(inp.shape) == 4:
                     spatial_dims = tuple(range(output.ndim))[1:]
                     if mask is not None:
-                        labels = label * (1 - mask)
+                        labels = inp * (1 - mask)
                         output = output * (1 - mask)
                     else:
-                        labels = label
+                        labels = inp
 
                     residuals = output - labels
                     raw_loss = (residuals) ** 2
                     loss = raw_loss.sum() / output.shape[0] / self.params.accum_grad
 
+                forward_end = time.time()
+                forward_time = forward_end - model_start
                 with paddle.no_grad():
                     logs["train_l1"] += F.l1_loss(output, labels)
-                    logs["train_nrmse"] += self.train_loss(output, labels)
+                    log_nrmse = raw_loss.sqrt().mean()
+                    logs["train_nrmse"] += log_nrmse
                     logs["train_rmse"] += (
                         residuals.pow(2).mean(spatial_dims).sqrt().mean()
                     )
                     logs["train_l2"] += l2_err(output, labels, spatial_dims)
                     logs["train_loss"] += loss
-                    log_nrmse = raw_loss.sqrt().mean()
                 self.gscaler.scale(loss).backward()
+                backward_end = time.time()
+                backward_time = backward_end - forward_end
 
                 if self.debug_grad and self.model.require_backward_grad_sync:
                     with paddle.no_grad():
@@ -447,6 +452,7 @@ class Trainer:
                         grad_diff = grad_norm(self.model.parameters())
                         porig = [p.clone() for p in self.model.parameters()]
 
+                optimizer_step = 0
                 if self.model.require_backward_grad_sync:
                     self.gscaler.unscale_(self.optimizer)
                     paddle.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
@@ -455,7 +461,7 @@ class Trainer:
                     if self.debug_grad:
                         if self.global_rank == 0:
                             pdiff = param_diff(self.model.parameters(), porig)
-                            print(
+                            self.single_print(
                                 "grad_norm",
                                 grad_diff,
                                 "last_step_size",
@@ -463,19 +469,35 @@ class Trainer:
                                 "loss",
                                 loss.item(),
                                 "data_shape",
-                                label.shape,
+                                inp.shape,
                             )
                     self.optimizer.clear_gradients(set_to_zero=False)
                     if self.scheduler is not None:
                         self.scheduler.step()
+                    optimizer_step = time.time() - backward_end
+                tr_time += time.time() - model_start
                 if (
                     self.log_to_screen
                     and batch_idx % self.params.log_interval == 0
                     and self.global_rank == 0
                 ):
-                    logger.info(
-                        f"Epoch {self.epoch}/{self.params.max_epochs} Batch {batch_idx+1}/{len(self.train_data_loader)} Train Loss {log_nrmse.item():.2e}"
+                    print(
+                        f"Epoch {self.epoch} Batch {batch_idx} Train Loss {log_nrmse.item()}"
                     )
+                if self.log_to_screen:
+                    print(
+                        "Total Times. Global step: {}, Batch: {}, Rank: {}, Data Shape: {}, Data time: {}, Forward: {}, Backward: {}, Optimizer: {}".format(
+                            self.iters + steps - 1,
+                            batch_idx,
+                            self.global_rank,
+                            inp.shape,
+                            dtime,
+                            forward_time,
+                            backward_time,
+                            optimizer_step,
+                        )
+                    )
+                data_start = time.time()
         logs = {k: v / steps for k, v in logs.items()}
         if dist.is_initialized():
             for key in sorted(logs.keys()):
@@ -486,9 +508,9 @@ class Trainer:
         if self.global_rank == 0:
             logs["iters"] = self.iters
             logs["parameter norm"] = param_norm(self.model.parameters())
-        logs["train_nrmse"] = logs["train_nrmse"].item() / n
-        logs["train_l2"] = logs["train_l2"].item() / n
-        return logs
+        self.single_print("all reduces executed!")
+
+        return tr_time, data_time, logs
 
     def single_dset_val(self, subset, logs, cutoff=40):
         if self.params.use_ddp:
@@ -511,32 +533,41 @@ class Trainer:
                 del temp_loader
                 break
             count += 1
-            input, label = data
 
-            # unsupervised pretrain
-            if self.params.mode == "train":
-                label = input
-            if len(input.shape) == 5:
-                input = rearrange(input, "b t c h w -> t b c h w")
-            else:
-                pass
-            if self.params.mode == "train":
-                output = self.model(input, None)
-            elif self.params.mode == "finetune":
-                output = self.model(input)
+            inp = data[0]
+            if len(inp.shape) == 5:
+                inp = rearrange(inp, "b t c h w -> t b c h w")
+            elif len(inp.shape) == 4:
+                b, c, h, w = inp.shape
+            output = self.model(inp, None)
+            residuals = output - inp
             if self.params.model_type == "fno":
                 spatial_dims = tuple(range(output.ndim))[1:]
             elif self.params.model_type == "vmae":
                 spatial_dims = tuple(range(output.ndim))[2:]
-            else:
-                raise NotImplementedError
 
-            logs["valid_nrmse"] += self.train_loss(output, label)
-            logs["valid_l2"] += l2_err(output, label, spatial_dims).item()
+            nmse = (
+                residuals.pow(2).mean(spatial_dims, keepdim=True)
+                / (1e-7 + inp.pow(2).mean(spatial_dims, keepdim=True))
+            ).sqrt()
+
+            logs["valid_nrmse"] = (
+                logs.get("valid_nrmse", 0) * (count - 1) + nmse.mean()
+            ) / count
+            logs["valid_rmse"] = (
+                logs.get("valid_mse", 0) * (count - 1)
+                + residuals.pow(2).mean(spatial_dims).sqrt().mean()
+            ) / count
+            logs["valid_l1"] = (
+                logs.get("valid_l1", 0) * (count - 1) + residuals.abs().mean()
+            ) / count
+            logs["valid_l2"] = (
+                logs.get("valid_l2", 0) * (count - 1)
+                + l2_err(output, inp, spatial_dims)
+            ) / count
+
         else:
             del temp_loader
-        logs["valid_nrmse"] = logs["valid_nrmse"].item() / count
-        logs["valid_l2"] = logs["valid_l2"].item() / count
         return logs
 
     def validate_one_epoch(self, full=False):
@@ -550,12 +581,10 @@ class Trainer:
             cutoff = 999999999999
         else:
             cutoff = 40
+        self.single_print("STARTING VALIDATION!!!")
         with paddle.no_grad():
             with amp.auto_cast(enable=False, dtype=self.mp_type):
-                logs = {
-                    "valid_nrmse":paddle.zeros([1]),
-                    "valid_l2":paddle.zeros([1]),
-                    }
+                logs = {}
                 if hasattr(self.valid_dataset, "sub_dsets"):
                     for subset_group in self.valid_dataset.sub_dsets:
                         for subset in subset_group.get_per_file_dsets():
@@ -563,6 +592,7 @@ class Trainer:
                 else:
                     logs = self.single_dset_val(self.valid_dataset, logs, cutoff)
 
+            self.single_print("DONE VALIDATING - NOW SYNCING")
 
             if dist.is_initialized():
                 for key in sorted(logs.keys()):
@@ -570,38 +600,58 @@ class Trainer:
                     logs[key] = float(logs[key].item() / dist.get_world_size())
                     if "rmse" in key:
                         logs[key] = logs[key]
+            self.single_print("DONE SYNCING - NOW LOGGING")
         return logs
 
     def train(self):
-        logger.info(f"iters per epoch = {len(self.train_data_loader)}, samples number = {len(self.train_dataset)}, batch size = {self.params.batch_size}, total batches = {len(self.train_data_loader)*self.params.batch_size}")
+        self.single_print("Starting Training Loop...")
+
         for epoch in range(self.startEpoch, self.params.max_epochs):
             if dist.is_initialized():
                 self.train_sampler.set_epoch(epoch)
-            train_logs = self.train_one_epoch()
+            start = time.time()
+
+            tr_time, data_time, train_logs = self.train_one_epoch()
+
+            valid_start = time.time()
+            train_logs["time/train_time"] = valid_start - start
+            train_logs["time/train_data_time"] = data_time
+            train_logs["time/train_compute_time"] = tr_time
+
             if epoch == self.params.max_epochs - 1:
                 valid_logs = self.validate_one_epoch(True)
             else:
                 valid_logs = self.validate_one_epoch()
             train_logs.update(valid_logs)
+            post_start = time.time()
             gc.collect()
             paddle.device.cuda.empty_cache()
-            if epoch % self.params.checkpoint_save_interval == 0:
-                save_dir = self.params.checkpoint_path.replace("ckpt", f"ckpt_epoch_{epoch}")
-                logger.info(f"saving checkpoint : save_dir")
-                self.save_checkpoint(save_dir)
-            logger.info(f"Train loss: {train_logs['train_nrmse']:.2e}, Valid Loss: {valid_logs['valid_nrmse']:.2e}\n")
 
-        save_dir = self.params.checkpoint_path.replace("ckpt", f"ckpt_last")
-        logger.info(f"saving checkpoint : {save_dir}")
-        self.save_checkpoint(save_dir)
+            if self.global_rank == 0:
+                if self.params.save_checkpoint:
+                    self.save_checkpoint(self.params.checkpoint_path)
+                if epoch % self.params.checkpoint_save_interval == 0:
+                    self.save_checkpoint(self.params.checkpoint_path + f"_epoch{epoch}")
 
-def train(config: DictConfig):
-    params = YParams(config.train_config, config.config, config.mode)
-    params.use_ddp = config.use_ddp
+                cur_time = time.time()
+                self.single_print(
+                    f"Time for train {valid_start-start}. For valid: {post_start-valid_start}. For postprocessing:{cur_time-post_start}"
+                )
+                self.single_print(
+                    "Time taken for epoch {} is {} sec".format(
+                        epoch + 1, time.time() - start
+                    )
+                )
+                self.single_print("Train loss: {}.".format(train_logs["train_nrmse"]))
+
+
+def train(cfg: DictConfig):
+    params = YParams(cfg.train_config, cfg.config)
+    params.use_ddp = cfg.use_ddp
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     global_rank = int(os.environ.get("RANK", 0))
     world_size = int(os.environ.get("WORLD_SIZE", 1))
-    if config.use_ddp:
+    if cfg.use_ddp:
         dist.init_process_group("nccl")
 
     device = f"gpu:{local_rank}" if paddle.device.cuda.device_count() >= 1 else "cpu"
@@ -609,13 +659,13 @@ def train(config: DictConfig):
 
     params.batch_size = int(params.batch_size // world_size)
     params.startEpoch = 0
-    if config.sweep_id:
+    if cfg.sweep_id:
         jid = os.environ["SLURM_JOBID"]
         expDir = os.path.join(
-            params.exp_dir, config.sweep_id, config.config, str(config.run_name), jid
+            params.exp_dir, cfg.sweep_id, cfg.config, str(cfg.run_name), jid
         )
     else:
-        expDir = os.path.join(params.exp_dir, config.config, str(config.run_name))
+        expDir = os.path.join(params.exp_dir, cfg.config, str(cfg.run_name))
 
     params.old_exp_dir = expDir
     params.experiment_dir = os.path.abspath(expDir)
@@ -632,7 +682,7 @@ def train(config: DictConfig):
             os.makedirs(expDir)
             os.makedirs(os.path.join(expDir, "training_checkpoints/"))
     params.resuming = True if os.path.isfile(params.checkpoint_path) else False
-    params.name = str(config.run_name)
+    params.name = str(cfg.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
 
     if global_rank == 0:
@@ -642,24 +692,31 @@ def train(config: DictConfig):
             hparams[str(key)] = str(value)
         with open(os.path.join(expDir, "hyperparams.yaml"), "w") as hpfile:
             yaml.dump(hparams, hpfile)
-    trainer = Trainer(params, global_rank, local_rank, device, sweep_id=config.sweep_id)
-    if config.sweep_id and trainer.global_rank == 0:
-        print(config.sweep_id, trainer.params.entity, trainer.params.project)
+    trainer = Trainer(params, global_rank, local_rank, device, sweep_id=cfg.sweep_id)
+    if cfg.sweep_id and trainer.global_rank == 0:
+        print(cfg.sweep_id, trainer.params.entity, trainer.params.project)
     else:
         trainer.train()
+    if params.log_to_screen:
+        print("DONE ---- rank %d" % global_rank)
+
 
 @paddle.no_grad()
-def inference(config):
-    config = config.infer_config
-    if config.ckpt_path:
-        save_dir = os.path.join("/".join(config.ckpt_path.split("/")[:-1]), "results_icl")
+def get_pred(cfg):
+    config = cfg.infer_config
+    if cfg.ckpt_path:
+        save_dir = os.path.join("/".join(cfg.ckpt_path.split("/")[:-1]), "results_icl")
     else:
         basedir = os.path.join("exp", config["log"]["logdir"])
         save_dir = os.path.join(basedir, "results_icl")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(
-        save_dir, "fno-prediction-demo%d.pt" % (config.num_demos if config.num_demos else 0)
+        save_dir, "fno-prediction-demo%d.pt" % (cfg.num_demos if cfg.num_demos else 0)
     )
+    if paddle.device.cuda.device_count() >= 1:
+        paddle.set_device("gpu")
+    else:
+        paddle.set_device("cpu")
 
     params = Namespace(**config)
     if not hasattr(params, "n_demos"):
@@ -671,9 +728,9 @@ def inference(config):
     dataloader, dataset, sampler = PoisHelmDatasetLoader(
         params, params.test_path, dist.is_initialized(), train=False
     )
-    if config.num_demos is not None and config.num_demos != 0:
+    if cfg.num_demos is not None and cfg.num_demos != 0:
         params.subsample = 1
-        params.local_valid_batch_size = config.num_demos
+        params.local_valid_batch_size = cfg.num_demos
         dataloader_icl, dataset_icl, _ = PoisHelmDatasetLoader(
             params, params.train_path, dist.is_initialized(), train=False
         )
@@ -683,8 +740,8 @@ def inference(config):
 
     model = build_fno(params)
 
-    if config.ckpt_path:
-        checkpoint = paddle.load(config.ckpt_path)
+    if cfg.ckpt_path:
+        checkpoint = paddle.load(cfg.ckpt_path)
         try:
             model.set_state_dict(checkpoint["model_state"])
         except:  # noqa
@@ -719,11 +776,11 @@ def inference(config):
     pbar = tqdm(dataloader, total=len(dataloader))
     for inputs, targets in pbar:
         inputs, targets = inputs, targets
-        if config.num_demos is None or config.num_demos == 0:
+        if cfg.num_demos is None or cfg.num_demos == 0:
             u = model(inputs)
         else:
             model.target = targets
-            u = model.forward_icl(inputs, input_demos, target_demos, use_tqdm=config.tqdm)
+            u = model.forward_icl(inputs, input_demos, target_demos, use_tqdm=cfg.tqdm)
 
         data_loss = l2_err(u.detach(), targets.detach())
         losses.append(data_loss.item())
@@ -731,8 +788,6 @@ def inference(config):
             u.detach() / paddle.abs(u).max(),
             targets.detach() / paddle.abs(targets).max(),
         )
-        print(data_loss.item())
-        print(data_loss_normalized.item())
         losses_normalized.append(data_loss_normalized.item())
         truth_list.append(targets.cpu())
         pred_list.append(u.cpu())
@@ -742,9 +797,9 @@ def inference(config):
         paddle.concat(truth_list, axis=0).view([-1]).numpy(),
     )
     print(
-        "L2:",
+        "RMSE:",
         np.mean(losses),
-        "L2 (normalized)",
+        "RMSE (normalized)",
         np.mean(losses_normalized),
         "R2:",
         r,
@@ -766,30 +821,23 @@ def inference(config):
     )
 
 
+def inference(cfg: DictConfig):
+    get_pred(cfg)
+
+
 @hydra.main(
     version_base=None,
     config_path="./config",
     config_name="data_efficient_nopt_fno_poisson",
 )
-def main(config: DictConfig):
-    if config.mode == "train" or config.mode == "finetune":
-        train(config)
-    elif config.mode == "infer":
-        inference(config)
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"config.mode should in ['train', 'infer'], but got '{config.mode}'")
+        raise ValueError(f"cfg.mode should in ['train', 'infer'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
     main()
-# export PYTHONPATH=/workspace/PaddleScience_repo/data_efficient_nopt/
-# python data_efficient_nopt.py --config-name=data_efficient_nopt_fno_helmholtz.yaml
-# python data_efficient_nopt.py --config-name=data_efficient_nopt_fno_poisson.yaml config=pois-64-pretrain-e1_20_m0
-# python data_efficient_nopt.py --config-name=data_efficient_nopt_fno_poisson.yaml mode=infer
-# python data_efficient_nopt.py --config-name=data_efficient_nopt_fno_poisson.yaml config=pois-64-pretrain-e1_20_m0 mode=infer ckpt_path=./exp/pois-64-pretrain-e1_20_m0/r0/training_checkpoints/ckpt.tar
-# data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train.h5
-# ls -l data/helmholtz_64/helmholtz_64/helmholtz_64_o1_20_train.h5
-# ls -l data/helmholtz_64/helmholtz_64/helmholtz_64_o15_20_train.h5 
-
-
-# python data_efficient_nopt.py --config-name=data_efficient_nopt_fno_poisson.yaml  mode=infer infer_config.ckpt_path=./exp/pois-64-pretrain-e1_20_m0/r0/training_checkpoints/ckpt.tar
