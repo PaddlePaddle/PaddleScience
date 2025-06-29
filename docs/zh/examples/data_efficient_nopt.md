@@ -13,7 +13,7 @@
     ``` sh
     # Download possion_64 data and model into `examples/data_efficient_nopt/data`
     cd examples/data_efficient_nopt
-    mkdir data && cd data
+    mkdir -p data/possion_64 && cd data/possion_64
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_train.h5
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_val.h5
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_test.h5
@@ -26,7 +26,7 @@
 
 
     # pretrain
-    cd examples/data_efficient_nopt
+    cd ../..
     python data_efficient_nopt.py \
         --config-name data_efficient_nopt_fno_poisson \
         config=pois-64-pretrain-e1_20_m0
@@ -51,9 +51,10 @@
 
     ``` sh
     cd examples/data_efficient_nopt
-    mkdir data && cd data
+    mkdir -p data/possion_64 && cd data/possion_64
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/finetune_b01_m0_n8192.pdparams
 
+    cd ../..
     python data_efficient_nopt.py \
         --config-name=data_efficient_nopt_fno_poisson.yaml \
         mode=infer \
