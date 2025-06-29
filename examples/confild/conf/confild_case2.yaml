@@ -101,7 +101,7 @@ INFER:
 
 Data:
   data_path: ../case2/data.npy
-  coor_path: ../case2/coor.npy
+  coor_path: null
   normalizer:
     method: "-11"
     dim: 0

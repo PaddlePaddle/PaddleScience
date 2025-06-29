@@ -26,7 +26,6 @@ from ppsci.arch import LatentContainer
 from ppsci.arch import SIRENAutodecoder_film
 from ppsci.utils import logger
 
-
 def load_elbow_flow(path):
     return np.load(f"{path}")[1:]
 
@@ -93,16 +92,12 @@ class Normalizer_ts(object):
 
     def normalize(self, new_data):
         if not new_data.place == self.params[0].place:
-            self.params = self.params[0].to(new_data.place), self.params[1].to(
-                new_data.place
-            )
+            self.params = self.params[0], self.params[1]
         return self.fnormalize(new_data, self.params, self.method)
 
     def denormalize(self, new_data_norm):
         if not new_data_norm.place == self.params[0].place:
-            self.params = self.params[0].to(new_data_norm.place), self.params[1].to(
-                new_data_norm.place
-            )
+            self.params = self.params[0], self.params[1]
         return self.fdenormalize(new_data_norm, self.params, self.method)
 
     def get_params(self):
@@ -119,32 +114,28 @@ class Normalizer_ts(object):
     @staticmethod
     def fnormalize(data, params, method):
         if method == "-11":
-            return (data - params[1].to(data.place)) / (
-                params[0].to(data.place) - params[1].to(data.place)
+            return (data - params[1]) / (
+                params[0] - params[1]
             ) * 2 - 1
         elif method == "01":
-            return (data - params[1].to(data.place)) / (
-                params[0].to(data.place) - params[1].to(data.place)
+            return (data - params[1]) / (
+                params[0] - params[1]
             )
         elif method == "ms":
-            return (data - params[0].to(data.place)) / params[1].to(data.place)
+            return (data - params[0]) / params[1]
         elif method == "none":
             return data
 
     @staticmethod
     def fdenormalize(data_norm, params, method):
         if method == "-11":
-            return (data_norm + 1) / 2 * (
-                params[0].to(data_norm.place) - params[1].to(data_norm.place)
-            ) + params[1].to(data_norm.place)
+            return (data_norm + 1) / 2 * (params[0] - params[1]) + params[1]
         elif method == "01":
             return data_norm * (
-                params[0].to(data_norm.place) - params[1].to(data_norm.place)
-            ) + params[1].to(data_norm.place)
+                params[0] - params[1]
+            ) + params[1]
         elif method == "ms":
-            return data_norm * params[1].to(data_norm.place) + params[0].to(
-                data_norm.place
-            )
+            return data_norm * params[1] + params[0]
         elif method == "none":
             return data_norm
 
@@ -206,9 +197,9 @@ def getdata(cfg):
 class basic_set(paddle.io.Dataset):
     def __init__(self, fois, coord, extra_siren_in=None) -> None:
         super().__init__()
-        self.fois = fois
+        self.fois = fois.numpy()
         self.total_samples = tuple(fois.shape)[0]
-        self.coords = coord
+        self.coords = coord.numpy()
 
     def __len__(self):
         return self.total_samples
@@ -335,22 +326,22 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
     dataset = basic_set(normed_fois, normed_coords)
 
     train_sampler = DistributedBatchSampler(
-        dataset, cfg.Train.batch_size, shuffle=True, drop_last=True
+        dataset, cfg.TRAIN.batch_size, shuffle=True, drop_last=True
     )
     train_loader = DataLoader(
         dataset,
         batch_sampler=train_sampler,
-        shuffle=True,
         num_workers=cfg.TRAIN.mutil_GPU,
+        use_shared_memory=False,
     )
     test_sampler = DistributedBatchSampler(
-        dataset, cfg.Train.test_batch_size, drop_last=True
+        dataset, cfg.TRAIN.test_batch_size, drop_last=True
     )
     test_loader = DataLoader(
         dataset,
         batch_sampler=test_sampler,
-        shuffle=False,
         num_workers=cfg.TRAIN.mutil_GPU,
+        use_shared_memory=False,
     )
 
     criterion = paddle.nn.MSELoss()
@@ -433,6 +424,8 @@ def mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer):
 def train(cfg):
     normed_coords, normed_fois, _, spatio_axis, out_normalizer = getdata(cfg)
     if cfg.TRAIN.mutil_GPU > 1:
+        import paddle.distributed as dist
+        dist.init_parallel_env()
         mutil_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer)
     else:
         signal_train(cfg, normed_coords, normed_fois, spatio_axis, out_normalizer)
