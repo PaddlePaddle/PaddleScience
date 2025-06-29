@@ -3210,10 +3210,10 @@ def dict2str(log_dict):
 class YParams:
     """Yaml file parser"""
 
-    def __init__(self, yaml_params, config_name):
+    def __init__(self, yaml_params, config_name, mode):
         self._config_name = config_name
         self.params = {}
-
+        self.mode = mode
         for key, val in yaml_params[config_name].items():
             if val == "None":
                 val = None

@@ -1,8 +1,5 @@
-from argparse import ArgumentParser
-
 import paddle
-import torch
-
+import numpy as np
 
 def save_checkpoint(checkpoint_path, model):
     """Save model and optimizer to checkpoint"""
@@ -14,46 +11,9 @@ def save_checkpoint(checkpoint_path, model):
 
 
 def torch2paddle():
-    parser = ArgumentParser()
-    parser.add_argument(
-        "--pt-model",
-        type=str,
-        default="data/possion_64_inference/finetune_b01_m0_n8192.tar",
-    )
-    parser.add_argument(
-        "--pd-model",
-        type=str,
-        default="./data/pd_finetune_b01_m0_n8192.tar",
-    )
-    args = parser.parse_args()
-    torch_path = args.pt_model
-    paddle_path = args.pd_model
-
-    torch_state_dict = torch.load(torch_path)["model_state"]
-    # model.set_state_dict(checkpoint["model_state"])
-    fc_names = ["classifier", "fc"]
-    paddle_state_dict = {}
-
-    for k in torch_state_dict:
-        if "num_batches_tracked" in k:
-            continue
-        v = torch_state_dict[k].detach().cpu().numpy()
-        flag = [i in k for i in fc_names]
-        if any(flag) and "weight" in k:
-            new_shape = [1, 0] + list(range(2, v.ndim))
-            print(
-                f"name: {k}, ori shape: {v.shape}, new shape: {v.transpose(new_shape).shape}"
-            )
-            v = v.transpose(new_shape)
-        # translate params of torch.nn.BatchNorm2d to params of paddle.nn.BatchNorm2D
-        k = k.replace("running_var", "_variance")
-        k = k.replace("running_mean", "_mean")
-        k = k.replace("module.", "")
-        # add it into dict of paddle weight
-        print(f"k: {k}")
-        paddle_state_dict[k] = v
-    print(f"paddle_state_dict: {paddle_state_dict.keys()}")
-    save_checkpoint(paddle_path, paddle_state_dict)
+    import numpy as np
+    paddle_state_dict = np.load("./checkpoint/npy_pretrain_b01_m0.tar.npy")
+    save_checkpoint("./checkpoint/paddle_pretrain_b01_m0.tar", paddle_state_dict)
 
 
 if __name__ == "__main__":

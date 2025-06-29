@@ -89,10 +89,10 @@ train_config:
 
   helm-64-scale-o5_15: &helm_64_o5_15
     <<: *helmholtz
-    train_path:   'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
-    val_path:     'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
-    test_path:    'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
-    scales_path:  'data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
+    train_path:   '/workspace/PaddleScience_repo/data_efficient_nopt/examples/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train.h5'
+    val_path:     '/workspace/PaddleScience_repo/data_efficient_nopt/examples/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_val.h5'
+    test_path:    '/workspace/PaddleScience_repo/data_efficient_nopt/examples/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_test.h5'
+    scales_path:  '/workspace/PaddleScience_repo/data_efficient_nopt/examples/data_efficient_nopt/data/helmholtz_64/helmholtz_64/helmholtz_64_o5_15_train_scale.npy'
     batch_size: 128
     in_dim: 3
     out_dim: 1
