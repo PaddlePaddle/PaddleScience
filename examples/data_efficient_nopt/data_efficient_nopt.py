@@ -36,7 +36,6 @@ from tqdm import tqdm
 
 from ppsci.arch.data_efficient_nopt_model import YParams
 from ppsci.arch.data_efficient_nopt_model import build_fno
-from ppsci.arch.data_efficient_nopt_model import build_vmae
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
 from ppsci.arch.data_efficient_nopt_model import gaussian_blur
 from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
@@ -211,8 +210,8 @@ class Trainer:
             elif self.params.mode == "finetune":
                 logger.info("Using Build FNO")
                 self.model = build_fno(params)
-        elif self.params.model_type == "vmae":
-            self.model = build_vmae(params)
+        else:
+            raise NotImplementedError("Only support FNO for now")
 
         if dist.is_initialized():
             self.model = paddle.DataParallel(
@@ -229,14 +228,6 @@ class Trainer:
         if params.optimizer == "adam":
             self.optimizer = optim.AdamW(
                 parameters=parameters, learning_rate=params.learning_rate
-            )
-        elif params.optimizer == "adan":
-            raise NotImplementedError("Adan not implemented yet")
-        elif params.optimizer == "sgd":
-            self.optimizer = optim.SGD(
-                parameters=self.model.parameters(),
-                learning_rate=params.learning_rate,
-                momentum=0.9,
             )
         else:
             raise ValueError(f"Optimizer {params.optimizer} not supported")
@@ -609,13 +600,7 @@ def train(config: DictConfig):
 
     params.batch_size = int(params.batch_size // world_size)
     params.startEpoch = 0
-    if config.sweep_id:
-        jid = os.environ["SLURM_JOBID"]
-        exp_dir = os.path.join(
-            params.exp_dir, config.sweep_id, config.config, str(config.run_name), jid
-        )
-    else:
-        exp_dir = os.path.join(params.exp_dir, config.config, str(config.run_name))
+    exp_dir = os.path.join(params.exp_dir, config.config, str(config.run_name))
 
     params.old_exp_dir = exp_dir
     params.experiment_dir = os.path.abspath(exp_dir)
@@ -627,10 +612,9 @@ def train(config: DictConfig):
         params.old_exp_dir, "training_checkpoints/best_ckpt.tar"
     )
 
-    if global_rank == 0:
-        if not os.path.isdir(exp_dir):
-            os.makedirs(exp_dir)
-            os.makedirs(os.path.join(exp_dir, "training_checkpoints/"))
+    if global_rank == 0 and not os.path.isdir(exp_dir):
+        os.makedirs(exp_dir)
+        os.makedirs(os.path.join(exp_dir, "training_checkpoints/"))
     params.resuming = True if os.path.isfile(params.checkpoint_path) else False
     params.name = str(config.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
