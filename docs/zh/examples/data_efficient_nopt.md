@@ -11,15 +11,32 @@
 === "模型训练命令"
 
     ``` sh
+    # Download possion_64 data and model into `examples/data_efficient_nopt/data`
     cd examples/data_efficient_nopt
-    # Download possion_64 data from https://drive.google.com/drive/folders/1crIsTZGxZULWhrXkwGDiWF33W6RHxJkf
-    # Download helmholtz_64 data from https://drive.google.com/drive/folders/1UjIaF6FsjmN_xlGGSUX-1K2V3EF2Zalw
+    mkdir data && cd data
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_train.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_val.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_test.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e1_20_train_scale.npy
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_train.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_train_scale.npy
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_val.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_test.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/train_rand_idx.npy
 
-    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `train`, and then specify to `train_path`, `val_path`, `test_path`, `scales_path` and `train_rand_idx_path`
 
-    # pretrain or finetune, for possion_64 or helmholtz_64.
-    # specify config_name to fno_possion using `data_efficient_nopt_fno_poisson`, or to fno_helmholtz using `data_efficient_nopt_fno_helmholtz`
-    python data_efficient_nopt.py --config-name=<config_name>
+    # pretrain
+    cd examples/data_efficient_nopt
+    python data_efficient_nopt.py \
+        --config-name data_efficient_nopt_fno_poisson \
+        config=pois-64-pretrain-e1_20_m0
+
+    # finetune
+    python data_efficient_nopt.py \
+        --config-name data_efficient_nopt_fno_poisson \
+        mode=finetune \
+        config=pois_64_finetune_e5_15 \
+        train_config.pois_64_finetune_e5_15.pretrained_ckpt_path="./data/pretrain_b01_m0.pdparams"
     ```
 
 === "模型评估命令"
@@ -34,16 +51,13 @@
 
     ``` sh
     cd examples/data_efficient_nopt
-    # Update the file paths in `cexamples/data_efficient_nopt/config/data_efficient_nopt.yaml`, specify to mode in `infer`, and then specify to `ckpt_path`, `train_path`, `test_path` and `scales_path`
-    # Use a fine-tuned model as the checkpoint in 'exp' or utilize `model_convert.py` to convert the official checkpoint.
+    mkdir data && cd data
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/finetune_b01_m0_n8192.pdparams
 
-    # use your onw finetune checkpoints, or download checkpoint from [FNO-Poisson](https://drive.google.com/drive/folders/1ekmXqqvpaY6pNStTciw1SCAzF0gjFP_V) or [FNO-Helmholtz](https://drive.google.com/drive/folders/1k7US8ZAgB14Wj9bfdgO_Cjw6hOrG6UaZ) and then convert to paddlepaddle weights.
-    python model_convert.py --pt-model <pt_checkpiont> --pd-model <pd_checkpiont>
-
-    # inference for possion_64 or helmholtz_64, specify in config as following:
-    #   ckpt_path: <ckpt_path>
-    # specify config_name to fno_possion using `data_efficient_nopt_fno_poisson`, or to fno_helmholtz using `data_efficient_nopt_fno_helmholtz`
-    python data_efficient_nopt.py --config-name=<config_name>
+    python data_efficient_nopt.py \
+        --config-name=data_efficient_nopt_fno_poisson.yaml \
+        mode=infer \
+        infer_config.ckpt_path=./exp/pois_64_finetune_e5_15/r0/training_checkpoints/ckpt.tar
     ```
 
 ## 1. 背景简介

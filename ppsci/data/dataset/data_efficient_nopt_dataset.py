@@ -691,10 +691,6 @@ class MultisetSampler(Sampler[T_co]):
 
 def PoisHelmDatasetLoader(params, location, distributed, train=True):
     transform = paddle.to_tensor
-    print(
-        f"Current batch size for {'train' if train else 'val'} loader is {int(params.batch_size)}"
-    )
-
     dataset = PoisHelmDataset(params, location, transform, train)
 
     sampler = DistributedBatchSampler(dataset, shuffle=train) if distributed else None
@@ -705,7 +701,6 @@ def PoisHelmDatasetLoader(params, location, distributed, train=True):
         shuffle=False,
         drop_last=True,
     )
-    print(f"There are {len(dataset)} samples used")
     return dataloader, dataset, sampler
 
 
