@@ -90,12 +90,6 @@ def param_diff(params1, params2):
 
 
 def add_weight_decay(model, weight_decay=1e-5, inner_lr=1e-3, skip_list=()):
-    """From Ross Wightman at:
-    https://discuss.pytorch.org/t/weight-decay-in-the-optimizers-is-a-bad-idea-especially-with-batchnorm/16994/3
-
-    Goes through the parameter list and if the squeeze dim is 1 or 0 (usually means bias or scale)
-    then don't apply weight decay.
-    """
     decay = []
     no_decay = []
     for name, param in model.named_parameters():
@@ -617,26 +611,26 @@ def train(config: DictConfig):
     params.startEpoch = 0
     if config.sweep_id:
         jid = os.environ["SLURM_JOBID"]
-        expDir = os.path.join(
+        exp_dir = os.path.join(
             params.exp_dir, config.sweep_id, config.config, str(config.run_name), jid
         )
     else:
-        expDir = os.path.join(params.exp_dir, config.config, str(config.run_name))
+        exp_dir = os.path.join(params.exp_dir, config.config, str(config.run_name))
 
-    params.old_exp_dir = expDir
-    params.experiment_dir = os.path.abspath(expDir)
-    params.checkpoint_path = os.path.join(expDir, "training_checkpoints/ckpt.tar")
+    params.old_exp_dir = exp_dir
+    params.experiment_dir = os.path.abspath(exp_dir)
+    params.checkpoint_path = os.path.join(exp_dir, "training_checkpoints/ckpt.tar")
     params.best_checkpoint_path = os.path.join(
-        expDir, "training_checkpoints/best_ckpt.tar"
+        exp_dir, "training_checkpoints/best_ckpt.tar"
     )
     params.old_checkpoint_path = os.path.join(
         params.old_exp_dir, "training_checkpoints/best_ckpt.tar"
     )
 
     if global_rank == 0:
-        if not os.path.isdir(expDir):
-            os.makedirs(expDir)
-            os.makedirs(os.path.join(expDir, "training_checkpoints/"))
+        if not os.path.isdir(exp_dir):
+            os.makedirs(exp_dir)
+            os.makedirs(os.path.join(exp_dir, "training_checkpoints/"))
     params.resuming = True if os.path.isfile(params.checkpoint_path) else False
     params.name = str(config.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
@@ -646,7 +640,7 @@ def train(config: DictConfig):
         yaml = YAML()
         for key, value in params.params.items():
             hparams[str(key)] = str(value)
-        with open(os.path.join(expDir, "hyperparams.yaml"), "w") as hpfile:
+        with open(os.path.join(exp_dir, "hyperparams.yaml"), "w") as hpfile:
             yaml.dump(hparams, hpfile)
     trainer = Trainer(params, global_rank, local_rank, device, sweep_id=config.sweep_id)
     if config.sweep_id and trainer.global_rank == 0:
