@@ -1,9 +1,12 @@
-defaults: #
-  - ppsci_default #
-  - TRAIN: train_default #
-  - EVAL: eval_default #
-#  - INFER: infer_default #
-  - _self_ #
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
 
 hydra:
   run:
@@ -51,7 +54,6 @@ TRAIN: #
   #  checkpoint_path: null #
   #  k: 9
   #  i: 2
-
 
 # evaluation settings
 EVAL:
