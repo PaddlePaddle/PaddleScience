@@ -873,34 +873,3 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
 
     img = _cast_squeeze_out(img, need_cast, need_squeeze, out_dtype)
     return img
-
-
-class YParams:
-    """Yaml file parser"""
-
-    def __init__(self, yaml_params, config_name, mode):
-        self._config_name = config_name
-        self.params = {}
-        self.mode = mode
-
-        for key, val in yaml_params[config_name].items():
-            if val == "None":
-                val = None
-
-            self.params[key] = val
-            self.__setattr__(key, val)
-
-    def __getitem__(self, key):
-        return self.params[key]
-
-    def __setitem__(self, key, val):
-        self.params[key] = val
-        self.__setattr__(key, val)
-
-    def __contains__(self, key):
-        return key in self.params
-
-    def update_params(self, config):
-        for key, val in config.items():
-            self.params[key] = val
-            self.__setattr__(key, val)

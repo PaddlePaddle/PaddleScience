@@ -30,11 +30,9 @@ import paddle.optimizer as optim
 from einops import rearrange
 from omegaconf import DictConfig
 from ruamel.yaml import YAML
-from ruamel.yaml.comments import CommentedMap as ruamelDict
 from scipy.stats import linregress
 from tqdm import tqdm
 
-from ppsci.arch.data_efficient_nopt_model import YParams
 from ppsci.arch.data_efficient_nopt_model import add_weight_decay
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
@@ -527,8 +525,16 @@ class Trainer:
 
 
 def train(config: DictConfig):
-    params = YParams(config.train_config, config.config, config.mode)
+    params = YAML()
+    params._config_name = config.config
+    params.params = {}
+    params.mode = config.mode
     params.use_ddp = config.use_ddp
+    for key, val in config.train_config[config.config].items():
+        val = None if val == "None" else val
+        params.params[key] = val
+        params.__setattr__(key, val)
+
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     global_rank = int(os.environ.get("RANK", 0))
     world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -559,13 +565,6 @@ def train(config: DictConfig):
     params.name = str(config.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
 
-    if global_rank == 0:
-        hparams = ruamelDict()
-        yaml = YAML()
-        for key, value in params.params.items():
-            hparams[str(key)] = str(value)
-        with open(os.path.join(exp_dir, "hyperparams.yaml"), "w") as hpfile:
-            yaml.dump(hparams, hpfile)
     trainer = Trainer(params, global_rank, local_rank, device, sweep_id=config.sweep_id)
     if config.sweep_id and trainer.global_rank == 0:
         print(config.sweep_id, trainer.params.entity, trainer.params.project)
