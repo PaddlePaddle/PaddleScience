@@ -27,6 +27,7 @@
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_val.h5
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_test.h5
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/train_rand_idx.npy
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/pretrain_b01_m0.pdparams
 
 
     # pretrain
@@ -40,7 +41,7 @@
         --config-name data_efficient_nopt_fno_poisson \
         mode=finetune \
         config=pois_64_finetune_e5_15 \
-        train_config.pois_64_finetune_e5_15.pretrained_ckpt_path="./data/pretrain_b01_m0.pdparams"
+        train_config.pois_64_finetune_e5_15.pretrained_ckpt_path="./data/possion_64/pretrain_b01_m0.pdparams"
     ```
 
 === "模型推理命令"
@@ -54,7 +55,7 @@
     python data_efficient_nopt.py \
         --config-name=data_efficient_nopt_fno_poisson.yaml \
         mode=infer \
-        infer_config.ckpt_path=./exp/pois_64_finetune_e5_15/r0/training_checkpoints/ckpt.tar
+        infer_config.ckpt_path=./data/possion_64/finetune_b01_m0_n8192.pdparams
     ```
 
 ## 1. 背景简介
