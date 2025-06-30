@@ -8,6 +8,10 @@
 
 ## 代码信息
 
+|    Model    |       Checkpoint       | **R2** | **Slope** |
+| :---------: | :--------------------: | :----: | :-------: |
+| FNO_Possion | [finetune_b01_m0_n8192](https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/finetune_b01_m0_n8192.pdparams) | 0.9765 |   0.9752  |
+
 === "模型训练命令"
 
     ``` sh
@@ -38,14 +42,6 @@
         config=pois_64_finetune_e5_15 \
         train_config.pois_64_finetune_e5_15.pretrained_ckpt_path="./data/pretrain_b01_m0.pdparams"
     ```
-
-=== "模型评估命令"
-
-    暂无
-
-=== "模型导出命令"
-
-    暂无
 
 === "模型推理命令"
 
@@ -206,12 +202,6 @@ examples/data_efficient_nopt/data_efficient_nopt.py
 ![fig3](https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/fig6.png)
 
 总而言之，这篇论文提出了一种创新且高效的神经算子学习框架，通过无监督预训练在大量廉价的无标签物理数据上学习通用表示，并通过情境学习在推理阶段利用少量相似案例来提升OOD泛化能力。这一框架显著降低了对昂贵模拟数据的需求，并提高了模型在复杂物理问题中的适应性和泛化性，为科学机器学习的数据高效发展开辟了新途径。
-
-下方展示了部分实验结果：
-
-|    Model    |       Checkpoint       | **$RMSE$** | **RMSE (normalized)$** | **R2** | **Slope** |
-| :---------: | :--------------------: | :--------: | :--------------------: | :----: | :-------: |
-| FNO_Possion | finetune_b01_m0_n8192  |   0.2586   |          0.1414        | 0.9765 |   0.9752  |
 
 ## 6. 参考资料
 

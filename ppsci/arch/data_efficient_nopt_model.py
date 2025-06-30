@@ -18,24 +18,79 @@ from typing import List
 
 import paddle
 import paddle.nn as nn
-import paddle.nn.functional as F
 import paddle.tensor as Tensor
 
+from ppsci.arch.activation import act_func_dict
 
-def _get_act(activation):
-    if activation == "tanh":
-        func = F.tanh
-    elif activation == "gelu":
-        func = F.gelu
-    elif activation == "relu":
-        func = F.relu_
-    elif activation == "elu":
-        func = F.elu_
-    elif activation == "leaky_relu":
-        func = F.leaky_relu_
-    else:
-        raise ValueError(f"{activation} is not supported")
-    return func
+FULL_MODE_CUTOFF = 999999999999
+NORMAL_MODE_CUTOFF = 40
+
+
+def get_cutoff(full):
+    return FULL_MODE_CUTOFF if full else NORMAL_MODE_CUTOFF
+
+
+def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
+    x = paddle.sum((pred - target) ** 2, axis=spatial_dim) / paddle.sum(
+        target**2, axis=spatial_dim
+    )
+    x = paddle.sqrt(x)
+    return paddle.mean(x)
+
+
+def grad_norm(parameters):
+    with paddle.no_grad():
+        total_norm = 0
+        for p in parameters:
+            if p.grad is not None:
+                total_norm += p.grad.data.pow(2).sum().item()
+        return total_norm**0.5
+
+
+def grad_clone(parameters):
+    with paddle.no_grad():
+        clones = []
+        for p in parameters:
+            if p.grad is not None:
+                clones.append(p.grad.clone())
+            else:
+                clones.append(paddle.zeros_like(p))
+        return clones
+
+
+def param_norm(parameters):
+    with paddle.no_grad():
+        total_norm = 0
+        for p in parameters:
+            total_norm += p.pow(2).sum().item()
+        return total_norm**0.5
+
+
+def param_diff(params1, params2):
+    with paddle.no_grad():
+        total_norm = 0
+        for p1, p2 in zip(params1, params2):
+            total_norm += (p2 - p1).pow(2).sum().item()
+        return total_norm**0.5
+
+
+def add_weight_decay(model, weight_decay=1e-5, inner_lr=1e-3, skip_list=()):
+    decay = []
+    no_decay = []
+    for name, param in model.named_parameters():
+        if param.stop_gradient:
+            continue
+        if len(param.squeeze().shape) <= 1 or name in skip_list:
+            no_decay.append(param)
+        else:
+            decay.append(param)
+    return [
+        {
+            "params": no_decay,
+            "weight_decay": 0.0,
+        },
+        {"params": decay, "weight_decay": weight_decay},
+    ]
 
 
 def compl_mul2d_v2(a: paddle.Tensor, b: paddle.Tensor) -> paddle.Tensor:
@@ -141,7 +196,7 @@ class FNN2d_Backbone(nn.Layer):
             ]
         )
 
-        self.activation = _get_act(activation)
+        self.activation = act_func_dict[activation]
 
     def forward(self, x):
         """
@@ -205,7 +260,7 @@ class FNN2d(nn.Layer):
         self.dropout = nn.Dropout(p=dropout)
         self.fc1 = nn.Linear(layers[-1], fc_dim)
         self.fc2 = nn.Linear(fc_dim, out_dim)
-        self.activation = _get_act(activation)
+        self.activation = act_func_dict[activation]
         self.mean_constraint = mean_constraint
 
     def forward(self, x):
@@ -387,7 +442,7 @@ class FNN2d_FewShot_Baseline(nn.Layer):
             layers[-1] * (n_demos + 1) + out_dim * n_demos * self.num_heads, fc_dim
         )
         self.fc2 = nn.Linear(fc_dim, out_dim)
-        self.activation = _get_act(activation)
+        self.activation = act_func_dict[activation]
         self.mean_constraint = mean_constraint
         self.n_demos = n_demos
 
@@ -504,8 +559,7 @@ class FNN2d_FewShot_Spatial_v2(nn.Layer):
         self.l_attn = l_attn
         self.fc1 = nn.Linear(self.C_fno, fc_dim)
         self.fc2 = nn.Linear(fc_dim, out_dim)
-        #########################
-        self.activation = _get_act(activation)
+        self.activation = act_func_dict[activation]
         self.mean_constraint = mean_constraint
         self.n_demos = n_demos
 
@@ -682,7 +736,7 @@ class FNN2d_MAE(nn.Layer):
         )
         self.dropout = nn.Dropout(p=dropout)
         self.encoder_to_decoder = nn.Linear(self.C_fno, self.C_fno)
-        self.activation = _get_act(activation)
+        self.activation = act_func_dict[activation]
         self.mean_constraint = mean_constraint
 
     def forward(self, x, mask=None):

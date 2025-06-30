@@ -35,76 +35,19 @@ from scipy.stats import linregress
 from tqdm import tqdm
 
 from ppsci.arch.data_efficient_nopt_model import YParams
+from ppsci.arch.data_efficient_nopt_model import add_weight_decay
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
 from ppsci.arch.data_efficient_nopt_model import gaussian_blur
+from ppsci.arch.data_efficient_nopt_model import get_cutoff
+from ppsci.arch.data_efficient_nopt_model import grad_norm
+from ppsci.arch.data_efficient_nopt_model import l2_err
+from ppsci.arch.data_efficient_nopt_model import param_diff
+from ppsci.arch.data_efficient_nopt_model import param_norm
 from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
 
 logger = logging.getLogger(__name__)
-
-
-def l2_err(pred, target, spatial_dim=(-1, -2, -3)):
-    x = paddle.sum((pred - target) ** 2, axis=spatial_dim) / paddle.sum(
-        target**2, axis=spatial_dim
-    )
-    x = paddle.sqrt(x)
-    return paddle.mean(x)
-
-
-def grad_norm(parameters):
-    with paddle.no_grad():
-        total_norm = 0
-        for p in parameters:
-            if p.grad is not None:
-                total_norm += p.grad.data.pow(2).sum().item()
-        return total_norm**0.5
-
-
-def grad_clone(parameters):
-    with paddle.no_grad():
-        clones = []
-        for p in parameters:
-            if p.grad is not None:
-                clones.append(p.grad.clone())
-            else:
-                clones.append(paddle.zeros_like(p))
-        return clones
-
-
-def param_norm(parameters):
-    with paddle.no_grad():
-        total_norm = 0
-        for p in parameters:
-            total_norm += p.pow(2).sum().item()
-        return total_norm**0.5
-
-
-def param_diff(params1, params2):
-    with paddle.no_grad():
-        total_norm = 0
-        for p1, p2 in zip(params1, params2):
-            total_norm += (p2 - p1).pow(2).sum().item()
-        return total_norm**0.5
-
-
-def add_weight_decay(model, weight_decay=1e-5, inner_lr=1e-3, skip_list=()):
-    decay = []
-    no_decay = []
-    for name, param in model.named_parameters():
-        if param.stop_gradient:
-            continue
-        if len(param.squeeze().shape) <= 1 or name in skip_list:
-            no_decay.append(param)
-        else:
-            decay.append(param)
-    return [
-        {
-            "params": no_decay,
-            "weight_decay": 0.0,
-        },
-        {"params": decay, "weight_decay": weight_decay},
-    ]
 
 
 class Trainer:
@@ -531,10 +474,7 @@ class Trainer:
         Note: need to split datasets for meaningful metrics, but TBD.
         """
         self.model.eval()
-        if full:
-            cutoff = 999999999999
-        else:
-            cutoff = 40
+        cutoff = get_cutoff(full=full)
         with paddle.no_grad():
             with amp.auto_cast(enable=False, dtype=self.mp_type):
                 logs = {

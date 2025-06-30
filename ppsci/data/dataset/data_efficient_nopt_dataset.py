@@ -14,9 +14,6 @@
 #
 # refs: https://github.com/delta-lab-ai/data_efficient_nopt
 
-"""
-Remember to parameterize the file paths eventually
-"""
 import glob
 import logging
 import os
@@ -31,6 +28,8 @@ from paddle.io import Dataset
 from paddle.io import DistributedBatchSampler
 from paddle.io import RandomSampler
 from paddle.io import Sampler
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "MultisetSampler",
@@ -167,7 +166,7 @@ class BaseHDF5DirectoryDataset(Dataset):
                     with h5py.File(file, "r") as _f:
                         samples, steps = self._get_specific_stats(_f)
                         if steps - self.n_steps - (self.dt - 1) < 1:
-                            print(
+                            logger.warning(
                                 "WARNING: File {} has {} steps, but n_steps is {}. Setting file steps = max allowable.".format(
                                     file, steps, self.n_steps
                                 )
@@ -209,7 +208,7 @@ class BaseHDF5DirectoryDataset(Dataset):
                             + (steps - file_nsteps - (self.dt - 1)) * split_samples
                         )
                 except:  # noqa
-                    print(
+                    logger.warning(
                         "WARNING: Failed to open file {}. Continuing without it.".format(
                             file
                         )
@@ -221,13 +220,12 @@ class BaseHDF5DirectoryDataset(Dataset):
         self.len = self.offsets[-1]
         if self.split_level == "file":
             if self.train_val_test is None:
-                print(
+                logger.warning(
                     "WARNING: No train/val/test split specified. Using all data for training."
                 )
                 self.split_offset = 0
                 self.len = self.offsets[-1]
             else:
-                print("Using train/val/test split: {}".format(self.train_val_test))
                 total_samples = sum(self.file_samples)
                 if (
                     self.train_val_test[1] * total_samples < 1
@@ -495,9 +493,9 @@ class MultisetSampler(Sampler[T_co]):
                     for d in queue:
                         yield d
             except Exception as err:
-                print("ERRRR", err)
+                logger.error("ERRRR", err)
                 sampler_choices.pop(index_sampled)
-                print(
+                logger.warning(
                     f"Note: dset {dset_sampled} fully used. Dsets remaining: {len(sampler_choices)}"
                 )
                 continue
@@ -938,7 +936,7 @@ class MixedDataset(Dataset):
         try:
             x, y = self.sub_dsets[file_idx][local_idx]
         except:  # noqa
-            print(
+            logger.error(
                 "FAILED AT ", file_idx, local_idx, index, int(os.environ.get("RANK", 0))
             )
 
