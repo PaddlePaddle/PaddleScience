@@ -1,6 +1,5 @@
 """
 Setup configuration
-
 """
 
 import setuptools
