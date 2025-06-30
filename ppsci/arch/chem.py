@@ -8,7 +8,7 @@ class ChemMultimodalMLP(base.Arch):
     def __init__(
         self, input_dim, hidden_dim, hidden_dim2, hidden_dim3, hidden_dim4, output_dim
     ):
-        super(ChemMultimodalMLP, self).__init__()
+        super().__init__()
 
         self.r1_fc = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -67,24 +67,19 @@ class ChemMultimodalMLP(base.Arch):
 
     def weighted_average(self, features, weights):
 
-        # 确保权重与特征的维度一致
         weights = weights.clone().detach()
 
-        # 计算加权和
         weighted_sum = sum(f * w for f, w in zip(features, weights))
 
-        # 计算权重和
         total_weight = weights.sum()
 
-        # 返回加权平均
         return weighted_sum / total_weight
 
     def forward(self, x):
         x = self.concat_to_tensor(x, ("v"), axis=-1)
-        # 沿列维度（axis=1）均分
+
         input_splits = paddle.split(x, num_or_sections=5, axis=1)
 
-        # 解包为 5 个变量
         r1_input, r2_input, ligand_input, base_input, solvent_input = input_splits
 
         r1_features = self.r1_fc(r1_input)
@@ -97,7 +92,6 @@ class ChemMultimodalMLP(base.Arch):
 
         solvent_features = self.solvent_fc(solvent_input)
 
-        # 结合特征
         features = [
             r1_features,
             r2_features,
@@ -108,7 +102,6 @@ class ChemMultimodalMLP(base.Arch):
 
         combined_features = self.weighted_average(features, self.weights)
 
-        # 最终预测
         output = self.fc_combined(combined_features)
         output = self.split_to_dict(output, ("u"), axis=-1)
         return output
