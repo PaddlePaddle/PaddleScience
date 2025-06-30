@@ -53,6 +53,6 @@ TRAIN: #
 # evaluation settings
 EVAL:
   test_size: 0.1
-  load_model_path: './angle_pretrained.pdparams'
+  load_model_path: './angle_model.pdparams'
   seed: 20
   pretrained_model_path: null

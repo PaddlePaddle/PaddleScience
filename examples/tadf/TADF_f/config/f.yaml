@@ -59,7 +59,7 @@ TRAIN: #
 # evaluation settings
 EVAL:
   test_size: 0.1
-  load_model_path: './f_pretrained.pdparams'
+  load_model_path: './f_model.pdparams'
   seed: 20
 #  pretrained_model_path: null #
 #  batch_size: 32 #
