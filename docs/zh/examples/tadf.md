@@ -18,17 +18,14 @@
     # Est 预测:  
     cd TADF_Est
     python Est.py mode=train
-    cd ../
 
     #f 预测:
     cd TADF_f
     python f.py mode=train
-    cd ../
 
     # angle 预测:
     cd TADF_angle
     python angle.py mode=train
-    cd ../
     ```
 
 === "模型评估命令"
