@@ -50,6 +50,10 @@
     cd examples/data_efficient_nopt
     mkdir -p data/possion_64 && cd data/possion_64
     wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/finetune_b01_m0_n8192.pdparams
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_test.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_train.h5
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_train_scale.npy
+    wget https://dataset.bj.bcebos.com/PaddleScience/data_efficient_nopt/possion_data/poisson_64_e5_15_val.h5
 
     cd ../..
     python data_efficient_nopt.py \
