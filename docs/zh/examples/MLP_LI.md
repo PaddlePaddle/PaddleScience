@@ -20,6 +20,8 @@
 ## 模型
 
 要查看该模型的具体实现，请参考以下代码文件：`MLP_LI.py`
+（未添加评估部分的实现）
+
 
 
 ## 训练好的模型权重文件
@@ -38,10 +40,6 @@
 
     # 下载预训练模型（如果需要）
     wget "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams"
-
-    # 使用预训练模型进行评估
-    python MLP_LI.py --evaluate --model_path ./checkpoints/MLP_LI_pretrained.pdparams
-    ```
 
 ## 完整代码
 
