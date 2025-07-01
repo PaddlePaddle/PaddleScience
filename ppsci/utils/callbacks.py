@@ -15,9 +15,11 @@
 import importlib.util
 import inspect
 import sys
+import traceback
 from os import path as osp
 from typing import Any
 
+from hydra.core.hydra_config import HydraConfig
 from hydra.experimental.callback import Callback
 from omegaconf import DictConfig
 
@@ -86,7 +88,7 @@ class InitCallback(Callback):
         # fix random seed for reproducibility
         misc.set_random_seed(full_cfg.seed)
 
-        # initialze logger while creating output directory
+        # initialize logger while creating output directory
         logger.init_logger(
             "ppsci",
             osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
@@ -101,6 +103,28 @@ class InitCallback(Callback):
 
             if isinstance(full_cfg.device, str):
                 paddle.device.set_device(full_cfg.device)
+
+        try:
+            if "num" in HydraConfig.get().job:
+                jobs_id = HydraConfig.get().job.num
+            else:
+                jobs_id = None
+            if "n_jobs" in HydraConfig.get().launcher:
+                parallel_jobs_num = HydraConfig.get().launcher.n_jobs
+            else:
+                parallel_jobs_num = None
+
+            if jobs_id and parallel_jobs_num:
+                job_device_id = jobs_id % parallel_jobs_num
+                device_type = paddle.get_device().split(":")[0]
+                logger.message(
+                    f"Running job {jobs_id} on device {device_type}:{job_device_id}(logical device id)"
+                )
+                paddle.set_device(f"{device_type}:{job_device_id}")
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            sys.exit(RUNTIME_EXIT_CODE)
 
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):

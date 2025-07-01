@@ -45,7 +45,7 @@ class UNONet(base.Arch):
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
-        ada_in_features (Optional[int],optional): The input channles of the adaptive normalization.Defaults to
+        ada_in_features (Optional[int],optional): The input channels of the adaptive normalization.Defaults to
             None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         fno_skip (str, optional): Type of skip connection to use for fno_block. Defaults to "linear".
@@ -162,7 +162,7 @@ class UNONet(base.Arch):
                 # example, if n_layers = 5, then 4:0, 3:1
                 self.horizontal_skips_map[n_layers - i - 1] = i
         # self.uno_scalings may be a 1d list specifying uniform scaling factor at each layer
-        # or a 2d list, where each row specifies scaling factors along each dimention.
+        # or a 2d list, where each row specifies scaling factors along each dimension.
         # To get the final (end to end) scaling factors we need to multiply
         # the scaling factors (a list) of all layer.
 

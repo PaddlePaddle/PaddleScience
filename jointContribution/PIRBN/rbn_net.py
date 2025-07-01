@@ -133,7 +133,7 @@ class Activation(paddle.nn.Layer):
     def __init__(self, n_neu, c, n_in, activation_function="gaussian"):
         super(Activation, self).__init__()
         self.activation_function = activation_function
-        # PINN      y = w2 * (tanh(w1 * x + b1)) + b2         w,b are trainable parameters, b is bais
+        # PINN      y = w2 * (tanh(w1 * x + b1)) + b2         w,b are trainable parameters, b is bias
         # PIRBN     y = w * exp(b^2 * |x-c|^2)          w,b are trainable parameters, c is constant, b is not bias
 
         if self.activation_function == "gaussian":

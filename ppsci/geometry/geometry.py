@@ -112,9 +112,6 @@ class Geometry:
     def uniform_points(self, n: int, boundary: bool = True) -> np.ndarray:
         """Compute the equi-spaced points in the geometry.
 
-        Warings:
-            This function is not implemented, please use random_points instead.
-
         Args:
             n (int): Number of points.
             boundary (bool): Include boundary points. Defaults to True.
@@ -144,7 +141,7 @@ class Geometry:
                 Halton: Halton sequence.
                 LHS: Latin Hypercube Sampling.
             criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
-                coords from differnet dimension and return a boolean array with shape [n,].
+                coords from different dimension and return a boolean array with shape [n,].
                 Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
             compute_sdf_derivatives (bool): Compute SDF derivatives. Defaults to False.
@@ -245,7 +242,7 @@ class Geometry:
                 Halton: Halton sequence.
                 LHS: Latin Hypercube Sampling.
             criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
-                coords from differnet dimension and return a boolean array with shape [n,].
+                coords from different dimension and return a boolean array with shape [n,].
                 Defaults to None.
             evenly (bool): Evenly sample points. Defaults to False.
 
@@ -379,9 +376,6 @@ class Geometry:
     def uniform_boundary_points(self, n: int) -> np.ndarray:
         """Compute the equi-spaced points on the boundary(not implemented).
 
-        Warings:
-            This function is not implemented, please use random_boundary_points instead.
-
         Args:
             n (int): Number of points.
 
@@ -429,11 +423,7 @@ class Geometry:
         """
 
     def periodic_point(self, x: np.ndarray, component: int):
-        """Compute the periodic image of x(not implemented).
-
-        Warings:
-            This function is not implemented.
-        """
+        """Compute the periodic image of x(not implemented)."""
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
 
     def sdf_derivatives(self, x: np.ndarray, epsilon: float = 1e-4) -> np.ndarray:

@@ -222,11 +222,23 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         python -m pip install https://paddle-qa.bj.bcebos.com/deepali/whl/latest/dist/hf_deepali-0.1.0-py3-none-any.whl
         ```
 
+    === "neuraloperator"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/neuraloperator
+        # install from source(recommended)
+        python -m pip install -e ppsci/externals/neuraloperator
+
+        # install from whl
+        python -m pip install https://paddle-qa.bj.bcebos.com/neuraloperator/whl/cuda11.8/latest/dist/neuraloperator-0.3.0-py3-none-any.whl
+        ```
+
     === "open3d"
 
         ``` sh
         cd PaddleScience
-        git submodule update --init ppsci/externals/deepali
+        git submodule update --init ppsci/externals/Open3D
         # install from whl(cuda 118)(recommended)
         python -m pip install https://paddle-qa.bj.bcebos.com/Open3D/whl/cuda11.8/latest/open3d-0.18.0-cp310-cp310-linux_x86_64.whl
         # install from whl(cuda 123)(recommended)
@@ -253,7 +265,16 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_scatter
         # install from source(recommended)
-        python -m pip install -e ppsci/externals/paddle_scatter
+        python -m pip install ppsci/externals/paddle_scatter
+        ```
+
+    === "paddle_sparse"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/paddle_sparse
+        # install from source(recommended)
+        python -m pip install ppsci/externals/paddle_sparse
         ```
 
     === "tensorly"
@@ -287,7 +308,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
     ``` python
     >>> from ppsci import externals
     >>> print(externals.__all__)
-    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'tensorly', 'warp']
+    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'paddle_sparse', 'tensorly', 'warp']
 
     >>> tl = externals.tensorly
     >>> tl.set_backend("paddle")

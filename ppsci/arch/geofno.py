@@ -67,7 +67,7 @@ class SpectralConv1d(nn.Layer):
 
     def forward(self, x, output_size=None):
         batchsize = x.shape[0]
-        # Compute Fourier coeffcients up to factor of e^(- something constant)
+        # Compute Fourier coefficients up to factor of e^(- something constant)
         x_ft = paddle.fft.rfft(x)
 
         # Multiply relevant Fourier modes

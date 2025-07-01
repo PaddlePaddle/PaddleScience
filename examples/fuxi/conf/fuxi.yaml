@@ -1,0 +1,29 @@
+defaults:
+  - ppsci_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: ./outputs_fuxi
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: infer # running mode: infer
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+input_file: 'FuXi_EC/20231012-06_input_grib.nc'
+num_steps: [20, 20, 20]
+fuxi_config_dir: './conf/'

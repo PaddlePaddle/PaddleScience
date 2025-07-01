@@ -107,73 +107,104 @@ TRAIN:
 | 3        | 1024 | 10     |
 | 4        | 1024 | 20     |
 
-执行如下命令即可按顺序自动运行这 4 组实验。
+=== "串行实验"
 
-``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
-[HYDRA] Launching 4 jobs locally
-[HYDRA]        #0 : seed=42 TRAIN.epochs=10
-...
-[HYDRA]        #1 : seed=42 TRAIN.epochs=20
-...
-[HYDRA]        #2 : seed=1024 TRAIN.epochs=10
-...
-[HYDRA]        #3 : seed=1024 TRAIN.epochs=20
-...
-```
+    执行如下命令即可按顺序，以串行的方式自动运行这 4 组实验。
 
-多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
+    ``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+    [HYDRA] Launching 4 jobs locally
+    [HYDRA]        #0 : seed=42 TRAIN.epochs=10
+    ...
+    [HYDRA]        #1 : seed=42 TRAIN.epochs=20
+    ...
+    [HYDRA]        #2 : seed=1024 TRAIN.epochs=10
+    ...
+    [HYDRA]        #3 : seed=1024 TRAIN.epochs=20
+    ...
+    ```
 
-``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
-PaddleScience/examples/bracket/outputs_bracket/
-└── 2023-10-14 # (1)
-    └── 04-01-52 # (2)
-        ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
-        │   └── multirun.yaml # multirun 配置文件 (3)
-        ├── {==TRAIN.epochs=10,seed=1024==} # 实验编号3的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        ├── {==TRAIN.epochs=10,seed=42==} # 实验编号1的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        ├── {==TRAIN.epochs=20,seed=1024==} # 实验编号4的保存目录
-        │   ├── checkpoints
-        │   │   ├── latest.pdeqn
-        │   │   ├── latest.pdopt
-        │   │   ├── latest.pdparams
-        │   │   └── latest.pdstates
-        │   ├── train.log
-        │   └── visual
-        │       └── epoch_0
-        │           └── result_u_v_w_sigmas.vtu
-        └── {==TRAIN.epochs=20,seed=42==} # 实验编号2的保存目录
-            ├── checkpoints
-            │   ├── latest.pdeqn
-            │   ├── latest.pdopt
-            │   ├── latest.pdparams
-            │   └── latest.pdstates
-            ├── train.log
-            └── visual
-                └── epoch_0
-                    └── result_u_v_w_sigmas.vtu
-```
+    多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-1. 该文件夹是程序运行时根据日期自动创建得到，此处表示2023年10月14日
-2. 该文件夹是程序运行时根据运行时刻(世界标准时间,UTC)自动创建得到，此处表示04点01分52秒
-3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
+    ``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
+    PaddleScience/examples/bracket/outputs_bracket/
+    └── 2023-10-14 # (1)
+        └── 04-01-52 # (2)
+            ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
+            │   └── multirun.yaml # multirun 配置文件 (3)
+            ├── {==TRAIN.epochs=10,seed=1024==} # 实验编号3的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            ├── {==TRAIN.epochs=10,seed=42==} # 实验编号1的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            ├── {==TRAIN.epochs=20,seed=1024==} # 实验编号4的保存目录
+            │   ├── checkpoints
+            │   │   ├── latest.pdeqn
+            │   │   ├── latest.pdopt
+            │   │   ├── latest.pdparams
+            │   │   └── latest.pdstates
+            │   ├── train.log
+            │   └── visual
+            │       └── epoch_0
+            │           └── result_u_v_w_sigmas.vtu
+            └── {==TRAIN.epochs=20,seed=42==} # 实验编号2的保存目录
+                ├── checkpoints
+                │   ├── latest.pdeqn
+                │   ├── latest.pdopt
+                │   ├── latest.pdparams
+                │   └── latest.pdstates
+                ├── train.log
+                └── visual
+                    └── epoch_0
+                        └── result_u_v_w_sigmas.vtu
+    ```
+
+    1. 该文件夹是程序运行时根据日期自动创建得到，此处表示2023年10月14日
+    2. 该文件夹是程序运行时根据运行时刻(世界标准时间,UTC)自动创建得到，此处表示04点01分52秒
+    3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
+
+=== "并行实验"
+
+    如果你的设备上有多个计算设备，则可以使用`hydra-joblib-launcher`插件实现并行实验，提高实验效率。
+
+    首先确认是否安装了`hydra-joblib-launcher`
+
+    ``` sh
+    pip install hydra-joblib-launcher --upgrade
+    ```
+
+    其次在你的运行配置 yaml 文件的开头位置，加入如下字段
+
+    ``` yaml title="xxx.yaml" hl_lines="3"
+    defaults:
+      - ...
+      - override hydra/launcher: joblib
+      - _self_
+    ```
+
+    最后执行如下命令即可在 3,4,5,6 这四个设备上，一次并行运行 4 个任务。
+
+    ``` sh
+    {++CUDA_VISIBLE_DEVICES=3,4,6,7++} \
+        python main_parallel.py -cn main_parallel -m seed=42,1024 TRAIN.epochs=10,20 \
+        {++hydra.launcher.n_jobs=4++}
+    ```
+
+    注：设备数和并行任务数可以不相等，但建议单次并行的任务数小于等于设备数。
 
 考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。
 
@@ -952,8 +983,7 @@ best_value: 0.02460772916674614
 
     ``` sh
     # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    export CUDA_VISIBLE_DEVICES=0,1,2,3
-    python -m paddle.distributed.launch --gpus="0,1,2,3" poiseuille_flow.py
+    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch poiseuille_flow.py
     ```
 
 <!-- #### 2.2.2 模型并行
@@ -1079,6 +1109,53 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     2. 开启 SWA 功能
     3. 设置平均间隔为 1 个 epoch
     4. 设置平均的起始和终止 epoch 为 75 至 100
+
+### 2.7 回调(callback)注册与调用指南
+
+在深度学习模型的训练过程中，能够在特定的时机执行自定义逻辑是非常有用的。PaddleScience 的 `Solver` 类提供了一种相对灵活的机制，允许用户在**训练的不同阶段**注册和调用回调函数。
+
+具体地，我们提供了如下四种注册回调函数的接口：
+
+``` py
+Solver.register_callback_on_epoch_begin # 在每个 epoch 开始时调用
+Solver.register_callback_on_epoch_end # 在每个 epoch 结束时调用
+Solver.register_callback_on_iter_begin # 在每个 iteration 开始时调用
+Solver.register_callback_on_iter_end # 在每个 iteration 结束时调用
+```
+
+它们在训练过程中的调用时机如下示例所示：
+
+``` py hl_lines="3 6 8 10"
+for epoch_id in range(1, num_epochs + 1):
+    # train one epoch...
+    _invoke_callbacks_on_epoch_begin() # 此处按注册顺序, 自动调用通过 register_callback_on_epoch_begin 注册的回调函数
+
+    for iter_id in range(1, num_iters + 1)
+        _invoke_callbacks_on_iter_begin() # 此处按注册顺序, 自动调用通过 register_callback_on_iter_begin 注册的回调函数
+        # train one iteration...
+        _invoke_callbacks_on_iter_end() # 此处按注册顺序, 自动调用通过 register_callback_on_iter_end 注册的回调函数
+
+    _invoke_callbacks_on_epoch_end() # 此处按注册顺序, 自动调用通过 register_callback_on_epoch_end 注册的回调函数
+```
+
+以 `examples/fsi/viv.py` 为例，假设希望在训练时，每隔 100 个 epoch 打印出方程中的可学习参数 `k1`, `k2`，那么可以按照如下示例代码，添加回调函数：
+
+``` py hl_lines="11 12 13 14 15"
+# initialize solver
+solver = ppsci.solver.Solver(
+    model,
+    constraint,
+    optimizer=optimizer,
+    equation=equation,
+    validator=validator,
+    visualizer=visualizer,
+    cfg=cfg,
+)
+def show_learnable_params(slv):
+    if slv.global_step % 100 == 0:
+        ppsci.utils.logger.message(f"{equation['VIV'].k1.item():.5f}, {equation['VIV'].k2.item():.5f}")
+solver.register_callback_on_iter_begin(show_learnable_params)
+```
 
 ## 3. 使用 Nsight 进行性能分析
 

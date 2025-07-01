@@ -28,6 +28,13 @@ mean_path: data/stats/gencast_stats_mean_by_level.nc
 min_path: data/stats/gencast_stats_min_by_level.nc
 param_path: data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
 
+train:
+  learning_rate: 0.001
+  weight_decay: 0.1
+  num_epochs: 2000000
+  batch_size: 1
+  snapshot_freq: 10
+
 sampler_config:
   max_noise_level: 80.0
   min_noise_level: 0.03
@@ -63,8 +70,9 @@ denoiser_architecture_config:
     block_q_dkv: 512
     block_kv_dkv: 1024
     block_kv_dkv_compute: 1024
-    ffw_winit_final_mult: 0.0
-    attn_winit_final_mult: 0.0
+    ffw_winit_final_mult: 1.0
+    attn_winit_final_mult: 1.0
+    attn_winit_mult: 2.0
     ffw_hidden: 2048
     mesh_node_dim: 186
     mesh_node_emb_dim: 512
