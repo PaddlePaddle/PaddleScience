@@ -1,11 +1,11 @@
 from typing import Optional
-
+from paddle_utils import add_tensor_methods
 import paddle.nn.functional as F
 import paddle
 
 __all__ = ["BiTemperedLogisticLoss", "BinaryBiTemperedLogisticLoss"]
 
-
+add_tensor_methods()
 def log_t(u, t):
     """Compute log_t for `u'."""
     if t == 1.0:

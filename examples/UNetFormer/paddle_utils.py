@@ -53,4 +53,27 @@ class PaddleFlag:
     cudnn_allow_tf32 = True
     cudnn_deterministic = False
 
+def add_tensor_methods():
+    def _Tensor_view(self, *args, **kwargs):
+        if args:
+            if len(args)==1 and isinstance(args[0], (tuple, list)):
+                return paddle.reshape(self, args[0])
+            else:
+                return paddle.reshape(self, list(args))
+        elif kwargs:
+            return paddle.reshape(self, shape=list(kwargs.values())[0])
+
+    setattr(paddle.Tensor, 'view', _Tensor_view)
+
+    def _Tensor_reshape(self, *args, **kwargs):
+        if args:
+            if len(args) == 1 and isinstance(args[0], (tuple, list)):
+                return paddle.reshape(self, args[0])
+            else:
+                return paddle.reshape(self, list(args))
+        elif kwargs:
+            assert "shape" in kwargs
+            return paddle.reshape(self, shape=kwargs["shape"])
+
+    setattr(paddle.Tensor, "reshape", _Tensor_reshape)
 

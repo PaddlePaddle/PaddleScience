@@ -1,15 +1,11 @@
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
-import numpy as np
 import paddle
-from paddle_utils import *
-
+from paddle_utils import device2int
+from paddle_utils import add_tensor_methods
 from .dice import DiceLoss
 from .joint_loss import JointLoss
 from .soft_ce import SoftCrossEntropyLoss
 
-
+add_tensor_methods()
 class EdgeLoss(paddle.nn.Layer):
     def __init__(self, ignore_index=255, edge_factor=1.0):
         super(EdgeLoss, self).__init__()

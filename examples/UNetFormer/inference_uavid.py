@@ -1,5 +1,3 @@
-import sys
-
 import argparse
 import glob
 import os
@@ -11,15 +9,12 @@ import cv2
 import numpy as np
 import paddle
 import ttach as tta
-from catalyst.dl import SupervisedRunner
-from paddle_utils import *
-from PIL import Image
-from skimage.morphology import remove_small_holes, remove_small_objects
+from paddle_utils import add_tensor_methods, device2int
 from tools.cfg import py2cfg
 from tqdm import tqdm
-from train_supervision import *
+from train_supervision import PaddleFlag, Supervision_Train
 
-
+add_tensor_methods()
 def seed_everything(seed):
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)

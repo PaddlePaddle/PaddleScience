@@ -4,11 +4,12 @@ import random
 from pathlib import Path
 import numpy as np
 import paddle
-from paddle_utils import *
+from paddle_utils import PaddleFlag
+from paddle_utils import add_tensor_methods
 from tools.cfg import py2cfg
 from tools.metric import Evaluator
 
-
+add_tensor_methods()
 def seed_everything(seed):
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -161,7 +162,7 @@ class ModelCheckpoint:
         self.monitor_mode = mode
         self.dirpath = dirpath
         self.filename = filename
-        self.best_metric = -float('inf') if mode == "max" else float('inf')
+        self.best_metric = -float("inf") if mode == "max" else float("inf")
         self.best_path = ""
         self.current_epoch = 0
 
@@ -192,7 +193,7 @@ class ModelCheckpoint:
         if self.save_top_k <= 0:
             return
             
-        all_files = [f for f in os.listdir(self.dirpath) if f.endswith('.pdparams') and self.filename in f]
+        all_files = [f for f in os.listdir(self.dirpath) if f.endswith(".pdparams") and self.filename in f]
         
         all_files.sort(key=lambda x: os.path.getmtime(os.path.join(self.dirpath, x)), reverse=True)
         
@@ -241,7 +242,7 @@ def main():
         state_dict = paddle.load(config.pretrained_ckpt_path)
         model.set_state_dict(state_dict)
     
-    paddle.set_device('gpu')
+    paddle.set_device("gpu")
 
     
     optimizer, lr_scheduler = model.configure_optimizers()
@@ -279,10 +280,10 @@ def main():
             lr_scheduler.step()
         if config.resume_ckpt_path and epoch == 0:
             state = paddle.load(config.resume_ckpt_path)
-            model.set_state_dict(state['model_state_dict'])
-            optimizer.set_state_dict(state['optimizer_state_dict'])
-            if lr_scheduler and 'lr_scheduler_state_dict' in state:
-                lr_scheduler.set_state_dict(state['lr_scheduler_state_dict'])
+            model.set_state_dict(state["model_state_dict"])
+            optimizer.set_state_dict(state["optimizer_state_dict"])
+            if lr_scheduler and "lr_scheduler_state_dict" in state:
+                lr_scheduler.set_state_dict(state["lr_scheduler_state_dict"])
             print(f"Resumed training from checkpoint: {config.resume_ckpt_path}")
 
 

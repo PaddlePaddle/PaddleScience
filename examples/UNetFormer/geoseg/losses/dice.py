@@ -1,20 +1,15 @@
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 from typing import List
-
 import numpy as np
 import paddle
-from paddle_utils import *
-
 from .functional import soft_dice_score
+from paddle_utils import add_tensor_methods
 
 __all__ = ["DiceLoss"]
 BINARY_MODE = "binary"
 MULTICLASS_MODE = "multiclass"
 MULTILABEL_MODE = "multilabel"
 
-
+add_tensor_methods()
 def to_tensor(x, dtype=None) -> paddle.Tensor:
     if isinstance(x, paddle.Tensor):
         if dtype is not None:

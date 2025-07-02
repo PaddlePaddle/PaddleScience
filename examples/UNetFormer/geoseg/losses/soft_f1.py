@@ -1,14 +1,10 @@
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 from typing import Optional
-
 import paddle
-from paddle_utils import *
+from paddle_utils import add_tensor_methods
 
 __all__ = ["soft_micro_f1", "BinarySoftF1Loss", "SoftF1Loss"]
 
-
+add_tensor_methods()
 def soft_micro_f1(
     preds: paddle.Tensor, targets: paddle.Tensor, eps=1e-06
 ) -> paddle.Tensor:

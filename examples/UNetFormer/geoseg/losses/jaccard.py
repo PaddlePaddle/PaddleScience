@@ -1,21 +1,16 @@
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 from typing import List
-
 import paddle
-from paddle_utils import *
 import paddle.nn.functional as F
-
 from .dice import to_tensor
 from .functional import soft_jaccard_score
+from paddle_utils import add_tensor_methods
 
 __all__ = ["JaccardLoss", "BINARY_MODE", "MULTICLASS_MODE", "MULTILABEL_MODE"]
 BINARY_MODE = "binary"
 MULTICLASS_MODE = "multiclass"
 MULTILABEL_MODE = "multilabel"
 
-
+add_tensor_methods()
 class JaccardLoss(paddle.nn.Layer):
     """
     Implementation of Jaccard loss for image segmentation task.

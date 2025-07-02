@@ -1,15 +1,12 @@
 from __future__ import division, print_function
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 import paddle
-from paddle_utils import *
+from paddle_utils import add_tensor_methods
 
 """
 Lovasz-Softmax and Jaccard hinge loss in PyTorch
 Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
 """
-
+add_tensor_methods()
 from typing import Optional, Union
 
 try:

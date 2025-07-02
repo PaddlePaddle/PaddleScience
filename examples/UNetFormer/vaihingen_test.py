@@ -1,17 +1,16 @@
-import sys
-
 import argparse
 import multiprocessing as mp
-import multiprocessing.pool as mpp
 import time
 from pathlib import Path
 import cv2
 import numpy as np
+import os
 import paddle
-from paddle_utils import *
+from paddle_utils import add_tensor_methods
 from tqdm import tqdm
-from train_supervision import *
+from train_supervision import random, py2cfg, Supervision_Train, Evaluator
 
+add_tensor_methods()
 
 def seed_everything(seed):
     random.seed(seed)
@@ -83,7 +82,7 @@ def main():
     with paddle.no_grad():
         for batch in tqdm(test_loader):
             images = batch["img"]
-            images = images.astype('float32') 
+            images = images.astype("float32") 
             raw_predictions = model(images)
             
             raw_predictions = paddle.nn.functional.softmax(raw_predictions, axis=1)

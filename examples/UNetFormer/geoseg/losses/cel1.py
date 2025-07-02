@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-
+from paddle_utils import add_tensor_methods
 import paddle
 import paddle.nn.functional as F
 
@@ -10,7 +10,7 @@ MULTILABEL_MODE: str = "multilabel"
 EPS = 1e-10
 logger = logging.getLogger(__name__)
 
-
+add_tensor_methods()
 def expand_onehot_labels(labels, target_shape, ignore_index):
     valid_mask = (labels >= 0) & (labels != ignore_index)
     num_classes = target_shape[1]

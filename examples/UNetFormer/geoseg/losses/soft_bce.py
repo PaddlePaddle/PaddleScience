@@ -1,10 +1,10 @@
 from typing import Optional
-
+from paddle_utils import add_tensor_methods
 import paddle
 
 __all__ = ["SoftBCEWithLogitsLoss"]
 
-
+add_tensor_methods()
 class SoftBCEWithLogitsLoss(paddle.nn.Layer):
     """
     Drop-in replacement for nn.BCEWithLogitsLoss with few additions:
@@ -50,7 +50,7 @@ class SoftBCEWithLogitsLoss(paddle.nn.Layer):
             reduction="none",
         )
         if self.ignore_index is not None:
-            not_ignored_mask: Tensor = target != self.ignore_index
+            not_ignored_mask: paddle.Tensor = target != self.ignore_index
             loss *= not_ignored_mask.astype(dtype=loss.dtype)
         if self.reduction == "mean":
             loss = loss.mean()

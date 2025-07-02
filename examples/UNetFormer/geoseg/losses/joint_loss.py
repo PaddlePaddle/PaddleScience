@@ -1,8 +1,9 @@
 import paddle
+from paddle_utils import add_tensor_methods
 
 __all__ = ["JointLoss", "WeightedLoss"]
 
-
+add_tensor_methods()
 class WeightedLoss(paddle.nn.Layer):
     """Wrapper class around loss function that applies weighted with fixed factor.
     This class helps to balance multiple losses if they have different scales

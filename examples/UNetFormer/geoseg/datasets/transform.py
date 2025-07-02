@@ -1,11 +1,7 @@
-import math
 import numbers
 import random
-
 import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
-from scipy.ndimage import maximum_filter
-from scipy.ndimage.morphology import binary_erosion, generate_binary_structure
 
 
 class Compose(object):
@@ -175,11 +171,11 @@ class RandomScale(object):
 
 class ColorJitter(object):
     def __init__(self, brightness=0.5, contrast=0.5, saturation=0.5):
-        if not brightness is None and brightness > 0:
+        if brightness is not None and brightness > 0:
             self.brightness = [max(1 - brightness, 0), 1 + brightness]
-        if not contrast is None and contrast > 0:
+        if contrast is not None and contrast > 0:
             self.contrast = [max(1 - contrast, 0), 1 + contrast]
-        if not saturation is None and saturation > 0:
+        if saturation is not None and saturation > 0:
             self.saturation = [max(1 - saturation, 0), 1 + saturation]
 
     def __call__(self, img, mask=None):

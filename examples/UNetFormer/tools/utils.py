@@ -1,16 +1,7 @@
 import collections
 import copy
-import os
 import re
-from collections import defaultdict
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
-
-import numpy as np
+from typing import Dict, List,  Union
 import paddle
 
 

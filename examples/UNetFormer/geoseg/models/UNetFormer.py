@@ -1,10 +1,9 @@
-import sys
-
 import einops
 import paddle
-from paddle_utils import *
+from paddle_utils import add_tensor_methods
+from paddle_utils import dim2perm
 
-
+add_tensor_methods()
 class DropPath(paddle.nn.Layer):
     """DropPath class"""
     def __init__(self, drop_prob=None):

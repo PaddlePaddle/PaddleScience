@@ -1,12 +1,12 @@
 from functools import partial
-
+from paddle_utils import add_tensor_methods
 import paddle
 
 from .functional import focal_loss_with_logits
 
 __all__ = ["BinaryFocalLoss", "FocalLoss"]
 
-
+add_tensor_methods()
 class BinaryFocalLoss(paddle.nn.Layer):
     def __init__(
         self,

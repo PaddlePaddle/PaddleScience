@@ -1,6 +1,6 @@
 import paddle
-from geoseg.datasets.vaihingen_dataset import *
-from geoseg.losses import *
+from geoseg.datasets.vaihingen_dataset import CLASSES, VaihingenDataset, train_aug, val_aug
+from geoseg.losses import UnetFormerLoss
 from geoseg.models.UNetFormer import UNetFormer
 from tools.utils import process_model_params
 
@@ -55,10 +55,6 @@ layerwise_params = {
     "backbone.*": dict(lr=backbone_lr, weight_decay=backbone_weight_decay)
 }
 net_params = process_model_params(net, layerwise_params=layerwise_params)
-'''base_optimizer = paddle.optimizer.AdamW(
-    parameters=net_params, learning_rate=lr, weight_decay=weight_decay
-)
-optimizer = Lookahead(base_optimizer, alpha=0.2, k=5)'''
 optimizer = paddle.optimizer.AdamW(
     parameters=net_params, learning_rate=lr, weight_decay=weight_decay
 )

@@ -1,12 +1,11 @@
 from typing import Optional
-
 import paddle
-
 from .functional import label_smoothed_nll_loss
+from paddle_utils import add_tensor_methods
 
 __all__ = ["SoftCrossEntropyLoss"]
 
-
+add_tensor_methods()
 class SoftCrossEntropyLoss(paddle.nn.Layer):
     """
     Drop-in replacement for nn.CrossEntropyLoss with few additions:

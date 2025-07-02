@@ -1,6 +1,6 @@
 import math
 from typing import Optional
-
+from paddle_utils import add_tensor_methods
 import paddle
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
     "wing_loss",
 ]
 
-
+add_tensor_methods()
 def focal_loss_with_logits(
     output: paddle.Tensor,
     target: paddle.Tensor,

@@ -1,10 +1,8 @@
-from typing import Optional
-
 import paddle
-
+from paddle_utils import add_tensor_methods
 __all__ = ["FocalCosineLoss"]
 
-
+add_tensor_methods()
 class FocalCosineLoss(paddle.nn.Layer):
     """
     Implementation Focal cosine loss from the "Data-Efficient Deep Learning Method for Image Classification

@@ -1,6 +1,3 @@
-import sys
-
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 import argparse
 import glob
 import multiprocessing as mp
@@ -8,16 +5,16 @@ import multiprocessing.pool as mpp
 import os
 import random
 import time
-
 import albumentations as albu
 import cv2
 import numpy as np
 import paddle
-from paddle_utils import *
+from paddle_utils import PaddleFlag
+from paddle_utils import add_tensor_methods
 from PIL import Image
 
 SEED = 42
-
+add_tensor_methods()
 
 def seed_everything(seed):
     random.seed(seed)

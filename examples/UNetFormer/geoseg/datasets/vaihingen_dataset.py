@@ -9,7 +9,9 @@ import numpy as np
 import paddle
 from PIL import Image
 
-from .transform import *
+from .transform import Compose
+from .transform import RandomScale
+from .transform import SmartCropV1
 
 CLASSES = "ImSurf", "Building", "LowVeg", "Tree", "Car", "Clutter"
 PALETTE = [

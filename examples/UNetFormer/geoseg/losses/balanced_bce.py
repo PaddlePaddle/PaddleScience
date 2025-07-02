@@ -1,10 +1,10 @@
 from typing import Optional
-
+from paddle_utils import add_tensor_methods
 import paddle
 
 __all__ = ["BalancedBCEWithLogitsLoss", "balanced_binary_cross_entropy_with_logits"]
 
-
+add_tensor_methods()
 def balanced_binary_cross_entropy_with_logits(
     logits: paddle.Tensor,
     targets: paddle.Tensor,
@@ -26,8 +26,8 @@ def balanced_binary_cross_entropy_with_logits(
         Zero-sized tensor with reduced loss if `reduction` is `sum` or `mean`; Otherwise returns loss of the
         shape of `logits` tensor.
     """
-    pos_targets: Tensor = targets.equal(y=1).sum()
-    neg_targets: Tensor = targets.equal(y=0).sum()
+    pos_targets: paddle.Tensor = targets.equal(y=1).sum()
+    neg_targets: paddle.Tensor = targets.equal(y=0).sum()
     num_targets = pos_targets + neg_targets
     pos_weight = paddle.pow(x=neg_targets / (num_targets + 1e-07), y=gamma)
     neg_weight = 1.0 - pos_weight
