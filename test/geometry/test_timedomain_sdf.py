@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pytest
 
 from ppsci import geometry
@@ -29,6 +30,18 @@ def test_sdf_of_TimeXGeometry():
     assert "sdf" in interior_points
     assert "sdf__x" in interior_points
     assert "sdf__y" in interior_points
+
+    interior_points = {"x": np.linspace(-1, 1, dtype="float32").reshape((-1, 1))}
+    geom = geometry.PointCloud(interior_points, ("x",))
+    time_geom = geometry.TimeXGeometry(timedomain, geom)
+
+    interior_points = time_geom.sample_interior(
+        timedomain.num_timestamps * 10, compute_sdf_derivatives=True
+    )
+
+    assert "sdf" not in interior_points
+    assert "sdf__x" not in interior_points
+    assert "sdf__y" not in interior_points
 
 
 if __name__ == "__main__":
