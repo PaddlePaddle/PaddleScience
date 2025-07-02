@@ -311,6 +311,7 @@ if importlib.util.find_spec("pydantic") is not None:
             to_static: bool = False
             prim: bool = False
             log_level: Literal["debug", "info", "warning", "error"] = "info"
+            trace: bool = False
 
             # Training related config
             TRAIN: Optional[TrainConfig] = None
@@ -408,6 +409,7 @@ if importlib.util.find_spec("pydantic") is not None:
             "to_static",
             "prim",
             "log_level",
+            "trace",
             "TRAIN.save_freq",
             "TRAIN.eval_during_train",
             "TRAIN.start_eval_epoch",
