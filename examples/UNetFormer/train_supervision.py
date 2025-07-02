@@ -1,11 +1,7 @@
-import sys
-
 import argparse
 import os
 import random
 from pathlib import Path
-
-import cv2
 import numpy as np
 import paddle
 from paddle_utils import *

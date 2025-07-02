@@ -1,6 +1,5 @@
 import sys
 
-sys.path.append("/data5/home/qiukaixiang2025/airs/Tran2")
 import argparse
 import glob
 import os
