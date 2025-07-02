@@ -167,26 +167,28 @@ class InitCallback(Callback):
                     os.makedirs(trace_dir, exist_ok=True)
 
                     staged_diff = repo.git.diff("--cached")
-                    staged_diff_path = osp.join(trace_dir, "staged.diff")
-                    with open(staged_diff_path, "w", encoding="utf-8") as f:
-                        f.write(staged_diff)
-                    logger.info(
-                        f"[Code Trace] Staged changes saved to: {staged_diff_path}"
-                    )
-                    logger.info(
-                        f"[Code Trace] To restore your code to this staged version, run: git apply {staged_diff_path}"
-                    )
+                    if len(staged_diff) > 0:
+                        staged_diff_path = osp.join(trace_dir, "staged.diff")
+                        with open(staged_diff_path, "w", encoding="utf-8") as f:
+                            f.write(staged_diff)
+                        logger.info(
+                            f"[Code Trace] Staged changes saved to: {staged_diff_path}"
+                        )
+                        logger.info(
+                            f"[Code Trace] To restore your code to this staged version, run: git apply {staged_diff_path}"
+                        )
 
                     unstaged_diff = repo.git.diff()
-                    unstaged_diff_path = osp.join(trace_dir, "unstaged.diff")
-                    with open(unstaged_diff_path, "w", encoding="utf-8") as f:
-                        f.write(unstaged_diff)
-                    logger.info(
-                        f"[Code Trace] Unstaged changes saved to: {unstaged_diff_path}"
-                    )
-                    logger.info(
-                        f"[Code Trace] To restore your code to this unstaged version, run: git apply {unstaged_diff_path}"
-                    )
+                    if len(unstaged_diff) > 0:
+                        unstaged_diff_path = osp.join(trace_dir, "unstaged.diff")
+                        with open(unstaged_diff_path, "w", encoding="utf-8") as f:
+                            f.write(unstaged_diff)
+                        logger.info(
+                            f"[Code Trace] Unstaged changes saved to: {unstaged_diff_path}"
+                        )
+                        logger.info(
+                            f"[Code Trace] To restore your code to this unstaged version, run: git apply {unstaged_diff_path}"
+                        )
 
             except InvalidGitRepositoryError:
                 logger.warning("[Code Trace] Not a Git repository. Skipping.")
