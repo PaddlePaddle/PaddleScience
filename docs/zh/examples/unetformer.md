@@ -140,7 +140,7 @@ ISPRS提供了城市分类和三维建筑重建测试项目的两个最先进的
 参数配置如下：
 ``` py linenums="7"
 --8<--
-examples/unetformer/config/vaihingen/unetformer.py:7:57
+examples/UNetFormer/config/vaihingen/unetformer.py:7:57
 --8<--
 ```
 
@@ -153,7 +153,7 @@ UNetFormer的损失函数由SoftCrossEntropyLoss交叉熵损失函数和DiceLoss
 
 ``` py linenums="10"
 --8<--
-eexamples/unetformer/geoseg/losses/soft_ce.py:10:40
+eexamples/UNetFormer/geoseg/losses/soft_ce.py:10:40
 --8<--
 ```
 
@@ -161,7 +161,7 @@ eexamples/unetformer/geoseg/losses/soft_ce.py:10:40
 
 ``` py linenums="37"
 --8<--
-examples/unetformer/geoseg/losses/dice.py:37:139
+examples/UNetFormer/geoseg/losses/dice.py:37:139
 --8<--
 ```
 
@@ -170,13 +170,13 @@ SoftCrossEntropyLoss和DiceLoss将使用JointLoss进行组合
 
 ``` py linenums="20"
 --8<--
-examples/unetformer/geoseg/losses/joint_loss.py:20:37
+examples/UNetFormer/geoseg/losses/joint_loss.py:20:37
 --8<--
 ```
 #### 3.4.2 UNetFormerLoss   
 ``` py linenums="96"
 --8<--
-examples/unetformer/geoseg/losses/useful_loss.py:96:117
+examples/UNetFormer/geoseg/losses/useful_loss.py:96:117
 --8<--
 ```
 
@@ -186,7 +186,7 @@ UNetFormer使用AdamW优化器，可直接调用`paddle.optimizer.AdamW`构建�
 
 ``` py linenums="62"
 --8<--
-examples/unetformer/config/vaihingen/unetformer.py:62:69
+examples/UNetFormer/config/vaihingen/unetformer.py:62:69
 --8<--
 ```
 
@@ -194,7 +194,7 @@ examples/unetformer/config/vaihingen/unetformer.py:62:69
 
 ``` py linenums="33"
 --8<--
-examples/unetformer/train_supervision.py:33:290
+examples/UNetFormer/train_supervision.py:33:290
 --8<--
 ```
 
@@ -203,7 +203,7 @@ examples/unetformer/train_supervision.py:33:290
 
 ``` py linenums="60"
 --8<--
-examples/unetformer/vaihingen_test.py:60:119
+examples/UNetFormer/vaihingen_test.py:60:119
 --8<--
 ```
 
