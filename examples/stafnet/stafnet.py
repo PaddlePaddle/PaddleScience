@@ -73,7 +73,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
         eval_during_train=cfg.TRAIN.eval_during_train,
-        seed=cfg.seed,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
