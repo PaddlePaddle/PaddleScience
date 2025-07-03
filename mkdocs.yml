@@ -100,6 +100,7 @@ nav:
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
+        - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
