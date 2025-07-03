@@ -6,9 +6,9 @@
 
 === "模型训练命令"
 
-``` sh
-python stafnet.py DATASET.data_dir="Your train dataset path" EVAL.eval_data_path="Your evaluate dataset path"
-```
+    ``` sh
+    python stafnet.py DATASET.data_dir="Your train dataset path" EVAL.eval_data_path="Your evaluate dataset path"
+    ```
 
 === "模型评估命令"
 
