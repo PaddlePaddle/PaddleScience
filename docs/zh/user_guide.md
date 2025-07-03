@@ -60,12 +60,12 @@ python -m pip install GitPython
 然后在运行命令的末尾加上 `trace=True` 参数
 
 ``` sh
-python allen_cahn_piratenet.py trace=True
+python allen_cahn_piratenet.py {++trace=True++}
 ```
 
 则其打印的日志如下
 
-``` log hl_lines="1-8"
+``` log hl_lines="1-9"
 ppsci MESSAGE: [Code Trace] Git Information:
 ppsci MESSAGE:   Branch : support_code_trace
 ppsci MESSAGE:   Commit : 5ea90ae584b7fff17ff5aa385ba5abb6c04c268c
@@ -83,9 +83,9 @@ ppsci MESSAGE: Set to_static=False for computational optimization.
 ...
 ```
 
-可以看到开启此时会在日志中打印出更为详细的代码版本信息，并自动将当前代码快照保存到 `output_dir/code_snapshot/*.diff` 文件中，可通过 `git apply` 命令将实验代码恢复到快照版本。
+启用该功能后，系统将在日志中记录更详细的代码版本信息，并自动将当前代码的修改差异快照保存至 `output_dir/code_snapshot/*.diff`。在有需要时可使用 `git apply` 命令，将代码恢复至对应快照时的状态。
 
-!!! note "注意事项"
+!!! warning "注意事项"
 
     - 如果需要跟踪新增文件，需先使用 `git add` 将新增文件添加到暂存区后才能被跟踪。
     - 使用本功能需确保当前开发的代码库为 git 仓库，且当前代码库中存在 `.git` 文件夹，否则无法跟踪。
@@ -1155,7 +1155,7 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     3. 设置平均间隔为 1 个 epoch
     4. 设置平均的起始和终止 epoch 为 75 至 100
 
-### 2.7 回调(callback)注册与调用指南
+### 2.7 回调函数(callback)
 
 在深度学习模型的训练过程中，能够在特定的时机执行自定义逻辑是非常有用的。PaddleScience 的 `Solver` 类提供了一种相对灵活的机制，允许用户在**训练的不同阶段**注册和调用回调函数。
 
