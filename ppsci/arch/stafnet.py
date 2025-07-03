@@ -298,29 +298,6 @@ class TimesBlock(paddle.nn.Layer):
         return res, period_list, period_weight_raw
 
 
-def compared_version(ver1, ver2):
-    """
-    :param ver1
-    :param ver2
-    :return: ver1< = >ver2 False/True
-    """
-    list1 = str(ver1).split(".")
-    list2 = str(ver2).split(".")
-    for i in range(len(list1)) if len(list1) < len(list2) else range(len(list2)):
-        if int(list1[i]) == int(list2[i]):
-            pass
-        elif int(list1[i]) < int(list2[i]):
-            return -1
-        else:
-            return 1
-    if len(list1) == len(list2):
-        return True
-    elif len(list1) < len(list2):
-        return False
-    else:
-        return True
-
-
 class PositionalEmbedding(paddle.nn.Layer):
     def __init__(self, d_model, max_len=5000):
         super(PositionalEmbedding, self).__init__()
@@ -347,7 +324,7 @@ class PositionalEmbedding(paddle.nn.Layer):
 class TokenEmbedding(paddle.nn.Layer):
     def __init__(self, c_in, d_model):
         super(TokenEmbedding, self).__init__()
-        padding = 1 if compared_version(paddle.__version__, "1.5.0") else 2
+        padding = 2
         self.tokenConv = paddle.nn.Conv1D(
             in_channels=c_in,
             out_channels=d_model,
