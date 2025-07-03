@@ -77,7 +77,7 @@ examples/stafnet/stafnet.py:10:10
 --8<--
 ```
 
-### 3.4 参数和超参数设定
+### 3.3 参数和超参数设定
 
 其中超参数`cfg.MODEL.gat_hidden_dim`、`cfg.MODEL.e_layers`、`cfg.MODEL.d_model`、`cfg.MODEL.top_k`等默认设定如下：
 
@@ -87,7 +87,7 @@ examples/stafnet/conf/stafnet.yaml:35:59
 --8<--
 ```
 
-### 3.5 优化器构建
+### 3.4 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
@@ -105,7 +105,7 @@ examples/stafnet/conf/stafnet.yaml:70:75
 --8<--
 ```
 
-### 3.6 约束构建
+### 3.5 约束构建
 
 在本案例中，我们使用监督数据集对模型进行训练，因此需要构建监督约束。
 
@@ -125,9 +125,9 @@ examples/stafnet/stafnet.py:46:51
 --8<--
 ```
 
-### 3.7 评估器构建
+### 3.6 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建 3.6](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建 3.5](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
 ``` py linenums="52" title="examples/stafnet/stafnet.py"
 --8<--
@@ -143,7 +143,7 @@ examples/stafnet/stafnet.py:55:55
 --8<--
 ```
 
-### 3.8 模型训练
+### 3.7 模型训练
 
 由于本问题为时序预测问题，因此可以使用PaddleScience内置的`psci.loss.MAELoss('mean')`作为训练过程的损失函数。同时选择使用随机梯度下降法对网络进行优化。完成述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。具体代码如下：
 
