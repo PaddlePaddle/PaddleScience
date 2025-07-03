@@ -12,10 +12,10 @@ python stafnet.py DATASET.data_dir="Your train dataset path" EVAL.eval_data_path
 
 === "模型评估命令"
 
-``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl -P ./dataset/
-python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams"
-```
+    ``` sh
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/stafnet/val_data.pkl -P ./dataset/
+    python stafnet.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/stafnet/stafnet.pdparams"
+    ```
 
 ## 1. 背景介绍
 
