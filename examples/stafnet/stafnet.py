@@ -94,11 +94,6 @@ def evaluate(cfg: DictConfig):
             "pred_len": cfg.MODEL.pred_len,
         },
         "batch_size": cfg.TRAIN.batch_size,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "num_workers": 0,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
