@@ -45,7 +45,52 @@ EVAL:
     sup_validator: 128
 ```
 
-#### 1.1.2 命令行方式配置参数
+#### 1.1.2 保存实验代码快照⭐
+
+尽管我们提供了以 hydra 和 Omegaconf 为基础的运行配置系统，但除了配置文件外还可能会涉及修改源代码，这同样会导致实验代码版本混乱，难以追踪。
+
+为了解决这一问题，PaddleScience 提供了代码差异跟踪功能，通过在运行命令的末尾加上：`trace=True`，就能够自动将当前代码快照保存到 `output_dir/code_snapshot/uncommitted.diff` 文件中，便于后续追踪和复现。
+
+以 `allen_cahn_piratenet.py` 为例，首先确认 Python 环境中安装了 GitPython 包
+
+``` sh
+python -m pip install GitPython
+```
+
+然后在运行命令的末尾加上 `trace=True` 参数
+
+``` sh
+python allen_cahn_piratenet.py {++trace=True++}
+```
+
+则其打印的日志如下
+
+``` log hl_lines="1-9"
+ppsci MESSAGE: [Code Trace] Git Information:
+ppsci MESSAGE:   Branch : support_code_trace
+ppsci MESSAGE:   Commit : 5ea90ae584b7fff17ff5aa385ba5abb6c04c268c
+ppsci MESSAGE:   Date   : 2025-06-24T20:48:07+08:00
+ppsci MESSAGE:   Dirty  : True
+ppsci INFO: [Code Trace] Staged changes saved to: outputs_allen_cahn_piratenet/2025-07-02/20-13-46/code_snapshot/staged.diff
+ppsci INFO: [Code Trace] To restore your code to this staged version, run: git apply outputs_allen_cahn_piratenet/2025-07-02/20-13-46/code_snapshot/staged.diff
+ppsci INFO: [Code Trace] Unstaged changes saved to: outputs_allen_cahn_piratenet/2025-07-02/20-13-46/code_snapshot/unstaged.diff
+ppsci INFO: [Code Trace] To restore your code to this unstaged version, run: git apply outputs_allen_cahn_piratenet/2025-07-02/20-13-46/code_snapshot/unstaged.diff
+W0702 20:13:46.390472 37150 gpu_resources.cc:114] Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 12.0, Runtime API Version: 11.6
+ppsci MESSAGE: 'shuffle' and 'drop_last' are both set to False in default as sampler config is not specified.
+ppsci INFO: Auto collation is disabled and set num_workers to 0 to speed up batch sampling.
+ppsci INFO: Using paddlepaddle develop(f701bb1) on device Place(gpu:0)
+ppsci MESSAGE: Set to_static=False for computational optimization.
+...
+```
+
+启用该功能后，系统将在日志中记录更详细的代码版本信息，并自动将当前代码的修改差异快照保存至 `output_dir/code_snapshot/*.diff`。在有需要时可使用 `git apply` 命令，将代码恢复至对应快照时的状态。
+
+!!! warning "注意事项"
+
+    - 如果需要跟踪新增文件，需先使用 `git add` 将新增文件添加到暂存区后才能被跟踪。
+    - 使用本功能需确保当前开发的代码库为 git 仓库，且当前代码库中存在 `.git` 文件夹，否则无法跟踪。
+
+#### 1.1.3 命令行方式配置参数
 
 仍然以配置文件 `bracket.yaml` 为例，关于学习率部分的参数配置如下所示。
 
@@ -94,7 +139,7 @@ TRAIN:
     # python example.py PATH="/workspace/lr=0.1,s=[3]/best_model.pdparams"
     ```
 
-#### 1.1.3 自动化运行实验
+#### 1.1.4 自动化运行实验⭐
 
 如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
 
@@ -675,7 +720,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     solver.eval()
     ```
 
-### 1.7 实验过程可视化
+### 1.7 实验过程可视化⭐
 
 === "TensorBoardX"
 
@@ -945,7 +990,7 @@ best_value: 0.02460772916674614
 
 ### 2.2 分布式训练
 
-#### 2.2.1 数据并行
+#### 2.2.1 数据并行⭐
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
@@ -1110,7 +1155,7 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     3. 设置平均间隔为 1 个 epoch
     4. 设置平均的起始和终止 epoch 为 75 至 100
 
-### 2.7 回调(callback)注册与调用指南
+### 2.7 回调函数(callback)
 
 在深度学习模型的训练过程中，能够在特定的时机执行自定义逻辑是非常有用的。PaddleScience 的 `Solver` 类提供了一种相对灵活的机制，允许用户在**训练的不同阶段**注册和调用回调函数。
 
