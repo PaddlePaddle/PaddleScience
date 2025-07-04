@@ -3,21 +3,19 @@
 !!! note
 
     1. 开始训练、评估前，数据文件data_set.xlsx的存在，并对应修改 yaml 配置文件中的 `data_dir` 为数据文件路径。
-    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[chem_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams), 并对应修改 yaml 配置文件中的 `load_model_path` 为模型参数路径。
+    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[smc_reac_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams), 并对应修改 yaml 配置文件中的 `load_model_path` 为模型参数路径。
     3. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install -r requirements.txt`安装。
 
 === "模型训练命令"
 
     ``` sh
-    # 训练:  
-    python chem.py mode=train
+    python smc_reac.py
     ```
 
 === "模型评估命令"
 
     ``` sh
-    # 评估：
-    python chem.py mode=eval
+    python smc_reac.py mode=eval
     ```
 
 ## 1. 背景简介
@@ -35,12 +33,12 @@ $$
 
 本节将讲解如何基于PaddleScience代码，实现对于 Suzuki-Miyaura 交叉偶联反应产率预测模型的构建、训练、测试和评估。案例的目录结构如下。
 ``` log
-chem/
+smc_reac/
 ├──config/
-│   └── chem.yaml  
-├── chem.py
-├── data_set.xlsx  
-└── requirements.txt
+│   └── smc_reac.yaml  
+├── data_set.xlsx
+├── requirements.txt
+└── smc_reac.py
 ```
 
 ### 2.1 数据集构建和载入
@@ -54,17 +52,17 @@ ClC=1C=C2C=CC=NC2=CC1 | CC=1C(=C2C=NN(C2=CC1)C1OCCCC1)B(O)O | C(C)(C)(C)P(C(C)(C
 
 首先从表格文件中将实验材料信息和反应产率进行导入，并划分训练集和测试集，
 
-``` py linenums="27" title="examples/chem/chem.py"
+``` py linenums="27" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:27:35
+examples/smc_reac/smc_reac.py:27:35
 --8<--
 ```
 
 应用 `rdkit.Chem.rdFingerprintGenerator` 将亲电试剂、亲核试剂、催化配体、碱和溶剂的SMILES描述转换为 Morgan 指纹。Morgan指纹是一种分子结构的向量化描述，通过局部拓扑被编码为 hash 值，映射到2048位指纹位上。用 PaddleScience 代码表示如下
 
-``` py linenums="38" title="examples/chem/chem.py"
+``` py linenums="38" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:38:66
+examples/smc_reac/smc_reac.py:38:66
 --8<--
 ```
 
@@ -72,9 +70,9 @@ examples/chem/chem.py:38:66
 
 本案例采用监督学习，按照 PaddleScience 的API结构说明，采用内置的 `SupervisedConstraint` 构建监督约束。用 PaddleScience 代码表示如下
 
-``` py linenums="73" title="examples/chem/chem.py"
+``` py linenums="73" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:73:89
+examples/smc_reac/smc_reac.py:73:89
 --8<--
 ```
 `SupervisedConstraint` 的第二个参数表示采用均方误差 `MSELoss` 作为损失函数，第三个参数表示约束条件的名字，方便后续对其索引。
@@ -83,25 +81,25 @@ examples/chem/chem.py:73:89
 
 本案例设计了五条独立的子网络（全连接层+ReLU激活），每条子网络分别提取对应化学物质的特征。随后，这五个特征向量通过可训练的权重参数进行加权平均，实现不同化学成分对反应产率预测影响的自适应学习。最后，将融合后的特征输入到一个全连接层进行进一步映射，输出反应产率预测值。整个网络结构体现了对反应中各组成成分信息的独立提取与有权重的融合，符合反应机理特性。用 PaddleScience 代码表示如下
 
-``` py linenums="7" title="ppsci/arch/chem.py"
+``` py linenums="7" title="ppsci/arch/smc_reac.py"
 --8<--
-ppsci/arch/chem.py:7:107
+ppsci/arch/smc_reac.py:7:107
 --8<--
 ```
 
 模型依据配置文件信息进行实例化
 
-``` py linenums="91" title="examples/chem/chem.py"
+``` py linenums="91" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:91:91
+examples/smc_reac/smc_reac.py:91:91
 --8<--
 ```
 
 参数通过配置文件进行设置如下
 
-``` py linenums="35" title="examples/chem/config/chem.yaml"
+``` py linenums="35" title="examples/smc_reac/config/smc_reac.yaml"
 --8<--
-examples/chem/config/chem.yaml:35:41
+examples/smc_reac/config/smc_reac.yaml:35:41
 --8<--
 ```
 
@@ -109,9 +107,9 @@ examples/chem/config/chem.yaml:35:41
 
 训练器采用Adam优化器，学习率设置由配置文件给出。用 PaddleScience 代码表示如下
 
-``` py linenums="93" title="examples/chem/chem.py"
+``` py linenums="93" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:93:93
+examples/smc_reac/smc_reac.py:93:93
 --8<--
 ```
 
@@ -119,23 +117,28 @@ examples/chem/chem.py:93:93
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给`ppsci.solver.Solver`，然后启动训练即可。用PaddleScience 代码表示如下
 
-``` py linenums="95" title="examples/chem/chem.py"
+``` py linenums="95" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py:95:105
+examples/smc_reac/smc_reac.py:95:105
 --8<--
 ```
 
 ## 3. 完整代码
 
-``` py linenums="1" title="examples/chem/chem.py"
+``` py linenums="1" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/chem/chem.py
+examples/smc_reac/smc_reac.py
 --8<--
 ```
 
 ## 4. 结果展示
 
 下图展示对 Suzuki-Miyaura 交叉偶联反应产率的模型预测结果。
+
+<figure markdown>
+  ![chem.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/SMCReac/chem.png){ loading=lazy }
+  <figcaption> Suzuki-Miyaura 交叉偶联反应产率的模型预测结果</figcaption>
+</figure>
 
 ## 5. 参考文献
 
