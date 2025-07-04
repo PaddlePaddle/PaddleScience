@@ -4,7 +4,7 @@ from paddle import nn
 from ppsci.arch import base
 
 
-class ChemMultimodalMLP(base.Arch):
+class SuzukiMiyauraModel(base.Arch):
     def __init__(
         self, input_dim, hidden_dim, hidden_dim2, hidden_dim3, hidden_dim4, output_dim
     ):
