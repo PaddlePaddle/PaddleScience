@@ -181,7 +181,7 @@ class ModelCheckpoint:
         if save_best:
             self._remove_old_checkpoints()
             
-            self.best_path = os.path.join(self.dirpath, f"{self.filename}_epoch{self.current_epoch}_metric{current_metric:.4f}.pdparams")
+            self.best_path = os.path.join(self.dirpath, f"{self.filename}_epoch{self.current_epoch}_best.pdparams")
             paddle.save(model.state_dict(), self.best_path)
             print(f"Saved best model to {self.best_path}")
         
@@ -224,7 +224,6 @@ def main():
     config = py2cfg(args.config_path)
     #config = py2cfg("Tran2/config/vaihingen/unetformer.py")
     seed_everything(42)
-    
     checkpoint_callback = ModelCheckpoint(
         save_top_k=config.save_top_k,
         monitor=config.monitor,

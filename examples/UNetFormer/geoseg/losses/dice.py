@@ -92,18 +92,24 @@ class DiceLoss(paddle.nn.Layer):
             y_pred = y_pred.view(bs, 1, -1)
             if self.ignore_index is not None:
                 mask = y_true != self.ignore_index
-                y_pred = y_pred * mask
-                y_true = y_true * mask
+                y_pred = y_pred * paddle.cast(mask, dtype="float32")
+                y_true = y_true * paddle.cast(mask, dtype="float32")
         if self.mode == MULTICLASS_MODE:
             y_true = y_true.view(bs, -1)
             y_pred = y_pred.view(bs, num_classes, -1)
             if self.ignore_index is not None:
-                mask = y_true != self.ignore_index
-                y_pred = y_pred * mask.unsqueeze(axis=1)
-                y_true = paddle.nn.functional.one_hot(
-                    num_classes=num_classes, x=(y_true * mask).astype("int64")
-                ).astype("int64")
-                y_true = y_true.transpose(perm=[0, 2, 1]) * mask.unsqueeze(axis=1)
+                if self.ignore_index is not None:
+                    mask = y_true != self.ignore_index
+                    mask = paddle.cast(mask, dtype="float32")
+                    y_pred = paddle.cast(y_pred * mask.unsqueeze(axis=1), dtype="float32")
+                    mask_float = paddle.cast(mask, dtype=y_true.dtype)
+                    masked_y_true = (y_true * mask_float).astype("int64")
+                    y_true = paddle.nn.functional.one_hot(
+                        num_classes=num_classes, 
+                        x=masked_y_true
+                    ).astype("int64")
+                    mask = paddle.cast(mask, dtype="int64")
+                    y_true = y_true.transpose(perm=[0, 2, 1]) * mask.unsqueeze(axis=1)
             else:
                 y_true = paddle.nn.functional.one_hot(
                     num_classes=num_classes, x=y_true
@@ -114,8 +120,8 @@ class DiceLoss(paddle.nn.Layer):
             y_pred = y_pred.view(bs, num_classes, -1)
             if self.ignore_index is not None:
                 mask = y_true != self.ignore_index
-                y_pred = y_pred * mask
-                y_true = y_true * mask
+                y_pred = y_pred * paddle.cast(mask, dtype="float32")
+                y_true = y_true * paddle.cast(mask, dtype="float32")
         scores = soft_dice_score(
             y_pred,
             y_true.astype(dtype=y_pred.dtype),

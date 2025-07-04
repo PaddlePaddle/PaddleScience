@@ -74,6 +74,8 @@ class VaihingenDataset(paddle.io.Dataset):
         img_size=ORIGIN_IMG_SIZE,
     ):
         self.data_root = data_root
+        if not os.path.exists(self.data_root):
+            os.makedirs(self.data_root, exist_ok=True)
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.img_suffix = img_suffix
@@ -106,6 +108,10 @@ class VaihingenDataset(paddle.io.Dataset):
         return len(self.img_ids)
 
     def get_img_ids(self, data_root, img_dir, mask_dir):
+        img_filename_list = os.path.join(os.path.join(data_root, img_dir))
+        mask_filename_list = os.path.join(os.path.join(data_root, mask_dir))
+        os.makedirs(img_filename_list, exist_ok=True)
+        os.makedirs(mask_filename_list, exist_ok=True)
         img_filename_list = os.listdir(os.path.join(data_root, img_dir))
         mask_filename_list = os.listdir(os.path.join(data_root, mask_dir))
         assert len(img_filename_list) == len(mask_filename_list)

@@ -3,6 +3,7 @@ from geoseg.datasets.vaihingen_dataset import CLASSES, VaihingenDataset, train_a
 from geoseg.losses import UnetFormerLoss
 from geoseg.models.UNetFormer import UNetFormer
 from tools.utils import process_model_params
+import os
 
 max_epoch = 105
 ignore_index = len(CLASSES)
@@ -16,7 +17,7 @@ num_classes = len(CLASSES)
 classes = CLASSES
 weights_name = "unetformer-r18-512-crop-ms-e105"
 weights_path = "model_weights/vaihingen/{}".format(weights_name)
-test_weights_name = "unetformer-r18-512-crop-ms-e105_epoch0_metric0.7421"
+test_weights_name = "unetformer-r18-512-crop-ms-e105_epoch0_best"
 log_name = "vaihingen/{}".format(weights_name)
 monitor = "val_F1"
 monitor_mode = "max"
@@ -29,21 +30,33 @@ resume_ckpt_path = None
 net = UNetFormer(num_classes=num_classes)
 loss = UnetFormerLoss(ignore_index=ignore_index)
 use_aux_loss = True
-train_dataset = VaihingenDataset(
-    data_root="data/vaihingen/train",
-    mode="train",
-    mosaic_ratio=0.25,
-    transform=train_aug,
-)
-val_dataset = VaihingenDataset(transform=val_aug)
-test_dataset = VaihingenDataset(data_root="data/vaihingen/test", transform=val_aug)
-train_loader = paddle.io.DataLoader(
+os.makedirs("data/vaihingen/train/images_1024", exist_ok=True)
+os.makedirs("data/vaihingen/train/masks_1024", exist_ok=True) 
+if len(os.listdir("data/vaihingen/train/images_1024")) == 0:
+    pass
+else:
+    train_dataset = VaihingenDataset(
+        data_root="data/vaihingen/train",
+        mode="train",
+        mosaic_ratio=0.25,
+        transform=train_aug,
+    )
+    train_loader = paddle.io.DataLoader(
     dataset=train_dataset,
     batch_size=train_batch_size,
     num_workers=4,
     shuffle=True,
     drop_last=True,
 )
+val_dataset = VaihingenDataset(transform=val_aug)
+test_dataset = VaihingenDataset(data_root="data/vaihingen/test", transform=val_aug)
+'''train_loader = paddle.io.DataLoader(
+    dataset=train_dataset,
+    batch_size=train_batch_size,
+    num_workers=4,
+    shuffle=True,
+    drop_last=True,
+)'''
 val_loader = paddle.io.DataLoader(
     dataset=val_dataset,
     batch_size=val_batch_size,
