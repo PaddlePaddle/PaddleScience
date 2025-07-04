@@ -88,7 +88,7 @@ def train(cfg: DictConfig):
         "sup": sup,
     }
 
-    model = ppsci.arch.ChemMultimodalMLP(**cfg.MODEL)
+    model = ppsci.arch.SuzukiMiyauraModel(**cfg.MODEL)
 
     optimizer = ppsci.optimizer.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
