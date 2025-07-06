@@ -1,6 +1,6 @@
 import paddle
 from geoseg.datasets.vaihingen_dataset import CLASSES, VaihingenDataset, train_aug, val_aug
-from geoseg.losses import UnetFormerLoss
+from geoseg.losses.useful_loss import UnetFormerLoss
 from geoseg.models.UNetFormer import UNetFormer
 from tools.utils import process_model_params
 import os

@@ -9,7 +9,7 @@
 文件数据集结构如下  
 ```none
 airs
-├── UNetFormer(code)
+├── unetformer(code)
 ├── model_weights (save the model weights trained on ISPRS vaihingen)
 ├── fig_results (save the masks predicted by models)
 ├── lightning_logs (CSV format training logs)
@@ -28,30 +28,30 @@ airs
 创建训练数据集  
 
     ```
-    python UNetFormer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/train_images" --mask-dir "data/vaihingen/train_masks" --output-img-dir "data/vaihingen/train/images_1024" --output-mask-dir "data/vaihingen/train/masks_1024" --mode "train" --split-size 1024 --stride 512 
+    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/train_images" --mask-dir "data/vaihingen/train_masks" --output-img-dir "data/vaihingen/train/images_1024" --output-mask-dir "data/vaihingen/train/masks_1024" --mode "train" --split-size 1024 --stride 512 
     ```  
 创建测试数据集  
 
     ```
-    python UNetFormer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks_eroded" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024" --mode "val" --split-size 1024 --stride 1024 --eroded
+    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks_eroded" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024" --mode "val" --split-size 1024 --stride 1024 --eroded
     ```  
 创建masks_1024_rgb可视化数据集  
 
     ```
-    python UNetFormer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024_rgb" --mode "val" --split-size 1024 --stride 1024 --gt
+    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024_rgb" --mode "val" --split-size 1024 --stride 1024 --gt
     ```    
 处理好的[Vaihingen数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/unetformer/test.zip)  
 
 模型训练命令
 
     ```
-    python UNetFormer/train_supervision.py -c UNetFormer/config/vaihingen/unetformer.py
+    python unetformer/train_supervision.py -c unetformer/config/vaihingen/unetformer.py
     ```
 
 模型评估命令  
 
     ``` 
-    python UNetFormer/vaihingen_test.py -c UNetFormer/config/vaihingen/unetformer.py -o fig_results/vaihingen/unetformer --rgb
+    python unetformer/vaihingen_test.py -c unetformer/config/vaihingen/unetformer.py -o fig_results/vaihingen/unetformer --rgb
     ```
 训练好的[UNetFormer模型](https://paddle-org.bj.bcebos.com/paddlescience/models/unetformer/unetformer-r18-512-crop-ms-e105_epoch0_best.pdparams)
 
@@ -84,9 +84,11 @@ UNetFormer是一种基于transformer的解码器的深度学习网络，下图�
 $$
 \mathcal{L}_{c e}=-\frac{1}{N} \sum_{n=1}^{N} \sum_{k=1}^{K} y_{k}^{(n)} \log \hat{y}_{k}^{(n)}
 $$  
+
 $$
 \mathcal{L}_{\text {dice }}=1-\frac{2}{N} \sum_{n=1}^{N} \sum_{k=1}^{K} \frac{\hat{y}_{k}^{(n)} y_{k}^{(n)}}{\hat{y}_{k}^{(n)}+y_{k}^{(n)}}
 $$  
+
 $$
 \mathcal{L}_{\text {p }}=\mathcal{L}_{c e}+\mathcal{L}_{\text {dice }}
 $$  
@@ -141,7 +143,7 @@ ISPRS提供了城市分类和三维建筑重建测试项目的两个最先进的
 参数配置如下：
 ``` py linenums="8"
 --8<--
-examples/UNetFormer/config/vaihingen/unetformer.py:8:69
+examples/unetformer/config/vaihingen/unetformer.py:8:69
 --8<--
 ```
 
@@ -154,7 +156,7 @@ UNetFormer的损失函数由SoftCrossEntropyLoss交叉熵损失函数和DiceLoss
 
 ``` py linenums="9"
 --8<--
-examples/UNetFormer/geoseg/losses/soft_ce.py:9:39
+examples/unetformer/geoseg/losses/soft_ce.py:9:39
 --8<--
 ```
 
@@ -162,7 +164,7 @@ examples/UNetFormer/geoseg/losses/soft_ce.py:9:39
 
 ``` py linenums="32"
 --8<--
-examples/UNetFormer/geoseg/losses/dice.py:32:140
+examples/unetformer/geoseg/losses/dice.py:32:140
 --8<--
 ```
 
@@ -171,13 +173,13 @@ SoftCrossEntropyLoss和DiceLoss将使用JointLoss进行组合
 
 ``` py linenums="21"
 --8<--
-examples/UNetFormer/geoseg/losses/joint_loss.py:21:38
+examples/unetformer/geoseg/losses/joint_loss.py:21:38
 --8<--
 ```
 #### 3.4.2 UNetFormerLoss   
 ``` py linenums="92"
 --8<--
-examples/UNetFormer/geoseg/losses/useful_loss.py:92:113
+examples/unetformer/geoseg/losses/useful_loss.py:92:113
 --8<--
 ```
 
@@ -187,7 +189,7 @@ UNetFormer使用AdamW优化器，可直接调用`paddle.optimizer.AdamW`构建�
 
 ``` py linenums="70"
 --8<--
-examples/UNetFormer/config/vaihingen/unetformer.py:70:76
+examples/unetformer/config/vaihingen/unetformer.py:70:76
 --8<--
 ```
 
@@ -195,7 +197,7 @@ examples/UNetFormer/config/vaihingen/unetformer.py:70:76
 
 ``` py linenums="30"
 --8<--
-examples/UNetFormer/train_supervision.py:30:286
+examples/unetformer/train_supervision.py:30:286
 --8<--
 ```
 
@@ -204,7 +206,7 @@ examples/UNetFormer/train_supervision.py:30:286
 
 ``` py linenums="60"
 --8<--
-examples/UNetFormer/vaihingen_test.py:60:119
+examples/unetformer/vaihingen_test.py:60:119
 --8<--
 ```
 
@@ -215,8 +217,8 @@ examples/UNetFormer/vaihingen_test.py:60:119
 |  F1  |  mIOU  |  OA  |
 | :----: | :----: | :----: |
 | 0.9062 | 0.8318 | 0.9283 |
-![image-vaihingen](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/top_mosaic_09cm_area38_0_6.tif)
-![image-vaihingen](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/result.png)
+![image-vaihingen1](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/top_mosaic_09cm_area38_0_6.tif)
+![image-vaihingen2](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/result.png)
 
 ## 6. 参考文献
 
