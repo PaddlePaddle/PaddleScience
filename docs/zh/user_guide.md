@@ -464,7 +464,7 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 
 PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
-|  | Native | ONNX | TensorRT | macaRT | MKLDNN |
+|  | Native | ONNX | TensorRT | macaRT | oneDNN |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Intel(CPU) | ✅ | ✅ | / | / | ✅ |
 | NVIDIA | ✅ | ✅ | ✅ | / | / |
@@ -576,16 +576,16 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         INFER.engine=onnx
     ```
 
-=== "使用 MKLDNN 推理"
+=== "使用 oneDNN 推理"
 
-    MKLDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+    oneDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 oneDNN 推理功能。
 
     运行以下命令进行推理：
 
     ``` sh
     python aneurysm.py mode=infer \
         INFER.device=cpu \
-        INFER.engine=mkldnn
+        INFER.engine=onednn
     ```
 
 !!! info "完整推理配置参数"
@@ -593,14 +593,14 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     | 参数 | 默认值 | 说明 |
     | :--- | :--- | :--- |
     | `INFER.device` | `cpu` | 推理设备，目前支持 `cpu` 和 `gpu` |
-    | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `mkldnn` |
+    | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `onednn` |
     | `INFER.precision` | `fp32` | 推理精度，目前支持 `fp32`, `fp16` |
     | `INFER.ir_optim` | `True` | 是否启用 IR 优化 |
     | `INFER.min_subgraph_size` | `30` | TensorRT 中最小子图 size，当子图的 size 大于该值时，才会尝试对该子图使用 TensorRT 计算 |
     | `INFER.gpu_mem` | `2000` | 初始显存大小 |
     | `INFER.gpu_id` | `0` | GPU 逻辑设备号 |
     | `INFER.max_batch_size` | `1024` | 推理时的最大 batch_size |
-    | `INFER.num_cpu_threads` | `10` | MKLDNN 和 ONNX 在 CPU 推理时的线程数 |
+    | `INFER.num_cpu_threads` | `10` | oneDNN 和 ONNX 在 CPU 推理时的线程数 |
     | `INFER.batch_size` | `256` | 推理时的 batch_size |
 
 ### 1.4 断点继续训练

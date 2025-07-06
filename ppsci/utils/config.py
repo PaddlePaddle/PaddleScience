@@ -213,7 +213,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
             device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu"
-            engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
+            engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True
             min_subgraph_size: int = 30
@@ -226,14 +226,18 @@ if importlib.util.find_spec("pydantic") is not None:
             # Fine-grained validator(s) below
             @field_validator("engine")
             def engine_check(cls, v, info: ValidationInfo):
+                if v == "mkldnn":
+                    raise ValueError(
+                        "The 'mkldnn' engine is deprecated. Please use 'onednn' instead."
+                    )
                 if v == "tensorrt" and info.data["device"] != "gpu":
                     raise ValueError(
                         "'INFER.device' should be 'gpu' when 'INFER.engine' is 'tensorrt', "
                         f"but got '{info.data['device']}'"
                     )
-                if v == "mkldnn" and info.data["device"] != "cpu":
+                if v == "onednn" and info.data["device"] != "cpu":
                     raise ValueError(
-                        "'INFER.device' should be 'cpu' when 'INFER.engine' is 'mkldnn', "
+                        "'INFER.device' should be 'cpu' when 'INFER.engine' is 'onednn', "
                         f"but got '{info.data['device']}'"
                     )
 
