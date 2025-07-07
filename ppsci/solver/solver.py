@@ -477,16 +477,15 @@ class Solver:
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
-            paddle_version = paddle.__version__
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
-                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    f"Detected paddlepaddle version is '{paddle.__version__}', "
                     "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
-        else:
-            paddle_version = f"develop({paddle.version.commit[:7]})"
 
-        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(
+            f"Using paddlepaddle {paddle.version.full_version}({paddle.version.commit[:7]}) on device {self.device}"
+        )
 
         self.forward_helper = expression.ExpressionSolver()
 

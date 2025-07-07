@@ -39,7 +39,7 @@ class Predictor:
         pdmodel_path (Optional[str]): Path to the PaddlePaddle model file. Defaults to None.
         pdiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
         device (Literal["cpu", "gpu", "npu", "xpu", "sdaa"], optional): Device to use for inference. Defaults to "cpu".
-        engine (Literal["native", "tensorrt", "onnx", "mkldnn"], optional): Inference engine to use. Defaults to "native".
+        engine (Literal["native", "tensorrt", "onnx", "onednn"], optional): Inference engine to use. Defaults to "native".
         precision (Literal["fp32", "fp16", "int8"], optional): Precision to use for inference. Defaults to "fp32".
         onnx_path (Optional[str], optional): Path to the ONNX model file. Defaults to None.
         ir_optim (bool, optional): Whether to use IR optimization. Defaults to True.
@@ -55,7 +55,7 @@ class Predictor:
         pdiparams_path: Optional[str] = None,
         *,
         device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu",
-        engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
+        engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native",
         precision: Literal["fp32", "fp16", "int8"] = "fp32",
         onnx_path: Optional[str] = None,
         ir_optim: bool = True,
@@ -157,11 +157,11 @@ class Predictor:
             config.enable_xpu(10 * 1024 * 1024)
         else:
             config.disable_gpu()
-            if self.engine == "mkldnn":
+            if self.engine == "onednn":
                 # 'set_mkldnn_cache_capatity' is not available on macOS
                 if platform.system() != "Darwin":
                     ...
-                    # cache 10 different shapes for mkldnn to avoid memory leak
+                    # cache 10 different shapes for onednn to avoid memory leak
                     # config.set_mkldnn_cache_capacity(10)
                 config.enable_mkldnn()
 
@@ -169,6 +169,11 @@ class Predictor:
                     config.enable_mkldnn_bfloat16()
 
                 config.set_cpu_math_library_num_threads(self.num_cpu_threads)
+
+            elif self.engine == "mkldnn":
+                raise ValueError(
+                    "The 'mkldnn' engine is deprecated. Please use 'onednn' instead."
+                )
 
         # enable memory optim
         config.enable_memory_optim()
@@ -221,9 +226,9 @@ class Predictor:
             )
 
     def _check_engine(self, engine: str):
-        if engine not in ["native", "tensorrt", "onnx", "mkldnn"]:
+        if engine not in ["native", "tensorrt", "onnx", "onednn"]:
             raise ValueError(
-                "Inference only supports 'native', 'tensorrt', 'onnx' and 'mkldnn' "
+                "Inference only supports 'native', 'tensorrt', 'onnx' and 'onednn' "
                 f"engines, but got {engine}."
             )
 
