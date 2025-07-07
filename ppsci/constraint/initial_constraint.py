@@ -141,6 +141,10 @@ class InitialConstraint(base.Constraint):
             for key, value in weight_dict.items():
                 if isinstance(value, str):
                     if value == "sdf":
+                        if "sdf" not in input:
+                            raise ValueError(
+                                f"Missing 'sdf' field in input. Please check whether the geometry ({geom.geometry.__class__.__name__}) implements 'sdf_func'"
+                            )
                         weight[key] = input["sdf"]
                     else:
                         raise NotImplementedError(f"string {value} is invalid yet.")
