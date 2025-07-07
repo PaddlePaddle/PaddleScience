@@ -139,7 +139,12 @@ class InitialConstraint(base.Constraint):
         if weight_dict is not None:
             weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
-                if isinstance(value, (int, float)):
+                if isinstance(value, str):
+                    if value == "sdf":
+                        weight[key] = input["sdf"]
+                    else:
+                        raise NotImplementedError(f"string {value} is invalid yet.")
+                elif isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
