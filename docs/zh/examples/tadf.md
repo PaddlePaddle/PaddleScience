@@ -18,17 +18,14 @@
     # Est 预测:  
     cd TADF_Est
     python Est.py mode=train
-    cd ../
 
     #f 预测:
     cd TADF_f
     python f.py mode=train
-    cd ../
 
     # angle 预测:
     cd TADF_angle
     python angle.py mode=train
-    cd ../
     ```
 
 === "模型评估命令"
@@ -36,15 +33,15 @@
     ``` sh
     # Est 评估：
     cd TADF_Est
-    python Est.py Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_model.pdparams
+    python Est.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_model.pdparams
 
     # f 评估:
     cd TADF_f
-    python f.py Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_model.pdparams
+    python f.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_model.pdparams
 
     # angle 评估:
     cd TADF_angle
-    python angle.py Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
+    python angle.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
     ```
 
 ## 1. 背景简介
