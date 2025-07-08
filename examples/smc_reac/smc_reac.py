@@ -105,7 +105,7 @@ def train(cfg: DictConfig):
     solver.train()
 
 
-def eval(cfg: DictConfig):
+def evaluate(cfg: DictConfig):
     global x_test, y_test
     x_test, y_test = data_processed(x_test, y_test)
     # Reformat data for evaluation
@@ -148,7 +148,7 @@ def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
-        eval(cfg)
+        evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
