@@ -111,7 +111,7 @@ nav:
         - FuXi: zh/examples/fuxi.md
         - WGAN_GP: zh/examples/wgan_gp.md
       - 化学科学(AI for Chemistry):
-        - Chem: zh/examples/chem.md
+        - SMC Reac: zh/examples/smc_reac.md
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
 
