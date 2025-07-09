@@ -111,7 +111,7 @@ def evaluate(cfg: DictConfig):
     # Reformat data for evaluation
     x_test = {"v": x_test}
     y_test = {"u": y_test}
-    model = ppsci.arch.ChemMultimodalMLP(**cfg.MODEL)
+    model = ppsci.arch.SuzukiMiyauraModel(**cfg.MODEL)
     model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
     ypred = model(x_test)
 
@@ -133,13 +133,13 @@ def evaluate(cfg: DictConfig):
     plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(R2, MAE))
     plt.xlabel("Test Yield(%)")
     plt.ylabel("Predicted Yield(%)")
-    save_path = "chem.png"
+    save_path = "smc_reac.png"
     plt.savefig(save_path)
     print(f"Iamge saved to: {save_path}")
     plt.show()
 
 
-@hydra.main(version_base=None, config_path="./config", config_name="chem.yaml")
+@hydra.main(version_base=None, config_path="./config", config_name="smc_reac.yaml")
 def main(cfg: DictConfig):
     global x_train, x_test, y_train, y_test
 
