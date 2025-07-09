@@ -7,10 +7,11 @@ run_name: r0
 use_ddp: False
 config: pois-64-pretrain-e1_20_m3
 sweep_id: ''
+logdir: exp
 
 train_config:
   default: &DEFAULT
-    num_data_workers: 0
+    num_data_workers: 4
     # model
     model: 'fno'
     depth: 5
@@ -289,7 +290,7 @@ infer_config:
   scales_path: 'data/possion_64/poisson_64_e5_15_train_scale.npy'
   ckpt_path: checkpoint/finetune_b01_m0_n8192.pdparams
 
-  num_data_workers: 0
+  num_data_workers: 4
   subsample: 1
   num_demos: 0
   shuffle: False

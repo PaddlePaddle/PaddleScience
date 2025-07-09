@@ -15,7 +15,6 @@
 # refs: https://github.com/delta-lab-ai/data_efficient_nopt
 
 import glob
-import logging
 import os
 from typing import Iterator
 from typing import TypeVar
@@ -29,7 +28,7 @@ from paddle.io import DistributedBatchSampler
 from paddle.io import RandomSampler
 from paddle.io import Sampler
 
-logger = logging.getLogger(__name__)
+from ppsci.utils import logger
 
 __all__ = [
     "MultisetSampler",
@@ -556,12 +555,12 @@ class PoisHelmDataset(Dataset):
         if self.train:
             if hasattr(self.params, "train_rand_idx_path"):
                 self.train_rand_idx = np.load(self.params.train_rand_idx_path)
-                logging.info("Randomizing train dataset using given random index path")
+                logger.info("Randomizing train dataset using given random index path")
             else:
                 self.train_rand_idx = range(self.data.shape[0])
             self.train_rand_idx = self.train_rand_idx[self.pt_idxs[0] : self.pt_idxs[1]]
             self.data = self.data[()][self.train_rand_idx, ...]
-            logging.info(
+            logger.info(
                 "Getting only data idx for training set for length: {}".format(
                     len(self.train_rand_idx)
                 )
@@ -576,7 +575,7 @@ class PoisHelmDataset(Dataset):
     def _get_files_stats(self):
         self.file = self.location
         with h5py.File(self.file, "r") as _f:
-            logging.info("Getting file stats from {}".format(self.file))
+            logger.info("Getting file stats from {}".format(self.file))
             if len(_f["fields"].shape) == 4:
                 self.n_demos = None
                 self.n_samples = _f["fields"].shape[0]
@@ -599,7 +598,7 @@ class PoisHelmDataset(Dataset):
                 self.pt_split = self.params.pt_split
             else:
                 self.pt_split = [0.9, 0.1]
-            logging.info(
+            logger.info(
                 "Split training set into {} for pretrain, {} for train. ".format(
                     self.pt_split[0], self.pt_split[1]
                 )
@@ -619,7 +618,7 @@ class PoisHelmDataset(Dataset):
             )
         self.n_samples /= self.subsample
         self.n_samples = int(self.n_samples)
-        logging.info(
+        logger.info(
             "Found data at path {}. Number of examples: {}. Image Shape: {} x {}".format(
                 self.location, self.n_samples, self.img_shape_x, self.img_shape_y
             )
@@ -631,12 +630,12 @@ class PoisHelmDataset(Dataset):
             measure_x = self.scales[-2] / self.img_shape_x
             measure_y = self.scales[-1] / self.img_shape_y
             self.measure = measure_x * measure_y
-            logging.info(
+            logger.info(
                 "Scales for PDE are (source, tensor, sol, domain): {}".format(
                     self.scales
                 )
             )
-            logging.info(
+            logger.info(
                 "Measure of the set is lx/nx * ly/ny =  {}/{} * {}/{}".format(
                     self.scales[-2], self.img_shape_x, self.scales[-1], self.img_shape_y
                 )

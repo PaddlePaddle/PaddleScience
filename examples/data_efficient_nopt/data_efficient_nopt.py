@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import gc
-import logging
 import os
 import random
 from argparse import Namespace
 from collections import OrderedDict
+from os import path as osp
 
 import hydra
 import numpy as np
@@ -44,8 +44,7 @@ from ppsci.arch.data_efficient_nopt_model import param_diff
 from ppsci.arch.data_efficient_nopt_model import param_norm
 from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
-
-logger = logging.getLogger(__name__)
+from ppsci.utils import logger
 
 
 class Trainer:
@@ -437,7 +436,8 @@ class Trainer:
                 del temp_loader
                 break
             count += 1
-            input, label = data
+            input = data[0]
+            label = data[1]
 
             # unsupervised pretrain
             if self.params.mode == "train":
@@ -699,6 +699,7 @@ def inference(config):
     config_name="data_efficient_nopt_fno_poisson",
 )
 def main(config: DictConfig):
+    logger.init_logger("ppsci", osp.join(config.logdir, f"{config.mode}.log"), "info")
     if config.mode == "train" or config.mode == "finetune":
         train(config)
     elif config.mode == "infer":
