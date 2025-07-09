@@ -2,7 +2,7 @@
 
 !!! note
 
-    1. 开始训练、评估前，数据文件data_set.xlsx的存在，并对应修改 yaml 配置文件中的 `data_dir` 为数据文件路径。
+    1. 开始训练、评估前，请先下载数据文件[data_set.xlsx](https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx)，并对应修改 yaml 配置文件中的 `data_dir` 为数据文件路径。
     2. 如果需要使用预训练模型进行评估，请先下载预训练模型[smc_reac_model.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams), 并对应修改 yaml 配置文件中的 `load_model_path` 为模型参数路径。
     3. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install -r requirements.txt`安装。
 
