@@ -437,7 +437,7 @@ class Trainer:
                 break
             count += 1
             input = data[0]
-            label = data[1]
+            label = data[1] if len(data) > 1 else None
 
             # unsupervised pretrain
             if self.params.mode == "train":
