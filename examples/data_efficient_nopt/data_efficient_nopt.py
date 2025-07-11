@@ -33,6 +33,7 @@ from ruamel.yaml import YAML
 from scipy.stats import linregress
 from tqdm import tqdm
 
+import ppsci
 from ppsci.arch.data_efficient_nopt_model import add_weight_decay
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
@@ -543,6 +544,7 @@ def train(config: DictConfig):
 
     device = f"gpu:{local_rank}" if paddle.device.cuda.device_count() >= 1 else "cpu"
     paddle.set_device(device)
+    ppsci.utils.misc.set_random_seed(config.seed)
 
     params.batch_size = int(params.batch_size // world_size)
     params.startEpoch = 0
