@@ -197,9 +197,9 @@ examples/unetformer/train_supervision.py:30:286
 
 ### 3.7 模型测试
 
-``` py linenums="60"
+``` py linenums="63"
 --8<--
-examples/unetformer/vaihingen_test.py:60:119
+examples/unetformer/vaihingen_test.py:63:123
 --8<--
 ```
 
@@ -212,11 +212,10 @@ examples/unetformer/vaihingen_test.py:60:119
 | 0.9062 | 0.8318 | 0.9283 |  
 
 ![image-vaihingen1](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/top_mosaic_09cm_area38_0_6.tif)
-![image-vaihingen2](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/result.png)  
+
+![image-vaihingen2](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/result.png)
 
 两张图片对比可以看出模型已经精确地分割出遥感图片中建筑、树木、汽车等物体的轮廓，并且很好地处理了重叠区域。
-
-
 ## 6. 参考文献
 
 - [UNetFormer: A UNet-like Transformer for Efficient Semantic Segmentation of Remote Sensing Urban Scene Imagery](https://arxiv.org/abs/2109.08937)

@@ -13,6 +13,10 @@ except ImportError:
     from itertools import filterfalse as ifilterfalse
 __all__ = ["BinaryLovaszLoss", "LovaszLoss"]
 add_tensor_methods()
+"""
+Lovasz-Softmax and Jaccard hinge loss in PyTorch
+Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
+"""
 
 
 def _lovasz_grad(gt_sorted):
