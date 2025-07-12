@@ -1,6 +1,7 @@
 import os
 
 import paddle
+
 from geoseg.datasets.vaihingen_dataset import CLASSES
 from geoseg.datasets.vaihingen_dataset import VaihingenDataset
 from geoseg.datasets.vaihingen_dataset import train_aug
