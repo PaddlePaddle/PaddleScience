@@ -197,9 +197,9 @@ examples/unetformer/train_supervision.py:30:286
 
 ### 3.7 模型测试
 
-``` py linenums="63"
+``` py linenums="61"
 --8<--
-examples/unetformer/vaihingen_test.py:63:123
+examples/unetformer/vaihingen_test.py:61:121
 --8<--
 ```
 
