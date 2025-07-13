@@ -133,10 +133,13 @@ def save_vtu_from_dict(
         >>> value_keys = ("u","v")
         >>> ppsci.visualize.save_vtu_from_dict(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
     """
-    if len(coord_keys) not in [2, 3, 4]:
-        raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 2, 3 or 4")
+    spatial_coord_keys = [key for key in coord_keys if key not in ("t", "sdf")]
+    if len(spatial_coord_keys) not in [1, 2, 3]:
+        raise ValueError(
+            f"ndim of spatial coord ({len(spatial_coord_keys)}) should be 1, 2, or 3"
+        )
 
-    coord = [data_dict[k] for k in coord_keys if k not in ("t", "sdf")]
+    coord = [data_dict[k] for k in spatial_coord_keys]
     value = [data_dict[k] for k in value_keys] if value_keys else None
 
     coord = np.concatenate(coord, axis=1)
@@ -180,10 +183,13 @@ def save_vtp_from_dict(
     """
     import pyvista as pv
 
-    if len(coord_keys) not in [3]:
-        raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 3 in vtp format")
+    spatial_coord_keys = [key for key in coord_keys if key not in ("t", "sdf")]
+    if len(spatial_coord_keys) not in [3]:
+        raise ValueError(
+            f"ndim of spatial coord ({len(spatial_coord_keys)}) should be 3 in vtp format"
+        )
 
-    coord = [data_dict[k] for k in coord_keys if k not in ("t", "sdf")]
+    coord = [data_dict[k] for k in spatial_coord_keys]
     assert all([c.ndim == 2 for c in coord]), "array of each axis should be [*, 1]"
     coord = np.concatenate(coord, axis=1)
 

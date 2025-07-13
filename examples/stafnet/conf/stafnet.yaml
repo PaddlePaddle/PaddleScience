@@ -1,0 +1,84 @@
+defaults:
+   - ppsci_default
+   - TRAIN: train_default
+   - TRAIN/ema: ema_default
+   - TRAIN/swa: swa_default
+   - EVAL: eval_default
+   - INFER: infer_default
+   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+   - _self_
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_stafnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+# dataset setting
+DATASET:
+  label_keys: [label]
+  data_dir: ./dataset/train_data.pkl
+
+MODEL:
+  input_keys: [aq_train_data, mete_train_data]
+  output_keys: [label]
+  output_attention: true
+  seq_len: 72
+  pred_len: 48
+  aq_gat_node_features: 7
+  aq_gat_node_num: 35
+  mete_gat_node_features: 7
+  mete_gat_node_num: 18
+  gat_hidden_dim: 32
+  gat_edge_dim: 3
+  e_layers: 1
+  enc_in: 7
+  dec_in: 7
+  c_out: 7
+  d_model: 16
+  embed: fixed
+  freq: t
+  dropout: 0.05
+  factor: 3
+  n_heads: 4
+  d_ff: 32
+  num_kernels: 6
+  top_k: 4
+
+# training settings
+TRAIN:
+  epochs: 100
+  iters_per_epoch: 400
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 10
+  batch_size: 32
+  learning_rate: 0.0001
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.0005
+    step_size: 20
+    gamma: 0.95
+  pretrained_model_path: null
+  checkpoint_path: null
+
+EVAL:
+  eval_data_path: ./dataset/val_data.pkl
+  pretrained_model_path: null
+  compute_metric_by_batch: false
+  eval_with_no_grad: true
+  batch_size: 32

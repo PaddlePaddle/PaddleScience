@@ -582,7 +582,12 @@ class Mesh(geometry.Geometry):
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
-        """Sample random points in the geometry and return those meet criteria."""
+        """
+        Sample random points in the geometry and return those meet criteria.
+
+        NOTE: sdf values returned by this function are negated because the weight in
+        loss function should be positive.
+        """
         if evenly:
             # TODO(sensen): Implement uniform sample for mesh interior.
             raise NotImplementedError(
@@ -1112,7 +1117,12 @@ class SDFMesh(geometry.Geometry):
         evenly: bool = False,
         compute_sdf_derivatives: bool = False,
     ):
-        """Sample random points in the geometry and return those meet criteria."""
+        """
+        Sample random points in the geometry and return those meet criteria.
+
+        NOTE: sdf values returned by this function are negated because the weight in
+        loss function should be positive.
+        """
         if evenly:
             # TODO(sensen): Implement uniform sample for mesh interior.
             raise NotImplementedError(
@@ -1128,7 +1138,7 @@ class SDFMesh(geometry.Geometry):
         if compute_sdf_derivatives:
             sdf, sdf_derives = sdf
 
-        # NOTE: Negate sdf because weight should be positive.
+        # NOTE: add negative to the sdf values because weight should be positive.
         sdf_dict = misc.convert_to_dict(-sdf, ("sdf",))
 
         sdf_derives_dict = {}

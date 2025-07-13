@@ -29,6 +29,7 @@
         - NowcastNet
         - SFNONet
         - SPINN
+        - STAFNet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
