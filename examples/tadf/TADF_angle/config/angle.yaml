@@ -1,9 +1,12 @@
-defaults: #
-  - ppsci_default #
-  - TRAIN: train_default #
-  - EVAL: eval_default #
-#  - INFER: infer_default #
-  - _self_ #
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
 
 hydra:
   run:
@@ -43,7 +46,6 @@ TRAIN: #
   eval_during_train: False #
   batch_size: 8 #
   learning_rate: 0.01
-  save_model_path: './angle_model.pdparams'
   weight_decay: 1e-5
   pretrained_model_path: null #
   checkpoint_path: null #
@@ -53,6 +55,6 @@ TRAIN: #
 # evaluation settings
 EVAL:
   test_size: 0.1
-  load_model_path: './angle_model.pdparams'
-  seed: 20
   pretrained_model_path: null
+  batch_size: 8 #
+  seed: 20
