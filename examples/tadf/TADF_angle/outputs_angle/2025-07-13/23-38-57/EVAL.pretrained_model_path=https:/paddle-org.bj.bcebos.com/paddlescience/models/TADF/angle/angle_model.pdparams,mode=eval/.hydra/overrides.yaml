@@ -1,2 +1,0 @@
-- mode=eval
-- EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
