@@ -7,7 +7,6 @@ import rdkit.Chem as Chem
 from omegaconf import DictConfig
 from rdkit.Chem import rdFingerprintGenerator
 from sklearn.decomposition import PCA
-from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import ppsci
@@ -132,56 +131,87 @@ def train(cfg: DictConfig, X, data):
     paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
 
 
-# 进行测试
-def eval(cfg: DictConfig, X, data):
-    y = paddle.to_tensor(data, dtype="float32")
-    # 重新划分数据集
-    x_train, x_test, y_train, y_test = train_test_split(
-        X.numpy(), y.numpy(), test_size=cfg.EVAL.test_size, random_state=cfg.EVAL.seed
-    )
-    x_test = paddle.to_tensor(x_test, dtype="float32")
-    y_test = paddle.to_tensor(y_test, dtype="float32")
+def evaluate(cfg: DictConfig, X, data):
 
-    x = {
+    y_full = paddle.to_tensor(data, dtype="float32")
+    X_np = X.numpy()
+    y_np = y_full.numpy()
+    X_train_np, X_test_np, y_train_np, y_test_np = train_test_split(
+        X_np,
+        y_np,
+        test_size=cfg.EVAL.test_size,
+        random_state=cfg.EVAL.seed,
+    )
+    x_test = paddle.to_tensor(X_test_np, dtype="float32")
+    y_test = paddle.to_tensor(y_test_np, dtype="float32")
+
+    x_dict = {
         f"key_{i}": paddle.unsqueeze(x_test[:, i], axis=1)
         for i in range(x_test.shape[1])
     }
 
-    hidden_size = [587, 256]
-    num_layers = None
+    test_validator = ppsci.validate.SupervisedValidator(
+        dataloader_cfg={
+            "dataset": {
+                "input": x_dict,
+                "label": {"u": paddle.unsqueeze(y_test, axis=1)},
+                "name": "IterableNamedArrayDataset",
+            },
+            "batch_size": cfg.EVAL.batch_size,
+            "shuffle": False,
+        },
+        loss=ppsci.loss.MSELoss("mean"),
+        metric={
+            "MAE": ppsci.metric.MAE(),
+            "RMSE": ppsci.metric.RMSE(),
+            "R2": ppsci.metric.R2Score(),
+        },
+        name="test_eval",
+    )
+    validators = {"test_eval": test_validator}
+
     model = ppsci.arch.TADF(
-        input_keys=tuple(x.keys()),
-        hidden_size=hidden_size,
-        num_layers=num_layers,
+        input_keys=tuple(x_dict.keys()),
+        hidden_size=[587, 256],
+        num_layers=None,
         **cfg.MODEL,
     )
-    model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
 
-    ypred = model(x)
-    ytest = {"u": paddle.unsqueeze(y_test, axis=1)}
+    solver = ppsci.solver.Solver(
+        model,
+        validator=validators,
+        cfg=cfg,
+    )
 
-    # 计算损失
-    mae_metric = ppsci.metric.MAE()
-    rmse_metric = ppsci.metric.RMSE()
-    MAE = mae_metric(ypred, ytest).get("u").numpy()
-    RMSE = rmse_metric(ypred, ytest).get("u").numpy()
-    R2 = r2_score(ytest["u"].numpy(), ypred.get("u").numpy())
+    _, metric_dict = solver.eval()
 
-    print("MAE", MAE)
-    print("RMSE", RMSE)
-    print("R2", R2)
+    ypred = model(x_dict)["u"].numpy()
+    ytrue = paddle.unsqueeze(y_test, axis=1).numpy()
 
-    # 可视化
+    mae = metric_dict["MAE"]["u"]
+    rmse = metric_dict["RMSE"]["u"]
+    r2 = metric_dict["R2"]["u"]
+
+    print("Evaluation metrics:")
+    print(f"MAE:  {mae:.4f}")
+    print(f"RMSE: {rmse:.4f}")
+    print(f"R2:   {r2:.4f}")
+
     plt.scatter(
-        ytest["u"].numpy(), ypred.get("u").numpy(), s=15, color="royalblue", marker="s"
+        ytrue,
+        ypred,
+        s=15,
+        color="royalblue",
+        marker="s",
+        linewidth=1,
     )
     plt.plot(
-        [ytest["u"].min(), ytest["u"].max()],
-        [ytest["u"].min(), ytest["u"].max()],
+        [ytrue.min(), ytrue.max()],
+        [ytrue.min(), ytrue.max()],
         "r-",
         lw=1,
     )
-    plt.legend(title=f"R²={R2:.3f}\n\nMAE={MAE:.3f}")
+    plt.legend(title=f"R²={r2:.3f}\n\nMAE={mae:.3f}")
     plt.xlabel("Test θ(°)")
     plt.ylabel("Predicted θ(°)")
     save_path = "test_angle.png"

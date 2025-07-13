@@ -1,5 +1,5 @@
 import hydra
-from angle_model import eval
+from angle_model import evaluate
 from angle_model import featurize_molecules
 from angle_model import load_data
 from angle_model import train
@@ -16,7 +16,7 @@ def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg, X, data)
     elif cfg.mode == "eval":
-        eval(cfg, X, data)
+        evaluate(cfg, X, data)
     else:
         raise ValueError(f"cfg.mode should be 'train' or 'eval', but got '{cfg.mode}'")
 
