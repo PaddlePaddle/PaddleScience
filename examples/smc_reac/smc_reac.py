@@ -8,11 +8,11 @@ import pandas as pd
 import rdkit.Chem as Chem
 from omegaconf import DictConfig
 from rdkit.Chem import rdFingerprintGenerator
-from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import ppsci
 
+paddle.set_device("gpu:5")
 os.environ["HYDRA_FULL_ERROR"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
@@ -107,36 +107,61 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     global x_test, y_test
+
     x_test, y_test = data_processed(x_test, y_test)
-    # Reformat data for evaluation
-    x_test = {"v": x_test}
-    y_test = {"u": y_test}
+
+    test_validator = ppsci.validate.SupervisedValidator(
+        dataloader_cfg={
+            "dataset": {
+                "input": {"v": x_test},
+                "label": {"u": y_test},
+                "name": "IterableNamedArrayDataset",
+            },
+            "batch_size": cfg.EVAL.batch_size,
+            "shuffle": False,
+        },
+        loss=ppsci.loss.MSELoss("mean"),
+        metric={
+            "MAE": ppsci.metric.MAE(),
+            "RMSE": ppsci.metric.RMSE(),
+            "R2": ppsci.metric.R2Score(),
+        },
+        name="test_eval",
+    )
+    validators = {"test_eval": test_validator}
+
     model = ppsci.arch.SuzukiMiyauraModel(**cfg.MODEL)
-    model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
-    ypred = model(x_test)
+    solver = ppsci.solver.Solver(
+        model,
+        validator=validators,
+        cfg=cfg,
+    )
 
-    # Calculate evaluation metrics
-    loss = ppsci.metric.MAE()
-    MAE = loss(ypred, y_test).get("u").numpy()
-    loss = ppsci.metric.RMSE()
-    RMSE = loss(ypred, y_test).get("u").numpy()
-    ypred = ypred.get("u").numpy()
-    ytest = y_test.get("u").numpy()
-    R2 = r2_score(ytest, ypred)
-    print("MAE", MAE)
-    print("RMSE", RMSE)
-    print("R2", R2)
+    loss_val, metric_dict = solver.eval()
 
-    # Visualization
-    plt.scatter(ytest, ypred, s=15, color="royalblue", marker="s", linewidth=1)
-    plt.plot([ytest.min(), ytest.max()], [ytest.min(), ytest.max()], "r-", lw=1)
-    plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(R2, MAE))
+    ypred = model({"v": x_test})["u"].numpy()
+    ytrue = y_test.numpy()
+
+    mae = metric_dict["MAE"]["u"]
+    rmse = metric_dict["RMSE"]["u"]
+    r2 = metric_dict["R2"]["u"]
+
+    plt.figure()
+    plt.scatter(ytrue, ypred, s=15, color="royalblue", marker="s", linewidth=1)
+    plt.plot([ytrue.min(), ytrue.max()], [ytrue.min(), ytrue.max()], "r-", lw=1)
+    plt.legend(title="R²={:.3f}\n\nMAE={:.3f}".format(r2, mae))
     plt.xlabel("Test Yield(%)")
     plt.ylabel("Predicted Yield(%)")
     save_path = "smc_reac.png"
     plt.savefig(save_path)
-    print(f"Iamge saved to: {save_path}")
+    print(f"Image saved to: {save_path}")
     plt.show()
+
+    print("Evaluation metrics:")
+    print(f"Loss: {loss_val:.4f}")
+    print(f"MAE : {mae:.4f}")
+    print(f"RMSE: {rmse:.4f}")
+    print(f"R2  : {r2:.4f}")
 
 
 @hydra.main(version_base=None, config_path="./config", config_name="smc_reac.yaml")
