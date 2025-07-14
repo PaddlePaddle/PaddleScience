@@ -8,6 +8,7 @@ use_ddp: False
 config: pois-64-pretrain-e1_20_m3
 sweep_id: ''
 logdir: exp
+output_dir: ${hydra:run.dir}
 
 train_config:
   default: &DEFAULT
