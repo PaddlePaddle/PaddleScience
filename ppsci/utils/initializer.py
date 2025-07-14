@@ -46,6 +46,8 @@ __all__ = [
     "kaiming_normal_",
     "linear_init_",
     "conv_init_",
+    "glorot_normal_",
+    "lecun_normal_",
 ]
 
 
@@ -493,6 +495,35 @@ def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     fin, fout = tensor.shape
     var = 2.0 / (fin + fout)
     stddev = math.sqrt(var) * 0.87962566103423978
+    trunc_normal_(tensor)
+    tensor.set_value(tensor * stddev)
+    return tensor
+
+
+def lecun_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
+    """Modify tensor inplace using jax-style lecun_normal.
+
+    References:
+        https://github.com/jax-ml/jax/blob/main/jax/_src/nn/initializers.py#L480-L513
+
+    Args:
+        tensor (paddle.Tensor): Paddle Tensor/Parameter.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.lecun_normal_(param)
+    """
+    assert (
+        tensor.ndim == 2
+    ), f"lecun_normal_ only support 2D tensor now, but got ndim={tensor.ndim}"
+    fin, _ = tensor.shape
+    var = 1.0 / fin
+    stddev = math.sqrt(var) / 0.87962566103423978
     trunc_normal_(tensor)
     tensor.set_value(tensor * stddev)
     return tensor
