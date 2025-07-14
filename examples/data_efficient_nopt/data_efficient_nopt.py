@@ -20,21 +20,20 @@ from collections import OrderedDict
 from os import path as osp
 
 import hydra
-import ppsci
-import paddle
 import numpy as np
+import paddle
 import paddle.amp as amp
 import paddle.distributed as dist
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-
-from tqdm import tqdm
 from einops import rearrange
-from ruamel.yaml import YAML
 from omegaconf import DictConfig
+from ruamel.yaml import YAML
 from scipy.stats import linregress
+from tqdm import tqdm
 
+import ppsci
 from ppsci.arch.data_efficient_nopt_model import add_weight_decay
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
@@ -48,10 +47,11 @@ from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
 from ppsci.utils import logger
 
-ppsci.utils.misc.set_random_seed(42)
 
 class Trainer:
-    def __init__(self, params, global_rank, local_rank, device, output_dir, sweep_id=None):
+    def __init__(
+        self, params, global_rank, local_rank, device, output_dir, sweep_id=None
+    ):
         self.device = device
         self.params = params
         self.output_dir = output_dir
@@ -527,8 +527,10 @@ class Trainer:
 
             if valid_logs["valid_nrmse"] < best_loss:
                 best_loss = valid_logs["valid_nrmse"]
-                save_dir = self.output_dir + f"/best.pt"
-                logger.info(f"saving best in epoch {epoch}, [valid = {best_loss:.2e}] checkpoint : {save_dir}")
+                save_dir = self.output_dir + "/best.pt"
+                logger.info(
+                    f"saving best in epoch {epoch}, [valid = {best_loss:.2e}] checkpoint : {save_dir}"
+                )
                 self.save_checkpoint(save_dir)
 
         save_dir = self.params.checkpoint_path.replace("ckpt", "ckpt_last")
@@ -578,7 +580,14 @@ def train(config: DictConfig):
     params.name = str(config.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
 
-    trainer = Trainer(params, global_rank, local_rank, device, config.output_dir, sweep_id=config.sweep_id)
+    trainer = Trainer(
+        params,
+        global_rank,
+        local_rank,
+        device,
+        config.output_dir,
+        sweep_id=config.sweep_id,
+    )
     if config.sweep_id and trainer.global_rank == 0:
         print(config.sweep_id, trainer.params.entity, trainer.params.project)
     else:
