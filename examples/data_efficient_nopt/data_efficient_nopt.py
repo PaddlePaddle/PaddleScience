@@ -20,20 +20,21 @@ from collections import OrderedDict
 from os import path as osp
 
 import hydra
-import numpy as np
+import ppsci
 import paddle
+import numpy as np
 import paddle.amp as amp
 import paddle.distributed as dist
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-from einops import rearrange
-from omegaconf import DictConfig
-from ruamel.yaml import YAML
-from scipy.stats import linregress
-from tqdm import tqdm
 
-import ppsci
+from tqdm import tqdm
+from einops import rearrange
+from ruamel.yaml import YAML
+from omegaconf import DictConfig
+from scipy.stats import linregress
+
 from ppsci.arch.data_efficient_nopt_model import add_weight_decay
 from ppsci.arch.data_efficient_nopt_model import build_fno
 from ppsci.arch.data_efficient_nopt_model import fno_pretrain as fno
@@ -47,11 +48,13 @@ from ppsci.data.dataset.data_efficient_nopt_dataset import MixedDatasetLoader
 from ppsci.data.dataset.data_efficient_nopt_dataset import PoisHelmDatasetLoader
 from ppsci.utils import logger
 
+ppsci.utils.misc.set_random_seed(42)
 
 class Trainer:
-    def __init__(self, params, global_rank, local_rank, device, sweep_id=None):
+    def __init__(self, params, global_rank, local_rank, device, output_dir, sweep_id=None):
         self.device = device
         self.params = params
+        self.output_dir = output_dir
         self.global_rank = global_rank
         self.local_rank = local_rank
         self.world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -499,6 +502,8 @@ class Trainer:
         logger.info(
             f"iters per epoch = {len(self.train_data_loader)}, samples number = {len(self.train_dataset)}, batch size = {self.params.batch_size}, total batches = {len(self.train_data_loader)*self.params.batch_size}"
         )
+        best_loss = 1.0
+
         for epoch in range(self.startEpoch, self.params.max_epochs):
             if dist.is_initialized():
                 self.train_sampler.set_epoch(epoch)
@@ -519,6 +524,12 @@ class Trainer:
             logger.info(
                 f"Train loss: {train_logs['train_nrmse']:.2e}, Valid Loss: {valid_logs['valid_nrmse']:.2e}\n"
             )
+
+            if valid_logs["valid_nrmse"] < best_loss:
+                best_loss = valid_logs["valid_nrmse"]
+                save_dir = self.output_dir + f"/best_ep_{epoch}.pt"
+                logger.info(f"saving best [valid = {best_loss:.2e}] checkpoint : {save_dir}")
+                self.save_checkpoint(save_dir)
 
         save_dir = self.params.checkpoint_path.replace("ckpt", "ckpt_last")
         logger.info(f"saving checkpoint : {save_dir}")
@@ -567,7 +578,7 @@ def train(config: DictConfig):
     params.name = str(config.run_name)
     params.log_to_screen = (global_rank == 0) and params.log_to_screen
 
-    trainer = Trainer(params, global_rank, local_rank, device, sweep_id=config.sweep_id)
+    trainer = Trainer(params, global_rank, local_rank, device, config.output_dir, sweep_id=config.sweep_id)
     if config.sweep_id and trainer.global_rank == 0:
         print(config.sweep_id, trainer.params.entity, trainer.params.project)
     else:
