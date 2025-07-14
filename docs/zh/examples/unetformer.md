@@ -29,11 +29,11 @@ airs
     ``` sh
     # 将[Vaihingen数据集]下载到`data`目录中对应的子目录（如`data/vaihingen/train_images`）
     # 创建训练数据集
-    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/train_images" --mask-dir "data/vaihingen/train_masks" --output-img-dir "data/vaihingen/train/images_1024" --output-mask-dir "data/vaihingen/train/masks_1024" --mode "train" --split-size 1024 --stride 512
+    python tools/vaihingen_patch_split.py --img-dir "data/vaihingen/train_images" --mask-dir "data/vaihingen/train_masks" --output-img-dir "data/vaihingen/train/images_1024" --output-mask-dir "data/vaihingen/train/masks_1024" --mode "train" --split-size 1024 --stride 512
     # 创建测试数据集
-    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks_eroded" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024" --mode "val" --split-size 1024 --stride 1024 --eroded
+    python tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks_eroded" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024" --mode "val" --split-size 1024 --stride 1024 --eroded
     # 创建masks_1024_rgb可视化数据集
-    python unetformer/tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024_rgb" --mode "val" --split-size 1024 --stride 1024 --gt
+    python tools/vaihingen_patch_split.py --img-dir "data/vaihingen/test_images" --mask-dir "data/vaihingen/test_masks" --output-img-dir "data/vaihingen/test/images_1024" --output-mask-dir "data/vaihingen/test/masks_1024_rgb" --mode "val" --split-size 1024 --stride 1024 --gt
     # 模型训练
     python train_supervision.py -c config/vaihingen/unetformer.py
     ```
@@ -47,6 +47,7 @@ airs
     # 下载预训练模型文件
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/unetformer/unetformer-r18-512-crop-ms-e105_epoch0_best.pdparams -P ./model_weights/vaihingen/unetformer-r18-512-crop-ms-e105/
     python vaihingen_test.py -c config/vaihingen/unetformer.py -o fig_results/vaihingen/unetformer --rgb
+    ```
 
 ## 1. 背景简介
 
@@ -147,26 +148,26 @@ UNetFormer的损失函数由SoftCrossEntropyLoss交叉熵损失函数和DiceLoss
 #### 3.4.1 SoftCrossEntropyLoss
 
 
-``` py linenums="9"
+``` py linenums="13"
 --8<--
-examples/unetformer/geoseg/losses/soft_ce.py:9:39
+examples/unetformer/geoseg/losses/soft_ce.py:13:43
 --8<--
 ```
 
 #### 3.4.2 DiceLoss
 
-``` py linenums="32"
+``` py linenums="36"
 --8<--
-examples/unetformer/geoseg/losses/dice.py:32:140
+examples/unetformer/geoseg/losses/dice.py:36:145
 --8<--
 ```
 
 #### 3.4.2 JointLoss  
 SoftCrossEntropyLoss和DiceLoss将使用JointLoss进行组合
 
-``` py linenums="21"
+``` py linenums="23"
 --8<--
-examples/unetformer/geoseg/losses/joint_loss.py:21:38
+examples/unetformer/geoseg/losses/joint_loss.py:23:40
 --8<--
 ```
 #### 3.4.2 UNetFormerLoss  
