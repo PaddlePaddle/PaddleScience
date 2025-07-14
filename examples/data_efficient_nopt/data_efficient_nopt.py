@@ -527,8 +527,8 @@ class Trainer:
 
             if valid_logs["valid_nrmse"] < best_loss:
                 best_loss = valid_logs["valid_nrmse"]
-                save_dir = self.output_dir + f"/best_ep_{epoch}.pt"
-                logger.info(f"saving best [valid = {best_loss:.2e}] checkpoint : {save_dir}")
+                save_dir = self.output_dir + f"/best.pt"
+                logger.info(f"saving best in epoch {epoch}, [valid = {best_loss:.2e}] checkpoint : {save_dir}")
                 self.save_checkpoint(save_dir)
 
         save_dir = self.params.checkpoint_path.replace("ckpt", "ckpt_last")
