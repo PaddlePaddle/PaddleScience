@@ -61,9 +61,9 @@ examples/fundiff/conf/fae.yaml:36:63
 --8<--
 ```
 
-``` py linenums="91"
+``` py linenums="87"
 --8<--
-examples/fundiff/main.py:91:99
+examples/fundiff/main.py:87:95
 --8<--
 ```
 
@@ -71,9 +71,9 @@ examples/fundiff/main.py:91:99
 
 FAE 使用 auto encoder decoder 的训练范式，因此标签即是输入 $u$
 
-``` py linenums="98"
+``` py linenums="97"
 --8<--
-examples/fundiff/main.py:98:142
+examples/fundiff/main.py:97:148
 --8<--
 ```
 
@@ -89,9 +89,9 @@ examples/fundiff/conf/diffusion.yaml:66:76
 --8<--
 ```
 
-``` py linenums="180"
+``` py linenums="186"
 --8<--
-examples/fundiff/main.py:180:202
+examples/fundiff/main.py:186:208
 --8<--
 ```
 
@@ -103,11 +103,19 @@ $$
 \mathcal{L}(\theta) = \mathbb{E}_{\mathbf{z}, t, {\epsilon}} \left[ \left\| \hat{\mathbf{v}}_\theta(\mathbf{x}, t) - (\mathbf{z} - \mathbf{x}) \right\|^2 \right]
 $$
 
-其对应的实现代码如下
+其对应的前向计算实现代码如下
 
 ``` py linenums="44"
 --8<--
 examples/fundiff/main.py:44:85
+--8<--
+```
+
+整体约束构建如下
+
+``` py linenums="210"
+--8<--
+examples/fundiff/main.py:210:262
 --8<--
 ```
 
@@ -139,9 +147,9 @@ examples/fundiff/conf/fae.yaml:65:80
 --8<--
 ```
 
-``` py linenums="153"
+``` py linenums="159"
 --8<--
-examples/fundiff/main.py:153:166
+examples/fundiff/main.py:159:172
 --8<--
 ```
 
@@ -151,9 +159,9 @@ examples/fundiff/conf/diffusion.yaml:78:104
 --8<--
 ```
 
-``` py linenums="260" title="main.py"
+``` py linenums="273" title="main.py"
 --8<--
-examples/fundiff/main.py:260:273
+examples/fundiff/main.py:273:286
 --8<--
 ```
 
@@ -161,9 +169,15 @@ examples/fundiff/main.py:260:273
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练即可。
 
-``` py linenums="275"
+``` py linenums="174"
 --8<--
-examples/fundiff/main.py:275:283
+examples/fundiff/main.py:174:182
+--8<--
+```
+
+``` py linenums="288"
+--8<--
+examples/fundiff/main.py:288:296
 --8<--
 ```
 
