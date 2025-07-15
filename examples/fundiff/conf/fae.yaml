@@ -1,0 +1,92 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_fae/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+stage: fae # fae
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+DATA_PATH: ./data/turbulence_mass_transfer/tmt.npy
+num_train: 900
+
+# model settings
+FAE:
+  input_keys: [coords, x]
+  output_keys: [u]
+  # x_dim: [2, 200, 100, 1]
+  # c_dim: [2, 256, 512]
+
+  encoder:
+    in_dim: 1
+    patch_size: [10, 5]
+    emb_dim: 256
+    num_latents: 256
+    grid_size: [200, 100]
+    depth: 8
+    num_heads: 8
+    mlp_ratio: 2
+    layer_norm_eps: 1e-05
+  decoder:
+    in_dim: 2
+    period: null
+    fourier_freq: 1.0
+    dec_emb_dim: 256
+    dec_depth: 4
+    dec_num_heads: 8
+    mlp_ratio: 2
+    num_mlp_layers: 2
+    out_dim: 1
+    layer_norm_eps: 1e-05
+
+# training settings
+TRAIN:
+  steps: 100000
+  epochs: 5000
+  iters_per_epoch: -1
+  num_queries: 1024
+  solution: [1, 2, 4]
+  save_freq: 0
+  eval_during_train: false
+  eval_freq: 10
+  optim: adam
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+  weight_decay: 1e-5
+  clip_norm: 1.0
+
+  lr_scheduler:
+    # epochs: ${TRAIN.epochs}
+    learning_rate: 0.001
+    gamma: 0.9
+    decay_steps: 1000
+    by_epoch: false
+    warmup_epoch: 1000
+
+  batch_size: 64
+  pretrained_model_path: null
+  checkpoint_path: null
