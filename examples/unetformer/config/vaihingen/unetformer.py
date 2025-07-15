@@ -7,6 +7,7 @@ from geoseg.datasets.vaihingen_dataset import train_aug
 from geoseg.datasets.vaihingen_dataset import val_aug
 from geoseg.losses.useful_loss import UnetFormerLoss
 from geoseg.models.UNetFormer import UNetFormer
+
 from tools.utils import process_model_params
 
 max_epoch = 105
