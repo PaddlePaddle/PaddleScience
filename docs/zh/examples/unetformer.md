@@ -171,9 +171,9 @@ examples/unetformer/geoseg/losses/joint_loss.py:23:40
 --8<--
 ```
 #### 3.4.2 UNetFormerLoss  
-``` py linenums="93"
+``` py linenums="92"
 --8<--
-examples/unetformer/geoseg/losses/useful_loss.py:93:115
+examples/unetformer/geoseg/losses/useful_loss.py:92:113
 --8<--
 ```
 
