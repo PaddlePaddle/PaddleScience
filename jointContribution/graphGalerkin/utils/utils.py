@@ -1,22 +1,29 @@
-from paddle import Tensor
-from typing import Optional, Tuple, Union
-import paddle
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
-from scatter import scatter, scatter_add
+import paddle
+from paddle import Tensor
+from scatter import scatter
+from scatter import scatter_add
+
 OptTensor = Optional[Tensor]
 
 import pgl
 
-class Data():
+
+class Data:
     def __init__(self, x, y, edge_index):
         self.y = y
         self.x = x
         self.edge_index = edge_index
+
     def __call__(self):
-        return pgl.Graph(edges=self.edge_index,
-                         num_nodes=self.x.shape[0],
-                         node_feat=self.x)
-    
+        return pgl.Graph(
+            edges=self.edge_index, num_nodes=self.x.shape[0], node_feat=self.x
+        )
+
+
 def maybe_num_nodes(edge_index, num_nodes=None):
     if num_nodes is not None:
         return num_nodes
@@ -25,8 +32,10 @@ def maybe_num_nodes(edge_index, num_nodes=None):
     else:
         return max(edge_index.size(0), edge_index.size(1))
 
-def remove_self_loops(edge_index: Tensor,
-                      edge_attr: OptTensor = None) -> Tuple[Tensor, OptTensor]:
+
+def remove_self_loops(
+    edge_index: Tensor, edge_attr: OptTensor = None
+) -> Tuple[Tensor, OptTensor]:
     r"""Removes every self-loop in the graph given by :attr:`edge_index`, so
     that :math:`(i,i) \not\in \mathcal{E}` for every :math:`i \in \mathcal{V}`.
 
@@ -39,16 +48,19 @@ def remove_self_loops(edge_index: Tensor,
     """
     mask = edge_index[0] != edge_index[1]
     for _ in range(edge_index.dim()):
-      edge_index[_] = paddle.masked_select(edge_index[_], mask)
+        edge_index[_] = paddle.masked_select(edge_index[_], mask)
     if edge_attr is None:
         return edge_index, None
     else:
         return edge_index, edge_attr[mask]
 
+
 def add_self_loops(
-        edge_index: Tensor, edge_attr: OptTensor = None,
-        fill_value: Union[float, Tensor, str] = None,
-        num_nodes: Optional[int] = None) -> Tuple[Tensor, OptTensor]:
+    edge_index: Tensor,
+    edge_attr: OptTensor = None,
+    fill_value: Union[float, Tensor, str] = None,
+    num_nodes: Optional[int] = None,
+) -> Tuple[Tensor, OptTensor]:
     r"""Adds a self-loop :math:`(i,i) \in \mathcal{E}` to every node
     :math:`i \in \mathcal{V}` in the graph given by :attr:`edge_index`.
     In case the graph is weighted or has multi-dimensional edge features
@@ -78,10 +90,10 @@ def add_self_loops(
     loop_index = paddle.tile(loop_index.unsqueeze(0), repeat_times=[2, 1])
     if edge_attr is not None:
         if fill_value is None:
-            loop_attr = edge_attr.new_full((N, ) + edge_attr.size()[1:], 1.)
+            loop_attr = edge_attr.new_full((N,) + edge_attr.size()[1:], 1.0)
 
         elif isinstance(fill_value, (int, float)):
-            loop_attr = paddle.full((N, ), fill_value, dtype=edge_attr.dtype)
+            loop_attr = paddle.full((N,), fill_value, dtype=edge_attr.dtype)
         elif isinstance(fill_value, Tensor):
             loop_attr = fill_value.to(edge_attr.device, edge_attr.dtype)
             if edge_attr.dim() != loop_attr.dim():
@@ -90,21 +102,26 @@ def add_self_loops(
             loop_attr = loop_attr.repeat(*sizes)
 
         elif isinstance(fill_value, str):
-            loop_attr = scatter(edge_attr, edge_index[1], dim=0, dim_size=N,
-                                reduce=fill_value)
+            loop_attr = scatter(
+                edge_attr, edge_index[1], dim=0, dim_size=N, reduce=fill_value
+            )
         else:
             raise AttributeError("No valid 'fill_value' provided")
-         
+
         edge_attr = paddle.concat([edge_attr, loop_attr], axis=0)
 
     edge_index = paddle.concat([edge_index, loop_index], axis=1)
     return edge_index, edge_attr
-    
-def get_laplacian(edge_index, edge_weight: Optional[paddle.Tensor] = None,
-                  normalization: Optional[str] = None,
-                  dtype: Optional[int] = None,
-                  num_nodes: Optional[int] = None):
-    r""" Computes the graph Laplacian of the graph given by :obj:`edge_index`
+
+
+def get_laplacian(
+    edge_index,
+    edge_weight: Optional[paddle.Tensor] = None,
+    normalization: Optional[str] = None,
+    dtype: Optional[int] = None,
+    num_nodes: Optional[int] = None,
+):
+    r"""Computes the graph Laplacian of the graph given by :obj:`edge_index`
     and optional :obj:`edge_weight`.
 
     Args:
@@ -130,7 +147,7 @@ def get_laplacian(edge_index, edge_weight: Optional[paddle.Tensor] = None,
     """
 
     if normalization is not None:
-        assert normalization in ['sym', 'rw']  # 'Invalid normalization'
+        assert normalization in ["sym", "rw"]  # 'Invalid normalization'
 
     edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
 
@@ -144,38 +161,44 @@ def get_laplacian(edge_index, edge_weight: Optional[paddle.Tensor] = None,
         # L = D - A.
         edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
         edge_weight = paddle.concat([-edge_weight, deg], dim=0)
-    elif normalization == 'sym':
+    elif normalization == "sym":
         # Compute A_norm = -D^{-1/2} A D^{-1/2}.
         deg_inv_sqrt = deg.pow(-0.5)
-        deg_inv_sqrt = masked_fill(deg_inv_sqrt,deg_inv_sqrt == float('inf'), 0)
+        deg_inv_sqrt = masked_fill(deg_inv_sqrt, deg_inv_sqrt == float("inf"), 0)
         edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
         # L = I - A_norm.
-        edge_index, tmp = add_self_loops(edge_index, -edge_weight,
-                                         fill_value=1., num_nodes=num_nodes)
+        edge_index, tmp = add_self_loops(
+            edge_index, -edge_weight, fill_value=1.0, num_nodes=num_nodes
+        )
         assert tmp is not None
         edge_weight = tmp
     else:
         # Compute A_norm = -D^{-1} A.
         deg_inv = 1.0 / deg
-        deg_inv.masked_fill_(deg_inv == float('inf'), 0)
+        deg_inv.masked_fill_(deg_inv == float("inf"), 0)
         edge_weight = deg_inv[row] * edge_weight
 
         # L = I - A_norm.
-        edge_index, tmp = add_self_loops(edge_index, -edge_weight,
-                                         fill_value=1., num_nodes=num_nodes)
+        edge_index, tmp = add_self_loops(
+            edge_index, -edge_weight, fill_value=1.0, num_nodes=num_nodes
+        )
         assert tmp is not None
         edge_weight = tmp
 
     return edge_index, edge_weight
 
+
 def masked_fill(x, mask, value):
     y = paddle.full(x.shape, value, x.dtype)
     return paddle.where(mask, y, x)
 
+
 def add_remaining_self_loops(
-        edge_index: Tensor, edge_attr: OptTensor = None,
-        fill_value: Union[float, Tensor, str] = None,
-        num_nodes: Optional[int] = None) -> Tuple[Tensor, OptTensor]:
+    edge_index: Tensor,
+    edge_attr: OptTensor = None,
+    fill_value: Union[float, Tensor, str] = None,
+    num_nodes: Optional[int] = None,
+) -> Tuple[Tensor, OptTensor]:
     r"""Adds remaining self-loop :math:`(i,i) \in \mathcal{E}` to every node
     :math:`i \in \mathcal{V}` in the graph given by :attr:`edge_index`.
     In case the graph is weighted or has multi-dimensional edge features
@@ -207,10 +230,10 @@ def add_remaining_self_loops(
 
     if edge_attr is not None:
         if fill_value is None:
-            loop_attr = edge_attr.new_full((N, ) + edge_attr.size()[1:], 1.)
+            loop_attr = edge_attr.new_full((N,) + edge_attr.size()[1:], 1.0)
 
         elif isinstance(fill_value, (int, float)):
-            loop_attr = paddle.full((N, ), fill_value, dtype=edge_attr.dtype)
+            loop_attr = paddle.full((N,), fill_value, dtype=edge_attr.dtype)
         elif isinstance(fill_value, Tensor):
             loop_attr = fill_value.to(edge_attr.device, edge_attr.dtype)
             if edge_attr.dim() != loop_attr.dim():
@@ -219,8 +242,9 @@ def add_remaining_self_loops(
             loop_attr = loop_attr.repeat(*sizes)
 
         elif isinstance(fill_value, str):
-            loop_attr = scatter(edge_attr, edge_index[1], dim=0, dim_size=N,
-                                reduce=fill_value)
+            loop_attr = scatter(
+                edge_attr, edge_index[1], dim=0, dim_size=N, reduce=fill_value
+            )
         else:
             raise AttributeError("No valid 'fill_value' provided")
 
@@ -229,6 +253,7 @@ def add_remaining_self_loops(
         edge_attr = paddle.concat([edge_attr, loop_attr], axis=0)
     edge_index = paddle.concat([edge_index, loop_index], axis=1)
     return edge_index, edge_attr
+
 
 def expand_left(src: paddle.Tensor, dim: int, dims: int) -> paddle.Tensor:
     for _ in range(dims + dim if dim < 0 else dim):

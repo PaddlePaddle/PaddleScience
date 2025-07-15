@@ -1,6 +1,8 @@
-from typing import Optional, Tuple
+from typing import Optional
+from typing import Tuple
 
 import paddle
+
 
 def broadcast(src: paddle.Tensor, other: paddle.Tensor, dim: int):
     if dim < 0:
@@ -13,21 +15,29 @@ def broadcast(src: paddle.Tensor, other: paddle.Tensor, dim: int):
     src = src.expand_as(other)
     return src
 
+
 def scatter_add_(dim, index, src, x):
-    if x.dim()==1:
-        output = paddle.scatter_nd_add(x.unsqueeze(-1), index.unsqueeze(-1), src.unsqueeze(-1)).squeeze(-1)
+    if x.dim() == 1:
+        output = paddle.scatter_nd_add(
+            x.unsqueeze(-1), index.unsqueeze(-1), src.unsqueeze(-1)
+        ).squeeze(-1)
     else:
         i, j = index.shape
-        grid_x , grid_y = paddle.meshgrid(paddle.arange(i), paddle.arange(j))
+        grid_x, grid_y = paddle.meshgrid(paddle.arange(i), paddle.arange(j))
         index = paddle.stack([index.flatten(), grid_y.flatten()], axis=1)
         updates_index = paddle.stack([grid_x.flatten(), grid_y.flatten()], axis=1)
         updates = paddle.gather_nd(src, index=updates_index)
         output = paddle.scatter_nd_add(x, index, updates)
     return output
 
-def scatter_sum(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-                out: Optional[paddle.Tensor] = None,
-                dim_size: Optional[int] = None) -> paddle.Tensor:
+
+def scatter_sum(
+    src: paddle.Tensor,
+    index: paddle.Tensor,
+    dim: int = -1,
+    out: Optional[paddle.Tensor] = None,
+    dim_size: Optional[int] = None,
+) -> paddle.Tensor:
     index = broadcast(index, src, dim)
     if out is None:
         size = list(src.shape)
@@ -42,14 +52,24 @@ def scatter_sum(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
     else:
         return scatter_add_(0, index, src, out)
 
-def scatter_add(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-                out: Optional[paddle.Tensor] = None,
-                dim_size: Optional[int] = None) -> paddle.Tensor:
+
+def scatter_add(
+    src: paddle.Tensor,
+    index: paddle.Tensor,
+    dim: int = -1,
+    out: Optional[paddle.Tensor] = None,
+    dim_size: Optional[int] = None,
+) -> paddle.Tensor:
     return scatter_sum(src, index, dim, out, dim_size)
 
-def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-                 out: Optional[paddle.Tensor] = None,
-                 dim_size: Optional[int] = None) -> paddle.Tensor:
+
+def scatter_mean(
+    src: paddle.Tensor,
+    index: paddle.Tensor,
+    dim: int = -1,
+    out: Optional[paddle.Tensor] = None,
+    dim_size: Optional[int] = None,
+) -> paddle.Tensor:
 
     out = scatter_sum(src, index, dim, out, dim_size)
     dim_size = out.size(dim)
@@ -70,9 +90,15 @@ def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         out.floor_divide_(count)
     return out
 
-def scatter(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-            out: Optional[paddle.Tensor] = None, dim_size: Optional[int] = None,
-            reduce: str = "sum") -> paddle.Tensor:
+
+def scatter(
+    src: paddle.Tensor,
+    index: paddle.Tensor,
+    dim: int = -1,
+    out: Optional[paddle.Tensor] = None,
+    dim_size: Optional[int] = None,
+    reduce: str = "sum",
+) -> paddle.Tensor:
     r"""
     Reduces all values from the :attr:`src` tensor into :attr:`out` at the
     indices specified in the :attr:`index` tensor along a given axis
@@ -121,9 +147,9 @@ def scatter(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
 
     :rtype: :class:`Tensor`
     """
-    if reduce == 'sum' or reduce == 'add':
+    if reduce == "sum" or reduce == "add":
         return scatter_sum(src, index, dim, out, dim_size)
-    elif reduce == 'mean':
+    elif reduce == "mean":
         return scatter_mean(src, index, dim, out, dim_size)
     else:
         raise ValueError

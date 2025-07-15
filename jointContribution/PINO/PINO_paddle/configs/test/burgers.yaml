@@ -23,5 +23,3 @@ test:
 log:
   project: 'PINO-burgers-test'
   group: 'gelu-test'
-
-
