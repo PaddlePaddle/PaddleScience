@@ -34,7 +34,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [fundiff_turbulence_mass_transfer_dit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/fundiff/fundiff_turbulence_mass_transfer_dit_pretrained.pdparams) | Mean relative p error: 0.0755<br>Max relative p error: 0.1976<br>Min relative p error: 0.0225<br>Std relative p error: 0.0389<br>Mean relative sdf error: 0.0841<br>Max relative sdf error: 0.2972<br>Min relative sdf error: 0.0205<br>Std relative sdf error: 0.0609 |
+| [fundiff_turbulence_mass_transfer_dit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/fundiff/fundiff_turbulence_mass_transfer_dit_pretrained.pdparams) | Mean relative p error: 0.0651<br>Max relative p error: 0.1329<br>Min relative p error: 0.0345<br>Std relative p error: 0.0300<br>Mean relative sdf error: 0.0684<br>Max relative sdf error: 0.1443<br>Min relative sdf error: 0.0335<br>Std relative sdf error: 0.0377 |
 
 ## 1. 背景简介
 
@@ -55,13 +55,13 @@
 
 在 FuncDiff 模型中，FAE 模块采用了 Perceiver 的架构，其输入为物理场 $x$ 和查询坐标 $coords$，输出是某个物理场在查询坐标上的值 $u$，因此模型构建代码如下
 
-``` yaml linenums="36"
+``` yaml linenums="36" title="fae.yaml"
 --8<--
 examples/fundiff/conf/fae.yaml:36:63
 --8<--
 ```
 
-``` py linenums="87"
+``` py linenums="87" title="main.py"
 --8<--
 examples/fundiff/main.py:87:95
 --8<--
@@ -71,7 +71,7 @@ examples/fundiff/main.py:87:95
 
 FAE 使用 auto encoder decoder 的训练范式，因此标签即是输入 $u$
 
-``` py linenums="97"
+``` py linenums="97" title="main.py"
 --8<--
 examples/fundiff/main.py:97:148
 --8<--
@@ -83,13 +83,13 @@ examples/fundiff/main.py:97:148
 
 DiT 的模型构建如下
 
-``` yaml linenums="66"
+``` yaml linenums="66" title="diffusion.yaml"
 --8<--
 examples/fundiff/conf/diffusion.yaml:66:76
 --8<--
 ```
 
-``` py linenums="186"
+``` py linenums="186" title="main.py"
 --8<--
 examples/fundiff/main.py:186:208
 --8<--
@@ -105,7 +105,7 @@ $$
 
 其对应的前向计算实现代码如下
 
-``` py linenums="44"
+``` py linenums="44" title="main.py"
 --8<--
 examples/fundiff/main.py:44:85
 --8<--
@@ -113,7 +113,7 @@ examples/fundiff/main.py:44:85
 
 整体约束构建如下
 
-``` py linenums="210"
+``` py linenums="210" title="main.py"
 --8<--
 examples/fundiff/main.py:210:262
 --8<--
@@ -147,7 +147,7 @@ examples/fundiff/conf/fae.yaml:65:80
 --8<--
 ```
 
-``` py linenums="159"
+``` py linenums="159" title="main.py"
 --8<--
 examples/fundiff/main.py:159:172
 --8<--
