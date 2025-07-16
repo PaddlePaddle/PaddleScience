@@ -123,7 +123,7 @@ def main(OUTPUT_DIR):
     optimizer = paddle.optimizer.Adam(
         parameters=model.parameters(), learning_rate=2e-06, weight_decay=0.0
     )
-    checkpoint_path = f"{OUTPUT_DIR}/checkpoint.pth"
+    checkpoint_path = os.path.join(OUTPUT_DIR, "checkpoint.pdparams")
 
     def load_checkpoint(filepath, model, optimizer):
         if os.path.isfile(filepath):
@@ -214,7 +214,7 @@ def main(OUTPUT_DIR):
             epoch_loss = running_loss / len(train_loader.dataset)
             train_losses.append(epoch_loss)
             if epoch % 1000 == 0:
-                with open(f"{OUTPUT_DIR}/loss.dat", "a") as file0:
+                with open(os.path.join(OUTPUT_DIR, "loss.dat"), "a") as file0:
                     print(f"{epoch + 1}, {np.log10(epoch_loss):.15f}", file=file0)
                 with paddle.no_grad():
                     prediction = outputs.detach().cpu().numpy()
@@ -222,7 +222,7 @@ def main(OUTPUT_DIR):
                     L2_error_training = np.sqrt(
                         np.linalg.norm(prediction - target) / np.linalg.norm(target)
                     )
-                    with open(f"{OUTPUT_DIR}/TrainingLoss_L2.dat", "a") as file1:
+                    with open(os.path.join(OUTPUT_DIR, "TrainingLoss_L2.dat"), "a") as file1:
                         print(f"{epoch + 1}, {L2_error_training:.15f}", file=file1)
                 with paddle.no_grad():
                     test_prediction = model(x1_test, x2_test)
@@ -232,7 +232,7 @@ def main(OUTPUT_DIR):
                         np.linalg.norm(test_prediction - test_target)
                         / np.linalg.norm(test_target)
                     )
-                    with open(f"{OUTPUT_DIR}/TestingLoss_L2.dat", "a") as file2:
+                    with open(os.path.join(OUTPUT_DIR, "TestingLoss_L2.dat"), "a") as file2:
                         print(f"{epoch + 1}, {L2_error_testing:.15f}", file=file2)
                 print(epoch, epoch_loss, L2_error_training, L2_error_testing)
             if epoch % 10000 == 0:
@@ -269,7 +269,7 @@ def main(OUTPUT_DIR):
         num_epochs=5000000,
         checkpoint_interval=1000,
     )
-    model_path = f"{OUTPUT_DIR}/trained_model.pth"
+    model_path = os.path.join(OUTPUT_DIR, "trained_model.pdparams")
     paddle.save(obj=model.state_dict(), path=model_path)
     print(f"Model saved to {model_path}")
 
