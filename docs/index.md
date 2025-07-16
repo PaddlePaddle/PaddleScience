@@ -160,6 +160,7 @@
 | 地震波形反演 | [VelocityGAN 地震波形反演](./zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
 | 交通预测 | [TGCN 交通流量预测](./zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
 | 生成模型| [图像生成中的梯度惩罚应用](./zh/examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
+| 遥感图像分割| [UNetFormer分割图像](./zh/examples/unetformer.md)|数据驱动|UNetformer|监督学习|[Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen)<br>| [Paper](https://github.com/WangLibo1995/GeoSeg) |
 
 <br>
 <p align="center"><b>化学科学 (AI for Chemistry)</b></p>

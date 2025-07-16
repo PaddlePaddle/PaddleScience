@@ -128,6 +128,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 地震波形反演 | [VelocityGAN 地震波形反演](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
 | 交通预测 | [TGCN 交通流量预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
 | 生成模型| [图像生成中的梯度惩罚应用](./zh/examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
+| 遥感图像分割| [UNetFormer分割图像](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/unetformer)|数据驱动|UNetformer|监督学习|[Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen)<br>| [Paper](https://github.com/WangLibo1995/GeoSeg) |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
@@ -150,6 +151,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:feature] -->
 ## ✨特性
 
+- **支持自动化并行实验调度，一键串/并行启动实验任务([教程](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#113))**，提高科研效率。
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
 - 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。
@@ -268,7 +270,8 @@ python -c "import paddle; paddle.utils.run_check()"
 | [tensorly](https://github.com/tensorly/tensorly) | 张量运算库 | 全量支持 |
 | [Open3D](https://github.com/PFCCLab/Open3D.git) | 三维图形库 | 全量支持 |
 | [neuraloperator](https://github.com/PFCCLab/neuraloperator) | 神经算子库 | 全量支持 |
-| [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏计算库 | 全量支持 |
+| [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏聚合库 | 全量支持 |
+| [paddle_sparse](https://github.com/PFCCLab/paddle_sparse) | 张量稀疏计算库 | 全量支持 |
 | [paddle_harmonics](https://github.com/PFCCLab/paddle_harmonics.git) | 球面谐波变换库 | 全量支持 |
 | [deepali](https://github.com/PFCCLab/deepali) | 图像、点云配准库 | 全量支持 |
 | [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
