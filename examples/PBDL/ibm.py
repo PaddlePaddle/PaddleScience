@@ -283,3 +283,4 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     # run model
     main(OUTPUT_DIR)
+        pass
