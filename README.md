@@ -108,7 +108,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 晶体材料属性预测 | [CGCNN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/cgcnn/) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
 | 分子生成 | [MoFlow](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/moflow/) | 数据驱动 | Flow Model | 监督学习 | [qm9/ zink250k](https://aistudio.baidu.com/datasetdetail/282687) | [Paper](https://arxiv.org/abs/2006.10137v1) |
 | 分子属性预测 | [IFM](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/) | 数据驱动 | MLP | 监督学习 | [tox21/sider/hiv/bace/bbbp](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/#:~:text=molecules%20%E6%95%B0%E6%8D%AE%E9%9B%86-,dataset.zip,-%EF%BC%8C%E6%88%96Google%20Drive) | [Paper](https://openreview.net/pdf?id=NLFqlDeuzt) |
-
+| 二维材料生成与数据库 | [ML2DDB](./en/examples/ml2ddb.md) | 数据驱动 | GNN/Diffusion | 监督学习 | Coming Soon | [Paper](https://arxiv.org/pdf/2507.00584) |
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>
@@ -124,6 +124,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 天气预报 | [FengWu 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fengwu) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2304.02948) |
 | 天气预报 | [Pangu-Weather 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/pangu_weather) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/pdf/2211.02556) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
+| 大气污染物 | [STAFNet 污染物浓度预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/stafnet) | 数据驱动 | STAFNet | 监督学习 | [Data](https://quotsoft.net/air) | [Paper](https://link.springer.com/chapter/10.1007/978-3-031-78186-5_22) |
 | 天气预报 | [DGMR 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/dgmr.md) | 数据驱动 | GAN | 监督学习 | [UK dataset](https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km) | [Paper](https://arxiv.org/pdf/2104.00954.pdf) |
 | 地震波形反演 | [VelocityGAN 地震波形反演](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
 | 交通预测 | [TGCN 交通流量预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
@@ -151,7 +152,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:feature] -->
 ## ✨特性
 
-- **支持自动化并行实验调度，一键串/并行启动实验任务([教程](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#113))**，提高科研效率。
+- 支持 **[实验源码跟踪](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#112)，[一键启动并行实验](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#114)**，提高科研效率。
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
 - 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。
@@ -166,7 +167,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
+请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，建议安装 PaddlePaddle <font color="red"><b>3.0 以上稳定版，或最新的 develop 开发版</b></font>。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 

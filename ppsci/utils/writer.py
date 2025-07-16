@@ -95,6 +95,9 @@ def save_csv_file(
 
     assert len(header) == len(data_fields)
 
+    if len(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     data_fields = zip(*data_fields)  # transpose col data to row data
     with open(filename, "w", newline="", encoding=encoding) as file:
         writer = csv.writer(file, delimiter=delimiter)

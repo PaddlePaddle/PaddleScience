@@ -95,11 +95,13 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - ML2DDB: en/examples/ml2ddb.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
+        - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
@@ -110,6 +112,7 @@ nav:
         - FengWu: zh/examples/fengwu.md
         - FuXi: zh/examples/fuxi.md
         - WGAN_GP: zh/examples/wgan_gp.md
+        - UNetFormer: zh/examples/unetformer.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
