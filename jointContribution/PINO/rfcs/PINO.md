@@ -56,7 +56,7 @@ class FNO2d(nn.Layer):
                  width=64, fc_dim=128,
                  layers=None,
                  in_dim=3, out_dim=1,
-                 act='gelu', 
+                 act='gelu',
                  pad_ratio=[0., 0.]):
         super(FNO2d, self).__init__()
 

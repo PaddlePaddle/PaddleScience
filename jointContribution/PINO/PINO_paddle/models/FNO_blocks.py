@@ -1,8 +1,10 @@
-import paddle
-import paddle.nn as nn
 import itertools
 
+import paddle
+import paddle.nn as nn
+
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 
 def _contract_dense(x, weight, separable=False):
     # order = tl.ndim(x)
@@ -27,6 +29,7 @@ def _contract_dense(x, weight, separable=False):
         weight = paddle.to_tensor(weight)
 
     return paddle.einsum(eq, x, weight)
+
 
 def _contract_dense_trick(x, weight, separable=False):
     # the same as above function, but do the complex multiplication manually to avoid the einsum bug in paddle
@@ -59,10 +62,12 @@ def _contract_dense_trick(x, weight, separable=False):
     x = paddle.complex(o1_real, o1_imag)
     return x
 
+
 def _contract_dense_separable(x, weight, separable=True):
     if separable == False:
         raise ValueError("This function is only for separable=True")
     return x * weight
+
 
 def _contract_cp(x, cp_weight, separable=False):
     # order = tl.ndim(x)
@@ -83,6 +88,7 @@ def _contract_cp(x, cp_weight, separable=False):
     )
 
     return paddle.einsum(eq, x, cp_weight.weights, *cp_weight.factors)
+
 
 def _contract_tucker(x, tucker_weight, separable=False):
     # order = tl.ndim(x)
@@ -118,6 +124,7 @@ def _contract_tucker(x, tucker_weight, separable=False):
     print(eq)  # 'abcd,fghi,bf,eg,ch,di->aecd'
     return paddle.einsum(eq, x, tucker_weight.core, *tucker_weight.factors)
 
+
 def _contract_tt(x, tt_weight, separable=False):
     # order = tl.ndim(x)
     order = len(x.shape)
@@ -144,16 +151,17 @@ def _contract_tt(x, tt_weight, separable=False):
 
     return paddle.einsum(eq, x, *tt_weight.factors)
 
+
 def get_contract_fun(weight, implementation="reconstructed", separable=False):
     """Generic ND implementation of Fourier Spectral Conv contraction
-    
+
     Parameters
     ----------
     weight : tensorl-paddle's FactorizedTensor
     implementation : {'reconstructed', 'factorized'}, default is 'reconstructed'
         whether to reconstruct the weight and do a forward pass (reconstructed)
         or contract directly the factors of the factorized weight with the input (factorized)
-    
+
     Returns
     -------
     function : (x, weight) -> x * weight in Fourier space
@@ -176,6 +184,7 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
             f'Got implementation = {implementation}, expected "reconstructed" or "factorized"'
         )
 
+
 class FactorizedTensor(nn.Layer):
     def __init__(self, shape, init_scale):
         super().__init__()
@@ -194,6 +203,7 @@ class FactorizedTensor(nn.Layer):
     @property
     def data(self):
         return paddle.complex(self.real, self.imag)
+
 
 class FactorizedSpectralConv(nn.Layer):
     """Generic N-Dimensional Fourier Neural Operator
@@ -324,14 +334,14 @@ class FactorizedSpectralConv(nn.Layer):
 
     def forward(self, x, indices=0):
         """Generic forward pass for the Factorized Spectral Conv
-        
-        Parameters 
+
+        Parameters
         ----------
         x : paddle.Tensor
             input activation of size (batch_size, channels, d1, ..., dN)
         indices : int, default is 0
             if joint_factorization, index of the layers for n_layers > 1
-        
+
         Returns
         -------
         tensorized_spectral_conv(x)
@@ -348,7 +358,8 @@ class FactorizedSpectralConv(nn.Layer):
         x = paddle.fft.rfftn(x_float, norm=self.fft_norm, axes=fft_dims)
 
         out_fft = paddle.zeros(
-            [batchsize, self.out_channels, *fft_size], dtype=paddle.complex64,
+            [batchsize, self.out_channels, *fft_size],
+            dtype=paddle.complex64,
         )  # [1,32,16,9], all zeros, complex
 
         # We contract all corners of the Fourier coefs
@@ -402,13 +413,14 @@ class FactorizedSpectralConv(nn.Layer):
     def __getitem__(self, indices):
         return self.get_conv(indices)
 
+
 class SubConv2d(nn.Layer):
     """Class representing one of the convolutions from the mother joint factorized convolution
 
     Notes
     -----
     This relies on the fact that nn.Parameters are not duplicated:
-    if the same nn.Parameter is assigned to multiple modules, they all point to the same data, 
+    if the same nn.Parameter is assigned to multiple modules, they all point to the same data,
     which is shared.
     """
 
@@ -419,6 +431,7 @@ class SubConv2d(nn.Layer):
 
     def forward(self, x):
         return self.main_conv.forward(x, self.indices)
+
 
 class FactorizedSpectralConv1d(FactorizedSpectralConv):
     def __init__(
@@ -462,7 +475,8 @@ class FactorizedSpectralConv1d(FactorizedSpectralConv):
         x = paddle.fft.rfft(x, norm=self.fft_norm)
 
         out_fft = paddle.zeros(
-            [batchsize, self.out_channels, width // 2 + 1], dtype=paddle.complex64,
+            [batchsize, self.out_channels, width // 2 + 1],
+            dtype=paddle.complex64,
         )
         out_fft[:, :, : self.half_modes_height] = self._contract(
             x[:, :, : self.half_modes_height],
@@ -476,6 +490,7 @@ class FactorizedSpectralConv1d(FactorizedSpectralConv):
             x = x + self.bias[indices, ...]
 
         return x
+
 
 class FactorizedSpectralConv2d(FactorizedSpectralConv):
     def __init__(
@@ -522,7 +537,8 @@ class FactorizedSpectralConv2d(FactorizedSpectralConv):
 
         # The output will be of size (batch_size, self.out_channels, x.size(-2), x.size(-1)//2 + 1)
         out_fft = paddle.zeros(
-            [batchsize, self.out_channels, height, width // 2 + 1], dtype=x.dtype,
+            [batchsize, self.out_channels, height, width // 2 + 1],
+            dtype=x.dtype,
         )
 
         # upper block (truncate high freq)
@@ -550,6 +566,7 @@ class FactorizedSpectralConv2d(FactorizedSpectralConv):
             x = x + self.bias[indices, ...]
 
         return x
+
 
 class FactorizedSpectralConv3d(FactorizedSpectralConv):
     def __init__(
@@ -678,6 +695,7 @@ class FactorizedSpectralConv3d(FactorizedSpectralConv):
             x = x + self.bias[indices, ...]
 
         return x
+
 
 if __name__ == "__main__":
     # let x be a complex tensor of size (32, 32, 8, 8)
