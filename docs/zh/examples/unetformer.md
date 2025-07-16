@@ -135,9 +135,9 @@ ISPRS提供了城市分类和三维建筑重建测试项目的两个最先进的
 
 
 参数配置如下：
-``` py linenums="12"
+``` py linenums="13"
 --8<--
-examples/unetformer/config/vaihingen/unetformer.py:12:37
+examples/unetformer/config/vaihingen/unetformer.py:13:37
 --8<--
 ```
 
@@ -183,15 +183,15 @@ UNetFormer使用AdamW优化器，可直接调用`paddle.optimizer.AdamW`构建�
 
 ``` py linenums="72"
 --8<--
-examples/unetformer/config/vaihingen/unetformer.py:71:82
+examples/unetformer/config/vaihingen/unetformer.py:72:83
 --8<--
 ```
 
 ### 3.6 模型训练
 
-``` py linenums="237"
+``` py linenums="238"
 --8<--
-examples/unetformer/train_supervision.py:237:302
+examples/unetformer/train_supervision.py:238:302
 --8<--
 ```
 
