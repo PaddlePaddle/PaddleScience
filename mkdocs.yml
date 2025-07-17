@@ -113,6 +113,7 @@ nav:
         - FengWu: zh/examples/fengwu.md
         - FuXi: zh/examples/fuxi.md
         - WGAN_GP: zh/examples/wgan_gp.md
+        - UNetFormer: zh/examples/unetformer.md
       - 化学科学(AI for Chemistry):
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md

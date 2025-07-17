@@ -139,11 +139,10 @@ TRAIN:
     # python example.py PATH="/workspace/lr=0.1,s=[3]/best_model.pdparams"
     ```
 
+<<<<<<< HEAD
 #### 1.1.4 自动化运行实验⭐
-
-如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
-
-假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
+=======
+#### 1.1.3 自动化运行实验
 
 | 实验编号 | seed | epochs |
 | :------- | :--- | :----- |
@@ -464,7 +463,11 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 
 PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
+<<<<<<< HEAD
 |  | Native | ONNX | TensorRT | macaRT | oneDNN |
+=======
+|  | Native | ONNX | TensorRT | macaRT | MKLDNN |
+>>>>>>> unetformer
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Intel(CPU) | ✅ | ✅ | / | / | ✅ |
 | NVIDIA | ✅ | ✅ | ✅ | / | / |
@@ -576,16 +579,26 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
         INFER.engine=onnx
     ```
 
+<<<<<<< HEAD
 === "使用 oneDNN 推理"
 
     oneDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 oneDNN 推理功能。
+=======
+=== "使用 MKLDNN 推理"
+
+    MKLDNN 是英特尔推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+>>>>>>> unetformer
 
     运行以下命令进行推理：
 
     ``` sh
     python aneurysm.py mode=infer \
         INFER.device=cpu \
+<<<<<<< HEAD
         INFER.engine=onednn
+=======
+        INFER.engine=mkldnn
+>>>>>>> unetformer
     ```
 
 !!! info "完整推理配置参数"
@@ -593,14 +606,22 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     | 参数 | 默认值 | 说明 |
     | :--- | :--- | :--- |
     | `INFER.device` | `cpu` | 推理设备，目前支持 `cpu` 和 `gpu` |
+<<<<<<< HEAD
     | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `onednn` |
+=======
+    | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `mkldnn` |
+>>>>>>> unetformer
     | `INFER.precision` | `fp32` | 推理精度，目前支持 `fp32`, `fp16` |
     | `INFER.ir_optim` | `True` | 是否启用 IR 优化 |
     | `INFER.min_subgraph_size` | `30` | TensorRT 中最小子图 size，当子图的 size 大于该值时，才会尝试对该子图使用 TensorRT 计算 |
     | `INFER.gpu_mem` | `2000` | 初始显存大小 |
     | `INFER.gpu_id` | `0` | GPU 逻辑设备号 |
     | `INFER.max_batch_size` | `1024` | 推理时的最大 batch_size |
+<<<<<<< HEAD
     | `INFER.num_cpu_threads` | `10` | oneDNN 和 ONNX 在 CPU 推理时的线程数 |
+=======
+    | `INFER.num_cpu_threads` | `10` | MKLDNN 和 ONNX 在 CPU 推理时的线程数 |
+>>>>>>> unetformer
     | `INFER.batch_size` | `256` | 推理时的 batch_size |
 
 ### 1.4 断点继续训练
@@ -720,7 +741,11 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     solver.eval()
     ```
 
+<<<<<<< HEAD
 ### 1.7 实验过程可视化⭐
+=======
+### 1.7 实验过程可视化
+>>>>>>> unetformer
 
 === "TensorBoardX"
 
@@ -990,7 +1015,11 @@ best_value: 0.02460772916674614
 
 ### 2.2 分布式训练
 
+<<<<<<< HEAD
 #### 2.2.1 数据并行⭐
+=======
+#### 2.2.1 数据并行
+>>>>>>> unetformer
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
@@ -1155,7 +1184,11 @@ PaddleScience 内置了两种模型平均方法：[Stochastic weight averaging(S
     3. 设置平均间隔为 1 个 epoch
     4. 设置平均的起始和终止 epoch 为 75 至 100
 
+<<<<<<< HEAD
 ### 2.7 回调函数(callback)
+=======
+### 2.7 回调(callback)注册与调用指南
+>>>>>>> unetformer
 
 在深度学习模型的训练过程中，能够在特定的时机执行自定义逻辑是非常有用的。PaddleScience 的 `Solver` 类提供了一种相对灵活的机制，允许用户在**训练的不同阶段**注册和调用回调函数。
 
