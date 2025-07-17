@@ -7,7 +7,6 @@ import rdkit.Chem as Chem
 from omegaconf import DictConfig
 from rdkit.Chem import rdFingerprintGenerator
 from sklearn.decomposition import PCA
-from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import ppsci
@@ -134,13 +133,15 @@ def train(cfg: DictConfig, X, data):
         print("error", ex)
     paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
 
+
 def evaluate(cfg: DictConfig, X, data):
 
     y_full = paddle.to_tensor(data, dtype="float32")
     X_np = X.numpy()
     y_np = y_full.numpy()
     X_train_np, X_test_np, y_train_np, y_test_np = train_test_split(
-        X_np, y_np,
+        X_np,
+        y_np,
         test_size=cfg.EVAL.test_size,
         random_state=cfg.EVAL.seed,
     )
@@ -190,9 +191,9 @@ def evaluate(cfg: DictConfig, X, data):
     ypred = model(x_dict)["u"].numpy()
     ytrue = paddle.unsqueeze(y_test, axis=1).numpy()
 
-    mae  = metric_dict["MAE"]["u"]
+    mae = metric_dict["MAE"]["u"]
     rmse = metric_dict["RMSE"]["u"]
-    r2   = metric_dict["R2"]["u"]
+    r2 = metric_dict["R2"]["u"]
 
     print("Evaluation metrics:")
     print(f"MAE:  {mae:.4f}")
@@ -200,7 +201,8 @@ def evaluate(cfg: DictConfig, X, data):
     print(f"R2:   {r2:.4f}")
 
     plt.scatter(
-        ytrue, ypred,
+        ytrue,
+        ypred,
         s=15,
         color="royalblue",
         marker="s",
@@ -212,13 +214,10 @@ def evaluate(cfg: DictConfig, X, data):
         "r-",
         lw=1,
     )
-    plt.legend(
-        title=f"R²={r2:.3f}\n\nMAE={mae:.3f}"
-    )
+    plt.legend(title=f"R²={r2:.3f}\n\nMAE={mae:.3f}")
     plt.xlabel("Test θ(°)")
     plt.ylabel("Predicted θ(°)")
     save_path = "test_est.png"
     plt.savefig(save_path)
     print(f"图片已保存至：{save_path}")
     plt.show()
-    
