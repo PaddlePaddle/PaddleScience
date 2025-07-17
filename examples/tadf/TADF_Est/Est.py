@@ -1,5 +1,5 @@
 import hydra
-from Est_model import eval
+from Est_model import evaluate
 from Est_model import featurize_molecules
 from Est_model import load_data
 from Est_model import train
@@ -16,7 +16,7 @@ def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg, X, data)
     elif cfg.mode == "eval":
-        eval(cfg, X, data)
+        evaluate(cfg, X, data)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
