@@ -11,7 +11,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import ppsci
-paddle.set_device("cpu")
+
 os.environ["HYDRA_FULL_ERROR"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
@@ -134,56 +134,6 @@ def train(cfg: DictConfig, X, data):
         print("error", ex)
     paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
 
-
-# 进行测试
-def eval(cfg: DictConfig, X, data):
-    y = paddle.to_tensor(data)
-    # 重新划分数据集
-    x_train, x_test, y_train, y_test = train_test_split(
-        X.numpy(), y.numpy(), test_size=cfg.EVAL.test_size, random_state=cfg.EVAL.seed
-    )
-    x = {
-        "key_{}".format(i): paddle.unsqueeze(
-            paddle.to_tensor(x_test[:, i], "float32"), axis=1
-        )
-        for i in range(x_test.shape[1])
-    }
-    hidden_size = [587, 256]
-    num_layers = None
-    model = ppsci.arch.TADF(
-        input_keys=tuple(x.keys()),
-        hidden_size=hidden_size,
-        num_layers=num_layers,
-        **cfg.MODEL,
-    )
-    model.set_state_dict(paddle.load(cfg.EVAL.load_model_path))
-    ytest = paddle.unsqueeze(paddle.to_tensor(y_test, dtype="float32"), axis=1)
-    ypred = model(x)
-    ytest = {"u": ytest}
-
-    # 计算损失
-    loss = ppsci.metric.MAE()
-    MAE = loss(ypred, ytest).get("u").numpy()
-    loss = ppsci.metric.RMSE()
-    RMSE = loss(ypred, ytest).get("u").numpy()
-    ypred = ypred.get("u").numpy()
-    ytest = ytest.get("u").numpy()
-    R2 = r2_score(ytest, ypred)
-    print("MAE", MAE)
-    print("RMSE", RMSE)
-    print("R2", R2)
-
-    # 可视化
-    plt.scatter(ytest, ypred, s=15, color="royalblue", marker="s", linewidth=1)
-    plt.plot([ytest.min(), ytest.max()], [ytest.min(), ytest.max()], "r-", lw=1)
-    plt.legend(title=f"R²={R2:.3f}\n\nMAE={MAE:.3f}")
-    plt.xlabel("Test ΔEst(eV)")
-    plt.ylabel("Predicted ΔEst(eV)")
-    save_path = "test_Est.png"
-    plt.savefig(save_path)
-    print(f"图片已保存至：{save_path}")
-    plt.show()
-
 def evaluate(cfg: DictConfig, X, data):
 
     y_full = paddle.to_tensor(data, dtype="float32")
@@ -271,3 +221,4 @@ def evaluate(cfg: DictConfig, X, data):
     plt.savefig(save_path)
     print(f"图片已保存至：{save_path}")
     plt.show()
+    
