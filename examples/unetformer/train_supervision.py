@@ -7,7 +7,6 @@ import numpy as np
 import paddle
 from paddle_utils import PaddleFlag
 from paddle_utils import add_tensor_methods
-
 from tools.cfg import py2cfg
 from tools.metric import Evaluator
 
@@ -18,7 +17,6 @@ def seed_everything(seed):
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
-    paddle.seed(seed=seed)
     paddle.seed(seed=seed)
     PaddleFlag.cudnn_deterministic = True
     PaddleFlag.cudnn_benchmark = True
