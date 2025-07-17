@@ -134,6 +134,9 @@ class Geometry:
     ) -> Dict[str, np.ndarray]:
         """Sample random points in the geometry and return those meet criteria.
 
+        NOTE: sdf values returned by this function are negated because the weight in
+        loss function should be positive.
+
         Args:
             n (int): Number of points.
             random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
@@ -211,6 +214,7 @@ class Geometry:
 
         # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
         if hasattr(self, "sdf_func"):
+            # NOTE: add negative to the sdf values because weight should be positive.
             sdf = -self.sdf_func(x)
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
             sdf_derives_dict = {}

@@ -56,6 +56,7 @@ nav:
         - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
+          - Fundiff: zh/examples/fundiff.md
           - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
@@ -95,11 +96,13 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - ML2DDB: en/examples/ml2ddb.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
+        - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
