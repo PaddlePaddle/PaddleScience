@@ -18,6 +18,7 @@ def seed_everything(seed):
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
     paddle.seed(seed=seed)
+    paddle.seed(seed=seed)
     PaddleFlag.cudnn_deterministic = True
     PaddleFlag.cudnn_benchmark = True
 
