@@ -3,8 +3,7 @@
 !!! note
 
     1. 开始训练、评估前，请先确保性质数据文件(.dat)和SMILES(smis.txt)数据文件的存在，并对应修改 yaml 配置文件中的 `data_dir` 为性质数据文件路径，`sim_dir` 为SMILES数据文件路径。
-    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[Est.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_pretrained.pdparams), [f.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_pretrained.pdparams), [angle.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_pretrained.pdparams)，并对应修改 yaml 配置文件中的 `load_model_path` 为模型参数路径。
-    3. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install -r requirements.txt`安装。
+    2. 开始训练、评估前，请安装 `rdkit` 等，相关依赖请执行`pip install -r requirements.txt`安装。
 
 | 预训练模型  | 指标 |
 |:--| :--|
@@ -33,15 +32,15 @@
     ``` sh
     # Est 评估：
     cd TADF_Est
-    python Est.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_model.pdparams
+    python Est.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_model.pdparams
 
     # f 评估:
     cd TADF_f
-    python f.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_model.pdparams
+    python f.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_model.pdparams
 
     # angle 评估:
     cd TADF_angle
-    python angle.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
+    python angle.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
     ```
 
 ## 1. 背景简介
