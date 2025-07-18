@@ -131,7 +131,6 @@ def train(cfg: DictConfig, X, data):
         solver.train()
     except Exception as ex:
         print("error", ex)
-    paddle.save(model.state_dict(), cfg.TRAIN.save_model_path)
 
 
 def evaluate(cfg: DictConfig, X, data):
