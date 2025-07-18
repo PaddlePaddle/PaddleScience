@@ -108,7 +108,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 晶体材料属性预测 | [CGCNN](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/cgcnn/) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
 | 分子生成 | [MoFlow](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/moflow/) | 数据驱动 | Flow Model | 监督学习 | [qm9/ zink250k](https://aistudio.baidu.com/datasetdetail/282687) | [Paper](https://arxiv.org/abs/2006.10137v1) |
 | 分子属性预测 | [IFM](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/) | 数据驱动 | MLP | 监督学习 | [tox21/sider/hiv/bace/bbbp](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/#:~:text=molecules%20%E6%95%B0%E6%8D%AE%E9%9B%86-,dataset.zip,-%EF%BC%8C%E6%88%96Google%20Drive) | [Paper](https://openreview.net/pdf?id=NLFqlDeuzt) |
-
+| 二维材料生成与数据库 | [ML2DDB](./en/examples/ml2ddb.md) | 数据驱动 | GNN/Diffusion | 监督学习 | Coming Soon | [Paper](https://arxiv.org/pdf/2507.00584) |
 
 <br>
 <p align="center"><b>地球科学(AI for Earth Science)</b></p>
@@ -166,7 +166,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ### 安装 PaddlePaddle
 
 <!-- --8<-- [start:paddle_install] -->
-请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，安装 <font color="red"><b>3.0 或 develop</b></font> 版的 PaddlePaddle。
+请根据您的运行环境，访问 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网，建议安装 PaddlePaddle <font color="red"><b>3.0 以上稳定版，或最新的 develop 开发版</b></font>。
 
 安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
 
