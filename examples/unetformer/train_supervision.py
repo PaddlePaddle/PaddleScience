@@ -236,7 +236,6 @@ class CSVLogger:
 def main():
     args = get_args()
     config = py2cfg(args.config_path)
-    # config = py2cfg("Tran2/config/vaihingen/unetformer.py")
     seed_everything(42)
     checkpoint_callback = ModelCheckpoint(
         save_top_k=config.save_top_k,

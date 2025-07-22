@@ -171,9 +171,9 @@ examples/unetformer/geoseg/losses/joint_loss.py:23:40
 --8<--
 ```
 #### 3.4.2 UNetFormerLoss  
-``` py linenums="92"
+``` py linenums="93"
 --8<--
-examples/unetformer/geoseg/losses/useful_loss.py:92:113
+examples/unetformer/geoseg/losses/useful_loss.py:93:114
 --8<--
 ```
 
@@ -189,9 +189,9 @@ examples/unetformer/config/vaihingen/unetformer.py:72:83
 
 ### 3.6 模型训练
 
-``` py linenums="238"
+``` py linenums="236"
 --8<--
-examples/unetformer/train_supervision.py:238:302
+examples/unetformer/train_supervision.py:236:300
 --8<--
 ```
 
