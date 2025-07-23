@@ -6,11 +6,8 @@ from pathlib import Path
 import numpy as np
 import paddle
 from paddle_utils import PaddleFlag
-from paddle_utils import add_tensor_methods
 from tools.cfg import py2cfg
 from tools.metric import Evaluator
-
-add_tensor_methods()
 
 
 def seed_everything(seed):
