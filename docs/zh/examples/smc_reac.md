@@ -15,7 +15,7 @@
 === "模型评估命令"
 
     ``` sh
-    python smc_reac.py mode=eval Eval.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/smc_reac/smc_reac_model.pdparams
+    python smc_reac.py mode=eval EVAL.load_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/smc_reac/smc_reac_model.pdparams
     ```
 
 ## 1. 背景简介
