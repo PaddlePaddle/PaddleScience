@@ -7,7 +7,6 @@ from geoseg.datasets.vaihingen_dataset import train_aug
 from geoseg.datasets.vaihingen_dataset import val_aug
 from geoseg.losses.useful_loss import UnetFormerLoss
 from geoseg.models.UNetFormer import UNetFormer
-
 from tools.utils import process_model_params
 
 max_epoch = 105
@@ -55,13 +54,7 @@ else:
     )
 val_dataset = VaihingenDataset(transform=val_aug)
 test_dataset = VaihingenDataset(data_root="data/vaihingen/test", transform=val_aug)
-"""train_loader = paddle.io.DataLoader(
-    dataset=train_dataset,
-    batch_size=train_batch_size,
-    num_workers=4,
-    shuffle=True,
-    drop_last=True,
-)"""
+
 val_loader = paddle.io.DataLoader(
     dataset=val_dataset,
     batch_size=val_batch_size,

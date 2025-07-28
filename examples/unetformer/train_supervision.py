@@ -88,7 +88,6 @@ class Supervision_Train(paddle.nn.Layer):
         iou_value = {}
         for class_name, iou in zip(self.config.classes, iou_per_class):
             iou_value[class_name] = iou
-        print(iou_value)
         self.metrics_train.reset()
         log_dict = {"train_mIoU": mIoU, "train_F1": F1, "train_OA": OA}
         print(f"Logging: {log_dict}")
