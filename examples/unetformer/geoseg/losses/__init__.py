@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from .dice import __all__ as __dice_all__
 from .functional import __all__ as __functional_all__
 from .joint_loss import __all__ as __joint_loss_all__
