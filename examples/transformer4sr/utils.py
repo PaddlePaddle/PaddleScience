@@ -23,6 +23,7 @@ import paddle
 import sympy
 import yaml
 import zss
+from sympy import S
 from typing_extensions import Literal
 
 with open("./conf/transformer4sr.yaml", "r") as file:
@@ -160,23 +161,23 @@ def from_sympy_power_to_seq(exponent):
         return ["inv", "cb"]
     elif exponent == (-2):
         return ["inv", "sq"]
-    elif exponent == (-3 / 2):
+    elif exponent == -S(3) / 2:
         return ["inv", "cb", "sqrt"]
     elif exponent == (-1):
         return ["inv"]
-    elif exponent == (-1 / 2):
+    elif exponent in (-S.Half, -S(1) / 2):
         return ["inv", "sqrt"]
-    elif exponent == (-1 / 3):
+    elif exponent == -S(1) / 3:
         return ["inv", "cbrt"]
-    elif exponent == (-1 / 4):
+    elif exponent == -S(1) / 4:
         return ["inv", "sqrt", "sqrt"]
-    elif exponent == (1 / 4):
+    elif exponent == S(1) / 4:
         return ["sqrt", "sqrt"]
-    elif exponent == (1 / 3):
+    elif exponent == S(1) / 3:
         return ["cbrt"]
-    elif exponent == (1 / 2):
+    elif exponent in (S.Half, S(1) / 2):
         return ["sqrt"]
-    elif exponent == (3 / 2):
+    elif exponent == S(3) / 2:
         return ["cb", "sqrt"]
     elif exponent == (2):
         return ["sq"]
