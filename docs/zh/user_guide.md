@@ -524,7 +524,7 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
             git clone https://github.com/PaddlePaddle/Paddle.git -b develop && cd Paddle/
             mkdir build && cd build
 
-            cmake .. -DPY_VERSION=3.9 \
+            cmake .. -DPY_VERSION=3.10 \
                 -DPYTHON_EXECUTABLE=$(which python3) \
                 -DWITH_GPU=ON \
                 -DWITH_DISTRIBUTE=ON \
