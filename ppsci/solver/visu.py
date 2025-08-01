@@ -79,11 +79,11 @@ def visualize_func(solver: "solver.Solver", epoch_id: Optional[int]):
             for key, batch_output in batch_output_dict.items():
                 all_output[key].append(batch_output.detach().astype("float32"))
 
-        # concatenate all data
+        # concatenate all data and convert to numpy array
         for key in all_input:
-            all_input[key] = paddle.concat(all_input[key])
+            all_input[key] = paddle.concat(all_input[key]).numpy()
         for key in all_output:
-            all_output[key] = paddle.concat(all_output[key])
+            all_output[key] = paddle.concat(all_output[key]).numpy()
 
         # save visualization
         with misc.RankZeroOnly(solver.rank) as is_master:

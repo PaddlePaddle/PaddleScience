@@ -15,7 +15,7 @@
     nvidia-docker run --name paddlescience_container --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
 
     ## docker version >= 19.03
-    # docker run --name paddlescience_container --gpus all --network=host -it shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
+    # docker run --name paddlescience_container --gpus all --network=host -it --shm-size 64g hydrogensulfate/paddlescience:latest /bin/bash
     ```
 
     !!! note

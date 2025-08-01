@@ -56,6 +56,7 @@ nav:
         - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
+          - Fundiff: zh/examples/fundiff.md
           - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
