@@ -27,7 +27,7 @@ from paddle import vision
 from ppsci.utils import logger
 
 
-def _group_array_into_ranks(
+def _group_array_into_local_rank(
     data: Optional[np.ndarray], rank: int, world_size: int
 ) -> Optional[np.ndarray]:
     """
@@ -49,17 +49,17 @@ def _group_array_into_ranks(
     # check if data can be grouped evenly into different ranks
     if len(data) < world_size:
         raise ValueError(
-            f"Length of data to be grouped{len(data)} must be larger than world_size."
+            f"Length of data to be grouped({len(data)}) must be greater than or equal to world_size({world_size})."
         )
     if len(data) % world_size != 0:
         raise ValueError(
-            f"Length of data to be grouped{len(data)} must be divisible by world_size."
+            f"Length of data to be grouped({len(data)}) must be divisible by world_size({world_size})."
         )
 
     return data[rank::world_size]
 
 
-def _group_dict_into_ranks(
+def _group_dict_into_local_rank(
     data_dict: Optional[Dict[str, Optional[np.ndarray]]], rank: int, world_size: int
 ) -> Optional[Dict[str, Optional[np.ndarray]]]:
     """
@@ -78,7 +78,8 @@ def _group_dict_into_ranks(
         return data_dict
 
     return {
-        k: _group_array_into_ranks(v, rank, world_size) for k, v in data_dict.items()
+        k: _group_array_into_local_rank(v, rank, world_size)
+        for k, v in data_dict.items()
     }
 
 
@@ -205,9 +206,9 @@ class IterableNamedArrayDataset(io.IterableDataset):
             input_, label_, weight_ = self.input, self.label, self.weight
 
         if self.world_size_ > 1:
-            input_ = _group_dict_into_ranks(input_, self.rank_, self.world_size_)
-            label_ = _group_dict_into_ranks(label_, self.rank_, self.world_size_)
-            weight_ = _group_dict_into_ranks(weight_, self.rank_, self.world_size_)
+            input_ = _group_dict_into_local_rank(input_, self.rank_, self.world_size_)
+            label_ = _group_dict_into_local_rank(label_, self.rank_, self.world_size_)
+            weight_ = _group_dict_into_local_rank(weight_, self.rank_, self.world_size_)
 
         yield input_, label_, weight_
 
@@ -291,13 +292,13 @@ class ContinuousNamedArrayDataset(io.IterableDataset):
                 )
 
             if self.world_size_ > 1:
-                input_batch = _group_dict_into_ranks(
+                input_batch = _group_dict_into_local_rank(
                     input_batch, self.rank_, self.world_size_
                 )
-                label_batch = _group_dict_into_ranks(
+                label_batch = _group_dict_into_local_rank(
                     label_batch, self.rank_, self.world_size_
                 )
-                weight_batch = _group_dict_into_ranks(
+                weight_batch = _group_dict_into_local_rank(
                     weight_batch, self.rank_, self.world_size_
                 )
 

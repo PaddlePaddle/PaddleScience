@@ -41,14 +41,14 @@
 如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
 
 1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包并手动安装。
-2. 创建 python 3.9 环境，并进入该环境。
+2. 创建 python 3.10 环境，并进入该环境。
 
     ``` sh
-    # 使用 conda 创建 python 环境，并命名为 "ppsci_py39"
-    conda create -n ppsci_py39 python=3.9
+    # 使用 conda 创建 python 环境，并命名为 "ppsci_py310"
+    conda create -n ppsci_py310 python=3.10
 
-    # 进入创建好的 "ppsci_py39" 环境
-    conda activate ppsci_py39
+    # 进入创建好的 "ppsci_py310" 环境
+    conda activate ppsci_py310
     ```
 
 ### 1.3 安装 PaddlePaddle
