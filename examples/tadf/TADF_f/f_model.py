@@ -16,7 +16,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
 
-# 加载数据集
+# Data preparation
 def load_data(cfg):
     data_dir = cfg.data_dir
     sim_dir = cfg.sim_dir
@@ -56,7 +56,7 @@ def featurize_molecules(smis):
 
 
 def train(cfg: DictConfig, X, data):
-    # 划分数据集
+    # k-fold cross validation splitter
     def k_fold(k, i, X, Y):
         fold_size = tuple(X.shape)[0] // k
         val_start = i * fold_size
@@ -73,7 +73,7 @@ def train(cfg: DictConfig, X, data):
 
     Y = paddle.to_tensor(data)
     x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, X, Y)
-    # 处理数据集
+    # Prepare feature dictionary
     x_train = paddle.to_tensor(x_train, dtype="float32")
     x = {
         "key_{}".format(i): paddle.unsqueeze(
@@ -83,7 +83,7 @@ def train(cfg: DictConfig, X, data):
     }
     y_train = paddle.unsqueeze(paddle.to_tensor(y_train, dtype="float32"), axis=1)
 
-    # 构建约束
+    # Build supervised constraint
     bc_sup = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg={
             "dataset": {
@@ -96,11 +96,11 @@ def train(cfg: DictConfig, X, data):
         loss=ppsci.loss.MSELoss("mean"),
         name="bc_sup",
     )
-    # 设置模型
+    # Set model architecture parameters
     hidden_size = [587, 256]
     num_layers = None
 
-    # 实例化模型
+    # Instantiate TADF model
     model = ppsci.arch.TADF(
         input_keys=tuple(x.keys()),
         hidden_size=hidden_size,
@@ -113,7 +113,8 @@ def train(cfg: DictConfig, X, data):
         beta2=(0.9, 0.99)[1],
         weight_decay=cfg.TRAIN.weight_decay,
     )(model)
-    # 构建Solver
+
+    # Build solver for training
     solver = ppsci.solver.Solver(
         model,
         constraint={
