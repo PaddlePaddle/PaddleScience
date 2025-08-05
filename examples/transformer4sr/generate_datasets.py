@@ -18,6 +18,7 @@ Reference: https://github.com/omron-sinicx/transformer4sr
 
 
 import concurrent.futures
+import gc
 import os
 import warnings
 from functools import partial
@@ -105,24 +106,31 @@ def generate_data(cfg: DictConfig):
     num_nested_max = cfg.DATA_GENERATE.num_nested_max
     partial_fliter_nested = partial(fliter_nested, num_nested_max=num_nested_max)
     exprs_fliter_nested = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_expr = {
-            executor.submit(partial_fliter_nested, expr): expr
-            for expr in exprs_filter_nodes
-        }
-        progress = tqdm(
-            concurrent.futures.as_completed(future_to_expr),
-            total=len(exprs_filter_nodes),
-            desc=f"Check invalid abd very nested (>{num_nested_max}) expressions",
-        )
-        for future in progress:
-            expr = future_to_expr[future]
-            try:
-                expr_sympy = future.result()
-                if expr_sympy is not None:
-                    exprs_fliter_nested.append(expr_sympy)
-            except Exception:
-                continue
+
+    chunk_size = min(len(exprs_filter_nodes), 10000)
+    total_chunks = (len(exprs_filter_nodes) - 1) // chunk_size + 1
+    for i in range(0, len(exprs_filter_nodes), chunk_size):
+        chunk = exprs_filter_nodes[i : i + chunk_size]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_expr = {
+                executor.submit(partial_fliter_nested, expr): expr for expr in chunk
+            }
+            progress = tqdm(
+                concurrent.futures.as_completed(future_to_expr),
+                total=len(chunk),
+                desc=(
+                    f"Check invalid abd very nested (>{num_nested_max}) expressions. "
+                    f"Processing chunk {i//chunk_size + 1}/{total_chunks+1}"
+                ),
+            )
+            for future in progress:
+                try:
+                    if (result := future.result()) is not None:
+                        exprs_fliter_nested.append(result)
+                except Exception as e:
+                    print(f"Skipped error: {str(e)}")
+        del chunk
+        gc.collect()
 
     # filter consts/vars/seq_length
     num_consts = cfg.DATA_GENERATE.num_consts
@@ -174,14 +182,16 @@ def generate_data(cfg: DictConfig):
                         ground_truth.append(token)
 
                 cur_sympy_expr = from_seq_to_sympy(seq_deformed)
-                np_y, np_x = gen_samples(cur_sympy_expr, num_samples=1000)
+                np_y, np_x = gen_samples(
+                    cur_sympy_expr, num_samples=max(1000, sampling_times * 2)
+                )
                 assert np.nanmax(np.abs(np_y)) <= order_of_mag_limit
                 mask = np.logical_not(np.isnan(np_y))
                 num_temp_obs = np.sum(mask)
                 assert num_temp_obs >= sampling_times
 
                 idx = np.random.choice(num_temp_obs, size=sampling_times, replace=False)
-                num_var = count_var_num(sampling_times)
+                num_var = count_var_num(cur_sympy_expr)
                 x_values = np_x[mask][idx, :num_var]
                 y_values = np_y[mask][idx]
                 if var_type == "both":
