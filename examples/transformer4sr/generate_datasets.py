@@ -20,8 +20,10 @@ Reference: https://github.com/omron-sinicx/transformer4sr
 import concurrent.futures
 import gc
 import os
+import signal
 import warnings
 from functools import partial
+from functools import wraps
 
 import hydra
 import numpy as np
@@ -42,6 +44,37 @@ import ppsci  # noqa
 warnings.filterwarnings("ignore")
 
 
+def timeout(seconds):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            def handler(signum, frame):
+                raise TimeoutError(f"Timed out after {seconds}s")
+
+            old = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old)
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+@timeout(30)
+def safe_factor(expr):
+    return sympy.factor(expr)
+
+
+@timeout(30)
+def safe_simplify(expr):
+    return sympy.simplify(expr)
+
+
 def fliter_nodes(expr, num_nodes):
     if num_nodes[0] <= len(expr) <= num_nodes[1]:
         return expr
@@ -52,14 +85,18 @@ def fliter_nodes(expr, num_nodes):
 def fliter_nested(expr, num_nested_max):
     try:
         expr_sympy = from_seq_to_sympy(expr)
-        expr_sympy = sympy.factor(expr_sympy)
-        expr_sympy = sympy.simplify(expr_sympy)
+        expr_sympy = safe_factor(expr_sympy)
+        expr_sympy = safe_simplify(expr_sympy)
         assert "zoo" not in str(expr_sympy)
         assert expr_tree_depth(expr_sympy) <= num_nested_max
         expr_sympy = reassign_variables(expr_sympy)
-        expr_sympy = sympy.factor(expr_sympy)
-        expr_sympy = sympy.simplify(expr_sympy)
-        return expr_sympy
+        expr_sympy = safe_factor(expr_sympy)
+        expr_sympy = safe_simplify(expr_sympy)
+        expr_seq = from_sympy_to_seq(expr_sympy)
+        return expr_seq
+    except TimeoutError:
+        print("Task timed out")
+        return None
     except Exception:
         return None
 
@@ -107,30 +144,55 @@ def generate_data(cfg: DictConfig):
     partial_fliter_nested = partial(fliter_nested, num_nested_max=num_nested_max)
     exprs_fliter_nested = []
 
-    chunk_size = min(len(exprs_filter_nodes), 10000)
+    max_workers = min(5, os.cpu_count() or 1)
+    chunk_size = min(len(exprs_filter_nodes), 100000)
     total_chunks = (len(exprs_filter_nodes) - 1) // chunk_size + 1
-    for i in range(0, len(exprs_filter_nodes), chunk_size):
-        chunk = exprs_filter_nodes[i : i + chunk_size]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_expr = {
-                executor.submit(partial_fliter_nested, expr): expr for expr in chunk
-            }
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for i in range(0, len(exprs_filter_nodes), chunk_size):
+            chunk = exprs_filter_nodes[i : i + chunk_size]
+
+            futures = []
             progress = tqdm(
-                concurrent.futures.as_completed(future_to_expr),
                 total=len(chunk),
                 desc=(
-                    f"Check invalid abd very nested (>{num_nested_max}) expressions. "
-                    f"Processing chunk {i//chunk_size + 1}/{total_chunks+1}"
+                    f"Check invalid and very nested (>{num_nested_max}) expressions. "
+                    f"Chunk {i//chunk_size + 1}/{total_chunks}"
                 ),
+                leave=True,
             )
-            for future in progress:
+
+            for expr in chunk:
                 try:
-                    if (result := future.result()) is not None:
-                        exprs_fliter_nested.append(result)
+                    future = executor.submit(partial_fliter_nested, expr)
+                    futures.append(future)
                 except Exception as e:
-                    print(f"Skipped error: {str(e)}")
-        del chunk
-        gc.collect()
+                    print(f"Submit failed: {e}")
+                    continue
+
+            completed_count = 0
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result(timeout=60)
+                    if result is not None:
+                        exprs_fliter_nested.append(result)
+                except concurrent.futures.TimeoutError:
+                    print("Task timeout during result")
+                except Exception as e:
+                    print(f"Task error: {str(e)}")
+                finally:
+                    completed_count += 1
+                    progress.update(1)
+
+            if completed_count < len(futures):
+                print(
+                    f"Warning: {len(futures) - completed_count} tasks not completed in chunk {i//chunk_size + 1}"
+                )
+
+            progress.close()
+            del chunk
+            gc.collect()
+    print(f"Filtered {len(exprs_fliter_nested)} valid expressions.")
 
     # filter consts/vars/seq_length
     num_consts = cfg.DATA_GENERATE.num_consts
@@ -138,9 +200,8 @@ def generate_data(cfg: DictConfig):
     seq_length_max = cfg.DATA_GENERATE.seq_length_max
     exprs_cvl = []
     for i in tqdm(range(len(exprs_fliter_nested)), desc="Check consts and vars."):
-        expr_seq = from_sympy_to_seq(exprs_fliter_nested[i])
         expr_seq = fliter_consts_vars_len(
-            expr_seq, num_consts, num_vars, seq_length_max
+            exprs_fliter_nested[i], num_consts, num_vars, seq_length_max
         )
         if expr_seq is not None:
             exprs_cvl.append(expr_seq)
