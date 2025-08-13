@@ -76,12 +76,12 @@ def train(cfg: DictConfig, X, data):
     x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, X, Y)
     # Prepare feature dictionary
     x = {
-        f"key_{i}": paddle.unsqueeze(x_train[:, i], axis=1)
+        "key_{}".format(i): paddle.unsqueeze(
+            paddle.to_tensor(x_train[:, i], dtype="float32"), axis=1
+        )
         for i in range(x_train.shape[1])
     }
-
-    param = paddle.empty((len(x["key_0"]), len(x_train)), "float32")
-    param = ppsci.utils.initializer.xavier_normal_(param)
+    y_train = paddle.unsqueeze(paddle.to_tensor(y_train, dtype="float32"), axis=1)
 
     # Build supervised constraint
     bc_sup = ppsci.constraint.SupervisedConstraint(
@@ -89,7 +89,6 @@ def train(cfg: DictConfig, X, data):
             "dataset": {
                 "input": x,
                 "label": {"u": y_train},
-                "weight": {"W": param},
                 "name": "IterableNamedArrayDataset",
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -110,8 +109,8 @@ def train(cfg: DictConfig, X, data):
     )
     optimizer = ppsci.optimizer.Adam(
         learning_rate=cfg.TRAIN.learning_rate,
-        beta1=0.9,
-        beta2=0.99,
+        beta1=(0.9, 0.99)[0],
+        beta2=(0.9, 0.99)[1],
         weight_decay=cfg.TRAIN.weight_decay,
     )(model)
 
