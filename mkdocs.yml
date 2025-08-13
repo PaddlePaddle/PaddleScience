@@ -96,6 +96,7 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
@@ -112,6 +113,7 @@ nav:
         - Pang-Weather: zh/examples/pangu_weather.md
         - FengWu: zh/examples/fengwu.md
         - FuXi: zh/examples/fuxi.md
+        - UNetFormer: zh/examples/unetformer.md
         - WGAN_GP: zh/examples/wgan_gp.md
       - 化学科学(AI for Chemistry):
         - SMC Reac: zh/examples/smc_reac.md

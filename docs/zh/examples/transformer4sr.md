@@ -4,11 +4,11 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar.gz
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar -o data_generated.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar.gz -o data_generated.tar.gz
     # unzip it
-    tar -xvf data_generated.tar
+    tar -xzvf data_generated.tar.gz
     python transformer4sr.py
     ```
 
