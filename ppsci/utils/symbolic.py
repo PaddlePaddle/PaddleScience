@@ -444,11 +444,12 @@ class ConstantNode(Node):
             or self.expr.is_Integer
             or self.expr.is_Boolean
             or self.expr.is_Rational
+            or isinstance(self.expr, sp.core.numbers.NumberSymbol)
         ):
             self.expr = float(self.expr)
         else:
             raise TypeError(
-                "expr({expr}) should be Float/Integer/Boolean/Rational, "
+                f"expr({expr}) should be Float/Integer/Boolean/Rational, "
                 f"but got {type(self.expr)}"
             )
         self.expr = paddle.to_tensor(self.expr)
