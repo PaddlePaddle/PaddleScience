@@ -52,17 +52,17 @@ ClC=1C=C2C=CC=NC2=CC1 | CC=1C(=C2C=NN(C2=CC1)C1OCCCC1)B(O)O | C(C)(C)(C)P(C(C)(C
 
 首先从表格文件中将实验材料信息和反应产率进行导入，并划分训练集和测试集，
 
-``` py linenums="27" title="examples/smc_reac/smc_reac.py"
+``` py linenums="26" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:27:35
+examples/smc_reac/smc_reac.py:26:34
 --8<--
 ```
 
 应用 `rdkit.Chem.rdFingerprintGenerator` 将亲电试剂、亲核试剂、催化配体、碱和溶剂的SMILES描述转换为 Morgan 指纹。Morgan指纹是一种分子结构的向量化描述，通过局部拓扑被编码为 hash 值，映射到2048位指纹位上。用 PaddleScience 代码表示如下
 
-``` py linenums="38" title="examples/smc_reac/smc_reac.py"
+``` py linenums="37" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:38:66
+examples/smc_reac/smc_reac.py:37:65
 --8<--
 ```
 
@@ -72,7 +72,7 @@ examples/smc_reac/smc_reac.py:38:66
 
 ``` py linenums="73" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:73:89
+examples/smc_reac/smc_reac.py:73:88
 --8<--
 ```
 `SupervisedConstraint` 的第二个参数表示采用均方误差 `MSELoss` 作为损失函数，第三个参数表示约束条件的名字，方便后续对其索引。
@@ -89,9 +89,9 @@ ppsci/arch/smc_reac.py:7:107
 
 模型依据配置文件信息进行实例化
 
-``` py linenums="91" title="examples/smc_reac/smc_reac.py"
+``` py linenums="90" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:91:91
+examples/smc_reac/smc_reac.py:90:90
 --8<--
 ```
 
@@ -107,9 +107,9 @@ examples/smc_reac/config/smc_reac.yaml:35:41
 
 训练器采用Adam优化器，学习率设置由配置文件给出。用 PaddleScience 代码表示如下
 
-``` py linenums="93" title="examples/smc_reac/smc_reac.py"
+``` py linenums="92" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:93:93
+examples/smc_reac/smc_reac.py:92:92
 --8<--
 ```
 
@@ -119,7 +119,7 @@ examples/smc_reac/smc_reac.py:93:93
 
 ``` py linenums="95" title="examples/smc_reac/smc_reac.py"
 --8<--
-examples/smc_reac/smc_reac.py:95:105
+examples/smc_reac/smc_reac.py:95:104
 --8<--
 ```
 
