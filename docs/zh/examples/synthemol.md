@@ -122,9 +122,9 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 数据加载的代码如下:
 
-``` py linenums="72" title="examples/synthemol/main.py"
+``` py linenums="232" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:72:92
+examples/synthemol/main.py:232:244
 --8<--
 ```
 
@@ -132,9 +132,9 @@ examples/synthemol/main.py:72:92
 
 定义监督约束的代码如下：
 
-``` py linenums="94" title="examples/synthemol/main.py"
+``` py linenums="246" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:94:100
+examples/synthemol/main.py:246:255
 --8<--
 ```
 
@@ -148,9 +148,9 @@ examples/synthemol/main.py:94:100
 
 在该案例中，分子属性预测模型基于 Chemprop 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="256" title="examples/synthemol/main.py"
+``` py linenums="257" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:256:271
+examples/synthemol/main.py:257:258
 --8<--
 ```
 
@@ -158,7 +158,7 @@ examples/synthemol/main.py:256:271
 
 ``` yaml linenums="32" title="examples/synthemol/conf/synthemol.yaml"
 --8<--
-examples/synthemol/conf/synthemol.yaml:32:35
+examples/synthemol/conf/synthemol.yaml:32:36
 --8<--
 ```
 
@@ -168,9 +168,9 @@ examples/synthemol/conf/synthemol.yaml:32:35
 
 本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组，使用不同的`weight_decay`,用 PaddleScience 代码表示如下：
 
-``` py linenums="141" title="examples/synthemol/main.py"
+``` py linenums="260" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:141:143
+examples/synthemol/main.py:260:263
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/synthemol/main.py:141:143
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="184" title="examples/synthemol/main.py"
+``` py linenums="265" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:184:202
+examples/synthemol/main.py:265:282
 --8<--
 ```
 
@@ -188,19 +188,19 @@ examples/synthemol/main.py:184:202
 
 构建模型的代码为：
 
-``` py linenums="256" title="examples/synthemol/main.py"
+``` py linenums="305" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:256:271
+examples/synthemol/main.py:305:305
 --8<--
 ```
 
 ### 3.4 Synthemol生成分子
 
-构建模型的代码为：
+构建Generator的代码为：
 
-``` py linenums="256" title="examples/synthemol/main.py"
+``` py linenums="471" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:256:271
+examples/synthemol/main.py:471:485
 --8<--
 ```
 
