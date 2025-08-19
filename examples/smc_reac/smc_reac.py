@@ -12,7 +12,6 @@ from sklearn.model_selection import train_test_split
 
 import ppsci
 
-paddle.set_device("gpu:5")
 os.environ["HYDRA_FULL_ERROR"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
