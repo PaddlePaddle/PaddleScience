@@ -133,8 +133,15 @@ def get_train_loss_func(args):  #:paddle.Tensor=None):
     return train_loss_func
 
 
-def make_args(dataset_type, epochs, use_gpu, fingerprint_type, property_name):
-    # , train_smiles, train_fingerprints):
+def make_args(
+    dataset_type,
+    epochs,
+    use_gpu,
+    fingerprint_type,
+    property_name,
+    train_smiles,
+    train_fingerprints,
+):
 
     # Create args
     arg_list = [
@@ -164,16 +171,16 @@ def make_args(dataset_type, epochs, use_gpu, fingerprint_type, property_name):
 
     args = TrainArgs().parse_args(arg_list)
     args.task_names = [property_name]
-    args.train_data_size = 100  # len(train_smiles) # TODO: magic
+    args.train_data_size = len(train_smiles)
 
     if fingerprint_type is not None:
-        args.features_size = 128  # train_fingerprints.shape[1] # TODO: magic
+        args.features_size = train_fingerprints.shape[1]
     return args
 
 
 def load_raw_data(cfg):
 
-    data_path = cfg.DATA.data_path  #'./data/Data/1_training_data/antibiotics_hits.csv'
+    data_path = cfg.DATA.data_path
     data = pd.read_csv(data_path)
     print(f"Data size = {len(data):,}")
     num_models = cfg.DATA.num_models  # 10
@@ -218,6 +225,8 @@ def train(cfg: DictConfig):
         use_gpu=cfg.TRAIN.use_gpu,
         fingerprint_type=cfg.DATA.fingerprint_type,  # None,
         property_name=cfg.DATA.property_column,  # "antibiotic_activity"
+        train_smiles=train_smiles,
+        train_fingerprints=train_fingerprints,
     )
 
     # set dataloader config
@@ -230,16 +239,7 @@ def train(cfg: DictConfig):
             "fingerprints": train_fingerprints,
             "properties": train_properties,
             "label_keys": tuple(cfg.MODEL.label_keys),
-            # "data_dir": cfg.data_dir,
-            # "data_mode": "train",
-            # "data_label": cfg.data_label,
         },
-        # "batch_size": cfg.TRAIN.batch_size,
-        # "sampler": {
-        #    "name": "BatchSampler",
-        #    "drop_last": False,
-        #    "shuffle": True,
-        # },
         "num_workers": cfg.TRAIN.num_workers,
     }
 
@@ -258,8 +258,6 @@ def train(cfg: DictConfig):
     model = ppsci.arch.chemprop_molecule.MoleculeModel(args=args)
 
     # set optimizer
-    # weight_decay=hyper_paras["l2"]
-    # TODO: magic weight_decay
     optimizer = ppsci.optimizer.Adam(
         learning_rate=cfg.TRAIN.learning_rate, weight_decay=0.001
     )(model)
@@ -271,12 +269,11 @@ def train(cfg: DictConfig):
         cfg.output_dir,
         optimizer,
         None,
-        cfg.TRAIN.epochs,  # cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,  # 2 #iters_per_epoch, # TODO: magic
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        # validator=validator,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
@@ -286,7 +283,6 @@ def train(cfg: DictConfig):
 
 
 def pre_compute(cfg):
-    pass
     data_path = Path(cfg.PRE_COMPUTE.data_path)
     model_path = Path(cfg.PRE_COMPUTE.model_path)
     smiles_column = cfg.PRE_COMPUTE.smiles_column
@@ -332,16 +328,12 @@ def pre_compute(cfg):
         else:
             device = paddle.CPUPlace()
         paddle.seed(seed=0)
-        # models = [chemprop_load(model_path=model_path, device=device) for
-        #    model_path in model_paths]
+
         models = [
             my_chemprop_load(model, model_path=model_path, device=device)
             for model_path in model_paths
         ]
 
-    # else:
-    #    models = [sklearn_load(model_path=model_path) for model_path in
-    #        model_paths]
     print(model_paths, models)
 
     if model_type == "chemprop":
@@ -356,9 +348,6 @@ def pre_compute(cfg):
                 for m in tqdm(models, desc="models")
             ]
         )
-    # else:
-    #    preds = np.array([sklearn_predict(model=model, fingerprints=
-    #        fingerprints) for model in tqdm(models, desc='models')])
 
     if average_preds:
         preds = np.mean(preds, axis=0)
@@ -379,8 +368,8 @@ def pre_compute(cfg):
 
 def generate(cfg):
     model_path = cfg.GENERATE.model_path
-    model_type = cfg.GENERATE.model_type  #'chemprop' #: MODEL_TYPES
-    save_dir = Path(cfg.GENERATE.save_dir)  #: Path,
+    model_type = cfg.GENERATE.model_type  #'chemprop'
+    save_dir = Path(cfg.GENERATE.save_dir)
 
     building_blocks_path = cfg.GENERATE.building_blocks_path
     fingerprint_type = cfg.GENERATE.fingerprint_type
@@ -530,7 +519,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "generate":
         generate(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'pre-compute', 'generate'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

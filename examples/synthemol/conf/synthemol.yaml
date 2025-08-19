@@ -21,12 +21,11 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: train # running mode: train/pre-compute/generate
 seed: 43
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
-data_label: "tox21" #'tox21'
 data_dir: "./data"
 
 # model settings
@@ -38,8 +37,8 @@ MODEL:
 
 # training settings
 TRAIN:
-  epochs: 50 #40
-  iters_per_epoch: 2 #20 #null #42
+  epochs: 30 #40
+  iters_per_epoch: 376 #20
   save_freq: 2
   eval_during_train: false
   eval_freq: 2
@@ -62,7 +61,7 @@ DATA:
 
 PRE_COMPUTE:
   data_path: ${data_dir}/Data/4_real_space/building_blocks.csv
-  model_path: "./outputs_synthemol/checkpoints/epoch_44.pdparams"
+  model_path: "./outputs_synthemol/checkpoints/epoch_30.pdparams"
   smiles_column: 'smiles'
   model_type: 'chemprop'
   fingerprint_type: null
@@ -83,7 +82,7 @@ GENERATE:
   building_blocks_score_column: 'chemprop_ensemble_preds'
   building_blocks_smiles_column: 'smiles'
   max_reactions: 1
-  n_rollout: 20 # 20000
+  n_rollout: 40 # 20000
   explore_weight: 10.0 #: float=10.0
   num_expand_nodes: null #: (int)=None
   optimization: 'maximize'
