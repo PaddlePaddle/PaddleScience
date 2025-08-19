@@ -47,6 +47,7 @@ from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
+from ppsci.data.dataset.synthemol_dataset import MoleculeDatasetIter
 from ppsci.data.dataset.tmtdataset import TMTDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
@@ -97,6 +98,7 @@ __all__ = [
     "IFMMoeDataset",
     "STAFNetDataset",
     "TMTDataset",
+    "MoleculeDatasetIter",
 ]
 
 
