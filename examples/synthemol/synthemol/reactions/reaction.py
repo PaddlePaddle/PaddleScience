@@ -1,6 +1,9 @@
 """Reaction class and helper functions."""
-from rdkit import Chem
-from rdkit.Chem import AllChem
+try:
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+except ModuleNotFoundError:
+    pass
 from synthemol.reactions.query_mol import QueryMol
 from synthemol.utils import MOLECULE_TYPE
 from synthemol.utils import convert_to_mol

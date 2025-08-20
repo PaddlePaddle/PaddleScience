@@ -18,7 +18,11 @@ from synthemol.reactions import REACTIONS
 from synthemol.reactions import Reaction
 from synthemol.reactions import load_and_set_allowed_reaction_building_blocks
 from synthemol.reactions import set_all_building_blocks
-from tap import tapify
+
+try:
+    from tap import tapify
+except ModuleNotFoundError:
+    pass
 
 
 def generate(

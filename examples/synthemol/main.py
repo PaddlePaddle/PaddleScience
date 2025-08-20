@@ -39,9 +39,6 @@ import ppsci.arch.chemprop_molecule
 
 def get_train_loss_func(args):  #:paddle.Tensor=None):
     def train_loss_func(output_dict, label_dict, weight_dict):
-
-        # print(len(batch), args.loss_function, args.dataset_type)
-
         preds = output_dict["pred"]
 
         targets = label_dict["targets"]
@@ -69,8 +66,6 @@ def get_train_loss_func(args):  #:paddle.Tensor=None):
                     mask[:, target_index],
                 ).unsqueeze(axis=0)
                 target_losses.append(target_loss)
-            # loss = paddle.concat(x=target_losses).to(torch_device
-            #    ) * target_weights.squeeze(axis=0)
             loss = paddle.concat(x=target_losses) * target_weights.squeeze(axis=0)
         elif args.dataset_type == "multiclass":
             targets = targets.astype(dtype="int64")
@@ -88,8 +83,6 @@ def get_train_loss_func(args):  #:paddle.Tensor=None):
                         preds[:, target_index, :], targets[:, target_index]
                     ).unsqueeze(axis=1)
                     target_losses.append(target_loss)
-                # loss = paddle.concat(x=target_losses, axis=1).to(torch_device
-                #    ) * target_weights * data_weights * mask
                 loss = (
                     paddle.concat(x=target_losses, axis=1)
                     * target_weights

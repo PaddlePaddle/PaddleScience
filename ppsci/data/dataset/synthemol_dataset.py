@@ -639,7 +639,7 @@ class BatchMolGraph:
 
     def get_components(self, atom_messages: bool = False):
         """
-        A tuple containing PyTorch tensors with the atom features, bond features, graph structure,
+        A tuple containing Paddle tensors with the atom features, bond features, graph structure,
         Returns the components of the class `BatchMolGraph`.
 
         Args:
@@ -702,15 +702,14 @@ class StandardScaler:
     """A class normalizes the features of a dataset.
     When it is fit on a dataset, the class StandardScaler learns the mean and standard deviation across the 0th axis.
     When transforming a dataset, the class StandardScaler subtracts the means and divides by the standard deviations.
+
+    Args:
+        means: An optional 1D numpy array of precomputed means.
+        stds: An optional 1D numpy array of precomputed standard deviations.
+        replace_nan_token: A token to use to replace NaN entries in the features.
     """
 
     def __init__(self, means=None, stds=None, replace_nan_token=None):
-        """
-        Args:
-            means: An optional 1D numpy array of precomputed means.
-            stds: An optional 1D numpy array of precomputed standard deviations.
-            replace_nan_token: A token to use to replace NaN entries in the features.
-        """
         self.means = means
         self.stds = stds
         self.replace_nan_token = replace_nan_token
@@ -1372,7 +1371,6 @@ class MoleculeDataset(io.Dataset):
             A class MoleculeDatapoint if an int is provided or a list of class MoleculeDatapoints
                  if a slice is provided.
         """
-        # print('item',item,self._data[item])
         return self._data[item]
 
 
@@ -1453,14 +1451,10 @@ def construct_molecule_batch(data: List[MoleculeDatapoint]):
     :param data: A list of :class:`MoleculeDatapoint`\\ s.
     :return: A :class:`MoleculeDataset` containing all the :class:`MoleculeDatapoint`\\ s.
     """
-    # data = MoleculeDataset(data)
-    # batch_graph = data.batch_graph()
-    # return data
 
     data = MoleculeDataset(data)
     mol_graph = data.batch_graph()
     mol_graphs = [mol.get_components() for mol in mol_graph]
-    # print('data',mol_graphs)
     features = data.features()
     targets = data.targets()
     if targets[0] is not None:
@@ -1739,18 +1733,12 @@ class MoleculeDatasetIter(io.IterableDataset):
         self.label_keys = label_keys
         self.args = args
 
-        # self.num_samples = num_samples
         self.data_loader = chemprop_build_data_loader(
             smiles, fingerprints, properties, shuffle, num_workers
         )
 
     def __iter__(self):
         for batch in self.data_loader:
-            # image = np.random.random([784]).astype('float32')
-            # label = np.random.randint(0, 9, (1, )).astype('int64')
-            # mol_batch, features_batch, target_batch, mask_batch, atom_descriptors_batch, atom_features_batch, bond_features_batch, data_weights_batch = batch
-
-            # yield batch #image, label
             (
                 mol_batch,
                 features_batch,
@@ -1781,184 +1769,19 @@ class MoleculeDatasetIter(io.IterableDataset):
                 lt_target_batch = paddle.to_tensor(data=lt_target_batch)
                 gt_target_batch = paddle.to_tensor(data=gt_target_batch)
 
-            # mask = mask.to(torch_device)
-            # targets = targets.to(torch_device)
-            # target_weights = target_weights.to(torch_device)
-            # data_weights = data_weights.to(torch_device)
-
             yield (
                 {
-                    self.input_keys[
-                        0
-                    ]: mol_batch,  # paddle.to_tensor(mol_batch, dtype="float32"),
-                    self.input_keys[
-                        1
-                    ]: features_batch,  # paddle.to_tensor(features_batch, dtype="float32"),
-                    self.input_keys[
-                        2
-                    ]: atom_descriptors_batch,  # paddle.to_tensor(atom_descriptors_batch, dtype="float32"),
-                    self.input_keys[
-                        3
-                    ]: atom_features_batch,  # paddle.to_tensor(atom_features_batch, dtype="float32"),
-                    self.input_keys[
-                        4
-                    ]: bond_features_batch,  # paddle.to_tensor(bond_features_batch, dtype="float32"),
+                    self.input_keys[0]: mol_batch,
+                    self.input_keys[1]: features_batch,
+                    self.input_keys[2]: atom_descriptors_batch,
+                    self.input_keys[3]: atom_features_batch,
+                    self.input_keys[4]: bond_features_batch,
                 },
                 {
-                    self.label_keys[
-                        0
-                    ]: targets,  # paddle.to_tensor(targets, dtype="float32"),
-                    self.label_keys[
-                        1
-                    ]: data_weights,  # paddle.to_tensor(data_weights, dtype="float32"),
-                    self.label_keys[
-                        2
-                    ]: mask,  # paddle.to_tensor(mask, dtype="float32"),
-                    self.label_keys[
-                        3
-                    ]: target_weights,  # paddle.to_tensor(target_weights, dtype="float32"),
+                    self.label_keys[0]: targets,
+                    self.label_keys[1]: data_weights,
+                    self.label_keys[2]: mask,
+                    self.label_keys[3]: target_weights,
                 },
                 {},
             )
-
-
-def main_old():
-    import pandas as pd
-    from tqdm import tqdm
-    from tqdm import trange
-
-    num_models = 10
-    data_path = "./data/Data/1_training_data/antibiotics_hits.csv"
-    data = pd.read_csv(data_path)
-    print(f"Data size = {len(data):,}")
-    num_folds = 10
-    indices = np.tile(np.arange(num_folds), 1 + len(data) // num_folds)[: len(data)]
-    random = Random(0)
-    random.shuffle(indices)
-    assert 1 <= num_models <= num_folds
-    smiles_column = "smiles"
-    property_column = "antibiotic_activity"
-    for model_num in trange(num_models, desc="cross-val"):
-        print(f"Model {model_num}")
-        test_index = model_num
-        val_index = (model_num + 1) % num_folds
-        test_mask = indices == test_index
-        val_mask = indices == val_index
-        train_mask = ~(test_mask | val_mask)
-        test_data = data[test_mask]
-        val_data = data[val_mask]
-        train_data = data[train_mask]
-        print(
-            "test_data:",
-            len(test_data),
-            "train_data:",
-            len(train_data),
-            "val_data:",
-            len(val_data),
-        )
-        train_smiles = train_data[smiles_column]
-        train_fingerprints = None
-        train_properties = train_data[property_column]
-        # print(test_data[smiles_column], test_data[property_column])
-
-        # Build data loaders
-        train_data_loader = chemprop_build_data_loader(
-            smiles=train_smiles,
-            fingerprints=train_fingerprints,
-            properties=train_properties,
-            shuffle=True,
-            num_workers=8,
-        )
-        print("train_data_loader", len(train_data_loader))
-
-        # 此处没有取出数据
-        iter_count = 0
-        for a in range(3):
-            for batch in tqdm(
-                train_data_loader, total=len(train_data_loader), leave=False
-            ):
-                # batch: MoleculeDataset
-                # mol_batch = batch.batch_graph()
-                # features_batch = batch.features()
-                print("\n", iter_count, len(batch), "\n")
-                print(batch)
-                # mol_batch, features_batch, target_batch, mask_batch, atom_descriptors_batch, atom_features_batch, bond_features_batch, data_weights_batch = batch
-                iter_count += 1
-                # print("ceshi data:", features_batch, target_batch, mask_batch, atom_descriptors_batch, atom_features_batch, bond_features_batch, data_weights_batch)
-
-
-def main():
-    import pandas as pd
-    from tqdm import trange
-
-    num_models = 10
-    data_path = "./data/Data/1_training_data/antibiotics_hits.csv"
-    data = pd.read_csv(data_path)
-    print(f"Data size = {len(data):,}")
-    num_folds = 10
-    indices = np.tile(np.arange(num_folds), 1 + len(data) // num_folds)[: len(data)]
-    random = Random(0)
-    random.shuffle(indices)
-    assert 1 <= num_models <= num_folds
-    smiles_column = "smiles"
-    property_column = "antibiotic_activity"
-    for model_num in trange(num_models, desc="cross-val"):
-        print(f"Model {model_num}")
-        test_index = model_num
-        val_index = (model_num + 1) % num_folds
-        test_mask = indices == test_index
-        val_mask = indices == val_index
-        train_mask = ~(test_mask | val_mask)
-        test_data = data[test_mask]
-        val_data = data[val_mask]
-        train_data = data[train_mask]
-        print(
-            "test_data:",
-            len(test_data),
-            "train_data:",
-            len(train_data),
-            "val_data:",
-            len(val_data),
-        )
-        train_smiles = train_data[smiles_column]
-        train_fingerprints = None
-        train_properties = train_data[property_column]
-        # print(test_data[smiles_column], test_data[property_column])
-
-        # Build data loaders
-        """
-        train_data_loader = chemprop_build_data_loader(
-            smiles=train_smiles,
-            fingerprints=train_fingerprints,
-            properties=train_properties,
-            shuffle=True,
-            num_workers=8
-        )
-        print('train_data_loader', len(train_data_loader))
-        """
-
-        iter_dataset = MoleculeDatasetIter(
-            smiles=train_smiles,
-            fingerprints=train_fingerprints,
-            properties=train_properties,
-            shuffle=True,
-            num_workers=8,
-        )
-
-        # 此处没有取出数据
-        iter_count = 0
-        for a in range(3):
-            # for batch in tqdm(train_data_loader, total=len(train_data_loader), leave=False):
-            for batch in iter_dataset:
-                # batch: MoleculeDataset
-                # mol_batch = batch.batch_graph()
-                # features_batch = batch.features()
-                print("\n", iter_count, len(batch), "\n")
-                print(batch)
-                # mol_batch, features_batch, target_batch, mask_batch, atom_descriptors_batch, atom_features_batch, bond_features_batch, data_weights_batch = batch
-                iter_count += 1
-                # print("ceshi data:", features_batch, target_batch, mask_batch, atom_descriptors_batch, atom_features_batch, bond_features_batch, data_weights_batch)
-
-
-if __name__ == "__main__":
-    main()

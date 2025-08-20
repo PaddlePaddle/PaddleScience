@@ -122,9 +122,9 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 数据加载的代码如下:
 
-``` py linenums="232" title="examples/synthemol/main.py"
+``` py linenums="225" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:232:244
+examples/synthemol/main.py:225:237
 --8<--
 ```
 
@@ -132,9 +132,9 @@ examples/synthemol/main.py:232:244
 
 定义监督约束的代码如下：
 
-``` py linenums="246" title="examples/synthemol/main.py"
+``` py linenums="239" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:246:255
+examples/synthemol/main.py:239:248
 --8<--
 ```
 
@@ -148,9 +148,9 @@ examples/synthemol/main.py:246:255
 
 在该案例中，分子属性预测模型基于 Chemprop 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="257" title="examples/synthemol/main.py"
+``` py linenums="250" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:257:258
+examples/synthemol/main.py:250:251
 --8<--
 ```
 
@@ -168,9 +168,9 @@ examples/synthemol/conf/synthemol.yaml:32:36
 
 本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组，使用不同的`weight_decay`,用 PaddleScience 代码表示如下：
 
-``` py linenums="260" title="examples/synthemol/main.py"
+``` py linenums="253" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:260:263
+examples/synthemol/main.py:253:256
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/synthemol/main.py:260:263
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="265" title="examples/synthemol/main.py"
+``` py linenums="258" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:265:282
+examples/synthemol/main.py:258:275
 --8<--
 ```
 
@@ -188,9 +188,9 @@ examples/synthemol/main.py:265:282
 
 构建模型的代码为：
 
-``` py linenums="305" title="examples/synthemol/main.py"
+``` py linenums="298" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:305:305
+examples/synthemol/main.py:298:298
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/synthemol/main.py:305:305
 
 构建Generator的代码为：
 
-``` py linenums="471" title="examples/synthemol/main.py"
+``` py linenums="464" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:471:485
+examples/synthemol/main.py:464:478
 --8<--
 ```
 

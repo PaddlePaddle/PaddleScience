@@ -1,10 +1,11 @@
 """Contains constants shared throughout synthemol."""
 import os
-
-# from importlib import resources
 from typing import Literal
 
-from rdkit.Chem import Mol
+try:
+    from rdkit.Chem import Mol
+except ModuleNotFoundError:
+    pass
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPClassifier

@@ -14,8 +14,12 @@ import paddle
 from features import MolGraph
 from features import get_available_features_generators
 from packaging import version
-from rdkit import Chem
-from tap import Tap
+
+try:
+    from rdkit import Chem
+    from tap import Tap
+except ModuleNotFoundError:
+    pass
 from typing_extensions import Literal
 
 Metric = Literal[
@@ -200,7 +204,7 @@ class CommonArgs(Tap):
 
     @property
     def device(self) -> (paddle.CPUPlace, paddle.CUDAPlace, str):
-        """The :code:`torch.device` on which to load and process data and models."""
+        """The :code:`paddle.Place` on which to load and process data and models."""
         if not self.cuda:
             # return paddle.CPUPlace()
             return "cpu"
@@ -371,8 +375,8 @@ class TrainArgs(CommonArgs):
     Random seed to use when splitting data into train/val/test sets.
     When :code`num_folds > 1`, the first fold uses this seed and all subsequent folds add 1 to the seed.
     """
-    pytorch_seed: int = 0
-    """Seed for PyTorch randomness (e.g., random initial weights)."""
+    paddle_seed: int = 0
+    """Seed for Paddle randomness (e.g., random initial weights)."""
     metric: Metric = None
     """
     Metric to use during evaluation. It is also used with the validation set for early stopping.
@@ -989,7 +993,7 @@ class PredictArgs(CommonArgs):
             paddle.__version__
         ) < version.parse("1.9.0"):
             raise ValueError(
-                "Dropout uncertainty is only supported for pytorch versions >= 1.9.0"
+                "Dropout uncertainty is only supported for versions >= 1.9.0"
             )
         self.smiles_columns = preprocess_smiles_columns(
             path=self.test_path,

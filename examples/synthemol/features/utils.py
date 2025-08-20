@@ -5,7 +5,11 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from rdkit.Chem import PandasTools
+
+try:
+    from rdkit.Chem import PandasTools
+except ModuleNotFoundError:
+    pass
 
 
 def save_features(path: str, features: List[np.ndarray]) -> None:

@@ -6,7 +6,11 @@ from typing import Union
 
 import numpy as np
 import paddle
-from rdkit import Chem
+
+try:
+    from rdkit import Chem
+except ModuleNotFoundError:
+    pass
 
 
 def make_mol(s: str, keep_h: bool, add_h: bool):

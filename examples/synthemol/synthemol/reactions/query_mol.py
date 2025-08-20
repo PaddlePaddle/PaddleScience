@@ -2,7 +2,10 @@
 from functools import cache
 from typing import Iterable
 
-from rdkit import Chem
+try:
+    from rdkit import Chem
+except ModuleNotFoundError:
+    pass
 from synthemol.utils import convert_to_mol
 from synthemol.utils import strip_atom_mapping
 

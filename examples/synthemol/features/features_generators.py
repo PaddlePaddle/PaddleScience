@@ -3,9 +3,13 @@ from typing import List
 from typing import Union
 
 import numpy as np
-from rdkit import Chem
-from rdkit import DataStructs
-from rdkit.Chem import AllChem
+
+try:
+    from rdkit import Chem
+    from rdkit import DataStructs
+    from rdkit.Chem import AllChem
+except ModuleNotFoundError:
+    pass
 
 Molecule = Union[str, Chem.Mol]
 FeaturesGenerator = Callable[[Molecule], np.ndarray]

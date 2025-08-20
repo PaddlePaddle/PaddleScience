@@ -3,7 +3,11 @@ import re
 from typing import Any
 
 import numpy as np
-from rdkit import Chem
+
+try:
+    from rdkit import Chem
+except ModuleNotFoundError:
+    pass
 
 from .constants import MOLECULE_TYPE
 

@@ -4,7 +4,11 @@ from functools import partial
 from typing import Callable
 
 import numpy as np
-from rdkit import Chem
+
+try:
+    from rdkit import Chem
+except ModuleNotFoundError:
+    pass
 from synthemol.constants import OPTIMIZATION_TYPES
 from synthemol.generate.node import Node
 from synthemol.reactions import Reaction

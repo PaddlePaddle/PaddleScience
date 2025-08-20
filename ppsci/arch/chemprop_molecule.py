@@ -1,37 +1,35 @@
 import math
 from functools import reduce
-
-# import sys
 from typing import List
 from typing import Tuple
 from typing import Union
 
 import numpy as np
-
-# import paddle_aux
 import paddle
-from rdkit import Chem
 
-# from .mpn import MPN
-# from chemprop.args import TrainArgs
+try:
+    from rdkit import Chem
+except ModuleNotFoundError:
+    pass
+
 from examples.synthemol.args import TrainArgs
 from examples.synthemol.features import BatchMolGraph
 from examples.synthemol.features import get_atom_fdim
 from examples.synthemol.features import get_bond_fdim
-
-# from examples.synthemol.features import mol2graph
 from examples.synthemol.nn_utils import get_activation_function
 from examples.synthemol.nn_utils import index_select_ND
 
-# from ppsci.data.dataset.synthemol_dataset import BatchMolGraph # TODO: check with line 18
-
-# from chemprop.features import BatchMolGraph
-
-# from chemprop.nn_utils import get_activation_function, initialize_weights
-
 
 class MPNEncoder(paddle.nn.Layer):
-    """An :class:`MPNEncoder` is a message passing neural network for encoding a molecule."""
+    """An :class:`MPNEncoder` is a message passing neural network for encoding a molecule.
+
+    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+    :param atom_fdim: Atom feature vector dimension.
+    :param bond_fdim: Bond feature vector dimension.
+    :param hidden_size: Hidden layers dimension
+    :param bias: Whether to add bias to linear layers
+    :param depth: Number of message passing steps
+    """
 
     def __init__(
         self,
@@ -42,14 +40,6 @@ class MPNEncoder(paddle.nn.Layer):
         bias: bool = None,
         depth: int = None,
     ):
-        """
-        :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
-        :param atom_fdim: Atom feature vector dimension.
-        :param bond_fdim: Bond feature vector dimension.
-        :param hidden_size: Hidden layers dimension
-        :param bias: Whether to add bias to linear layers
-        :param depth: Number of message passing steps
-        """
         super(MPNEncoder, self).__init__()
         self.atom_fdim = atom_fdim
         self.bond_fdim = bond_fdim
@@ -108,7 +98,7 @@ class MPNEncoder(paddle.nn.Layer):
         :param mol_graph: A :class:`~chemprop.features.featurization.BatchMolGraph` representing
                           a batch of molecular graphs.
         :param atom_descriptors_batch: A list of numpy arrays containing additional atomic descriptors
-        :return: A PyTorch tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
+        :return: A Paddle tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
         """
         if atom_descriptors_batch is not None:
             atom_descriptors_batch = [
@@ -119,16 +109,9 @@ class MPNEncoder(paddle.nn.Layer):
                 .astype(dtype="float32")
                 .to(self.device)
             )
-        # print(self.device)
-        # f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope = (mol_graph.
-        #    get_components(atom_messages=self.atom_messages))
-
-        # print(len(mol_graph),mol_graph)
 
         f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope = mol_graph
-        # f_atoms, f_bonds, a2b, b2a, b2revb = f_atoms.to(self.device
-        #    ), f_bonds.to(self.device), a2b.to(self.device), b2a.to(self.device
-        #    ), b2revb.to(self.device)
+
         if self.atom_messages:
             a2a = mol_graph.get_a2a().to(self.device)
         if self.atom_messages:
@@ -136,8 +119,7 @@ class MPNEncoder(paddle.nn.Layer):
         else:
             input = self.W_i(f_bonds)
         message = self.act_func(input)
-        # print("message", message)
-        # print("b2revb", b2revb)
+
         for depth in range(self.depth - 1):
             if self.undirected:
                 message = (message + message[b2revb]) / 2
@@ -147,7 +129,6 @@ class MPNEncoder(paddle.nn.Layer):
                 nei_message = paddle.concat(x=(nei_a_message, nei_f_bonds), axis=2)
                 message = nei_message.sum(axis=1)
             else:
-                # print("a2b",a2b,a2b.shape)
                 nei_a_message = index_select_ND(message, a2b)
                 a_message = nei_a_message.sum(axis=1)
                 rev_message = message[b2revb]
@@ -193,14 +174,13 @@ class MPNEncoder(paddle.nn.Layer):
 
 
 class MPN(paddle.nn.Layer):
-    """An :class:`MPN` is a wrapper around :class:`MPNEncoder` which featurizes input as needed."""
+    """An :class:`MPN` is a wrapper around :class:`MPNEncoder` which featurizes input as needed.
+    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+    :param atom_fdim: Atom feature vector dimension.
+    :param bond_fdim: Bond feature vector dimension.
+    """
 
     def __init__(self, args: TrainArgs, atom_fdim: int = None, bond_fdim: int = None):
-        """
-        :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
-        :param atom_fdim: Atom feature vector dimension.
-        :param bond_fdim: Bond feature vector dimension.
-        """
         super(MPN, self).__init__()
         self.reaction = args.reaction
         self.reaction_solvent = args.reaction_solvent
@@ -280,7 +260,7 @@ class MPN(paddle.nn.Layer):
         :param atom_descriptors_batch: A list of numpy arrays containing additional atom descriptors.
         :param atom_features_batch: A list of numpy arrays containing additional atom features.
         :param bond_features_batch: A list of numpy arrays containing additional bond features.
-        :return: A PyTorch tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
+        :return: A Paddle tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
         """
         """
         if type(batch[0]) != BatchMolGraph:
@@ -343,10 +323,6 @@ class MPN(paddle.nn.Layer):
         return output
 
 
-# ====================================================================================
-# This file is generated by PaConvert ToolKit, please Don't edit it!
-
-
 def split(x, num_or_sections, axis=0):
     if isinstance(num_or_sections, int):
         return paddle.split(x, x.shape[axis] // num_or_sections, axis)
@@ -372,7 +348,7 @@ def compute_pnorm(model: paddle.nn.Layer) -> float:
     """
     Computes the norm of the parameters of a model.
 
-    :param model: A PyTorch model.
+    :param model: A Paddle model.
     :return: The norm of the parameters of the model.
     """
     return math.sqrt(sum([(p.norm().item() ** 2) for p in model.parameters()]))
@@ -382,7 +358,7 @@ def compute_gnorm(model: paddle.nn.Layer) -> float:
     """
     Computes the norm of the gradients of a model.
 
-    :param model: A PyTorch model.
+    :param model: A Paddle model.
     :return: The norm of the gradients of the model.
     """
     return math.sqrt(
@@ -400,7 +376,7 @@ def param_count(model: paddle.nn.Layer) -> int:
     """
     Determines number of trainable parameters.
 
-    :param model: An PyTorch model.
+    :param model: An Paddle model.
     :return: The number of trainable parameters in the model.
     """
     return sum(param.size for param in model.parameters() if not param.stop_gradient)
@@ -410,70 +386,17 @@ def param_count_all(model: paddle.nn.Layer) -> int:
     """
     Determines number of trainable parameters.
 
-    :param model: An PyTorch model.
+    :param model: An Paddle model.
     :return: The number of trainable parameters in the model.
     """
     return sum(param.size for param in model.parameters())
-
-
-'''
-def index_select_ND(source: paddle.Tensor, index: paddle.Tensor) -> paddle.Tensor:
-    """
-    Selects the message features from source corresponding to the atom or bond indices in :code:`index`.
-
-    :param source: A tensor of shape :code:`(num_bonds, hidden_size)` containing message features.
-    :param index: A tensor of shape :code:`(num_atoms/num_bonds, max_num_bonds)` containing the atom or bond
-                  indices to select from :code:`source`.
-    :return: A tensor of shape :code:`(num_atoms/num_bonds, max_num_bonds, hidden_size)` containing the message
-             features corresponding to the atoms/bonds specified in index.
-    """
-    index_size = tuple(index.shape)
-    suffix_dim = tuple(source.shape)[1:]
-    final_size = index_size + suffix_dim
-    # print("index", index)
-    target = source.index_select(axis=0, index=index.reshape(-1))
-    target = target.reshape(final_size)
-    return target
-
-
-def get_activation_function(activation: str) -> paddle.nn.Layer:
-    """
-    Gets an activation function module given the name of the activation.
-
-    Supports:
-
-    * :code:`ReLU`
-    * :code:`LeakyReLU`
-    * :code:`PReLU`
-    * :code:`tanh`
-    * :code:`SELU`
-    * :code:`ELU`
-
-    :param activation: The name of the activation function.
-    :return: The activation function module.
-    """
-    if activation == "ReLU":
-        return paddle.nn.ReLU()
-    elif activation == "LeakyReLU":
-        return paddle.nn.LeakyReLU(negative_slope=0.1)
-    elif activation == "PReLU":
-        return paddle.nn.PReLU()
-    elif activation == "tanh":
-        return paddle.nn.Tanh()
-    elif activation == "SELU":
-        return paddle.nn.SELU()
-    elif activation == "ELU":
-        return paddle.nn.ELU()
-    else:
-        raise ValueError(f'Activation "{activation}" not supported.')
-'''
 
 
 def initialize_weights(model: paddle.nn.Layer) -> None:
     """
     Initializes the weights of a model in place.
 
-    :param model: An PyTorch model.
+    :param model: An Paddle model.
     """
     for param in model.parameters():
         if param.dim() == 1:
@@ -494,6 +417,13 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
     course of the remaining :code:`total_steps - warmup_steps` (where :code:`total_steps =
     total_epochs * steps_per_epoch`). This is roughly based on the learning rate
     schedule from `Attention is All You Need <https://arxiv.org/abs/1706.03762>`_, section 5.3.
+        :param optimizer: A Paddle optimizer.
+        :param warmup_epochs: The number of epochs during which to linearly increase the learning rate.
+        :param total_epochs: The total number of epochs.
+        :param steps_per_epoch: The number of steps (batches) per epoch.
+        :param init_lr: The initial learning rate.
+        :param max_lr: The maximum learning rate (achieved after :code:`warmup_epochs`).
+        :param final_lr: The final learning rate (achieved after :code:`total_epochs`).
     """
 
     def __init__(
@@ -506,15 +436,6 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
         max_lr: List[float],
         final_lr: List[float],
     ):
-        """
-        :param optimizer: A PyTorch optimizer.
-        :param warmup_epochs: The number of epochs during which to linearly increase the learning rate.
-        :param total_epochs: The total number of epochs.
-        :param steps_per_epoch: The number of steps (batches) per epoch.
-        :param init_lr: The initial learning rate.
-        :param max_lr: The maximum learning rate (achieved after :code:`warmup_epochs`).
-        :param final_lr: The final learning rate (achieved after :code:`total_epochs`).
-        """
         if (
             not len(optimizer._param_groups)
             == len(warmup_epochs)
@@ -590,12 +511,11 @@ def activate_dropout(module: paddle.nn.Layer, dropout_prob: float):
 
 
 class MoleculeModel(paddle.nn.Layer):
-    """A :class:`MoleculeModel` is a model which contains a message passing network following by feed-forward layers."""
+    """A :class:`MoleculeModel` is a model which contains a message passing network following by feed-forward layers.
+    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+    """
 
     def __init__(self, args: TrainArgs):
-        """
-        :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
-        """
         super(MoleculeModel, self).__init__()
         self.classification = args.dataset_type == "classification"
         self.multiclass = args.dataset_type == "multiclass"
@@ -794,19 +714,11 @@ class MoleculeModel(paddle.nn.Layer):
         :return: The output of the :class:`MoleculeModel`, containing a list of property predictions
         """
 
-        mol_batch = batch["mol_batch"]  # paddle.to_tensor(mol_batch, dtype="float32"),
-        features_batch = batch[
-            "features_batch"
-        ]  # paddle.to_tensor(features_batch, dtype="float32"),
-        atom_descriptors_batch = batch[
-            "atom_descriptors_batch"
-        ]  # paddle.to_tensor(atom_descriptors_batch, dtype="float32"),
-        atom_features_batch = batch[
-            "atom_features_batch"
-        ]  # paddle.to_tensor(atom_features_batch, dtype="float32"),
-        bond_features_batch = batch[
-            "bond_features_batch"
-        ]  # paddle.to_tensor(bond_features_batch, dtype="float32"),
+        mol_batch = batch["mol_batch"]
+        features_batch = batch["features_batch"]
+        atom_descriptors_batch = batch["atom_descriptors_batch"]
+        atom_features_batch = batch["atom_features_batch"]
+        bond_features_batch = batch["bond_features_batch"]
         batch = mol_batch
 
         output = self.ffn(
@@ -848,5 +760,4 @@ class MoleculeModel(paddle.nn.Layer):
             output = paddle.concat(x=[means, lambdas, alphas, betas], axis=1)
         if self.loss_function == "dirichlet":
             output = paddle.nn.functional.softplus(x=output) + 1
-        # return output
         return {"pred": output}
