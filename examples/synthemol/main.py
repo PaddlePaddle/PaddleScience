@@ -20,7 +20,6 @@ import hydra
 import numpy as np
 import paddle
 import pandas as pd
-from args import TrainArgs
 from chemprop_models import chemprop_predict
 from chemprop_models import my_chemprop_load
 from loss_functions import get_loss_func
@@ -35,6 +34,7 @@ from tqdm import tqdm
 
 import ppsci
 import ppsci.arch.chemprop_molecule
+from ppsci.arch.chemprop_molecule_utils import TrainArgs
 
 
 def get_train_loss_func(args):  #:paddle.Tensor=None):
@@ -164,7 +164,8 @@ def make_args(
 
     args = TrainArgs().parse_args(arg_list)
     args.task_names = [property_name]
-    args.train_data_size = len(train_smiles)
+    if train_smiles is not None:
+        args.train_data_size = len(train_smiles)
 
     if fingerprint_type is not None:
         args.features_size = train_fingerprints.shape[1]
@@ -293,6 +294,8 @@ def pre_compute(cfg):
         use_gpu=cfg.PRE_COMPUTE.use_gpu,
         fingerprint_type=cfg.DATA.fingerprint_type,
         property_name=cfg.DATA.property_column,
+        train_smiles=None,
+        train_fingerprints=None,
     )
 
     model = ppsci.arch.chemprop_molecule.MoleculeModel(args=args)

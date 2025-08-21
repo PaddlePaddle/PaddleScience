@@ -2,7 +2,8 @@ from typing import Callable
 
 import numpy as np
 import paddle
-from args import TrainArgs
+
+from ppsci.arch.chemprop_molecule_utils import TrainArgs
 
 
 def split(x, num_or_sections, axis=0):

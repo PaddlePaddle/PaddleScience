@@ -12,12 +12,12 @@ try:
 except ModuleNotFoundError:
     pass
 
-from examples.synthemol.args import TrainArgs
-from examples.synthemol.features import BatchMolGraph
-from examples.synthemol.features import get_atom_fdim
-from examples.synthemol.features import get_bond_fdim
-from examples.synthemol.nn_utils import get_activation_function
-from examples.synthemol.nn_utils import index_select_ND
+from ppsci.arch.chemprop_molecule_utils import BatchMolGraph
+from ppsci.arch.chemprop_molecule_utils import TrainArgs
+from ppsci.arch.chemprop_molecule_utils import get_activation_function
+from ppsci.arch.chemprop_molecule_utils import get_atom_fdim
+from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
+from ppsci.arch.chemprop_molecule_utils import index_select_ND
 
 
 class MPNEncoder(paddle.nn.Layer):

@@ -14,6 +14,8 @@
 
 # Copyright 2024 Kyle Swanson
 
+from __future__ import annotations
+
 import threading
 from random import Random
 from typing import Dict
@@ -32,10 +34,10 @@ try:
 except ModuleNotFoundError:
     pass
 
-from examples.synthemol.features import atom_features_zeros
-from examples.synthemol.features import get_bond_fdim
-from examples.synthemol.features import get_features_generator
-from examples.synthemol.features import map_reac_to_prod
+from ppsci.arch.chemprop_molecule_utils import atom_features_zeros
+from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
+from ppsci.arch.chemprop_molecule_utils import get_features_generator
+from ppsci.arch.chemprop_molecule_utils import map_reac_to_prod
 
 
 class Featurization:

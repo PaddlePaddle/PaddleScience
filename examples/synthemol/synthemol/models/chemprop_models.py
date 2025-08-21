@@ -2,7 +2,8 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-from ppsci.arch.chemprop_molecule import MoleculeModel  # hth
+from ppsci.arch.chemprop_molecule import MoleculeModel
+from ppsci.arch.chemprop_molecule_utils import mol2graph
 
 
 def chemprop_predict_on_molecule(
@@ -21,10 +22,6 @@ def chemprop_predict_on_molecule(
     """
 
     # generator 单独运行, reaction_to_building_blocks_filtered.pkl
-
-    # from synthemol.features import BatchMolGraph
-    from synthemol.features import mol2graph
-
     batch = [mol2graph(b) for b in [[smiles]]]
     batchs = [batch[0].get_components()]
     # print(len(batchs))
@@ -32,9 +29,6 @@ def chemprop_predict_on_molecule(
     pred = model(
         batch=batchs, features_batch=[fingerprint] if fingerprint is not None else None
     ).item()
-
-    # pred = model(batch=[[smiles]], features_batch=[fingerprint] if
-    #    fingerprint is not None else None).item()
 
     if scaler is not None:
         pred = scaler.inverse_transform([[pred]])[0][0]
