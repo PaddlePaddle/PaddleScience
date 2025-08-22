@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import sys
+from typing import TYPE_CHECKING
 
 from paddle import io
 
@@ -56,6 +59,9 @@ from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 __all__ = [
     "IterableNamedArrayDataset",
@@ -100,11 +106,11 @@ __all__ = [
 ]
 
 
-def build_dataset(cfg) -> "io.Dataset":
+def build_dataset(cfg: DictConfig) -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (List[DictConfig]): Dataset config list.
+        cfg (DictConfig): Dataset config list.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
@@ -115,7 +121,23 @@ def build_dataset(cfg) -> "io.Dataset":
     if "transforms" in cfg:
         cfg["transforms"] = transform.build_transforms(cfg.pop("transforms"))
 
-    dataset = eval(dataset_cls)(**cfg)
+    try:
+        dataset = eval(dataset_cls)(**cfg)
+    except NameError:
+        import textwrap
+
+        logger.error(
+            f"name {dataset_cls} is not defined, maybe you should register your dataset class first as below:\n"
+            + textwrap.indent(
+                "\nimport paddle\n"
+                "from ppsci.data import register_to_dataset\n\n"
+                "@register_to_dataset # <-- here\n"
+                "class MyDataset(paddle.io.Dataset):\n"
+                "    pass\n\n",
+                prefix=" " * 4,
+            )
+        )
+        raise
 
     logger.debug(str(dataset))
 
