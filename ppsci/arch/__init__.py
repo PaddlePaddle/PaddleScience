@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
@@ -63,6 +64,10 @@ from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
 from ppsci.arch.regpointnet import RegPointNet  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 __all__ = [
     "MoFlowNet",
@@ -118,7 +123,7 @@ __all__ = [
 ]
 
 
-def build_model(cfg):
+def build_model(cfg: DictConfig):
     """Build model
 
     Args:
