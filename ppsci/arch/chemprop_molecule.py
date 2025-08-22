@@ -13,12 +13,15 @@ try:
 except ModuleNotFoundError:
     pass
 
-from ppsci.arch.chemprop_molecule_utils import BatchMolGraph
-from ppsci.arch.chemprop_molecule_utils import TrainArgs
-from ppsci.arch.chemprop_molecule_utils import get_activation_function
-from ppsci.arch.chemprop_molecule_utils import get_atom_fdim
-from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
-from ppsci.arch.chemprop_molecule_utils import index_select_ND
+try:
+    from ppsci.arch.chemprop_molecule_utils import BatchMolGraph
+    from ppsci.arch.chemprop_molecule_utils import TrainArgs
+    from ppsci.arch.chemprop_molecule_utils import get_activation_function
+    from ppsci.arch.chemprop_molecule_utils import get_atom_fdim
+    from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
+    from ppsci.arch.chemprop_molecule_utils import index_select_ND
+except NameError:
+    pass  # not running this example
 
 
 class MPNEncoder(paddle.nn.Layer):

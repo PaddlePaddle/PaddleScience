@@ -34,10 +34,13 @@ try:
 except ModuleNotFoundError:
     pass
 
-from ppsci.arch.chemprop_molecule_utils import atom_features_zeros
-from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
-from ppsci.arch.chemprop_molecule_utils import get_features_generator
-from ppsci.arch.chemprop_molecule_utils import map_reac_to_prod
+try:
+    from ppsci.arch.chemprop_molecule_utils import atom_features_zeros
+    from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
+    from ppsci.arch.chemprop_molecule_utils import get_features_generator
+    from ppsci.arch.chemprop_molecule_utils import map_reac_to_prod
+except NameError:
+    pass  # not running this example
 
 
 class Featurization:
