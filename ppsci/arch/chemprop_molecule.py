@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from functools import reduce
 from typing import List
@@ -13,15 +15,13 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    from ppsci.arch.chemprop_molecule_utils import BatchMolGraph
-    from ppsci.arch.chemprop_molecule_utils import TrainArgs
-    from ppsci.arch.chemprop_molecule_utils import get_activation_function
-    from ppsci.arch.chemprop_molecule_utils import get_atom_fdim
-    from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
-    from ppsci.arch.chemprop_molecule_utils import index_select_ND
-except NameError:
-    pass  # not running this example
+
+from ppsci.arch.chemprop_molecule_utils import BatchMolGraph
+from ppsci.arch.chemprop_molecule_utils import TrainArgs
+from ppsci.arch.chemprop_molecule_utils import get_activation_function
+from ppsci.arch.chemprop_molecule_utils import get_atom_fdim
+from ppsci.arch.chemprop_molecule_utils import get_bond_fdim
+from ppsci.arch.chemprop_molecule_utils import index_select_ND
 
 
 class MPNEncoder(paddle.nn.Layer):
