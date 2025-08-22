@@ -1,4 +1,6 @@
 import os
+import tempfile
+import urllib.request
 from os import path as osp
 
 import hydra
@@ -19,6 +21,52 @@ from ppsci.optimizer import lr_scheduler
 from ppsci.optimizer import optimizer
 from ppsci.solver import Solver
 from ppsci.validate import SupervisedValidator
+
+
+def download_model_from_url(url, local_path=None):
+    """
+    Download model from URL to local path.
+
+    Args:
+        url (str): URL to download the model from
+        local_path (str, optional): Local path to save the model.
+                                   If None, saves to a temporary file.
+
+    Returns:
+        str: Path to the downloaded model file
+    """
+    if local_path is None:
+        # Create a temporary file
+        temp_dir = tempfile.gettempdir()
+        local_path = os.path.join(temp_dir, "downloaded_model.pdparams")
+
+    print(f"Downloading model from {url} to {local_path}")
+
+    try:
+        urllib.request.urlretrieve(url, local_path)
+        print(f"Successfully downloaded model to {local_path}")
+        return local_path
+    except Exception as e:
+        raise RuntimeError(f"Failed to download model from {url}: {str(e)}")
+
+
+def load_model_from_path_or_url(model_path):
+    """
+    Load model from local path or URL.
+
+    Args:
+        model_path (str): Local path or URL to the model
+
+    Returns:
+        dict: Loaded model dictionary
+    """
+    if model_path.startswith(("http://", "https://")):
+        # It's a URL, download first
+        local_path = download_model_from_url(model_path)
+        return paddle.load(local_path)
+    else:
+        # It's a local path
+        return paddle.load(model_path)
 
 
 def weighted_loss(output_dict, target_dict, weight_dict=None):
@@ -265,7 +313,7 @@ def evaluate(cfg: DictConfig):
 
     # Loading model structure and weights
     print(f"Loading model from {cfg.eval.pretrained_model_path}")
-    model_dict = paddle.load(cfg.eval.pretrained_model_path)
+    model_dict = load_model_from_path_or_url(cfg.eval.pretrained_model_path)
     hidden_size = model_dict["hidden_size"]
     print(f"Loaded model structure with hidden sizes: {hidden_size}")
 

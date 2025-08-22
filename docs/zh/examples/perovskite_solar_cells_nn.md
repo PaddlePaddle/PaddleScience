@@ -26,7 +26,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [solar_cell_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams) | RMSE: 4.64047 |
+| [solar_cell_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams) | RMSE: 3.91798 |
 
 ## 1. 背景简介
 
@@ -70,25 +70,25 @@
 
 为了方便数据处理，我们实现了一个辅助函数 `create_tensor_dict` 来创建输入和标签的 tensor 字典：
 
-``` py linenums="36" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="84" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:36:41
+examples/perovskite_solar_cells/psc_nn.py:84:89
 --8<--
 ```
 
 数据集的读取和预处理代码如下：
 
-``` py linenums="123" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="172" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:123:142
+examples/perovskite_solar_cells/psc_nn.py:172:191
 --8<--
 ```
 
 为了进行超参数优化，我们将训练集进一步划分为训练集和验证集：
 
-``` py linenums="137" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="185" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:137:139
+examples/perovskite_solar_cells/psc_nn.py:185:187
 --8<--
 ```
 
@@ -104,9 +104,9 @@ examples/perovskite_solar_cells/psc_nn.py:137:139
 
 模型定义代码如下：
 
-``` py linenums="104" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="152" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:104:120
+examples/perovskite_solar_cells/psc_nn.py:152:168
 --8<--
 ```
 
@@ -114,9 +114,9 @@ examples/perovskite_solar_cells/psc_nn.py:104:120
 
 考虑到数据集中不同样本的重要性可能不同，我们设计了一个加权均方误差损失函数。该函数对较大的 Jsc 值赋予更高的权重，以提高模型在高性能太阳能电池上的预测准确性：
 
-``` py linenums="24" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="72" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:24:33
+examples/perovskite_solar_cells/psc_nn.py:72:81
 --8<--
 ```
 
@@ -124,9 +124,9 @@ examples/perovskite_solar_cells/psc_nn.py:24:33
 
 本案例基于数据驱动的方法求解问题，因此使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。为了减少代码重复，我们实现了 `create_constraint` 函数来创建监督约束：
 
-``` py linenums="44" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="92" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:44:63
+examples/perovskite_solar_cells/psc_nn.py:92:111
 --8<--
 ```
 
@@ -134,9 +134,9 @@ examples/perovskite_solar_cells/psc_nn.py:44:63
 
 为了实时监测模型的训练情况，我们实现了 `create_validator` 函数来创建评估器：
 
-``` py linenums="66" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="114" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:66:81
+examples/perovskite_solar_cells/psc_nn.py:114:129
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/perovskite_solar_cells/psc_nn.py:66:81
 
 为了统一管理优化器和学习率调度器的创建，我们实现了 `create_optimizer` 函数：
 
-``` py linenums="84" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="132" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:84:101
+examples/perovskite_solar_cells/psc_nn.py:132:149
 --8<--
 ```
 
@@ -154,9 +154,9 @@ examples/perovskite_solar_cells/psc_nn.py:84:101
 
 在训练过程中，我们使用上述封装的函数来创建数据字典、约束、评估器和优化器：
 
-``` py linenums="210" title="examples/perovskite_solar_cells/psc_nn.py"
+``` py linenums="258" title="examples/perovskite_solar_cells/psc_nn.py"
 --8<--
-examples/perovskite_solar_cells/psc_nn.py:210:214
+examples/perovskite_solar_cells/psc_nn.py:258:262
 --8<--
 ```
 
