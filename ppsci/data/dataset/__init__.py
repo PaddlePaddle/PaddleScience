@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import copy
-from typing import TYPE_CHECKING
+import sys
+
+from paddle import io
 
 from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
 from ppsci.data.dataset.array_dataset import ChipHeatDataset
@@ -55,9 +57,6 @@ from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
-if TYPE_CHECKING:
-    from paddle import io
-
 __all__ = [
     "IterableNamedArrayDataset",
     "NamedArrayDataset",
@@ -97,6 +96,7 @@ __all__ = [
     "IFMMoeDataset",
     "STAFNetDataset",
     "TMTDataset",
+    "register_to_dataset",
 ]
 
 
@@ -120,3 +120,13 @@ def build_dataset(cfg) -> "io.Dataset":
     logger.debug(str(dataset))
 
     return dataset
+
+
+def register_to_dataset(cls: type):
+    from ppsci.utils.registry import register_cls_to_module
+
+    if not issubclass(cls, io.Dataset):
+        logger.warning(
+            f"The registered class '{cls.__name__}' should be inherited from `paddle.io.Dataset`"
+        )
+    register_cls_to_module(sys.modules[__name__], cls)
