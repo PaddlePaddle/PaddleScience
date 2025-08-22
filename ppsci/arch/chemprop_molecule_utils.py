@@ -1025,7 +1025,7 @@ def activate_dropout(module: paddle.nn.Layer, dropout_prob: float):
 # === nn_util end   ===
 
 # === features_generators start ===
-Molecule = Union[str, Chem.Mol]
+Molecule = Union[str, "Chem.Mol"]
 FeaturesGenerator = Callable[[Molecule], np.ndarray]
 FEATURES_GENERATOR_REGISTRY = {}
 
@@ -1200,7 +1200,7 @@ Metric = Literal[
 
 SMILES_TO_GRAPH: Dict[str, MolGraph] = {}
 CACHE_MOL = True
-SMILES_TO_MOL: Dict[str, Union[Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]] = {}
+SMILES_TO_MOL: Dict[str, Union["Chem.Mol", Tuple["Chem.Mol", "Chem.Mol"]]] = {}
 
 
 def empty_cache():
