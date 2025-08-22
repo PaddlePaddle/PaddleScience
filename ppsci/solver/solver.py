@@ -428,9 +428,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'visualdl' with `pip install visualdl` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
+            self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -448,6 +446,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
+            # FIXME: wandb may hanging here in distributed env
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.wandb_writer = wandb.init(**self.wandb_config)
@@ -463,11 +462,11 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'tensorboardX' with `pip install tensorboardX` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(self.output_dir, "tensorboard")
-                    )
+            # NOTE: To prevent program hangs, initialize the tensorboardX writer across all processes,
+            # but it will only be used in rank 0
+            self.tbd_writer = tensorboardX.SummaryWriter(
+                osp.join(self.output_dir, "tensorboard")
+            )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
                 f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
@@ -477,16 +476,15 @@ class Solver:
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
-            paddle_version = paddle.__version__
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
-                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    f"Detected paddlepaddle version is '{paddle.__version__}', "
                     "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
-        else:
-            paddle_version = f"develop({paddle.version.commit[:7]})"
 
-        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(
+            f"Using paddlepaddle {paddle.version.full_version}({paddle.version.commit[:7]}) on device {self.device}"
+        )
 
         self.forward_helper = expression.ExpressionSolver()
 
@@ -566,9 +564,11 @@ class Solver:
         start_epoch = self.best_metric["epoch"] + 1
 
         if self.use_tbd and isinstance(self.cfg, DictConfig):
-            self.tbd_writer.add_text(
-                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
-            )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.tbd_writer.add_text(
+                        "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                    )
 
         if self.nvtx_flag:
             core.nvprof_start()

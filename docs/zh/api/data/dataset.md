@@ -35,4 +35,5 @@
         - DrivAerNetDataset
         - DrivAerNetPlusPlusDataset
         - IFMMoeDataset
+        - STAFNetDataset
       show_root_heading: true
