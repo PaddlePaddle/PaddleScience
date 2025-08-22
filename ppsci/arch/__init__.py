@@ -63,6 +63,7 @@ from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
 from ppsci.arch.regpointnet import RegPointNet  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
+from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 
 __all__ = [
     "MoFlowNet",
@@ -115,6 +116,7 @@ __all__ = [
     "RegPointNet",
     "IFMMLP",
     "STAFNet",
+    "MoleculeModel",
 ]
 
 

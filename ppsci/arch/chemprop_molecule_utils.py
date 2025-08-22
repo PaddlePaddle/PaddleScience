@@ -90,7 +90,10 @@ class Featurization_parameters:
         self.ADDING_H = False
 
 
-PARAMS = Featurization_parameters()
+try:
+    PARAMS = Featurization_parameters()
+except NameError:
+    pass  # not running this example
 
 
 def reset_featurization_parameters(logger: logging.Logger = None) -> None:

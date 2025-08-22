@@ -249,7 +249,7 @@ def train(cfg: DictConfig):
     constraint = {sup_constraint.name: sup_constraint}
 
     # set model
-    model = ppsci.arch.chemprop_molecule.MoleculeModel(args=args)
+    model = ppsci.arch.chemprop_molecule.MoleculeModel(cfg=cfg)
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(
@@ -288,17 +288,7 @@ def pre_compute(cfg):
     preds_column_prefix = cfg.PRE_COMPUTE.preds_column_prefix
     save_path = Path(cfg.PRE_COMPUTE.save_path)
 
-    args = make_args(
-        dataset_type=cfg.DATA.dataset_type,
-        epochs=1,
-        use_gpu=cfg.PRE_COMPUTE.use_gpu,
-        fingerprint_type=cfg.DATA.fingerprint_type,
-        property_name=cfg.DATA.property_column,
-        train_smiles=None,
-        train_fingerprints=None,
-    )
-
-    model = ppsci.arch.chemprop_molecule.MoleculeModel(args=args)
+    model = ppsci.arch.chemprop_molecule.MoleculeModel(cfg=cfg)
 
     data = pd.read_csv(data_path)
     smiles = list(data[smiles_column])

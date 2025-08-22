@@ -6,6 +6,7 @@ from typing import Union
 
 import numpy as np
 import paddle
+from omegaconf import DictConfig
 
 try:
     from rdkit import Chem
@@ -515,8 +516,9 @@ class MoleculeModel(paddle.nn.Layer):
     :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
     """
 
-    def __init__(self, args: TrainArgs):
+    def __init__(self, cfg: DictConfig):
         super(MoleculeModel, self).__init__()
+        args = self.build_from_cfg(cfg)
         self.classification = args.dataset_type == "classification"
         self.multiclass = args.dataset_type == "multiclass"
         self.loss_function = args.loss_function
@@ -547,6 +549,64 @@ class MoleculeModel(paddle.nn.Layer):
         self.create_encoder(args)
         self.create_ffn(args)
         initialize_weights(self)
+
+    def _make_args(
+        self,
+        dataset_type,
+        epochs,
+        use_gpu,
+        fingerprint_type,
+        property_name,
+        train_smiles=None,
+        train_fingerprints=None,
+    ):
+
+        # Create args
+        arg_list = [
+            "--data_path",
+            "foo.csv",
+            "--dataset_type",
+            dataset_type,
+            "--save_dir",
+            "foo",
+            "--epochs",
+            str(epochs),
+            "--quiet",
+        ] + ([] if use_gpu else ["--no_cuda"])
+
+        if fingerprint_type == "morgan":
+            arg_list += ["--features_generator", "morgan"]
+        elif fingerprint_type == "rdkit":
+            arg_list += [
+                "--features_generator",
+                "rdkit_2d_normalized",
+                "--no_features_scaling",
+            ]
+        elif fingerprint_type is None:
+            pass
+        else:
+            raise ValueError(f'Fingerprint type "{fingerprint_type}" is not supported.')
+
+        args = TrainArgs().parse_args(arg_list)
+        args.task_names = [property_name]
+        if train_smiles is not None:
+            args.train_data_size = len(train_smiles)
+
+        if fingerprint_type is not None:
+            args.features_size = train_fingerprints.shape[1]
+        return args
+
+    def build_from_cfg(self, cfg: DictConfig):
+        args = self._make_args(
+            dataset_type=cfg.DATA.dataset_type,  # "classification",
+            epochs=cfg.TRAIN.epochs,  # 1,
+            use_gpu=cfg.TRAIN.use_gpu,
+            fingerprint_type=cfg.DATA.fingerprint_type,  # None,
+            property_name=cfg.DATA.property_column,  # "antibiotic_activity"
+            train_smiles=None,
+            train_fingerprints=None,
+        )
+        return args
 
     def create_encoder(self, args: TrainArgs) -> None:
         """
