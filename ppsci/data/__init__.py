@@ -26,6 +26,7 @@ from paddle import io
 from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
+from ppsci.data.dataset import register_to_dataset
 from ppsci.data.process import batch_transform
 from ppsci.data.process import transform
 from ppsci.utils import logger
@@ -37,6 +38,7 @@ __all__ = [
     "build_dataloader",
     "transform",
     "batch_transform",
+    "register_to_dataset",
 ]
 
 

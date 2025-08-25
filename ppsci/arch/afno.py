@@ -203,6 +203,19 @@ class AFNO2D(nn.Layer):
             default_initializer=nn.initializer.Normal(std=self.scale),
         )
 
+        if paddle.device.is_compiled_with_xpu():
+            # softshrink is not supported in xpu, so we use a custom implementation to avoid fallback to cpu
+            def softshrink(x: paddle.Tensor, threshold: float = 0.5) -> paddle.Tensor:
+                return paddle.where(
+                    x > threshold,
+                    x - threshold,
+                    paddle.where(x < -threshold, x + threshold, paddle.zeros_like(x)),
+                )
+
+            self.softshrink = softshrink
+        else:
+            self.softshrink = F.softshrink
+
     def forward(self, x):
         bias = x
 
@@ -285,7 +298,7 @@ class AFNO2D(nn.Layer):
         )
 
         x = paddle.stack([o2_real, o2_imag], axis=-1)
-        x = F.softshrink(x, threshold=self.sparsity_threshold)
+        x = self.softshrink(x, threshold=self.sparsity_threshold)
         x = paddle.as_complex(x)
         x = x.reshape((B, H, W // 2 + 1, C))
         x = paddle.fft.irfft2(x, s=(H, W), axes=(1, 2), norm="ortho")
