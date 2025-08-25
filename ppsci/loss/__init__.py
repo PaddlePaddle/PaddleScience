@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
 
 from ppsci.loss import mtl
 from ppsci.loss.base import Loss
@@ -30,6 +33,10 @@ from ppsci.loss.mse import CausalMSELoss
 from ppsci.loss.mse import MSELoss
 from ppsci.loss.mse import MSELossWithL2Decay
 from ppsci.loss.mse import PeriodicMSELoss
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 __all__ = [
     "Loss",
@@ -51,7 +58,7 @@ __all__ = [
 ]
 
 
-def build_loss(cfg):
+def build_loss(cfg: DictConfig):
     """Build loss.
 
     Args:
