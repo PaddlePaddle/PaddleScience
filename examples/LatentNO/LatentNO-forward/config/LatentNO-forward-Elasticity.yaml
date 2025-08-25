@@ -44,9 +44,9 @@ job_logging:
 output_dir: ./output/${data_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}/
 # general setting
 mode : "train" # train/eval
-data_name : "Darcy"
+data_name : "Elasticity"
 data_normalize : True
-data_concat : True
+data_concat : False
 seed : 20
 batch_size : 4
 
@@ -64,11 +64,11 @@ pct_start : 0.2
 MODEL:
   n_block : 4
   n_mode : 256
-  n_dim : 128
+  n_dim : 192
   n_layer : 3
   n_head : 8
   trunk_dim : 2
-  branch_dim : 3
+  branch_dim : 2
   out_dim : 1
 
 TRAIN:
@@ -77,9 +77,9 @@ TRAIN:
   epochs : 500
   log_epoch : 1
   checkpoint_epcoh : 50
-  exp_name : "LatentNO_Darcy"
+  exp_name : "LatentNO_Elasticity"
   eval_during_train : True
-  eval_freq : 1
+  eval_freq : 10
   self.start_eval_epoch : 1
 EVAL:
   eval_batch_size : 4

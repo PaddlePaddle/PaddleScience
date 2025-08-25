@@ -1,20 +1,24 @@
-import ppsci
-import hydra
-import paddle
-import numpy as np
 import random
-from omegaconf import DictConfig
+
+import hydra
+import numpy as np
+import paddle
 from loss import RelLpLoss
+from omegaconf import DictConfig
+
+import ppsci
+
 
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     paddle.seed(seed)
 
+
 def train(cfg: DictConfig):
-    
+
     set_seed(cfg.seed)
-    device = 'gpu:0'
+    device = "gpu:0"
     paddle.set_device(device)
 
     model = ppsci.arch.LatentNO(
@@ -28,16 +32,16 @@ def train(cfg: DictConfig):
         out_dim=cfg.MODEL.out_dim,
     )
     train_dataset_cfg = {
-            "name": "LatentNODataset",
-            "data_name": cfg.data_name,
-            "data_mode": "train",
-            "data_normalize": cfg.data_normalize,
-            "data_concat": cfg.data_concat,
-            "input_keys": ("x", "y1"),
-            "label_keys": ("y2",),
-            "weight_dict": None,  
-            "transform_fn": None,  
-        }
+        "name": "LatentNODataset",
+        "data_name": cfg.data_name,
+        "data_mode": "train",
+        "data_normalize": cfg.data_normalize,
+        "data_concat": cfg.data_concat,
+        "input_keys": ("x", "y1"),
+        "label_keys": ("y2",),
+        "weight_dict": None,
+        "transform_fn": None,
+    }
 
     train_dataloader_cfg = {
         "dataset": {
@@ -48,8 +52,8 @@ def train(cfg: DictConfig):
             "data_concat": cfg.data_concat,
             "input_keys": ("x", "y1"),
             "label_keys": ("y2",),
-            "weight_dict": None,  
-            "transform_fn": None,  
+            "weight_dict": None,
+            "transform_fn": None,
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": True},
         "batch_size": cfg.TRAIN.train_batch_size,
@@ -73,18 +77,22 @@ def train(cfg: DictConfig):
         "num_workers": cfg.get("num_workers", 0),
     }
     train_ds = ppsci.data.dataset.build_dataset(train_dataset_cfg)
-    normalizer = train_ds.normalizer
-    
+    if cfg.data_normalize:
+        normalizer = train_ds.normalizer
+    else:
+        normalizer = None
+
     iters_per_epoch = cfg.get("iters_per_epoch", None)
     if iters_per_epoch is None:
         from ppsci.data import build_dataloader
+
         tmp_loader = build_dataloader(train_ds, train_dataloader_cfg)
         iters_per_epoch = len(tmp_loader)
     cfg.TRAIN.iters_per_epoch = iters_per_epoch
-    
-    train_loss_fn = RelLpLoss(p=2, key="y2",normalizer=None)
-    val_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer) 
-    
+
+    train_loss_fn = RelLpLoss(p=2, key="y2", normalizer=None)
+    val_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
+
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         train_loss_fn,
@@ -142,13 +150,23 @@ def train(cfg: DictConfig):
 
     solver.eval()
 
+
 def evaluate(cfg: DictConfig):
     set_seed(cfg.seed)
-    device = 'gpu:0'
+    device = "gpu:0"
     paddle.set_device(device)
-    train_ds = ppsci.data.dataset.LatentNODataset(cfg.data_name, "train", cfg.data_normalize, cfg.data_concat, input_keys=("x", "y1"),
-            label_keys=("y2",),)
-    normalizer = train_ds.normalizer
+    train_ds = ppsci.data.dataset.LatentNODataset(
+        cfg.data_name,
+        "train",
+        cfg.data_normalize,
+        cfg.data_concat,
+        input_keys=("x", "y1"),
+        label_keys=("y2",),
+    )
+    if cfg.data_normalize:
+        normalizer = train_ds.normalizer
+    else:
+        normalizer = None
 
     eval_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
     model = ppsci.arch.LatentNO(
@@ -161,11 +179,11 @@ def evaluate(cfg: DictConfig):
         branch_dim=cfg.MODEL.branch_dim,
         out_dim=cfg.MODEL.out_dim,
     )
-    
+
     pretrained_model_path = "./output2/checkpoints/latest.pdparams"
     model_state = paddle.load(pretrained_model_path)
     model.set_state_dict(model_state)
-    
+
     eval_dataloader_cfg = {
         "dataset": {
             "name": "LatentNODataset",
@@ -182,9 +200,9 @@ def evaluate(cfg: DictConfig):
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
-    
+
     metric_dict = {"L2Rel": RelLpLoss(p=2, key="y2", normalizer=normalizer)}
-    
+
     validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
         eval_loss_fn,
@@ -192,26 +210,30 @@ def evaluate(cfg: DictConfig):
         metric=metric_dict,
         name="Evaluation",
     )
-    
+
     solver = ppsci.solver.Solver(
         model=model,
         validator={"eval": validator},
         output_dir=cfg.get("output_dir", "./outputs"),
         seed=cfg.seed,
     )
-    
+
     solver.eval()
 
-@hydra.main(version_base=None, config_path="./config", config_name="LatentNO-forward-Darcy.yaml")
+
+@hydra.main(
+    version_base=None, config_path="./config", config_name="LatentNO-forward-Darcy.yaml"
+)
 def main(cfg: DictConfig):
     set_seed(cfg.seed)
-    
+
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
-    
+
+
 if __name__ == "__main__":
     main()
