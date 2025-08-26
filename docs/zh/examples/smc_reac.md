@@ -9,6 +9,10 @@
 === "模型训练命令"
 
     ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
+    # windows
+    curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
     python smc_reac.py
     ```
 
