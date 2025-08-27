@@ -149,6 +149,16 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 生成模型| [图像生成中的梯度惩罚应用](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/wgan_gp)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
 </details>
 
+<details>
+<summary><b>化学科学</b></summary>
+
+| 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
+|-----|---------|-----|---------|----|---------|---------|
+| 产率预测 | [Suzuki-Miyaura 交叉偶联反应产率预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/smc_reac/)| 数据驱动 | MLP | 监督学习 |[data_set.xlsx](https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx)| [Paper](https://github.com/igul222/improved_wgan_training) |
+| 分子图生成 | [MoFlow](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/moflow/)| 数据驱动 | WGAN GP | 监督学习 |[QM9数据集和ZINC数据集](https://aistudio.baidu.com/datasetdetail/282687)| [Paper](https://arxiv.org/abs/2006.10137v1) |
+| 分子特性预测 | [IFM-MLP](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ifm/)| 数据驱动 | MLP | 监督学习 |[IFM](https://github.com/junxia97/IFM)| [Paper](https://openreview.net/pdf?id=NLFqlDeuzt) |
+</details>
+
 ## 🕘最近更新
 
 <details>
