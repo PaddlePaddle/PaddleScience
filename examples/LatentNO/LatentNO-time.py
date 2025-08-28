@@ -1,18 +1,22 @@
-import ppsci
-import hydra
-import paddle
-import numpy as np
 import random
+
+import hydra
+import numpy as np
+import paddle
 from omegaconf import DictConfig
 from utils import RelLpLoss_time
+
+import ppsci
+
 
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     paddle.seed(seed)
 
+
 def train(cfg: DictConfig):
-    
+
     set_seed(cfg.seed)
 
     model = ppsci.arch.LatentNO_time(
@@ -29,23 +33,23 @@ def train(cfg: DictConfig):
         time_unroll=True,
     )
     train_dataset_cfg = {
-            "name": "LatentNODataset_time",
-            "data_name": cfg.data_name,
-            "data_mode": "train",
-            "data_normalize": cfg.data_normalize,
-            "data_concat": cfg.data_concat,
-            "input_keys": ("x", "y1", "y2"),
-            "label_keys": ("y2",),
-            "weight_dict": None,  
-            "transform_fn": None,  
-        }
+        "name": "LatentNODataset_time",
+        "data_name": cfg.data_name,
+        "data_mode": "train",
+        "data_normalize": cfg.data_normalize,
+        "data_concat": cfg.data_concat,
+        "input_keys": ("x", "y1", "y2"),
+        "label_keys": ("y2",),
+        "weight_dict": None,
+        "transform_fn": None,
+    }
     train_ds = ppsci.data.dataset.build_dataset(train_dataset_cfg)
 
     if cfg.data_normalize:
         normalizer = train_ds.normalizer
     else:
         normalizer = None
-        
+
     train_dataloader_cfg = {
         "dataset": {
             "name": "LatentNODataset_time",
@@ -55,8 +59,8 @@ def train(cfg: DictConfig):
             "data_concat": cfg.data_concat,
             "input_keys": ("x", "y1", "y2"),
             "label_keys": ("y2",),
-            "weight_dict": None,  
-            "transform_fn": None,  
+            "weight_dict": None,
+            "transform_fn": None,
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": True},
         "batch_size": cfg.TRAIN.train_batch_size,
@@ -79,17 +83,22 @@ def train(cfg: DictConfig):
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
-    
+
     iters_per_epoch = cfg.get("iters_per_epoch", None)
     if iters_per_epoch is None:
         from ppsci.data import build_dataloader
+
         tmp_loader = build_dataloader(train_ds, train_dataloader_cfg)
         iters_per_epoch = len(tmp_loader)
     cfg.TRAIN.iters_per_epoch = iters_per_epoch
-    
-    train_loss_fn = RelLpLoss_time(p=2, key="y2",normalizer=None,use_full_sequence=False)
-    val_loss_fn = RelLpLoss_time(p=2, key="y2", normalizer=normalizer,use_full_sequence=True) 
-    
+
+    train_loss_fn = RelLpLoss_time(
+        p=2, key="y2", normalizer=None, use_full_sequence=False
+    )
+    val_loss_fn = RelLpLoss_time(
+        p=2, key="y2", normalizer=normalizer, use_full_sequence=True
+    )
+
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         train_loss_fn,
@@ -112,7 +121,7 @@ def train(cfg: DictConfig):
         end_learning_rate=cfg.lr / cfg.div_factor / cfg.final_div_factor,
         phase_pct=cfg.pct_start,
     )()
-    
+
     optimizer = ppsci.optimizer.AdamW(
         lr_scheduler,
         weight_decay=cfg.weight_decay,
@@ -121,7 +130,11 @@ def train(cfg: DictConfig):
         beta2=cfg.beta1,
     )(model)
 
-    metric_dict = {"L2Rel": RelLpLoss_time(p=2, key="y2", normalizer=normalizer,use_full_sequence=True)}
+    metric_dict = {
+        "L2Rel": RelLpLoss_time(
+            p=2, key="y2", normalizer=normalizer, use_full_sequence=True
+        )
+    }
 
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -146,19 +159,28 @@ def train(cfg: DictConfig):
     solver.train()
 
     solver.eval()
-    
+
+
 def evaluate(cfg: DictConfig):
 
     set_seed(cfg.seed)
-    
-    train_ds = ppsci.data.dataset.LatentNODataset_time(cfg.data_name, "train", cfg.data_normalize, cfg.data_concat, input_keys=("x", "y1", "y2"),
-            label_keys=("y2",),)
+
+    train_ds = ppsci.data.dataset.LatentNODataset_time(
+        cfg.data_name,
+        "train",
+        cfg.data_normalize,
+        cfg.data_concat,
+        input_keys=("x", "y1", "y2"),
+        label_keys=("y2",),
+    )
     if cfg.data_normalize:
         normalizer = train_ds.normalizer
     else:
         normalizer = None
 
-    eval_loss_fn = RelLpLoss_time(p=2, key="y2", normalizer=normalizer,use_full_sequence=True)
+    eval_loss_fn = RelLpLoss_time(
+        p=2, key="y2", normalizer=normalizer, use_full_sequence=True
+    )
 
     model = ppsci.arch.LatentNO_time(
         n_block=cfg.MODEL.n_block,
@@ -173,7 +195,7 @@ def evaluate(cfg: DictConfig):
         step=cfg.MODEL.step,
         time_unroll=True,
     )
-    
+
     eval_dataloader_cfg = {
         "dataset": {
             "name": "LatentNODataset_time",
@@ -190,9 +212,13 @@ def evaluate(cfg: DictConfig):
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
-    
-    metric_dict = {"L2Rel": RelLpLoss_time(p=2, key="y2", normalizer=normalizer,use_full_sequence=True)}
-    
+
+    metric_dict = {
+        "L2Rel": RelLpLoss_time(
+            p=2, key="y2", normalizer=normalizer, use_full_sequence=True
+        )
+    }
+
     validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
         eval_loss_fn,
@@ -200,26 +226,30 @@ def evaluate(cfg: DictConfig):
         metric=metric_dict,
         name="Evaluation",
     )
-    
+
     solver = ppsci.solver.Solver(
         model=model,
         validator={"eval": validator},
         output_dir=cfg.get("output_dir", "./outputs"),
         seed=cfg.seed,
     )
-    
+
     solver.eval()
 
-@hydra.main(version_base=None, config_path="./config", config_name="LatentNO-forward-NS2d.yaml")
+
+@hydra.main(
+    version_base=None, config_path="./config", config_name="LatentNO-forward-NS2d.yaml"
+)
 def main(cfg: DictConfig):
     set_seed(cfg.seed)
-    
+
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
-    
+
+
 if __name__ == "__main__":
     main()

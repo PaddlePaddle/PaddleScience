@@ -85,4 +85,3 @@ TRAIN:
   self.start_eval_epoch : 1
 EVAL:
   eval_batch_size : 4
-

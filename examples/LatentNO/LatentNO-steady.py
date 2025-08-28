@@ -1,9 +1,11 @@
 import random
+
 import hydra
 import numpy as np
 import paddle
-from utils import RelLpLoss
 from omegaconf import DictConfig
+from utils import RelLpLoss
+
 import ppsci
 
 
@@ -61,7 +63,7 @@ def train(cfg: DictConfig):
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
-    
+
     train_dataset_cfg = {
         "name": "LatentNODataset",
         "data_name": cfg.data_name,
@@ -83,6 +85,7 @@ def train(cfg: DictConfig):
     iters_per_epoch = cfg.get("iters_per_epoch", None)
     if iters_per_epoch is None:
         from ppsci.data import build_dataloader
+
         tmp_loader = build_dataloader(train_ds, train_dataloader_cfg)
         iters_per_epoch = len(tmp_loader)
     cfg.TRAIN.iters_per_epoch = iters_per_epoch
@@ -149,7 +152,7 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    
+
     set_seed(cfg.seed)
 
     train_ds = ppsci.data.dataset.LatentNODataset(
