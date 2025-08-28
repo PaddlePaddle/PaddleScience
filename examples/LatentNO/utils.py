@@ -76,7 +76,7 @@ class RelLpLoss_time(base.Metric):
         self.key = key
         self.normalizer = normalizer
         self.eps = eps
-        self.use_full_sequence = use_full_sequence  # True: 使用完整序列损失（与日志一致）
+        self.use_full_sequence = use_full_sequence  # True: use full sequence loss; False: accumulate step-wise losses
 
     def forward(
         self,
@@ -88,11 +88,10 @@ class RelLpLoss_time(base.Metric):
 
         for label_key in label_dict:
             if f"{self.key}_steps" in output_dict and not self.use_full_sequence:
-                # 方式1：累积各时间步损失（与反向传播损失一致）
+                # Method 1: Accumulate losses at each timestep (matches backpropagation loss)
                 pred_stack = output_dict[f"{self.key}_steps"]
                 target_full = label_dict[label_key]
 
-                B, N = target_full.shape[0], target_full.shape[1]
                 step = pred_stack.shape[2]
                 num_steps = pred_stack.shape[3]
 
@@ -108,7 +107,7 @@ class RelLpLoss_time(base.Metric):
                         pred_s = self.normalizer.apply_y2(pred_s, device, inverse=True)
                         tgt_s = self.normalizer.apply_y2(tgt_s, device, inverse=True)
 
-                    # 单个时间步损失
+                    # Compute Lp error for current timestep
                     error = paddle.sum(
                         paddle.abs(pred_s - tgt_s) ** self.p,
                         tuple(range(1, len(pred_s.shape))),
@@ -122,7 +121,7 @@ class RelLpLoss_time(base.Metric):
                 losses[label_key] = total_loss
 
             else:
-                # 方式2：使用完整序列损失（与原始日志显示一致）
+                # Method 2: Use full sequence loss
                 pred_full = (
                     output_dict[self.key]
                     if self.key in output_dict
