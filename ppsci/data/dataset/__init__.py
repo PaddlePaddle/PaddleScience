@@ -40,8 +40,9 @@ from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
 from ppsci.data.dataset.ifm_moe_dataset import IFMMoeDataset
-from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.latent_no_dataset import LatentNODataset
+from ppsci.data.dataset.latent_no_dataset import LatentNODataset_time
+from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
 from ppsci.data.dataset.mrms_dataset import MRMSDataset
@@ -104,7 +105,8 @@ __all__ = [
     "STAFNetDataset",
     "TMTDataset",
     "register_to_dataset",
-    "LatentNODataset"
+    "LatentNODataset",
+    "LatentNODataset_time",
 ]
 
 
