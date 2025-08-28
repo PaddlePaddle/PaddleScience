@@ -1,11 +1,9 @@
 import random
-
 import hydra
 import numpy as np
 import paddle
-from loss import RelLpLoss
+from utils import RelLpLoss
 from omegaconf import DictConfig
-
 import ppsci
 
 
@@ -18,8 +16,6 @@ def set_seed(seed):
 def train(cfg: DictConfig):
 
     set_seed(cfg.seed)
-    device = "gpu:0"
-    paddle.set_device(device)
 
     model = ppsci.arch.LatentNO(
         n_block=cfg.MODEL.n_block,
@@ -31,17 +27,6 @@ def train(cfg: DictConfig):
         branch_dim=cfg.MODEL.branch_dim,
         out_dim=cfg.MODEL.out_dim,
     )
-    train_dataset_cfg = {
-        "name": "LatentNODataset",
-        "data_name": cfg.data_name,
-        "data_mode": "train",
-        "data_normalize": cfg.data_normalize,
-        "data_concat": cfg.data_concat,
-        "input_keys": ("x", "y1"),
-        "label_keys": ("y2",),
-        "weight_dict": None,
-        "transform_fn": None,
-    }
 
     train_dataloader_cfg = {
         "dataset": {
@@ -76,6 +61,19 @@ def train(cfg: DictConfig):
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
+    
+    train_dataset_cfg = {
+        "name": "LatentNODataset",
+        "data_name": cfg.data_name,
+        "data_mode": "train",
+        "data_normalize": cfg.data_normalize,
+        "data_concat": cfg.data_concat,
+        "input_keys": ("x", "y1"),
+        "label_keys": ("y2",),
+        "weight_dict": None,
+        "transform_fn": None,
+    }
+
     train_ds = ppsci.data.dataset.build_dataset(train_dataset_cfg)
     if cfg.data_normalize:
         normalizer = train_ds.normalizer
@@ -85,7 +83,6 @@ def train(cfg: DictConfig):
     iters_per_epoch = cfg.get("iters_per_epoch", None)
     if iters_per_epoch is None:
         from ppsci.data import build_dataloader
-
         tmp_loader = build_dataloader(train_ds, train_dataloader_cfg)
         iters_per_epoch = len(tmp_loader)
     cfg.TRAIN.iters_per_epoch = iters_per_epoch
@@ -152,9 +149,9 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    
     set_seed(cfg.seed)
-    device = "gpu:0"
-    paddle.set_device(device)
+
     train_ds = ppsci.data.dataset.LatentNODataset(
         cfg.data_name,
         "train",
