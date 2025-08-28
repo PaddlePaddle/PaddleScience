@@ -20,13 +20,13 @@ try:
     from rdkit import Chem
     from rdkit import DataStructs
     from rdkit.Chem import AllChem
-    from tap import Tap
 except ModuleNotFoundError:
     pass
 import logging
 import math
 from itertools import zip_longest
 
+from tap import Tap
 from typing_extensions import Literal
 
 
