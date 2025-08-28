@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import numbers
 from collections.abc import Mapping
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import List
@@ -26,6 +29,10 @@ import paddle
 
 from ppsci.data.process import transform
 from ppsci.data.process.batch_transform.preprocess import FunctionalBatchTransform
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 try:
     import pgl
@@ -104,7 +111,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
     )
 
 
-def build_transforms(cfg):
+def build_transforms(cfg: DictConfig):
     if not cfg:
         return transform.Compose([])
     cfg = copy.deepcopy(cfg)

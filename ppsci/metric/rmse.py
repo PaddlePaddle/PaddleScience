@@ -120,6 +120,11 @@ class LatitudeWeightedRMSE(base.Metric):
         self.unlog = unlog
         self.scale = scale
         self.weight = self.get_latitude_weight(num_lat)
+        if paddle.device.is_compiled_with_xpu():
+            # expm1 is not supported in xpu, so we use a custom implementation to avoid fallback to cpu
+            self.expm1 = lambda x: paddle.exp(x) - 1
+        else:
+            self.expm1 = paddle.expm1
 
     def get_latitude_weight(self, num_lat: int = 720):
         lat_t = paddle.linspace(start=0, stop=1, num=num_lat)
@@ -129,7 +134,7 @@ class LatitudeWeightedRMSE(base.Metric):
         return weight
 
     def scale_expm1(self, x: paddle.Tensor):
-        return self.scale * paddle.expm1(x)
+        return self.scale * self.expm1(x)
 
     @paddle.no_grad()
     def forward(self, output_dict, label_dict) -> Dict[str, "paddle.Tensor"]:
