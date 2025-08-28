@@ -26,7 +26,15 @@ import logging
 import math
 from itertools import zip_longest
 
-from tap import Tap
+try:
+    from tap import Tap
+except ModuleNotFoundError:
+
+    class Tap:
+        def __init__(self, *args, **kwargs):
+            pass
+
+
 from typing_extensions import Literal
 
 
