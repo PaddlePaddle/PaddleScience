@@ -23,24 +23,6 @@ hydra:
     dir: ${hydra.run.dir}
     subdir: ./
 
-job_logging:
-  root:
-    level: INFO
-    handlers: [file, console]
-  handlers:
-    console:
-      class: logging.StreamHandler
-      formatter: simple
-      stream: ext://sys.stdout
-    file:
-      class: logging.FileHandler
-      formatter: simple
-      filename: ${hydra.run.dir}/train.log
-      mode: a
-  formatters:
-    simple:
-      format: '[%(asctime)s][%(levelname)s] - %(message)s'
-
 output_dir: ./output/${data_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}/
 # general setting
 mode : "train" # train/eval
@@ -81,5 +63,6 @@ TRAIN:
   eval_during_train : True
   eval_freq : 1
   self.start_eval_epoch : 1
+
 EVAL:
   eval_batch_size : 4
