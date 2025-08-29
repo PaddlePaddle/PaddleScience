@@ -3,7 +3,6 @@ from typing import Callable
 from typing import Optional
 from typing import Tuple
 
-import numpy as np
 import paddle
 
 from ppsci.arch import base
