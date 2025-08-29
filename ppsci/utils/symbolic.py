@@ -444,11 +444,12 @@ class ConstantNode(Node):
             or self.expr.is_Integer
             or self.expr.is_Boolean
             or self.expr.is_Rational
+            or isinstance(self.expr, sp.core.numbers.NumberSymbol)
         ):
             self.expr = float(self.expr)
         else:
             raise TypeError(
-                "expr({expr}) should be Float/Integer/Boolean/Rational, "
+                f"expr({expr}) should be Float/Integer/Boolean/Rational, "
                 f"but got {type(self.expr)}"
             )
         self.expr = paddle.to_tensor(self.expr)
@@ -638,7 +639,7 @@ def _fuse_derivative_nodes(
             function, e.g. [Derivative(u(x,y), x), Derivative(u(x,y), y)]
 
     Returns:
-        List[FusedDerivativeNode]: List of FusedDerivativeNode converting from mergable
+        List[FusedDerivativeNode]: List of FusedDerivativeNode converting from mergeable
             derivatives.
     """
 
@@ -880,7 +881,7 @@ def lambdify(
     while fuse_derivative:
         candidate_pos: List[Tuple[int, int]] = []  # [(group_id, node_id), ...]
 
-        # use 4-nested for-loop to find all potential mergable derivative nodes
+        # use 4-nested for-loop to find all potential mergeable derivative nodes
         for i in range(len(callable_nodes_group)):
             for j in range(len(callable_nodes_group[i])):
                 # skip non-derivative node
@@ -939,7 +940,7 @@ def lambdify(
                 assert isinstance(callable_nodes_group[gid][nid], DerivativeNode)
                 callable_nodes_group[gid][nid].merged = True
 
-            # replace first mergable node with fused node sequence(packed in list)
+            # replace first mergeable node with fused node sequence(packed in list)
             # then mask the rest merged node to None(except [gid0, nid0])
             for i, (gid, nid) in enumerate(candidate_pos[1:]):
                 # keep the end node of each group to avoid generating empty callable

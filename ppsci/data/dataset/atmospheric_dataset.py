@@ -1456,7 +1456,7 @@ def get_day_progress(
         seconds_since_epoch: 1D array of times in seconds since the 'epoch' (the point at which UNIX time starts).
         longitude: 1D array of longitudes at which day progress is computed.
     Returns:
-        2D array of day progress values normalized to be in the [0, 1) inverval for each time point at each longitude.
+        2D array of day progress values normalized to be in the [0, 1) interval for each time point at each longitude.
     """
     # [0.0, 1.0) Interval.
     day_progress_greenwich = np.mod(seconds_since_epoch, SEC_PER_DAY) / SEC_PER_DAY

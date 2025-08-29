@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
 from ppsci.visualize.vtu import save_vtu_to_mesh
 
@@ -32,6 +33,9 @@ from ppsci.visualize.vtu import save_vtp_from_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_1d_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_3d_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_weather_from_dict  # isort:skip
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 
 __all__ = [
@@ -53,11 +57,11 @@ __all__ = [
 ]
 
 
-def build_visualizer(cfg):
+def build_visualizer(cfg: DictConfig):
     """Build visualizer(s).
 
     Args:
-        cfg (List[DictConfig]): Visualizer(s) config list.
+        cfg (DictConfig): Visualizer(s) config list.
         geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
         equation_dict (Dct[str, Equation]): Equation(s) in dict.
 

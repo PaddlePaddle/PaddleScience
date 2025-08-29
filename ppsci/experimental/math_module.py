@@ -120,7 +120,7 @@ def gaussian_integrate(
         fn (Callable[[Any], paddle.Tensor]): Function to be integrated.
         dim (int): Dimensionality of the integrand.
         N (int): Number of dicretization points.
-        integration_domains (List[List[float]]): Intergration domains.
+        integration_domains (List[List[float]]): Integration domains.
         dtype (Literal["float32", "float64"], optional): Dtype used during computation. Defaults to "float64".
 
     Returns:

@@ -74,20 +74,6 @@ class Sin(nn.Layer):
         return paddle.sin(x)
 
 
-class Silu(nn.Layer):
-    """
-    FIXME: This activation function is a workaround for the potential occurrence of NaNs
-    during the computation of the native SiLU function via using x*sigmoid(x) instead of
-    silu(x)
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x * F.sigmoid(x)
-
-
 class Siren(nn.Layer):
     """Implicit Neural Representations with Periodic Activation Functions.
     paper link: https://arxiv.org/abs/2006.09661
@@ -143,7 +129,7 @@ act_func_dict = {
     "gelu": nn.GELU(),
     "leaky_relu": nn.LeakyReLU(),
     "sigmoid": nn.Sigmoid(),
-    "silu": Silu(),
+    "silu": nn.Silu(),
     "sin": Sin(),
     "cos": Cos(),
     "swish": Swish,

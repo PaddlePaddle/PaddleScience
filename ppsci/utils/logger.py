@@ -43,7 +43,7 @@ _COLORLOG_CONFIG = {
     "DEBUG": "green",
     "WARNING": "yellow",
     "ERROR": "red",
-    "MESSAGE": "cyan",
+    "MESSAGE": "bold_cyan",
 }
 
 __all__ = [
@@ -153,48 +153,48 @@ def ensure_logger(log_func: Callable) -> Callable:
     """
 
     @functools.wraps(log_func)
-    def wrapped_log_func(msg, *args):
+    def wrapped_log_func(msg, *args, **kwargs):
         if _logger is None:
             init_logger()
             _logger.warning(
                 "Logger has already been automatically initialized as `log_file` is "
                 "set to None by default, information will only be printed to terminal "
-                "without writting to any file."
+                "without writing to any file."
             )
 
-        log_func(msg, *args)
+        log_func(msg, *args, **kwargs)
 
     return wrapped_log_func
 
 
 @ensure_logger
 @misc.run_at_rank0
-def info(msg, *args):
-    _logger.info(msg, *args)
+def info(msg, *args, **kwargs):
+    _logger.info(msg, *args, **kwargs)
 
 
 @ensure_logger
 @misc.run_at_rank0
-def message(msg, *args):
-    _logger.log(_MESSAGE_LEVEL, msg, *args)
+def message(msg, *args, **kwargs):
+    _logger.log(_MESSAGE_LEVEL, msg, *args, **kwargs)
 
 
 @ensure_logger
 @misc.run_at_rank0
-def debug(msg, *args):
-    _logger.debug(msg, *args)
+def debug(msg, *args, **kwargs):
+    _logger.debug(msg, *args, **kwargs)
 
 
 @ensure_logger
 @misc.run_at_rank0
-def warning(msg, *args):
-    _logger.warning(msg, *args)
+def warning(msg, *args, **kwargs):
+    _logger.warning(msg, *args, **kwargs)
 
 
 @ensure_logger
 @misc.run_at_rank0
-def error(msg, *args):
-    _logger.error(msg, *args)
+def error(msg, *args, **kwargs):
+    _logger.error(msg, *args, **kwargs)
 
 
 def scalar(

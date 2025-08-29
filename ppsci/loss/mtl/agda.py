@@ -68,7 +68,7 @@ class AGDA(base.LossAggregator):
     def __call__(self, losses, step: int = 0) -> "AGDA":
         if len(losses) != 2:
             raise ValueError(
-                f"Number of losses(tasks) for AGDA shoule be 2, but got {len(losses)}"
+                f"Number of losses(tasks) for AGDA should be 2, but got {len(losses)}"
             )
         return super().__call__(losses, step)
 

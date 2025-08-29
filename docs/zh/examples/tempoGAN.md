@@ -146,7 +146,7 @@ examples/tempoGAN/conf/tempogan.yaml:27:37
 --8<--
 ```
 
-注意到其中包含 3 个 bool 类型的变量 `use_amp`、`use_spatialdisc` 和 `use_tempodisc`，它们分别表示是否使用混合精度训练(AMP)、是否使用 Discriminator 和是否使用 Discriminator_tempo，当 `use_spatialdisc` 和 `use_tempodisc` 都被设置为 `False` 时，本问题的网络结构将会变为一个单纯的 Genrator 模型，不再是 GAN 网络了。
+注意到其中包含 3 个 bool 类型的变量 `use_amp`、`use_spatialdisc` 和 `use_tempodisc`，它们分别表示是否使用混合精度训练(AMP)、是否使用 Discriminator 和是否使用 Discriminator_tempo，当 `use_spatialdisc` 和 `use_tempodisc` 都被设置为 `False` 时，本问题的网络结构将会变为一个单纯的 Generator 模型，不再是 GAN 网络了。
 
 同时需要指定训练轮数和学习率等超参数，注意由于 GAN 网络训练流程与一般单个模型的网络不同，`EPOCHS` 的设置也有所不同。
 

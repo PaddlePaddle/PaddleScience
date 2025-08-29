@@ -56,9 +56,15 @@ class Biharmonic(base.PDE):
         u = self.create_function("u", invars)
 
         if isinstance(q, str):
-            q = self.create_function("q", invars)
+            if q == "q":
+                q = self.create_function("q", invars)
+            else:
+                q = sympy.sympify(q)
         if isinstance(D, str):
-            D = self.create_function("D", invars)
+            if D == "D":
+                D = self.create_function("D", invars)
+            else:
+                D = sympy.sympify(D)
 
         self.dim = dim
         self.q = q

@@ -2,7 +2,7 @@
 
 TIPC功能测试的主程序为benchmark_train.sh，可以测试基于Python的模型训练性能测试功能，包括裁剪、量化、蒸馏。
 
-## 1. Docker enviroment (运行环境)
+## 1. Docker environment (运行环境)
 
 - docker image: registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda11.2-cudnn8-gcc82
 - paddle = 0.0.0

@@ -16,5 +16,7 @@
         - kaiming_normal_
         - linear_init_
         - conv_init_
+        - glorot_normal_
+        - lecun_normal_
       show_root_heading: True
       heading_level: 3

@@ -21,6 +21,7 @@
         - FNO1d
         - Generator
         - HEDeepONets
+        - KAN
         - LorenzEmbedding
         - MLP
         - ModelList
@@ -28,6 +29,7 @@
         - NowcastNet
         - SFNONet
         - SPINN
+        - STAFNet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet

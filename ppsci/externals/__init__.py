@@ -7,6 +7,8 @@ EXTERNAL_PACKAGES_LIST = [
     "neuraloperator",
     "open3d",
     "paddle_harmonics",
+    "paddle_scatter",
+    "paddle_sparse",
     "tensorly",
     "warp",
 ]

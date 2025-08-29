@@ -428,9 +428,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'visualdl' with `pip install visualdl` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
+            self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -448,6 +446,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
+            # FIXME: wandb may hanging here in distributed env
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.wandb_writer = wandb.init(**self.wandb_config)
@@ -463,11 +462,11 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'tensorboardX' with `pip install tensorboardX` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(self.output_dir, "tensorboard")
-                    )
+            # NOTE: To prevent program hangs, initialize the tensorboardX writer across all processes,
+            # but it will only be used in rank 0
+            self.tbd_writer = tensorboardX.SummaryWriter(
+                osp.join(self.output_dir, "tensorboard")
+            )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
                 f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
@@ -477,16 +476,15 @@ class Solver:
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
-            paddle_version = paddle.__version__
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
-                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    f"Detected paddlepaddle version is '{paddle.__version__}', "
                     "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
-        else:
-            paddle_version = f"develop({paddle.version.commit[:7]})"
 
-        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(
+            f"Using paddlepaddle {paddle.version.full_version}({paddle.version.commit[:7]}) on device {self.device}"
+        )
 
         self.forward_helper = expression.ExpressionSolver()
 
@@ -552,6 +550,12 @@ class Solver:
         self.nvtx_flag: bool = os.getenv("NVTX", None) is not None
         self.forward_helper.nvtx_flag = self.nvtx_flag
 
+        # for callbacks
+        self.callbacks_on_epoch_begin: List[Callable[[Solver]]] = []
+        self.callbacks_on_epoch_end: List[Callable[[Solver]]] = []
+        self.callbacks_on_iter_begin: List[Callable[[Solver]]] = []
+        self.callbacks_on_iter_end: List[Callable[[Solver]]] = []
+
     def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
@@ -560,16 +564,21 @@ class Solver:
         start_epoch = self.best_metric["epoch"] + 1
 
         if self.use_tbd and isinstance(self.cfg, DictConfig):
-            self.tbd_writer.add_text(
-                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
-            )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.tbd_writer.add_text(
+                        "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                    )
 
         if self.nvtx_flag:
             core.nvprof_start()
             core.nvprof_enable_record_event()
 
         for epoch_id in range(start_epoch, self.epochs + 1):
+            self._invoke_callbacks_on_epoch_begin()  # [optional]
             self.train_epoch_func(self, epoch_id, self.log_freq)
+            self._invoke_callbacks_on_epoch_end()  # [optional]
+
             self.train_output_info.clear()
 
             # update average model if exist
@@ -948,8 +957,6 @@ class Solver:
 
         if with_onnx:
             # TODO: support pir + onnx
-            if paddle.framework.use_pir_api():
-                raise ValueError("paddle2onnx does not support PIR mode yet.")
             if not importlib.util.find_spec("paddle2onnx"):
                 raise ModuleNotFoundError(
                     "Please install paddle2onnx with `pip install paddle2onnx`"
@@ -957,11 +964,13 @@ class Solver:
                 )
             import paddle2onnx
 
-            DEFAULT_OPSET_VERSION = 13
+            DEFAULT_OPSET_VERSION = 19
 
             paddle2onnx.export(
-                model_file=export_path + ".pdmodel",
-                params_file=export_path + ".pdiparams",
+                model_filename=export_path + ".json"
+                if paddle.framework.use_pir_api()
+                else ".pdmodel",
+                params_filename=export_path + ".pdiparams",
                 save_file=export_path + ".onnx",
                 opset_version=DEFAULT_OPSET_VERSION,
                 enable_onnx_checker=True,
@@ -1124,3 +1133,87 @@ class Solver:
             self.pretrained_model_path = cfg.EVAL.pretrained_model_path
         elif cfg.mode in ["export", "infer"]:
             self.pretrained_model_path = cfg.INFER.pretrained_model_path
+
+    def register_callback_on_epoch_begin(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the beginning of each training epoch.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the start of every epoch.
+        """
+        self.callbacks_on_epoch_begin.append(callback_fn)
+
+    def register_callback_on_epoch_end(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the end of each training epoch.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the end of every epoch.
+        """
+        self.callbacks_on_epoch_end.append(callback_fn)
+
+    def register_callback_on_iter_begin(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the beginning of each training iteration.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the start of every iteration.
+        """
+        self.callbacks_on_iter_begin.append(callback_fn)
+
+    def register_callback_on_iter_end(
+        self: Solver, callback_fn: Callable[[Solver]]
+    ) -> None:
+        """
+        Registers a callback function to be executed at the end of each training iteration.
+
+        Args:
+            callback_fn : Callable[[Solver]]
+                A function that takes a Solver instance as an argument. This function
+                will be called at the end of every iteration.
+
+        Returns:
+        -------
+        None
+        """
+        self.callbacks_on_iter_end.append(callback_fn)
+
+    def _invoke_callbacks_on_epoch_begin(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the beginning of an epoch.
+        """
+        for callback in self.callbacks_on_epoch_begin:
+            callback(self)
+
+    def _invoke_callbacks_on_epoch_end(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the end of an epoch.
+        """
+        for callback in self.callbacks_on_epoch_end:
+            callback(self)
+
+    def _invoke_callbacks_on_iter_begin(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the beginning of an iteration.
+        """
+        for callback in self.callbacks_on_iter_begin:
+            callback(self)
+
+    def _invoke_callbacks_on_iter_end(self: Solver) -> None:
+        """
+        Invokes all registered callbacks at the end of an iteration.
+        """
+        for callback in self.callbacks_on_iter_end:
+            callback(self)

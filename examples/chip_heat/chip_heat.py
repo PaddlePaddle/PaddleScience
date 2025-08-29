@@ -388,8 +388,9 @@ def train(cfg: DictConfig):
         top_sup_constraint.name: top_sup_constraint,
     }
 
+    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=1.0)
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate, grad_clip=clip)(model)
 
     # set validator
     top_down_label = {"chip": np.zeros([cfg.NL, 1], dtype="float32")}

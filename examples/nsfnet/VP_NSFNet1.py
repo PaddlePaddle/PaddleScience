@@ -141,7 +141,7 @@ def train(cfg: DictConfig):
         name="Sup",
     )
 
-    # set equation constarint s.t. ||F(u)||
+    # set equation constraint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
             nu=1.0 / Re, rho=1.0, dim=2, time=False
@@ -300,7 +300,7 @@ def evaluate(cfg: DictConfig):
 
     geom = ppsci.geometry.PointCloud({"x": x_train, "y": y_train}, ("x", "y"))
 
-    # set equation constarint s.t. ||F(u)||
+    # set equation constraint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
             nu=1.0 / Re, rho=1.0, dim=2, time=False

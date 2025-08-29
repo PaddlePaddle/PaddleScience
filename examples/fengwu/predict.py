@@ -32,7 +32,7 @@ class FengWuPredictor(base.Predictor):
         cfg (DictConfig): Running configuration.
     """
 
-    # 14 day with time-interval of siz hours
+    # 14 day with time-interval of six hours
     PREDICT_TIMESTAMP = int(14 * 24 / 6)
     # Where 69 represents 69 atmospheric features, The first four variables are surface variables in the order of ['u10', 'v10', 't2m', 'msl'],
     # followed by non-surface variables in the order of ['z', 'q', 'u', 'v', 't']. Each data has 13 levels, which are ordered as

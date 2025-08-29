@@ -14,10 +14,13 @@
 
 import importlib.util
 import inspect
+import os
 import sys
+import traceback
 from os import path as osp
 from typing import Any
 
+from hydra.core.hydra_config import HydraConfig
 from hydra.experimental.callback import Callback
 from omegaconf import DictConfig
 
@@ -86,7 +89,7 @@ class InitCallback(Callback):
         # fix random seed for reproducibility
         misc.set_random_seed(full_cfg.seed)
 
-        # initialze logger while creating output directory
+        # initialize logger while creating output directory
         logger.init_logger(
             "ppsci",
             osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
@@ -102,6 +105,28 @@ class InitCallback(Callback):
             if isinstance(full_cfg.device, str):
                 paddle.device.set_device(full_cfg.device)
 
+        try:
+            if "num" in HydraConfig.get().job:
+                jobs_id = HydraConfig.get().job.num
+            else:
+                jobs_id = None
+            if "n_jobs" in HydraConfig.get().launcher:
+                parallel_jobs_num = HydraConfig.get().launcher.n_jobs
+            else:
+                parallel_jobs_num = None
+
+            if jobs_id and parallel_jobs_num:
+                job_device_id = jobs_id % parallel_jobs_num
+                device_type = paddle.get_device().split(":")[0]
+                logger.message(
+                    f"Running job {jobs_id} on device {device_type}:{job_device_id}(logical device id)"
+                )
+                paddle.set_device(f"{device_type}:{job_device_id}")
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            sys.exit(RUNTIME_EXIT_CODE)
+
         # enable prim if specified
         if "prim" in full_cfg and bool(full_cfg.prim):
             # Mostly for compiler running with dy2st.
@@ -110,3 +135,62 @@ class InitCallback(Callback):
             core.set_prim_eager_enabled(True)
             core._set_prim_all_enabled(True)
             logger.message("Prim mode is enabled.")
+
+        # === Optionally log git info & dump uncommitted diff ===
+        if bool(full_cfg.get("trace", False)):
+            if not importlib.util.find_spec("git"):
+                logger.error(
+                    "[Code Trace] GitPython is required for trace=True.\n"
+                    "Please install it with: pip install GitPython"
+                )
+                sys.exit(RUNTIME_EXIT_CODE)
+
+            from git import InvalidGitRepositoryError
+            from git import Repo
+
+            try:
+                repo = Repo(".", search_parent_directories=True)
+                branch = repo.active_branch.name
+                commit = repo.head.commit
+                commit_hash = commit.hexsha
+                commit_time = commit.committed_datetime.isoformat()
+                is_dirty = repo.is_dirty()
+
+                logger.message("[Code Trace] Git Information:")
+                logger.message(f"  Branch : {branch}")
+                logger.message(f"  Commit : {commit_hash}")
+                logger.message(f"  Date   : {commit_time}")
+                logger.message(f"  Dirty  : {is_dirty}")
+
+                if is_dirty:
+                    trace_dir = osp.join(full_cfg.output_dir, "code_snapshot")
+                    os.makedirs(trace_dir, exist_ok=True)
+
+                    staged_diff = repo.git.diff("--cached")
+                    if len(staged_diff) > 0:
+                        staged_diff_path = osp.join(trace_dir, "staged.diff")
+                        with open(staged_diff_path, "w", encoding="utf-8") as f:
+                            f.write(staged_diff)
+                        logger.info(
+                            f"[Code Trace] Staged changes saved to: {staged_diff_path}"
+                        )
+                        logger.info(
+                            f"[Code Trace] To restore your code to this staged version, run: git apply {staged_diff_path}"
+                        )
+
+                    unstaged_diff = repo.git.diff()
+                    if len(unstaged_diff) > 0:
+                        unstaged_diff_path = osp.join(trace_dir, "unstaged.diff")
+                        with open(unstaged_diff_path, "w", encoding="utf-8") as f:
+                            f.write(unstaged_diff)
+                        logger.info(
+                            f"[Code Trace] Unstaged changes saved to: {unstaged_diff_path}"
+                        )
+                        logger.info(
+                            f"[Code Trace] To restore your code to this unstaged version, run: git apply {unstaged_diff_path}"
+                        )
+
+            except InvalidGitRepositoryError:
+                logger.warning("[Code Trace] Not a Git repository. Skipping.")
+            except Exception as e:
+                logger.warning(f"[Code Trace] Unexpected error: {e}")

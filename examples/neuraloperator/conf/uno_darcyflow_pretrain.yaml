@@ -14,7 +14,7 @@ hydra:
     dir: outputs_uno_pretrain
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working directory unchanged
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback

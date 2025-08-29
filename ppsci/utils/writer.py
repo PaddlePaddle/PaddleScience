@@ -49,7 +49,7 @@ def save_csv_file(
         alias_dict (Optional[Dict[str, str]], optional): Alias dict for keys,
             i.e. {dump_key: dict_key}. Defaults to None.
         use_header (bool, optional): Whether save csv with header. Defaults to True.
-        delimiter (str, optional): Delemiter for splitting different data field. Defaults to ",".
+        delimiter (str, optional): Delimiter for splitting different data field. Defaults to ",".
         encoding (str, optional): Encoding. Defaults to "utf-8".
 
     Examples:
@@ -95,6 +95,9 @@ def save_csv_file(
 
     assert len(header) == len(data_fields)
 
+    if len(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     data_fields = zip(*data_fields)  # transpose col data to row data
     with open(filename, "w", newline="", encoding=encoding) as file:
         writer = csv.writer(file, delimiter=delimiter)
@@ -130,7 +133,7 @@ def save_tecplot_file(
             the discrete grid size is 20 x 30, then num_y=30.
         alias_dict (Optional[Dict[str, str]], optional): Alias dict for keys,
             i.e. {dump_key: dict_key}. Defaults to None.
-        delimiter (str, optional): Delemiter for splitting different data field. Defaults to " ".
+        delimiter (str, optional): Delimiter for splitting different data field. Defaults to " ".
         encoding (str, optional): Encoding. Defaults to "utf-8".
         num_timestamps (int, optional): Number of timestamp over coord and value. Defaults to 1.
 
