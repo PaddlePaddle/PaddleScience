@@ -34,14 +34,12 @@ class RelLpLoss(base.Metric):
         for label_key in label_dict:
 
             pred_key = self.key if self.key in output_dict else label_key
-
             pred = output_dict[pred_key]
             target = label_dict[label_key]
 
             if self.normalizer is not None:
-                device = paddle.get_device()
-                pred = self.normalizer.apply_y2(pred, device, inverse=True)
-                target = self.normalizer.apply_y2(target, device, inverse=True)
+                pred = self.normalizer.apply_y2(pred, inverse=True)
+                target = self.normalizer.apply_y2(target, inverse=True)
 
             error = paddle.sum(
                 paddle.abs(pred - target) ** self.p,
@@ -53,7 +51,6 @@ class RelLpLoss(base.Metric):
 
             denom = target_norm.clip(min=self.eps)
             rloss = paddle.mean(error / denom)
-
             losses[label_key] = rloss
 
         return losses
@@ -91,7 +88,6 @@ class RelLpLoss_time(base.Metric):
                 # Method 1: Accumulate losses at each timestep (matches backpropagation loss)
                 pred_stack = output_dict[f"{self.key}_steps"]
                 target_full = label_dict[label_key]
-
                 step = pred_stack.shape[2]
                 num_steps = pred_stack.shape[3]
 
@@ -103,9 +99,8 @@ class RelLpLoss_time(base.Metric):
                     tgt_s = target_full[..., t_start:t_end]
 
                     if self.normalizer is not None:
-                        device = paddle.get_device()
-                        pred_s = self.normalizer.apply_y2(pred_s, device, inverse=True)
-                        tgt_s = self.normalizer.apply_y2(tgt_s, device, inverse=True)
+                        pred_s = self.normalizer.apply_y2(pred_s, inverse=True)
+                        tgt_s = self.normalizer.apply_y2(tgt_s, inverse=True)
 
                     # Compute Lp error for current timestep
                     error = paddle.sum(
@@ -130,13 +125,8 @@ class RelLpLoss_time(base.Metric):
                 target_full = label_dict[label_key]
 
                 if self.normalizer is not None:
-                    device = paddle.get_device()
-                    pred_full = self.normalizer.apply_y2(
-                        pred_full, device, inverse=True
-                    )
-                    target_full = self.normalizer.apply_y2(
-                        target_full, device, inverse=True
-                    )
+                    pred_full = self.normalizer.apply_y2(pred_full, inverse=True)
+                    target_full = self.normalizer.apply_y2(target_full, inverse=True)
 
                 error = paddle.sum(
                     paddle.abs(pred_full - target_full) ** self.p,

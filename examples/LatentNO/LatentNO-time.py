@@ -1,28 +1,15 @@
-import random
-
 import hydra
-import numpy as np
 import paddle
 from omegaconf import DictConfig
 from utils import RelLpLoss_time
 
 import ppsci
 
+
 def train(cfg: DictConfig):
 
-    model = ppsci.arch.LatentNO_time(
-        n_block=cfg.MODEL.n_block,
-        n_mode=cfg.MODEL.n_mode,
-        n_dim=cfg.MODEL.n_dim,
-        n_head=cfg.MODEL.n_head,
-        n_layer=cfg.MODEL.n_layer,
-        trunk_dim=cfg.MODEL.trunk_dim,
-        branch_dim=cfg.MODEL.branch_dim,
-        out_dim=cfg.MODEL.out_dim,
-        T=cfg.MODEL.T,
-        step=cfg.MODEL.step,
-        time_unroll=True,
-    )
+    model = ppsci.arch.LatentNO_time(**cfg.MODEL)
+
     train_dataset_cfg = {
         "name": "LatentNODataset_time",
         "data_name": cfg.data_name,
@@ -31,8 +18,6 @@ def train(cfg: DictConfig):
         "data_concat": cfg.data_concat,
         "input_keys": ("x", "y1", "y2"),
         "label_keys": ("y2",),
-        "weight_dict": None,
-        "transform_fn": None,
     }
     train_ds = ppsci.data.dataset.build_dataset(train_dataset_cfg)
 
@@ -50,8 +35,6 @@ def train(cfg: DictConfig):
             "data_concat": cfg.data_concat,
             "input_keys": ("x", "y1", "y2"),
             "label_keys": ("y2",),
-            "weight_dict": None,
-            "transform_fn": None,
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": True},
         "batch_size": cfg.TRAIN.train_batch_size,
@@ -67,21 +50,11 @@ def train(cfg: DictConfig):
             "data_concat": cfg.data_concat,
             "input_keys": ("x", "y1", "y2"),
             "label_keys": ("y2",),
-            "weight_dict": None,
-            "transform_fn": None,
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
         "batch_size": cfg.EVAL.eval_batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
-
-    iters_per_epoch = cfg.get("iters_per_epoch", None)
-    if iters_per_epoch is None:
-        from ppsci.data import build_dataloader
-
-        tmp_loader = build_dataloader(train_ds, train_dataloader_cfg)
-        iters_per_epoch = len(tmp_loader)
-    cfg.TRAIN.iters_per_epoch = iters_per_epoch
 
     train_loss_fn = RelLpLoss_time(
         p=2, key="y2", normalizer=None, use_full_sequence=False
@@ -98,15 +71,9 @@ def train(cfg: DictConfig):
     )
 
     constraint = {sup_constraint.name: sup_constraint}
-
-    print("tmp_loader length:", len(tmp_loader))
-    print("cfg.TRAIN.epochs:", cfg.TRAIN.epochs)
-    iters_per_epoch = len(tmp_loader)
-    total_steps = cfg.TRAIN.epochs * iters_per_epoch
-    print("Computed total_steps:", total_steps)
     lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(
         epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=iters_per_epoch,
+        iters_per_epoch=cfg.iters_per_epoch,
         max_learning_rate=cfg.lr,
         divide_factor=cfg.div_factor,
         end_learning_rate=cfg.lr / cfg.div_factor / cfg.final_div_factor,
@@ -138,13 +105,10 @@ def train(cfg: DictConfig):
 
     solver = ppsci.solver.Solver(
         model=model,
-        iters_per_epoch=iters_per_epoch,
-        constraint=constraint,
         optimizer=optimizer,
-        cfg=cfg,
+        constraint=constraint,
         validator=validator,
-        output_dir=cfg.get("output_dir", "./outputs"),
-        seed=cfg.seed,
+        cfg=cfg,
     )
 
     solver.train()
@@ -171,19 +135,7 @@ def evaluate(cfg: DictConfig):
         p=2, key="y2", normalizer=normalizer, use_full_sequence=True
     )
 
-    model = ppsci.arch.LatentNO_time(
-        n_block=cfg.MODEL.n_block,
-        n_mode=cfg.MODEL.n_mode,
-        n_dim=cfg.MODEL.n_dim,
-        n_head=cfg.MODEL.n_head,
-        n_layer=cfg.MODEL.n_layer,
-        trunk_dim=cfg.MODEL.trunk_dim,
-        branch_dim=cfg.MODEL.branch_dim,
-        out_dim=cfg.MODEL.out_dim,
-        T=cfg.MODEL.T,
-        step=cfg.MODEL.step,
-        time_unroll=True,
-    )
+    model = ppsci.arch.LatentNO_time(**cfg.MODEL)
 
     eval_dataloader_cfg = {
         "dataset": {
@@ -194,8 +146,6 @@ def evaluate(cfg: DictConfig):
             "data_concat": cfg.data_concat,
             "input_keys": ("x", "y1", "y2"),
             "label_keys": ("y2",),
-            "weight_dict": None,
-            "transform_fn": None,
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
         "batch_size": cfg.EVAL.eval_batch_size,
@@ -219,8 +169,6 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model=model,
         validator={"eval": validator},
-        output_dir=cfg.get("output_dir", "./outputs"),
-        seed=cfg.seed,
     )
 
     solver.eval()

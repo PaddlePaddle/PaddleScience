@@ -23,7 +23,7 @@ hydra:
     dir: ${hydra.run.dir}
     subdir: ./
 
-output_dir: ./output/${data_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}/
+output_dir: ${hydra:run.dir}
 # general setting
 mode : "train" # train/eval
 data_name : "Elasticity"
@@ -55,7 +55,7 @@ MODEL:
 
 TRAIN:
   train_batch_size : 4
-  iters_per_epoch : 1
+  iters_per_epoch : -1
   epochs : 500
   log_epoch : 1
   checkpoint_epcoh : 50
@@ -66,3 +66,4 @@ TRAIN:
 
 EVAL:
   eval_batch_size : 4
+  pretrained_model_path : None
