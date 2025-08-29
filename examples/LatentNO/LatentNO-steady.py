@@ -7,7 +7,6 @@ import ppsci
 
 
 def train(cfg: DictConfig):
-
     model = ppsci.arch.LatentNO(**cfg.MODEL)
 
     train_dataloader_cfg = {
@@ -21,7 +20,7 @@ def train(cfg: DictConfig):
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": True},
-        "batch_size": cfg.TRAIN.train_batch_size,
+        "batch_size": cfg.batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
 
@@ -36,28 +35,11 @@ def train(cfg: DictConfig):
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
-        "batch_size": cfg.EVAL.eval_batch_size,
+        "batch_size": cfg.batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
 
-    train_dataset_cfg = {
-        "name": "LatentNODataset",
-        "data_name": cfg.data_name,
-        "data_mode": "train",
-        "data_normalize": cfg.data_normalize,
-        "data_concat": cfg.data_concat,
-        "input_keys": ("x", "y1"),
-        "label_keys": ("y2",),
-    }
-
-    train_ds = ppsci.data.dataset.build_dataset(train_dataset_cfg)
-    if cfg.data_normalize:
-        normalizer = train_ds.normalizer
-    else:
-        normalizer = None
-
     train_loss_fn = RelLpLoss(p=2, key="y2", normalizer=None)
-    val_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -65,27 +47,35 @@ def train(cfg: DictConfig):
         output_expr={"y2": lambda out: out["y2"]},
         name="SupTrain",
     )
-
+    if cfg.data_normalize:
+        normalizer = sup_constraint.dataloader.dataset.normalizer
+    else:
+        normalizer = None
     constraint = {sup_constraint.name: sup_constraint}
 
+    cfg.TRAIN.iters_per_epoch = len(sup_constraint.data_loader)
     lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(
         epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=cfg.iters_per_epoch,
-        max_learning_rate=cfg.lr,
-        divide_factor=cfg.div_factor,
-        end_learning_rate=cfg.lr / cfg.div_factor / cfg.final_div_factor,
-        phase_pct=cfg.pct_start,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        max_learning_rate=cfg.TRAIN.lr,
+        divide_factor=cfg.TRAIN.div_factor,
+        end_learning_rate=cfg.TRAIN.lr
+        / cfg.TRAIN.div_factor
+        / cfg.TRAIN.final_div_factor,
+        phase_pct=cfg.TRAIN.pct_start,
     )()
 
     optimizer = ppsci.optimizer.AdamW(
         lr_scheduler,
-        weight_decay=cfg.weight_decay,
-        grad_clip=paddle.nn.ClipGradByNorm(clip_norm=cfg.clip_norm),
-        beta1=cfg.beta0,
-        beta2=cfg.beta1,
+        weight_decay=cfg.TRAIN.weight_decay,
+        grad_clip=paddle.nn.ClipGradByNorm(clip_norm=cfg.TRAIN.clip_norm),
+        beta1=cfg.TRAIN.beta0,
+        beta2=cfg.TRAIN.beta1,
     )(model)
 
     metric_dict = {"L2Rel": RelLpLoss(p=2, key="y2", normalizer=normalizer)}
+
+    val_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
 
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -105,12 +95,10 @@ def train(cfg: DictConfig):
     )
 
     solver.train()
-
     solver.eval()
 
 
 def evaluate(cfg: DictConfig):
-
     train_ds = ppsci.data.dataset.LatentNODataset(
         cfg.data_name,
         "train",
@@ -139,7 +127,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
-        "batch_size": cfg.EVAL.eval_batch_size,
+        "batch_size": cfg.batch_size,
         "num_workers": cfg.get("num_workers", 0),
     }
 

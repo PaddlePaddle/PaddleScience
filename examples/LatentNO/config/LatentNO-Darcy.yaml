@@ -23,24 +23,14 @@ hydra:
     dir: ${hydra.run.dir}
     subdir: ./
 
-output_dir: ${hydra:run.dir}
 # general setting
+output_dir: ${hydra:run.dir}
 mode : "train" # train/eval
 data_name : "Darcy"
 data_normalize : True
 data_concat : True
 seed : 20
 batch_size : 4
-
-# optimizer setting
-beta0 : 0.9
-beta1 : 0.99
-weight_decay : 0.00005
-clip_norm : 1000.0
-lr : 0.001
-div_factor : 10000.0
-final_div_factor : 10000.0
-pct_start : 0.2
 
 # model setting
 MODEL:
@@ -54,7 +44,6 @@ MODEL:
   out_dim : 1
 
 TRAIN:
-  train_batch_size : 4
   iters_per_epoch : -1
   epochs : 500
   log_epoch : 1
@@ -63,7 +52,15 @@ TRAIN:
   eval_during_train : True
   eval_freq : 1
   self.start_eval_epoch : 1
+  # optimizer setting
+  beta0 : 0.9
+  beta1 : 0.99
+  weight_decay : 0.00005
+  clip_norm : 1000.0
+  lr : 0.001
+  div_factor : 10000.0
+  final_div_factor : 10000.0
+  pct_start : 0.2
 
 EVAL:
-  eval_batch_size : 4
   pretrained_model_path : None
