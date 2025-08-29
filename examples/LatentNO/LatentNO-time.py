@@ -8,16 +8,7 @@ from utils import RelLpLoss_time
 
 import ppsci
 
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    paddle.seed(seed)
-
-
 def train(cfg: DictConfig):
-
-    set_seed(cfg.seed)
 
     model = ppsci.arch.LatentNO_time(
         n_block=cfg.MODEL.n_block,
@@ -163,8 +154,6 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
 
-    set_seed(cfg.seed)
-
     train_ds = ppsci.data.dataset.LatentNODataset_time(
         cfg.data_name,
         "train",
@@ -241,7 +230,6 @@ def evaluate(cfg: DictConfig):
     version_base=None, config_path="./config", config_name="LatentNO-forward-NS2d.yaml"
 )
 def main(cfg: DictConfig):
-    set_seed(cfg.seed)
 
     if cfg.mode == "train":
         train(cfg)
