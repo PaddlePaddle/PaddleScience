@@ -368,7 +368,7 @@ class Meteoformer(base.Arch):
         >>> model = ppsci.arch.Meteoformer(
         ...     input_keys=("input",),
         ...     output_keys=("output",),
-        ...     shape_in=(12, 12, 192, 256),
+        ...     shape_in=(6, 12, 192, 256),
         ...     hid_S=64,
         ...     hid_T=256,
         ...     N_S=4,
@@ -377,10 +377,10 @@ class Meteoformer(base.Arch):
         ...     groups=8,
         ...     num_classes=4,
         ... )
-        >>> input_dict = {"input": paddle.rand([16, 12, 4, 192, 256])}
+        >>> input_dict = {"input": paddle.rand([8, 6, 12, 192, 256])}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["output"].shape)
-        [16, 12, 4, 192, 256]
+        [8, 6, 12, 192, 256]
     """
 
     def __init__(
@@ -394,16 +394,17 @@ class Meteoformer(base.Arch):
         N_T: int = 4,
         incep_ker: Tuple[int, ...] = [3, 5, 7, 11],
         groups: int = 8,
-        num_classes: int = 4,
+        num_classes: int = 12,
     ):
         super(Meteoformer, self).__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
+        self.num_classes = num_classes
 
         T, C, H, W = shape_in
         self.enc = Encoder(C, hid_S, N_S)
         self.hid1 = MidXnet(T * hid_S, hid_T // 2, N_T, incep_ker, groups)
-        self.dec = Decoder(T * hid_S, T * num_classes, N_S)
+        self.dec = Decoder(T * hid_S, T * self.num_classes, N_S)
 
     def forward(self, x):
         if self._input_transform is not None:
@@ -422,14 +423,14 @@ class Meteoformer(base.Arch):
         z = embed[-1].reshape([B, T, C_4, H_4, W_4])
         hid = self.hid1(z)
         hid = hid.transpose(perm=[0, 2, 1]).reshape([B, -1, H_4, W_4])
-
+        
         # decoded
-        y = self.dec(hid, embed[0])
-        y = y.reshape([B, T, 4, H, W])
+        y = self.dec(hid, embed[0]) # [8, 72, 192, 256]
+        y = y.reshape([B, T, self.num_classes, H, W])   # [8, 6, 12, 192, 256]
 
         y = self.split_to_dict(y, self.output_keys)
-
         if self._output_transform is not None:
             y = self._output_transform(x, y)
 
         return y
+        # return {self.output_keys[0]: Y}

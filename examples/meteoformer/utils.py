@@ -12,7 +12,7 @@ def date_to_hours(date: str):
     return hours_since_jan_01_epoch
 
 
-def get_mean_std(mean_path: str, std_path: str, vars_channel: Tuple[int, ...]):
+def get_mean_std(mean_path: str, std_path: str, vars_channel: Tuple[int, ...] = None):
     data_mean = xr.open_mfdataset(mean_path)["mean"].values
     data_std = xr.open_mfdataset(std_path)["std"].values
 

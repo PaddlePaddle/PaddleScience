@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "ERA5MeteoDataset",
                 "file_path": cfg.TRAIN_FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.MODEL.afno.output_keys,
+                "input_keys": cfg.MODEL.input_keys,
+                "label_keys": cfg.MODEL.output_keys,
                 "size": (cfg.IMG_H, cfg.IMG_W),
             },
             "sampler": {
@@ -36,15 +36,16 @@ def train(cfg: DictConfig):
                 "shuffle": True,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 1,
+            "num_workers": 4,
         }
     else:
+        NUM_GPUS_PER_NODE = 8
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
                 "file_path": cfg.TRAIN_FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.MODEL.afno.output_keys,
+                "input_keys": cfg.MODEL.input_keys,
+                "label_keys": cfg.MODEL.output_keys,
             },
             "sampler": {
                 "name": "DistributedBatchSampler",
@@ -52,8 +53,9 @@ def train(cfg: DictConfig):
                 "shuffle": True,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 1,
+            "num_workers": 4,
         }
+        
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -70,10 +72,13 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ERA5MeteoDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": cfg.MODEL.afno.input_keys,
-            "label_keys": cfg.MODEL.afno.output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
+        },
+        "sampler": {
+            "name": "BatchSampler",
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -101,13 +106,15 @@ def train(cfg: DictConfig):
 
     # initialize solver
     solver = ppsci.solver.Solver(
-        model,
-        constraint,
-        cfg.output_dir,
-        optimizer,
+        model=model,
+        constraint=constraint,
+        output_dir=cfg.output_dir,
+        optimizer=optimizer,
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=cfg.TRAIN.compute_metric_by_batch,
+        log_freq=cfg.log_freq,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
@@ -119,14 +126,42 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    # set eval dataloader config
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "ERA5MeteoDataset",
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "training": False,
+            "size": (cfg.IMG_H, cfg.IMG_W),
+        },
+        "sampler": {
+            "name": "BatchSampler",
+        },
+        "batch_size": cfg.EVAL.batch_size,
+    }
+
+    # set validator
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        metric={
+            "MAE": ppsci.metric.MAE(keep_batch=True),
+        },
+        name="Sup_Validator",
+    )
+    validator = {sup_validator.name: sup_validator}
+
     # set model
-    model = ppsci.arch.Meteoformer(**cfg.MODEL.afno)
+    model = ppsci.arch.Preformer(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
+        validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,

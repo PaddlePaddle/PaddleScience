@@ -69,6 +69,7 @@ from ppsci.arch.stafnet import STAFNet  # isort:skip
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
+from ppsci.arch.meteoformer import Meteoformer  # isort:skip
 
 __all__ = [
     "MoFlowNet",
@@ -122,6 +123,7 @@ __all__ = [
     "RegPointNet",
     "IFMMLP",
     "STAFNet",
+    "Meteoformer",
 ]
 
 
