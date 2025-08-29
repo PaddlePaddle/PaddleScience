@@ -7,6 +7,7 @@ import numpy as np
 import paddle
 
 from ppsci.arch import base
+from ppsci.utils import initializer
 
 AttentionFn = Callable[[paddle.Tensor, paddle.Tensor, paddle.Tensor], paddle.Tensor]
 
@@ -230,28 +231,17 @@ class LatentNO(base.Arch):
         self.attn_blocks = paddle.nn.Sequential(
             *[AttentionBlock(n_mode, n_dim, n_head) for _ in range(n_block)]
         )
+        self.apply(self._init_weights)
 
-        # Kaiming_Uniform
+    def _init_weights(self):
         for module in self.sublayers():
             if isinstance(module, paddle.nn.Linear):
-                bound = 1 / math.sqrt(module.weight.shape[0])
-                module.weight.set_value(
-                    paddle.to_tensor(
-                        np.random.uniform(-bound, bound, module.weight.shape).astype(
-                            "float32"
-                        )
-                    )
-                )
-                module.bias.set_value(
-                    paddle.to_tensor(
-                        np.random.uniform(-bound, bound, module.bias.shape).astype(
-                            "float32"
-                        )
-                    )
-                )
+                initializer.linear_init_(module)
+            elif isinstance(module, paddle.nn.Conv2D):
+                initializer.conv_init_(module)
             elif isinstance(module, paddle.nn.LayerNorm):
-                module.weight.set_value(paddle.ones_like(module.weight))
-                module.bias.set_value(paddle.zeros_like(module.bias))
+                initializer.ones_(module.weight)
+                initializer.zeros_(module.bias)
 
     def forward(self, inputs: dict[str, paddle.Tensor]) -> dict[str, paddle.Tensor]:
         """
@@ -360,31 +350,21 @@ class LatentNO_time(base.Arch):
             *[AttentionBlock(n_mode, n_dim, n_head) for _ in range(n_block)]
         )
 
-        # Kaiming_Uniform
-        for module in self.sublayers():
-            if isinstance(module, paddle.nn.Linear):
-                bound = 1 / math.sqrt(module.weight.shape[0])
-                module.weight.set_value(
-                    paddle.to_tensor(
-                        np.random.uniform(-bound, bound, module.weight.shape).astype(
-                            "float32"
-                        )
-                    )
-                )
-                module.bias.set_value(
-                    paddle.to_tensor(
-                        np.random.uniform(-bound, bound, module.bias.shape).astype(
-                            "float32"
-                        )
-                    )
-                )
-            elif isinstance(module, paddle.nn.LayerNorm):
-                module.weight.set_value(paddle.ones_like(module.weight))
-                module.bias.set_value(paddle.zeros_like(module.bias))
+        self.apply(self._init_weights)
 
         self.time_unroll = bool(time_unroll)
         # teacher forcing: when True *and* model.training==True, forward will use GT from inputs["y2"] as next input.
         self.use_teacher_forcing = True
+
+    def _init_weights(self):
+        for module in self.sublayers():
+            if isinstance(module, paddle.nn.Linear):
+                initializer.linear_init_(module)
+            elif isinstance(module, paddle.nn.Conv2D):
+                initializer.conv_init_(module)
+            elif isinstance(module, paddle.nn.LayerNorm):
+                initializer.ones_(module.weight)
+                initializer.zeros_(module.bias)
 
     # --- MODIFIED ---: extract single-step prediction for reuse
     def _single_step_predict(self, x: paddle.Tensor, y: paddle.Tensor) -> paddle.Tensor:
