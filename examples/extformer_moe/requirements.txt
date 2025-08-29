@@ -1,0 +1,2 @@
+h5netcdf
+xarray==2024.2.0

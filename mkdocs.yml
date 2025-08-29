@@ -34,6 +34,7 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
+      - 多硬件支持: zh/multi_device.md
       - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
@@ -48,17 +49,27 @@ nav:
         - Rossler_transform_physx: zh/examples/rossler.md
         - Volterra_IDE: zh/examples/volterra_ide.md
         - NLSMB: zh/examples/nlsmb.md
+        - SPINN: zh/examples/spinn.md
         - XPINN: zh/examples/xpinns.md
+        - NeuralOperator: zh/examples/neuraloperator.md
+        - Brusselator3D: zh/examples/brusselator3d.md
+        - Transformer4SR: zh/examples/transformer4sr.md
       - 技术科学(AI for Technology):
         - 流体:
+          - Fundiff: zh/examples/fundiff.md
+          - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
           - BubbleNet: zh/examples/bubble.md
           - CFDGCN: zh/examples/cfdgcn.md
+          - CVit(Advection): zh/examples/adv_cvit.md
+          - CVit(NS): zh/examples/ns_cvit.md
           - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - Darcy2D: zh/examples/darcy2d.md
           - DeepCFD: zh/examples/deepcfd.md
+          - DrivAerNet: zh/examples/drivaernet.md
+          - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
@@ -75,6 +86,8 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
+          - NTopo: zh/examples/ntopo.md
+          - Heart: zh/examples/heart.md
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
           - Heat_PINN: zh/examples/heat_pinn.md
@@ -82,12 +95,31 @@ nav:
           - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
+        - CGCNN: zh/examples/cgcnn.md
+        - Battery_LI: zh/examples/MLP_LI.md
+        - ML2DDB: en/examples/ml2ddb.md
       - 地球科学(AI for Earth Science):
+        - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
+        - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
-        - Preformer: zh/examples/preformer.md
+        - GraphCast: zh/examples/graphcast.md
+        - GenCast: zh/examples/gencast.md
+        - VelocityGAN: zh/examples/velocity_gan.md
+        - TGCN: zh/examples/tgcn.md
+        - IOPS: zh/examples/iops.md
+        - Pang-Weather: zh/examples/pangu_weather.md
+        - FengWu: zh/examples/fengwu.md
+        - FuXi: zh/examples/fuxi.md
+        - UNetFormer: zh/examples/unetformer.md
+        - WGAN_GP: zh/examples/wgan_gp.md
+      - 化学科学(AI for Chemistry):
+        - SMC Reac: zh/examples/smc_reac.md
+        - Moflow: zh/examples/moflow.md
+        - IFM: zh/examples/ifm.md
+
   - API 文档:
     - ppsci:
       - ppsci.arch: zh/api/arch.md
@@ -128,6 +160,7 @@ nav:
   - 开发与复现指南:
     - 开发指南: zh/development.md
     - 复现指南: zh/reproduction.md
+  - 学术成果: zh/academic.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
@@ -157,6 +190,7 @@ theme:
     - content.tabs.link
     - content.action.edit
     - content.action.view
+    - content.tooltips
   icon:
     edit: material/pencil
     view: material/eye
@@ -182,15 +216,22 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [./ppsci]
+          setup_commands:
+            - import sys
+            - sys.path.append("../")
+          paths: [../ppsci]
+          selection:
+            new_path_syntax: true
   - mkdocs-video
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
       type: date
+  - mike
 
 # Extensions
 markdown_extensions:
+  - abbr
   - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
@@ -236,3 +277,6 @@ extra:
     - name: English
       link: /en/
       lang: en
+  version:
+    provider: mike
+    alias: true

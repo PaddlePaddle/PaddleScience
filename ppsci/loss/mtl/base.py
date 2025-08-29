@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import ClassVar
 from typing import Dict
 from typing import Union
 
@@ -27,9 +28,15 @@ if TYPE_CHECKING:
 class LossAggregator(nn.Layer):
     """Base class of loss aggregator mainly for multitask learning.
 
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
+
     Args:
         model (nn.Layer): Training model.
     """
+
+    should_persist: ClassVar[bool] = False
 
     def __init__(self, model: nn.Layer) -> None:
         super().__init__()
@@ -52,3 +59,10 @@ class LossAggregator(nn.Layer):
         raise NotImplementedError(
             f"'backward' should be implemented in subclass {self.__class__.__name__}"
         )
+
+    def state_dict(self):
+        agg_state = super().state_dict()
+        model_state = self.model.state_dict()
+        # remove model parameters from state dict for already in pdparams
+        agg_state = {k: v for k, v in agg_state.items() if k not in model_state}
+        return agg_state

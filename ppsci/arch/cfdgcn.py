@@ -98,7 +98,7 @@ def signed_dist_graph(
         last_surface = marker_nodes[-1] - marker_nodes[0]
         marker_surfaces = paddle.concat([marker_surfaces, last_surface.unsqueeze(0)])
         normals = left_orthogonal(marker_surfaces) / marker_surfaces.norm(
-            dim=1
+            axis=1
         ).unsqueeze(1)
     for i, x in enumerate(nodes):
         if i not in marker_inds:
@@ -109,7 +109,7 @@ def signed_dist_graph(
             if with_sign:
                 # if sign is requested, check if inside marker shape
                 # dot product with normals to find if inside shape
-                surface_dists = (vecs * normals).sum(dim=1)
+                surface_dists = (vecs * normals).sum(axis=1)
                 if (surface_dists < 0).unique().shape[0] == 1:
                     # if all point in same direction it is inside
                     min_dist *= -1
@@ -194,7 +194,7 @@ class CFDGCN(nn.Layer):
         config_file (str): Name of configuration file for su2 module.
         coarse_mesh (str): Path of coarse mesh file.
         fine_marker_dict (Dict[str, List[List[int]]]): Dict of fine marker.
-        process_sim (Callable, optional): Preprocess funtion. Defaults to `lambda x, y: x`.
+        process_sim (Callable, optional): Preprocess function. Defaults to `lambda x, y: x`.
         freeze_mesh (bool, optional): Whether set `stop_gradient=True` for nodes. Defaults to False.
         num_convs (int, optional): Number of conv layers. Defaults to 6.
         num_end_convs (int, optional): Number of end conv layers. Defaults to 3.

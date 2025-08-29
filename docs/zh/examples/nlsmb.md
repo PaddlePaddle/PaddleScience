@@ -253,4 +253,4 @@ examples/NLS-MB/NLS-MB_optical_soliton.py
 
 ## 6. 参考资料
 
-[1] [S.-Y. Xu, Q. Zhou, and W. Liu, Prediction of Soliton Evolution and Equation Parameters for NLS–MB Equation Based on the phPINN Algorithm, Nonlinear Dyn (2023)](https://doi.org/10.1007/s11071-023-08824-w).
+1. [S.-Y. Xu, Q. Zhou, and W. Liu, Prediction of Soliton Evolution and Equation Parameters for NLS–MB Equation Based on the phPINN Algorithm, Nonlinear Dyn (2023)](https://doi.org/10.1007/s11071-023-08824-w).

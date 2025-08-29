@@ -24,12 +24,12 @@ class ZScoreNormalize:
 
     def transform(self, data):
         mean = (
-            paddle.to_tensor(self.mean, dtype=data.dtype)
+            paddle.full([], self.mean, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.mean
         )
         std = (
-            paddle.to_tensor(self.std, dtype=data.dtype)
+            paddle.full([], self.std, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.std
         )
@@ -37,12 +37,12 @@ class ZScoreNormalize:
 
     def inverse_transform(self, data):
         mean = (
-            paddle.to_tensor(self.mean, dtype=data.dtype)
+            paddle.full([], self.mean, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.mean
         )
         std = (
-            paddle.to_tensor(self.std, dtype=data.dtype)
+            paddle.full([], self.std, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.std
         )
@@ -64,12 +64,12 @@ class MinMaxNormalize:
 
     def transform(self, data):
         _min = (
-            paddle.to_tensor(self.min, dtype=data.dtype)
+            paddle.full([], self.min, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.min
         )
         _max = (
-            paddle.to_tensor(self.max, dtype=data.dtype)
+            paddle.full([], self.max, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.max
         )
@@ -78,12 +78,12 @@ class MinMaxNormalize:
 
     def inverse_transform(self, data, axis=None):
         _min = (
-            paddle.to_tensor(self.min, dtype=data.dtype)
+            paddle.full([], self.min, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.min
         )
         _max = (
-            paddle.to_tensor(self.max, dtype=data.dtype)
+            paddle.full([], self.max, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.max
         )

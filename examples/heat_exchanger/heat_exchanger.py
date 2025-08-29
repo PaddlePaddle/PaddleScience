@@ -473,7 +473,7 @@ def evaluate(cfg: DictConfig):
         output_expr={
             "T_h": lambda out: out["T_h"] - cfg.T_hin,
         },
-        metric={"MSE": ppsci.metric.MSE()},
+        metric={"left_MSE": ppsci.metric.MSE()},
         name="left_mse",
     )
     right_validator = ppsci.validate.SupervisedValidator(
@@ -494,7 +494,7 @@ def evaluate(cfg: DictConfig):
         output_expr={
             "T_h": lambda out: out["T_c"] - cfg.T_cin,
         },
-        metric={"MSE": ppsci.metric.MSE()},
+        metric={"right_MSE": ppsci.metric.MSE()},
         name="right_mse",
     )
     interior_validator = ppsci.validate.SupervisedValidator(
@@ -513,7 +513,7 @@ def evaluate(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr=equation["heat_exchanger"].equations,
-        metric={"MSE": ppsci.metric.MSE()},
+        metric={"interior_MSE": ppsci.metric.MSE()},
         name="interior_mse",
     )
     validator = {

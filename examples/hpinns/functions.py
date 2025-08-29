@@ -283,8 +283,8 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     e_re = output_dict["e_real"]
     e_im = output_dict["e_imaginary"]
 
-    f1 = paddle.heaviside((x + 0.5) * (0.5 - x), paddle.to_tensor(0.5))
-    f2 = paddle.heaviside((y - 1) * (2 - y), paddle.to_tensor(0.5))
+    f1 = paddle.heaviside((x + 0.5) * (0.5 - x), paddle.full([], 0.5))
+    f2 = paddle.heaviside((y - 1) * (2 - y), paddle.full([], 0.5))
     j = e_re[:bound] ** 2 + e_im[:bound] ** 2 - f1[:bound] * f2[:bound]
     loss_opt_area = paddle.mean(j**2)
 
@@ -309,8 +309,8 @@ def eval_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor
     e_re = output_dict["e_real"]
     e_im = output_dict["e_imaginary"]
 
-    f1 = paddle.heaviside((x + 0.5) * (0.5 - x), paddle.to_tensor(0.5))
-    f2 = paddle.heaviside((y - 1) * (2 - y), paddle.to_tensor(0.5))
+    f1 = paddle.heaviside((x + 0.5) * (0.5 - x), paddle.full([], 0.5))
+    f2 = paddle.heaviside((y - 1) * (2 - y), paddle.full([], 0.5))
     j = e_re**2 + e_im**2 - f1 * f2
     losses = paddle.mean(j**2)
 

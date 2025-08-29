@@ -90,7 +90,7 @@ class PDE:
 
     def _apply_detach(self):
         """
-        Wrap detached sub_expr into detach(sub_expr) to prevent gradient back-propagation, only for those items speicified in self.detach_keys.
+        Wrap detached sub_expr into detach(sub_expr) to prevent gradient back-propagation, only for those items specified in self.detach_keys.
 
         NOTE: This function is expected to be called after self.equations is ready in PDE.__init__.
 

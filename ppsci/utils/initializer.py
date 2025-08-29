@@ -18,7 +18,7 @@ If you need to use the initialization method of PaddlePaddle, please refer to
 [paddle.nn.initializer](https://github.com/PaddlePaddle/Paddle/tree/develop/python/paddle/nn/initializer)
 
 This code is based on [torch.nn.init](https://github.com/pytorch/pytorch/blob/main/torch/nn/init.py)
-Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
+The copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
 """
 
 from __future__ import annotations
@@ -46,6 +46,8 @@ __all__ = [
     "kaiming_normal_",
     "linear_init_",
     "conv_init_",
+    "glorot_normal_",
+    "lecun_normal_",
 ]
 
 
@@ -445,7 +447,7 @@ def linear_init_(module: nn.Layer) -> None:
         >>> layer = paddle.nn.Linear(128, 256)
         >>> ppsci.utils.initializer.linear_init_(layer)
     """
-    kaiming_uniform_(module.weight, a=math.sqrt(5))
+    kaiming_uniform_(module.weight, a=math.sqrt(5), reverse=True)
     if module.bias is not None:
         fan_in, _ = _calculate_fan_in_and_fan_out(module.weight, reverse=True)
         bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
@@ -476,7 +478,7 @@ def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     """Modify tensor inplace using jax-style glorot_normal.
 
     Args:
-        tensor (paddle.Tensor): Paddle Tensor/Paramter.
+        tensor (paddle.Tensor): Paddle Tensor/Parameter.
 
     Returns:
         paddle.Tensor: Initialized tensor.
@@ -493,6 +495,35 @@ def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     fin, fout = tensor.shape
     var = 2.0 / (fin + fout)
     stddev = math.sqrt(var) * 0.87962566103423978
+    trunc_normal_(tensor)
+    tensor.set_value(tensor * stddev)
+    return tensor
+
+
+def lecun_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
+    """Modify tensor inplace using jax-style lecun_normal.
+
+    References:
+        https://github.com/jax-ml/jax/blob/main/jax/_src/nn/initializers.py#L480-L513
+
+    Args:
+        tensor (paddle.Tensor): Paddle Tensor/Parameter.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.lecun_normal_(param)
+    """
+    assert (
+        tensor.ndim == 2
+    ), f"lecun_normal_ only support 2D tensor now, but got ndim={tensor.ndim}"
+    fin, _ = tensor.shape
+    var = 1.0 / fin
+    stddev = math.sqrt(var) / 0.87962566103423978
     trunc_normal_(tensor)
     tensor.set_value(tensor * stddev)
     return tensor

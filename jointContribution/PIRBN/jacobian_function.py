@@ -24,9 +24,9 @@ def jacobian(y, x):
     J = paddle.zeros(J_shape)
     J_flat = flat(
         J, start_axis=0, stop_axis=len(y.shape) - 1
-    )  # partialy flatten as y_flat
+    )  # partially flatten as y_flat
     for i, y_i in enumerate(y):
-        assert y_i.size == 1, f"y_i.size shoule be 1, but got {y_i.size}"
+        assert y_i.size == 1, f"y_i.size should be 1, but got {y_i.size}"
         grad = paddle.grad(y_i, x, allow_unused=True)[
             0
         ]  # grad[i] == sum by j (dy[j] / dx[i])

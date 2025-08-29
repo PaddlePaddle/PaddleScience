@@ -8,6 +8,7 @@
         - PrettyOrderedDict
         - Prettydefaultdict
         - RankZeroOnly
+        - RankZeroFirst
         - Timer
         - all_gather
         - concat_dict_list
@@ -20,5 +21,6 @@
         - run_on_eval_mode
         - run_at_rank0
         - plot_curve
+        - check_flag_enabled
       show_root_heading: True
       heading_level: 3

@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 from ppsci.metric.anomaly_coef import LatitudeWeightedACC
 from ppsci.metric.base import Metric
@@ -20,7 +27,9 @@ from ppsci.metric.func import FunctionalMetric
 from ppsci.metric.l2_rel import L2Rel
 from ppsci.metric.l2_rel import MeanL2Rel
 from ppsci.metric.mae import MAE
+from ppsci.metric.max_ae import MaxAE
 from ppsci.metric.mse import MSE
+from ppsci.metric.r2_score import R2Score
 from ppsci.metric.rmse import RMSE
 from ppsci.metric.rmse import LatitudeWeightedRMSE
 from ppsci.utils import misc
@@ -32,18 +41,20 @@ __all__ = [
     "L2Rel",
     "MeanL2Rel",
     "MAE",
+    "MaxAE",
     "MSE",
     "RMSE",
     "LatitudeWeightedRMSE",
+    "R2Score",
     "build_metric",
 ]
 
 
-def build_metric(cfg):
+def build_metric(cfg: DictConfig):
     """Build metric.
 
     Args:
-        cfg (List[DictConfig]): List of metric config.
+        cfg (DictConfig): List of metric config.
 
     Returns:
         Dict[str, Metric]: Dict of callable metric object.

@@ -51,7 +51,7 @@ class Swish(nn.Layer):
         super().__init__()
         self.beta = self.create_parameter(
             shape=[],
-            default_initializer=paddle.nn.initializer.Constant(beta),
+            default_initializer=nn.initializer.Constant(beta),
         )
 
     def forward(self, x):
@@ -72,20 +72,6 @@ class Sin(nn.Layer):
 
     def forward(self, x):
         return paddle.sin(x)
-
-
-class Silu(nn.Layer):
-    """
-    FIXME: This activation function is a workaround for the potential occurrence of NaNs
-    during the computation of the native SiLU function via using x*sigmoid(x) instead of
-    silu(x)
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x * F.sigmoid(x)
 
 
 class Siren(nn.Layer):
@@ -143,7 +129,7 @@ act_func_dict = {
     "gelu": nn.GELU(),
     "leaky_relu": nn.LeakyReLU(),
     "sigmoid": nn.Sigmoid(),
-    "silu": Silu(),
+    "silu": nn.Silu(),
     "sin": Sin(),
     "cos": Cos(),
     "swish": Swish,

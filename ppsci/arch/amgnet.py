@@ -161,7 +161,7 @@ def StAS(
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
-    return index_E, value_E
+    return index_E.astype("int64"), value_E
 
 
 def FillZeros(
@@ -194,7 +194,7 @@ def FillZeros(
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
-    return index_E, value_E
+    return index_E.astype("int64"), value_E
 
 
 def remove_self_loops(
@@ -238,21 +238,21 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm
         value_A = edge_weight.clone()
 
     value_A = paddle.squeeze(value_A)
-    model_1 = paddle.nn.Sequential(
-        ("l1", paddle.nn.Linear(128, 256)),
-        ("act1", paddle.nn.ReLU()),
-        ("l2", paddle.nn.Linear(256, 256)),
-        ("act2", paddle.nn.ReLU()),
-        ("l4", paddle.nn.Linear(256, 128)),
-        ("act4", paddle.nn.ReLU()),
-        ("l5", paddle.nn.Linear(128, 1)),
+    model_1 = nn.Sequential(
+        ("l1", nn.Linear(128, 256)),
+        ("act1", nn.ReLU()),
+        ("l2", nn.Linear(256, 256)),
+        ("act2", nn.ReLU()),
+        ("l4", nn.Linear(256, 128)),
+        ("act4", nn.ReLU()),
+        ("l5", nn.Linear(128, 1)),
     )
-    model_2 = paddle.nn.Sequential(
-        ("l1", paddle.nn.Linear(1, 64)),
-        ("act1", paddle.nn.ReLU()),
-        ("l2", paddle.nn.Linear(64, 128)),
-        ("act2", paddle.nn.ReLU()),
-        ("l4", paddle.nn.Linear(128, 128)),
+    model_2 = nn.Sequential(
+        ("l1", nn.Linear(1, 64)),
+        ("act1", nn.ReLU()),
+        ("l2", nn.Linear(64, 128)),
+        ("act2", nn.ReLU()),
+        ("l4", nn.Linear(128, 128)),
     )
 
     val_A = model_1(value_A)

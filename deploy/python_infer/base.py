@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from typing import Optional
 from typing import Tuple
 
+import paddle
 from paddle import inference as paddle_inference
 from typing_extensions import Literal
 
@@ -37,8 +38,8 @@ class Predictor:
     Args:
         pdmodel_path (Optional[str]): Path to the PaddlePaddle model file. Defaults to None.
         pdiparams_path (Optional[str]): Path to the PaddlePaddle model parameters file. Defaults to None.
-        device (Literal["gpu", "cpu", "npu", "xpu"], optional): Device to use for inference. Defaults to "cpu".
-        engine (Literal["native", "tensorrt", "onnx", "mkldnn"], optional): Inference engine to use. Defaults to "native".
+        device (Literal["cpu", "gpu", "npu", "xpu", "sdaa"], optional): Device to use for inference. Defaults to "cpu".
+        engine (Literal["native", "tensorrt", "onnx", "onednn"], optional): Inference engine to use. Defaults to "native".
         precision (Literal["fp32", "fp16", "int8"], optional): Precision to use for inference. Defaults to "fp32".
         onnx_path (Optional[str], optional): Path to the ONNX model file. Defaults to None.
         ir_optim (bool, optional): Whether to use IR optimization. Defaults to True.
@@ -53,8 +54,8 @@ class Predictor:
         pdmodel_path: Optional[str] = None,
         pdiparams_path: Optional[str] = None,
         *,
-        device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu",
-        engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
+        device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu",
+        engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native",
         precision: Literal["fp32", "fp16", "int8"] = "fp32",
         onnx_path: Optional[str] = None,
         ir_optim: bool = True,
@@ -94,20 +95,26 @@ class Predictor:
         )
 
     def predict(self, input_dict):
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"Method 'predict' is should be implemented in {self.__class__.__name__} class."
+        )
 
     def _create_paddle_predictor(
         self,
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
+        if paddle.framework.use_pir_api():
+            # NOTE: Using 'json' as suffix instead of 'pdmodel' in PIR mode
+            self.pdmodel_path = self.pdmodel_path.replace(".pdmodel", ".json", 1)
+
         if not osp.exists(self.pdmodel_path):
             raise FileNotFoundError(
                 f"Given 'pdmodel_path': {self.pdmodel_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdmodel_path is correct."
             )
         if not osp.exists(self.pdiparams_path):
             raise FileNotFoundError(
                 f"Given 'pdiparams_path': {self.pdiparams_path} does not exist. "
-                "Please check if it is correct."
+                "Please check if cfg.INFER.pdiparams_path is correct."
             )
 
         config = paddle_inference.Config(self.pdmodel_path, self.pdiparams_path)
@@ -150,11 +157,11 @@ class Predictor:
             config.enable_xpu(10 * 1024 * 1024)
         else:
             config.disable_gpu()
-            if self.engine == "mkldnn":
+            if self.engine == "onednn":
                 # 'set_mkldnn_cache_capatity' is not available on macOS
                 if platform.system() != "Darwin":
                     ...
-                    # cache 10 different shapes for mkldnn to avoid memory leak
+                    # cache 10 different shapes for onednn to avoid memory leak
                     # config.set_mkldnn_cache_capacity(10)
                 config.enable_mkldnn()
 
@@ -162,6 +169,11 @@ class Predictor:
                     config.enable_mkldnn_bfloat16()
 
                 config.set_cpu_math_library_num_threads(self.num_cpu_threads)
+
+            elif self.engine == "mkldnn":
+                raise ValueError(
+                    "The 'mkldnn' engine is deprecated. Please use 'onednn' instead."
+                )
 
         # enable memory optim
         config.enable_memory_optim()
@@ -207,16 +219,16 @@ class Predictor:
         return predictor, config
 
     def _check_device(self, device: str):
-        if device not in ["gpu", "cpu", "npu", "xpu"]:
+        if device not in ["cpu", "gpu", "npu", "xpu", "sdaa"]:
             raise ValueError(
-                "Inference only supports 'gpu', 'cpu', 'npu' and 'xpu' devices, "
+                "Inference only supports 'gpu', 'cpu', 'npu', 'xpu' and 'sdaa' devices, "
                 f"but got {device}."
             )
 
     def _check_engine(self, engine: str):
-        if engine not in ["native", "tensorrt", "onnx", "mkldnn"]:
+        if engine not in ["native", "tensorrt", "onnx", "onednn"]:
             raise ValueError(
-                "Inference only supports 'native', 'tensorrt', 'onnx' and 'mkldnn' "
+                "Inference only supports 'native', 'tensorrt', 'onnx' and 'onednn' "
                 f"engines, but got {engine}."
             )
 

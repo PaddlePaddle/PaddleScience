@@ -10,7 +10,7 @@ from paddle import nn
 
 from ppsci.arch import base
 from ppsci.arch import fno_block
-from ppsci.paddle_harmonics import sht as paddle_sht
+from ppsci.arch.paddle_harmonics import sht as paddle_sht
 from ppsci.utils import initializer
 
 einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -90,7 +90,6 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
             {'reconstructed', 'factorized'} Defaults to "reconstructed".
         separable (bool, optional): Whether to use the separable implementation of contraction. This arg is
             only checked when `implementation=reconstructed`. Defaults to False.
-
     """
 
     if implementation == "reconstructed":
@@ -208,7 +207,6 @@ class SphericalConv(nn.Layer):
         sht_norm (str, optional): The normalization mode of the SHT. Defaults to "ortho".
         sht_grids (str, optional): The grid of the SHT. Defaults to "equiangular".
         dtype (paddle.float32, optional): The data type. Defaults to paddle.float32.
-
     """
 
     def __init__(
@@ -410,7 +408,7 @@ class SFNONet(base.Arch):
             Defaults to None.
         non_linearity (nn.functional, optional): Non-Linearity module to use. Defaults to F.gelu.
         norm (str, optional): Normalization layer to use. Defaults to None.
-        ada_in_features (int,optional): The input channles of the adaptive normalization.Defaults to None.
+        ada_in_features (int,optional): The input channels of the adaptive normalization.Defaults to None.
         preactivation (bool, optional): Whether to use resnet-style preactivation. Defaults to False.
         fno_skip (str, optional): Type of skip connection to use,{'linear', 'identity', 'soft-gating'}.
             Defaults to "soft-gating".

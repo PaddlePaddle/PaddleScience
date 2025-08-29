@@ -117,7 +117,7 @@ class SEVIRSkillScore:
     @staticmethod
     def bias(hits, misses, fas, eps):
         bias = (hits + fas) / (hits + misses + eps)
-        logbias = paddle.pow(bias / paddle.log(paddle.to_tensor(2.0)), 2.0)
+        logbias = paddle.pow(bias / paddle.log(paddle.full([], 2.0)), 2.0)
         return logbias
 
     @property

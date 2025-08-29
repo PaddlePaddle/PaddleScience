@@ -25,6 +25,7 @@ import paddle
 from paddle import io
 
 from ppsci.solver import printer
+from ppsci.solver.train import _compute_batch_size
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
@@ -90,11 +91,6 @@ def _eval_by_dataset(
             input_dict, label_dict, weight_dict = batch
             reader_cost = time.perf_counter() - reader_tic
 
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.eval_time_info:
-                    solver.eval_time_info[key].reset()
-
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False
@@ -133,7 +129,7 @@ def _eval_by_dataset(
             batch_cost = time.perf_counter() - batch_tic
             solver.eval_time_info["reader_cost"].update(reader_cost)
             solver.eval_time_info["batch_cost"].update(batch_cost)
-            batch_size = next(iter(input_dict.values())).shape[0]
+            batch_size = _compute_batch_size(input_dict)
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if (
                 iter_id == 1
@@ -215,19 +211,13 @@ def _eval_by_batch(
         num_samples = _get_dataset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
-        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
             reader_cost = time.perf_counter() - reader_tic
 
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.eval_time_info:
-                    solver.eval_time_info[key].reset()
-
-            batch_size = next(iter(input_dict.values())).shape[0]
+            batch_size = _compute_batch_size(input_dict)
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False
@@ -251,9 +241,8 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
+                metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
                 metric_dict = metric_func(output_dict, label_dict)
-                if metric_name not in metric_dict_group:
-                    metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
                 for var_name, metric_value in metric_dict.items():
                     metric_dict_group[metric_name][var_name].append(
                         metric_value
@@ -284,9 +273,9 @@ def _eval_by_batch(
         # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
             for var_name, metric_value in metric_dict.items():
-                # NOTE: concat all metric(scalars) into metric vector
+                # NOTE: concat single metric(scalar) list into metric vector
                 metric_value = paddle.concat(metric_value)[:num_samples]
-                # NOTE: compute metric via averaging metric vector,
+                # NOTE: compute metric via averaging metric over all samples,
                 # this might be not general for certain evaluation case
                 metric_value = float(metric_value.mean())
                 metric_dict_group[metric_name][var_name] = metric_value

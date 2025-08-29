@@ -24,7 +24,6 @@ import imageio
 import matplotlib
 import numpy as np
 import paddle
-from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.patches import Rectangle
@@ -458,7 +457,7 @@ def _save_plot_weather_from_array(
         vmin,
         vmax,
         log_norm,
-        cmap=cm.get_cmap("turbo", 1000),
+        cmap=plt.get_cmap("turbo", 1000),
     ):
         ax.title.set_text(title_text)
         ax.set_yticks(yticks)

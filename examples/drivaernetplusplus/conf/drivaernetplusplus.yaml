@@ -1,0 +1,76 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    dir: outputs_drivaernetplusplus/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode}
+    chdir: false
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train
+seed: 1
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+# model settings
+MODEL:
+  input_keys: ["vertices"]
+  output_keys: ["cd_value"]
+  weight_keys: ["weight_keys"]
+  dropout: 0.0
+  emb_dims: 1024
+  channels: [6, 64, 128, 256, 512, 1024]
+  linear_sizes: [128, 64, 32, 16]
+  k: 40
+  output_channels: 1
+
+# training settings
+TRAIN:
+  iters_per_epoch: 5399
+  epochs: 200
+  num_points: 100000
+  num_workers: 32
+  eval_during_train: True
+  train_ids_file: "train_design_ids.txt"
+  eval_ids_file: "val_design_ids.txt"
+  batch_size: 32
+  scheduler:
+    mode: "min"
+    patience: 20
+    factor: 0.1
+    verbose: True
+
+# evaluation settings
+EVAL:
+  num_points: 100000
+  batch_size: 1
+  pretrained_model_path: "https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DragPrediction_DrivAerNet_PointNet_r2_batchsize16_200epochs_100kpoints_tsne_NeurIPS_best_model.pdparams"
+  eval_with_no_grad: True
+  ids_file: "test_design_ids.txt"
+  num_workers: 8
+
+# optimizer settings
+optimizer:
+  weight_decay: 0.0001
+  lr: 0.001
+  optimizer: "adam"
+
+# dataset settings
+dataset_path: "data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle"
+aero_coeff: "data/DrivAerNetPlusPlus_Drag_8k.csv"
+subset_dir: "data/subset_dir"

@@ -106,9 +106,9 @@ examples/phylstm/phylstm2.py:37:100
 
 设置训练数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="119"
+``` py linenums="120"
 --8<--
-examples/phylstm/phylstm2.py:119:145
+examples/phylstm/phylstm2.py:120:146
 --8<--
 ```
 
@@ -116,9 +116,9 @@ examples/phylstm/phylstm2.py:119:145
 
 设置评估数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="147"
+``` py linenums="148"
 --8<--
-examples/phylstm/phylstm2.py:147:174
+examples/phylstm/phylstm2.py:148:170
 --8<--
 ```
 
@@ -126,9 +126,9 @@ examples/phylstm/phylstm2.py:147:174
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` yaml linenums="39"
+``` yaml linenums="38"
 --8<--
-examples/phylstm/conf/phylstm2.yaml:39:39
+examples/phylstm/conf/phylstm2.yaml:38:40
 --8<--
 ```
 
@@ -136,9 +136,9 @@ examples/phylstm/conf/phylstm2.yaml:39:39
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate` 为 1e-3。
 
-``` py linenums="177"
+``` py linenums="172"
 --8<--
-examples/phylstm/phylstm2.py:177:177
+examples/phylstm/phylstm2.py:172:173
 --8<--
 ```
 
@@ -146,17 +146,17 @@ examples/phylstm/phylstm2.py:177:177
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="178"
+``` py linenums="174"
 --8<--
-examples/phylstm/phylstm2.py:178:192
+examples/phylstm/phylstm2.py:174:180
 --8<--
 ```
 
 最后启动训练、评估即可：
 
-``` py linenums="194"
+``` py linenums="182"
 --8<--
-examples/phylstm/phylstm2.py:194:197
+examples/phylstm/phylstm2.py:182:185
 --8<--
 ```
 

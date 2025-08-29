@@ -133,7 +133,7 @@ class PhyCRNet(base.Arch):
         self.num_convlstm = num_layers[1]
 
         # encoder - downsampling
-        self.encoder = paddle.nn.LayerList(
+        self.encoder = nn.LayerList(
             [
                 encoder_block(
                     input_channels=self.input_channels[i],
@@ -147,7 +147,7 @@ class PhyCRNet(base.Arch):
         )
 
         # ConvLSTM
-        self.convlstm = paddle.nn.LayerList(
+        self.convlstm = nn.LayerList(
             [
                 ConvLSTMCell(
                     input_channels=self.input_channels[i],
@@ -170,7 +170,7 @@ class PhyCRNet(base.Arch):
 
         # initialize weights
         self.apply(_initialize_weights)
-        initializer_0 = paddle.nn.initializer.Constant(0.0)
+        initializer_0 = nn.initializer.Constant(0.0)
         initializer_0(self.output_layer.bias)
         self.enable_transform = True
 
@@ -334,8 +334,8 @@ class ConvLSTMCell(nn.Layer):
             padding_mode="circular",
         )
 
-        initializer_0 = paddle.nn.initializer.Constant(0.0)
-        initializer_1 = paddle.nn.initializer.Constant(1.0)
+        initializer_0 = nn.initializer.Constant(0.0)
+        initializer_1 = nn.initializer.Constant(1.0)
 
         initializer_0(self.Wxi.bias)
         initializer_0(self.Wxf.bias)
@@ -343,10 +343,10 @@ class ConvLSTMCell(nn.Layer):
         initializer_1(self.Wxo.bias)
 
     def forward(self, x, h, c):
-        ci = paddle.nn.functional.sigmoid(self.Wxi(x) + self.Whi(h))
-        cf = paddle.nn.functional.sigmoid(self.Wxf(x) + self.Whf(h))
+        ci = nn.functional.sigmoid(self.Wxi(x) + self.Whi(h))
+        cf = nn.functional.sigmoid(self.Wxf(x) + self.Whf(h))
         cc = cf * c + ci * paddle.tanh(self.Wxc(x) + self.Whc(h))
-        co = paddle.nn.functional.sigmoid(self.Wxo(x) + self.Who(h))
+        co = nn.functional.sigmoid(self.Wxo(x) + self.Who(h))
         ch = co * paddle.tanh(cc)
         return ch, cc
 
@@ -387,7 +387,7 @@ class encoder_block(nn.Layer):
 
         self.act = nn.ReLU()
 
-        initializer_0 = paddle.nn.initializer.Constant(0.0)
+        initializer_0 = nn.initializer.Constant(0.0)
         initializer_0(self.conv.bias)
 
     def forward(self, x):
@@ -418,7 +418,7 @@ class Conv2DDerivative(nn.Layer):
         self.filter.weight = self.create_parameter(
             shape=self.filter.weight.shape,
             dtype=self.filter.weight.dtype,
-            default_initializer=paddle.nn.initializer.Assign(
+            default_initializer=nn.initializer.Assign(
                 paddle.to_tensor(
                     der_filter, dtype=paddle.get_default_dtype(), stop_gradient=True
                 )
@@ -455,7 +455,7 @@ class Conv1DDerivative(nn.Layer):
         self.filter.weight = self.create_parameter(
             shape=self.filter.weight.shape,
             dtype=self.filter.weight.dtype,
-            default_initializer=paddle.nn.initializer.Assign(
+            default_initializer=nn.initializer.Assign(
                 paddle.to_tensor(
                     der_filter, dtype=paddle.get_default_dtype(), stop_gradient=True
                 )

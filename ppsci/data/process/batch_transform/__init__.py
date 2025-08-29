@@ -12,18 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import numbers
 from collections.abc import Mapping
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import List
+from typing import Optional
 
 import numpy as np
 import paddle
 
 from ppsci.data.process import transform
+from ppsci.data.process.batch_transform.preprocess import FunctionalBatchTransform
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 try:
     import pgl
@@ -31,7 +40,11 @@ except ModuleNotFoundError:
     pass
 
 
-__all__ = ["build_batch_transforms", "default_collate_fn"]
+__all__ = [
+    "build_batch_transforms",
+    "default_collate_fn",
+    "FunctionalBatchTransform",
+]
 
 
 def default_collate_fn(batch: List[Any]) -> Any:
@@ -84,22 +97,46 @@ def default_collate_fn(batch: List[Any]) -> Any:
         graph.tensor()
         graph.shape = [len(batch)]
         return graph
-
+    elif (
+        str(type(sample))
+        == "<class 'ppsci.data.dataset.atmospheric_dataset.GraphGridMesh'>"
+    ):
+        graph = sample
+        graph.tensor()
+        graph.shape = [1]
+        return graph
     raise TypeError(
         "batch data can only contains: paddle.Tensor, numpy.ndarray, "
-        f"dict, list, number, None, pgl.Graph, but got {type(sample)}"
+        f"dict, list, number, None, pgl.Graph, GraphGridMesh, but got {type(sample)}"
     )
 
 
-def build_batch_transforms(cfg):
+def build_transforms(cfg: DictConfig):
+    if not cfg:
+        return transform.Compose([])
     cfg = copy.deepcopy(cfg)
-    batch_transforms: Callable[[List[Any]], List[Any]] = transform.build_transforms(cfg)
+
+    transform_list = []
+    for _item in cfg:
+        transform_cls = next(iter(_item.keys()))
+        transform_cfg = _item[transform_cls]
+        transform_obj = eval(transform_cls)(**transform_cfg)
+        transform_list.append(transform_obj)
+
+    return transform.Compose(transform_list)
+
+
+def build_batch_transforms(cfg, collate_fn: Optional[Callable]):
+    cfg = copy.deepcopy(cfg)
+    batch_transforms: Callable[[List[Any]], List[Any]] = build_transforms(cfg)
+    if collate_fn is None:
+        collate_fn = default_collate_fn
 
     def collate_fn_batch_transforms(batch: List[Any]):
         # apply batch transform on separate samples
         batch = batch_transforms(batch)
 
         # then collate separate samples into batched data
-        return default_collate_fn(batch)
+        return collate_fn(batch)
 
     return collate_fn_batch_transforms

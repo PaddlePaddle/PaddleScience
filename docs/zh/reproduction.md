@@ -14,7 +14,7 @@
 
 - PaddleScience
 
-    基于飞桨的 AI4S 套件，提供面向 AI4S 领域通用功能，如复杂几何形状解析、通用微分方程、数据驱动/物理机理/数理融合等求解器，方便开发 AI4S 领域相关模型，具体参考 [PaddleScience 文档](https://paddlescience-docs.readthedocs.io/zh/latest/)
+    基于飞桨的 AI4S 套件，提供面向 AI4S 领域通用功能，如复杂几何形状解析、通用微分方程、数据驱动/物理机理/数理融合等求解器，方便开发 AI4S 领域相关模型，具体参考 [PaddleScience 文档](https://paddlescience-docs.readthedocs.io/zh-cn/latest/)
 
 - 飞桨PaddlePaddle
 
@@ -194,4 +194,4 @@ PaddleScience 官网文档需满足：
 - 如果模型依赖 PaddlePaddle 未涵盖的依赖（如 pandas），则需要在文档开头对说明需安装哪些依赖项。
 - 随机控制，需要尽量固定含有随机因素模块的随机种子，保证模型可以正常复现（PaddleScience 套件提供了 `ppsci.utils.misc.set_random_seed(seed_num)` 语句来控制全局随机数）。
 - 超参数：模型内部超参数禁止写死，尽量都可以通过配置文件进行配置。
-- 文档末尾附上参考论文、参考代码网址、复现训练好的模型参数下载链接。 整体文档撰写可以参考：[文档参考样例(darcy2d)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/darcy2d/)。
+- 文档末尾附上参考论文、参考代码网址、复现训练好的模型参数下载链接。 整体文档撰写可以参考：[文档参考样例(darcy2d)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/darcy2d/)。

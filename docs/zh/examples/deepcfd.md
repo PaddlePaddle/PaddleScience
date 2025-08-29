@@ -1,5 +1,7 @@
 # DeepCFD(Deep Computational Fluid Dynamics)
 
+<a href="https://aistudio.baidu.com/projectdetail/8691947" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 === "模型训练命令"
 
     ``` sh
@@ -24,6 +26,24 @@
     python deepcfd.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deepcfd/deepcfd_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python deepcfd.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    # windows
+    # curl --create-dirs -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    # curl --create-dirs -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    python deepcfd.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [deepcfd_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/deepcfd/deepcfd_pretrained.pdparams) | MSE.Total_MSE(mse_validator): 1.92947<br>MSE.Ux_MSE(mse_validator): 0.70684<br>MSE.Uy_MSE(mse_validator): 0.21337<br>MSE.p_MSE(mse_validator): 1.00926 |
@@ -41,7 +61,7 @@
 
 ## 2. 问题定义
 
- Navier-Stokes 方程是用于描述流体运动的方程，它的二维形式如下，
+Navier-Stokes 方程是用于描述流体运动的方程，它的二维形式如下，
 
 质量守恒：
 

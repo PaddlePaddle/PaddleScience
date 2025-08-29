@@ -4,12 +4,13 @@
     handler: python
     options:
       members:
-        - SGD
-        - Momentum
         - Adam
         - AdamW
-        - RMSProp
         - LBFGS
+        - Momentum
         - OptimizerList
+        - RMSProp
+        - SGD
+        - SOAP
       show_root_heading: true
       heading_level: 3

@@ -40,6 +40,7 @@ __all__ = [
     "PrettyOrderedDict",
     "Prettydefaultdict",
     "RankZeroOnly",
+    "RankZeroFirst",
     "Timer",
     "all_gather",
     "concat_dict_list",
@@ -52,6 +53,7 @@ __all__ = [
     "run_on_eval_mode",
     "run_at_rank0",
     "plot_curve",
+    "check_flag_enabled",
 ]
 
 
@@ -188,6 +190,40 @@ class RankZeroOnly:
             dist.barrier()
 
 
+class RankZeroFirst(ContextDecorator):
+    """
+    A context manager that ensures the code inside it is only executed by the process
+    with rank zero first. All ranks will be synchronized by `dist.barrier()`.
+
+    Args:
+        rank (Optional[int]): The rank of the current process. If not provided,
+            it will be obtained from `dist.get_rank()`.
+
+    Examples:
+        >>> import paddle.distributed as dist
+        >>> with RankZeroFirst(dist.get_rank()):
+        ...     # code here which should be executed first in the master(rank-0) process
+        ...     pass
+    """
+
+    def __init__(self, rank: Optional[int] = None):
+        if dist.is_initialized():
+            self.rank = rank if rank is not None else dist.get_rank()
+            self.world_size = dist.get_world_size()
+        else:
+            self.rank = 0
+            self.world_size = 1
+        self.is_master = self.rank == 0
+
+    def __enter__(self):
+        if self.world_size > 1 and not self.is_master:
+            dist.barrier()  # Non-master processs wait for master to finish
+
+    def __exit__(self, type, value, traceback):
+        if self.world_size > 1 and self.is_master:
+            dist.barrier()  # Allow others to proceed
+
+
 class Timer(ContextDecorator):
     """Count time cost for code block within context.
 
@@ -237,7 +273,7 @@ class Timer(ContextDecorator):
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
-            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+            logger.message(f"{self.name}.time_cost = {self.interval * 1000:.2f} ms")
 
     def start(self, name: str = "Timer"):
         """Push a new timer context.
@@ -631,3 +667,18 @@ def plot_curve(
     plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
     plt.close()
+
+
+def check_flag_enabled(flag_name: str) -> bool:
+    """Check whether the flag is enabled.
+
+    Args:
+        flag_name (str): Flag name to be checked whether enabled or disabled.
+
+    Returns:
+        bool: Whether given flag name is enabled in environment.
+    """
+    value = os.getenv(flag_name, False)
+    if isinstance(value, str):
+        return value.lower() in ["true", "1"]
+    return False

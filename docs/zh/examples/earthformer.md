@@ -10,9 +10,9 @@
 === "模型训练命令"
 
     ``` sh
-    # ICAR-ENSO 数据预训练模型
+    # ICAR-ENSO 数据模型训练
     python examples/earthformer/earthformer_enso_train.py
-    # SEVIR 数据集预训练模型
+    # SEVIR 数据模型训练
     python examples/earthformer/earthformer_sevir_train.py
 
     ```
@@ -74,7 +74,7 @@ EarthFormer 原代码中训练了 ICAR-ENSO 数据集中海面温度 (sst) 和 S
 
 ### 2.1 ICAR-ENSO 和 SEVIR 模型的训练、推理过程
 
-模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $[x_{i}]_{i=1}^{T}$ 表示长度为 $T$ 时空序列的输入气象数据，$[y_{i}]_{i=1}^{K}$ 表示预测未来 $K$ 步的气象数据，$[y_{i_True}]_{i=1}^{K}$ 表示未来 $K$ 步的真实数据，如海面温度数据和云总降水量数据。最后网络模型预测的输出和真值计算 mse 损失函数。
+模型预训练阶段是基于随机初始化的网络权重对模型进行训练，如下图所示，其中 $[x_{i}]_{i=1}^{T}$ 表示长度为 $T$ 时空序列的输入气象数据，$[y_{T+i}]_{i=1}^{K}$ 表示预测未来 $K$ 步的气象数据，$[y_{T+i_true}]_{i=1}^{K}$ 表示未来 $K$ 步的真实数据，如海面温度数据和云总降水量数据。最后网络模型预测的输出和真值计算 mse 损失函数。
 
 <figure markdown>
   ![earthformer-pretraining](https://paddle-org.bj.bcebos.com/paddlescience/docs/earthformer/earthformer-pretrain.png){ loading=lazy style="margin:0 auto;height:70%;width:70%"}

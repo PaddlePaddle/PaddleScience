@@ -14,6 +14,7 @@
 
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -106,7 +107,7 @@ class PINNPredictor(base.Predictor):
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
-        batch_size: int = 64,
+        batch_size: Optional[int] = 64,
     ) -> Dict[str, np.ndarray]:
         """
         Predicts the output of the model for the given input.
@@ -114,13 +115,14 @@ class PINNPredictor(base.Predictor):
         Args:
             input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]):
                 A dictionary containing the input data.
-            batch_size (int, optional): The batch size to use for prediction.
-                Defaults to 64.
+            batch_size (Optional[int]): The batch size to use for prediction.
+                If None, input will be directly sent to the model
+                without batch slicing. Defaults to 64.
 
         Returns:
             Dict[str, np.ndarray]: A dictionary containing the predicted output.
         """
-        if batch_size > self.max_batch_size:
+        if batch_size and batch_size > self.max_batch_size:
             logger.warning(
                 f"batch_size({batch_size}) is larger than "
                 f"max_batch_size({self.max_batch_size}), which may occur error."
@@ -143,7 +145,7 @@ class PINNPredictor(base.Predictor):
             ]
 
         num_samples = len(next(iter(input_dict.values())))
-        batch_num = (num_samples + (batch_size - 1)) // batch_size
+        batch_num = (num_samples + (batch_size - 1)) // batch_size if batch_size else 1
         pred_dict = misc.Prettydefaultdict(list)
 
         # inference by batch
@@ -152,9 +154,12 @@ class PINNPredictor(base.Predictor):
                 logger.info(f"Predicting batch {batch_id}/{batch_num}")
 
             # prepare batch input dict
-            st = (batch_id - 1) * batch_size
-            ed = min(num_samples, batch_id * batch_size)
-            batch_input_dict = {key: input_dict[key][st:ed] for key in input_dict}
+            if batch_size:
+                st = (batch_id - 1) * batch_size
+                ed = min(num_samples, batch_id * batch_size)
+                batch_input_dict = {key: input_dict[key][st:ed] for key in input_dict}
+            else:
+                batch_input_dict = {**input_dict}
 
             # send batch input data to input handle(s)
             if self.engine != "onnx":

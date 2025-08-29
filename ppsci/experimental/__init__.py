@@ -22,6 +22,7 @@ from ppsci.experimental.math_module import bessel_i1
 from ppsci.experimental.math_module import bessel_i1e
 from ppsci.experimental.math_module import fractional_diff
 from ppsci.experimental.math_module import gaussian_integrate
+from ppsci.experimental.math_module import montecarlo_integrate
 from ppsci.experimental.math_module import trapezoid_integrate
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "fractional_diff",
     "gaussian_integrate",
     "trapezoid_integrate",
+    "montecarlo_integrate",
 ]

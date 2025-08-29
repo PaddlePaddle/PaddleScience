@@ -103,7 +103,7 @@ class PeriodEmbedding(nn.Layer):
             )  # mu = 2*pi / period for sin/cos function
             for k, (p, trainable) in periods.items()
         }
-        self.freqs = paddle.nn.ParameterList(list(self.freqs_dict.values()))
+        self.freqs = nn.ParameterList(list(self.freqs_dict.values()))
 
     def forward(self, x: Dict[str, paddle.Tensor]):
         y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
@@ -151,7 +151,7 @@ class MLP(base.Arch):
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
-            input in given channel will be period embeded if specified, each tuple of
+            input in given channel will be period embedded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
             e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
@@ -220,7 +220,7 @@ class MLP(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
@@ -384,7 +384,7 @@ class ModifiedMLP(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
@@ -546,6 +546,7 @@ class PirateNetBlock(nn.Layer):
     $$
 
     Args:
+        input_dim (int): Input dimension.
         embed_dim (int): Embedding dimension.
         activation (str, optional): Name of activation function. Defaults to "tanh".
         random_weight (Optional[Dict[str, float]]): Mean and std of random weight
@@ -554,16 +555,17 @@ class PirateNetBlock(nn.Layer):
 
     def __init__(
         self,
+        input_dim: int,
         embed_dim: int,
         activation: str = "tanh",
         random_weight: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
         self.linear1 = (
-            nn.Linear(embed_dim, embed_dim)
+            nn.Linear(input_dim, embed_dim)
             if random_weight is None
             else RandomWeightFactorization(
-                embed_dim,
+                input_dim,
                 embed_dim,
                 mean=random_weight["mean"],
                 std=random_weight["std"],
@@ -595,9 +597,21 @@ class PirateNetBlock(nn.Layer):
             ],
             default_initializer=nn.initializer.Constant(0),
         )
-        self.act1 = act_mod.get_activation(activation)
-        self.act2 = act_mod.get_activation(activation)
-        self.act3 = act_mod.get_activation(activation)
+        self.act1 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act2 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act3 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
 
     def forward(self, x, u, v):
         f = self.act1(self.linear1(x))
@@ -641,7 +655,7 @@ class PirateNet(base.Arch):
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
         periods (Optional[Dict[int, Tuple[float, bool]]]): Period of each input key,
-            input in given channel will be period embeded if specified, each tuple of
+            input in given channel will be period embedded if specified, each tuple of
             periods list is [period, trainable]. Defaults to None.
         fourier (Optional[Dict[str, Union[float, int]]]): Random fourier feature embedding,
             e.g. {'dim': 256, 'scale': 1.0}. Defaults to None.
@@ -700,7 +714,7 @@ class PirateNet(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
@@ -709,6 +723,9 @@ class PirateNet(base.Arch):
                 cur_size, fourier["dim"], fourier["scale"]
             )
             cur_size = fourier["dim"]
+        else:
+            self.linear_emb = nn.Linear(cur_size, hidden_size[0])
+            cur_size = hidden_size[0]
 
         self.embed_u = nn.Sequential(
             (
@@ -757,6 +774,7 @@ class PirateNet(base.Arch):
             self.blocks.append(
                 PirateNetBlock(
                     cur_size,
+                    _size,
                     activation=activation,
                     random_weight=random_weight,
                 )
@@ -799,6 +817,8 @@ class PirateNet(base.Arch):
 
         if self.fourier:
             y = self.fourier_emb(y)
+        else:
+            y = self.linear_emb(y)
 
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)

@@ -23,7 +23,6 @@ class SphericalSWEDataset(io.Dataset):
         train_resolution (str, optional): The resolutions to train dataset. Defaults to "34x64".
         data_split (str, optional): Specify the dataset split, either 'train' , 'test_32x64',or 'test_64x128'.
             Defaults to "train".
-
     """
 
     def __init__(

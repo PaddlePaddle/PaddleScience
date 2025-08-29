@@ -17,6 +17,9 @@ from __future__ import annotations
 import sys
 import time
 from typing import TYPE_CHECKING
+from typing import Dict
+from typing import Sequence
+from typing import Union
 
 import paddle
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
@@ -27,6 +30,29 @@ from ppsci.utils import misc
 
 if TYPE_CHECKING:
     from ppsci import solver
+
+
+def _compute_batch_size(
+    input_dict: Dict[str, Union[paddle.Tensor, Sequence[paddle.Tensor]]]
+) -> int:
+    """Compute batch size from given input dict.
+
+    NOTE: Returned `batch_size` might be inaccurate, but it won't affect the correctness
+    of the training results because `batch_size` is now only used for timing.
+
+    Args:
+        input_dict (Dict[str, Union[paddle.Tensor, Sequence[paddle.Tensor]]]): Given input dict.
+
+    Returns:
+        int: Batch size of input dict.
+    """
+    sample = next(iter(input_dict.values()))
+    if hasattr(sample, "shape"):
+        return sample.shape[0]
+    elif hasattr(sample, "__len__"):  # Might be inaccurate here.
+        return len(sample)
+    else:
+        raise ValueError("Unsupported type of input dict value.")
 
 
 def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
@@ -40,6 +66,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
+        solver._invoke_callbacks_on_iter_begin()
         if solver.nvtx_flag:  # only for nsight analysis
             core.nvprof_nvtx_push(
                 f"Training iteration {solver.global_step + 1}"
@@ -55,17 +82,19 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
             # fetch data from data loader
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_push("Data load")
+
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
                 _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
-            reader_cost += time.perf_counter() - reader_tic
 
-            # NOTE: eliminate first 5 step for warmup
-            if iter_id == 5:
-                for key in solver.train_time_info:
-                    solver.train_time_info[key].reset()
+            if solver.nvtx_flag:  # only for nsight analysis
+                core.nvprof_nvtx_pop()
+
+            reader_cost += time.perf_counter() - reader_tic
 
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
@@ -75,7 +104,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             input_dicts.append(input_dict)
             label_dicts.append(label_dict)
             weight_dicts.append(weight_dict)
-            total_batch_size += next(iter(input_dict.values())).shape[0]
+            total_batch_size += _compute_batch_size(input_dict)
             reader_tic = time.perf_counter()
 
         loss_dict = misc.Prettydefaultdict(float)
@@ -184,6 +213,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 core.nvprof_stop()
                 sys.exit(0)
 
+        solver._invoke_callbacks_on_iter_end()
+
 
 def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
@@ -198,6 +229,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
+        solver._invoke_callbacks_on_iter_begin()
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
         total_batch_size = 0
@@ -225,7 +257,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             input_dicts.append(input_dict)
             label_dicts.append(label_dict)
             weight_dicts.append(weight_dict)
-            total_batch_size += next(iter(input_dict.values())).shape[0]
+            total_batch_size += _compute_batch_size(input_dict)
             reader_tic = time.perf_counter()
 
         def closure() -> paddle.Tensor:
@@ -289,3 +321,4 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
+        solver._invoke_callbacks_on_iter_end()

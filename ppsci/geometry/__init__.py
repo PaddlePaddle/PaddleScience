@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 
 from ppsci.geometry.geometry import Geometry
@@ -25,6 +27,7 @@ from ppsci.geometry.geometry_3d import Sphere
 from ppsci.geometry.geometry_nd import Hypercube
 from ppsci.geometry.geometry_nd import Hypersphere
 from ppsci.geometry.mesh import Mesh
+from ppsci.geometry.mesh import SDFMesh
 from ppsci.geometry.pointcloud import PointCloud
 from ppsci.geometry.timedomain import TimeDomain
 from ppsci.geometry.timedomain import TimeXGeometry
@@ -40,6 +43,7 @@ __all__ = [
     "Hypersphere",
     "Interval",
     "Mesh",
+    "SDFMesh",
     "Polygon",
     "Rectangle",
     "Sphere",
@@ -50,11 +54,17 @@ __all__ = [
 ]
 
 
-def build_geometry(cfg):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+
+def build_geometry(cfg: DictConfig):
     """Build geometry(ies)
 
     Args:
-        cfg (List[DictConfig]): Geometry config list.
+        cfg (DictConfig): Geometry config list.
 
     Returns:
         Dict[str, Geometry]: Geometry(ies) in dict.

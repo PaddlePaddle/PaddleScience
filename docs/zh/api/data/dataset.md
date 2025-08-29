@@ -12,6 +12,7 @@
         - ContinuousNamedArrayDataset
         - ERA5Dataset
         - ERA5SampledDataset
+        - ExtMoEENSODataset
         - IterableMatDataset
         - MatDataset
         - IterableNPZDataset
@@ -27,4 +28,12 @@
         - DGMRDataset
         - DarcyFlowDataset
         - SphericalSWEDataset
+        - SEVIRDataset
+        - MOlFLOWDataset
+        - CGCNNDataset
+        - PEMSDataset
+        - DrivAerNetDataset
+        - DrivAerNetPlusPlusDataset
+        - IFMMoeDataset
+        - STAFNetDataset
       show_root_heading: true

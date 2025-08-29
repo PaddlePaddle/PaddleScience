@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from typing import Dict
 
 import paddle
@@ -25,6 +26,10 @@ class Relobralo(nn.Layer):
     **Re**lative **Lo**ss **B**alancing with **Ra**ndom **Lo**okback
 
     [Multi-Objective Loss Balancing for Physics-Informed Deep Learning](https://arxiv.org/abs/2110.09813)
+
+    Attributes:
+        should_persist(bool): Whether to persist the loss aggregator when saving.
+            Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:
         num_losses (int): Number of losses.
@@ -49,6 +54,7 @@ class Relobralo(nn.Layer):
         ...     loss2 = paddle.sum((y2 - 2) ** 2)
         ...     loss_aggregator({'loss1': loss1, 'loss2': loss2}).backward()
     """
+    should_persist: ClassVar[bool] = True
 
     def __init__(
         self,

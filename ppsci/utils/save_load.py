@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from paddle import optimizer
 
     from ppsci import equation
+    from ppsci.loss import mtl
     from ppsci.utils import ema
 
 
@@ -42,7 +43,9 @@ __all__ = [
 
 
 def _load_pretrain_from_path(
-    path: str, model: nn.Layer, equation: Optional[Dict[str, equation.PDE]] = None
+    path: str,
+    model: nn.Layer,
+    equation: Optional[Dict[str, equation.PDE]] = None,
 ):
     """Load pretrained model from given path.
 
@@ -79,7 +82,9 @@ def _load_pretrain_from_path(
 
 
 def load_pretrain(
-    model: nn.Layer, path: str, equation: Optional[Dict[str, equation.PDE]] = None
+    model: nn.Layer,
+    path: str,
+    equation: Optional[Dict[str, equation.PDE]] = None,
 ):
     """
     Load pretrained model from given path or url.
@@ -103,7 +108,7 @@ def load_pretrain(
         eqn_path = path.replace(".pdparams", ".pdeqn", 1)
         path = download.get_weights_path_from_url(path)
 
-        # automatically download additional equation weights if avaiable
+        # automatically download additional equation weights if available
         def is_url_accessible(url: str):
             try:
                 import requests
@@ -131,6 +136,7 @@ def load_checkpoint(
     grad_scaler: Optional[amp.GradScaler] = None,
     equation: Optional[Dict[str, equation.PDE]] = None,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ) -> Dict[str, Any]:
     """Load from checkpoint.
 
@@ -141,6 +147,7 @@ def load_checkpoint(
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -153,9 +160,11 @@ def load_checkpoint(
         raise FileNotFoundError(f"{path}.scaler not exist.")
 
     # load state dict
-    param_dict = paddle.load(f"{path}.pdparams")
+    model_dict = paddle.load(f"{path}.pdparams")
     optim_dict = paddle.load(f"{path}.pdopt")
-    metric_dict = paddle.load(f"{path}.pdstates")
+    metric_dict = {}
+    if os.path.exists(f"{path}.pdstates"):
+        metric_dict = paddle.load(f"{path}.pdstates")
     if grad_scaler is not None:
         scaler_dict = paddle.load(f"{path}.pdscaler")
     if equation is not None:
@@ -165,8 +174,9 @@ def load_checkpoint(
         else:
             equation_dict = paddle.load(f"{path}.pdeqn")
 
-    # set state dict
-    missing_keys, unexpected_keys = model.set_state_dict(param_dict)
+    # set model state dict
+    logger.message(f"* Loading model checkpoint from {path}.pdparams")
+    missing_keys, unexpected_keys = model.set_state_dict(model_dict)
     if missing_keys:
         logger.warning(
             f"There are missing keys when loading checkpoint: {missing_keys}, "
@@ -178,16 +188,28 @@ def load_checkpoint(
             "and corresponding weights will be ignored."
         )
 
+    # set optimizer state dict
+    logger.message(f"* Loading optimizer checkpoint from {path}.pdopt")
     optimizer.set_state_dict(optim_dict)
+
     if grad_scaler is not None:
+        logger.message(f"* Loading grad scaler checkpoint from {path}.pdscaler")
         grad_scaler.load_state_dict(scaler_dict)
+
     if equation is not None and equation_dict is not None:
+        logger.message(f"* Loading equation checkpoint from {path}.pdeqn")
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
-    if ema_model:
-        avg_param_dict = paddle.load(f"{path}_ema.pdparams")
-        ema_model.set_state_dict(avg_param_dict)
+    if ema_model is not None:
+        logger.message(f"* Loading EMA checkpoint from {path}_ema.pdparams")
+        avg_model_dict = paddle.load(f"{path}_ema.pdparams")
+        ema_model.set_state_dict(avg_model_dict)
+
+    if aggregator is not None and aggregator.should_persist:
+        logger.message(f"* Loading loss aggregator checkpoint from {path}.pdagg")
+        aggregator_dict = paddle.load(f"{path}.pdagg")
+        aggregator.set_state_dict(aggregator_dict)
 
     logger.message(f"Finish loading checkpoint from {path}")
     return metric_dict
@@ -196,13 +218,14 @@ def load_checkpoint(
 def save_checkpoint(
     model: nn.Layer,
     optimizer: Optional[optimizer.Optimizer],
-    metric: Dict[str, float],
+    metric: Optional[Dict[str, float]] = None,
     grad_scaler: Optional[amp.GradScaler] = None,
     output_dir: Optional[str] = None,
     prefix: str = "model",
     equation: Optional[Dict[str, equation.PDE]] = None,
     print_log: bool = True,
     ema_model: Optional[ema.AveragedModel] = None,
+    aggregator: Optional[mtl.LossAggregator] = None,
 ):
     """
     Save checkpoint, including model params, optimizer params, metric information.
@@ -210,7 +233,7 @@ def save_checkpoint(
     Args:
         model (nn.Layer): Model with parameters.
         optimizer (Optional[optimizer.Optimizer]): Optimizer for model.
-        metric (Dict[str, float]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}.
+        metric (Optional[Dict[str, float]]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}. Defaults to None.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
@@ -219,6 +242,7 @@ def save_checkpoint(
             keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
             Defaults to True.
         ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
+        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -240,11 +264,16 @@ def save_checkpoint(
     os.makedirs(ckpt_dir, exist_ok=True)
 
     paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
-    if optimizer:
+
+    if optimizer is not None:
         paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
-    paddle.save(metric, f"{ckpt_path}.pdstates")
+
+    if metric is not None and len(metric) > 0:
+        paddle.save(metric, f"{ckpt_path}.pdstates")
+
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
+
     if equation is not None:
         num_learnable_params = sum(
             [len(eq.learnable_parameters) for eq in equation.values()]
@@ -255,8 +284,11 @@ def save_checkpoint(
                 f"{ckpt_path}.pdeqn",
             )
 
-    if ema_model:
+    if ema_model is not None:
         paddle.save(ema_model.state_dict(), f"{ckpt_path}_ema.pdparams")
+
+    if aggregator is not None and aggregator.should_persist:
+        paddle.save(aggregator.state_dict(), f"{ckpt_path}.pdagg")
 
     if print_log:
         log_str = f"Finish saving checkpoint to: {ckpt_path}"

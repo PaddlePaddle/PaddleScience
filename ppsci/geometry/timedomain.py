@@ -19,6 +19,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 from __future__ import annotations
 
 import itertools
+import types
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -61,19 +62,23 @@ class TimeDomain(geometry_1d.Interval):
         super().__init__(t0, t1)
         self.t0 = t0
         self.t1 = t1
+        assert (
+            time_step is None or timestamps is None
+        ), "time_step and timestamps cannot be both set."
         self.time_step = time_step
-        if timestamps is None:
-            self.timestamps = None
-        else:
+        if timestamps is not None:
             self.timestamps = np.array(
                 timestamps, dtype=paddle.get_default_dtype()
             ).reshape([-1])
-        if time_step is not None:
-            if time_step <= 0:
-                raise ValueError(f"time_step({time_step}) must be larger than 0.")
-            self.num_timestamps = int(np.ceil((t1 - t0) / time_step)) + 1
-        elif timestamps is not None:
-            self.num_timestamps = len(timestamps)
+            self.num_timestamps = len(self.timestamps)
+        elif time_step is not None:
+            # set timestamps manually with given time_step
+            self.timestamps = np.arange(
+                t0, t1, time_step, dtype=paddle.get_default_dtype()
+            )
+            self.num_timestamps = len(self.timestamps)
+        else:
+            self.timestamps = None
 
     def on_initial(self, t: np.ndarray) -> np.ndarray:
         """Check if a specific time is on the initial time point.
@@ -115,6 +120,35 @@ class TimeXGeometry(geometry.Geometry):
         self.geometry = geometry
         self.ndim = geometry.ndim + timedomain.ndim
 
+        if hasattr(self.geometry, "sdf_func"):
+
+            def sdf_func(self, points: np.ndarray) -> np.ndarray:
+                """Compute signed distance field.
+
+                Args:
+                    points (np.ndarray): The temporal-spatial coordinate points used to calculate
+                        the SDF value, the shape is [N, 1+D], where 1 represents the temporal
+                        dimension and D represents the spatial dimensions.
+
+                Returns:
+                    np.ndarray: SDF values of input points without squared, the shape is [N, 1].
+
+                NOTE: This function usually returns ndarray with negative values, because
+                according to the definition of SDF, the SDF value of the coordinate point inside
+                the object(interior points) is negative, the outside is positive, and the edge
+                is 0. Therefore, when used for weighting, a negative sign is often added before
+                the result of this function.
+                """
+                if points.shape[1] != self.ndim:
+                    raise ValueError(
+                        f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+                    )
+                spatial_points = points[:, 1:]
+                sdf = self.geometry.sdf_func(spatial_points)
+                return sdf
+
+            self.sdf_func = types.MethodType(sdf_func, self)
+
     @property
     def dim_keys(self):
         return ("t",) + self.geometry.dim_keys
@@ -153,11 +187,10 @@ class TimeXGeometry(geometry.Geometry):
             >>> print(ts.shape)
             (1000, 3)
         """
-        if self.timedomain.time_step is not None:
-            # exclude start time t0
-            nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
-            nx = int(np.ceil(n / nt))
-        elif self.timedomain.timestamps is not None:
+        if (
+            self.timedomain.time_step is not None
+            or self.timedomain.timestamps is not None
+        ):
             # exclude start time t0
             nt = self.timedomain.num_timestamps - 1
             nx = int(np.ceil(n / nt))
@@ -211,7 +244,8 @@ class TimeXGeometry(geometry.Geometry):
             criteria (Optional[Callable]): A method that filters on the generated random points. Defaults to None.
 
         Returns:
-            np.ndarray: A set of random spatial-temporal points.
+            np.ndarray: A array of random spatial-temporal points with shape [N, 1+D], where 1 represents the
+            temporal dimension and D represents the spatial dimensions.
 
         Examples:
             >>> import ppsci
@@ -225,63 +259,14 @@ class TimeXGeometry(geometry.Geometry):
         if self.timedomain.time_step is None and self.timedomain.timestamps is None:
             raise ValueError("Either time_step or timestamps must be provided.")
         # time evenly and geometry random, if time_step if specified
-        if self.timedomain.time_step is not None:
-            nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
-            t = np.linspace(
-                self.timedomain.t1,
-                self.timedomain.t0,
-                num=nt,
-                endpoint=False,
-                dtype=paddle.get_default_dtype(),
-            )[:, None][
-                ::-1
-            ]  # [nt, 1]
+        if (
+            self.timedomain.time_step is not None
+            or self.timedomain.timestamps is not None
+        ):
             # 1. sample nx points in static geometry with criteria
-            nx = int(np.ceil(n / nt))
-            _size, _ntry, _nsuc = 0, 0, 0
-            x = np.empty(
-                shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
-            )
-            while _size < nx:
-                _x = self.geometry.random_points(nx, random)
-                if criteria is not None:
-                    # fix arg 't' to None in criteria there
-                    criteria_mask = criteria(
-                        None, *np.split(_x, self.geometry.ndim, axis=1)
-                    ).flatten()
-                    _x = _x[criteria_mask]
-                if len(_x) > nx - _size:
-                    _x = _x[: nx - _size]
-                x[_size : _size + len(_x)] = _x
-
-                _size += len(_x)
-                _ntry += 1
-                if len(_x) > 0:
-                    _nsuc += 1
-
-                if _ntry >= 1000 and _nsuc == 0:
-                    raise ValueError(
-                        "Sample points failed, "
-                        "please check correctness of geometry and given criteria."
-                    )
-
-            # 2. repeat spatial points along time
-            tx = []
-            for ti in t:
-                tx.append(
-                    np.hstack(
-                        (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x)
-                    )
-                )
-            tx = np.vstack(tx)
-            if len(tx) > n:
-                tx = tx[:n]
-            return tx
-        elif self.timedomain.timestamps is not None:
-            nt = self.timedomain.num_timestamps - 1
             t = self.timedomain.timestamps[1:]
+            nt = self.timedomain.num_timestamps - 1
             nx = int(np.ceil(n / nt))
-
             _size, _ntry, _nsuc = 0, 0, 0
             x = np.empty(
                 shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
@@ -309,6 +294,7 @@ class TimeXGeometry(geometry.Geometry):
                         "please check correctness of geometry and given criteria."
                     )
 
+            # 2. repeat spatial points along time
             tx = []
             for ti in t:
                 tx.append(

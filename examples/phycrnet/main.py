@@ -2,8 +2,6 @@
 PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
-from os import path as osp
-
 import functions
 import hydra
 import paddle
@@ -11,15 +9,9 @@ import scipy.io as scio
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set initial states for convlstm
     NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))
@@ -79,6 +71,7 @@ def train(cfg: DictConfig):
             },
             "batch_size": 1,
             "num_workers": 0,
+            "auto_collation": True,
         },
         ppsci.loss.FunctionalLoss(functions.train_loss_func),
         {
@@ -97,6 +90,7 @@ def train(cfg: DictConfig):
             },
             "batch_size": 1,
             "num_workers": 0,
+            "auto_collation": True,
         },
         ppsci.loss.FunctionalLoss(functions.val_loss_func),
         {
@@ -107,10 +101,11 @@ def train(cfg: DictConfig):
     )
     validator_pde = {sup_validator_pde.name: sup_validator_pde}
 
-    # initialize solver
+    # initialize optimizer & scheduler
     scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
-
     optimizer = ppsci.optimizer.Adam(scheduler)(model)
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
@@ -132,11 +127,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set initial states for convlstm
     NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))

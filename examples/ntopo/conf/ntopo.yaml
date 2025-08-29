@@ -1,0 +1,107 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_ntopo/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2024
+log_freq: 500
+output_dir: ${hydra:run.dir}
+output_dir_disp: ${hydra:run.dir}/disp
+output_dir_density: ${hydra:run.dir}/density
+
+# set problem parameters
+PROBLEM: "Beam3D"
+
+# set working condition
+NU: 0.3
+E: 1.0
+VOLUME_RATIO: 0.5
+SIGMOID_ALPHA: 5.0
+ENERGY_EXP: 3.0  # TODO: trainable parameter
+PENALTY: 10
+MAX_MOVE: 0.2
+DAMPING: 0.5
+
+USE_MMSE: true
+USE_OC: true
+FILTER: "Gaussian"  # "null" "Gaussian"
+FILTER_RADIUS: 2.0
+
+input_keys_3d: ["x_scaled", "y_scaled", "z_scaled", "sin_x_scaled", "sin_y_scaled", "sin_z_scaled"]
+output_keys_3d: ["u", "v", "w"]
+# model settings
+MODEL:
+  disp_net:
+    input_keys: ${input_keys_3d}
+    output_keys: ${output_keys_3d}
+    num_layers: 6
+    hidden_size: 180
+    last_layer_init_scale: 1.0e-3
+  density_net:
+    input_keys: ${input_keys_3d}
+    output_keys: ["density",]
+    num_layers: 6
+    hidden_size: 180
+    last_layer_init_scale: 1.0e-3
+
+# training settings
+TRAIN:
+  st_epoch: 1
+  epochs: 100  # times for for-loop
+  disp_net:
+    epochs: 1
+    iters_per_epoch: 1000
+    optimizer:
+      learning_rate: 3.0e-4
+      beta2: 0.99
+      epsilon: 1e-7
+  density_net:
+    epochs: 1
+    iters_per_epoch: 50
+    optimizer:
+      learning_rate: 3.0e-4
+      beta1: 0.8
+      beta2: 0.9
+      epsilon: 1e-7
+  batch_size:
+    constraint: 8000  # 640000
+    visualizer: 8000  # 640000
+  save_freq: 10
+  eval_during_train: false
+  eval_freq: 100
+  enable_parallel: false # whether to enable parallel training
+  # Due to the particularity of this case training process,
+  # please use `pretrained_model_path` but not `checkpoint_path` to resume training
+  # and manually adjust the above `st_epoch`
+  pretrained_model_path_disp: null
+  pretrained_model_path_density: null
+  checkpoint_path_disp: null
+  checkpoint_path_density: null
+
+# evaluation settings
+EVAL:
+  num_sample: 10000
+  pretrained_model_path_density: null
+  n_cells: [100, 50, 25]

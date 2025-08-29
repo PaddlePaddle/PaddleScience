@@ -13,13 +13,12 @@
 # limitations under the License.
 
 # NOTE: Put config module import at the top level for register default config(s) in
-# ConfigStore at the begining of ppsci
+# ConfigStore at the beginning of ppsci
 from ppsci.utils import config  # isort:skip  # noqa: F401
 from ppsci.utils import ema
 from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
-from ppsci.utils import profiler
 from ppsci.utils import reader
 from ppsci.utils import writer
 from ppsci.utils.checker import dynamic_import_to_globals
@@ -49,7 +48,6 @@ __all__ = [
     "ema",
     "reader",
     "writer",
-    "profiler",
     "load_csv_file",
     "load_mat_file",
     "load_npz_file",

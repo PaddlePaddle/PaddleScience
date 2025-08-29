@@ -1002,8 +1002,8 @@ class AddCoords(nn.Layer):
             input_tensor: shape(batch, channel, x_dim, y_dim)
         """
         batch_size, _, x_dim, y_dim = input_tensor.shape
-        xx_channel = paddle.arange(end=x_dim).repeat(1, y_dim, 1)
-        x = paddle.arange(end=y_dim).repeat(1, x_dim, 1)
+        xx_channel = paddle.arange(end=x_dim).tile([1, y_dim, 1])
+        x = paddle.arange(end=y_dim).tile([1, x_dim, 1])
         perm_0 = list(range(x.ndim))
         perm_0[1] = 2
         perm_0[2] = 1
@@ -1012,12 +1012,12 @@ class AddCoords(nn.Layer):
         yy_channel = yy_channel.astype(dtype="float32") / (y_dim - 1)
         xx_channel = xx_channel * 2 - 1
         yy_channel = yy_channel * 2 - 1
-        x = xx_channel.repeat(batch_size, 1, 1, 1)
+        x = xx_channel.tile([batch_size, 1, 1, 1])
         perm_1 = list(range(x.ndim))
         perm_1[2] = 3
         perm_1[3] = 2
         xx_channel = x.transpose(perm=perm_1)
-        x = yy_channel.repeat(batch_size, 1, 1, 1)
+        x = yy_channel.tile([batch_size, 1, 1, 1])
         perm_2 = list(range(x.ndim))
         perm_2[2] = 3
         perm_2[3] = 2
