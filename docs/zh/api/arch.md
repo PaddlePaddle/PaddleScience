@@ -22,6 +22,7 @@
         - Generator
         - HEDeepONets
         - KAN
+        - LatentNO
         - LorenzEmbedding
         - MLP
         - ModelList
