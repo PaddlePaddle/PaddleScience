@@ -256,7 +256,6 @@ class LatentNO(base.Arch):
             dict[str, paddle.Tensor]: Dictionary containing:
                 - "y2": Output tensor of shape (B, N, out_dim).
         """
-
         x = inputs[self.input_keys[0]]  # trunk input
         y = inputs[self.input_keys[1]]  # branch input
 
@@ -320,7 +319,6 @@ class LatentNO_time(base.Arch):
             step (Optional[int]): Time step size used during unrolling.
             time_unroll (bool): Whether to enable autoregressive time unrolling.
         """
-
         super().__init__()
 
         # Use separate input keys (x, y1) to align with Dataset convention.
@@ -365,7 +363,7 @@ class LatentNO_time(base.Arch):
                 initializer.ones_(module.weight)
                 initializer.zeros_(module.bias)
 
-    # --- MODIFIED ---: extract single-step prediction for reuse
+    # Extract single-step prediction for reuse
     def _single_step_predict(self, x: paddle.Tensor, y: paddle.Tensor) -> paddle.Tensor:
         """
         Compute single-step prediction (reused in forward).
