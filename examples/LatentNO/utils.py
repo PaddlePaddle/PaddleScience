@@ -15,7 +15,6 @@ class RelLpLoss(base.Metric):
         eps: float = 1e-12,
         keep_batch: bool = False,
     ):
-
         if keep_batch:
             raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
         super(RelLpLoss, self).__init__(keep_batch)
@@ -32,7 +31,6 @@ class RelLpLoss(base.Metric):
     ) -> Dict[str, "paddle.Tensor"]:
         losses: Dict[str, paddle.Tensor] = {}
         for label_key in label_dict:
-
             pred_key = self.key if self.key in output_dict else label_key
             pred = output_dict[pred_key]
             target = label_dict[label_key]
@@ -82,7 +80,6 @@ class RelLpLoss_time(base.Metric):
         weight_dicts: Optional[Dict] = None,
     ) -> Dict[str, "paddle.Tensor"]:
         losses: Dict[str, paddle.Tensor] = {}
-
         for label_key in label_dict:
             if f"{self.key}_steps" in output_dict and not self.use_full_sequence:
                 # Method 1: Accumulate losses at each timestep (matches backpropagation loss)
