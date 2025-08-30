@@ -1,0 +1,46 @@
+
+# satellite_panoptic.yaml
+
+# 数据集相关配置
+dataset:
+  train_data_path: "./data/satellite_panoptic/images/train"
+  val_data_path: "./data/satellite_panoptic/images/val"
+  label_data_path: "./data/satellite_panoptic/labels"
+  batch_size: 16
+  num_workers: 4
+  shuffle: true
+  image_size: [256, 256]
+
+# 模型相关配置
+model:
+  name: "ConvTemporalAttentionNet"
+  input_channels: 3  # RGB 图像
+  output_channels: 21  # 例如，21个类别
+  pretrained_weights: "./pretrained/model.pdparams"
+
+# 训练相关配置
+training:
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "Adam"
+  scheduler:
+    name: "StepLR"
+    step_size: 10
+    gamma: 0.5
+  loss: "CrossEntropyLoss"
+
+# 验证相关配置
+validation:
+  save_best_model: true
+  validation_interval: 1  # 每训练1个epoch进行一次验证
+
+# 日志和检查点
+logging:
+  log_dir: "./logs"
+  checkpoint_dir: "./checkpoints"
+
+# 其他超参数
+other:
+  seed: 42
+  device: "cuda"  # 使用GPU训练，如果没有GPU，则改为 'cpu'
