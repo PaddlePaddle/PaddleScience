@@ -150,7 +150,7 @@ def evaluate(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./config", config_name="LatentNO-forward-Darcy.yaml"
+    version_base=None, config_path="./config", config_name="LatentNO-Darcy.yaml"
 )
 def main(cfg: DictConfig):
 

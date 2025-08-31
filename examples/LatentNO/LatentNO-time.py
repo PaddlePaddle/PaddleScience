@@ -165,7 +165,7 @@ def evaluate(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./config", config_name="LatentNO-forward-NS2d.yaml"
+    version_base=None, config_path="./config", config_name="LatentNO-NS2d.yaml"
 )
 def main(cfg: DictConfig):
 
