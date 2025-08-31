@@ -232,15 +232,14 @@ class LatentNO(base.Arch):
         )
         self.apply(self._init_weights)
 
-    def _init_weights(self):
-        for module in self.sublayers():
-            if isinstance(module, paddle.nn.Linear):
-                initializer.linear_init_(module)
-            elif isinstance(module, paddle.nn.Conv2D):
-                initializer.conv_init_(module)
-            elif isinstance(module, paddle.nn.LayerNorm):
-                initializer.ones_(module.weight)
-                initializer.zeros_(module.bias)
+    def _init_weights(self, module):
+        if isinstance(module, paddle.nn.Linear):
+            initializer.linear_init_(module)
+        elif isinstance(module, paddle.nn.Conv2D):
+            initializer.conv_init_(module)
+        elif isinstance(module, paddle.nn.LayerNorm):
+            initializer.ones_(module.weight)
+            initializer.zeros_(module.bias)
 
     def forward(self, inputs: dict[str, paddle.Tensor]) -> dict[str, paddle.Tensor]:
         """
@@ -353,15 +352,14 @@ class LatentNO_time(base.Arch):
         # teacher forcing: when True *and* model.training==True, forward will use GT from inputs["y2"] as next input.
         self.use_teacher_forcing = True
 
-    def _init_weights(self):
-        for module in self.sublayers():
-            if isinstance(module, paddle.nn.Linear):
-                initializer.linear_init_(module)
-            elif isinstance(module, paddle.nn.Conv2D):
-                initializer.conv_init_(module)
-            elif isinstance(module, paddle.nn.LayerNorm):
-                initializer.ones_(module.weight)
-                initializer.zeros_(module.bias)
+    def _init_weights(self, module):
+        if isinstance(module, paddle.nn.Linear):
+            initializer.linear_init_(module)
+        elif isinstance(module, paddle.nn.Conv2D):
+            initializer.conv_init_(module)
+        elif isinstance(module, paddle.nn.LayerNorm):
+            initializer.ones_(module.weight)
+            initializer.zeros_(module.bias)
 
     # Extract single-step prediction for reuse
     def _single_step_predict(self, x: paddle.Tensor, y: paddle.Tensor) -> paddle.Tensor:
