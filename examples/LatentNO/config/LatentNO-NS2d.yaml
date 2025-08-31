@@ -45,6 +45,8 @@ MODEL:
   T: 10
   step: 1
   time_unroll: True
+  input_keys : ["x", "y1"]
+  output_keys : ["y2"]
 
 TRAIN:
   iters_per_epoch : -1
