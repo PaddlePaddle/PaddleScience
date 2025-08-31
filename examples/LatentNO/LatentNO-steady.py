@@ -1,22 +1,22 @@
 import hydra
 import paddle
 from omegaconf import DictConfig
-from utils import RelLpLoss_time
+from utils import RelLpLoss
 
 import ppsci
 
 
 def train(cfg: DictConfig):
-    model = ppsci.arch.LatentNO_time(**cfg.MODEL)
+    model = ppsci.arch.LatentNO(**cfg.MODEL)
 
     train_dataloader_cfg = {
         "dataset": {
-            "name": "LatentNODataset_time",
+            "name": "LatentNODataset",
             "data_name": cfg.data_name,
             "data_mode": "train",
             "data_normalize": cfg.data_normalize,
             "data_concat": cfg.data_concat,
-            "input_keys": ("x", "y1", "y2"),
+            "input_keys": ("x", "y1"),
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": True},
@@ -26,12 +26,12 @@ def train(cfg: DictConfig):
 
     eval_dataloader_cfg = {
         "dataset": {
-            "name": "LatentNODataset_time",
+            "name": "LatentNODataset",
             "data_name": cfg.data_name,
             "data_mode": "val",
             "data_normalize": cfg.data_normalize,
             "data_concat": cfg.data_concat,
-            "input_keys": ("x", "y1", "y2"),
+            "input_keys": ("x", "y1"),
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
@@ -39,9 +39,7 @@ def train(cfg: DictConfig):
         "num_workers": cfg.get("num_workers", 0),
     }
 
-    train_loss_fn = RelLpLoss_time(
-        p=2, key="y2", normalizer=None, use_full_sequence=False
-    )
+    train_loss_fn = RelLpLoss(p=2, key="y2", normalizer=None)
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -49,7 +47,6 @@ def train(cfg: DictConfig):
         output_expr={"y2": lambda out: out["y2"]},
         name="SupTrain",
     )
-
     if cfg.data_normalize:
         normalizer = sup_constraint.data_loader.dataset.normalizer
     else:
@@ -76,15 +73,9 @@ def train(cfg: DictConfig):
         beta2=cfg.TRAIN.beta1,
     )(model)
 
-    metric_dict = {
-        "L2Rel": RelLpLoss_time(
-            p=2, key="y2", normalizer=normalizer, use_full_sequence=True
-        )
-    }
+    metric_dict = {"L2Rel": RelLpLoss(p=2, key="y2", normalizer=normalizer)}
 
-    val_loss_fn = RelLpLoss_time(
-        p=2, key="y2", normalizer=normalizer, use_full_sequence=True
-    )
+    val_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
 
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -108,12 +99,12 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    train_ds = ppsci.data.dataset.LatentNODataset_time(
+    train_ds = ppsci.data.dataset.LatentNODataset(
         cfg.data_name,
         "train",
         cfg.data_normalize,
         cfg.data_concat,
-        input_keys=("x", "y1", "y2"),
+        input_keys=("x", "y1"),
         label_keys=("y2",),
     )
     if cfg.data_normalize:
@@ -121,20 +112,18 @@ def evaluate(cfg: DictConfig):
     else:
         normalizer = None
 
-    eval_loss_fn = RelLpLoss_time(
-        p=2, key="y2", normalizer=normalizer, use_full_sequence=True
-    )
+    eval_loss_fn = RelLpLoss(p=2, key="y2", normalizer=normalizer)
 
-    model = ppsci.arch.LatentNO_time(**cfg.MODEL)
+    model = ppsci.arch.LatentNO(**cfg.MODEL)
 
     eval_dataloader_cfg = {
         "dataset": {
-            "name": "LatentNODataset_time",
+            "name": "LatentNODataset",
             "data_name": cfg.data_name,
             "data_mode": "val",
             "data_normalize": cfg.data_normalize,
             "data_concat": cfg.data_concat,
-            "input_keys": ("x", "y1", "y2"),
+            "input_keys": ("x", "y1"),
             "label_keys": ("y2",),
         },
         "sampler": {"name": "BatchSampler", "drop_last": True, "shuffle": False},
@@ -142,11 +131,7 @@ def evaluate(cfg: DictConfig):
         "num_workers": cfg.get("num_workers", 0),
     }
 
-    metric_dict = {
-        "L2Rel": RelLpLoss_time(
-            p=2, key="y2", normalizer=normalizer, use_full_sequence=True
-        )
-    }
+    metric_dict = {"L2Rel": RelLpLoss(p=2, key="y2", normalizer=normalizer)}
 
     validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
@@ -165,7 +150,7 @@ def evaluate(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./config", config_name="LatentNO-forward-NS2d.yaml"
+    version_base=None, config_path="./config", config_name="LatentNO-Elasticity.yaml"
 )
 def main(cfg: DictConfig):
 
