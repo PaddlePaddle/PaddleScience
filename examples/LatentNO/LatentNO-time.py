@@ -164,9 +164,7 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
 
-@hydra.main(
-    version_base=None, config_path="./config", config_name="LatentNO-NS2d.yaml"
-)
+@hydra.main(version_base=None, config_path="./config", config_name="LatentNO-NS2d.yaml")
 def main(cfg: DictConfig):
 
     if cfg.mode == "train":
