@@ -5,16 +5,17 @@ import random
 import numpy as np
 import paddle
 import pandas as pd
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from tqdm import tqdm
 
 import ppsci
 
-# 随机种子设置，确保与 torch 版对齐
 random.seed(0)
 np.random.seed(0)
 paddle.seed(0)

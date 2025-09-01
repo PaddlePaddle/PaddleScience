@@ -122,7 +122,7 @@ __all__ = [
     "RegPointNet",
     "IFMMLP",
     "STAFNet",
-    "VGG"
+    "VGG",
 ]
 
 

@@ -1,17 +1,20 @@
-from typing import List, Optional, Set, Tuple
-
-from uuid import uuid1
-from inspect import Parameter
 from collections import OrderedDict
+from inspect import Parameter
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from uuid import uuid1
 
 import paddle
-from paddle import Tensor
-
 from inspector import Inspector
-from scatter import scatter
+from paddle import Tensor
 from paddle.nn import Layer
+from scatter import scatter
 
 Size = Optional[Tuple[int, int]]
+
+
 class MessagePassing(Layer):
     r"""Base class for creating message passing layers of the form
 
@@ -55,21 +58,33 @@ class MessagePassing(Layer):
     """
 
     special_args: Set[str] = {
-        'edge_index', 'adj_t', 'edge_index_i', 'edge_index_j', 'size',
-        'size_i', 'size_j', 'ptr', 'index', 'dim_size'
+        "edge_index",
+        "adj_t",
+        "edge_index_i",
+        "edge_index_j",
+        "size",
+        "size_i",
+        "size_j",
+        "ptr",
+        "index",
+        "dim_size",
     }
 
-    def __init__(self, aggr: Optional[str] = "add",
-                 flow: str = "source_to_target", node_dim: int = -2,
-                 decomposed_layers: int = 1):
+    def __init__(
+        self,
+        aggr: Optional[str] = "add",
+        flow: str = "source_to_target",
+        node_dim: int = -2,
+        decomposed_layers: int = 1,
+    ):
 
         super().__init__()
 
         self.aggr = aggr
-        assert self.aggr in ['add', 'mean', 'max', None]
+        assert self.aggr in ["add", "mean", "max", None]
 
         self.flow = flow
-        assert self.flow in ['source_to_target', 'target_to_source']
+        assert self.flow in ["source_to_target", "target_to_source"]
 
         self.node_dim = node_dim
         self.decomposed_layers = decomposed_layers
@@ -82,14 +97,17 @@ class MessagePassing(Layer):
         self.inspector.inspect(self.message_and_aggregate, pop_first=True)
 
         self.__user_args__ = self.inspector.keys(
-            ['message', 'aggregate', 'update']).difference(self.special_args)
+            ["message", "aggregate", "update"]
+        ).difference(self.special_args)
         self.__fused_user_args__ = self.inspector.keys(
-            ['message_and_aggregate', 'update']).difference(self.special_args)
-        self.__edge_user_args__ = self.inspector.keys(
-            ['edge_update']).difference(self.special_args)
+            ["message_and_aggregate", "update"]
+        ).difference(self.special_args)
+        self.__edge_user_args__ = self.inspector.keys(["edge_update"]).difference(
+            self.special_args
+        )
 
         # Support for "fused" message passing.
-        self.fuse = self.inspector.implements('message_and_aggregate')
+        self.fuse = self.inspector.implements("message_and_aggregate")
 
         # Support for GNNExplainer.
         self.__explain__ = False
@@ -114,24 +132,27 @@ class MessagePassing(Layer):
             size[dim] = src.shape[self.node_dim]
         elif the_size != src.shape[self.node_dim]:
             raise ValueError(
-                (f'Encountered tensor with size {src.size(self.node_dim)} in '
-                 f'dimension {self.node_dim}, but expected size {the_size}.'))
-        
+                (
+                    f"Encountered tensor with size {src.size(self.node_dim)} in "
+                    f"dimension {self.node_dim}, but expected size {the_size}."
+                )
+            )
+
     def __lift__(self, src, edge_index, dim):
         if isinstance(edge_index, Tensor):
             index = edge_index[dim]
             return src.index_select(index, self.node_dim)
         raise ValueError
-    
+
     def __collect__(self, args, edge_index, size, kwargs):
-        i, j = (1, 0) if self.flow == 'source_to_target' else (0, 1)
+        i, j = (1, 0) if self.flow == "source_to_target" else (0, 1)
 
         out = {}
         for arg in args:
-            if arg[-2:] not in ['_i', '_j']:
+            if arg[-2:] not in ["_i", "_j"]:
                 out[arg] = kwargs.get(arg, Parameter.empty)
             else:
-                dim = 0 if arg[-2:] == '_j' else 1
+                dim = 0 if arg[-2:] == "_j" else 1
                 data = kwargs.get(arg[:-2], Parameter.empty)
 
                 if isinstance(data, (tuple, list)):
@@ -142,26 +163,25 @@ class MessagePassing(Layer):
 
                 if isinstance(data, Tensor):
                     self.__set_size__(size, dim, data)
-                    data = self.__lift__(data, edge_index,
-                                         j if arg[-2:] == '_j' else i)
+                    data = self.__lift__(data, edge_index, j if arg[-2:] == "_j" else i)
 
                 out[arg] = data
 
         if isinstance(edge_index, Tensor):
-            out['adj_t'] = None
-            out['edge_index'] = edge_index
-            out['edge_index_i'] = edge_index[i]
-            out['edge_index_j'] = edge_index[j]
-            out['ptr'] = None
+            out["adj_t"] = None
+            out["edge_index"] = edge_index
+            out["edge_index_i"] = edge_index[i]
+            out["edge_index_j"] = edge_index[j]
+            out["ptr"] = None
 
-        out['index'] = out['edge_index_i']
-        out['size'] = size
-        out['size_i'] = size[1] or size[0]
-        out['size_j'] = size[0] or size[1]
-        out['dim_size'] = out['size_i']
+        out["index"] = out["edge_index_i"]
+        out["size"] = size
+        out["size_i"] = size[1] or size[0]
+        out["size_j"] = size[0] or size[1]
+        out["dim_size"] = out["size_i"]
 
         return out
-    
+
     def __check_input__(self, edge_index, size):
         the_size: List[Optional[int]] = [None, None]
 
@@ -175,9 +195,12 @@ class MessagePassing(Layer):
             return the_size
 
         raise ValueError(
-            ('`MessagePassing.propagate` only supports `int` of '
-             'shape `[2, num_messages]` for '
-             'argument `edge_index`.'))
+            (
+                "`MessagePassing.propagate` only supports `int` of "
+                "shape `[2, num_messages]` for "
+                "argument `edge_index`."
+            )
+        )
 
     def propagate(self, edge_index: Tensor, size: Size = None, **kwargs):
         r"""The initial call to start propagating messages.
@@ -216,10 +239,9 @@ class MessagePassing(Layer):
         if isinstance(edge_index, Tensor) or not self.fuse:
             if decomposed_layers > 1:
                 user_args = self.__user_args__
-                decomp_args = {a[:-2] for a in user_args if a[-2:] == '_j'}
+                decomp_args = {a[:-2] for a in user_args if a[-2:] == "_j"}
                 decomp_kwargs = {
-                    a: kwargs[a].chunk(decomposed_layers, -1)
-                    for a in decomp_args
+                    a: kwargs[a].chunk(decomposed_layers, -1) for a in decomp_args
                 }
                 decomp_out = []
 
@@ -228,17 +250,18 @@ class MessagePassing(Layer):
                     for arg in decomp_args:
                         kwargs[arg] = decomp_kwargs[arg][i]
 
-                coll_dict = self.__collect__(self.__user_args__, edge_index,
-                                             size, kwargs)
+                coll_dict = self.__collect__(
+                    self.__user_args__, edge_index, size, kwargs
+                )
 
-                msg_kwargs = self.inspector.distribute('message', coll_dict)
+                msg_kwargs = self.inspector.distribute("message", coll_dict)
                 for hook in self._message_forward_pre_hooks.values():
-                    res = hook(self, (msg_kwargs, ))
+                    res = hook(self, (msg_kwargs,))
                     if res is not None:
                         msg_kwargs = res[0] if isinstance(res, tuple) else res
                 out = self.message(**msg_kwargs)
                 for hook in self._message_forward_hooks.values():
-                    res = hook(self, (msg_kwargs, ), out)
+                    res = hook(self, (msg_kwargs,), out)
                     if res is not None:
                         out = res
 
@@ -256,19 +279,19 @@ class MessagePassing(Layer):
                     assert out.size(self.node_dim) == edge_mask.size(0)
                     out = out * edge_mask.view([-1] + [1] * (out.dim() - 1))
 
-                aggr_kwargs = self.inspector.distribute('aggregate', coll_dict)
+                aggr_kwargs = self.inspector.distribute("aggregate", coll_dict)
                 for hook in self._aggregate_forward_pre_hooks.values():
-                    res = hook(self, (aggr_kwargs, ))
+                    res = hook(self, (aggr_kwargs,))
                     if res is not None:
                         aggr_kwargs = res[0] if isinstance(res, tuple) else res
 
                 out = self.aggregate(out, **aggr_kwargs)
                 for hook in self._aggregate_forward_hooks.values():
-                    res = hook(self, (aggr_kwargs, ), out)
+                    res = hook(self, (aggr_kwargs,), out)
                     if res is not None:
                         out = res
 
-                update_kwargs = self.inspector.distribute('update', coll_dict)
+                update_kwargs = self.inspector.distribute("update", coll_dict)
                 out = self.update(out, **update_kwargs)
 
                 if decomposed_layers > 1:
@@ -283,7 +306,7 @@ class MessagePassing(Layer):
                 out = res
 
         return out
-    
+
     def message(self, x_j: Tensor) -> Tensor:
         r"""Constructs messages from node :math:`j` to node :math:`i`
         in analogy to :math:`\phi_{\mathbf{\Theta}}` for each edge in
@@ -295,10 +318,14 @@ class MessagePassing(Layer):
         :obj:`_j` to the variable name, *.e.g.* :obj:`x_i` and :obj:`x_j`.
         """
         return x_j
-    
-    def aggregate(self, inputs: Tensor, index: Tensor,
-                  ptr: Optional[Tensor] = None,
-                  dim_size: Optional[int] = None) -> Tensor:
+
+    def aggregate(
+        self,
+        inputs: Tensor,
+        index: Tensor,
+        ptr: Optional[Tensor] = None,
+        dim_size: Optional[int] = None,
+    ) -> Tensor:
         r"""Aggregates messages from neighbors as
         :math:`\square_{j \in \mathcal{N}(i)}`.
 
@@ -309,9 +336,10 @@ class MessagePassing(Layer):
         that support "add", "mean" and "max" operations as specified in
         :meth:`__init__` by the :obj:`aggr` argument.
         """
-        return scatter(inputs, index, dim=self.node_dim, dim_size=dim_size,
-                        reduce=self.aggr)
-        
+        return scatter(
+            inputs, index, dim=self.node_dim, dim_size=dim_size, reduce=self.aggr
+        )
+
     def update(self, inputs: Tensor) -> Tensor:
         r"""Updates node embeddings in analogy to
         :math:`\gamma_{\mathbf{\Theta}}` for each node
@@ -320,7 +348,7 @@ class MessagePassing(Layer):
         which was initially passed to :meth:`propagate`.
         """
         return inputs
-    
+
     def edge_update(self) -> Tensor:
         r"""Computes or updates features for each edge in the graph.
         This function can take any argument as input which was initially passed
@@ -330,6 +358,7 @@ class MessagePassing(Layer):
         :obj:`_j` to the variable name, *.e.g.* :obj:`x_i` and :obj:`x_j`.
         """
         raise NotImplementedError
+
     def message_and_aggregate(self, adj_t) -> Tensor:
         r"""Fuses computations of :func:`message` and :func:`aggregate` into a
         single function.

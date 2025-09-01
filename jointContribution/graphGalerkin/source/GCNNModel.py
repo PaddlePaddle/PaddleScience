@@ -1,13 +1,15 @@
 # from pgl.nn import GCNConv
+import sys
+
 import numpy as np
 import paddle
 import paddle.nn.initializer as Initializer
-import sys
 
 sys.path.insert(0, "utils")
 from ChebConv import ChebConv
+from paddle.nn import Layer
+from paddle.nn import Linear
 from paddle.nn.functional import relu
-from paddle.nn import Layer, Linear
 
 place = paddle.CUDAPlace(0)
 

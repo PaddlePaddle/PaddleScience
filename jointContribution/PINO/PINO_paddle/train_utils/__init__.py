@@ -1,2 +1,4 @@
-from .datasets import NSLoader, DarcyFlow
-from .losses import get_forcing, LpLoss
+from .datasets import DarcyFlow
+from .datasets import NSLoader
+from .losses import LpLoss
+from .losses import get_forcing
