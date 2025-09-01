@@ -11,7 +11,7 @@ import time
 import numpy as np
 import paddle
 import paddle.nn as nn
-from src import model_utils_paddle as model_utils
+from src import model_utils as model_utils
 from src import utils as utils
 from src.dataset import PASTIS_Dataset
 from src.learning.miou import IoU
