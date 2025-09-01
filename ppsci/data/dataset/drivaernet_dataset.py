@@ -245,7 +245,7 @@ class DrivAerNetDataset(paddle.io.Dataset):
         load_path = os.path.join(self.root_dir, f"{design_id}.paddle_tensor")
         if os.path.exists(load_path) and os.path.getsize(load_path) > 0:
             try:
-                vertices = paddle.load(path=str(load_path))
+                vertices: paddle.Tensor = paddle.load(path=str(load_path))
                 num_vertices = vertices.shape[0]
 
                 if num_vertices > self.num_points:
@@ -254,6 +254,8 @@ class DrivAerNetDataset(paddle.io.Dataset):
                     )
                     vertices = vertices.numpy()[indices]
                     vertices = paddle.to_tensor(vertices)
+
+                vertices = self._sample_or_pad_vertices(vertices, self.num_points)
 
                 return vertices
             except (EOFError, RuntimeError, ValueError) as e:

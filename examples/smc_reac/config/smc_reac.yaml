@@ -1,0 +1,56 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} #
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback: #
+      _target_: ppsci.utils.callbacks.InitCallback #
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval #
+seed: 42 #
+output_dir: ${hydra:run.dir} #
+log_freq: 20 #
+use_tbd: false #
+data_dir: "./data_set.xlsx" #
+
+# model settings
+MODEL: #
+  input_dim : 2048  # Assuming x_train is your DataFrame
+  output_dim : 1
+  hidden_dim : 512
+  hidden_dim2 : 1024
+  hidden_dim3 : 2048
+  hidden_dim4 : 1024
+
+# training settings
+TRAIN: #
+  epochs: 1500 #
+  iters_per_epoch: 20 #
+  batch_size: 8 #
+  learning_rate: 0.0001
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  batch_size: 8 #
+  seed: 20

@@ -994,10 +994,13 @@ best_value: 0.02460772916674614
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能进行训练。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
-1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
+1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度，再作为参数传递给 `Solver`（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
-    ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="22"
-    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
+    ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="28 37"
+    # set constraint
+    ITERS_PER_EPOCH = int(
+        (cfg.N_x * cfg.N_y * cfg.N_p) / cfg.TRAIN.batch_size.pde_constraint
+    )
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -1006,30 +1009,47 @@ best_value: 0.02460772916674614
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
             "num_workers": 1,
-            "batch_size": BATCH_SIZE,
+            "batch_size": cfg.TRAIN.batch_size.pde_constraint,
             "iters_per_epoch": ITERS_PER_EPOCH,
             "sampler": {
                 "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
             },
         },
         loss=ppsci.loss.MSELoss("mean"),
         evenly=True,
         name="EQ",
     )
-    ITERS_PER_EPOCH = len(pde_constraint.data_loader) # re-assign to ITERS_PER_EPOCH
-
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
-    ...
-    ...
+
+    ITERS_PER_EPOCH = len(pde_constraint.data_loader) # re-assign to ITERS_PER_EPOCH
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=ITERS_PER_EPOCH,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        save_freq=cfg.TRAIN.save_freq,
+        equation=equation,
+    )
+    solver.train()
     ```
 
 2. 使用分布式训练命令启动训练，以 4 卡数据并行训练为例
 
     ``` sh
     # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch poiseuille_flow.py
+    CUDA_VISIBLE_DEVICES=0,1,2,3 fleetrun poiseuille_flow.py # (1)
     ```
+
+    1. `fleetrun` 可以代替 `python -m paddle.distributed.launch` 启动分布式训练，详见[Paddle/setup.py](https://github.com/PaddlePaddle/Paddle/blob/9396014e1c811a2ed23eac70df471d024a95939f/setup.py#L2753)。
+
 
 <!-- #### 2.2.2 模型并行
 
