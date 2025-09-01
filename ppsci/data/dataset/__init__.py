@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 import copy
-import sys
 from typing import TYPE_CHECKING
-
-from paddle import io
 
 from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
 from ppsci.data.dataset.array_dataset import ChipHeatDataset
@@ -51,17 +46,18 @@ from ppsci.data.dataset.pems_dataset import PEMSDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
-from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
-from ppsci.data.dataset.tmtdataset import TMTDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
+from ppsci.data.dataset.era5sq_dataset import ERA5SQDataset
+from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
+from ppsci.data.dataset.era5climate_dataset import ERA5ClimateDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
 if TYPE_CHECKING:
-    from omegaconf import DictConfig
+    from paddle import io
 
 __all__ = [
     "IterableNamedArrayDataset",
@@ -100,17 +96,18 @@ __all__ = [
     "DrivAerNetDataset",
     "DrivAerNetPlusPlusDataset",
     "IFMMoeDataset",
-    "STAFNetDataset",
-    "TMTDataset",
-    "register_to_dataset",
+    "ERA5SQDataset",
+    "ERA5MeteoDataset",
+    "ERA5ClimateDataset",
+
 ]
 
 
-def build_dataset(cfg: DictConfig) -> "io.Dataset":
+def build_dataset(cfg) -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (DictConfig): Dataset config list.
+        cfg (List[DictConfig]): Dataset config list.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
@@ -121,37 +118,8 @@ def build_dataset(cfg: DictConfig) -> "io.Dataset":
     if "transforms" in cfg:
         cfg["transforms"] = transform.build_transforms(cfg.pop("transforms"))
 
-    try:
-        dataset = eval(dataset_cls)(**cfg)
-    except NameError:
-        import textwrap
-
-        logger.error(
-            f"name {dataset_cls} is not defined, maybe you should register your dataset class first as below:\n"
-            + textwrap.indent(
-                "\n"
-                "import paddle\n"
-                "from ppsci.data import register_to_dataset\n"
-                "\n"
-                "@register_to_dataset\n"
-                "class MyDataset(paddle.io.Dataset):\n"
-                "    pass\n"
-                "\n",
-                prefix=" " * 4,
-            )
-        )
-        raise
+    dataset = eval(dataset_cls)(**cfg)
 
     logger.debug(str(dataset))
 
     return dataset
-
-
-def register_to_dataset(cls: type):
-    from ppsci.utils.registry import register_cls_to_module
-
-    if not issubclass(cls, io.Dataset):
-        logger.warning(
-            f"The registered class '{cls.__name__}' should be inherited from `paddle.io.Dataset`"
-        )
-    register_cls_to_module(sys.modules[__name__], cls)
