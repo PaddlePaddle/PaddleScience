@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -22,6 +23,9 @@ from typing import Union
 import paddle
 
 from ppsci.loss import base
+
+if TYPE_CHECKING:
+    from paddle import Tensor
 
 
 class FunctionalLoss(base.Loss):
@@ -36,7 +40,7 @@ class FunctionalLoss(base.Loss):
     $$
 
     Args:
-        loss_expr (Callable[..., paddle.Tensor]): Function for custom loss computation.
+        loss_expr (Callable[[Dict[str, Tensor], Dict[str, Tensor], Dict[str, Tensor]], Tensor]): Function for custom loss computation.
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -65,7 +69,9 @@ class FunctionalLoss(base.Loss):
 
     def __init__(
         self,
-        loss_expr: Callable[..., paddle.Tensor],
+        loss_expr: Callable[
+            [Dict[str, Tensor], Dict[str, Tensor], Dict[str, Tensor]], Tensor
+        ],
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         super().__init__(None, weight)
