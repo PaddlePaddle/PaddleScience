@@ -1,39 +1,67 @@
 # 隐空间神经算子LatentNO(or LNO)
 
-!!! note
-
-    1. 开始训练、评估前，请先下载对应的数据文件[.npy](https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/data_set.xlsx)，并放置于目录(./datas)。
-
 === "模型训练命令"
 
     ``` sh
     # Darcy
-    python LatentNO-steady.py --config-name=LatentNO-Darcy.yaml mode=train
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Darcy_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Darcy_$f.npy --create-dirs -o ./datas/Darcy_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Darcy.yaml
 
     # Elasticity
-    python LatentNO-steady.py --config-name=LatentNO-Elasticity.yaml mode=train
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Elasticity_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Elasticity_$f.npy --create-dirs -o ./datas/Elasticity_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Elasticity.yaml
 
     # Pipe
-    python LatentNO-steady.py --config-name=LatentNO-Pipe.yaml mode=train
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Pipe_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Pipe_$f.npy --create-dirs -o ./datas/Pipe_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Pipe.yaml
 
     # NS2d
-    python LatentNO-time.py --config-name=LatentNO-NS2d.yaml mode=train
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/NS2d_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/NS2d_$f.npy --create-dirs -o ./datas/Pipe_$f.npy}
+    python LatentNO-time.py --config-name=LatentNO-NS2d.yaml
     ```
 
 === "模型评估命令"
 
     ``` sh
     # Darcy
-    python LatentNO-steady.py --config-name=LatentNO-Darcy.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Darcy_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Darcy_$f.npy --create-dirs -o ./datas/Darcy_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Darcy.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LatentNO/LatentNO_Darcy_pretrained.pdparams
 
     # Elasticity
-    python LatentNO-steady.py --config-name=LatentNO-Elasticity.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Elasticity_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Elasticity_$f.npy --create-dirs -o ./datas/Elasticity_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Elasticity.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LatentNO/LatentNO_Elasticity_pretrained.pdparams
 
     # Pipe
-    python LatentNO-steady.py --config-name=LatentNO-Pipe.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Pipe_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/Pipe_$f.npy --create-dirs -o ./datas/Pipe_$f.npy}
+    python LatentNO-steady.py --config-name=LatentNO-Pipe.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LatentNO/LatentNO_Pipe_pretrained.pdparams
 
     # NS2d
-    python LatentNO-time.py --config-name=LatentNO-NS2d.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/
+    # linux
+    wget -nc -P ./datas/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/NS2d_{train,val}.npy
+    # windows
+    # foreach ($f in "train","val") {curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/LatentNO/NS2d_$f.npy --create-dirs -o ./datas/Pipe_$f.npy}
+    python LatentNO-time.py --config-name=LatentNO-NS2d.yaml mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LatentNO/LatentNO_NS2d_pretrained.pdparams
     ```
 
 ## 1. 背景简介
@@ -66,31 +94,32 @@ LatentNO/
 
 对于静态数据类任务，数据首先以 `.npy` 文件的形式存放在 `./datas` 目录中，每个文件按照数据名称与模式（训练集或验证集）进行命名，例如 `Darcy_train.npy` 或 `Darcy_val.npy`。这些文件内部存储了包含 x、y1 与 y2 三个关键变量的字典，x与y1均会被作为模型的输入 ，而 y2 则为最终的预测目标。在载入阶段，数据会被转换为 Paddle 的张量格式，并根据需求调整形状以满足模型的输入要求，并在必要时将 x 与 y1 进行拼接。
 
-``` py linenums="99" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="94" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:99:135
+ppsci/data/dataset/latent_no_dataset.py:94:131
 --8<--
 ```
 
 为了增强模型的训练稳定性与泛化能力，数据集类中还内置了归一化模块。该模块会在初始化阶段统计各变量的均值与标准差，并在数据载入时自动进行归一化处理。同时提供了反归一化的接口，便于在推理或可视化时还原到物理真实尺度。
 
-``` py linenums="27" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="134" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:27:97
+ppsci/data/dataset/latent_no_dataset.py:134:140
 --8<--
 ```
 
-``` py linenums="137" title="ppsci/data/dataset/latent_no_dataset.py"
+
+``` py linenums="12" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:137:144
+ppsci/data/dataset/latent_no_dataset.py:12:74
 --8<--
 ```
 
 在训练过程中，通过调用 `__getitem__` 方法，可以按索引返回一条数据的输入、标签及对应权重，从而无缝衔接到训练管线中。
 
-``` py linenums="158" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="154" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:158:179
+ppsci/data/dataset/latent_no_dataset.py:154:170
 --8<--
 ```
 
@@ -102,111 +131,111 @@ ppsci/data/dataset/latent_no_dataset.py:158:179
 
 隐空间神经算子包含编码、隐空间算子拟合和解码三个过程。在处理静态数据任务中，模型的前向传播过程用PaddleScience表示如下：
 
-``` py linenums="114" title="ppsci/arch/latent_no.py"
+``` py linenums="244" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:114:133
+ppsci/arch/latent_no.py:244:275
 --8<--
 ```
 
 编码过程包含输入投影和输入函数编码两部分。其中输入投影操作将几何空间中以序列形式输入的观测函数的采样位置与对应的物理量值组成的元组提升到更高的向量维度。几何空间是PDE输入或输出的原始空间，其中包含若干个样本点，每个样本由多维空维位置坐标和多维物理量值组成。通过输入投影操作，观测函数能够被投影到更容易捕捉非局部特征的空间中。输入函数编码操作将投影后的输入数据从几何空间映射到隐空间中。隐空间神经算子模型使用隐空间中的假想采样位置的表征Token来对输入函数进行重新表示，其中假想采样位置的数量远小于输入函数在几何空间中的采样点数，实现序列压缩的目的。隐空间神经算子模型使用物理交叉注意力来完成输入函数从几何空间到隐空间的编码操作。编码操作的相关代码用PaddleScience表示如下：
 
-``` py linenums="116" title="ppsci/arch/latent_no.py"
+``` py linenums="258" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:116:126
---8<--
-```
-
-``` py linenums="93" title="ppsci/arch/latent_no.py"
---8<--
-ppsci/arch/latent_no.py:93:95
+ppsci/arch/latent_no.py:258:268
 --8<--
 ```
 
-``` py linenums="12" title="ppsci/arch/latent_no.py"
+``` py linenums="225" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:12:29
+ppsci/arch/latent_no.py:225:227
+--8<--
+```
+
+``` py linenums="35" title="ppsci/arch/latent_no.py"
+--8<--
+ppsci/arch/latent_no.py:35:82
 --8<--
 ```
 
 对输入函数完成编码后，待处理的序列长度显著减少为了隐空间中假想采样点位置的数量，因此在隐空间中对输入函数的特征进行提取和转换比在原本几何空间中更加高效。隐空间神经算子模型在隐空间中拟合PDE问题的解算子，使用堆叠的 Transformer 层，借助自注意力机制作为核积分算子，每一层都在隐空间中将假想采样位置上的表征 Token 进行信息聚合，从而将输入函数的特征转换为输出函数的特征。在隐空间中基于更短的特征序列进行解算子的拟合赋予了隐空间神经算子模型在 PDE 问题上更高的求解效率，并且同时兼容了更强建模能力的核积分算子，从而也确保了在 PDE 问题上出色的求解精度。隐空间中的堆叠结构用PaddleScience表示如下：
 
-``` py linenums="127" title="ppsci/arch/latent_no.py"
+``` py linenums="269" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:127:128
---8<--
-```
-
-``` py linenums="98" title="ppsci/arch/latent_no.py"
---8<--
-ppsci/arch/latent_no.py:98:98
+ppsci/arch/latent_no.py:269:270
 --8<--
 ```
 
-``` py linenums="62" title="ppsci/arch/latent_no.py"
+``` py linenums="230" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:62:85
+ppsci/arch/latent_no.py:230:232
+--8<--
+```
+
+``` py linenums="140" title="ppsci/arch/latent_no.py"
+--8<--
+ppsci/arch/latent_no.py:140:189
 --8<--
 ```
 
 解码过程包含输出函数解码和输出投影两部分。输出函数解码操作将经过堆叠 Transformer 层转换后的假想采样位置上的表征 Token 映射回几何空间中。隐空间神经算子模型再次使用物理交叉注意力，根据输出函数的查询位置解码隐空间中输出函数表征序列在对应待预测位置上的表征向量。输出投影操作则将解码得到的待预测位置上的表征向量投影为预测的低维度物理量值。解码过程相关代码用PaddleScience表示如下
 
-``` py linenums="130" title="ppsci/arch/latent_no.py"
+``` py linenums="272" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:130:131
+ppsci/arch/latent_no.py:272:273
 --8<--
 ```
 
-``` py linenums="96" title="ppsci/arch/latent_no.py"
+``` py linenums="228" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:96:96
+ppsci/arch/latent_no.py:228:228
 --8<--
 ```
 
 在处理含时数据时，模型整体结构不变，但为了满足PaddleScience自动训练的要求，`LatentNO_time` 类重写了前向传播函数，实现了一个时间展开（time-unroll / 自回归）流程。在时间迭代内部，`LatentNO_time` 引入了两条不同的下一步输入来源：训练期间额外使用外部提供的 y2（标签信息），从 y2 中切出对齐的片段 y2[..., t:t+step] 作为下一个输入一部分；在推断时则使用模型的 pred_step 作为下一个输入并对其执行 stop_gradient=True，以阻断跨步的梯度传播。无论采用哪种来源，下一步的 current_y 都通过“保留 trunk 部分 + 丢弃最早的若干时间槽 + 在末尾拼接新片段”的滑动窗口方式更新。用 PaddleScience 表示如下
 
-``` py linenums="290" title="ppsci/arch/latent_no.py"
+``` py linenums="392" title="ppsci/arch/latent_no.py"
 --8<--
-ppsci/arch/latent_no.py:290:348
+ppsci/arch/latent_no.py:392:462
 --8<--
 ```
 
 在训练或验证函数中，模型通过如下代码进行实例化。
 
-``` py linenums="20" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="10" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:20:29
+examples/LatentNO/LatentNO-steady.py:10:10
 --8<--
 ```
 
-``` py linenums="18" title="examples/LatentNO/LatentNO-time.py"
+``` py linenums="10" title="examples/LatentNO/LatentNO-time.py"
 --8<--
-examples/LatentNO/LatentNO-time.py:18:30
+examples/LatentNO/LatentNO-time.py:10:10
 --8<--
 ```
 
 ### 2.3 约束构建
 
-本案例采用监督学习，按照 PaddleScience 的API结构说明，采用内置的 `SupervisedConstraint` 构建监督约束。用 PaddleScience 代码表示如下（测试约束类似）
+本案例采用监督学习，按照 PaddleScience 的API结构说明，采用内置的 `SupervisedConstraint` 构建监督约束。用 PaddleScience 代码表示如下（测试约束类似，区别在于部分任务中需要在计算测试损失时进行反归一化操作，即通过 `sup_constraint.data_loader.dataset.normalizer` 获得训练集的归一化器并作为参数传入 `RelLpLoss`）
 
-``` py linenums="90" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="57" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:90:98
+examples/LatentNO/LatentNO-steady.py:57:66
 --8<--
 ```
 
 其中损失函数为相对 Lp 损失。对于静态任务，损失函数 `RelLpLoss` 表示如下。
 
-``` py linenums="7" title="examples/LatentNO/utils.py"
+``` py linenums="9" title="examples/LatentNO/utils.py"
 --8<--
-examples/LatentNO/utils.py:7:32
+examples/LatentNO/utils.py:9:54
 --8<--
 ```
 
 同样，对于含时任务做出了适应自动训练框架的调整，`RelLpLoss_time` 通过 `use_full_sequence` 参数实现使用逐时间步累积误差进行梯度反传更新，并使用完整序列一次性误差作为评估指标。
 
-``` py linenums="59" title="examples/LatentNO/utils.py"
+``` py linenums="57" title="examples/LatentNO/utils.py"
 --8<--
-examples/LatentNO/utils.py:59:121
+examples/LatentNO/utils.py:57:138
 --8<--
 ```
 
@@ -214,9 +243,9 @@ examples/LatentNO/utils.py:59:121
 
 训练器采用AdamW优化器，学习率设置由配置文件给出，并使用OneCycleLR控制学习率变化。用 PaddleScience 代码表示如下
 
-``` py linenums="107" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="59" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:107:122
+examples/LatentNO/LatentNO-steady.py:59:77
 --8<--
 ```
 
@@ -225,9 +254,9 @@ examples/LatentNO/LatentNO-steady.py:107:122
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给`ppsci.solver.Solver`，然后启动训练即可。用PaddleScience 代码表示如下
 
 
-``` py linenums="135" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="98" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:135:146
+examples/LatentNO/LatentNO-steady.py:98:106
 --8<--
 ```
 
