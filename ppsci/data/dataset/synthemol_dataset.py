@@ -1754,7 +1754,7 @@ class MoleculeDatasetIter(io.IterableDataset):
                 gt_target_batch,
             ) = batch
 
-            mask = paddle.to_tensor(data=mask_batch, dtype="bool")
+            mask = paddle.to_tensor(data=mask_batch, dtype="float32")
             targets = paddle.to_tensor(
                 data=[[(0 if x is None else x) for x in tb] for tb in target_batch]
             )
