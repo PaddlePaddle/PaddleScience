@@ -9,7 +9,7 @@ import pprint
 
 import numpy as np
 import paddle
-from src import model_utils_paddle as model_utils
+from src import model_utils as model_utils
 from src.dataset import PASTIS_Dataset
 from src.model_utils import get_ntrainparams
 from src.panoptic.metrics import PanopticMeter
