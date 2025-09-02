@@ -70,6 +70,11 @@
 近年来 Transformer 架构在神经算子的构建中占据了主导地位。注意力机制建模了序列中全体对象之间的长距离非线性相互作用关系，自然地符合 PDE 求解过程中序列到序列的表征方式，并且相较于传统的全连接结构可以提供更精确的建模结果。但是注意力机制相对于序列长度的时间复杂度是平方级别，因此使用注意力机制构建神经算子带来的计算成本急剧增加。为了降低计算成本，一部分已有工作尝试采用线性时间复杂度的注意力机制变体取代原始注意力机制，但是由于其建模能力有限，往往会牺牲 PDE 的求解精度。另一部分已有工作尝试在隐空间中使用少量物理特征求解 PDE，从而摆脱原始几何空间中大量采样点之间错综复杂的相互作用关系，并在紧致的隐空间中捕捉物理特征之间的关联，然而这些方法要么依赖人工指定的基函数特征，要么没能构建持续存在的隐空间。
 因此， 本案例提出物理交叉注意力模块，该模块解耦了输入的观测样本和输出的待预测样本的位置，并从数据中自主学习持续存在的隐空间。基于物理交叉注意力模块，进一步设计了隐空间神经算子模型。
 
+<figure markdown>
+  ![pipe](https://paddle-org.bj.bcebos.com/paddlescience/docs/LatentNO/LatentNO_1.jpg){ loading=lazy }
+  <figcaption>隐空间神经算子结构图</figcaption>
+</figure>
+
 ## 2. 隐空间神经算子的实现
 
 本节将讲解如何基于PaddleScience代码，实现对于隐空间神经算子模型的构建、训练、测试和评估。案例的目录结构如下。
@@ -136,6 +141,11 @@ ppsci/data/dataset/latent_no_dataset.py:154:170
 ppsci/arch/latent_no.py:244:275
 --8<--
 ```
+
+<figure markdown>
+  ![pipe](https://paddle-org.bj.bcebos.com/paddlescience/docs/LatentNO/LatentNO_2.jpg){ loading=lazy }
+  <figcaption>编码、解码阶段所用物理交叉注意力模块</figcaption>
+</figure>
 
 编码过程包含输入投影和输入函数编码两部分。其中输入投影操作将几何空间中以序列形式输入的观测函数的采样位置与对应的物理量值组成的元组提升到更高的向量维度。几何空间是PDE输入或输出的原始空间，其中包含若干个样本点，每个样本由多维空维位置坐标和多维物理量值组成。通过输入投影操作，观测函数能够被投影到更容易捕捉非局部特征的空间中。输入函数编码操作将投影后的输入数据从几何空间映射到隐空间中。隐空间神经算子模型使用隐空间中的假想采样位置的表征Token来对输入函数进行重新表示，其中假想采样位置的数量远小于输入函数在几何空间中的采样点数，实现序列压缩的目的。隐空间神经算子模型使用物理交叉注意力来完成输入函数从几何空间到隐空间的编码操作。编码操作的相关代码用PaddleScience表示如下：
 
@@ -270,7 +280,12 @@ examples/LatentNO/LatentNO-steady.py
 
 ## 4. 结果展示
 
-以下展示隐空间神经算子在若干PDE前向问题的性能表现。
+以下展示隐空间神经算子在若干PDE前向问题中的性能表现。
+
+<figure markdown>
+  ![pipe](https://paddle-org.bj.bcebos.com/paddlescience/docs/LatentNO/LatentNO_3.jpg){ loading=lazy }
+  <figcaption>隐空间神经算子在若干PDE前向问题中的性能表现</figcaption>
+</figure>
 
 ## 5. 参考文献
 
