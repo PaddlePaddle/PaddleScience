@@ -11,7 +11,7 @@
   - **语义分割 (Semantic Segmentation)**
   - **全景分割 (Panoptic Segmentation)**
 
-数据集可通过 [PASTIS 官网](https://paperswithcode.com/dataset/pastis) 下载。  
+数据集可通过 [PASTIS 官网](https://zenodo.org/records/5012942) 下载。  
 
 ## 模型结构
 - **U-TAE Backbone**：采用卷积 + 时间注意力机制对卫星影像时序特征进行建模。  
