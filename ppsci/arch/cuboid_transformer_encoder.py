@@ -400,7 +400,7 @@ def masked_softmax(att_score, mask, axis: int = -1):
             att_score = att_score.masked_fill(paddle.logical_not(mask), -1e4)
         else:
             att_score = att_score.masked_fill(paddle.logical_not(mask), -1e18)
-        att_weights = nn.functional.softmax(x=att_score, axis=axis) * mask
+        att_weights = nn.functional.softmax(x=att_score, axis=axis) * mask.astype(att_score.dtype)
     else:
         att_weights = nn.functional.softmax(x=att_score, axis=axis)
     return att_weights
