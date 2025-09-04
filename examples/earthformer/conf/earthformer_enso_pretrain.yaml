@@ -105,7 +105,6 @@ MODEL:
   down_up_linear_init_mode: "0"
   norm_init_mode: "0"
 
-
 # training settings
 TRAIN:
   epochs: 100
@@ -122,7 +121,6 @@ TRAIN:
   pretrained_model_path: null
   checkpoint_path: null
 
-
 # evaluation settings
 EVAL:
   pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
@@ -131,7 +129,7 @@ EVAL:
   batch_size: 1
 
 INFER:
-  pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_enso.pdparams
   export_path: ./inference/earthformer/enso
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams

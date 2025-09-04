@@ -1,48 +1,53 @@
 # EarthFormer
 
-开始训练、评估前，请先下载
+开始训练、评估前，请先下载以下数据集
 
 [ICAR-ENSO数据集](https://tianchi.aliyun.com/dataset/98942)
 
-[SEVIR数据集](https://nbviewer.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb#download
-)
+[SEVIR数据集](https://nbviewer.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb#download)
+
+并安装运行所需依赖：
+
+``` py
+pip install -r requirements.txt
+```
 
 === "模型训练命令"
 
     ``` sh
     # ICAR-ENSO 数据模型训练
-    python examples/earthformer/earthformer_enso_train.py
+    python earthformer_enso_train.py
     # SEVIR 数据模型训练
-    python examples/earthformer/earthformer_sevir_train.py
-
+    python earthformer_sevir_train.py
     ```
 
 === "模型评估命令"
 
     ``` sh
     # ICAR-ENSO 模型评估
-    python examples/earthformer/earthformer_enso_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_enso.pdparams
+    python earthformer_enso_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_enso.pdparams
     # SEVIR 模型评估
-    python examples/earthformer/earthformer_sevir_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_sevir.pdparams
+    python earthformer_sevir_train.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_sevir.pdparams
     ```
 
 === "模型导出命令"
 
     ``` sh
     # ICAR-ENSO 模型推理
-    python examples/earthformer/earthformer_enso_train.py mode=export
+    python earthformer_enso_train.py mode=export
     # SEVIR 模型推理
-    python examples/earthformer/earthformer_sevir_train.py mode=export
+    python earthformer_sevir_train.py mode=export
     ```
 
 === "模型推理命令"
 
     ``` sh
     # ICAR-ENSO 模型推理
-    python examples/earthformer/earthformer_enso_train.py mode=infer
+    python earthformer_enso_train.py mode=infer
     # SEVIR 模型推理
-    python examples/earthformer/earthformer_sevir_train.py mode=infer
+    python earthformer_sevir_train.py mode=infer
     ```
+
 | 模型 | 变量名称 | C-Nino3.4-M | C-Nino3.4-WM | MSE(1E-4) |
 | :-- | :-- | :-- | :-- | :-- |
 | [ENSO 模型](https://paddle-org.bj.bcebos.com/paddlescience/models/earthformer/earthformer_enso.pdparams) | sst | 0.74130 | 2.28990 | 2.5000 |
