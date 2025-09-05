@@ -65,4 +65,4 @@ TRAIN:
   pct_start : 0.2
 
 EVAL:
-  pretrained_model_path : ./checkpoints/latest.pdparams
+  pretrained_model_path : None
