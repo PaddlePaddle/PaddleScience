@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 
 import ppsci
 
+paddle.set_device("gpu:0")
 os.environ["HYDRA_FULL_ERROR"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 plt.rcParams["axes.unicode_minus"] = False
@@ -41,16 +42,25 @@ def featurize_molecules(smis):
     vectors = []
     del_mol = []
     for s in smis:
+        # Convert SMILES to RDKit molecule object
         mol = Chem.MolFromSmiles(s)
         try:
+            # Create Morgan fingerprint generator (radius 2, 2048-bit vector)
             generator = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
+
+            # Generate fingerprint for current molecule
             fp = generator.GetFingerprint(mol)
+
             _input = np.array(list(map(int, fp.ToBitString())))
             vectors.append(_input)
         except Exception as e:
             print(f"Error processing {s}: {e}")
             del_mol.append(s)
+
+    # Initialize PCA preserving 99% of variance
     pca = PCA(n_components=0.99)
+
+    # Learn PCA transformation from fingerprint vectors
     pca.fit(vectors)
     X = pca.transform(vectors)
     return paddle.to_tensor(X, dtype="float32")
@@ -76,7 +86,7 @@ def train(cfg: DictConfig, X, data):
     x_train, y_train, x_test, y_test = k_fold(cfg.TRAIN.k, cfg.TRAIN.i, X, Y)
     # Prepare feature dictionary
     x = {
-        "key_{}".format(i): paddle.unsqueeze(
+        f"key_{i}": paddle.unsqueeze(
             paddle.to_tensor(x_train[:, i], dtype="float32"), axis=1
         )
         for i in range(x_train.shape[1])
@@ -84,17 +94,17 @@ def train(cfg: DictConfig, X, data):
     y_train = paddle.unsqueeze(paddle.to_tensor(y_train, dtype="float32"), axis=1)
 
     # Build supervised constraint
-    bc_sup = ppsci.constraint.SupervisedConstraint(
+    sup = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg={
             "dataset": {
+                "name": "IterableNamedArrayDataset",
                 "input": x,
                 "label": {"u": y_train},
-                "name": "IterableNamedArrayDataset",
             },
             "batch_size": cfg.TRAIN.batch_size,
         },
         loss=ppsci.loss.MSELoss("mean"),
-        name="bc_sup",
+        name="sup",
     )
 
     # Set model architecture parameters
@@ -109,19 +119,19 @@ def train(cfg: DictConfig, X, data):
     )
     optimizer = ppsci.optimizer.Adam(
         learning_rate=cfg.TRAIN.learning_rate,
-        beta1=(0.9, 0.99)[0],
-        beta2=(0.9, 0.99)[1],
+        beta1=0.9,
+        beta2=0.99,
         weight_decay=cfg.TRAIN.weight_decay,
     )(model)
 
     # Build solver for training
     solver = ppsci.solver.Solver(
         model,
-        constraint={"bc_sup": bc_sup},
+        constraint={sup.name: sup},
         optimizer=optimizer,
         epochs=cfg.TRAIN.epochs,
+        eval_during_train=False,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        seed=cfg.seed,
     )
     try:
         solver.train()
@@ -151,9 +161,9 @@ def evaluate(cfg: DictConfig, X, data):
     test_validator = ppsci.validate.SupervisedValidator(
         dataloader_cfg={
             "dataset": {
+                "name": "IterableNamedArrayDataset",
                 "input": x_dict,
                 "label": {"u": paddle.unsqueeze(y_test, axis=1)},
-                "name": "IterableNamedArrayDataset",
             },
             "batch_size": cfg.EVAL.batch_size,
             "shuffle": False,
