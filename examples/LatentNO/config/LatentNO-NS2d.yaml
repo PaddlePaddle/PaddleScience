@@ -55,7 +55,7 @@ TRAIN:
   checkpoint_epcoh : 50
   exp_name : "LatentNO_NS2d"
   eval_during_train : True
-  eval_freq : 5
+  eval_freq : 10
   self.start_eval_epoch : 1
   # optimizer setting
   beta0 : 0.9

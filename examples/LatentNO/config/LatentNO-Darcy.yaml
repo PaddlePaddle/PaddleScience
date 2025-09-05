@@ -52,7 +52,7 @@ TRAIN:
   checkpoint_epcoh : 50
   exp_name : "LatentNO_Darcy"
   eval_during_train : True
-  eval_freq : 1
+  eval_freq : 10
   self.start_eval_epoch : 1
   # optimizer setting
   beta0 : 0.9
@@ -65,4 +65,4 @@ TRAIN:
   pct_start : 0.2
 
 EVAL:
-  pretrained_model_path : None
+  pretrained_model_path : ./checkpoints/latest.pdparams
