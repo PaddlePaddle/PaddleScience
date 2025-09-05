@@ -140,7 +140,6 @@ def train(cfg: DictConfig, X, data):
 
 
 def evaluate(cfg: DictConfig, X, data):
-
     y_full = paddle.to_tensor(data, dtype="float32")
     X_np = X.numpy()
     y_np = y_full.numpy()
