@@ -159,6 +159,7 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model=model,
         validator={"eval": validator},
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
     solver.eval()

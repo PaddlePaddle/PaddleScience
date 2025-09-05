@@ -144,13 +144,14 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model=model,
         validator={"eval": validator},
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
     solver.eval()
 
 
 @hydra.main(
-    version_base=None, config_path="./config", config_name="LatentNO-Elasticity.yaml"
+    version_base=None, config_path="./config", config_name="LatentNO-Darcy.yaml"
 )
 def main(cfg: DictConfig):
 

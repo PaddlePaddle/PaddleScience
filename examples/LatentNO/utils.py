@@ -36,8 +36,8 @@ class RelLpLoss(base.Metric):
             target = label_dict[label_key]
 
             if self.normalizer is not None:
-                pred = self.normalizer.apply_y2(pred, inverse=True)
-                target = self.normalizer.apply_y2(target, inverse=True)
+                pred = self.normalizer.apply_y2(pred, device="cpu", inverse=True)
+                target = self.normalizer.apply_y2(target, device="cpu", inverse=True)
 
             error = paddle.sum(
                 paddle.abs(pred - target) ** self.p,
