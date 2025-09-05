@@ -1,12 +1,12 @@
 from os import path as osp
 
+import enso_metric as enso_metric
 import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle import nn
 
-import examples.earthformer.enso_metric as enso_metric
 import ppsci
 from ppsci.data.dataset import enso_dataset
 from ppsci.utils import logger
