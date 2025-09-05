@@ -99,32 +99,32 @@ LatentNO/
 
 对于静态数据类任务，数据首先以 `.npy` 文件的形式存放在 `./datas` 目录中，每个文件按照数据名称与模式（训练集或验证集）进行命名，例如 `Darcy_train.npy` 或 `Darcy_val.npy`。这些文件内部存储了包含 x、y1 与 y2 三个关键变量的字典，x与y1均会被作为模型的输入 ，而 y2 则为最终的预测目标。在载入阶段，数据会被转换为 Paddle 的张量格式，并根据需求调整形状以满足模型的输入要求，并在必要时将 x 与 y1 进行拼接。
 
-``` py linenums="94" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="123" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:94:131
+ppsci/data/dataset/latent_no_dataset.py:123:142
 --8<--
 ```
 
 为了增强模型的训练稳定性与泛化能力，数据集类中还内置了归一化模块。该模块会在初始化阶段统计各变量的均值与标准差，并在数据载入时自动进行归一化处理。同时提供了反归一化的接口，便于在推理或可视化时还原到物理真实尺度。
 
-``` py linenums="134" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="144" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:134:140
+ppsci/data/dataset/latent_no_dataset.py:144:149
 --8<--
 ```
 
 
 ``` py linenums="12" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:12:74
+ppsci/data/dataset/latent_no_dataset.py:12:82
 --8<--
 ```
 
 在训练过程中，通过调用 `__getitem__` 方法，可以按索引返回一条数据的输入、标签及对应权重，从而无缝衔接到训练管线中。
 
-``` py linenums="154" title="ppsci/data/dataset/latent_no_dataset.py"
+``` py linenums="166" title="ppsci/data/dataset/latent_no_dataset.py"
 --8<--
-ppsci/data/dataset/latent_no_dataset.py:154:170
+ppsci/data/dataset/latent_no_dataset.py:166:186
 --8<--
 ```
 
@@ -253,9 +253,9 @@ examples/LatentNO/utils.py:57:138
 
 训练器采用AdamW优化器，学习率设置由配置文件给出，并使用OneCycleLR控制学习率变化。用 PaddleScience 代码表示如下
 
-``` py linenums="59" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="57" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:59:77
+examples/LatentNO/LatentNO-steady.py:57:77
 --8<--
 ```
 
@@ -264,9 +264,9 @@ examples/LatentNO/LatentNO-steady.py:59:77
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给`ppsci.solver.Solver`，然后启动训练即可。用PaddleScience 代码表示如下
 
 
-``` py linenums="98" title="examples/LatentNO/LatentNO-steady.py"
+``` py linenums="89" title="examples/LatentNO/LatentNO-steady.py"
 --8<--
-examples/LatentNO/LatentNO-steady.py:98:106
+examples/LatentNO/LatentNO-steady.py:89:97
 --8<--
 ```
 
