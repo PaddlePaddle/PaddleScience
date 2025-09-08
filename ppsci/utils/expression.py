@@ -185,7 +185,7 @@ class ExpressionSolver(nn.Layer):
 
         # compute loss for each validator according to its' own output, label and weight
         validator_losses: Dict[str, "paddle.Tensor"] = {}
-        if validator.loss is not None and callable(validator.loss):
+        if callable(validator.loss):
             validator_losses = validator.loss(
                 output_dict,
                 label_dict,

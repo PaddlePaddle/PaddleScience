@@ -76,10 +76,8 @@ def log_train_info(
     iters_width = len(str(solver.iters_per_epoch))
     log_str = (
         f"[Train][Epoch {epoch_id:>{epoch_width}}/{solver.epochs}]"
-        f"[Iter {iter_id:>{iters_width}}/{solver.iters_per_epoch}] {lr_msg}, "
-        ", ".join(
-            [*([metric_msg] if len(metric_msg) > 0 else []), time_msg, ips_msg, eta_msg]
-        )
+        + f"[Iter {iter_id:>{iters_width}}/{solver.iters_per_epoch}] {lr_msg}, "
+        + ", ".join(filter(None, [metric_msg, time_msg, ips_msg, eta_msg]))
     )
     if solver.benchmark_flag:
         max_mem_reserved_msg = (
@@ -139,26 +137,12 @@ def log_eval_info(
         logger.info(
             f"[Eval][Epoch {epoch_id:>{epoch_width}}/{solver.epochs}]"
             + f"[Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
-            ", ".join(
-                [
-                    *([metric_msg] if len(metric_msg) > 0 else []),
-                    time_msg,
-                    ips_msg,
-                    eta_msg,
-                ]
-            )
+            + ", ".join(filter(None, [metric_msg, time_msg, ips_msg, eta_msg]))
         )
     else:
         logger.info(
             f"[Eval][Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
-            + ", ".join(
-                [
-                    *([metric_msg] if len(metric_msg) > 0 else []),
-                    time_msg,
-                    ips_msg,
-                    eta_msg,
-                ]
-            )
+            + ", ".join(filter(None, [metric_msg, time_msg, ips_msg, eta_msg]))
         )
 
     # reset time information after printing

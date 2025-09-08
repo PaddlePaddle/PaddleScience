@@ -31,7 +31,7 @@ class SupervisedValidator(base.Validator):
     Args:
         dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
         loss (Optional[loss.Loss]): Loss functor. Defaults to None.
-        output_expr (Optional[Dict[str, Callable]]): List of label expression.
+        output_expr (Optional[Dict[str, Callable]]): List of label expression. Defaults to None.
         metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
         name (Optional[str]): Name of validator. Defaults to None.
 
