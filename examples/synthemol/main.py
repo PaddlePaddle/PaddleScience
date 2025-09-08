@@ -22,6 +22,7 @@ import paddle
 import pandas as pd
 from chemprop_models import chemprop_predict
 from chemprop_models import my_chemprop_load
+from evaluation import evaluate_auto
 from loss_functions import get_loss_func
 from omegaconf import DictConfig
 from synthemol.generate.generator import Generator
@@ -253,7 +254,8 @@ def train(cfg: DictConfig):
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(
-        learning_rate=cfg.TRAIN.learning_rate, weight_decay=0.001
+        learning_rate=cfg.TRAIN.learning_rate,
+        weight_decay=None,  # 0.001
     )(model)
 
     # initialize solver
@@ -274,6 +276,64 @@ def train(cfg: DictConfig):
 
     # train model
     solver.train()
+
+
+def evaluate(cfg):
+    data_path = cfg.DATA.data_path
+    data = pd.read_csv(data_path)
+    print(f"Data size = {len(data):,}")
+    num_models = cfg.DATA.num_models
+    num_folds = cfg.DATA.num_folds
+    indices = np.tile(np.arange(num_folds), 1 + len(data) // num_folds)[: len(data)]
+    random = Random(0)
+    random.shuffle(indices)
+    assert 1 <= num_models <= num_folds
+    smiles_column = cfg.DATA.smiles_column  #'smiles'
+    property_column = cfg.DATA.property_column  #'antibiotic_activity'
+
+    model_num = 1
+    test_index = model_num
+    val_index = (model_num + 1) % num_folds
+    test_mask = indices == test_index
+    val_mask = indices == val_index
+    train_mask = ~(test_mask | val_mask)
+    test_data = data[test_mask]
+    val_data = data[val_mask]
+    train_data = data[train_mask]
+    print(
+        "test_data:",
+        len(test_data),
+        "train_data:",
+        len(train_data),
+        "val_data:",
+        len(val_data),
+    )
+
+    # load model
+    model_path = Path(cfg.PRE_COMPUTE.model_path)
+    use_gpu = cfg.PRE_COMPUTE.use_gpu
+    model_type = cfg.PRE_COMPUTE.model_type  #'chemprop'
+
+    model = ppsci.arch.chemprop_molecule.MoleculeModel(cfg=cfg)
+
+    if model_type == "chemprop":
+        if use_gpu:
+            device = str("cuda").replace("cuda", "gpu")
+        else:
+            device = paddle.CPUPlace()
+        paddle.seed(seed=0)
+    m = my_chemprop_load(model, model_path=model_path, device=device)
+    test_preds = chemprop_predict(
+        model=m, smiles=test_data[smiles_column], fingerprints=None, num_workers=1
+    )
+
+    scores = evaluate_auto(
+        true=test_data[property_column],
+        preds=test_preds,
+        dataset_type=cfg.DATA.dataset_type,
+    )
+    for score_name, score_value in scores.items():
+        print(f"Test {score_name} = {score_value:.3f}")
 
 
 def pre_compute(cfg):
@@ -500,13 +560,15 @@ def generate(cfg):
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
     elif cfg.mode == "pre-compute":
         pre_compute(cfg)
     elif cfg.mode == "generate":
         generate(cfg)
     else:
         raise ValueError(
-            f"cfg.mode should in ['train', 'pre-compute', 'generate'], but got '{cfg.mode}'"
+            f"cfg.mode should in ['train', 'eval', 'pre-compute', 'generate'], but got '{cfg.mode}'"
         )
 
 

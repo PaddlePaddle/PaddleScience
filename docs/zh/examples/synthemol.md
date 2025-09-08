@@ -3,7 +3,7 @@
 !!! note
 
     1. 开始训练、评估前，请先下载实验所用数据集 [Data.zip](https://paddle-org.bj.bcebos.com/paddlescience/datasets/synthemol/Data.zip) ，并对应修改 yaml 配置文件中的 `data_dir` 为解压后的数据集路径。例如："./data/Data/..."
-    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[pretrained.zip](https://paddle-org.bj.bcebos.com/paddlescience/models/synthemol/pretrained.zip)并解压，例如pretrained路径,并在yaml配置文件的PRE_COMPUTE.model_path指明路径。
+    2. 如果需要使用预训练模型进行评估，请先下载预训练模型[pretrained.zip](https://paddle-org.bj.bcebos.com/paddlescience/models/synthemol/pretrained.zip)并解压，例如./pretrained/pretrained_chemprop.pdparams路径,并在yaml配置文件的PRE_COMPUTE.model_path指明路径。
     3. 开始训练、生成前，请安装 `rdkit` 等，相关依赖请执行`pip install requirements.txt`安装。
 
 === "Property Predictor模型训练命令"
@@ -12,6 +12,14 @@
     # 使用antibiotics等数据训练模型chemprop模型,实现Property Predict
     # 配置可在conf/synthemol.yaml进行修改
     python main.py mode=train
+    ```
+
+=== "Property Predictor模型评估命令"
+
+    ``` sh
+    # 使用antibiotics等数据评估模型chemprop模型,实现Property Predict
+    # 配置可在conf/synthemol.yaml进行修改
+    python main.py mode=eval
     ```
 
 === "预计算building blocks分数命令"
@@ -122,9 +130,9 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 数据加载的代码如下:
 
-``` py linenums="225" title="examples/synthemol/main.py"
+``` py linenums="227" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:225:237
+examples/synthemol/main.py:227:239
 --8<--
 ```
 
@@ -132,9 +140,9 @@ examples/synthemol/main.py:225:237
 
 定义监督约束的代码如下：
 
-``` py linenums="239" title="examples/synthemol/main.py"
+``` py linenums="241" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:239:248
+examples/synthemol/main.py:241:250
 --8<--
 ```
 
@@ -148,9 +156,9 @@ examples/synthemol/main.py:239:248
 
 在该案例中，分子属性预测模型基于 Chemprop 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="250" title="examples/synthemol/main.py"
+``` py linenums="252" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:250:251
+examples/synthemol/main.py:252:253
 --8<--
 ```
 
@@ -166,11 +174,11 @@ examples/synthemol/conf/synthemol.yaml:32:36
 
 #### 3.2.3 学习率与优化器构建
 
-本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组，使用不同的`weight_decay`,用 PaddleScience 代码表示如下：
+本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组,用 PaddleScience 代码表示如下：
 
-``` py linenums="253" title="examples/synthemol/main.py"
+``` py linenums="255" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:253:256
+examples/synthemol/main.py:255:258
 --8<--
 ```
 
@@ -178,9 +186,9 @@ examples/synthemol/main.py:253:256
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="258" title="examples/synthemol/main.py"
+``` py linenums="260" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:258:275
+examples/synthemol/main.py:260:277
 --8<--
 ```
 
@@ -188,9 +196,9 @@ examples/synthemol/main.py:258:275
 
 构建模型的代码为：
 
-``` py linenums="298" title="examples/synthemol/main.py"
+``` py linenums="345" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:298:298
+examples/synthemol/main.py:345:345
 --8<--
 ```
 
@@ -198,9 +206,9 @@ examples/synthemol/main.py:298:298
 
 构建Generator的代码为：
 
-``` py linenums="464" title="examples/synthemol/main.py"
+``` py linenums="511" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:464:478
+examples/synthemol/main.py:511:525
 --8<--
 ```
 
@@ -214,11 +222,17 @@ examples/synthemol/main.py
 
 ## 5. 结果展示
 
+评估第一步Chemprop模型的训练效果，通过加载预训练模型并执行评估命令，可以得到结果：
+
+| | roc_auc | prc_auc |
+|:-- | :-- | :-- |
+| chemprop | 0.797 | 0.332 |
+
 查看生成的molecules.csv，可以看到类似于下表的生成的分子信息：
 
-|  | smiles | node_id | num_expansions | rollout_num | score | Q_value | num_reactions | reaction_1_id | building_block_1_1_id | building_block_1_1_smiles | building_block_1_2_id | building_block_1_2_smiles |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-|  | C#CCN(C(=O)C(C)(C)C#C)C1CCN(C(=O)OC(C)(C)C)CC1 | 91431 | 20 | 1 |  |  | 1 | 22 | 4349560 | C#CCNC1CCN(C(=O)OC(C)(C)C)CC1 | 2998277 | C#CC(C)(C)C(=O)O |
+| smiles | node_id | num_expansions | rollout_num | score | Q_value | num_reactions | reaction_1_id | building_block_1_1_id | building_block_1_1_smiles | building_block_1_2_id | building_block_1_2_smiles |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| C#CCN(C(=O)C(C)(C)C#C)C1CCN(C(=O)OC(C)(C)C)CC1 | 91431 | 20 | 1 |  |  | 1 | 22 | 4349560 | C#CCNC1CCN(C(=O)OC(C)(C)C)CC1 | 2998277 | C#CC(C)(C)C(=O)O |
 
 可以看到生成了符合要求的分子信息，符合作者的设计目的。
 

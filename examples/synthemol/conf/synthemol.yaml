@@ -23,7 +23,7 @@ hydra:
 # general settings
 mode: train # running mode: train/pre-compute/generate
 seed: 43
-output_dir: ${hydra:run.dir}
+output_dir: ${hydra:run.dir} #/${now:%Y-%m-%d}/${now:%H-%M-%S}
 log_freq: 20
 
 data_dir: "./data"
@@ -37,13 +37,13 @@ MODEL:
 
 # training settings
 TRAIN:
-  epochs: 30 #40
-  iters_per_epoch: 376 #20
+  epochs: 50 #40
+  iters_per_epoch: 216 #376 #20
   save_freq: 2
   eval_during_train: false
   eval_freq: 2
-  learning_rate: 0.001
-  batch_size: 128
+  learning_rate: 0.0001 #0.001
+  batch_size: 50 #128
   pretrained_model_path: null
   checkpoint_path: null
   use_gpu: true
@@ -54,14 +54,14 @@ DATA:
   fingerprint_type: null
   smiles_column: 'smiles'
   property_column: "antibiotic_activity"
-  data_path: ${data_dir}/Data/1_training_data/antibiotics_hits.csv
+  data_path: ${data_dir}/Data/1_training_data/antibiotics.csv
   num_models: 1
   num_folds: 10
   dataset_name: "MoleculeDatasetIter"
 
 PRE_COMPUTE:
   data_path: ${data_dir}/Data/4_real_space/building_blocks.csv
-  model_path: "./outputs_synthemol/checkpoints/epoch_30.pdparams"
+  model_path: "./pretrained/pretrained_chemprop.pdparams"
   smiles_column: 'smiles'
   model_type: 'chemprop'
   fingerprint_type: null
