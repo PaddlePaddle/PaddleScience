@@ -34,18 +34,18 @@ class Validator:
     Args:
         dataset (io.Dataset): Dataset for validator.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.Loss): Loss functor.
-        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict.
-        name (str): Name of validator.
+        loss (Optional[loss.Loss]): Loss functor. Defaults to None.
+        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
+        name (str): Name of validator. Defaults to "validator".
     """
 
     def __init__(
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: "loss.Loss",
-        metric: Optional[Dict[str, "metric.Metric"]],
-        name: str,
+        loss: Optional["loss.Loss"] = None,
+        metric: Optional[Dict[str, "metric.Metric"]] = None,
+        name: str = "validator",
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
         self.data_iter = iter(self.data_loader)

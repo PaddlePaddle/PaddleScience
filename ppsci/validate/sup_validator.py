@@ -30,7 +30,7 @@ class SupervisedValidator(base.Validator):
 
     Args:
         dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
-        loss (loss.Loss): Loss functor.
+        loss (Optional[loss.Loss]): Loss functor. Defaults to None.
         output_expr (Optional[Dict[str, Callable]]): List of label expression.
         metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
         name (Optional[str]): Name of validator. Defaults to None.
@@ -63,7 +63,7 @@ class SupervisedValidator(base.Validator):
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: Optional["loss.Loss"] = None,
         output_expr: Optional[Dict[str, Callable]] = None,
         metric: Optional[Dict[str, metric.Metric]] = None,
         name: Optional[str] = None,
