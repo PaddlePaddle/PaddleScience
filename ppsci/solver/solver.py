@@ -491,10 +491,16 @@ class Solver:
         # whether enable static for forward pass. Defaults to False
         if not cfg:
             self.to_static = to_static
-        jit.enable_to_static(self.to_static)
-        logger.message(
-            f"Set to_static={self.to_static} for computational optimization."
-        )
+
+        if self.to_static:
+            jit.enable_to_static(self.to_static)
+            logger.message("Enable jit.to_static for computational optimization.")
+            self.forward_helper.train_forward = paddle.jit.to_static(
+                self.forward_helper.train_forward
+            )
+            self.forward_helper.eval_forward = paddle.jit.to_static(
+                self.forward_helper.eval_forward
+            )
 
         # convert sympy to callable object if exist
         extra_parameters = []
