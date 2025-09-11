@@ -54,6 +54,7 @@ nav:
         - NeuralOperator: zh/examples/neuraloperator.md
         - Brusselator3D: zh/examples/brusselator3d.md
         - Transformer4SR: zh/examples/transformer4sr.md
+        - LatentNO: zh/examples/latent_no.md
       - 技术科学(AI for Technology):
         - 流体:
           - Fundiff: zh/examples/fundiff.md
