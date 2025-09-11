@@ -66,7 +66,11 @@ class ModelWrapper(nn.Layer):
                 z_sdf = self.encoder(sdf)
                 z_1 = paddle.concat([z_p, z_sdf], axis=-1)
                 z_0 = paddle.randn(z_1.shape)  # (b, 200, 512)
-                t = paddle.uniform([z_1.shape[0], *[1 for _ in range(z_1.ndim - 1)]])
+                t = paddle.uniform(
+                    [z_1.shape[0], *[1 for _ in range(z_1.ndim - 1)]],
+                    min=0.0,
+                    max=1.0,
+                )
                 z_t = t * (z_1 - z_0) + z_0
                 v_t = z_1 - z_0
             else:

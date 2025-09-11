@@ -213,22 +213,19 @@ def scalar(
         wandb_writer (Optional[wandb.run]): Run object of WandB to record metrics. Defaults to None.
         tbd_writer (Optional[tbd.SummaryWriter]): Run object of WandB to record metrics. Defaults to None.
     """
-    if vdl_writer is not None:
-        with misc.RankZeroOnly() as is_master:
-            if is_master:
-                for name, value in metric_dict.items():
-                    vdl_writer.add_scalar(name, value, step)
+    with misc.RankZeroOnly() as is_master:
+        if vdl_writer is not None and is_master:
+            for name, value in metric_dict.items():
+                vdl_writer.add_scalar(name, value, step)
 
-    if wandb_writer is not None:
-        with misc.RankZeroOnly() as is_master:
-            if is_master:
-                wandb_writer.log({"step": step, **metric_dict})
+    with misc.RankZeroOnly() as is_master:
+        if wandb_writer is not None and is_master:
+            wandb_writer.log({"step": step, **metric_dict})
 
-    if tbd_writer is not None:
-        with misc.RankZeroOnly() as is_master:
-            if is_master:
-                for name, value in metric_dict.items():
-                    tbd_writer.add_scalar(name, value, global_step=step)
+    with misc.RankZeroOnly() as is_master:
+        if tbd_writer is not None and is_master:
+            for name, value in metric_dict.items():
+                tbd_writer.add_scalar(name, value, global_step=step)
 
 
 def advertise():
