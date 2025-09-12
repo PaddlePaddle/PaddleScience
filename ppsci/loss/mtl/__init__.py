@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 
 from ppsci.loss.mtl.agda import AGDA
@@ -33,7 +35,13 @@ __all__ = [
 ]
 
 
-def build_mtl_aggregator(cfg):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+
+def build_mtl_aggregator(cfg: DictConfig):
     """Build loss aggregator with multi-task learning method.
 
     Args:

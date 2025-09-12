@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import traceback
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Tuple
 
 from paddle import vision
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 from ppsci.data.process.transform.preprocess import CropData
 from ppsci.data.process.transform.preprocess import FunctionalTransform
@@ -57,7 +63,7 @@ class Compose(vision.Compose):
         return data
 
 
-def build_transforms(cfg):
+def build_transforms(cfg: DictConfig):
     if not cfg:
         return Compose([])
     cfg = copy.deepcopy(cfg)

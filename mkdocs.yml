@@ -54,6 +54,7 @@ nav:
         - NeuralOperator: zh/examples/neuraloperator.md
         - Brusselator3D: zh/examples/brusselator3d.md
         - Transformer4SR: zh/examples/transformer4sr.md
+        - LatentNO: zh/examples/latent_no.md
       - 技术科学(AI for Technology):
         - 流体:
           - Fundiff: zh/examples/fundiff.md
@@ -117,6 +118,7 @@ nav:
         - UNetFormer: zh/examples/unetformer.md
         - WGAN_GP: zh/examples/wgan_gp.md
       - 化学科学(AI for Chemistry):
+        - SMC Reac: zh/examples/smc_reac.md
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
 

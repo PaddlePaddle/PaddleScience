@@ -1045,8 +1045,11 @@ best_value: 0.02460772916674614
 
     ``` sh
     # 指定 0,1,2,3 张卡启动分布式数据并行训练
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch poiseuille_flow.py
+    CUDA_VISIBLE_DEVICES=0,1,2,3 fleetrun poiseuille_flow.py # (1)
     ```
+
+    1. `fleetrun` 可以代替 `python -m paddle.distributed.launch` 启动分布式训练，详见[Paddle/setup.py](https://github.com/PaddlePaddle/Paddle/blob/9396014e1c811a2ed23eac70df471d024a95939f/setup.py#L2753)。
+
 
 <!-- #### 2.2.2 模型并行
 

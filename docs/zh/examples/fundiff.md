@@ -34,7 +34,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [fundiff_turbulence_mass_transfer_dit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/fundiff/fundiff_turbulence_mass_transfer_dit_pretrained.pdparams) | Mean relative p error: 0.0651<br>Max relative p error: 0.1329<br>Min relative p error: 0.0345<br>Std relative p error: 0.0300<br>Mean relative sdf error: 0.0684<br>Max relative sdf error: 0.1443<br>Min relative sdf error: 0.0335<br>Std relative sdf error: 0.0377 |
+| [fundiff_turbulence_mass_transfer_dit_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/fundiff/fundiff_turbulence_mass_transfer_dit_pretrained.pdparams) | Mean relative p error: 0.066<br>Max relative p error: 0.159<br>Min relative p error: 0.029<br>Std relative p error: 0.027<br>Mean relative sdf error: 0.085<br>Max relative sdf error: 0.307<br>Min relative sdf error: 0.022<br>Std relative sdf error: 0.0499 |
 
 ## 1. 背景简介
 

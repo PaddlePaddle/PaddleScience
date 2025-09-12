@@ -43,7 +43,7 @@ class GeometryValidator(base.Validator):
             label, which will be a reference value to participate in the loss calculation.
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.Loss): Loss functor.
+        loss (Optional[loss.Loss]): Loss functor. Defaults to None.
         random (Literal["pseudo", "Halton", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified domain. Defaults to None.
@@ -75,7 +75,7 @@ class GeometryValidator(base.Validator):
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: Optional["loss.Loss"] = None,
         random: Literal["pseudo", "Halton", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,

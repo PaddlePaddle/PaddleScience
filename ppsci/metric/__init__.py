@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 from ppsci.metric.anomaly_coef import LatitudeWeightedACC
 from ppsci.metric.base import Metric
@@ -43,11 +50,11 @@ __all__ = [
 ]
 
 
-def build_metric(cfg):
+def build_metric(cfg: DictConfig):
     """Build metric.
 
     Args:
-        cfg (List[DictConfig]): List of metric config.
+        cfg (DictConfig): List of metric config.
 
     Returns:
         Dict[str, Metric]: Dict of callable metric object.
