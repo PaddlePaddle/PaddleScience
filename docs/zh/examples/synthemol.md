@@ -17,6 +17,8 @@
 === "Property Predictor模型评估命令"
 
     ``` sh
+    # 下载预训练模型（可选，或配置文件指定自己训练的模型）
+    mkdir -p ./pretrained && wget -O ./pretrained/pretrained_chemprop.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/synthemol/pretrained_chemprop.pdparams
     # 使用antibiotics等数据评估模型chemprop模型,实现Property Predict
     # 配置可在conf/synthemol.yaml进行修改
     python main.py mode=eval
@@ -25,6 +27,8 @@
 === "预计算building blocks分数命令"
 
     ``` sh
+    # 下载预训练模型（可选，或配置文件指定自己训练的模型）
+    mkdir -p ./pretrained && wget -O ./pretrained/pretrained_chemprop.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/synthemol/pretrained_chemprop.pdparams
     # 使用训练好的模型进行building blocks的分数与计算，以加速下一个生成阶段
     # 配置可在conf/synthemol.yaml进行修改
     python main.py mode=pre-compute
