@@ -53,7 +53,7 @@ TRAIN:
     warmup_epoch: 2
     warmup_start_lr: 1.0e-6
 
-eval:
+EVAL:
   batch_size: 64
   eval_with_no_grad: true
   pretrained_model_path: null

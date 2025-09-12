@@ -204,7 +204,7 @@ def train(cfg: DictConfig):
 
         train_constraint = create_constraint(train_dict, cfg.TRAIN.batch_size)
         verif_validator = create_validator(
-            verif_dict, cfg.eval.batch_size, "verif_validator"
+            verif_dict, cfg.EVAL.batch_size, "verif_validator"
         )
 
         solver = Solver(
@@ -218,7 +218,7 @@ def train(cfg: DictConfig):
             eval_during_train=cfg.TRAIN.eval_during_train,
             eval_freq=cfg.TRAIN.eval_freq,
             save_freq=cfg.TRAIN.save_freq,
-            eval_with_no_grad=cfg.eval.eval_with_no_grad,
+            eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
             log_freq=cfg.TRAIN.log_freq,
         )
 
@@ -259,7 +259,7 @@ def train(cfg: DictConfig):
     val_dict = create_tensor_dict(X_val, y_val)
 
     train_constraint = create_constraint(train_dict, cfg.TRAIN.batch_size)
-    val_validator = create_validator(val_dict, cfg.eval.batch_size, "val_validator")
+    val_validator = create_validator(val_dict, cfg.EVAL.batch_size, "val_validator")
 
     solver = Solver(
         model=final_model,
@@ -272,7 +272,7 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         save_freq=cfg.TRAIN.save_freq,
-        eval_with_no_grad=cfg.eval.eval_with_no_grad,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         log_freq=cfg.TRAIN.log_freq,
     )
 
@@ -312,8 +312,8 @@ def evaluate(cfg: DictConfig):
             X_val = X_val.rename(columns={old_name: new_name})
 
     # Loading model structure and weights
-    print(f"Loading model from {cfg.eval.pretrained_model_path}")
-    model_dict = load_model_from_path_or_url(cfg.eval.pretrained_model_path)
+    print(f"Loading model from {cfg.EVAL.pretrained_model_path}")
+    model_dict = load_model_from_path_or_url(cfg.EVAL.pretrained_model_path)
     hidden_size = model_dict["hidden_size"]
     print(f"Loaded model structure with hidden sizes: {hidden_size}")
 
@@ -333,14 +333,14 @@ def evaluate(cfg: DictConfig):
 
     valid_dict = create_tensor_dict(X_val, y_val)
     valid_validator = create_validator(
-        valid_dict, cfg.eval.batch_size, "valid_validator"
+        valid_dict, cfg.EVAL.batch_size, "valid_validator"
     )
 
     solver = Solver(
         model=model,
         output_dir=cfg.output_dir,
         validator={"valid": valid_validator},
-        eval_with_no_grad=cfg.eval.eval_with_no_grad,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
     # evaluation model
