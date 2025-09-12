@@ -40,6 +40,7 @@ from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.geofno import FNO1d  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
+from ppsci.arch.latent_no import LatentNO, LatentNO_time  # isort:skip
 from ppsci.arch.lno import LNO  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
@@ -98,6 +99,8 @@ __all__ = [
     "GraphCastNet",
     "HEDeepONets",
     "LorenzEmbedding",
+    "LatentNO",
+    "LatentNO_time",
     "LNO",
     "MLP",
     "ModelList",
