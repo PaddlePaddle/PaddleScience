@@ -2,9 +2,9 @@
 
 !!! note
 
-    1. 开始训练、评估前，请先下载实验所用数据集 [Data.zip](https://paddle-org.bj.bcebos.com/paddlescience/datasets/synthemol/Data.zip) ，并对应修改 yaml 配置文件中的 `data_dir` 为解压后的数据集路径。例如："./data/Data/..."
+    1. 开始训练、评估前，请先下载实验所用数据集 [Data.zip](https://paddle-org.bj.bcebos.com/paddlescience/datasets/synthemol/Data.zip) ，并对应修改 yaml 配置文件中的 `data_dir` 为解压后的数据集路径。例如："./data/Data/..."；下载 [resources.zip](https://paddle-org.bj.bcebos.com/paddlescience/datasets/synthemol/resources.zip), 将其解压至examples/synthemol/synthemol/下。
     2. 如果需要使用预训练模型进行评估，请先下载预训练模型[pretrained.zip](https://paddle-org.bj.bcebos.com/paddlescience/models/synthemol/pretrained.zip)并解压，例如./pretrained/pretrained_chemprop.pdparams路径,并在yaml配置文件的PRE_COMPUTE.model_path指明路径。
-    3. 开始训练、生成前，请安装 `rdkit` 等，相关依赖请执行`pip install requirements.txt`安装。
+    4. 开始训练、生成前，请安装 `rdkit` 等，相关依赖请执行`pip install requirements.txt`安装。
 
 === "Property Predictor模型训练命令"
 
