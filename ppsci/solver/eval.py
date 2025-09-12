@@ -108,9 +108,10 @@ def _eval_by_dataset(
                     weight_dict,
                 )
 
-            loss_dict[f"{_validator.name}/loss"] = float(
-                sum(list(validator_loss.values()))
-            )
+            if len(validator_loss) > 0:
+                loss_dict[f"{_validator.name}/loss"] = float(
+                    sum(list(validator_loss.values()))
+                )
 
             for key, output in output_dict.items():
                 all_output[key].append(
@@ -235,9 +236,10 @@ def _eval_by_batch(
                     weight_dict,
                 )
 
-            loss_dict[f"{_validator.name}/loss"] = float(
-                sum(list(validator_loss.values()))
-            )
+            if len(validator_loss) > 0:
+                loss_dict[f"{_validator.name}/loss"] = float(
+                    sum(list(validator_loss.values()))
+                )
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
