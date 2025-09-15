@@ -97,6 +97,7 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - psc_NN: zh/examples/perovskite_solar_cells_nn.md
         - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
       - 地球科学(AI for Earth Science):
