@@ -132,3 +132,7 @@ FETCH_HEAD
 
 # auto generated version file by setuptools_scm
 ppsci/_version.py
+
+
+# Ignore entire output_laplace2d output directory
+/examples/laplace/output_laplace2d/
