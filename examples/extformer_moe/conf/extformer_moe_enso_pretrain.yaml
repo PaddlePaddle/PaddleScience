@@ -30,7 +30,8 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set train and evaluate data path
-FILE_PATH: /hpc2hdd/home/hni017/Workplace/data/weather_data/icar_enso_2021/enso_round1_train_20210201
+# FILE_PATH: /hpc2hdd/home/hni017/Workplace/data/weather_data/icar_enso_2021/enso_round1_train_20210201
+FILE_PATH: /root/workspace/PaddleScience/examples/extformer_moe/data/weather_data/enso_round1_train_20210201
 
 # dataset setting
 DATASET:

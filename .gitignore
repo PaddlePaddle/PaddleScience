@@ -136,3 +136,4 @@ ppsci/_version.py
 
 # Ignore entire output_laplace2d output directory
 /examples/laplace/output_laplace2d/
+/examples/extformer_moe/data

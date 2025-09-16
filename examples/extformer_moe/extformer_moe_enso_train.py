@@ -44,7 +44,7 @@ def train(cfg: DictConfig):
             "shuffle": True,
         },
         "batch_size": cfg.TRAIN.batch_size,
-        "num_workers": 8,
+        "num_workers": 0,
     }
 
     # set constraint
