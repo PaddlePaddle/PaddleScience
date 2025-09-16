@@ -446,7 +446,6 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
-            # FIXME: wandb may hanging here in distributed env
             with misc.RankZeroOnly(self.rank) as is_master:
                 for key in ("http_proxy", "https_proxy"):
                     if f"{key}_original" in os.environ and os.environ.get(
