@@ -61,7 +61,7 @@ INFER:
   export_path: ./inference/laplace2d
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdiparams_path: ${INFER.export_path}.pdiparams
-  device: gpu
+  device: sdaa
   engine: native
   precision: fp32
   onnx_path: ${INFER.export_path}.onnx

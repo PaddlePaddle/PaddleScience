@@ -7,6 +7,7 @@ from paddle import nn
 
 import ppsci
 
+paddle.set_device("sdaa")
 
 def get_parameter_names(model, forbidden_layer_types):
     result = []
