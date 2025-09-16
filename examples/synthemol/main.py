@@ -136,7 +136,6 @@ def make_args(
     train_smiles,
     train_fingerprints,
 ):
-
     # Create args
     arg_list = [
         "--data_path",
@@ -174,7 +173,6 @@ def make_args(
 
 
 def load_raw_data(cfg):
-
     data_path = cfg.DATA.data_path
     data = pd.read_csv(data_path)
     print(f"Data size = {len(data):,}")
@@ -211,7 +209,6 @@ def load_raw_data(cfg):
 
 
 def train(cfg: DictConfig):
-
     train_smiles, train_fingerprints, train_properties = load_raw_data(cfg)
 
     args = make_args(

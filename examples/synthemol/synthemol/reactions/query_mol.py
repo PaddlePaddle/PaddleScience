@@ -11,13 +11,12 @@ from synthemol.utils import strip_atom_mapping
 
 
 class QueryMol:
-    """Contains a molecule query in the form of a SMARTS string along with helper functions."""
+    """Contains a molecule query in the form of a SMARTS string along with helper functions.
+
+    :param smarts: A SMARTS string representing the molecular query.
+    """
 
     def __init__(self, smarts: str) -> None:
-        """Initializes the QueryMol.
-
-        :param smarts: A SMARTS string representing the molecular query.
-        """
         self.smarts_with_atom_mapping = smarts
         self.smarts = strip_atom_mapping(smarts)
         self.query_mol = Chem.MolFromSmarts(self.smarts)

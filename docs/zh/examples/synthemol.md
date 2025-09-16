@@ -134,9 +134,9 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 数据加载的代码如下:
 
-``` py linenums="227" title="examples/synthemol/main.py"
+``` py linenums="224" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:227:239
+examples/synthemol/main.py:224:236
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/synthemol/main.py:227:239
 
 定义监督约束的代码如下：
 
-``` py linenums="241" title="examples/synthemol/main.py"
+``` py linenums="238" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:241:250
+examples/synthemol/main.py:238:247
 --8<--
 ```
 
@@ -160,9 +160,9 @@ examples/synthemol/main.py:241:250
 
 在该案例中，分子属性预测模型基于 Chemprop 网络模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="252" title="examples/synthemol/main.py"
+``` py linenums="249" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:252:253
+examples/synthemol/main.py:249:250
 --8<--
 ```
 
@@ -178,11 +178,11 @@ examples/synthemol/conf/synthemol.yaml:32:36
 
 #### 3.2.3 学习率与优化器构建
 
-本案例中使用的学习率大小设置为 `0.001`。优化器使用 `Adam`，并将参数进行分组,用 PaddleScience 代码表示如下：
+本案例中使用的学习率大小设置为 `0.0001`。优化器使用 `Adam`，并将参数进行分组,用 PaddleScience 代码表示如下：
 
-``` py linenums="255" title="examples/synthemol/main.py"
+``` py linenums="252" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:255:258
+examples/synthemol/main.py:252:256
 --8<--
 ```
 
@@ -190,9 +190,9 @@ examples/synthemol/main.py:255:258
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="260" title="examples/synthemol/main.py"
+``` py linenums="258" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:260:277
+examples/synthemol/main.py:258:275
 --8<--
 ```
 
@@ -200,9 +200,9 @@ examples/synthemol/main.py:260:277
 
 构建模型的代码为：
 
-``` py linenums="345" title="examples/synthemol/main.py"
+``` py linenums="348" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:345:345
+examples/synthemol/main.py:348:348
 --8<--
 ```
 
@@ -210,9 +210,9 @@ examples/synthemol/main.py:345:345
 
 构建Generator的代码为：
 
-``` py linenums="511" title="examples/synthemol/main.py"
+``` py linenums="514" title="examples/synthemol/main.py"
 --8<--
-examples/synthemol/main.py:511:525
+examples/synthemol/main.py:514:528
 --8<--
 ```
 

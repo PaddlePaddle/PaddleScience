@@ -17,7 +17,25 @@ from tqdm import trange
 
 
 class Generator:
-    """A class that generates molecules."""
+    """A class that generates molecules.
+
+    :param building_block_smiles_to_id: A dictionary mapping building block SMILES to their IDs.
+    :param max_reactions: The maximum number of reactions to use to construct a molecule.
+    :param scoring_fn: A function that takes as input a SMILES representing a molecule and returns a score.
+    :param explore_weight: The hyperparameter that encourages exploration.
+    :param num_expand_nodes: The number of tree nodes to expand when extending the child nodes in the search tree.
+                                If None, then all nodes are expanded.
+    :param optimization: Whether to maximize or minimize the score.
+    :param reactions: A tuple of reactions that combine molecular building blocks.
+    :param rng_seed: Seed for the random number generator.
+    :param no_building_block_diversity: Whether to turn off the score modification that encourages diverse building blocks.
+    :param store_nodes: Whether to store the child nodes of each node in the search tree.
+                        This doubles the speed of the search but significantly increases
+                        the memory usage (e.g., 450GB for 20,000 rollouts instead of 600 MB).
+    :param verbose: Whether to print out additional statements during generation.
+    :param replicate: This is necessary to replicate the results from the paper, but otherwise should not be used
+                        since it limits the potential choices of building blocks.
+    """
 
     def __init__(
         self,
@@ -34,25 +52,7 @@ class Generator:
         verbose: bool,
         replicate: bool = False,
     ) -> None:
-        """Creates the Generator.
 
-        :param building_block_smiles_to_id: A dictionary mapping building block SMILES to their IDs.
-        :param max_reactions: The maximum number of reactions to use to construct a molecule.
-        :param scoring_fn: A function that takes as input a SMILES representing a molecule and returns a score.
-        :param explore_weight: The hyperparameter that encourages exploration.
-        :param num_expand_nodes: The number of tree nodes to expand when extending the child nodes in the search tree.
-                                  If None, then all nodes are expanded.
-        :param optimization: Whether to maximize or minimize the score.
-        :param reactions: A tuple of reactions that combine molecular building blocks.
-        :param rng_seed: Seed for the random number generator.
-        :param no_building_block_diversity: Whether to turn off the score modification that encourages diverse building blocks.
-        :param store_nodes: Whether to store the child nodes of each node in the search tree.
-                            This doubles the speed of the search but significantly increases
-                            the memory usage (e.g., 450GB for 20,000 rollouts instead of 600 MB).
-        :param verbose: Whether to print out additional statements during generation.
-        :param replicate: This is necessary to replicate the results from the paper, but otherwise should not be used
-                          since it limits the potential choices of building blocks.
-        """
         self.building_block_smiles_to_id = building_block_smiles_to_id
         self.max_reactions = max_reactions
         self.scoring_fn = scoring_fn

@@ -10,17 +10,16 @@ from synthemol.utils import convert_to_mol
 
 
 class Reaction:
-    """A chemical reaction including SMARTS for the reactants, product, and reaction along with helper functions."""
+    """A chemical reaction including SMARTS for the reactants, product, and reaction along with helper functions.
+
+    :param reactants: A list of QueryMols containing the reactants of the reaction.
+    :param product: A QueryMol containing the product of the reaction.
+    :param reaction_id: The ID of the reaction.
+    """
 
     def __init__(
         self, reactants: list[QueryMol], product: QueryMol, reaction_id: (int) = None
     ) -> None:
-        """Initializes the Reaction.
-
-        :param reactants: A list of QueryMols containing the reactants of the reaction.
-        :param product: A QueryMol containing the product of the reaction.
-        :param reaction_id: The ID of the reaction.
-        """
         self.reactants = reactants
         self.product = product
         self.id = reaction_id

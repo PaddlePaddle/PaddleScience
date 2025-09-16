@@ -6,7 +6,18 @@ from typing import Callable
 
 
 class Node:
-    """A Node represents a step in the combinatorial molecule construction process."""
+    """A Node represents a step in the combinatorial molecule construction process.
+
+    :param explore_weight: The hyperparameter that encourages exploration.
+    :param scoring_fn: A function that takes as input a SMILES representing a molecule and returns a score.
+    :param node_id: The ID of the Node, which should correspond to the order in which the Mode was visited.
+    :param molecules: A tuple of SMILES. The first element is the currently constructed molecule
+                        while the remaining elements are the building blocks that are about to be added.
+    :param unique_building_block_ids: A set of building block IDS used in this Node.
+    :param construction_log: A tuple of dictionaries containing information about each reaction
+                                used to construct the molecules in this Node.
+    :param rollout_num: The number of the rollout on which this Node was created.
+    """
 
     def __init__(
         self,
@@ -18,18 +29,7 @@ class Node:
         construction_log: (tuple[dict[str, Any]]) = None,
         rollout_num: (int) = None,
     ) -> None:
-        """Initializes the Node.
 
-        :param explore_weight: The hyperparameter that encourages exploration.
-        :param scoring_fn: A function that takes as input a SMILES representing a molecule and returns a score.
-        :param node_id: The ID of the Node, which should correspond to the order in which the Mode was visited.
-        :param molecules: A tuple of SMILES. The first element is the currently constructed molecule
-                          while the remaining elements are the building blocks that are about to be added.
-        :param unique_building_block_ids: A set of building block IDS used in this Node.
-        :param construction_log: A tuple of dictionaries containing information about each reaction
-                                 used to construct the molecules in this Node.
-        :param rollout_num: The number of the rollout on which this Node was created.
-        """
         self.explore_weight = explore_weight
         self.scoring_fn = scoring_fn
         self.node_id = node_id
