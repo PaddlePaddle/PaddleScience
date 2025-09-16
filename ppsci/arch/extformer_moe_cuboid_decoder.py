@@ -855,7 +855,7 @@ class Upsample3DLayer(nn.Layer):
     Args:
         dim (int): The dimension of the input tensor.
         out_dim (int): The dimension of the output tensor.
-        target_size (Tuple[int,...]): The size of output tensor.
+        target_size (Tuple[int, ...]): The size of output tensor.
         temporal_upsample (bool, optional): Whether the temporal axis will go through upsampling. Defaults to False.
         kernel_size (int, optional): The kernel size of the Conv2D layer. Defaults to 3.
         layout (str, optional): The layout of the inputs. Defaults to "THWC".
@@ -956,7 +956,7 @@ class CuboidTransformerDecoder(nn.Layer):
 
     Args:
         target_temporal_length (int): The temporal length of the target.
-        mem_shapes (Tuple[int,...]): The mem shapes of the decoder.
+        mem_shapes (Tuple[int, ...]): The mem shapes of the decoder.
         cross_start (int, optional): The block to start cross attention. Defaults to 0.
         depth (list, optional): The number of layers for each block. Defaults to [2, 2].
         upsample_type (str, optional): The type of upsample. Defaults to "upsample".
