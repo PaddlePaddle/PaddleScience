@@ -255,9 +255,8 @@ def main(config):
         print(f"Test samples: {len(dt_test)}")
 
         # Load weights
-        weight_path = os.path.join(
-            config.weight_folder, "Fold_{}".format(fold + 1), "model.pdparams"
-        )
+        weight_path = config.weight_folder
+
         if not os.path.exists(weight_path):
             print(f"Warning: Weight file not found at {weight_path}")
             continue
