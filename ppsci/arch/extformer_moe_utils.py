@@ -125,9 +125,10 @@ class GatingNet(nn.Layer):
 
         assert logits.shape[-1] == self.num_experts
         logits = self.softmax(logits)  # [B, T, H, W, E]
-        top_logits, top_indices = logits.topk(
-            min(self.out_planes + 1, self.num_experts), axis=-1
-        )
+        with paddle.amp.auto_cast(custom_black_list={"top_k_v2", "top_k_v2_grad"}):
+            top_logits, top_indices = logits.topk(
+                min(self.out_planes + 1, self.num_experts), axis=-1
+            )
         top_k_logits = top_logits[:, :, :, :, : self.out_planes]
         top_k_indices = top_indices[:, :, :, :, : self.out_planes]
         top_k_gates = top_k_logits / (
