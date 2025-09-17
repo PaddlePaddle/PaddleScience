@@ -81,9 +81,12 @@ python train_semantic.py \
 
 - 测试：
 ```bash
-python test_semantic.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams\
-    --dataset_folder "/path/to/PASTIS" \
-    --num_workers 0
+wget -nc -O pretrained/utae_semantic.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams
+python test_semantic.py \
+  --weight_file pretrained/utae_semantic.pdparams \
+  --dataset_folder "/path/to/PASTIS" \
+  --device gpu --num_workers 0
+
 ```
 
 ### 全景分割任务
@@ -101,11 +104,14 @@ python train_panoptic.py \
 
 - 测试：
 ```bash
-python test_panoptic.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams\
+wget -O pretrained/utae_panoptic.pdparams \
+  https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams
+python test_panoptic.py \
+  --weight_file ./pretrained/utae_panoptic.pdparams \
   --dataset_folder "/path/to/PASTIS" \
   --batch_size 2 \
   --num_workers 0 \
-  --display_step 10
+  --device gpu
 ```
 
 ## 实验结果
