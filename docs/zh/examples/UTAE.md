@@ -2,6 +2,52 @@
 
 基于卫星图像时间序列的语义分割
 
+## 使用方法
+
+### 语义分割任务
+- 训练：
+```bash
+python train_semantic.py \
+    --dataset_folder "/path/to/PASTIS" \
+    --epochs 100 \
+    --batch_size 2 \
+    --num_workers 0 \
+    --display_step 10
+```
+
+- 测试：
+```bash
+wget -nc -O pretrained/utae_semantic.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams
+python test_semantic.py \
+  --weight_file pretrained/utae_semantic.pdparams \
+  --dataset_folder "/path/to/PASTIS" \
+  --device gpu
+  --num_workers 0
+```
+
+### 全景分割任务
+- 训练：
+```bash
+python train_panoptic.py \
+    --dataset_folder "/path/to/PASTIS" \
+    --epochs 100 \
+    --batch_size 2 \
+    --num_workers 0 \
+    --warmup 5 \
+    --l_shape 1 \
+    --display_step 10
+```
+
+- 测试：
+```bash
+wget -O pretrained/utae_panoptic.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams
+python test_panoptic.py \
+  --weight_file ./pretrained/utae_panoptic.pdparams \
+  --dataset_folder "/path/to/PASTIS" \
+  --batch_size 2 \
+  --num_workers 0 \
+  --device gpu
+```
 ## 背景简介
 对农作物种植分布和生长状态进行高效、精准的监测，是现代智慧农业和粮食安全领域的核心需求。传统的人工勘察方法耗时费力，而利用单时相卫星影像进行分析的方法，难以应对云层遮挡问题，也无法捕捉作物在整个生长周期中的动态变化规律。
 
@@ -12,26 +58,28 @@
 ## 模型原理
 本章节仅对U-TAE的模型原理进行简单地介绍，详细的理论推导请阅读[Panoptic Segmentation of Satellite Image Time Series with Convolutional Temporal Attention Networks](https://arxiv.org/abs/2107.07933)
 
-1 整体结构
+1. 整体结构
 UTAE（U-Net Temporal Attention Encoder）采用 编码器-解码器 架构，专为 卫星图像时间序列语义分割 设计：
 - 编码器：轻量化 ResNet-18，提取单时相空间特征
 - 解码器：U-TAE 模块，通过 时间注意力机制 聚合多时相全局上下文
 - 输出：与输入同分辨率的像素级类别概率图
 ![U-TAE Architecture](https://paddle-org.bj.bcebos.com/paddlescience/docs/utae/utae.png)
 
-2 时间注意力机制（Temporal Attention）
+2. 时间注意力机制（Temporal Attention）
 对于 T 帧序列，UTAE 在解码阶段为每一帧计算 帧间相似度权重，实现 自适应时序聚合：
 - Query = 当前帧特征
 - Key / Value = 全部帧特征
 - 权重 = Softmax(Query·Key)
 - 聚合特征 = Σ(权重 × Value)
 - 该机制自动抑制云层、阴影等低质量帧，提升作物边界清晰度。
-3 全局-局部注意力块（GLTB）
+
+3. 全局-局部注意力块（GLTB）
 每个解码器层包含 两个并行分支：
 - 全局分支：Multi-Head Self-Attention，建模 田块级 长程依赖
 - 局部分支：3×3 深度可分离卷积，保留 边缘细节
 - 输出通过 逐元素相加融合，兼顾全局上下文与局部纹理。
-4 实时推理优化
+
+4. 实时推理优化
 轻量级骨干：ResNet-18 参数量 < 12 M
 - 帧间共享权重：同一序列内只计算一次 Key/Value
 - 滑动窗口：大图分块推理，显存占用恒定
@@ -77,53 +125,6 @@ examples/utae/train.py:66:85
 examples/utae/train.py:86:92
 --8<--
 ```
-## 使用方法
-
-### 语义分割任务
-- 训练：
-```bash
-python train_semantic.py \
-    --dataset_folder "/path/to/PASTIS" \
-    --epochs 100 \
-    --batch_size 2 \
-    --num_workers 0 \
-    --display_step 10
-```
-
-- 测试：
-```bash
-wget -nc -O pretrained/utae_semantic.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams
-python test_semantic.py \
-  --weight_file pretrained/utae_semantic.pdparams \
-  --dataset_folder "/path/to/PASTIS" \
-  --device gpu --num_workers 0
-
-```
-
-### 全景分割任务
-- 训练：
-```bash
-python train_panoptic.py \
-    --dataset_folder "/path/to/PASTIS" \
-    --epochs 100 \
-    --batch_size 2 \
-    --num_workers 0 \
-    --warmup 5 \
-    --l_shape 1 \
-    --display_step 10
-```
-
-- 测试：
-```bash
-wget -O pretrained/utae_panoptic.pdparams \
-  https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams
-python test_panoptic.py \
-  --weight_file ./pretrained/utae_panoptic.pdparams \
-  --dataset_folder "/path/to/PASTIS" \
-  --batch_size 2 \
-  --num_workers 0 \
-  --device gpu
-```
 
 ## 实验结果
 在 PASTIS 数据集上，本案例复现了以下性能（PaddlePaddle 实现）：
@@ -134,5 +135,7 @@ python test_panoptic.py \
 
 ## 参考文献
 U-TAE 原论文：Segmentation of Satellite Image Time Series with Convolutional Temporal Attention Networks
+
 官方 PyTorch 实现：https://github.com/VSainteuf/utae-paps
+
 数据集与基准：https://github.com/VSainteuf/pastis-benchmark

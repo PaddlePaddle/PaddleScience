@@ -19,22 +19,7 @@ class LTAE2d(nn.Layer):
         return_att=False,
         positional_encoding=True,
     ):
-        """
-        Lightweight Temporal Attention Encoder (L-TAE) for image time series.
-        Attention-based sequence encoding that maps a sequence of images to a single feature map.
-        A shared L-TAE is applied to all pixel positions of the image sequence.
-        Args:
-            in_channels (int): Number of channels of the input embeddings.
-            n_head (int): Number of attention heads.
-            d_k (int): Dimension of the key and query vectors.
-            mlp (List[int]): Widths of the layers of the MLP that processes the concatenated outputs of the attention heads.
-            dropout (float): dropout
-            d_model (int, optional): If specified, the input tensors will first processed by a fully connected layer
-                to project them into a feature space of dimension d_model.
-            T (int): Period to use for the positional encoding.
-            return_att (bool): If true, the module returns the attention masks along with the embeddings (default False)
-            positional_encoding (bool): If False, no positional encoding is used (default True).
-        """
+
         super(LTAE2d, self).__init__()
         self.in_channels = in_channels
         self.mlp = copy.deepcopy(mlp)
