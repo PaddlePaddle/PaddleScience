@@ -226,8 +226,8 @@ class Sampler(nn.Layer):
         Perform the sampling from Skillful Nowcasting with GANs
 
         Args:
-            conditioning_states(List[paddle.Tensor]): Outputs from the `ContextConditioningStack` with the 4 input states, ordered from largest to smallest spatially
-            latent_dim(paddle.Tensor): Output from `LatentConditioningStack` for input into the ConvGRUs
+            conditioning_states (List[paddle.Tensor]): Outputs from the `ContextConditioningStack` with the 4 input states, ordered from largest to smallest spatially
+            latent_dim (paddle.Tensor): Output from `LatentConditioningStack` for input into the ConvGRUs
         Returns:
             forecast_steps-length output of images for future timesteps
 
@@ -909,7 +909,7 @@ class LatentConditioningStack(nn.Layer):
     def forward(self, x: paddle.Tensor) -> paddle.Tensor:
         """
         Args:
-            x(paddle.Tensor): tensor on the correct device, to move over the latent distribution
+            x (paddle.Tensor): tensor on the correct device, to move over the latent distribution
 
         Returns:
             z
