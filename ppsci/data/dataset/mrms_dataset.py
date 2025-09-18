@@ -41,7 +41,7 @@ class MRMSDataset(io.Dataset):
         input_keys (Tuple[str, ...]): Input keys, usually there is only one, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, usually there is only one, such as ("output",).
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        date_period (Tuple[str,...], optional): Dates of data. Scale is [start_date, end_date] with format "%Y%m%d". Defaults to ("20230101","20230101").
+        date_period (Tuple[str, ...], optional): Dates of data. Scale is [start_date, end_date] with format "%Y%m%d". Defaults to ("20230101","20230101").
         num_input_timestamps (int, optional): Number of timestamp of input. Defaults to 1.
         num_label_timestamps (int, optional): Number of timestamp of label. Defaults to 1.
         stride (int, optional): Stride of sampling data. Defaults to 1.
@@ -100,7 +100,7 @@ class MRMSDataset(io.Dataset):
         """Get a string list of all dates within given period.
 
         Args:
-            date_period (Tuple[str,...]): Dates of data. Scale is [start_date, end_date] with format "%Y%m%d".
+            date_period (Tuple[str, ...]): Dates of data. Scale is [start_date, end_date] with format "%Y%m%d".
         """
         start_time = datetime.strptime(date_period[0], "%Y%m%d")
         end_time = datetime.strptime(date_period[1], "%Y%m%d")
