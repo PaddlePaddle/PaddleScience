@@ -58,6 +58,7 @@ from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
+from ppsci.data.dataset.era5climate_dataset import ERA5ClimateDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
@@ -105,6 +106,7 @@ __all__ = [
     "TMTDataset",
     "register_to_dataset",
     "ERA5MeteoDataset",
+    "ERA5ClimateDataset",
 ]
 
 

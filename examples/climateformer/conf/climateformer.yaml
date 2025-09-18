@@ -36,12 +36,12 @@ IMG_W: 256
 USE_SAMPLED_DATA: false
 
 # set train data path
-TRAIN_FILE_PATH: /data/jinqizhao/ERA5/
-DATA_MEAN_PATH: ./datasets/era5/stat/mean.nc
-DATA_STD_PATH: ./datasets/era5/stat/std.nc
+TRAIN_FILE_PATH: /data/ERA5/
+DATA_MEAN_PATH: /data/ERA5/mean.nc
+DATA_STD_PATH: /data/ERA5/std.nc
 
 # set evaluate data path
-VALID_FILE_PATH: /data/jinqizhao/ERA5/
+VALID_FILE_PATH: /data/ERA5/
 
 # model settings
 MODEL:

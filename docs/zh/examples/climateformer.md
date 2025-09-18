@@ -30,9 +30,9 @@ Climateformer，正是一种面向长期气候预测的时空深度学习框架�
 
 该模块使用两层Transformer，提取空间特征更新节点特征：
 
-``` py linenums="8" title="ppsci/arch/climateformer.py"
+``` py linenums="243" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:233:267
+ppsci/arch/climateformer.py:243:277
 --8<--
 ```
 
@@ -40,9 +40,9 @@ ppsci/arch/climateformer.py:233:267
 
 该模块使用两层Transformer，学习全局时间动态特性：
 
-``` py linenums="29" title="ppsci/arch/climateformer.py"
+``` py linenums="280" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:269:314
+ppsci/arch/climateformer.py:280:325
 --8<--
 ```
 
@@ -50,9 +50,9 @@ ppsci/arch/climateformer.py:269:314
 
 该模块使用两层卷积，将时空表征解码为未来多气象要素：
 
-``` py linenums="29" title="ppsci/arch/climateformer.py"
+``` py linenums="329" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:317:332
+ppsci/arch/climateformer.py:329:344
 --8<--
 ```
 
@@ -60,43 +60,43 @@ ppsci/arch/climateformer.py:317:332
 
 Climateformer模型首先使用特征嵌入层对输入信号（多气象要素的过去几个周平均时间帧）进行空间特征编码：
 
-``` py linenums="73" title="ppsci/arch/climateformer.py"
+``` py linenums="419" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:405:406
+ppsci/arch/climateformer.py:419:420
 --8<--
 ```
 
-``` py linenums="94" title="ppsci/arch/climateformer.py"
+``` py linenums="243" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:233:267
+ppsci/arch/climateformer.py:243:277
 --8<--
 ```
 
 然后模型利用演变器将学习空间特征的动态特性，预测未来几个周平均时间帧的气象特征：
 
-``` py linenums="75" title="ppsci/arch/climateformer.py"
+``` py linenums="423" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:409:411
+ppsci/arch/climateformer.py:423:425
 --8<--
 ```
 
-``` py linenums="96" title="ppsci/arch/climateformer.py"
+``` py linenums="280" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:269:314
+ppsci/arch/climateformer.py:280:325
 --8<--
 ```
 
 最后模型将时空动态特性与初始气象底层特征结合，使用两层卷积预测未来数周至数月的多气象要素周平均值：
 
-``` py linenums="112" title="ppsci/arch/climateformer.py"
+``` py linenums="428" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:414:415
+ppsci/arch/climateformer.py:428:429
 --8<--
 ```
 
-``` py linenums="35" title="ppsci/arch/climateformer.py"
+``` py linenums="329" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:317:332
+ppsci/arch/climateformer.py:329:344
 --8<--
 ```
 
@@ -114,9 +114,9 @@ ppsci/arch/climateformer.py:317:332
 
 该案例基于 Climateformer 模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="79" title="examples/climateformer/mian.py"
+``` py linenums="98" title="examples/climateformer/mian.py"
 --8<--
-examples/climateformer/main.py:92:92
+examples/climateformer/main.py:98:98
 --8<--
 ```
 
@@ -126,17 +126,17 @@ examples/climateformer/main.py:92:92
 
 训练集数据加载的代码如下:
 
-``` py linenums="20" title="examples/climateformer/main.py"
+``` py linenums="22" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:23:38
+examples/climateformer/main.py:22:57
 --8<--
 ```
 
 定义监督约束的代码如下：
 
-``` py linenums="40" title="examples/climateformer/main.py"
+``` py linenums="60" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:57:61
+examples/climateformer/main.py:60:65
 --8<--
 ```
 
@@ -146,17 +146,17 @@ examples/climateformer/main.py:57:61
 
 验证集数据加载的代码如下:
 
-``` py linenums="44" title="examples/climateformer/main.py"
+``` py linenums="71" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:68:78
+examples/climateformer/main.py:71:81
 --8<--
 ```
 
 定义监督评估器的代码如下：
 
-``` py linenums="65" title="examples/climateformer/main.py"
+``` py linenums="84" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:81:88
+examples/climateformer/main.py:84:92
 --8<--
 ```
 
@@ -164,9 +164,9 @@ examples/climateformer/main.py:81:88
 
 本案例中学习率大小设置为 `1e-3`，优化器使用 `Adam`，用 PaddleScience 代码表示如下：
 
-``` py linenums="83" title="examples/climateformer/main.py"
+``` py linenums="98" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:95:99
+examples/climateformer/main.py:98:102
 --8<--
 ```
 
@@ -174,15 +174,92 @@ examples/climateformer/main.py:95:99
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="88" title="examples/climateformer/main.py"
+``` py linenums="105" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:115:117
+examples/climateformer/main.py:105:120
+--8<--
+```
+
+#### 3.2.6 模型导出
+
+通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 参数，可以自动保存在验证集上效果最优的模型参数。
+
+``` py linenums="113" title="examples/climateformer/main.py"
+--8<--
+examples/climateformer/main.py:113:113
+--8<--
+```
+
+### 3.3 评估模型
+
+#### 3.3.1 评估器构建
+
+测试集数据加载的代码如下:
+
+``` py linenums="125" title="examples/climateformer/main.py"
+--8<--
+examples/climateformer/main.py:125:137
+--8<--
+```
+
+定义监督评估器的代码如下：
+
+``` py linenums="140" title="examples/climateformer/main.py"
+--8<--
+examples/climateformer/main.py:140:148
+--8<--
+```
+
+与验证集的 `SupervisedValidator` 相似，在这里使用的评价指标是 `MAE`。
+
+#### 3.3.2 加载模型并进行评估
+
+设置预训练模型参数的加载路径并加载模型。
+
+``` py linenums="151" title="examples/climateformer/main.py"
+--8<--
+examples/climateformer/main.py:151:151
+--8<--
+```
+
+实例化 `ppsci.solver.Solver`，然后启动评估。
+
+``` py linenums="154" title="examples/climateformer/main.py"
+--8<--
+examples/climateformer/main.py:154:164
 --8<--
 ```
 
 ## 4. 完整代码
 
+数据集接口：
+
+``` py linenums="1" title="ppsci/data/dataset/era5climate_dataset.py"
+--8<--
+ppsci/data/dataset/era5climate_dataset.py
+--8<--
+```
+
+模型结构：
+
+``` py linenums="1" title="ppsci/arch/climateformer.py"
+--8<--
+ppsci/arch/climateformer.py
+--8<--
+```
+
+模型训练：
+
 ``` py linenums="1" title="examples/climateformer/main.py"
 --8<--
 examples/climateformer/main.py
 --8<--
+```
+
+配置文件：
+
+``` py linenums="1" title="examples/climateformer/conf/climateformer.yaml"
+--8<--
+examples/climateformer/conf/climateformer.yaml
+--8<--
+```

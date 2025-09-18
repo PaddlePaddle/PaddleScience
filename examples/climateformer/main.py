@@ -77,9 +77,6 @@ def train(cfg: DictConfig):
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
         },
-        "sampler": {
-            "name": "BatchSampler",
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -135,9 +132,6 @@ def evaluate(cfg: DictConfig):
             "label_keys": cfg.MODEL.output_keys,
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
-        },
-        "sampler": {
-            "name": "BatchSampler",
         },
         "batch_size": cfg.EVAL.batch_size,
     }

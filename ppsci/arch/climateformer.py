@@ -242,7 +242,7 @@ class Block(nn.Layer):
 
 class Encoder(nn.Layer):
     def __init__(self, C_in: int, C_hid: int, N_S: int):
-        super(Encoder, self).__init__()
+        super().__init__()
         strides = stride_generator(N_S)
 
         self.enc0 = ConvSC(C_in, C_hid, stride=strides[0])
@@ -286,7 +286,7 @@ class MidXnet(nn.Layer):
         incep_ker: Tuple[int, ...] = (3, 5, 7, 11),
         groups: int = 8,
     ):
-        super(MidXnet, self).__init__()
+        super().__init__()
 
         self.N_T = N_T
         dpr = [x.item() for x in np.linspace(0, 0.1, N_T)]
@@ -328,7 +328,7 @@ class MidXnet(nn.Layer):
 # MultiDecoder
 class Decoder(nn.Layer):
     def __init__(self, C_hid: int, C_out: int, N_S: int):
-        super(Decoder, self).__init__()
+        super().__init__()
         strides = stride_generator(N_S, reverse=True)
         # strides = [2, 1, 2, 1]
         self.dec = nn.Sequential(
