@@ -42,8 +42,8 @@ python train_panoptic.py \
 ```bash
 wget -O pretrained/utae_panoptic.pdparams https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams
 python test_panoptic.py \
-  --weight_file ./pretrained/utae_panoptic.pdparams \
-  --dataset_folder "/path/to/PASTIS" \
+  --weight_folder /pretrained/utae_panoptic.pdparams \
+  --dataset_folder /path/to/PASTIS \
   --batch_size 2 \
   --num_workers 0 \
   --device gpu
