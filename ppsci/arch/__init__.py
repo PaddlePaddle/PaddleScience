@@ -22,6 +22,7 @@ from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
+from ppsci.arch.confild import LatentContainer, SIRENAutodecoder_film, SpacedDiffusion, UNetModel, ModelVarType, ModelMeanType  # isort:skip
 from ppsci.arch.smc_reac import SuzukiMiyauraModel  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
 from ppsci.arch.crystalgraphconvnet import CrystalGraphConvNet  # isort:skip
@@ -98,11 +99,14 @@ __all__ = [
     "GraphCastNet",
     "HEDeepONets",
     "LorenzEmbedding",
+    "LatentContainer",
     "LatentNO",
     "LatentNO_time",
     "LNO",
     "MLP",
     "ModelList",
+    "ModelVarType",
+    "ModelMeanType",
     "ModifiedMLP",
     "NowcastNet",
     "PhyCRNet",
@@ -111,12 +115,15 @@ __all__ = [
     "PrecipNet",
     "RosslerEmbedding",
     "SFNONet",
+    "SIRENAutodecoder_film",
+    "SpacedDiffusion",
     "SPINN",
     "TFNO1dNet",
     "TFNO2dNet",
     "TFNO3dNet",
     "Transformer",
     "UNetEx",
+    "UNetModel",
     "UNONet",
     "USCNN",
     "VelocityDiscriminator",

@@ -1,0 +1,108 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    # dir: outputs_confild_case3/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: ./outputs_confild_case3
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: infer # running mode: infer
+seed: 2025
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+TRAIN:
+  batch_size: 100
+  test_batch_size: 100
+  epochs: 4800
+  mutil_GPU: 2
+  lr:
+    cnf: 1.e-4
+    latents: 1.e-5
+
+EVAL:
+  confild_pretrained_model_path: ./outputs_confild_case3/confild_case3/epoch_99999
+  latent_pretrained_model_path: ./outputs_confild_case3/latent_case3/epoch_99999
+
+CONFILD:
+  input_keys: ["confild_x", "latent_z"]
+  output_keys: ["confild_output"]
+  num_hidden_layers: 117
+  out_features: 2
+  hidden_features: 256
+  in_coord_features: 2
+  in_latent_features: 256
+
+Latent:
+  input_keys: ["latent_x"]
+  output_keys: ["latent_z"]
+  N_samples: 2880
+  lumped: True
+  N_features: 256
+  dims: 2
+
+INFER:
+  Latent:
+    INFER:
+      pretrained_model_path: null
+      export_path: ./inference/latent_case3
+      pdmodel_path: ${INFER.Latent.INFER.export_path}.pdmodel
+      pdiparams_path: ${INFER.Latent.INFER.export_path}.pdiparams
+      onnx_path: ${INFER.Latent.INFER.export_path}.onnx
+      device: gpu
+      engine: native
+      precision: fp32
+      ir_optim: true
+      min_subgraph_size: 5
+      gpu_mem: 2000
+      gpu_id: 0
+      max_batch_size: 1024
+      num_cpu_threads: 10
+    log_freq: 20
+  Confild:
+    INFER:
+      pretrained_model_path: null
+      export_path: ./inference/confild_case3
+      pdmodel_path: ${INFER.Confild.INFER.export_path}.pdmodel
+      pdiparams_path: ${INFER.Confild.INFER.export_path}.pdiparams
+      onnx_path: ${INFER.Confild.INFER.export_path}.onnx
+      device: gpu
+      engine: native
+      precision: fp32
+      ir_optim: true
+      min_subgraph_size: 5
+      gpu_mem: 2000
+      gpu_id: 0
+      max_batch_size: 1024
+      num_cpu_threads: 10
+      coord_shape: [10884, 2]
+      latents_shape: [1, 256]
+    log_freq: 20
+  batch_size: 100
+
+Data:
+  data_path: ../case3/data.npy
+  coor_path: ../case3/coor.npy
+  normalizer:
+    method: "-11"
+    dim: 0
+  load_data_fn: load_periodic_hill_flow
