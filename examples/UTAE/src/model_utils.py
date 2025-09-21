@@ -12,7 +12,7 @@ def get_model(config, mode="semantic"):
     if mode == "panoptic":
         # For panoptic segmentation, create PaPs model
         if config.backbone == "utae":
-            from src.panoptic.paps_paddle import PaPs
+            from src.panoptic.paps import PaPs
 
             encoder = UTAE(
                 input_dim=10,  # PASTIS has 10 spectral bands
