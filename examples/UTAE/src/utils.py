@@ -9,9 +9,11 @@ import paddle
 
 np_str_obj_array_pattern = re.compile(r"[SaUO]")
 
+"""Pad tensor to target shape for all dimensions"""
+
 
 def pad_tensor(x, target_shape, pad_value=0):
-    """Pad tensor to target shape for all dimensions"""
+
     if len(x.shape) != len(target_shape):
         raise ValueError(f"Shape mismatch: {x.shape} vs {target_shape}")
 
@@ -67,8 +69,11 @@ def pad_tensor(x, target_shape, pad_value=0):
     return result
 
 
+"""Get the maximum shape across all tensors in batch"""
+
+
 def get_max_shape(batch):
-    """Get the maximum shape across all tensors in batch"""
+
     if not batch:
         return None
 
@@ -80,11 +85,14 @@ def get_max_shape(batch):
     return tuple(max_shape)
 
 
+"""
+Modified default_collate from the official pytorch repo for padding variable length sequences
+Adapted from the original PyTorch implementation
+"""
+
+
 def pad_collate(batch, pad_value=0):
-    """
-    Modified default_collate from the official pytorch repo for padding variable length sequences
-    Adapted from the original PyTorch implementation
-    """
+
     elem = batch[0]
     elem_type = type(elem)
 
@@ -133,9 +141,12 @@ def pad_collate(batch, pad_value=0):
     raise TypeError("Format not managed : {}".format(elem_type))
 
 
+"""
+Set random seed for reproducibility
+"""
+
+
 def set_seed(seed):
-    """
-    Set random seed for reproducibility
-    """
+
     np.random.seed(seed)
     paddle.seed(seed)

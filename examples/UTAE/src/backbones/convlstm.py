@@ -7,26 +7,26 @@ import paddle.nn as nn
 
 
 class ConvLSTMCell(nn.Layer):
-    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, bias):
-        """
-        Initialize ConvLSTM cell.
+    """
+    Initialize ConvLSTM cell.
 
-        Parameters
-        ----------
-        input_size: (int, int)
-            Height and width of input tensor as (height, width).
-        input_dim: int
-            Number of channels of input tensor.
-        hidden_dim: int
-            Number of channels of hidden state.
-        kernel_size: (int, int)
-            Size of the convolutional kernel.
-        bias: bool
-            Whether or not to add the bias.
-        """
+    Parameters
+    ----------
+    input_size: (int, int)
+        Height and width of input tensor as (height, width).
+    input_dim: int
+        Number of channels of input tensor.
+    hidden_dim: int
+        Number of channels of hidden state.
+    kernel_size: (int, int)
+        Size of the convolutional kernel.
+    bias: bool
+        Whether or not to add the bias.
+    """
+
+    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, bias):
 
         super(ConvLSTMCell, self).__init__()
-
         self.height, self.width = input_size
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -117,7 +117,6 @@ class ConvLSTM(nn.Layer):
 
         self.cell_list = nn.LayerList(cell_list)
 
-    def forward(self, input_tensor, hidden_state=None, pad_mask=None):
         """
         Parameters
         ----------
@@ -130,6 +129,9 @@ class ConvLSTM(nn.Layer):
         -------
         last_state_list, layer_output
         """
+
+    def forward(self, input_tensor, hidden_state=None, pad_mask=None):
+
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
             input_tensor = input_tensor.transpose([1, 0, 2, 3, 4])

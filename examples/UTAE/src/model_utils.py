@@ -4,11 +4,13 @@ Model utilities (Paddle Version)
 from src.backbones.utae import UTAE
 from src.backbones.utae import RecUNet
 
+"""
+Get the model based on configuration
+"""
+
 
 def get_model(config, mode="semantic"):
-    """
-    Get the model based on configuration
-    """
+
     if mode == "panoptic":
         # For panoptic segmentation, create PaPs model
         if config.backbone == "utae":
@@ -97,8 +99,11 @@ def get_model(config, mode="semantic"):
     return model
 
 
+"""
+Get number of trainable parameters
+"""
+
+
 def get_ntrainparams(model):
-    """
-    Get number of trainable parameters
-    """
+
     return sum(p.numel() for p in model.parameters() if not p.stop_gradient)

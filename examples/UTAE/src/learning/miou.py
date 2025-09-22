@@ -12,10 +12,12 @@ class IoU:
         self.cm_device = cm_device
         self.confusion_matrix = np.zeros((num_classes, num_classes))
 
+    """
+    Add predictions and targets to confusion matrix
+    """
+
     def add(self, pred, target):
-        """
-        Add predictions and targets to confusion matrix
-        """
+
         # Convert to numpy if tensors
         if isinstance(pred, paddle.Tensor):
             pred = pred.cpu().numpy()
@@ -37,10 +39,12 @@ class IoU:
             if 0 <= t < self.num_classes and 0 <= p < self.num_classes:
                 self.confusion_matrix[t, p] += 1
 
+    """
+    Get mean IoU and accuracy from confusion matrix
+    """
+
     def get_miou_acc(self):
-        """
-        Get mean IoU and accuracy from confusion matrix
-        """
+
         # Overall accuracy
         acc = np.diag(self.confusion_matrix).sum() / (
             self.confusion_matrix.sum() + 1e-15
@@ -66,8 +70,10 @@ class IoU:
 
         return miou, acc
 
+    """
+    Reset confusion matrix
+    """
+
     def reset(self):
-        """
-        Reset confusion matrix
-        """
+
         self.confusion_matrix.fill(0)

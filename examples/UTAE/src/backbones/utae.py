@@ -10,6 +10,41 @@ from src.backbones.ltae import LTAE2d
 
 
 class UTAE(nn.Layer):
+    """
+    U-TAE architecture for spatio-temporal encoding of satellite image time series.
+    Args:
+        input_dim (int): Number of channels in the input images.
+        encoder_widths (List[int]): List giving the number of channels of the successive encoder_widths of the convolutional encoder.
+        This argument also defines the number of encoder_widths (i.e. the number of downsampling steps +1)
+        in the architecture.
+        The number of channels are given from top to bottom, i.e. from the highest to the lowest resolution.
+        decoder_widths (List[int], optional): Same as encoder_widths but for the decoder. The order in which the number of
+        channels should be given is also from top to bottom. If this argument is not specified the decoder
+        will have the same configuration as the encoder.
+        out_conv (List[int]): Number of channels of the successive convolutions for the
+        str_conv_k (int): Kernel size of the strided up and down convolutions.
+        str_conv_s (int): Stride of the strided up and down convolutions.
+        str_conv_p (int): Padding of the strided up and down convolutions.
+        agg_mode (str): Aggregation mode for the skip connections. Can either be:
+            - att_group (default) : Attention weighted temporal average, using the same
+            channel grouping strategy as in the LTAE. The attention masks are bilinearly
+            resampled to the resolution of the skipped feature maps.
+            - att_mean : Attention weighted temporal average,
+                using the average attention scores across heads for each date.
+            - mean : Temporal average excluding padded dates.
+        encoder_norm (str): Type of normalisation layer to use in the encoding branch. Can either be:
+            - group : GroupNorm (default)
+            - batch : BatchNorm
+            - instance : InstanceNorm
+        n_head (int): Number of heads in LTAE.
+        d_model (int): Parameter of LTAE
+        d_k (int): Key-Query space dimension
+        encoder (bool): If true, the feature maps instead of the class scores are returned (default False)
+        return_maps (bool): If true, the feature maps instead of the class scores are returned (default False)
+        pad_value (float): Value used by the dataloader for temporal padding.
+        padding_mode (str): Spatial padding strategy for convolutional layers (passed to nn.Conv2D).
+    """
+
     def __init__(
         self,
         input_dim,
@@ -29,40 +64,7 @@ class UTAE(nn.Layer):
         pad_value=0,
         padding_mode="reflect",
     ):
-        """
-        U-TAE architecture for spatio-temporal encoding of satellite image time series.
-        Args:
-            input_dim (int): Number of channels in the input images.
-            encoder_widths (List[int]): List giving the number of channels of the successive encoder_widths of the convolutional encoder.
-            This argument also defines the number of encoder_widths (i.e. the number of downsampling steps +1)
-            in the architecture.
-            The number of channels are given from top to bottom, i.e. from the highest to the lowest resolution.
-            decoder_widths (List[int], optional): Same as encoder_widths but for the decoder. The order in which the number of
-            channels should be given is also from top to bottom. If this argument is not specified the decoder
-            will have the same configuration as the encoder.
-            out_conv (List[int]): Number of channels of the successive convolutions for the
-            str_conv_k (int): Kernel size of the strided up and down convolutions.
-            str_conv_s (int): Stride of the strided up and down convolutions.
-            str_conv_p (int): Padding of the strided up and down convolutions.
-            agg_mode (str): Aggregation mode for the skip connections. Can either be:
-                - att_group (default) : Attention weighted temporal average, using the same
-                channel grouping strategy as in the LTAE. The attention masks are bilinearly
-                resampled to the resolution of the skipped feature maps.
-                - att_mean : Attention weighted temporal average,
-                 using the average attention scores across heads for each date.
-                - mean : Temporal average excluding padded dates.
-            encoder_norm (str): Type of normalisation layer to use in the encoding branch. Can either be:
-                - group : GroupNorm (default)
-                - batch : BatchNorm
-                - instance : InstanceNorm
-            n_head (int): Number of heads in LTAE.
-            d_model (int): Parameter of LTAE
-            d_k (int): Key-Query space dimension
-            encoder (bool): If true, the feature maps instead of the class scores are returned (default False)
-            return_maps (bool): If true, the feature maps instead of the class scores are returned (default False)
-            pad_value (float): Value used by the dataloader for temporal padding.
-            padding_mode (str): Spatial padding strategy for convolutional layers (passed to nn.Conv2D).
-        """
+
         super(UTAE, self).__init__()
         self.n_stages = len(encoder_widths)
         self.return_maps = return_maps

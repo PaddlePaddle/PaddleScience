@@ -9,6 +9,20 @@ from src.panoptic.FocalLoss import FocalLoss
 
 
 class PaPsLoss(nn.Layer):
+    """
+    Loss for training PaPs.
+    Args:
+        l_center (float): Coefficient for the centerness loss (default 1)
+        l_size (float): Coefficient for the size loss (default 1)
+        l_shape (float): Coefficient for the shape loss (default 1)
+        l_class (float): Coefficient for the classification loss (default 1)
+        alpha (float): Parameter for the centerness loss (default 0)
+        beta (float): Parameter for the centerness loss (default 4)
+        gamma (float): Focal exponent for the classification loss (default 0)
+        eps (float): Stability epsilon
+        void_label (int): Label to ignore in the classification loss
+    """
+
     def __init__(
         self,
         l_center=1,
@@ -22,19 +36,7 @@ class PaPsLoss(nn.Layer):
         void_label=None,
         binary_threshold=0.4,
     ):
-        """
-        Loss for training PaPs.
-        Args:
-            l_center (float): Coefficient for the centerness loss (default 1)
-            l_size (float): Coefficient for the size loss (default 1)
-            l_shape (float): Coefficient for the shape loss (default 1)
-            l_class (float): Coefficient for the classification loss (default 1)
-            alpha (float): Parameter for the centerness loss (default 0)
-            beta (float): Parameter for the centerness loss (default 4)
-            gamma (float): Focal exponent for the classification loss (default 0)
-            eps (float): Stability epsilon
-            void_label (int): Label to ignore in the classification loss
-        """
+
         super(PaPsLoss, self).__init__()
         self.l_center = l_center
         self.l_size = l_size

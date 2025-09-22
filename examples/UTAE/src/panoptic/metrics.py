@@ -7,24 +7,26 @@ import paddle
 
 
 class PanopticMeter:
+    """
+    Meter class for the panoptic metrics as defined by Kirilov et al. :
+    Segmentation Quality (SQ)
+    Recognition Quality (RQ)
+    Panoptic Quality (PQ)
+    The behavior of this meter mimics that of torchnet meters, each predicted batch
+    is added via the add method and the global metrics are retrieved with the value
+    method.
+    Args:
+        num_classes (int): Number of semantic classes (including background and void class).
+        void_label (int): Label for the void class (default 19).
+        background_label (int): Label for the background class (default 0).
+        iou_threshold (float): Threshold used on the IoU of the true vs predicted
+        instance mask. Above the threshold a true instance is counted as True Positive.
+    """
+
     def __init__(
         self, num_classes=20, background_label=0, void_label=19, iou_threshold=0.5
     ):
-        """
-        Meter class for the panoptic metrics as defined by Kirilov et al. :
-        Segmentation Quality (SQ)
-        Recognition Quality (RQ)
-        Panoptic Quality (PQ)
-        The behavior of this meter mimics that of torchnet meters, each predicted batch
-        is added via the add method and the global metrics are retrieved with the value
-        method.
-        Args:
-            num_classes (int): Number of semantic classes (including background and void class).
-            void_label (int): Label for the void class (default 19).
-            background_label (int): Label for the background class (default 0).
-            iou_threshold (float): Threshold used on the IoU of the true vs predicted
-            instance mask. Above the threshold a true instance is counted as True Positive.
-        """
+
         self.num_classes = num_classes
         self.iou_threshold = iou_threshold
         self.class_list = [c for c in range(num_classes) if c != background_label]

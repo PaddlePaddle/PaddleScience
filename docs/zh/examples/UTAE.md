@@ -128,7 +128,7 @@ examples/UTAE/src/backbones/utae.py:12:177
 ```
 
 ## 可视化结果
-在 PASTIS 数据集上，本案例复现了以下性能（PaddlePaddle 实现）：
+在 PASTIS 数据集上，本案例复现了全景分割预测与语义分割预测的可视化结果如图所示：
 
 - **SQ (Segmentation Quality)**: 83.8  
 - **RQ (Recognition Quality)**: 58.9  
@@ -142,9 +142,5 @@ examples/UTAE/src/backbones/utae.py:12:177
 ## 参考文献
 
 - U-TAE 原论文：[Panoptic Segmentation of Satellite Image Time Series with Convolutional Temporal Attention Networks](https://arxiv.org/abs/2107.07933)
-- 源代码实现：[python test_semantic.py \
-  --weight_file /home/aistudio/1/results/Fold_1/model_epoch_8_miou_0.477.pdparams \
-  --dataset_folder "/home/aistudio/PASTIS" \
-  --device gpu
-  --num_workers 0](https://github.com/VSainteuf/utae-paps)
+- 源代码实现：[https://github.com/VSainteuf/utae-paps](https://github.com/VSainteuf/utae-paps)
 - 数据集与基准：[https://github.com/VSainteuf/pastis-benchmark](https://github.com/VSainteuf/pastis-benchmark)
