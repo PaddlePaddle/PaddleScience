@@ -28,7 +28,7 @@ class Relobralo(nn.Layer):
     [Multi-Objective Loss Balancing for Physics-Informed Deep Learning](https://arxiv.org/abs/2110.09813)
 
     Attributes:
-        should_persist(bool): Whether to persist the loss aggregator when saving.
+        should_persist (bool): Whether to persist the loss aggregator when saving.
             Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:

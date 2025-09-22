@@ -77,25 +77,25 @@ def train(cfg: DictConfig, X, data):
     # Prepare feature dictionary
     x_train = paddle.to_tensor(x_train, dtype="float32")
     x = {
-        "key_{}".format(i): paddle.unsqueeze(
+        f"key_{i}": paddle.unsqueeze(
             paddle.to_tensor(x_train[:, i], dtype="float32"), axis=1
         )
         for i in range(x_train.shape[1])
     }
     y_train = paddle.unsqueeze(paddle.to_tensor(y_train, dtype="float32"), axis=1)
 
-    # 构建约束
-    bc_sup = ppsci.constraint.SupervisedConstraint(
+    # Build supervised constraint
+    sup = ppsci.constraint.SupervisedConstraint(
         dataloader_cfg={
             "dataset": {
+                "name": "IterableNamedArrayDataset",
                 "input": x,
                 "label": {"u": y_train},
-                "name": "IterableNamedArrayDataset",
             },
             "batch_size": cfg.TRAIN.batch_size,
         },
         loss=ppsci.loss.MSELoss("mean"),
-        name="bc_sup",
+        name="sup",
     )
 
     # Set model architecture parameters
@@ -110,22 +110,19 @@ def train(cfg: DictConfig, X, data):
     )
     optimizer = ppsci.optimizer.optimizer.Adam(
         cfg.TRAIN.learning_rate,
-        beta1=(0.9, 0.99)[0],
-        beta2=(0.9, 0.99)[1],
+        beta1=0.9,
+        beta2=0.99,
         weight_decay=cfg.TRAIN.weight_decay,
     )(model)
 
     # Build solver for training
     solver = ppsci.solver.Solver(
         model,
-        constraint={
-            "bc_sup": bc_sup,
-        },
+        constraint={sup.name: sup},
         optimizer=optimizer,
         epochs=cfg.TRAIN.epochs,
         eval_during_train=False,
         iters_per_epoch=cfg.TRAIN.iters_per_epoch,
-        seed=cfg.seed,
     )
     try:
         solver.train()
@@ -134,7 +131,6 @@ def train(cfg: DictConfig, X, data):
 
 
 def evaluate(cfg: DictConfig, X, data):
-
     y_full = paddle.to_tensor(data, dtype="float32")
     X_np = X.numpy()
     y_np = y_full.numpy()
@@ -155,9 +151,9 @@ def evaluate(cfg: DictConfig, X, data):
     test_validator = ppsci.validate.SupervisedValidator(
         dataloader_cfg={
             "dataset": {
+                "name": "IterableNamedArrayDataset",
                 "input": x_dict,
                 "label": {"u": paddle.unsqueeze(y_test, axis=1)},
-                "name": "IterableNamedArrayDataset",
             },
             "batch_size": cfg.EVAL.batch_size,
             "shuffle": False,

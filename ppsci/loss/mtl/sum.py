@@ -34,7 +34,7 @@ class Sum(LossAggregator):
     $$
 
     Attributes:
-        should_persist(bool): Whether to persist the loss aggregator when saving.
+        should_persist (bool): Whether to persist the loss aggregator when saving.
             Those loss aggregators with parameters and/or buffers should be persisted.
     """
     should_persist: ClassVar[bool] = False

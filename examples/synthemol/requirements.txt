@@ -1,0 +1,6 @@
+numpy
+pandas
+rdkit
+tap
+tqdm
+typed-argument-parser
