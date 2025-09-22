@@ -61,7 +61,7 @@ FAE:
     num_mlp_layers: 2
     out_dim: 1
     layer_norm_eps: 1e-05
-  pretrained_model_path: null
+  pretrained_model_path: ???
 
 DIT:
   # input_keys: [u, v, p, sdf]

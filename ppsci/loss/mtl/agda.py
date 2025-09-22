@@ -32,7 +32,7 @@ class AGDA(base.LossAggregator):
     NOTE: This loss aggregator is only suitable for two-task learning and the first task loss must be PDE loss.
 
     Attributes:
-        should_persist(bool): Whether to persist the loss aggregator when saving.
+        should_persist (bool): Whether to persist the loss aggregator when saving.
             Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:

@@ -446,8 +446,16 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
-            # FIXME: wandb may hanging here in distributed env
             with misc.RankZeroOnly(self.rank) as is_master:
+                for key in ("http_proxy", "https_proxy"):
+                    if f"{key}_original" in os.environ and os.environ.get(
+                        "WANDB_MODE"
+                    ) not in ["offline", "disabled"]:
+                        os.environ[key] = os.environ.get(f"{key}_original")
+                        logger.warning(
+                            f"Environment variable '{key}' was restored from "
+                            f"'{key}_original' to avoid wandb online initialization.",
+                        )
                 if is_master:
                     self.wandb_writer = wandb.init(**self.wandb_config)
 
@@ -491,10 +499,16 @@ class Solver:
         # whether enable static for forward pass. Defaults to False
         if not cfg:
             self.to_static = to_static
-        jit.enable_to_static(self.to_static)
-        logger.message(
-            f"Set to_static={self.to_static} for computational optimization."
-        )
+
+        if self.to_static:
+            jit.enable_to_static(self.to_static)
+            logger.message("Enable jit.to_static for computational optimization.")
+            self.forward_helper.train_forward = paddle.jit.to_static(
+                self.forward_helper.train_forward
+            )
+            self.forward_helper.eval_forward = paddle.jit.to_static(
+                self.forward_helper.eval_forward
+            )
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -915,7 +929,7 @@ class Solver:
             full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
                 when set to True, where otherwise use Abstract Syntax Tree(AST) if False.
                 Defaults to True.
-            ignore_modules (List[ModuleType]): Adds modules that should be ignored during
+            ignore_modules (Optional[List[ModuleType]]): Adds modules that should be ignored during
                 conversion. Builtin modules that have been ignored are collections, pdb,
                 copy, inspect, re, numpy, logging, six. For example, einops can be added
                 here. Defaults to None.
