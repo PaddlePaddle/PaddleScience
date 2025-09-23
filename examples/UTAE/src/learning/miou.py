@@ -17,7 +17,6 @@ class IoU:
     """
 
     def add(self, pred, target):
-
         # Convert to numpy if tensors
         if isinstance(pred, paddle.Tensor):
             pred = pred.cpu().numpy()

@@ -104,36 +104,6 @@ class PaPs(nn.Layer):
         else:
             self.mask_cnn = None
 
-    """
-    Args:
-        input (tensor): Input image time series.
-        batch_positions (tensor): Date sequence of the batch images.
-        zones (tensor, Optional): Tensor that defines the mapping between each pixel position and
-        the "closest" center during training (see paper paragraph Centerpoint detection). This mapping
-        is used at train time to predict and supervise at most one prediction
-        per ground truth object for efficiency.
-        When not provided all predicted centers receive supervision.
-        pseudo_nms (bool): If True performs pseudo_nms to produce a panoptic prediction,
-        otherwise the model returns potentially overlapping instance segmentation masks (default True).
-        heatmap_only (bool): If True the model only returns the centerness heatmap. Can be useful for some
-        warmup epochs of the centerness prediction, as all the rest hinges on this.
-
-    Returns:
-        predictions (dict[tensor]): A dictionary of predictions with the following keys:
-            center_mask         (B,H,W) Binary mask of centers.
-            saliency            (B,1,H,W) Global Saliency.
-            heatmap             (B,1,H,W) Predicted centerness heatmap.
-            semantic            (M, K) Predicted class scores for each center (with M the number of predicted centers).
-            size                (M, 2) Predicted sizes for each center.
-            confidence          (M,1) Predicted centerness for each center.
-            centerness          (M,1) Predicted centerness for each center.
-            instance_masks      List of N binary masks of varying shape.
-            instance_boxes      (N, 4) Coordinates of the N bounding boxes.
-            pano_instance       (B,H,W) Predicted instance id for each pixel.
-            pano_semantic       (B,K,H,W) Predicted class score for each pixel.
-
-    """
-
     def forward(
         self,
         input,
@@ -142,7 +112,35 @@ class PaPs(nn.Layer):
         pseudo_nms=True,
         heatmap_only=False,
     ):
+        """
+        Args:
+            input (tensor): Input image time series.
+            batch_positions (tensor): Date sequence of the batch images.
+            zones (tensor, Optional): Tensor that defines the mapping between each pixel position and
+            the "closest" center during training (see paper paragraph Centerpoint detection). This mapping
+            is used at train time to predict and supervise at most one prediction
+            per ground truth object for efficiency.
+            When not provided all predicted centers receive supervision.
+            pseudo_nms (bool): If True performs pseudo_nms to produce a panoptic prediction,
+            otherwise the model returns potentially overlapping instance segmentation masks (default True).
+            heatmap_only (bool): If True the model only returns the centerness heatmap. Can be useful for some
+            warmup epochs of the centerness prediction, as all the rest hinges on this.
 
+        Returns:
+            predictions (dict[tensor]): A dictionary of predictions with the following keys:
+                center_mask         (B,H,W) Binary mask of centers.
+                saliency            (B,1,H,W) Global Saliency.
+                heatmap             (B,1,H,W) Predicted centerness heatmap.
+                semantic            (M, K) Predicted class scores for each center (with M the number of predicted centers).
+                size                (M, 2) Predicted sizes for each center.
+                confidence          (M,1) Predicted centerness for each center.
+                centerness          (M,1) Predicted centerness for each center.
+                instance_masks      List of N binary masks of varying shape.
+                instance_boxes      (N, 4) Coordinates of the N bounding boxes.
+                pano_instance       (B,H,W) Predicted instance id for each pixel.
+                pano_semantic       (B,K,H,W) Predicted class score for each pixel.
+
+        """
         out, maps = self.encoder(input, batch_positions=batch_positions)
 
         # Global Predictions
@@ -438,18 +436,16 @@ class CenterExtractor(nn.Layer):
         super(CenterExtractor, self).__init__()
         self.pool = nn.MaxPool2D(kernel_size=3, stride=1, padding=1)
 
-    """
-    Args:
-        input (tensor): Centerness heatmap
-        zones (tensor, Optional): Tensor that defines the mapping between each pixel position and
-        the "closest" center during training (see paper paragraph Centerpoint detection).
-        If provided, the highest local maxima in each zone is kept. As a result at most one
-        prediction is made per ground truth object.
-        If not provided, all local maxima are returned.
-    """
-
     def forward(self, input, zones=None):
-
+        """
+        Args:
+            input (tensor): Centerness heatmap
+            zones (tensor, Optional): Tensor that defines the mapping between each pixel position and
+            the "closest" center during training (see paper paragraph Centerpoint detection).
+            If provided, the highest local maxima in each zone is kept. As a result at most one
+            prediction is made per ground truth object.
+            If not provided, all local maxima are returned.
+        """
         if zones is not None:
             # Note: torch_scatter functionality needs to be implemented using native Paddle operations
             # This is a simplified implementation - may need refinement for exact equivalence

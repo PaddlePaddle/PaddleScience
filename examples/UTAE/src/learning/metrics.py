@@ -3,11 +3,13 @@ Metrics utilities (Paddle Version)
 """
 import numpy as np
 
+"""
+Compute per-class and overall metrics from confusion matrix
+"""
+
 
 def confusion_matrix_analysis(cm):
-    """
-    Compute per-class and overall metrics from confusion matrix
-    """
+
     n_classes = cm.shape[0]
 
     # Overall accuracy

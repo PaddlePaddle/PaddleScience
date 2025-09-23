@@ -130,10 +130,6 @@ examples/UTAE/src/backbones/utae.py:12:177
 ## 可视化结果
 在 PASTIS 数据集上，本案例复现了全景分割预测与语义分割预测的可视化结果如图所示：
 
-- **SQ (Segmentation Quality)**: 83.8  
-- **RQ (Recognition Quality)**: 58.9  
-- **PQ (Panoptic Quality)**: 49.7  
-
 ![rusult](https://paddle-org.bj.bcebos.com/paddlescience/docs/utae/rusult.png)
 
 (a)原始图像 (b)标注（真实标签）(c) 全景分割预测 (d) 语义分割预测

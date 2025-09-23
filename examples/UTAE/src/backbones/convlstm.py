@@ -117,6 +117,7 @@ class ConvLSTM(nn.Layer):
 
         self.cell_list = nn.LayerList(cell_list)
 
+    def forward(self, input_tensor, hidden_state=None, pad_mask=None):
         """
         Parameters
         ----------
@@ -129,9 +130,6 @@ class ConvLSTM(nn.Layer):
         -------
         last_state_list, layer_output
         """
-
-    def forward(self, input_tensor, hidden_state=None, pad_mask=None):
-
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
             input_tensor = input_tensor.transpose([1, 0, 2, 3, 4])

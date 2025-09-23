@@ -1,8 +1,6 @@
 """
-
 Converted to PaddlePaddle
 """
-
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
