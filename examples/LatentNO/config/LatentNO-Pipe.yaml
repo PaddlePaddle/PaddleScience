@@ -1,0 +1,68 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: ./outputs/${data_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} #
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback: #
+      _target_: ppsci.utils.callbacks.InitCallback #
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general setting
+output_dir: ${hydra:run.dir}
+mode : "train" # train/eval
+data_name : "Pipe"
+data_normalize : False
+data_concat : True
+seed : 20
+batch_size : 4
+
+# model setting
+MODEL:
+  n_block : 8
+  n_mode : 256
+  n_dim : 128
+  n_layer : 3
+  n_head : 8
+  trunk_dim : 2
+  branch_dim : 4
+  out_dim : 1
+  input_keys : ["x", "y1"]
+  output_keys : ["y2"]
+
+TRAIN:
+  iters_per_epoch : -1
+  epochs : 500
+  log_epoch : 1
+  checkpoint_epcoh : 50
+  exp_name : "LatentNO_Pipe"
+  eval_during_train : True
+  eval_freq : 10
+  self.start_eval_epoch : 1
+  # optimizer setting
+  beta0 : 0.9
+  beta1 : 0.99
+  weight_decay : 0.00005
+  clip_norm : 1000.0
+  lr : 0.001
+  div_factor : 10000.0
+  final_div_factor : 10000.0
+  pct_start : 0.2
+
+EVAL:
+  pretrained_model_path : None

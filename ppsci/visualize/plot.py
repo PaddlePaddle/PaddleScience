@@ -256,8 +256,8 @@ def save_plot_from_2d_dict(
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float, ...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float, ...]]): The list of ytick locations. Defaults to None.
     """
     visu_data = [data_dict[k] for k in visu_keys]
     if isinstance(visu_data[0], paddle.Tensor):
