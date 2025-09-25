@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
 
 from ppsci.equation.fpde import FractionalPoisson
 from ppsci.equation.ide import Volterra
@@ -31,6 +34,10 @@ from ppsci.equation.pde import Poisson
 from ppsci.equation.pde import Vibration
 from ppsci.utils import logger
 from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
 
 __all__ = [
     "PDE",
@@ -52,11 +59,11 @@ __all__ = [
 ]
 
 
-def build_equation(cfg):
+def build_equation(cfg: DictConfig):
     """Build equation(s)
 
     Args:
-        cfg (List[DictConfig]): Equation(s) config list.
+        cfg (DictConfig): Equation(s) config list.
 
     Returns:
         Dict[str, Equation]: Equation(s) in dict.

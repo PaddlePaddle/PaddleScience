@@ -20,7 +20,6 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-from paddle import jit
 from paddle import nn
 from paddle.framework import core
 
@@ -57,7 +56,6 @@ class ExpressionSolver(nn.Layer):
             "Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
-    @jit.to_static
     def train_forward(
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
@@ -80,8 +78,10 @@ class ExpressionSolver(nn.Layer):
 
         Returns:
             Tuple[Dict[str, "paddle.Tensor"], Dict[str, float]]:
-                all_losses: A loss dictionary containing the output terms of all constraints,
-                constraint_losses: The loss values of all constraints.
+                losses_all: A flat dictionary of all individual loss components.
+                    This will be sent to the loss aggregator for computing the final scalar loss.
+                losses_constraint: A grouped dictionary where losses are aggregated by constraint.
+                    This will mainly be used for logging and monitoring purposes.
         """
         losses_all: Dict[str, "paddle.Tensor"] = {}
         losses_constraint: Dict[str, float] = {}
@@ -114,9 +114,22 @@ class ExpressionSolver(nn.Layer):
                 label_dicts[i],
                 weight_dicts[i],
             )
-            # update losses into 'losses_all' and 'losses_constraint'
-            # 'losses_all': Will be send to loss aggregator for further computing final loss(scalar)
-            # 'losses_constraint': Will be used in logging
+
+            # Update losses into two dictionaries: 'losses_all' and 'losses_constraint'
+            #
+            # - 'losses_all': A flat dictionary of all individual loss components.
+            #   This will be sent to the loss aggregator for computing the final scalar loss.
+            # - 'losses_constraint': A grouped dictionary where losses are aggregated by constraint.
+            #   This will mainly be used for logging and monitoring purposes.
+            #
+            # NOTE: Structure overview
+            """
+            | Constraints       | constraint_1(name=pde)   | constraint_2 (name=bc)               | Usage          |
+            |-------------------|--------------------------|--------------------------------------|----------------|
+            | Loss items        | loss_1, loss_2           | loss_3, loss_4                       | /              |
+            | losses_all        | {loss_1: loss_1, loss_2: loss_2, loss_3: loss_3, loss_4:loss_4} | loss computing |
+            | losses_constraint | {pde: loss_1 + loss_2}   | {bc: loss_3 + loss_4}                | logging        |
+            """
             losses_constraint[cst_name] = 0.0
             for key in losses:
                 losses_constraint[cst_name] += losses[key].item()
@@ -130,7 +143,6 @@ class ExpressionSolver(nn.Layer):
 
         return losses_all, losses_constraint
 
-    @jit.to_static
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
@@ -172,11 +184,13 @@ class ExpressionSolver(nn.Layer):
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_losses = validator.loss(
-            output_dict,
-            label_dict,
-            weight_dict,
-        )
+        validator_losses: Dict[str, "paddle.Tensor"] = {}
+        if callable(validator.loss):
+            validator_losses = validator.loss(
+                output_dict,
+                label_dict,
+                weight_dict,
+            )
         return output_dict, validator_losses
 
     def visu_forward(
