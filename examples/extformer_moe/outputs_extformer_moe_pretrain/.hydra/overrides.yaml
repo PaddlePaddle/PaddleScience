@@ -1,1 +1,2 @@
-[]
+- mode=eval
+- EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams

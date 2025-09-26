@@ -487,6 +487,11 @@ class RnCLoss(nn.Layer):
         exp_logits = logits.exp()
         n = logits.shape[1]
 
+        # Guard against trivial case where n <= 1 (no negatives) to avoid empty tensors
+        # if n <= 1:
+        #     # return a zero tensor on the same device/dtype as logits
+        #     return logits.sum() * 0.0
+
         # remove diagonal
         logits = logits.masked_select(
             (1 - paddle.eye(n)).astype("bool").unsqueeze(0).tile([B, 1, 1])
@@ -512,6 +517,7 @@ class RnCLoss(nn.Layer):
                 loss += -pos_log_probs.sum()
             loss /= B * n * (n - 1)
         elif self.loss_cal_mode == "computation-efficient":
+            # print('label_diffs.shape:', label_diffs.shape)
             neg_mask = (label_diffs.unsqueeze(-2) >= label_diffs.unsqueeze(-1)).astype(
                 "float32"
             )  # [B, n, n - 1, n - 1]

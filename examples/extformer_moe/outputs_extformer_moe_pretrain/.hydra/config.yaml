@@ -1,4 +1,4 @@
-mode: train
+mode: eval
 output_dir: ${hydra:run.dir}
 log_freq: 20
 seed: 0
@@ -39,7 +39,7 @@ TRAIN:
   wd: 1.0e-05
   batch_size: 16
 EVAL:
-  pretrained_model_path: ./checkpoint/enso/extformer_moe_enso.pdparams
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/extformer-moe/extformer_moe_pretrained.pdparams
   eval_with_no_grad: true
   compute_metric_by_batch: false
   batch_size: 1
@@ -59,7 +59,7 @@ INFER:
   max_batch_size: 1024
   num_cpu_threads: 10
   batch_size: 256
-FILE_PATH: /root/workspace/PaddleScience/examples/extformer_moe/data/weather_data/enso_round1_train_20210201
+FILE_PATH: /root/workspace/PaddleScience/examples/extformer_moe/data/weather_data/icar_enso_2021/enso_round1_train_20210201
 DATASET:
   label_keys:
   - sst_target

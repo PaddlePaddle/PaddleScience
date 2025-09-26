@@ -24,14 +24,14 @@ hydra:
     subdir: ./
 
 # general settings
-mode: train # running mode: train/eval
+mode: inference # running mode: inference only
 seed: 0
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set train and evaluate data path
 # FILE_PATH: /hpc2hdd/home/hni017/Workplace/data/weather_data/icar_enso_2021/enso_round1_train_20210201
-FILE_PATH: /root/workspace/PaddleScience/examples/extformer_moe/data/weather_data/icar_enso_2021/enso_round1_train_20210201
+FILE_PATH: /localnvme/application/duff/workspace/PaddleScience/examples/extformer_moe/data/weather_data/icar_enso_2021/enso_round1_train_20210201/
 
 # dataset setting
 DATASET:
@@ -121,7 +121,7 @@ MOE:
 
 # rnc settings
 RNC:
-  use_rnc: true
+  use_rnc: false
   rank_imbalance_style: "batch+T+H+W"
   feature_similarity_style: "l2"
   rank_imbalance_temp: 2
@@ -148,7 +148,8 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: ./checkpoint/enso/extformer_moe_enso.pdparams
+  # pretrained_model_path: ./checkpoint/enso/extformer_moe_enso.pdparams
+  pretrained_model_path: ./pretrained/extformer_moe_pretrained.pdparams
   compute_metric_by_batch: false
   eval_with_no_grad: true
   batch_size: 1
