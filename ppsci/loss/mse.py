@@ -168,7 +168,9 @@ class CausalMSELoss(base.Loss):
                 loss *= output_dict["area"]
 
             # causal weighting
-            loss_t = loss.reshape([self.n_chunks, -1])  # [nt, nx]
+            loss_t = loss.reshape([self.n_chunks, -1])
+            # [nt * nx_per_chunk, 1] ==> [nt, nx_per_chunk]
+
             weight_t = paddle.exp(
                 -self.tol * (self.acc_mat @ loss_t.mean(-1, keepdim=True))
             )  # [nt, nt] x [nt, 1] ==> [nt, 1]

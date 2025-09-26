@@ -559,7 +559,7 @@ class SEVIRDataset(io.Dataset):
             event_batch_size (int): Event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
 
         Returns:
-            event_batch (List[np.array,...]): List of event batches.
+            event_batch (List[np.array]): List of event batches.
                 event_batch[i] is the event batch of the i-th data type.
                 Each event_batch[i] is a np.ndarray with shape = (event_batch_size, height, width, raw_seq_len)
         """
