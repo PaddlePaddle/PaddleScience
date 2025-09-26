@@ -76,7 +76,7 @@
     | 天气预报 | [Extformer-MoE 气象预报](./examples/extformer_moe.md) | ✅ | | | ✅ |
     | 天气预报 | [FourCastNet 气象预报](./examples/fourcastnet.md) | ✅ | | | |
     | 天气预报 | [NowCastNet 气象预报](./examples/nowcastnet.md) | ✅ | | | ✅ |
-    | 天气预报 | [GraphCast 气象预报](./examples/graphcast.md) | ✅ | | | ✅ |
+    | 天气预报 | [GraphCast 气象预报](./examples/graphcast.md) | ✅ | | ✅ | ✅ |
     | 天气预报 | [DGMR 气象预报](./examples/dgmr.md) | ✅ | | | |
     | 地震波形反演 | [VelocityGAN 地震波形反演](./examples/velocity_gan.md) | ✅ | | | ✅ |
     | 交通预测 | [TGCN 交通流量预测](./examples/tgcn.md) | ✅ | | | ✅ |
