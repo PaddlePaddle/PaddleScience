@@ -138,3 +138,4 @@ ppsci/_version.py
 /examples/laplace/output_laplace2d/
 /examples/extformer_moe/data
 /examples/extformer_moe/pretrained
+/examples/test
