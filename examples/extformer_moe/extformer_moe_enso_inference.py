@@ -1,3 +1,4 @@
+# 需要加载环境变量export CUSTOM_DEVICE_BLACK_LIST=top_k_v2,top_k,mask_select
 import os
 import numpy as np
 import paddle
