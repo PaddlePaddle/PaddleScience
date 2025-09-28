@@ -82,7 +82,7 @@ def get_norm_layer(
 
     Args:
         normalization (str): The type of the layer normalization from ['layer_norm'].
-        axis (float): The axis to normalize the.
+        axis (int): The axis to normalize the.
         epsilon (float): The epsilon of the normalization layer.
         in_channels (int): Input channel.
 
@@ -239,12 +239,12 @@ class CuboidSelfAttentionPatterns:
         """Axial attention proposed in https://arxiv.org/abs/1912.12180
 
         Args:
-            input_shape (Tuple[int,...]): The shape of the input tensor, T H W.
+            input_shape (Tuple[int, ...]): The shape of the input tensor, T H W.
 
         Returns:
-            cuboid_size (Tuple[int,...]): The size of cuboid.
-            strategy (Tuple[str,...]): The strategy of the attention.
-            shift_size (Tuple[int,...]): The shift size of the attention.
+            cuboid_size (Tuple[int, ...]): The size of cuboid.
+            strategy (Tuple[str, ...]): The strategy of the attention.
+            shift_size (Tuple[int, ...]): The shift size of the attention.
         """
 
         T, H, W, _ = input_shape

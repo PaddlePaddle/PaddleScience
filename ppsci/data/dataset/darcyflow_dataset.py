@@ -113,7 +113,7 @@ class PositionalEmbedding2D:
         and caches the grid associated with MRU resolution
 
         Args:
-            spatial_dims (tuple[int,...]): Sizes of spatial resolution.
+            spatial_dims (tuple[int, ...]): Sizes of spatial resolution.
             dtype (str): Dtype to encode data.
 
         Returns:
@@ -154,8 +154,8 @@ class DarcyFlowDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
         data_dir (str): The directory to load data from.
         weight_dict (Optional[Dict[str, float]], optional): Define the weight of each constraint variable. Defaults to None.
-        test_resolutions (List[int,...]): The resolutions to test dataset. Default is [16, 32].
-        grid_boundaries (List[int,...]): The boundaries of the grid. Default is [[0,1],[0,1]].
+        test_resolutions (Tuple[int, ...]): The resolutions to test dataset. Default is [16, 32].
+        grid_boundaries (Tuple[int, ...]): The boundaries of the grid. Default is [[0,1],[0,1]].
         positional_encoding (bool): Whether to use positional encoding. Default is True
         encode_input (bool): Whether to encode the input. Default is False
         encode_output (bool): Whether to encode the output. Default is True

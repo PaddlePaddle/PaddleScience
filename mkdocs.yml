@@ -121,6 +121,7 @@ nav:
         - SMC Reac: zh/examples/smc_reac.md
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
+        - Synthemol: zh/examples/synthemol.md
 
   - API 文档:
     - ppsci:
