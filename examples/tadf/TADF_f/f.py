@@ -8,11 +8,8 @@ from omegaconf import DictConfig
 
 @hydra.main(version_base=None, config_path="./config", config_name="f.yaml")
 def main(cfg: DictConfig):
-
     data, smis = load_data(cfg)
-
     X = featurize_molecules(smis)
-
     if cfg.mode == "train":
         train(cfg, X, data)
     elif cfg.mode == "eval":
