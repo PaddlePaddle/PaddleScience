@@ -139,3 +139,6 @@ ppsci/_version.py
 /examples/extformer_moe/data
 /examples/extformer_moe/pretrained
 /examples/test
+/examples/fourcastnet/datasets
+/examples/fourcastnet/model_precip
+/examples/fourcastnet/model_wind

@@ -241,61 +241,62 @@ class AFNO2D(nn.Layer):
 
         st, end = total_modes - kept_modes, total_modes + kept_modes
 
-        o1_real[:, st:end, :kept_modes] = F.relu(
-            paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                x[:, st:end, :kept_modes].real(),
-                self.w1[0],
+        with paddle.amp.auto_cast(custom_black_list=['einsum']):
+            o1_real[:, st:end, :kept_modes] = F.relu(
+                paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    x[:, st:end, :kept_modes].real(),
+                    self.w1[0],
+                )
+                - paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    x[:, st:end, :kept_modes].imag(),
+                    self.w1[1],
+                )
+                + self.b1[0]
             )
-            - paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                x[:, st:end, :kept_modes].imag(),
-                self.w1[1],
-            )
-            + self.b1[0]
-        )
 
-        o1_imag[:, st:end, :kept_modes] = F.relu(
-            paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                x[:, st:end, :kept_modes].imag(),
-                self.w1[0],
+            o1_imag[:, st:end, :kept_modes] = F.relu(
+                paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    x[:, st:end, :kept_modes].imag(),
+                    self.w1[0],
+                )
+                + paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    x[:, st:end, :kept_modes].real(),
+                    self.w1[1],
+                )
+                + self.b1[1]
             )
-            + paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                x[:, st:end, :kept_modes].real(),
-                self.w1[1],
-            )
-            + self.b1[1]
-        )
 
-        o2_real[:, st:end, :kept_modes] = (
-            paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                o1_real[:, st:end, :kept_modes],
-                self.w2[0],
+            o2_real[:, st:end, :kept_modes] = (
+                paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    o1_real[:, st:end, :kept_modes],
+                    self.w2[0],
+                )
+                - paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    o1_imag[:, st:end, :kept_modes],
+                    self.w2[1],
+                )
+                + self.b2[0]
             )
-            - paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                o1_imag[:, st:end, :kept_modes],
-                self.w2[1],
-            )
-            + self.b2[0]
-        )
 
-        o2_imag[:, st:end, :kept_modes] = (
-            paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                o1_imag[:, st:end, :kept_modes],
-                self.w2[0],
+            o2_imag[:, st:end, :kept_modes] = (
+                paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    o1_imag[:, st:end, :kept_modes],
+                    self.w2[0],
+                )
+                + paddle.einsum(
+                    "xyzbi,bio->xyzbo",
+                    o1_real[:, st:end, :kept_modes],
+                    self.w2[1],
+                )
+                + self.b2[1]
             )
-            + paddle.einsum(
-                "xyzbi,bio->xyzbo",
-                o1_real[:, st:end, :kept_modes],
-                self.w2[1],
-            )
-            + self.b2[1]
-        )
 
         x = paddle.stack([o2_real, o2_imag], axis=-1)
         x = self.softshrink(x, threshold=self.sparsity_threshold)
