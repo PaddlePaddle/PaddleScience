@@ -29,7 +29,6 @@ mode: infer # running mode: infer
 seed: 2025
 output_dir: ${hydra:run.dir}
 log_freq: 20
-alis: False
 
 TRAIN:
   batch_size: 64

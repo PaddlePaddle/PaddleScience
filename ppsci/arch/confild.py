@@ -7,7 +7,7 @@ import paddle
 
 DEFAULT_W0 = 30.0
 
-
+###################### ConFILD Model #######################
 class Swish(paddle.nn.Layer):
     def __init__(self):
         super().__init__()
@@ -380,7 +380,7 @@ class LatentContainer(paddle.nn.Layer):
         expanded_latents = selected_latents.reshape(getShape)
         return {self.output_keys[0]: expanded_latents}
 
-
+###################### GaussianDiffusion Model #######################
 class ModelVarType(enum.Enum):
 
     LEARNED = enum.auto()
@@ -412,6 +412,34 @@ class ModelMeanType(enum.Enum):
     EPSILON = enum.auto()
 
 
+def mean_flat(tensor):
+    return paddle.mean(tensor, axis=list(range(1, len(tensor.shape))))
+
+
+def normal_kl(mean1, logvar1, mean2, logvar2):
+    tensor = None
+    for obj in (mean1, logvar1, mean2, logvar2):
+        if isinstance(obj, paddle.Tensor):
+            tensor = obj
+            break
+    assert tensor is not None, "at least one argument must be a Tensor"
+
+    # Force variances to be Tensors. Broadcasting helps convert scalars to
+    # Tensors, but it does not work for th.exp().
+    logvar1, logvar2 = [
+        x if isinstance(x, paddle.Tensor) else paddle.to_tensor(x).to(tensor)
+        for x in (logvar1, logvar2)
+    ]
+
+    return 0.5 * (
+        -1.0
+        + logvar2
+        - logvar1
+        + paddle.exp(logvar1 - logvar2)
+        + ((mean1 - mean2) ** 2) * paddle.exp(-logvar2)
+    )
+
+
 class GaussianDiffusion:
     def __init__(
         self,
@@ -426,16 +454,22 @@ class GaussianDiffusion:
         self.model_var_type = model_var_type
         self.loss_type = loss_type
         self.rescale_timesteps = rescale_timesteps
+        
+        # Use float64 for accuracy.
         betas = np.array(betas, dtype=np.float64)
         self.betas = betas
         assert len(tuple(betas.shape)) == 1, "betas must be 1-D"
         assert (betas > 0).astype("bool").all() and (betas <= 1).astype("bool").all()
+
         self.num_timesteps = int(tuple(betas.shape)[0])
+
         alphas = 1.0 - betas
         self.alphas_cumprod = np.cumprod(alphas, axis=0)
         self.alphas_cumprod_prev = np.append(1.0, self.alphas_cumprod[:-1])
         self.alphas_cumprod_next = np.append(self.alphas_cumprod[1:], 0.0)
         assert tuple(self.alphas_cumprod_prev.shape) == (self.num_timesteps,)
+
+        # calculations for diffusion q(x_t | x_{t-1}) and others
         self.sqrt_alphas_cumprod = np.sqrt(self.alphas_cumprod)
         self.sqrt_one_minus_alphas_cumprod = np.sqrt(1.0 - self.alphas_cumprod)
         self.log_one_minus_alphas_cumprod = np.log(1.0 - self.alphas_cumprod)
@@ -455,7 +489,22 @@ class GaussianDiffusion:
             * np.sqrt(alphas)
             / (1.0 - self.alphas_cumprod)
         )
-    
+
+    def q_mean_variance(self, x_start, t):
+        mean = _extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
+        variance = _extract_into_tensor(1.0 - self.alphas_cumprod, t, x_start.shape)
+        log_variance = _extract_into_tensor(self.log_one_minus_alphas_cumprod, t, x_start.shape)
+        return mean, variance, log_variance
+
+    def q_sample(self, x_start, t, noise=None):
+        if noise is None:
+            noise = paddle.randn(x_start.shape)
+            
+        sqrt_alpha_cumprod_t = _extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape)
+        sqrt_one_minus_alpha_cumprod_t = _extract_into_tensor(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape)
+            
+        return sqrt_alpha_cumprod_t * x_start + sqrt_one_minus_alpha_cumprod_t * noise
+
     def _predict_xstart_from_xprev(self, x_t, t, xprev):
         assert tuple(x_t.shape) == tuple(xprev.shape)
         return (
@@ -584,11 +633,36 @@ class GaussianDiffusion:
         return t
 
     def condition_mean(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
+        if model_kwargs is None:
+            model_kwargs = {}
         gradient = cond_fn(x, self._scale_timesteps(t), **model_kwargs)
         new_mean = p_mean_var["mean"].astype(dtype="float32") + p_mean_var[
             "variance"
         ] * gradient.astype(dtype="float32")
         return new_mean
+
+    def _predict_eps_from_xstart(self, x_t, t, pred_xstart):
+        return (
+            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
+            - pred_xstart
+        ) / _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
+
+    def condition_score(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
+        if model_kwargs is None:
+            model_kwargs = {}
+        alpha_bar = _extract_into_tensor(self.alphas_cumprod, t, x.shape)
+
+        eps = self._predict_eps_from_xstart(x, t, p_mean_var["pred_xstart"])
+        eps = eps - (1 - alpha_bar).sqrt() * cond_fn(
+            x, self._scale_timesteps(t), **model_kwargs
+        )
+
+        out = p_mean_var.copy()
+        out["pred_xstart"] = self._predict_xstart_from_eps(x, t, eps)
+        out["mean"], _, _ = self.q_posterior_mean_variance(
+            x_start=out["pred_xstart"], x_t=x, t=t
+        )
+        return out
 
     def p_sample(
         self,
@@ -699,6 +773,63 @@ class GaussianDiffusion:
                 yield out
                 img = out["sample"]
 
+    def training_losses(self, model, x_start, t, noise=None):
+        if noise is None:
+            noise = paddle.randn(x_start.shape)
+                
+        x_t = self.q_sample(x_start=x_start, t=t, noise=noise)
+            
+        model_output = model(x_t, t)
+            
+        # Handle different model outputs
+        if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
+            assert model_output.shape[1] == 2 * x_start.shape[1], "Output channels must be 2x input channels"
+            model_output, model_var_values = paddle.split(model_output, 2, axis=1)
+            
+        # Calculate the MSE loss for epsilon prediction
+        target = noise
+        mse_loss = mean_flat((target - model_output) ** 2)
+            
+        # Calculate the KL divergence loss if needed
+        vb_losses = 0
+        if self.loss_type.is_vb():
+            # Compute the KL divergence between q and p distributions
+            true_mean, true_log_variance_clipped, pred_xstart = self.q_posterior_mean_variance(
+                x_start=x_start, x_t=x_t, t=t
+            )
+            p_mean, p_log_variance_clipped, _ = self.p_mean_variance(
+                model, x_t, t, clip_denoised=False, denoised_fn=None
+            )
+                
+            kl = normal_kl(true_mean, true_log_variance_clipped, p_mean, p_log_variance_clipped)
+            vb_losses = mean_flat(kl)
+                
+        # Choose the loss based on loss_type
+        if self.loss_type == LossType.MSE:
+            losses = mse_loss
+        elif self.loss_type == LossType.RESCALED_MSE:
+            losses = mse_loss * self.num_timesteps
+        elif self.loss_type == LossType.KL:
+            losses = vb_losses
+        elif self.loss_type == LossType.RESCALED_KL:
+            losses = vb_losses * self.num_timesteps
+        else:
+            raise NotImplementedError(f"Unknown loss type: {self.loss_type}")
+                
+        return {"loss": losses.mean()}
+
+
+class LossType(enum.Enum):
+    MSE = enum.auto()  # use raw MSE loss (and KL when learning variances)
+    RESCALED_MSE = (
+        enum.auto()
+    )  # use raw MSE loss (with RESCALED_KL when learning variances)
+    KL = enum.auto()  # use the variational lower-bound
+    RESCALED_KL = enum.auto()  # like KL, but rescale to estimate the full VLB
+
+    def is_vb(self):
+        return self == LossType.KL or self == LossType.RESCALED_KL
+
 
 class SpacedDiffusion(GaussianDiffusion):
     """
@@ -757,7 +888,7 @@ class _WrappedModel:
 
     def __call__(self, x, ts, **kwargs):
         map_tensor = paddle.to_tensor(
-            data=self.timestep_map, dtype=ts.dtype, place=ts.place
+            data=self.timestep_map, dtype=ts.dtype#, place=ts.place
         )
         new_ts = map_tensor[ts]
         if self.rescale_timesteps:
@@ -765,6 +896,7 @@ class _WrappedModel:
         return self.model(x, new_ts, **kwargs)
 
 
+###################### UNET Model #######################
 def conv_nd(dims, *args, **kwargs):
     if dims == 1:
         return paddle.nn.Conv1D(*args, **kwargs)
@@ -894,13 +1026,12 @@ def avg_pool_nd(dims, *args, **kwargs):
     Create a 1D, 2D, or 3D average pooling module.
     """
     if dims == 1:
-        return paddle.nn.AvgPool1d(*args, **kwargs, exclusive=False)
+        return paddle.nn.AvgPool1D(*args, **kwargs, exclusive=False)
     elif dims == 2:
-        return paddle.nn.AvgPool2d(*args, **kwargs, exclusive=False)
+        return paddle.nn.AvgPool2D(*args, **kwargs, exclusive=False)
     elif dims == 3:
-        return paddle.nn.AvgPool3d(*args, **kwargs, exclusive=False)
+        return paddle.nn.AvgPool3D(*args, **kwargs, exclusive=False)
     raise ValueError(f"unsupported dimensions: {dims}")
-
 
 
 class Downsample(paddle.nn.Layer):
@@ -922,6 +1053,7 @@ class Downsample(paddle.nn.Layer):
     def forward(self, x):
         assert tuple(x.shape)[1] == self.channels
         return self.op(x)
+
 
 class Upsample(paddle.nn.Layer):
     def __init__(self, channels, use_conv, dims=2, out_channels=None):
@@ -947,10 +1079,11 @@ class Upsample(paddle.nn.Layer):
             x = self.conv(x)
         return x
 
+
 def count_flops_attn(model, _x, y):
     b, c, *spatial = tuple(y[0].shape)
     num_spatial = int(np.prod(spatial))
-    matmul_ops = 2 * b * num_spatial**2 * c
+    matmul_ops = 2 * b * (num_spatial**2) * c
     model.total_ops += paddle.to_tensor(data=[matmul_ops], dtype="float64")
 
 
@@ -963,7 +1096,7 @@ class QKVAttentionLegacy(paddle.nn.Layer):
         bs, width, length = tuple(qkv.shape)
         assert width % (3 * self.n_heads) == 0
         ch = width // (3 * self.n_heads)
-        q, k, v = qkv.reshape((bs * self.n_heads, ch * 3, length)).split(3, axis=1)
+        q, k, v = qkv.reshape((bs * self.n_heads, ch * 3, length)).split(ch, axis=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = paddle.einsum("bct,bcs->bts", q * scale, k * scale)
         weight = paddle.nn.functional.softmax(
@@ -988,7 +1121,7 @@ class QKVAttention(paddle.nn.Layer):
         ch = width // (3 * self.n_heads)
         q, k, v = qkv.chunk(chunks=3, axis=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
-        weight = paddle.einsum(
+        weight = paddle.einsum(# 非复数
             "bct,bcs->bts",
             (q * scale).view(bs * self.n_heads, ch, length),
             (k * scale).view(bs * self.n_heads, ch, length),
@@ -1041,8 +1174,7 @@ class CheckpointFunction(paddle.autograd.PyLayer):
 
     @staticmethod
     def backward(ctx, *output_grads):
-        """Class Method: *.requires_grad_, can not convert, please check whether it is torch.Tensor.*/Optimizer.*/nn.Module.*/torch.distributions.Distribution.*/torch.autograd.function.FunctionCtx.*/torch.profiler.profile.*/torch.autograd.profiler.profile.*, and convert manually"""
-        ctx.input_tensors = [paddle.stop_gradient(x, stop=False) for x in ctx.input_tensors]
+        ctx.input_tensors = [stop_gradient(x, stop=False) for x in ctx.input_tensors]
         with paddle.enable_grad():
             shallow_copies = [x.view_as(other=x) for x in ctx.input_tensors]
             # print(shallow_copies)
@@ -1057,10 +1189,12 @@ class CheckpointFunction(paddle.autograd.PyLayer):
         del ctx.input_tensors
         del ctx.input_params
         del output_tensors
-        return (None, None) + input_grads
+        return [None, None] + input_grads
 
-def stop_gradient(self, *args, **kwargs):
-    return self
+
+def stop_gradient(input, stop):
+    input.stop_gradient = stop
+    return input
 
 
 class AttentionBlock(paddle.nn.Layer):
@@ -1122,7 +1256,7 @@ def timestep_embedding(timesteps, dim, max_period=10000):
         x=-math.log(max_period)
         * paddle.arange(start=0, end=half, dtype="float32")
         / half
-    ).to(paddle.CUDAPlace(0))
+    )#.to(paddle.CUDAPlace(0))
     args = timesteps[:, None].astype(dtype="float32") * freqs[None]
     embedding = paddle.concat(x=[paddle.cos(x=args), paddle.sin(x=args)], axis=-1)
     if dim % 2:
@@ -1206,7 +1340,7 @@ class UNetModel(paddle.nn.Layer):
         )
         if self.num_classes is not None:
             self.label_emb = paddle.nn.Embedding(
-                num_embeddings=num_classes, embedding_dim=time_embed_dim
+                num_embeddings=self.num_classes, embedding_dim=time_embed_dim
             )
         ch = input_ch = int(channel_mult[0] * model_channels)
         self.input_blocks = paddle.nn.LayerList(
@@ -1219,7 +1353,8 @@ class UNetModel(paddle.nn.Layer):
         ds = 1
         for level, mult in enumerate(channel_mult):
             for _ in range(num_res_blocks):
-                layers = [
+                layers = []
+                layers.append(
                     ResBlock(
                         ch,
                         time_embed_dim,
@@ -1229,7 +1364,7 @@ class UNetModel(paddle.nn.Layer):
                         use_checkpoint=use_checkpoint,
                         use_scale_shift_norm=use_scale_shift_norm,
                     )
-                ]
+                )
                 ch = int(mult * model_channels)
                 if ds in attention_resolutions:
                     layers.append(
@@ -1298,7 +1433,8 @@ class UNetModel(paddle.nn.Layer):
         for level, mult in list(enumerate(channel_mult))[::-1]:
             for i in range(num_res_blocks + 1):
                 ich = input_block_chans.pop()
-                layers = [
+                layers = []
+                layers.append(
                     ResBlock(
                         ch + ich,
                         time_embed_dim,
@@ -1308,7 +1444,7 @@ class UNetModel(paddle.nn.Layer):
                         use_checkpoint=use_checkpoint,
                         use_scale_shift_norm=use_scale_shift_norm,
                     )
-                ]
+                )
                 ch = int(model_channels * mult)
                 if ds in attention_resolutions:
                     layers.append(

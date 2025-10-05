@@ -32,6 +32,7 @@ from ppsci.arch import ModelVarType
 from ppsci.arch import ModelMeanType
 from ppsci.utils import logger
 
+
 def load_elbow_flow(path):
     return np.load(f"{path}")[1:]
 
@@ -146,87 +147,6 @@ class Normalizer_ts(object):
             return data_norm
 
 
-# build data
-def getdata(cfg):
-    ###### read data - fois ######
-    if cfg.Data.load_data_fn == "load_3d_flow":
-        input_data = load_3d_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_elbow_flow":
-        input_data = load_elbow_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_channel_flow":
-        input_data = load_channel_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_periodic_hill_flow":
-        input_data = load_periodic_hill_flow(cfg.Data.data_path)
-    else:
-        input_data = np.load(cfg.Data.data_path)
-
-    spatio_shape = input_data.shape[1:-1]
-    spatio_axis = list(
-        range(
-            input_data.ndim if isinstance(input_data, np.ndarray) else input_data.dim()
-        )
-    )[1:-1]
-
-    ###### read data - coordinate ######
-    if cfg.Data.coor_path is None:
-        coord = [np.linspace(0, 1, i) for i in spatio_shape]
-        coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
-    else:
-        coord = np.load(cfg.Data.coor_path)
-    coord = coord.astype("float32")
-    input_data = input_data.astype("float32")
-
-    ###### convert to tensor ######
-    input_data = (
-        paddle.to_tensor(input_data)
-        if not isinstance(input_data, paddle.Tensor)
-        else input_data
-    )
-    coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
-    N_samples = input_data.shape[0]
-
-    ###### normalizer ######
-    in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-    in_normalizer.fit_normalize(
-        coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims - 1)
-    )
-    out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-    out_normalizer.fit_normalize(
-        input_data if cfg.Latent.lumped else input_data.flatten(0, cfg.Latent.dims)
-    )
-    normed_coords = in_normalizer.normalize(coord)
-    normed_fois = out_normalizer.normalize(input_data)
-
-    return normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer
-    ###### 添加数据集划分 ######
-    # split_ratio = cfg.Data.get("split_ratio", 0.8)  # 默认为80%训练集
-    # seed = cfg.Data.get("shuffle_seed", 42)         # 随机种子
-
-    # # 生成随机索引并划分
-    # np.random.seed(seed)
-    # total_samples = N_samples
-    # indices = np.random.permutation(total_samples)
-    # split_idx = int(total_samples * split_ratio)
-    
-    # # 划分训练集和测试集
-    # train_indices = indices[:split_idx]
-    # test_indices = indices[split_idx:]
-
-    # # 根据索引获取训练集和测试集数据
-    # train_normed_fois = normed_fois[train_indices]
-    # test_normed_fois = normed_fois[test_indices]
-
-    # return (
-    #     normed_coords, 
-    #     train_normed_fois,  # 训练集数据
-    #     test_normed_fois,   # 测试集数据
-    #     spatio_axis, 
-    #     out_normalizer,
-    #     train_indices,      # 训练集索引（用于latent模型）
-    #     test_indices        # 测试集索引
-    # )
-
-
 class basic_set(paddle.io.Dataset):
     def __init__(self, fois, coord, global_indices=None, extra_siren_in=None) -> None:
         super().__init__()
@@ -248,6 +168,61 @@ class basic_set(paddle.io.Dataset):
             return (self.coords, self.extra_in[extra_id]), self.fois[idb, extra_id], global_idx
         else:
             return self.coords, self.fois[idx], global_idx
+
+
+# build data
+def getdata(cfg):
+    ###### read data - fois ######
+    if cfg.Data.load_data_fn == "load_3d_flow":
+        fois = load_3d_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_elbow_flow":
+        fois = load_elbow_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_channel_flow":
+        fois = load_channel_flow(cfg.Data.data_path)
+    elif cfg.Data.load_data_fn == "load_periodic_hill_flow":
+        fois = load_periodic_hill_flow(cfg.Data.data_path)
+    else:
+        fois = np.load(cfg.Data.data_path)
+
+    # 计算空间形状和轴
+    spatio_shape = fois.shape[1:-1]
+    spatio_axis = list(
+        range(
+            fois.ndim if isinstance(fois, np.ndarray) else fois.dim()
+        )
+    )[1:-1]
+
+    ###### read data - coordinate ######
+    if cfg.Data.coor_path is None:
+        coord = [np.linspace(0, 1, i) for i in spatio_shape]
+        coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
+    else:
+        coord = np.load(cfg.Data.coor_path)
+    coord = coord.astype("float32")
+    fois = fois.astype("float32")
+
+    ###### convert to tensor ######
+    fois = (
+        paddle.to_tensor(fois)
+        if not isinstance(fois, paddle.Tensor)
+        else fois
+    )
+    coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
+    N_samples = fois.shape[0]
+
+    ###### normalizer ######
+    in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
+    in_normalizer.fit_normalize(
+        coord if cfg.Latent.lumped else coord.flatten(0, cfg.Latent.dims - 1)
+    )
+    out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
+    out_normalizer.fit_normalize(
+        fois if cfg.Latent.lumped else fois.flatten(0, cfg.Latent.dims)
+    )
+    normed_coords = in_normalizer.normalize(coord)# 训练集就是测试集
+    normed_fois = out_normalizer.normalize(fois)
+
+    return normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer
 
 
 def signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio_axis, out_normalizer, train_indices, test_indices):
@@ -464,28 +439,24 @@ def mutil_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio_
 
 
 def train(cfg):
-    # 获取分割后的数据集
-    # (normed_coords, 
-    #  train_normed_fois, 
-    #  test_normed_fois, 
-    #  spatio_axis, 
-    #  out_normalizer,
-    #  train_indices,
-    #  test_indices) = getdata(cfg)
+    # 获取GPU数量，检查是否是多卡训练
+    world_size = cfg.TRAIN.mutil_GPU
+    # 获取数据
     normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer = getdata(cfg)
     train_normed_fois = normed_fois
     test_normed_fois = normed_fois
     train_indices = list(range(N_samples))
     test_indices = list(range(N_samples))
     
-    if cfg.TRAIN.mutil_GPU > 1:
+    
+    if world_size > 1:
         import paddle.distributed as dist
         dist.init_parallel_env()
         mutil_train(cfg, normed_coords, train_normed_fois, test_normed_fois, 
                     spatio_axis, out_normalizer, train_indices, test_indices)
     else:
         signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, 
-                     spatio_axis, out_normalizer, train_indices, test_indices)
+                    spatio_axis, out_normalizer, train_indices, test_indices)
 
 
 def evaluate(cfg: DictConfig):
@@ -565,243 +536,6 @@ def inference(cfg):
     logger.info("Result is {}".format(output_dict["fetch_name_0"]))
 
 
-def uncondiction_infer(cfg):
-    test_batch_size = cfg.Uncondiction_INFER.test_batch_size
-    time_length = cfg.Uncondiction_INFER.time_length
-    latent_length = cfg.Uncondiction_INFER.latent_length
-    image_size = cfg.Uncondiction_INFER.image_size
-    num_channels = cfg.Uncondiction_INFER.num_channels
-    num_res_blocks = cfg.Uncondiction_INFER.num_res_blocks
-    num_heads = cfg.Uncondiction_INFER.num_heads
-    num_head_channels = cfg.Uncondiction_INFER.num_head_channels
-    attention_resolutions = cfg.Uncondiction_INFER.attention_resolutions
-    steps = cfg.Uncondiction_INFER.steps
-    noise_schedule = cfg.Uncondiction_INFER.noise_schedule
-
-    unet_model = create_model(
-        image_size=image_size,
-        num_channels=num_channels,
-        num_res_blocks=num_res_blocks,
-        num_heads=num_heads,
-        num_head_channels=num_head_channels,
-        attention_resolutions=attention_resolutions,
-    )
-    # ppsci.utils.save_load.load_pretrain(
-    #     unet_model,
-    #     # cfg.Uncondiction_INFER.ema_path,
-    #     "/home/aistudio/ema_0.9999_550000.pdparams",
-    # )
-    diff_model = create_gaussian_diffusion(steps=steps, noise_schedule=noise_schedule)
-    sample_fn = diff_model.p_sample_loop
-    gen_latents = sample_fn(unet_model, (test_batch_size, 1, time_length, latent_length))[
-        :, 0
-    ]
-    max_val, min_val = np.load("/home/aistudio/data_max.npy"), np.load("/home/aistudio/data_min.npy")
-    # max_val, min_val = np.load(cfg.Uncondiction_INFER.max_val), np.load(cfg.Uncondiction_INFER.min_val)
-    max_val, min_val = paddle.to_tensor(data=max_val), paddle.to_tensor(data=min_val)
-    gen_latents = (gen_latents + 1) * (max_val - min_val) / 2.0 + min_val
-    # 加载cnf模型
-    print("加载cnf模型")
-    confild = SIRENAutodecoder_film(**cfg.CONFILD)
-    ppsci.utils.save_load.load_pretrain(
-        confild,
-        "https://dataset.bj.bcebos.com/PaddleScience/CoNFiLD/cnf_model_9700.pdparams",# cfg.EVAL.confild_pretrained_model_path,
-    )
-    confild.eval()
-    coord = paddle.to_tensor(np.load("/home/aistudio/data/data321897/case1_coords.npy"), dtype="float32")#(np.load(f"{cfg.Data.coor_path}"), dtype='float32')
-    batch_size = 1
-    n_samples = tuple(gen_latents.shape)[0]
-    out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-
-    gen_fields = []
-    print("开始生成")
-    for sample_index in range(n_samples):
-        print("第{}个样本", sample_index)
-        for i in range(tuple(gen_latents.shape)[1] // batch_size):
-            input_dict = {
-                "confild_x": coord,
-                "latent_z": gen_latents[sample_index, i * batch_size : (i + 1) * batch_size],
-            }
-            confild_output = confild(input_dict)
-            # print(confild_output)
-            gen_fields.append(out_normalizer.denormalize(confild_output["confild_output"]).detach()
-            .cpu()
-            .numpy())
-    gen_fields = np.concatenate(gen_fields)
-    np.save("./", gen_fields)#cfg.Uncondiction_INFER.save_path
-
-
-class LossType(enum.Enum):
-    MSE = enum.auto()
-    RESCALED_MSE = enum.auto()
-    KL = enum.auto()
-    RESCALED_KL = enum.auto()
-
-    def is_vb(self):
-        return self == LossType.KL or self == LossType.RESCALED_KL
-
-
-def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
-    if schedule_name == "linear":
-        scale = 1000 / num_diffusion_timesteps
-        beta_start = scale * 0.0001
-        beta_end = scale * 0.02
-        return np.linspace(
-            beta_start, beta_end, num_diffusion_timesteps, dtype=np.float64
-        )
-    elif schedule_name == "cosine":
-        return betas_for_alpha_bar(
-            num_diffusion_timesteps,
-            lambda t: math.cos((t + 0.008) / 1.008 * math.pi / 2) ** 2,
-        )
-    else:
-        raise NotImplementedError(f"unknown beta schedule: {schedule_name}")
-
-
-def space_timesteps(num_timesteps, section_counts):
-    if isinstance(section_counts, str):
-        if section_counts.startswith("ddim"):
-            desired_count = int(section_counts[len("ddim") :])
-            for i in range(1, num_timesteps):
-                if len(range(0, num_timesteps, i)) == desired_count:
-                    return set(range(0, num_timesteps, i))
-            raise ValueError(
-                f"cannot create exactly {num_timesteps} steps with an integer stride"
-            )
-        section_counts = [int(x) for x in section_counts.split(",")]
-    size_per = num_timesteps // len(section_counts)
-    extra = num_timesteps % len(section_counts)
-    start_idx = 0
-    all_steps = []
-    for i, section_count in enumerate(section_counts):
-        size = size_per + (1 if i < extra else 0)
-        if size < section_count:
-            raise ValueError(
-                f"cannot divide section of {size} steps into {section_count}"
-            )
-        if section_count <= 1:
-            frac_stride = 1
-        else:
-            frac_stride = (size - 1) / (section_count - 1)
-        cur_idx = 0.0
-        taken_steps = []
-        for _ in range(section_count):
-            taken_steps.append(start_idx + round(cur_idx))
-            cur_idx += frac_stride
-        all_steps += taken_steps
-        start_idx += size
-    return set(all_steps)
-
-
-def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
-    betas = []
-    for i in range(num_diffusion_timesteps):
-        t1 = i / num_diffusion_timesteps
-        t2 = (i + 1) / num_diffusion_timesteps
-        betas.append(min(1 - alpha_bar(t2) / alpha_bar(t1), max_beta))
-    return np.array(betas)
-
-
-def create_gaussian_diffusion(
-    *,
-    steps=1000,
-    learn_sigma=False,
-    sigma_small=False,
-    noise_schedule="linear",
-    use_kl=False,
-    predict_xstart=False,
-    rescale_timesteps=False,
-    rescale_learned_sigmas=False,
-    timestep_respacing="",
-):
-    betas = get_named_beta_schedule(noise_schedule, steps)
-    if use_kl:
-        loss_type = LossType.RESCALED_KL
-    elif rescale_learned_sigmas:
-        loss_type = LossType.RESCALED_MSE
-    else:
-        loss_type = LossType.MSE
-    if not timestep_respacing:
-        timestep_respacing = [steps]
-    return SpacedDiffusion(
-        use_timesteps=space_timesteps(steps, timestep_respacing),
-        betas=betas,
-        model_mean_type=ModelMeanType.EPSILON
-        if not predict_xstart
-        else ModelMeanType.START_X,
-        model_var_type=(
-            ModelVarType.FIXED_LARGE
-            if not sigma_small
-            else ModelVarType.FIXED_SMALL
-        )
-        if not learn_sigma
-        else ModelVarType.LEARNED_RANGE,
-        loss_type=loss_type,
-        rescale_timesteps=rescale_timesteps,
-    )
-
-
-NUM_CLASSES = 1000
-
-
-def create_model(
-    image_size,
-    num_channels,
-    num_res_blocks,
-    dims=2,
-    out_channels=1,
-    channel_mult=None,
-    learn_sigma=False,
-    class_cond=False,
-    use_checkpoint=False,
-    attention_resolutions="16",
-    num_heads=1,
-    num_head_channels=-1,
-    num_heads_upsample=-1,
-    use_scale_shift_norm=False,
-    dropout=0,
-    resblock_updown=False,
-    use_fp16=False,
-    use_new_attention_order=False,
-):
-    if channel_mult is None:
-        if image_size == 512:
-            channel_mult = 0.5, 1, 1, 2, 2, 4, 4
-        elif image_size == 256:
-            channel_mult = 1, 1, 2, 2, 4, 4
-        elif image_size == 128:
-            channel_mult = 1, 1, 2, 3, 4
-        elif image_size == 64:
-            channel_mult = 1, 2, 3, 4
-        else:
-            raise ValueError(f"unsupported image size: {image_size}")
-    else:
-        channel_mult = tuple(int(ch_mult) for ch_mult in channel_mult.split(","))
-    attention_ds = []
-    for res in attention_resolutions.split(","):
-        attention_ds.append(image_size // int(res))
-    return UNetModel(
-        image_size=image_size,
-        in_channels=out_channels,
-        model_channels=num_channels,
-        out_channels=out_channels if not learn_sigma else 2 * out_channels,
-        num_res_blocks=num_res_blocks,
-        attention_resolutions=tuple(attention_ds),
-        dropout=dropout,
-        channel_mult=channel_mult,
-        num_classes=NUM_CLASSES if class_cond else None,
-        use_checkpoint=use_checkpoint,
-        use_fp16=use_fp16,
-        num_heads=num_heads,
-        num_head_channels=num_head_channels,
-        num_heads_upsample=num_heads_upsample,
-        use_scale_shift_norm=use_scale_shift_norm,
-        resblock_updown=resblock_updown,
-        use_new_attention_order=use_new_attention_order,
-        dims=dims,
-    )
-
-
 def export(cfg):
     # set model
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
@@ -846,15 +580,12 @@ def main(cfg: DictConfig):
     elif cfg.mode == "eval":
         evaluate(cfg)
     elif cfg.mode == "infer":
-        if cfg.alis == False:
-            inference(cfg)
-        else:
-            uncondiction_infer(cfg)
+        inference(cfg)
     elif cfg.mode == "export":
         export(cfg)
-    elif cfg.mode == "uncondition_infer":
+    else:
         raise ValueError(
-            f"cfg.mode should in ['train', 'eval', 'infer', 'export', 'uncondition_infer'], but got '{cfg.mode}'"
+            f"cfg.mode should in ['train', 'eval', 'infer', 'export'], but got '{cfg.mode}'"
         )
 
 

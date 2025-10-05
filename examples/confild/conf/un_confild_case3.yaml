@@ -1,0 +1,64 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    # dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: ./outputs_un_confild_case3
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: infer # running mode: infer
+seed: 2025
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+EVAL:
+  epochs: 9800
+  mutil_GPU: 2
+  microbatch: -1
+  lr : 5.e-5
+  ema_rate: "0.9999"
+  log_interval: 1000
+  save_interval: 10000
+  lr_anneal_steps: 0
+  batch_size : 16
+  test_batch_size : 16
+  time_length : 256
+  latent_length : 256
+
+UNET:
+
+  image_size : 256
+  num_channels: 128
+  num_res_blocks: 2
+  num_heads: 4
+  num_head_channels: 64
+  attention_resolutions: "32,16,8"
+  channel_mult: null
+  ema_path: /add/ema/path/here
+
+Diff:
+  steps: 1000
+  noise_schedule: "cosine"
+
+CNF: "ConditionalNeuralField/training_recipes/case3.yml"
+
+  min_val: -1.0
