@@ -37,7 +37,6 @@ TRAIN:
   lr_anneal_steps: 0
   lr : 5.e-5
   weight_decay: 0.0
-  lr_anneal_steps: 0
   final_lr: 0.
   microbatch: -1
 
