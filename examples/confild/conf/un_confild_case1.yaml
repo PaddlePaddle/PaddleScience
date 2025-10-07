@@ -25,28 +25,33 @@ hydra:
     subdir: ./
 
 # general settings
-mode: infer # running mode: infer
+mode: eval # running mode: infer
 seed: 2025
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
+TRAIN:
+  batch_size : 16
+  test_batch_size : 16
+  ema_rate: "0.9999"
+  lr_anneal_steps: 0
+  lr : 5.e-5
+  weight_decay: 0.0
+  lr_anneal_steps: 0
+  final_lr: 0.
+  microbatch: -1
 
 EVAL:
-  epochs: 9800
   mutil_GPU: 1
-  microbatch: -1
   lr : 5.e-5
   ema_rate: "0.9999"
   log_interval: 1000
   save_interval: 10000
   lr_anneal_steps: 0
-  batch_size : 16
-  test_batch_size : 16
   time_length : 128
   latent_length : 128
 
 UNET:
-
   image_size : 128
   num_channels: 128
   num_res_blocks: 2
@@ -54,14 +59,33 @@ UNET:
   num_head_channels: 64
   attention_resolutions: "32,16,8"
   channel_mult: null
-  ema_path: /add/ema/path/here
+  ema_path: /home/aistudio/work/extracted/data/Case1/diffusion/ema.pdparams
 
 Diff:
   steps: 1000
   noise_schedule: "cosine"
 
-CNF: "ConditionalNeuralField/training_recipes/case1.yml"
+CNF:
+  mutil_GPU: 1
+  data_path: /home/aistudio/work/extracted/data/Case1/data.npy
+  coor_path: /home/aistudio/work/extracted/data/Case1/coords.npy
+  load_data_fn: load_elbow_flow
+  normalizer:
+    method: "-11"
+    dim: 0
+  CONFILD:
+    input_keys: ["confild_x", "latent_z"]
+    output_keys: ["confild_output"]
+    num_hidden_layers: 10
+    out_features: 3
+    hidden_features: 128
+    in_coord_features: 2
+    in_latent_features: 128
+  normalizer_params_path: /home/aistudio/work/extracted/data/Case1/cnf/normalizer_params.pdparams
+  model_path: ./outputs_confild_case1/confild_case1/epoch_99999
 
 DATA:
   max_val: 1.0
   min_val: -1.0
+  train_data: "/home/aistudio/work/extracted/data/Case1/train_data.npy"
+  valid_data: "/home/aistudio/work/extracted/data/Case1/valid_data.npy"

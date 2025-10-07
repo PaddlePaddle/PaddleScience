@@ -115,8 +115,8 @@ Uncondiction_INFER:
   noise_schedule: "cosine"
 
 Data:
-  data_path: ../case1/data.npy
-  coor_path: ../case1/coor.npy
+  data_path: /home/aistudio/work/extracted/data/Case1/data.npy
+  coor_path: /home/aistudio/work/extracted/data/Case1/coords.npy
   normalizer:
     method: "-11"
     dim: 0

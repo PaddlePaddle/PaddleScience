@@ -100,8 +100,8 @@ INFER:
   batch_size: 100
 
 Data:
-  data_path: ../case3/data.npy
-  coor_path: ../case3/coor.npy
+  data_path: /home/aistudio/work/extracted/data/Case3/data.npy
+  coor_path: /home/aistudio/work/extracted/data/Case3/coords.npy
   normalizer:
     method: "-11"
     dim: 0

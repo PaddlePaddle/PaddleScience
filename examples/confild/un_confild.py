@@ -12,25 +12,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# 导入必要的库
+from abc import ABC, abstractmethod
+import copy
 import enum
+import functools
 import math
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+import os
 from omegaconf import DictConfig
-from paddle.distributed import fleet
-from paddle.io import DataLoader
-from paddle.io import DistributedBatchSampler
+from resample import UniformSampler, LossAwareSampler
 
-import ppsci
 from ppsci.arch import UNetModel
-from ppsci.arch import LatentContainer
 from ppsci.arch import SIRENAutodecoder_film
 from ppsci.arch import SpacedDiffusion
 from ppsci.arch import ModelVarType
 from ppsci.arch import ModelMeanType
 from ppsci.utils import logger
+
+
+def mean_flat(tensor):
+    """
+    计算张量除批次维度外所有维度的平均值
+    
+    参数:
+        tensor: 输入张量
+        
+    返回:
+        除批次维度外所有维度的平均值
+    """
+    return tensor.mean(axis=list(range(1, len(tensor.shape))))
+
+
+def normal_kl(mean1, logvar1, mean2, logvar2):
+    """
+    计算两个高斯分布之间的KL散度
+    
+    参数:
+        mean1: 第一个高斯分布的均值
+        logvar1: 第一个高斯分布的对数方差
+        mean2: 第二个高斯分布的均值
+        logvar2: 第二个高斯分布的对数方差
+        
+    返回:
+        两个高斯分布之间的KL散度
+    """
+    return 0.5 * (
+        -1.0
+        + logvar2
+        - logvar1
+        + paddle.exp(logvar1 - logvar2)
+        + ((mean1 - mean2) ** 2) * paddle.exp(-logvar2)
+    )
+
+
+def _extract_into_tensor(arr, timesteps, broadcast_shape):
+    """
+    从一维numpy数组中为一批索引提取值
+    
+    参数:
+        arr: 一维numpy数组
+        timesteps: 时间步索引
+        broadcast_shape: 广播形状
+        
+    返回:
+        提取并广播后的张量
+    """
+    # 修复变量名错误
+    res = paddle.to_tensor(arr)[timesteps].astype(timesteps.dtype)
+    while len(res.shape) < len(broadcast_shape):
+        res = res[..., None]
+    return res.expand(broadcast_shape)
+
+
+# 添加用于存储训练和验证损失的全局变量
+train_losses = []  # 存储训练损失
+valid_losses = []  # 存储验证损失
 
 
 def create_model(
@@ -53,6 +113,32 @@ def create_model(
     use_fp16=False,
     use_new_attention_order=False,
 ):
+    """
+    创建UNet模型
+    
+    参数:
+        image_size: 图像尺寸
+        num_channels: 模型通道数
+        num_res_blocks: 每个下采样级别的残差块数
+        dims: 数据维度(1=1D, 2=2D, 3=3D)
+        out_channels: 输出张量的通道数
+        channel_mult: 每个级别的通道乘数
+        learn_sigma: 是否学习方差
+        class_cond: 是否使用类别条件
+        use_checkpoint: 是否启用梯度检查点
+        attention_resolutions: 应用注意力的下采样率
+        num_heads: 注意力头数
+        num_head_channels: 每个注意力头的通道数
+        num_heads_upsample: 上采样块的注意力头数
+        use_scale_shift_norm: 是否使用FiLM-like调节
+        dropout: Dropout概率
+        resblock_updown: 是否使用残差块进行重采样
+        use_fp16: 是否使用float16精度
+        use_new_attention_order: 是否使用优化的注意力模式
+        
+    返回:
+        UNet模型实例
+    """
     if channel_mult is None:
         if image_size == 512:
             channel_mult = (0.5, 1, 1, 2, 2, 4, 4)
@@ -65,7 +151,9 @@ def create_model(
         else:
             raise ValueError(f"unsupported image size: {image_size}")
     else:
-        channel_mult = tuple(int(ch_mult) for ch_mult in channel_mult.split(","))
+        # 修复channel_mult处理逻辑，确保类型正确
+        if isinstance(channel_mult, str):
+            channel_mult = tuple(int(ch_mult) for ch_mult in channel_mult.split(","))
 
     attention_ds = []
     for res in attention_resolutions.split(","):
@@ -94,21 +182,36 @@ def create_model(
 
 
 class LossType(enum.Enum):
-    MSE = enum.auto()  # use raw MSE loss (and KL when learning variances)
+    """
+    损失类型枚举
+    """
+    MSE = enum.auto()  # 使用原始MSE损失(学习方差时使用KL)
     RESCALED_MSE = (
         enum.auto()
-    )  # use raw MSE loss (with RESCALED_KL when learning variances)
-    KL = enum.auto()  # use the variational lower-bound
-    RESCALED_KL = enum.auto()  # like KL, but rescale to estimate the full VLB
+    )  # 使用原始MSE损失(学习方差时使用RESCALED_KL)
+    KL = enum.auto()  # 使用变分下界
+    RESCALED_KL = enum.auto()  # 类似KL，但重新缩放以估计完整的VLB
 
     def is_vb(self):
+        """
+        判断是否为变分下界损失
+        """
         return self == LossType.KL or self == LossType.RESCALED_KL
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
+    """
+    获取命名的beta调度
+    
+    参数:
+        schedule_name: 调度名称("linear"或"cosine")
+        num_diffusion_timesteps: 扩散步骤数
+        
+    返回:
+        beta值数组
+    """
     if schedule_name == "linear":
-        # Linear schedule from Ho et al, extended to work for any number of
-        # diffusion steps.
+        # Ho等人的线性调度，扩展为适用于任何数量的扩散步骤
         scale = 1000 / num_diffusion_timesteps
         beta_start = scale * 0.0001
         beta_end = scale * 0.02
@@ -125,6 +228,17 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
 
 
 def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
+    """
+    基于alpha_bar创建betas
+    
+    参数:
+        num_diffusion_timesteps: 扩散步骤数
+        alpha_bar: 累积alpha值函数
+        max_beta: beta的最大值
+        
+    返回:
+        beta值数组
+    """
     betas = []
     for i in range(num_diffusion_timesteps):
         t1 = i / num_diffusion_timesteps
@@ -134,6 +248,16 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
 
 
 def space_timesteps(num_timesteps, section_counts):
+    """
+    在基础扩散过程中跳过步骤的时间步空间化
+    
+    参数:
+        num_timesteps: 原始时间步数
+        section_counts: 每个部分的时间步数
+        
+    返回:
+        保留的时间步集合
+    """
     if isinstance(section_counts, str):
         if section_counts.startswith("ddim"):
             desired_count = int(section_counts[len("ddim") :])
@@ -180,6 +304,23 @@ def create_gaussian_diffusion(
     rescale_learned_sigmas=False,
     timestep_respacing="",
 ):
+    """
+    创建高斯扩散过程
+    
+    参数:
+        steps: 扩散步骤数
+        learn_sigma: 是否学习方差
+        sigma_small: 是否使用小方差
+        noise_schedule: 噪声调度("linear"或"cosine")
+        use_kl: 是否使用KL损失
+        predict_xstart: 是否预测初始x
+        rescale_timesteps: 是否重新缩放时间步
+        rescale_learned_sigmas: 是否重新缩放学习的sigma
+        timestep_respacing: 时间步重新间隔
+        
+    返回:
+        高斯扩散过程实例
+    """
     betas = get_named_beta_schedule(noise_schedule, steps)
     if use_kl:
         loss_type = LossType.RESCALED_KL
@@ -210,6 +351,15 @@ def create_gaussian_diffusion(
 
 
 def load_elbow_flow(path):
+    """
+    加载肘管流数据
+    
+    参数:
+        path: 数据文件路径
+        
+    返回:
+        肘管流数据(从索引1开始)
+    """
     return np.load(f"{path}")[1:]
 
 
@@ -219,26 +369,76 @@ def load_channel_flow(
     t_end=1200,
     t_every=1,
 ):
+    """
+    加载通道流数据
+    
+    参数:
+        path: 数据文件路径
+        t_start: 起始时间步
+        t_end: 结束时间步
+        t_every: 采样间隔
+        
+    返回:
+        通道流数据
+    """
     return np.load(f"{path}")[t_start:t_end:t_every]
 
 
 def load_periodic_hill_flow(path):
+    """
+    加载周期性山丘流数据
+    
+    参数:
+        path: 数据文件路径
+        
+    返回:
+        周期性山丘流数据
+    """
     data = np.load(f"{path}")
     return data
 
 
 def load_3d_flow(path):
+    """
+    加载3D流数据
+    
+    参数:
+        path: 数据文件路径
+        
+    返回:
+        3D流数据
+    """
     data = np.load(f"{path}")
     return data
 
 
 class Normalizer_ts(object):
+    """
+    时间序列归一化器
+    """
     def __init__(self, params=[], method="-11", dim=None):
+        """
+        初始化归一化器
+        
+        参数:
+            params: 归一化参数
+            method: 归一化方法("-11", "01", "ms", "none")
+            dim: 归一化维度
+        """
         self.params = params
         self.method = method
         self.dim = dim
 
     def fit_normalize(self, data):
+        """
+        拟合并归一化数据
+        
+        参数:
+            data: 输入数据
+            
+        返回:
+            归一化后的数据
+        """
         assert type(data) == paddle.Tensor
         if len(self.params) == 0:
             if self.method == "-11" or self.method == "01":
@@ -268,16 +468,37 @@ class Normalizer_ts(object):
         return self.fnormalize(data, self.params, self.method)
 
     def normalize(self, new_data):
+        """
+        归一化新数据
+        
+        参数:
+            new_data: 新数据
+            
+        返回:
+            归一化后的数据
+        """
         if not new_data.place == self.params[0].place:
             self.params = self.params[0], self.params[1]
         return self.fnormalize(new_data, self.params, self.method)
 
     def denormalize(self, new_data_norm):
+        """
+        反归一化数据
+        
+        参数:
+            new_data_norm: 归一化后的数据
+            
+        返回:
+            反归一化后的数据
+        """
         if not new_data_norm.place == self.params[0].place:
             self.params = self.params[0], self.params[1]
         return self.fdenormalize(new_data_norm, self.params, self.method)
 
     def get_params(self):
+        """
+        获取归一化参数
+        """
         if self.method == "ms":
             print("returning mean and std")
         elif self.method == "01":
@@ -290,6 +511,17 @@ class Normalizer_ts(object):
 
     @staticmethod
     def fnormalize(data, params, method):
+        """
+        执行归一化
+        
+        参数:
+            data: 输入数据
+            params: 归一化参数
+            method: 归一化方法
+            
+        返回:
+            归一化后的数据
+        """
         if method == "-11":
             return (data - params[1]) / (
                 params[0] - params[1]
@@ -305,6 +537,17 @@ class Normalizer_ts(object):
 
     @staticmethod
     def fdenormalize(data_norm, params, method):
+        """
+        执行反归一化
+        
+        参数:
+            data_norm: 归一化后的数据
+            params: 归一化参数
+            method: 归一化方法
+            
+        返回:
+            反归一化后的数据
+        """
         if method == "-11":
             return (data_norm + 1) / 2 * (params[0] - params[1]) + params[1]
         elif method == "01":
@@ -318,33 +561,37 @@ class Normalizer_ts(object):
 
 
 def create_slim(cfg):
-    world_size = cfg.multiGPU
+    """
+    创建SLIM模型
+    
+    参数:
+        cfg: 配置对象
+        
+    返回:
+        CNF模型、输入归一化器、输出归一化器和坐标
+    """
+    world_size = cfg.CNF.multiGPU
     ###### read data - fois ######
-    if cfg.Data.load_data_fn == "load_3d_flow":
-        fois = load_3d_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_elbow_flow":
-        fois = load_elbow_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_channel_flow":
-        fois = load_channel_flow(cfg.Data.data_path)
-    elif cfg.Data.load_data_fn == "load_periodic_hill_flow":
-        fois = load_periodic_hill_flow(cfg.Data.data_path)
+    if cfg.CNF.load_data_fn == "load_3d_flow":
+        fois = load_3d_flow(cfg.CNF.data_path)
+    elif cfg.CNF.load_data_fn == "load_elbow_flow":
+        fois = load_elbow_flow(cfg.CNF.data_path)
+    elif cfg.CNF.load_data_fn == "load_channel_flow":
+        fois = load_channel_flow(cfg.CNF.data_path)
+    elif cfg.CNF.load_data_fn == "load_periodic_hill_flow":
+        fois = load_periodic_hill_flow(cfg.CNF.data_path)
     else:
-        fois = np.load(cfg.Data.data_path)
+        fois = np.load(cfg.CNF.data_path)
 
     # 计算空间形状和轴
     spatio_shape = fois.shape[1:-1]
-    spatio_axis = list(
-        range(
-            fois.ndim if isinstance(fois, np.ndarray) else fois.dim()
-        )
-    )[1:-1]
 
     ###### read data - coordinate ######
-    if cfg.Data.coor_path is None:
+    if cfg.CNF.coor_path is None:
         coord = [np.linspace(0, 1, i) for i in spatio_shape]
         coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
     else:
-        coord = np.load(cfg.Data.coor_path)
+        coord = np.load(cfg.CNF.coor_path)
     coord = coord.astype("float32")
     fois = fois.astype("float32")
 
@@ -358,21 +605,327 @@ def create_slim(cfg):
     N_samples = fois.shape[0]
 
     ###### normalizer ######
-    in_normalizer = Normalizer_ts(**cfg.Data.normalizer)
-    out_normalizer = Normalizer_ts(**cfg.Data.normalizer)
+    in_normalizer = Normalizer_ts(**cfg.CNF.normalizer)
+    out_normalizer = Normalizer_ts(**cfg.CNF.normalizer)
     # 使用最新的模型参数
-    norm_params = paddle.load(f"{hyper_para.save_path}/normalizer_params.pt")
+    norm_params = paddle.load(cfg.CNF.normalizer_params_path)
     in_normalizer.params = norm_params["x_normalizer_params"]
     out_normalizer.params = norm_params["y_normalizer_params"]
 
-    cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
-    
-    normed_coords = in_normalizer.normalize(coord)# 训练集就是测试集
+    cnf_model = SIRENAutodecoder_film(**cfg.CNF.CONFILD)
 
     return cnf_model, in_normalizer, out_normalizer, coord
 
 
+def dl_iter(dl):
+    """
+    数据加载器迭代器
+    
+    参数:
+        dl: 数据加载器
+        
+    返回:
+        无限迭代数据加载器
+    """
+    while True:
+        yield from dl 
+
+
+def train(cfg):
+    """
+    训练函数
+    
+    参数:
+        cfg: 配置对象
+    """
+    # create parameters
+    batch_size = cfg.TRAIN.batch_size
+    test_batch_size = cfg.TRAIN.test_batch_size
+    ema_rate = cfg.TRAIN.ema_rate
+    ema_rate = (
+            [ema_rate]
+            if isinstance(ema_rate, float)
+            else [float(x) for x in ema_rate.split(",")]
+        )
+
+    lr_anneal_steps = cfg.TRAIN.lr_anneal_steps
+    final_lr = cfg.TRAIN.final_lr
+    step = 0
+    resume_step = 0
+    microbatch = cfg.TRAIN.microbatch if cfg.TRAIN.microbatch > 0 else batch_size
+
+    ## Data Preprocessing
+    train_data = np.load(cfg.DATA.train_data)
+    valid_data = np.load(cfg.DATA.valid_data)
+    max_val, min_val = np.max(train_data, keepdims=True), np.min(train_data, keepdims=True)
+    norm_train_data = -1 + (train_data - min_val)*2. / (max_val - min_val)
+    norm_valid_data = -1 + (valid_data - min_val)*2. / (max_val - min_val)
+
+    norm_train_data = paddle.to_tensor(norm_train_data[:, None, ...])
+    norm_valid_data = paddle.to_tensor(norm_valid_data[:, None, ...])
+
+    dl_train = dl_iter(paddle.io.DataLoader(paddle.io.TensorDataset(norm_train_data), batch_size=batch_size, shuffle=True))
+    dl_valid = dl_iter(paddle.io.DataLoader(paddle.io.TensorDataset(norm_valid_data), batch_size=test_batch_size, shuffle=True))
+
+    unet_model = create_model(image_size=cfg.UNET.image_size,
+                        num_channels= cfg.UNET.num_channels,
+                        num_res_blocks= cfg.UNET.num_res_blocks,
+                        num_heads=cfg.UNET.num_heads,
+                        num_head_channels=cfg.UNET.num_head_channels,
+                        attention_resolutions=cfg.UNET.attention_resolutions,
+                        channel_mult=cfg.UNET.channel_mult
+                        )
+    diff_model = create_gaussian_diffusion(steps=cfg.Diff.steps,
+                                        noise_schedule=cfg.Diff.noise_schedule
+                                        )
+
+    # 初始化AdamW优化器
+    opt = paddle.optimizer.AdamW(
+        parameters=unet_model.parameters(), learning_rate=cfg.TRAIN.lr, weight_decay=cfg.TRAIN.weight_decay
+    )
+    
+    schedule_sampler = UniformSampler(diff_model)
+
+    # 初始化EMA参数
+    ema_params = [
+        copy.deepcopy(unet_model.parameters())
+        for _ in range(len(ema_rate))
+    ]
+    
+    # 清空损失记录
+    global train_losses, valid_losses
+    train_losses.clear()
+    valid_losses.clear()
+
+    while (
+            not lr_anneal_steps
+            or step + resume_step < lr_anneal_steps
+        ):
+            cond = {}
+            # 获取下一个训练批次和验证批次的数据
+            train_batch, = next(dl_train)
+            valid_batch, = next(dl_valid)
+            # 前向传播
+            unet_model.train()
+            unet_model.clear_grad()
+            
+            for i in range(0, train_batch.shape[0], microbatch):
+                # 获取当前微批次数据
+                micro = train_batch[i : i + microbatch]
+                micro_cond = {
+                    k: v[i : i + microbatch]
+                    for k, v in cond.items()
+                }
+
+                # 从调度采样器中采样时间步
+                t, weights = schedule_sampler.sample(micro.shape[0])
+
+                # 创建部分应用的损失计算函数
+                compute_losses = functools.partial(
+                    diff_model.training_losses,
+                    unet_model,
+                    micro,
+                    t,
+                    model_kwargs=micro_cond
+                )
+
+                # 计算损失
+                losses = compute_losses()
+                # 添加训练标记
+                losses["valid"] = False
+
+                # 如果使用损失感知采样器，则更新本地损失
+                if isinstance(schedule_sampler, LossAwareSampler):
+                    schedule_sampler.update_with_local_losses(
+                        t, losses["loss"].detach()
+                    )
+
+                # 计算加权平均损失
+                loss = (losses["loss"] * weights).mean()
+                
+                # 记录损失字典
+                log_loss_dict(
+                    diff_model, t, {k: v * weights for k, v in losses.items()}, is_valid=False
+                )
+                
+                # 反向传播
+                # unet_model.backward(loss)
+                loss.backward()
+
+            # 不计算梯度，节省内存
+            with paddle.no_grad():
+                # 同样分解成微批次处理
+                for i in range(0, valid_batch.shape[0], microbatch):
+                    # 获取当前微批次数据
+                    micro = valid_batch[i : i + microbatch]
+                    micro_cond = {
+                    k: v[i : i + microbatch]
+                    for k, v in cond.items()
+                    }
+                    
+                    # 判断是否为最后一个微批次
+                    last_batch = (i + microbatch) >= valid_batch.shape[0]
+                    
+                    # 采样时间步
+                    t, weights = schedule_sampler.sample(micro.shape[0])
+
+                    # 创建部分应用的损失计算函数
+                    compute_losses = functools.partial(
+                        diff_model.training_losses,
+                        unet_model,
+                        micro,
+                        t,
+                        model_kwargs=micro_cond
+                    )
+
+                    # 计算验证损失
+                    losses = compute_losses()
+                    # 添加验证标记
+                    losses["valid"] = True
+
+                    # 记录验证损失
+                    log_loss_dict(
+                        diff_model, t, {k: v * weights for k, v in losses.items()}, is_valid=True
+                    )
+
+            grad_norm, param_norm = _compute_norms(unet_model)
+            opt.step()
+            # took_step = unet_model.optimize(opt)
+            # 更新ema参数
+            _update_ema(ema_rate, ema_params, unet_model.parameters())
+            # 更新学习率
+            _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, cfg.TRAIN.lr)
+            
+            step += 1
+            
+            # 每100步打印一次训练和验证损失
+            if step % 100 == 0:
+                if len(train_losses) > 0 and len(valid_losses) > 0:
+                    print(f"Step {step}: Train Loss: {train_losses[-1]:.6f}, Valid Loss: {valid_losses[-1]:.6f}")
+    
+    # 保存模型
+    paddle.save(unet_model.state_dict(), "unet.pdparams")
+    
+    # 绘制训练和验证损失曲线
+    plot_losses()
+
+
+def plot_losses():
+    """
+    绘制训练和验证损失曲线
+    """
+    if len(train_losses) == 0 or len(valid_losses) == 0:
+        print("没有足够的数据来绘制损失曲线")
+        return
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_losses, label='Training Loss', alpha=0.8)
+    plt.plot(valid_losses, label='Validation Loss', alpha=0.8)
+    plt.xlabel('Training Steps')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    
+    # 保存图像
+    plt.savefig('loss_curve.png', dpi=300, bbox_inches='tight')
+    print("损失曲线已保存为 loss_curve.png")
+    
+    # 显示图像
+    plt.show()
+
+
+def _compute_norms(model, grad_scale=1.0):
+    """
+    计算模型参数和梯度的范数
+    
+    参数:
+        model: 模型
+        grad_scale: 梯度缩放因子
+        
+    返回:
+        梯度范数和参数范数
+    """
+    grad_norm = 0.0
+    param_norm = 0.0
+    for p in model.parameters():
+        with paddle.no_grad():
+            param_norm += paddle.norm(p, p=2, dtype=paddle.float32).item() ** 2
+            if p.grad is not None:
+                grad_norm += paddle.norm(p.grad, p=2, dtype=paddle.float32).item() ** 2
+    return np.sqrt(grad_norm) / grad_scale, np.sqrt(param_norm)
+
+
+def _update_ema(ema_rate, ema_params, source_params, rate=0.99):
+        """
+        更新EMA(指数移动平均)参数
+        EMA有助于提高生成质量，减少模型权重噪声
+        
+        参数:
+            ema_rate: EMA衰减率
+            ema_params: EMA参数
+            source_params: 源参数
+            rate: 衰减率
+        """
+        for rate, target_params in zip(ema_rate, ema_params):
+            for targ, src in zip(target_params, source_params):
+                updated = targ.detach() * rate + src * (1 - rate)
+                targ.set_value(updated)
+
+
+def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
+        """
+        学习率退火调整
+        根据训练进度线性降低学习率
+        
+        参数:
+            lr_anneal_steps: 学习率退火步数
+            step: 当前步数
+            resume_step: 恢复步数
+            opt: 优化器
+            final_lr: 最终学习率
+            lr: 初始学习率
+        """
+        if not lr_anneal_steps:
+            return
+        frac_done = (step + resume_step) / lr_anneal_steps
+        new_lr = final_lr * (frac_done) + lr * (1 - frac_done)
+        opt.set_lr(new_lr)
+
+
+def log_loss_dict(diffusion, ts, losses, is_valid=False):
+    """
+    记录损失字典信息
+    
+    参数:
+        diffusion: 扩散模型对象
+        ts: 时间步张量
+        losses: 损失字典
+        is_valid: 是否为验证损失
+    """
+    for key, values in losses.items():
+        logger.logkv_mean(key, values.mean().item())
+        # 记录分位数（特别是四个四分位数）
+        for sub_t, sub_loss in zip(ts.cpu().numpy(), values.detach().cpu().numpy()):
+            quartile = int(4 * sub_t / diffusion.num_timesteps)
+            logger.logkv_mean(f"{key}_q{quartile}", sub_loss)
+        
+        # 记录训练和验证损失
+        if key == "loss":
+            if is_valid:
+                valid_losses.append(values.mean().item())
+            else:
+                train_losses.append(values.mean().item())
+
+
 def evaluate(cfg):
+    """
+    评估函数
+    
+    参数:
+        cfg: 配置对象
+    """
     ## Create model and diffusion
     unet_model = create_model(image_size=cfg.UNET.image_size,
                             num_channels=cfg.UNET.num_channels,
@@ -391,13 +944,13 @@ def evaluate(cfg):
     sample_fn = diff_model.p_sample_loop
     gen_latents = sample_fn(unet_model, (cfg.EVAL.test_batch_size, 1, cfg.EVAL.time_length, cfg.EVAL.latent_length))[:, 0]
 
-    max_val, min_val = np.load(cfg.DATA.max_val), np.load(cfg.DATA.min_val)
+    max_val, min_val = cfg.DATA.max_val, cfg.DATA.min_val#np.load(cfg.DATA.max_val), np.load(cfg.DATA.min_val)
     max_val, min_val = paddle.to_tensor(max_val), paddle.to_tensor(min_val)
     gen_latents = (gen_latents + 1)*(max_val - min_val)/2. + min_val
 
     # 获取模型
     nf, in_normalizer, out_normalizer, coord = create_slim(cfg)
-    nf.set_state_dict(paddle.load(cfg.CONFILD.ema_path))
+    nf.set_state_dict(paddle.load(cfg.CNF.model_path))
     coord = in_normalizer.normalize(coord)
 
     batch_size = 1 # if you are limited by your GPU Memory, please change the batch_size variable accordingly
@@ -412,35 +965,36 @@ def evaluate(cfg):
                 new_latents = new_latents[:, None, None]
             else:
                 new_latents = new_latents[:, None]
-            out = nf(coord.to(new_latents.device), new_latents)
+            input_data = {
+                "confild_x": coord,
+                "latent_z": new_latents
+            }
+            out = nf(input_data)["confild_output"]
             out = out_normalizer.denormalize(out)
             gen_fields.append(out.detach().cpu().numpy())
 
     gen_fields = np.concatenate(gen_fields)
 
-    np.save(inp.save_path, gen_fields)
-    
-    # 绘制结果
+    np.save(cfg.save_path, gen_fields)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="un_confild_case1.yaml")
 def main(cfg: DictConfig):
-    if cfg.mode == "eval":
+    """
+    主函数
+    
+    参数:
+        cfg: 配置对象
+    """
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
         evaluate(cfg)
     else:
         raise ValueError(
-            f"cfg.mode should in ['eval'], but got '{cfg.mode}'"
+            f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'"
         )
 
 
 if __name__ == "__main__":
-    # main()
-    # 构建create_model
-    my_model = create_model(image_size=128,
-                           num_channels=128,
-                           num_res_blocks=2,
-                           num_heads=4,
-                           num_head_channels=64,
-                           attention_resolutions="32,16,8")
-    #保存参数
-    paddle.save(my_model.state_dict(), "my_model.pdparams")
+    main()
