@@ -773,50 +773,133 @@ class GaussianDiffusion:
                 yield out
                 img = out["sample"]
 
-    def training_losses(self, model, x_start, t, noise=None):
+    def training_losses(self, model, x_start, t,  model_kwargs=None, noise=None, valid=False):
+        if model_kwargs is None:
+            model_kwargs = {}
         if noise is None:
             noise = paddle.randn(x_start.shape)
                 
         x_t = self.q_sample(x_start=x_start, t=t, noise=noise)
+        # terms = {}
+        # model_output = model(x_t, t)
             
-        model_output = model(x_t, t)
-            
-        # Handle different model outputs
-        if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
-            assert model_output.shape[1] == 2 * x_start.shape[1], "Output channels must be 2x input channels"
-            model_output, model_var_values = paddle.split(model_output, 2, axis=1)
+        # # Handle different model outputs
+        # if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
+        #     assert model_output.shape[1] == 2 * x_start.shape[1], "Output channels must be 2x input channels"
+        #     model_output, model_var_values = split(model_output, 2, axis=1)
             
         # Calculate the MSE loss for epsilon prediction
-        target = noise
-        mse_loss = mean_flat((target - model_output) ** 2)
+        terms = {}
+        if self.loss_type == LossType.KL or self.loss_type == LossType.RESCALED_KL:
+            terms["loss"] = self._vb_terms_bpd(
+                model=model,
+                x_start=x_start,
+                x_t=x_t,
+                t=t,
+                clip_denoised=True,
+                model_kwargs=model_kwargs,
+            )["output"]
+            if self.loss_type == LossType.RESCALED_KL:
+                terms["loss"] *= self.num_timesteps
+        elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
+            model_output = model(x_t, self._scale_timesteps(t), **model_kwargs)
+
+            if self.model_var_type in [
+                ModelVarType.LEARNED,
+                ModelVarType.LEARNED_RANGE,
+            ]:
+                B, C = x_t.shape[:2]
+                assert model_output.shape == (B, C * 2, *x_t.shape[2:])
+                model_output, model_var_values = split(model_output, C, axis=1)
+                # Learn the variance using the variational bound, but don't let
+                # it affect our mean prediction.
+                frozen_out = paddle.cat([model_output.detach(), model_var_values], dim=1)
+                terms["vb"] = self._vb_terms_bpd(
+                    model=lambda *args, r=frozen_out: r,
+                    x_start=x_start,
+                    x_t=x_t,
+                    t=t,
+                    clip_denoised=True,
+                )["output"]
+                if self.loss_type == LossType.RESCALED_MSE:
+                    # Divide by 1000 for equivalence with initial implementation.
+                    # Without a factor of 1/1000, the VB term hurts the MSE term.
+                    terms["vb"] *= self.num_timesteps / 1000.0
+
+            target = {
+                ModelMeanType.PREVIOUS_X: self.q_posterior_mean_variance(
+                    x_start=x_start, x_t=x_t, t=t
+                )[0],
+                ModelMeanType.START_X: x_start,
+                ModelMeanType.EPSILON: noise,
+            }[self.model_mean_type]
+            assert model_output.shape == target.shape == x_start.shape
             
-        # Calculate the KL divergence loss if needed
-        vb_losses = 0
-        if self.loss_type.is_vb():
-            # Compute the KL divergence between q and p distributions
-            true_mean, true_log_variance_clipped, pred_xstart = self.q_posterior_mean_variance(
-                x_start=x_start, x_t=x_t, t=t
-            )
-            p_mean, p_log_variance_clipped, _ = self.p_mean_variance(
-                model, x_t, t, clip_denoised=False, denoised_fn=None
-            )
-                
-            kl = normal_kl(true_mean, true_log_variance_clipped, p_mean, p_log_variance_clipped)
-            vb_losses = mean_flat(kl)
-                
-        # Choose the loss based on loss_type
-        if self.loss_type == LossType.MSE:
-            losses = mse_loss
-        elif self.loss_type == LossType.RESCALED_MSE:
-            losses = mse_loss * self.num_timesteps
-        elif self.loss_type == LossType.KL:
-            losses = vb_losses
-        elif self.loss_type == LossType.RESCALED_KL:
-            losses = vb_losses * self.num_timesteps
+            if valid == False:
+                terms["mse"] = mean_flat((target - model_output) ** 2)
+                if "vb" in terms:
+                    terms["loss"] = terms["mse"] + terms["vb"]
+                else:
+                    terms["loss"] = terms["mse"]
+            else:
+                terms["valid_mse"] = mean_flat((target - model_output) ** 2)
         else:
-            raise NotImplementedError(f"Unknown loss type: {self.loss_type}")
-                
-        return {"loss": losses.mean()}
+            raise NotImplementedError(self.loss_type)
+
+        return terms
+
+    def _vb_terms_bpd(
+        self, model, x_start, x_t, t, clip_denoised=True, model_kwargs=None
+    ):
+        true_mean, _, true_log_variance_clipped = self.q_posterior_mean_variance(
+            x_start=x_start, x_t=x_t, t=t
+        )
+        out = self.p_mean_variance(
+            model, x_t, t, clip_denoised=clip_denoised, model_kwargs=model_kwargs
+        )
+        kl = normal_kl(
+            true_mean, true_log_variance_clipped, out["mean"], out["log_variance"]
+        )
+        kl = mean_flat(kl) / np.log(2.0)
+
+        decoder_nll = -discretized_gaussian_log_likelihood(
+            x_start, means=out["mean"], log_scales=0.5 * out["log_variance"]
+        )
+        assert decoder_nll.shape == x_start.shape
+        decoder_nll = mean_flat(decoder_nll) / np.log(2.0)
+
+        # At the first timestep return the decoder NLL,
+        # otherwise return KL(q(x_{t-1}|x_t,x_0) || p(x_{t-1}|x_t))
+        output = paddle.where((t == 0), decoder_nll, kl)
+        return {"output": output, "pred_xstart": out["pred_xstart"]}
+
+
+def discretized_gaussian_log_likelihood(x, *, means, log_scales):
+    assert x.shape == means.shape == log_scales.shape
+    centered_x = x - means
+    inv_stdv = paddle.exp(-log_scales)
+    plus_in = inv_stdv * (centered_x + 1.0 / 255.0)
+    cdf_plus = approx_standard_normal_cdf(plus_in)
+    min_in = inv_stdv * (centered_x - 1.0 / 255.0)
+    cdf_min = approx_standard_normal_cdf(min_in)
+    log_cdf_plus = paddle.log(cdf_plus.clamp(min=1e-12))
+    log_one_minus_cdf_min = paddle.log((1.0 - cdf_min).clamp(min=1e-12))
+    cdf_delta = cdf_plus - cdf_min
+    log_probs = paddle.where(
+        x < -0.999,
+        log_cdf_plus,
+        paddle.where(x > 0.999, log_one_minus_cdf_min, paddle.log(cdf_delta.clamp(min=1e-12))),
+    )
+    assert log_probs.shape == x.shape
+    return log_probs
+
+
+def approx_standard_normal_cdf(x):
+    """
+    A fast approximation of the cumulative distribution function of the
+    standard normal.
+    """
+    return 0.5 * (1.0 + paddle.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * paddle.pow(x, 3))))
 
 
 class LossType(enum.Enum):
@@ -999,7 +1082,7 @@ class ResBlock(TimestepBlock):
             emb_out = emb_out[..., None]
         if self.use_scale_shift_norm:
             out_norm, out_rest = self.out_layers[0], self.out_layers[1:]
-            scale, shift = paddle.chunk(x=emb_out, chunks=2, axis=1)
+            (scale, shift) = paddle.chunk(x=emb_out, chunks=2, axis=1)
             h = out_norm(h) * (1 + scale) + shift
             h = out_rest(h)
         else:
@@ -1096,7 +1179,8 @@ class QKVAttentionLegacy(paddle.nn.Layer):
         bs, width, length = tuple(qkv.shape)
         assert width % (3 * self.n_heads) == 0
         ch = width // (3 * self.n_heads)
-        q, k, v = qkv.reshape((bs * self.n_heads, ch * 3, length)).split(ch, axis=1)
+        # split_size: 为 int 时 torch 表示块的大小，paddle 表示块的个数
+        (q, k, v) = split(qkv.reshape((bs * self.n_heads, ch * 3, length)), ch, 1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = paddle.einsum("bct,bcs->bts", q * scale, k * scale)
         weight = paddle.nn.functional.softmax(
@@ -1119,7 +1203,7 @@ class QKVAttention(paddle.nn.Layer):
         bs, width, length = tuple(qkv.shape)
         assert width % (3 * self.n_heads) == 0
         ch = width // (3 * self.n_heads)
-        q, k, v = qkv.chunk(chunks=3, axis=1)
+        (q, k, v) = qkv.chunk(chunks=3, axis=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = paddle.einsum(# 非复数
             "bct,bcs->bts",
@@ -1184,12 +1268,18 @@ class CheckpointFunction(paddle.autograd.PyLayer):
             inputs=ctx.input_tensors + ctx.input_params,
             grad_outputs=output_grads,
             allow_unused=True,
-            retain_graph=True, create_graph=False
+            # retain_graph=True, create_graph=False
         )
         del ctx.input_tensors
         del ctx.input_params
         del output_tensors
-        return [None, None] + input_grads
+        
+        # 确保将input_grads转换为元组，然后与(None, None)连接
+        # PyLayer要求backward方法返回元组类型
+        # if input_grads:
+        return tuple(input_grads)
+        # else:
+            # return (None, None)
 
 
 def stop_gradient(input, stop):

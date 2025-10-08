@@ -32,6 +32,7 @@ from ppsci.arch import SpacedDiffusion
 from ppsci.arch import ModelVarType
 from ppsci.arch import ModelMeanType
 from ppsci.utils import logger
+from ppsci.arch import LossType
 
 
 def mean_flat(tensor):
@@ -181,22 +182,22 @@ def create_model(
     )
 
 
-class LossType(enum.Enum):
-    """
-    损失类型枚举
-    """
-    MSE = enum.auto()  # 使用原始MSE损失(学习方差时使用KL)
-    RESCALED_MSE = (
-        enum.auto()
-    )  # 使用原始MSE损失(学习方差时使用RESCALED_KL)
-    KL = enum.auto()  # 使用变分下界
-    RESCALED_KL = enum.auto()  # 类似KL，但重新缩放以估计完整的VLB
+# class LossType(enum.Enum):
+#     """
+#     损失类型枚举
+#     """
+#     MSE = enum.auto()  # 使用原始MSE损失(学习方差时使用KL)
+#     RESCALED_MSE = (
+#         enum.auto()
+#     )  # 使用原始MSE损失(学习方差时使用RESCALED_KL)
+#     KL = enum.auto()  # 使用变分下界
+#     RESCALED_KL = enum.auto()  # 类似KL，但重新缩放以估计完整的VLB
 
-    def is_vb(self):
-        """
-        判断是否为变分下界损失
-        """
-        return self == LossType.KL or self == LossType.RESCALED_KL
+#     def is_vb(self):
+#         """
+#         判断是否为变分下界损失
+#         """
+#         return self == LossType.KL or self == LossType.RESCALED_KL
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
@@ -570,7 +571,6 @@ def create_slim(cfg):
     返回:
         CNF模型、输入归一化器、输出归一化器和坐标
     """
-    world_size = cfg.CNF.multiGPU
     ###### read data - fois ######
     if cfg.CNF.load_data_fn == "load_3d_flow":
         fois = load_3d_flow(cfg.CNF.data_path)
@@ -703,13 +703,19 @@ def train(cfg):
         ):
             cond = {}
             # 获取下一个训练批次和验证批次的数据
-            train_batch, = next(dl_train)
-            valid_batch, = next(dl_valid)
+            train_batch = next(dl_train)
+            valid_batch = next(dl_valid)
             # 前向传播
             unet_model.train()
-            unet_model.clear_grad()
+            # def zero_grad(model_params):
+            for param in unet_model.parameters():
+                # Taken from https://pytorch.org/docs/stable/_modules/torch/optim/optimizer.html#Optimizer.add_param_group
+                if param.grad is not None:
+                    param.grad.detach_()
+                    param.grad.zero_()
+                    unet_model.clear_grad()
             
-            for i in range(0, train_batch.shape[0], microbatch):
+            for i in range(0, len(train_batch), microbatch):
                 # 获取当前微批次数据
                 micro = train_batch[i : i + microbatch]
                 micro_cond = {
@@ -718,13 +724,14 @@ def train(cfg):
                 }
 
                 # 从调度采样器中采样时间步
-                t, weights = schedule_sampler.sample(micro.shape[0])
+                t, weights = schedule_sampler.sample(len(micro))
 
                 # 创建部分应用的损失计算函数
+                new_micro = paddle.to_tensor(micro)
                 compute_losses = functools.partial(
                     diff_model.training_losses,
                     unet_model,
-                    micro,
+                    new_micro,
                     t,
                     model_kwargs=micro_cond
                 )
@@ -755,7 +762,7 @@ def train(cfg):
             # 不计算梯度，节省内存
             with paddle.no_grad():
                 # 同样分解成微批次处理
-                for i in range(0, valid_batch.shape[0], microbatch):
+                for i in range(0, len(valid_batch), microbatch):
                     # 获取当前微批次数据
                     micro = valid_batch[i : i + microbatch]
                     micro_cond = {
@@ -764,18 +771,20 @@ def train(cfg):
                     }
                     
                     # 判断是否为最后一个微批次
-                    last_batch = (i + microbatch) >= valid_batch.shape[0]
+                    last_batch = (i + microbatch) >= len(valid_batch)
                     
                     # 采样时间步
-                    t, weights = schedule_sampler.sample(micro.shape[0])
+                    t, weights = schedule_sampler.sample(len(micro))
 
                     # 创建部分应用的损失计算函数
+                    new_micro = paddle.to_tensor(micro)
                     compute_losses = functools.partial(
                         diff_model.training_losses,
                         unet_model,
-                        micro,
+                        new_micro,
                         t,
-                        model_kwargs=micro_cond
+                        model_kwargs=micro_cond,
+                        valid=True
                     )
 
                     # 计算验证损失
@@ -896,7 +905,7 @@ def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
 
 def log_loss_dict(diffusion, ts, losses, is_valid=False):
     """
-    记录损失字典信息
+    记录损失字典的日志
     
     参数:
         diffusion: 扩散模型对象
@@ -905,11 +914,12 @@ def log_loss_dict(diffusion, ts, losses, is_valid=False):
         is_valid: 是否为验证损失
     """
     for key, values in losses.items():
-        logger.logkv_mean(key, values.mean().item())
+        # 使用logger.info替代logger.logkv_mean记录平均损失值
+        logger.info(f"{key}: {values.mean().item():.6f}")
         # 记录分位数（特别是四个四分位数）
         for sub_t, sub_loss in zip(ts.cpu().numpy(), values.detach().cpu().numpy()):
             quartile = int(4 * sub_t / diffusion.num_timesteps)
-            logger.logkv_mean(f"{key}_q{quartile}", sub_loss)
+            logger.info(f"{key}_q{quartile}: {sub_loss:.6f}")
         
         # 记录训练和验证损失
         if key == "loss":

@@ -29,6 +29,7 @@ mode: eval # running mode: infer
 seed: 2025
 output_dir: ${hydra:run.dir}
 log_freq: 20
+save_path: ${output_dir}/result.npy
 
 TRAIN:
   batch_size : 16
@@ -49,6 +50,7 @@ EVAL:
   lr_anneal_steps: 0
   time_length : 256
   latent_length : 256
+  test_batch_size: 16
 
 UNET:
   image_size : 256
