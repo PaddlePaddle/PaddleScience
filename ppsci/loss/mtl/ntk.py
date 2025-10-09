@@ -32,7 +32,7 @@ class NTK(base.LossAggregator):
     reference: [https://github.com/PredictiveIntelligenceLab/jaxpi/blob/main/jaxpi/models.py#L148-L158](https://github.com/PredictiveIntelligenceLab/jaxpi/blob/main/jaxpi/models.py#L148-L158)
 
     Attributes:
-        should_persist(bool): Whether to persist the loss aggregator when saving.
+        should_persist (bool): Whether to persist the loss aggregator when saving.
             Those loss aggregators with parameters and/or buffers should be persisted.
 
     Args:

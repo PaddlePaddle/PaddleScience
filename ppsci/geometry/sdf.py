@@ -140,7 +140,7 @@ def signed_distance_field(
 
     Args:
         mesh_vertices (list[tuple[float, float, float]]): List of vertices defining the mesh.
-        mesh_indices (list[tuple[int, int, int]]): List of indices defining the triangles of the mesh.
+        mesh_indices (ndarray): List of indices defining the triangles of the mesh.
         input_points (list[tuple[float, float, float]]): List of input points for which to compute the SDF.
         max_dist (float, optional): Maximum distance within which to search for
             the closest point on the mesh. Default is 1e8.
