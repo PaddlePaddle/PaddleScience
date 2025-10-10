@@ -1,6 +1,5 @@
 # PaddleScience
 
-clean-branch
 
 <!-- --8<-- [start:status] -->
 ![paddlescience_icon](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2Fpaddlescience_icon.png)
