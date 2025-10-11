@@ -62,10 +62,12 @@ from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
 from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.tadf import TADF  # isort:skip
 from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
 from ppsci.arch.regpointnet import RegPointNet  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
+from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -112,6 +114,7 @@ __all__ = [
     "RosslerEmbedding",
     "SFNONet",
     "SPINN",
+    "TADF",
     "TFNO1dNet",
     "TFNO2dNet",
     "TFNO3dNet",

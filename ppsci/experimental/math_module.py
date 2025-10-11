@@ -470,8 +470,8 @@ def montecarlo_integrate(
     fn: Callable,
     dim: int,
     N: int = 1000,
-    integration_domain: Union[List[List[float]], paddle.Tensor] = None,
-    seed: int = None,
+    integration_domain: Optional[Union[List[List[float]], paddle.Tensor]] = None,
+    seed: Optional[int] = None,
 ) -> paddle.Tensor:
     """Integrates the passed function on the passed domain using vanilla Monte
     Carlo Integration.
@@ -480,9 +480,9 @@ def montecarlo_integrate(
         fn (Callable): The function to integrate over.
         dim (int): Dimensionality of the function's domain over which to
             integrate.
-        N (Optional[int]): Number of sample points to use for the integration.
+        N (int, optional): Number of sample points to use for the integration.
             Defaults to 1000.
-        integration_domain (Union[List[List[float]], paddle.Tensor]): Integration
+        integration_domain (Optional[Union[List[List[float]], paddle.Tensor]]): Integration
             domain, e.g. [[-1,1],[0,1]]. Defaults to [-1,1]^dim.
         seed (Optional[int]): Random number generation seed to the sampling
             point creation, only set if provided. Defaults to None.

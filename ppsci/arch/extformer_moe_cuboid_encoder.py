@@ -268,14 +268,14 @@ def update_cuboid_size_shift_size(data_shape, cuboid_size, shift_size, strategy)
     """Update the cuboid_size and shift_size
 
     Args:
-        data_shape (Tuple[int,...]): The shape of the data.
-        cuboid_size (Tuple[int,...]): Size of the cuboid.
-        shift_size (Tuple[int,...]): Size of the shift.
+        data_shape (Tuple[int, ...]): The shape of the data.
+        cuboid_size (Tuple[int, ...]): Size of the cuboid.
+        shift_size (Tuple[int, ...]): Size of the shift.
         strategy (str): The strategy of attention.
 
     Returns:
-        new_cuboid_size (Tuple[int,...]): Size of the cuboid.
-        new_shift_size (Tuple[int,...]): Size of the shift.
+        new_cuboid_size (Tuple[int, ...]): Size of the cuboid.
+        new_shift_size (Tuple[int, ...]): Size of the shift.
     """
 
     new_cuboid_size = list(cuboid_size)
@@ -295,8 +295,8 @@ def cuboid_reorder(data, cuboid_size, strategy):
 
     Args:
         data (paddle.Tensor): The input data.
-        cuboid_size (Tuple[int,...]): The size of the cuboid.
-        strategy (Tuple[int,...]): The cuboid strategy.
+        cuboid_size (Tuple[int, ...]): The size of the cuboid.
+        strategy (Tuple[int, ...]): The cuboid strategy.
 
     Returns:
         reordered_data (paddle.Tensor): Shape will be (B, num_cuboids, bT * bH * bW, C).
@@ -437,9 +437,9 @@ def cuboid_reorder_reverse(data, cuboid_size, strategy, orig_data_shape):
 
     Args:
         data (paddle.Tensor): The input data.
-        cuboid_size (Tuple[int,...]): The size of cuboid.
+        cuboid_size (Tuple[int, ...]): The size of cuboid.
         strategy (str): The strategy of reordering.
-        orig_data_shape (Tuple[int,...]): The original shape of the data.
+        orig_data_shape (Tuple[int, ...]): The original shape of the data.
 
     Returns:
         data (paddle.Tensor): The recovered data
@@ -1391,7 +1391,7 @@ class CuboidTransformerEncoder(nn.Layer):
     x --> attn_block --> patch_merge --> attn_block --> patch_merge --> ... --> out
 
     Args:
-        input_shape (Tuple[int,...]): The shape of the input. Contains T, H, W, C
+        input_shape (Tuple[int, ...]): The shape of the input. Contains T, H, W, C
         base_units (int, optional): The number of units. Defaults to 128.
         block_units (int, optional): The number of block units. Defaults to None.
         scale_alpha (float, optional):  We scale up the channels based on the formula:

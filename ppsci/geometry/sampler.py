@@ -32,9 +32,11 @@ def sample(
     Args:
         n_samples (int): The number of samples.
         ndim (int): Number of dimension.
-        method (str): One of the following: "pseudo" (pseudorandom), "LHS" (Latin
-            hypercube sampling), "Halton" (Halton sequence), "Hammersley" (Hammersley
-            sequence), or "Sobol" (Sobol sequence).
+        method (Literal["pseudo", "Halton", "LHS"], optional): One of the following:
+            "pseudo" (pseudorandom),
+            "LHS" (Latin hypercube sampling),
+            "Halton" (Halton sequence),
+            "Hammersley" (Hammersley sequence), or "Sobol" (Sobol sequence).
 
     Returns:
         np.ndarray: Generated random samples with shape of [n_samples, ndim].
