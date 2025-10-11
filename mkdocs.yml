@@ -122,6 +122,7 @@ nav:
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
         - Synthemol: zh/examples/synthemol.md
+        - TADF: zh/examples/tadf.md
 
   - API 文档:
     - ppsci:
