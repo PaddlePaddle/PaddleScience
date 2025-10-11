@@ -1,0 +1,93 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_synthemol #${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/pre-compute/generate
+seed: 43
+output_dir: ${hydra:run.dir} #/${now:%Y-%m-%d}/${now:%H-%M-%S}
+log_freq: 20
+
+data_dir: "./data"
+
+# model settings
+MODEL:
+  input_keys: ["mol_batch", "features_batch", "atom_descriptors_batch",
+                "atom_features_batch", "bond_features_batch"]
+  output_keys: ["pred"]
+  label_keys: ["targets", "data_weights", "mask", "target_weights"]
+
+# training settings
+TRAIN:
+  epochs: 50 #40
+  iters_per_epoch: 216 #376 #20
+  save_freq: 2
+  eval_during_train: false
+  eval_freq: 2
+  learning_rate: 0.0001 #0.001
+  batch_size: 50 #128
+  pretrained_model_path: null
+  checkpoint_path: null
+  use_gpu: true
+  num_workers: 1
+
+DATA:
+  dataset_type: "classification"
+  fingerprint_type: null
+  smiles_column: 'smiles'
+  property_column: "antibiotic_activity"
+  data_path: ${data_dir}/Data/1_training_data/antibiotics.csv
+  num_models: 1
+  num_folds: 10
+  dataset_name: "MoleculeDatasetIter"
+
+PRE_COMPUTE:
+  data_path: ${data_dir}/Data/4_real_space/building_blocks.csv
+  model_path: "./pretrained/pretrained_chemprop.pdparams"
+  smiles_column: 'smiles'
+  model_type: 'chemprop'
+  fingerprint_type: null
+  use_gpu: true
+  average_preds: true
+  num_workers: 1
+  preds_column_prefix: null
+  save_path: './pre-compute/building_blocks.csv'
+
+GENERATE:
+  model_path: null
+  model_type: 'chemprop'
+  save_dir: './generated'
+  building_blocks_path: "./pre-compute/building_blocks.csv"
+  fingerprint_type: null
+  reaction_to_building_blocks_path: ${data_dir}/Data/4_real_space/reaction_to_building_blocks_filtered.pkl
+  building_blocks_id_column: 'Reagent_ID'
+  building_blocks_score_column: 'chemprop_ensemble_preds'
+  building_blocks_smiles_column: 'smiles'
+  max_reactions: 1
+  n_rollout: 40 # 20000
+  explore_weight: 10.0 #: float=10.0
+  num_expand_nodes: null #: (int)=None
+  optimization: 'maximize'
+  rng_seed: 0
+  no_building_block_diversity: false
+  store_nodes: false
+  verbose: false
+  replicate: true
