@@ -63,4 +63,10 @@ class FunctionalMetric(base.Metric):
         self.metric_expr = metric_expr
 
     def forward(self, output_dict, label_dict=None) -> Dict[str, "paddle.Tensor"]:
-        return self.metric_expr(output_dict, label_dict)
+        metric: "paddle.Tensor" = self.metric_expr(output_dict, label_dict)
+        if self.keep_batch:
+            assert metric.ndim >= 1, (
+                f"metric.shape should be like [batch_size, ...], but got {metric.shape} when keep_batch is True, "
+                "please check the return value of your metric_expr function."
+            )
+        return metric
