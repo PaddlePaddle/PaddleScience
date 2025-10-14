@@ -54,8 +54,8 @@ class FunctionalMetric(base.Metric):
     def __init__(
         self,
         metric_expr: Callable[
-            [Dict["str", "paddle.Tensor"], Dict["str", "paddle.Tensor"]],
-            Dict["str", "paddle.Tensor"],
+            [Dict[str, "paddle.Tensor"], Dict[str, "paddle.Tensor"]],
+            Dict[str, "paddle.Tensor"],
         ],
         keep_batch: bool = False,
     ):
