@@ -280,11 +280,27 @@ class Solver:
                 *[_v.metric.values() for _v in self.validator.values()]
             ):
                 if metric.keep_batch ^ self.compute_metric_by_batch:
+                    """
+                    Evaluation has two modes:
+                    1. compute_metric_by_batch=True:
+                        - The metric is computed for each batch separately, and the results
+                            are averaged across all batches.
+                        - Suitable for metrics that support additive aggregation (e.g. accuracy).
+                        - Saves memory since batch outputs are not stored.
+                        - In this mode, metric.keep_batch should be True.
+
+                    2. compute_metric_by_batch=False:
+                        - The outputs and labels of all batches are cached.
+                        - Metric is computed once on the concatenated results at the end.
+                        - Needed for metrics that cannot be computed additively (e.g. L2 relative error).
+                        - In this mode, metric.keep_batch should be False.
+                    """
                     raise ValueError(
                         f"{misc.typename(metric)}.keep_batch should be "
-                        f"{self.compute_metric_by_batch} when compute_metric_by_batch="
+                        f"{self.compute_metric_by_batch} when compute_metric_by_batch is "
                         f"{self.compute_metric_by_batch}."
                     )
+
             # check metric name uniqueness over all validators
             _count = {}
             for _validator in validator.values():
