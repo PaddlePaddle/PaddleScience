@@ -48,10 +48,14 @@ CNN_UTS/
 
 ## 训练好的模型权重文件
 
-| 预训练模型                        |
+| 预训练模型参数                        |
 |-----------------------------------|
 | [Saved_Output.zip](下载链接待填写) |
-| [resnet18-v5-finetune.zip](下载链接待填写) |
+| [resnet18-v5-fold1](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+ [resnet18-v5-fold2](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+ [resnet18-v5-fold3](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+ [resnet18-v5-fold4](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+ [resnet18-v5-fold5](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) ||
 
 ## 快速开始
 
