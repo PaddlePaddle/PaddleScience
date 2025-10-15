@@ -593,12 +593,25 @@ class Solver:
 
         start_epoch = self.best_metric["epoch"] + 1
 
-        if self.use_tbd and isinstance(self.cfg, DictConfig):
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.tbd_writer.add_text(
-                        "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
-                    )
+        if isinstance(self.cfg, DictConfig):
+            if self.use_tbd:
+                with misc.RankZeroOnly(self.rank) as is_master:
+                    if is_master:
+                        self.tbd_writer.add_text(
+                            "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                        )
+            if self.use_wandb:
+                import wandb
+
+                with misc.RankZeroOnly(self.rank) as is_master:
+                    if is_master:
+                        self.wandb_writer.log(
+                            {
+                                "config": wandb.Html(
+                                    f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                                )
+                            }
+                        )
 
         if self.nvtx_flag:
             core.nvprof_start()
