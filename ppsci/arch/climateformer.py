@@ -263,7 +263,7 @@ class Encoder(nn.Layer):
         )
         self.norm1 = nn.LayerNorm(C_hid)
 
-    def forward(self, x):  # B*4, 3, 128, 128
+    def forward(self, x):
         B = x.shape[0]
         latent = []
         x = self.enc0(x)
@@ -330,7 +330,7 @@ class Decoder(nn.Layer):
     def __init__(self, C_hid: int, C_out: int, N_S: int):
         super().__init__()
         strides = stride_generator(N_S, reverse=True)
-        # strides = [2, 1, 2, 1]
+
         self.dec = nn.Sequential(
             *[ConvSC(C_hid, C_hid, stride=s, transpose=True) for s in strides[:-1]],
             ConvSC(C_hid, C_hid, stride=strides[-1], transpose=True),
@@ -423,14 +423,13 @@ class Climateformer(base.Arch):
         z = embed[-1].reshape([B, T, C_4, H_4, W_4])
         hid = self.hid1(z)
         hid = hid.transpose(perm=[0, 2, 1]).reshape([B, -1, H_4, W_4])
-        
+
         # decoded
-        y = self.dec(hid, embed[0]) # [8, 72, 192, 256]
-        y = y.reshape([B, T, self.num_classes, H, W])   # [8, 6, 12, 192, 256]
+        y = self.dec(hid, embed[0])
+        y = y.reshape([B, T, self.num_classes, H, W])
 
         y = self.split_to_dict(y, self.output_keys)
         if self._output_transform is not None:
             y = self._output_transform(x, y)
 
-        return y
-        # return {self.output_keys[0]: Y}
+        return y  # {self.output_keys[0]: Y}

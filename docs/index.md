@@ -171,6 +171,7 @@
     |-----|---------|-----|---------|----|---------|---------|
     | 化学分子生成 | [Moflow](./zh/examples/moflow.md) | 数据驱动 | moflow | 监督学习 | qm9/ zink250k | [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1) |
     | 化学反应预测 | [IFM](./zh/examples/ifm.md) | 数据驱动 | IFM-MLP | 监督学习 | tox21/sider/hiv/bace/bbbp | [Understanding the Limitations of Deep Models for Molecular property prediction: Insights and Solutions](https://openreview.net/pdf?id=NLFqlDeuzt) |
+| 天气预报 | [Climateformer 气候预测](./zh/examples/climateformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
 
 ## 🚀快速安装
 

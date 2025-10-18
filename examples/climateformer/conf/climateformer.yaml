@@ -7,7 +7,7 @@ defaults:
   - INFER: infer_default
   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
   - _self_
-  
+
 hydra:
   run:
     # dynamic output directory according to running time and override name
@@ -35,6 +35,10 @@ IMG_H: 192
 IMG_W: 256
 USE_SAMPLED_DATA: false
 
+# data years settings
+TRAIN_YEARS: ["2018"]
+EVAL_YEARS: ["2018"]
+
 # set train data path
 TRAIN_FILE_PATH: /data/ERA5/
 DATA_MEAN_PATH: /data/ERA5/mean.nc
@@ -52,7 +56,7 @@ MODEL:
     - 12
     - ${IMG_H}
     - ${IMG_W}
-    
+
 # training settings
 TRAIN:
   epochs: 20  # 150

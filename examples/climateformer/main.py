@@ -29,6 +29,7 @@ def train(cfg: DictConfig):
                 "input_keys": cfg.MODEL.input_keys,
                 "label_keys": cfg.MODEL.output_keys,
                 "size": (cfg.IMG_H, cfg.IMG_W),
+                "years": cfg.TRAIN_YEARS,
             },
             "sampler": {
                 "name": "BatchSampler",
@@ -39,13 +40,13 @@ def train(cfg: DictConfig):
             "num_workers": 4,
         }
     else:
-        NUM_GPUS_PER_NODE = 8
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
                 "file_path": cfg.TRAIN_FILE_PATH,
                 "input_keys": cfg.MODEL.input_keys,
                 "label_keys": cfg.MODEL.output_keys,
+                "years": cfg.TRAIN_YEARS,
             },
             "sampler": {
                 "name": "DistributedBatchSampler",
@@ -55,7 +56,7 @@ def train(cfg: DictConfig):
             "batch_size": cfg.TRAIN.batch_size,
             "num_workers": 4,
         }
-        
+
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -76,6 +77,7 @@ def train(cfg: DictConfig):
             "label_keys": cfg.MODEL.output_keys,
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
+            "years": cfg.EVAL_YEARS,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -86,6 +88,7 @@ def train(cfg: DictConfig):
         ppsci.loss.MSELoss(),
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
+            "MSE": ppsci.metric.MSE(keep_batch=True),
         },
         name="Sup_Validator",
     )
@@ -110,7 +113,7 @@ def train(cfg: DictConfig):
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
         log_freq=cfg.log_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_during_train=True,
         eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
@@ -132,6 +135,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": cfg.MODEL.output_keys,
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
+            "years": cfg.EVAL_YEARS,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -142,6 +146,7 @@ def evaluate(cfg: DictConfig):
         ppsci.loss.MSELoss(),
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
+            "MSE": ppsci.metric.MSE(keep_batch=True),
         },
         name="Sup_Validator",
     )

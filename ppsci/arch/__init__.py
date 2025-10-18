@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -65,12 +65,11 @@ from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
 from ppsci.arch.regpointnet import RegPointNet  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
+from ppsci.arch.climateformer import Climateformer  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
-from ppsci.arch.meteoformer import Meteoformer  # isort:skip
-from ppsci.arch.climateformer import Climateformer  # isort:skip
 
 __all__ = [
     "MoFlowNet",
@@ -124,7 +123,6 @@ __all__ = [
     "RegPointNet",
     "IFMMLP",
     "STAFNet",
-    "Meteoformer",
     "Climateformer",
 ]
 

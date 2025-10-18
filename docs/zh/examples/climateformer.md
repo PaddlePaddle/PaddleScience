@@ -1,8 +1,13 @@
 # Climateformer
 
-开始训练、评估前，请下载ERA5数据集文件
+开始训练、评估前，请下载[ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download)数据集文件。
 
-开始评估前，请下载或训练生成预训练模型
+开始评估前，请下载或训练生成预训练模型。
+
+2018年的ERA5数据已保存，可通过下面的链接进行下载，评估：
+[2018.h5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/2018.h5)、
+[mean.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/mean.nc)、
+[std.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/std.nc)。
 
 === "模型训练命令"
 
@@ -13,7 +18,7 @@
 === "模型评估命令"
 
     ``` sh
-    python main.py mode=eval EVAL.pretrained_model_path=./outputs_climateformer/checkpoints/best_model.pdparams
+    python main.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/climateformer/climateformer.pdparams"
     ```
 
 ## 1. 背景简介
@@ -60,43 +65,25 @@ ppsci/arch/climateformer.py:329:344
 
 Climateformer模型首先使用特征嵌入层对输入信号（多气象要素的过去几个周平均时间帧）进行空间特征编码：
 
-``` py linenums="419" title="ppsci/arch/climateformer.py"
+``` py linenums="418" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:419:420
---8<--
-```
-
-``` py linenums="243" title="ppsci/arch/climateformer.py"
---8<--
-ppsci/arch/climateformer.py:243:277
+ppsci/arch/climateformer.py:418:420
 --8<--
 ```
 
 然后模型利用演变器将学习空间特征的动态特性，预测未来几个周平均时间帧的气象特征：
 
-``` py linenums="423" title="ppsci/arch/climateformer.py"
+``` py linenums="422" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:423:425
---8<--
-```
-
-``` py linenums="280" title="ppsci/arch/climateformer.py"
---8<--
-ppsci/arch/climateformer.py:280:325
+ppsci/arch/climateformer.py:422:425
 --8<--
 ```
 
 最后模型将时空动态特性与初始气象底层特征结合，使用两层卷积预测未来数周至数月的多气象要素周平均值：
 
-``` py linenums="428" title="ppsci/arch/climateformer.py"
+``` py linenums="427" title="ppsci/arch/climateformer.py"
 --8<--
-ppsci/arch/climateformer.py:428:429
---8<--
-```
-
-``` py linenums="329" title="ppsci/arch/climateformer.py"
---8<--
-ppsci/arch/climateformer.py:329:344
+ppsci/arch/climateformer.py:427:429
 --8<--
 ```
 
@@ -104,7 +91,7 @@ ppsci/arch/climateformer.py:329:344
 
 ### 3.1 数据集介绍
 
-案例中使用了预处理的ERA5Climate数据集，属于ERA5再分析数据的一个子集。ERA5Climate包含了全球大气、陆地和海洋的多种变量，分辨率为31公里。该数据集从1979年开始到2020年，每小时提供一次天气状况的估计，非常适合用于短中期多气象要素预测等任务。在实际应用过程中，时间间隔为一周，每帧选取为 7*24 小时内的周平均值。
+案例中使用了预处理的ERA5Climate数据集，属于ERA5再分析数据的一个子集。ERA5Climate包含了全球大气、陆地和海洋的多种变量，研究区域从东经 140° 到西经 70°，从北纬 55° 到赤道，空间分辨率为 0.25°。该数据集从2016年开始到2020年，每小时提供一次天气状况的估计，非常适合用于短中期多气象要素预测等任务。在实际应用过程中，时间间隔为一周，每帧选取为 7*24 小时内的周平均值。
 
 数据集被保存为 T x C x H x W 的矩阵，记录了相应地点和时间的对应气象要素的值，其中 T 为时间序列长度，C代表通道维，案例中选取了3个不同气压层的温度、相对湿度、东向风速、北向风速等气象信息，H 和 W 代表按照经纬度划分后的矩阵的高度和宽度。根据年份，数据集按照 7:2:1 划分为训练集、验证集，和测试集。案例中预先计算了气象要素数据的均值与标准差，用于后续的正则化操作。
 
@@ -114,9 +101,9 @@ ppsci/arch/climateformer.py:329:344
 
 该案例基于 Climateformer 模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="98" title="examples/climateformer/mian.py"
+``` py linenums="97" title="examples/climateformer/mian.py"
 --8<--
-examples/climateformer/main.py:98:98
+examples/climateformer/main.py:97:98
 --8<--
 ```
 
@@ -126,9 +113,9 @@ examples/climateformer/main.py:98:98
 
 训练集数据加载的代码如下:
 
-``` py linenums="22" title="examples/climateformer/main.py"
+``` py linenums="23" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:22:57
+examples/climateformer/main.py:23:58
 --8<--
 ```
 
@@ -136,7 +123,7 @@ examples/climateformer/main.py:22:57
 
 ``` py linenums="60" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:60:65
+examples/climateformer/main.py:60:66
 --8<--
 ```
 
@@ -148,15 +135,15 @@ examples/climateformer/main.py:60:65
 
 ``` py linenums="71" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:71:81
+examples/climateformer/main.py:71:83
 --8<--
 ```
 
 定义监督评估器的代码如下：
 
-``` py linenums="84" title="examples/climateformer/main.py"
+``` py linenums="85" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:84:92
+examples/climateformer/main.py:85:95
 --8<--
 ```
 
@@ -164,9 +151,9 @@ examples/climateformer/main.py:84:92
 
 本案例中学习率大小设置为 `1e-3`，优化器使用 `Adam`，用 PaddleScience 代码表示如下：
 
-``` py linenums="98" title="examples/climateformer/main.py"
+``` py linenums="100" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:98:102
+examples/climateformer/main.py:100:105
 --8<--
 ```
 
@@ -174,9 +161,9 @@ examples/climateformer/main.py:98:102
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="105" title="examples/climateformer/main.py"
+``` py linenums="107" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:105:120
+examples/climateformer/main.py:107:123
 --8<--
 ```
 
@@ -184,9 +171,9 @@ examples/climateformer/main.py:105:120
 
 通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 参数，可以自动保存在验证集上效果最优的模型参数。
 
-``` py linenums="113" title="examples/climateformer/main.py"
+``` py linenums="116" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:113:113
+examples/climateformer/main.py:116:116
 --8<--
 ```
 
@@ -196,37 +183,37 @@ examples/climateformer/main.py:113:113
 
 测试集数据加载的代码如下:
 
-``` py linenums="125" title="examples/climateformer/main.py"
+``` py linenums="129" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:125:137
+examples/climateformer/main.py:129:141
 --8<--
 ```
 
 定义监督评估器的代码如下：
 
-``` py linenums="140" title="examples/climateformer/main.py"
+``` py linenums="143" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:140:148
+examples/climateformer/main.py:143:153
 --8<--
 ```
 
-与验证集的 `SupervisedValidator` 相似，在这里使用的评价指标是 `MAE`。
+与验证集的 `SupervisedValidator` 相似，在这里使用的评价指标是 `MAE` 和 `MSE`。
 
 #### 3.3.2 加载模型并进行评估
 
 设置预训练模型参数的加载路径并加载模型。
 
-``` py linenums="151" title="examples/climateformer/main.py"
+``` py linenums="155" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:151:151
+examples/climateformer/main.py:155:156
 --8<--
 ```
 
 实例化 `ppsci.solver.Solver`，然后启动评估。
 
-``` py linenums="154" title="examples/climateformer/main.py"
+``` py linenums="158" title="examples/climateformer/main.py"
 --8<--
-examples/climateformer/main.py:154:164
+examples/climateformer/main.py:158:169
 --8<--
 ```
 
