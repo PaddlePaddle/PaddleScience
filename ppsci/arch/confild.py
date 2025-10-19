@@ -9,24 +9,64 @@ DEFAULT_W0 = 30.0
 
 ###################### ConFILD Model #######################
 class Swish(paddle.nn.Layer):
+    """
+    Swish activation function: f(x) = x * sigmoid(x).
+    
+    A smooth, non-monotonic activation function that has been shown to work
+    better than ReLU on deeper models across a number of challenging datasets.
+    """
     def __init__(self):
         super().__init__()
         self.Sigmoid = paddle.nn.Sigmoid()
 
     def forward(self, x):
+        """
+        Apply Swish activation.
+        
+        Args:
+            x (paddle.Tensor): Input tensor.
+            
+        Returns:
+            paddle.Tensor: Output tensor with same shape as input.
+        """
         return x * self.Sigmoid(x)
 
 
 class Sine(paddle.nn.Layer):
+    """
+    Sine activation function for SIREN (Sinusoidal Representation Networks).
+    
+    Args:
+        w0 (float, optional): Frequency parameter for sine activation. Defaults to DEFAULT_W0 (30.0).
+    """
     def __init__(self, w0=DEFAULT_W0):
         self.w0 = w0
         super().__init__()
 
     def forward(self, input):
+        """
+        Apply sine activation with frequency modulation.
+        
+        Args:
+            input (paddle.Tensor): Input tensor.
+            
+        Returns:
+            paddle.Tensor: sin(w0 * input).
+        """
         return paddle.sin(x=self.w0 * input)
 
 
 def sine_init(m, w0=DEFAULT_W0):
+    """
+    Weight initialization for SIREN hidden layers.
+    
+    Initializes weights uniformly in [-√(6/n)/w0, √(6/n)/w0] where n is input dimension.
+    This initialization is critical for maintaining stable signal propagation in SIREN networks.
+    
+    Args:
+        m (paddle.nn.Layer): Layer to initialize (must have 'weight' attribute).
+        w0 (float, optional): Frequency parameter. Defaults to DEFAULT_W0.
+    """
     with paddle.no_grad():
         if hasattr(m, "weight"):
             num_input = m.weight.shape[-1]
@@ -36,6 +76,15 @@ def sine_init(m, w0=DEFAULT_W0):
 
 
 def first_layer_sine_init(m):
+    """
+    Weight initialization for SIREN first layer.
+    
+    Initializes weights uniformly in [-1/n, 1/n] where n is input dimension.
+    Different from hidden layers to handle raw coordinate inputs properly.
+    
+    Args:
+        m (paddle.nn.Layer): Layer to initialize (must have 'weight' attribute).
+    """
     with paddle.no_grad():
         if hasattr(m, "weight"):
             num_input = m.weight.shape[-1]
@@ -93,16 +142,34 @@ NLS_AND_INITS = {
 
 class BatchLinear(paddle.nn.Linear):
     """
-    This is a linear transformation implemented manually. It also allows maually input parameters.
-    for initialization, (in_features, out_features) needs to be provided.
-    weight is of shape (out_features*in_features)
-    bias is of shape (out_features)
-
+    Batch-wise linear transformation layer that supports manual parameter injection.
+    
+    This layer extends paddle.nn.Linear to allow passing parameters explicitly,
+    which is useful for meta-learning and hypernetwork applications.
+    
+    Args:
+        in_features (int): Size of input features.
+        out_features (int): Size of output features.
+        
+    Note:
+        - Weight shape: (out_features, in_features)
+        - Bias shape: (out_features,)
     """
 
     __doc__ = paddle.nn.Linear.__doc__
 
     def forward(self, input, params=None):
+        """
+        Forward pass with optional external parameters.
+        
+        Args:
+            input (paddle.Tensor): Input tensor of shape (..., in_features).
+            params (OrderedDict, optional): External parameters dict containing 'weight' and optionally 'bias'.
+                                           If None, uses internal parameters. Defaults to None.
+        
+        Returns:
+            paddle.Tensor: Output tensor of shape (..., out_features).
+        """
         if params is None:
             params = OrderedDict(self.named_parameters())
         bias = params.get("bias", None)
@@ -116,7 +183,14 @@ class BatchLinear(paddle.nn.Linear):
 
 class FeatureMapping:
     """
-    This is feature mapping class for  fourier feature networks
+    Feature mapping class for Fourier Feature Networks.
+    
+    Supports multiple mapping strategies including Gaussian random Fourier features,
+    positional encoding, and radial basis functions (RBF) for improving coordinate-based
+    neural network representations.
+    
+    Reference: 
+        Tancik et al. "Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains"
     """
 
     def __init__(
@@ -136,16 +210,22 @@ class FeatureMapping:
         rbf_std=0.5,
     ):
         """
-        inputs:
-            in_freatures: number of input features
-            mapping_size: output features for Gaussian mapping
-            rand_key: random key for Gaussian mapping
-            tau: standard deviation for Gaussian mapping
-            num_freqs: number of frequencies for P.E.
-            scale = 2: base scale of frequencies for P.E.
-            init_scale: initial scale for P.E.
-            use_nyquist: use nyquist to calculate num_freqs or not.
-
+        Initialize feature mapping.
+        
+        Args:
+            in_features (int): Number of input features.
+            mode (str, optional): Mapping mode. Options: "basic", "gaussian", "positional", "rbf". Defaults to "basic".
+            gaussian_mapping_size (int, optional): Output dimension for Gaussian mapping. Defaults to 256.
+            gaussian_rand_key (int, optional): Random seed for Gaussian mapping. Defaults to 0.
+            gaussian_tau (float, optional): Standard deviation for Gaussian mapping. Defaults to 1.0.
+            pe_num_freqs (int, optional): Number of frequency bands for positional encoding. Defaults to 4.
+            pe_scale (int, optional): Base scale for frequencies in positional encoding. Defaults to 2.
+            pe_init_scale (int, optional): Initial scale multiplier for positional encoding. Defaults to 1.
+            pe_use_nyquist (bool, optional): Use Nyquist frequency to determine num_freqs. Defaults to True.
+            pe_lowest_dim (int, optional): Lowest dimension for Nyquist calculation. Defaults to None.
+            rbf_out_features (int, optional): Number of RBF centers. Defaults to None.
+            rbf_range (float, optional): Range for RBF center initialization. Defaults to 1.0.
+            rbf_std (float, optional): Standard deviation for RBF kernels. Defaults to 0.5.
         """
         self.mode = mode
         if mode == "basic":
@@ -191,7 +271,14 @@ class FeatureMapping:
     @staticmethod
     def fourier_mapping(x, B):
         """
-        x is the input, B is the reference information
+        Apply Fourier feature mapping: [sin(2πxB^T), cos(2πxB^T)].
+        
+        Args:
+            x (paddle.Tensor): Input coordinates of shape (..., in_features).
+            B (np.ndarray): Frequency matrix of shape (mapping_size, in_features).
+        
+        Returns:
+            paddle.Tensor: Fourier features of shape (..., 2 * mapping_size).
         """
         if B is None:
             return x
@@ -216,37 +303,47 @@ class FeatureMapping:
 
 class SIRENAutodecoder_film(paddle.nn.Layer):
     """
-    siren network with author decoding
+    SIREN (Sinusoidal Representation Networks) with FiLM conditioning for autodecoding.
+    
+    This architecture uses sine activations and latent code modulation (FiLM) for
+    implicit neural representations. It takes both coordinate inputs and latent codes,
+    making it suitable for learning multiple shapes/scenes with a single network.
+    
+    Reference:
+        Sitzmann et al. "Implicit Neural Representations with Periodic Activation Functions" (NeurIPS 2020)
 
     Args:
-        input_keys (Tuple[str,...], optional): Key to get the input tensor from the dict.
-        output_keys (Tuple[str,...], optional): Key to save the output tensor into the dict.
-        in_coord_features (int, optional): Number of input coordinates features
-        in_latent_features (int, optional): Number of input latent features
-        out_features (int, optional): Number of output features
-        num_hidden_layers (int, optional): Number of hidden layers
-        hidden_features (int, optional): Number of hidden features
-        outermost_linear (bool, optional): Whether to use linear layer at the end. Defaults to False.
-        nonlinearity (str, optional): Nonlinearity to use. Defaults to "sine".
-        weight_init (Callable, optional): Weight initialization function. Defaults to None.
-        bias_init (Callable, optional): Bias initialization function. Defaults to None.
-        premap_mode (str, optional): Feature mapping mode. Defaults to None.
+        input_keys (Tuple[str, ...], optional): Keys to get input tensors from dict. First key for coordinates, second for latents.
+        output_keys (Tuple[str, ...], optional): Keys to save output tensors into dict.
+        in_coord_features (int, optional): Number of input coordinate features (e.g., 2 for 2D, 3 for 3D).
+        in_latent_features (int, optional): Number of latent features for conditioning.
+        out_features (int, optional): Number of output features (e.g., 3 for RGB).
+        num_hidden_layers (int, optional): Number of hidden layers.
+        hidden_features (int, optional): Number of hidden layer features.
+        outermost_linear (bool, optional): Whether to use linear layer at output. Defaults to False.
+        nonlinearity (str, optional): Activation function. Options: "sine", "relu", "tanh", etc. Defaults to "sine".
+        weight_init (Callable, optional): Custom weight initialization function. Defaults to None.
+        bias_init (Callable, optional): Custom bias initialization function. Defaults to None.
+        premap_mode (str, optional): Feature mapping mode before network. Options: "gaussian", "positional", "rbf". Defaults to None.
 
     Examples:
+        >>> import ppsci
         >>> model = ppsci.arch.SIRENAutodecoder_film(
-                input_keys=["input1", "input2"],
-                output_keys=("output",),
-                in_coord_features=2,
-                in_latent_features=128,
-                out_features=3,
-                num_hidden_layers=10,
-                hidden_features=128,
-            )
-        >>> input_data = {"input1": paddle.randn([10, 2]), "input2": paddle.randn([10, 128])}
+        ...     input_keys=["coords", "latents"],
+        ...     output_keys=("output",),
+        ...     in_coord_features=2,
+        ...     in_latent_features=128,
+        ...     out_features=3,
+        ...     num_hidden_layers=10,
+        ...     hidden_features=128,
+        ... )
+        >>> input_data = {
+        ...     "coords": paddle.randn([1000, 2]),
+        ...     "latents": paddle.randn([1000, 128])
+        ... }
         >>> out_dict = model(input_data)
-        >>> for k, v in out_dict.items():
-        ...     print(k, v.shape)
-        output [22, 918, 3]
+        >>> print(out_dict["output"].shape)
+        [1000, 3]
     """
 
     def __init__(
@@ -325,24 +422,37 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
 
 class LatentContainer(paddle.nn.Layer):
     """
-    a model container that stores latents for multi GPU
+    Learnable latent code container for autodecoding applications.
+    
+    This module stores and retrieves per-sample latent codes, which can be used
+    for representing multiple instances (shapes, scenes) with a single decoder network.
+    Supports multi-GPU training and different dimensional arrangements.
+    
+    Reference:
+        Park et al. "DeepSDF: Learning Continuous Signed Distance Functions for Shape Representation" (CVPR 2019)
 
     Args:
-        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
-        output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
-        N_samples (int, optional): Number of samples. Defaults to None.
-        N_features (int, optional): Number of features. Defaults to None.
-        dims (int, optional): Number of dimensions. Defaults to None.
-        lumped (bool, optional): Whether to lump the latents. Defaults to False.
+        input_keys (Tuple[str, ...], optional): Key to get batch indices from dict. Defaults to ("input",).
+        output_keys (Tuple[str, ...], optional): Key to save latent codes into dict. Defaults to ("output",).
+        N_samples (int, optional): Total number of samples/instances in dataset. Defaults to None.
+        N_features (int, optional): Dimension of latent codes. Defaults to None.
+        dims (int, optional): Number of spatial dimensions (for proper broadcasting). Defaults to None.
+        lumped (bool, optional): If True, adds single dimension; if False, adds dims dimensions. Defaults to False.
 
     Examples:
-        >>> model = ppsci.arch.LatentContainer(N_samples=1600, N_features=128, dims=2, lumped=True)
-        >>> input_data = paddle.linspace(0, 1600, 1600, 'int64')
-        >>> input_dict = {"input": input_data}
+        >>> import ppsci
+        >>> import paddle
+        >>> model = ppsci.arch.LatentContainer(
+        ...     N_samples=1600,
+        ...     N_features=128,
+        ...     dims=2,
+        ...     lumped=True
+        ... )
+        >>> batch_indices = paddle.randint(0, 1600, [32], dtype='int64')
+        >>> input_dict = {"input": batch_indices}
         >>> out_dict = model(input_dict)
-        >>> for k, v in out_dict.items():
-        ...     print(k, v.shape)
-        output [1600, 1, 128]
+        >>> print(out_dict["output"].shape)
+        [32, 1, 128]
     """
 
     def __init__(
@@ -441,6 +551,23 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
 
 
 class GaussianDiffusion:
+    """
+    Gaussian diffusion process for denoising diffusion probabilistic models (DDPM).
+    
+    Implements the forward diffusion process q(x_t|x_0) and reverse denoising process p(x_{t-1}|x_t).
+    Supports various parameterizations (epsilon, x_0, x_{t-1}) and variance schedules.
+    
+    Reference:
+        Ho et al. "Denoising Diffusion Probabilistic Models" (NeurIPS 2020)
+        Nichol & Dhariwal "Improved Denoising Diffusion Probabilistic Models" (ICML 2021)
+    
+    Args:
+        betas (np.ndarray): Noise schedule β_t for t=0,...,T-1.
+        model_mean_type (ModelMeanType): Parameterization of model output.
+        model_var_type (ModelVarType): Variance parameterization (fixed or learned).
+        loss_type (LossType): Loss function type (MSE, KL, etc.).
+        rescale_timesteps (bool, optional): Rescale timesteps to [0, 1000]. Defaults to False.
+    """
     def __init__(
         self,
         *,
@@ -916,12 +1043,18 @@ class LossType(enum.Enum):
 
 class SpacedDiffusion(GaussianDiffusion):
     """
-    A diffusion process which can skip steps in a base diffusion process.
+    Accelerated diffusion process that skips timesteps for faster sampling.
+    
+    Implements DDIM-style sampling by using a subset of timesteps from the original
+    diffusion process, enabling faster inference without retraining the model.
+    
+    Reference:
+        Song et al. "Denoising Diffusion Implicit Models" (ICLR 2021)
 
     Args:
-        use_timesteps: a collection (sequence or set) of timesteps from the
-                          original diffusion process to retain.
-        kwargs: the kwargs to create the base diffusion process.
+        use_timesteps (Sequence[int]): Collection of timesteps to retain from original process
+                                       (e.g., [0, 10, 20, ..., 1000] for 100-step sampling).
+        **kwargs: Additional arguments for base GaussianDiffusion (betas, model_mean_type, etc.).
     """
 
     def __init__(self, use_timesteps, **kwargs):
@@ -1004,6 +1137,24 @@ class TimestepBlock(paddle.nn.Layer):
 
 
 class ResBlock(TimestepBlock):
+    """
+    Residual block with timestep embedding for diffusion models.
+    
+    Implements a residual connection with two convolutional layers, timestep conditioning,
+    and optional up/downsampling. Supports FiLM-style adaptive normalization.
+    
+    Args:
+        channels (int): Number of input channels.
+        emb_channels (int): Number of timestep embedding channels.
+        dropout (float): Dropout probability.
+        out_channels (int, optional): Number of output channels. Defaults to channels.
+        use_conv (bool, optional): Use conv for skip connection if channels differ. Defaults to False.
+        use_scale_shift_norm (bool, optional): Use FiLM-style conditioning. Defaults to False.
+        dims (int, optional): Spatial dimensions (1D/2D/3D). Defaults to 2.
+        use_checkpoint (bool, optional): Use gradient checkpointing. Defaults to False.
+        up (bool, optional): Apply upsampling. Defaults to False.
+        down (bool, optional): Apply downsampling. Defaults to False.
+    """
     def __init__(
         self,
         channels,
@@ -1118,6 +1269,17 @@ def avg_pool_nd(dims, *args, **kwargs):
 
 
 class Downsample(paddle.nn.Layer):
+    """
+    Spatial downsampling layer (2x reduction).
+    
+    Can use either strided convolution or average pooling for downsampling.
+    
+    Args:
+        channels (int): Number of input channels.
+        use_conv (bool): Use strided conv (True) or avg pooling (False).
+        dims (int, optional): Spatial dimensions. Defaults to 2.
+        out_channels (int, optional): Number of output channels. Defaults to channels.
+    """
     def __init__(self, channels, use_conv, dims=2, out_channels=None):
         super().__init__()
         self.channels = channels
@@ -1134,11 +1296,23 @@ class Downsample(paddle.nn.Layer):
             self.op = avg_pool_nd(dims, kernel_size=stride, stride=stride)
 
     def forward(self, x):
+        """Apply downsampling."""
         assert tuple(x.shape)[1] == self.channels
         return self.op(x)
 
 
 class Upsample(paddle.nn.Layer):
+    """
+    Spatial upsampling layer (2x expansion).
+    
+    Uses nearest-neighbor interpolation followed by optional convolution.
+    
+    Args:
+        channels (int): Number of input channels.
+        use_conv (bool): Apply convolution after upsampling.
+        dims (int, optional): Spatial dimensions. Defaults to 2.
+        out_channels (int, optional): Number of output channels. Defaults to channels.
+    """
     def __init__(self, channels, use_conv, dims=2, out_channels=None):
         super().__init__()
         self.channels = channels
@@ -1149,6 +1323,7 @@ class Upsample(paddle.nn.Layer):
             self.conv = conv_nd(dims, self.channels, self.out_channels, 3, padding=1)
 
     def forward(self, x):
+        """Apply upsampling."""
         assert tuple(x.shape)[1] == self.channels
         if self.dims == 3:
             x = paddle.nn.functional.interpolate(
@@ -1288,6 +1463,19 @@ def stop_gradient(input, stop):
 
 
 class AttentionBlock(paddle.nn.Layer):
+    """
+    Self-attention block for spatial feature maps.
+    
+    Applies multi-head self-attention over spatial locations in feature maps,
+    allowing the model to capture long-range dependencies.
+    
+    Args:
+        channels (int): Number of input/output channels.
+        num_heads (int, optional): Number of attention heads. Defaults to 1.
+        num_head_channels (int, optional): Channels per head (overrides num_heads). Defaults to -1.
+        use_checkpoint (bool, optional): Use gradient checkpointing. Defaults to False.
+        use_new_attention_order (bool, optional): Use optimized attention implementation. Defaults to False.
+    """
     def __init__(
         self,
         channels,
@@ -1341,6 +1529,20 @@ def convert_module_to_f32(l):
 
 
 def timestep_embedding(timesteps, dim, max_period=10000):
+    """
+    Create sinusoidal timestep embeddings for diffusion models.
+    
+    Similar to positional encodings in transformers, but for continuous timesteps.
+    Uses sinusoids of exponentially increasing frequencies.
+    
+    Args:
+        timesteps (paddle.Tensor): Timestep values of shape (batch_size,).
+        dim (int): Embedding dimension.
+        max_period (int, optional): Maximum period for sinusoids. Defaults to 10000.
+    
+    Returns:
+        paddle.Tensor: Timestep embeddings of shape (batch_size, dim).
+    """
     half = dim // 2
     freqs = paddle.exp(
         x=-math.log(max_period)
@@ -1358,28 +1560,55 @@ def timestep_embedding(timesteps, dim, max_period=10000):
 
 class UNetModel(paddle.nn.Layer):
     """
-    The full UNet model with attention and timestep embedding.
+    Full UNet model with attention and timestep embedding for diffusion models.
+    
+    Implements a U-Net architecture with residual blocks, self-attention at multiple resolutions,
+    and timestep conditioning via adaptive normalization (FiLM). Designed for denoising diffusion
+    probabilistic models (DDPM) and can be conditioned on class labels.
+    
+    Reference:
+        Ronneberger et al. "U-Net: Convolutional Networks for Biomedical Image Segmentation" (MICCAI 2015)
+        Dhariwal & Nichol "Diffusion Models Beat GANs on Image Synthesis" (NeurIPS 2021)
 
     Args:
-        image_size (int): Input image size (maintained for interface compatibility)
-        in_channels (int): Number of channels in input tensor
-        model_channels (int): Base channel count for model
-        out_channels (int): Number of channels in output tensor
-        num_res_blocks (int): Residual blocks per downsampling level
-        attention_resolutions (list/tuple): Downsample rates to apply attention (e.g., [4, 8])
-        dropout (float, optional): Dropout probability. Default: 0.0
-        channel_mult (tuple, optional): Channel multipliers per level. Default: (1, 2, 4, 8)
-        conv_resample (bool, optional): Use convolutional resampling. Default: True
-        dims (int, optional): Data dimensionality (1=1D, 2=2D, 3=3D). Default: 2
-        num_classes (int, optional): Number of classes for conditional generation. Default: None
-        use_checkpoint (bool, optional): Enable gradient checkpointing. Default: False
-        use_fp16 (bool, optional): Use float16 precision. Default: False
-        num_heads (int, optional): Number of attention heads. Default: 1
-        num_head_channels (int, optional): Fixed channels per head (overrides num_heads). Default: -1
-        num_heads_upsample (int, optional): Heads for upsampling blocks. Default: -1 (use num_heads)
-        use_scale_shift_norm (bool, optional): Use FiLM-like conditioning. Default: False
-        resblock_updown (bool, optional): Use residual blocks for resampling. Default: False
-        use_new_attention_order (bool, optional): Use optimized attention pattern. Default: False
+        image_size (int): Input image size (maintained for interface compatibility).
+        in_channels (int): Number of channels in input tensor.
+        model_channels (int): Base channel count for model (multiplied by channel_mult).
+        out_channels (int): Number of channels in output tensor.
+        num_res_blocks (int): Number of residual blocks per downsampling level.
+        attention_resolutions (list/tuple): Downsample factors where to apply attention (e.g., [4, 8, 16]).
+        dropout (float, optional): Dropout probability in residual blocks. Defaults to 0.0.
+        channel_mult (tuple, optional): Channel multipliers per level (e.g., (1, 2, 4, 8)). Defaults to (1, 2, 4, 8).
+        conv_resample (bool, optional): Use learned convolutional up/downsampling. Defaults to True.
+        dims (int, optional): Data dimensionality (1=1D, 2=2D, 3=3D). Defaults to 2.
+        num_classes (int, optional): Number of classes for class-conditional generation. Defaults to None.
+        use_checkpoint (bool, optional): Enable gradient checkpointing to save memory. Defaults to False.
+        use_fp16 (bool, optional): Use float16 precision for forward pass. Defaults to False.
+        num_heads (int, optional): Number of attention heads in each attention block. Defaults to 1.
+        num_head_channels (int, optional): Fixed channels per head (overrides num_heads if set). Defaults to -1.
+        num_heads_upsample (int, optional): Attention heads for upsampling blocks. Defaults to -1 (use num_heads).
+        use_scale_shift_norm (bool, optional): Use FiLM-style conditioning in ResBlocks. Defaults to False.
+        resblock_updown (bool, optional): Use ResBlocks for up/downsampling instead of conv layers. Defaults to False.
+        use_new_attention_order (bool, optional): Use optimized QKV attention implementation. Defaults to False.
+    
+    Examples:
+        >>> import ppsci
+        >>> import paddle
+        >>> model = ppsci.arch.UNetModel(
+        ...     image_size=64,
+        ...     in_channels=3,
+        ...     model_channels=128,
+        ...     out_channels=3,
+        ...     num_res_blocks=2,
+        ...     attention_resolutions=[8, 16],
+        ...     channel_mult=(1, 2, 4, 8),
+        ...     num_heads=4,
+        ... )
+        >>> x = paddle.randn([4, 3, 64, 64])
+        >>> t = paddle.randint(0, 1000, [4])
+        >>> out = model(x, t)
+        >>> print(out.shape)
+        [4, 3, 64, 64]
     """
 
     def __init__(
