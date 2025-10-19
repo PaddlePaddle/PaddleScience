@@ -22,6 +22,7 @@
         - Generator
         - HEDeepONets
         - KAN
+        - LatentNO
         - LorenzEmbedding
         - MLP
         - ModelList
@@ -43,5 +44,6 @@
         - RegPointNet
         - IFMMLP
         - Meteoformer
+        - MoleculeModel
       show_root_heading: true
       heading_level: 3

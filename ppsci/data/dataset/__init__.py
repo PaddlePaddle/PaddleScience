@@ -41,6 +41,8 @@ from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
 from ppsci.data.dataset.ifm_moe_dataset import IFMMoeDataset
+from ppsci.data.dataset.latent_no_dataset import LatentNODataset
+from ppsci.data.dataset.latent_no_dataset import LatentNODataset_time
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.dataset.moflow_dataset import MOlFLOWDataset
@@ -53,6 +55,7 @@ from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
+from ppsci.data.dataset.synthemol_dataset import MoleculeDatasetIter
 from ppsci.data.dataset.tmtdataset import TMTDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
@@ -105,6 +108,9 @@ __all__ = [
     "TMTDataset",
     "register_to_dataset",
     "ERA5MeteoDataset",
+    "LatentNODataset",
+    "LatentNODataset_time",
+    "MoleculeDatasetIter",
 ]
 
 

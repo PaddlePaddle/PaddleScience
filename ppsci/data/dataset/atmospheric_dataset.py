@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import List
 from typing import NamedTuple
 from typing import Optional
@@ -212,9 +214,9 @@ def stacked_to_dataset(
     All variables must have preserved_dims dimensions.
 
     Args:
-        stacked_array: Data in BHWC layout, encoded the same as dataset_to_stacked would if it was asked to encode `template_dataset`.
-        template_dataset: A template Dataset (or other mapping of DataArrays) demonstrating the shape of output required (variables, shapes, coordinates etc).
-        preserved_dims: dimensions from the target_template that were not folded in the predictions channels. The preserved_dims need to be a subset of the dims of all the variables of template_dataset.
+        stacked_array (xarray.Variable): Data in BHWC layout, encoded the same as dataset_to_stacked would if it was asked to encode `template_dataset`.
+        template_dataset (xarray.Dataset): A template Dataset (or other mapping of DataArrays) demonstrating the shape of output required (variables, shapes, coordinates etc).
+        preserved_dims (Tuple[str, ...]): dimensions from the target_template that were not folded in the predictions channels. The preserved_dims need to be a subset of the dims of all the variables of template_dataset.
 
     Returns:
         An xarray.Dataset (or other mapping of DataArrays) with the same shape and type as template_dataset.

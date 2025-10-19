@@ -30,6 +30,7 @@ from ppsci import experimental  # isort:skip
 from ppsci.utils.checker import run_check  # isort:skip
 from ppsci.utils.checker import run_check_mesh  # isort:skip
 from ppsci.utils import lambdify  # isort:skip
+from ppsci.utils import misc  # isort:skip
 
 
 try:
@@ -58,6 +59,7 @@ __all__ = [
     "run_check",
     "run_check_mesh",
     "lambdify",
+    "misc",
 ]
 
 
