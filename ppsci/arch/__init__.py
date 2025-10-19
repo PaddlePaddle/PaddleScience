@@ -40,6 +40,7 @@ from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.geofno import FNO1d  # isort:skip
 from ppsci.arch.graphcast import GraphCastNet  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
+from ppsci.arch.latent_no import LatentNO, LatentNO_time  # isort:skip
 from ppsci.arch.lno import LNO  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import ModifiedMLP  # isort:skip
@@ -61,11 +62,13 @@ from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
 from ppsci.arch.velocitygan import VelocityGenerator  # isort:skip
 from ppsci.arch.moflow_net import MoFlowNet, MoFlowProp  # isort:skip
 from ppsci.utils import logger  # isort:skip
+from ppsci.arch.tadf import TADF  # isort:skip
 from ppsci.arch.regdgcnn import RegDGCNN  # isort:skip
 from ppsci.arch.regpointnet import RegPointNet  # isort:skip
 from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
 from ppsci.arch.climateformer import Climateformer  # isort:skip
+from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -98,6 +101,8 @@ __all__ = [
     "GraphCastNet",
     "HEDeepONets",
     "LorenzEmbedding",
+    "LatentNO",
+    "LatentNO_time",
     "LNO",
     "MLP",
     "ModelList",
@@ -110,6 +115,7 @@ __all__ = [
     "RosslerEmbedding",
     "SFNONet",
     "SPINN",
+    "TADF",
     "TFNO1dNet",
     "TFNO2dNet",
     "TFNO3dNet",
@@ -124,6 +130,7 @@ __all__ = [
     "IFMMLP",
     "STAFNet",
     "Climateformer",
+    "MoleculeModel",
 ]
 
 

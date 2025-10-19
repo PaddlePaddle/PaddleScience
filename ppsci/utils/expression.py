@@ -20,7 +20,6 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-from paddle import jit
 from paddle import nn
 from paddle.framework import core
 
@@ -57,7 +56,6 @@ class ExpressionSolver(nn.Layer):
             "Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
-    @jit.to_static
     def train_forward(
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
@@ -145,7 +143,6 @@ class ExpressionSolver(nn.Layer):
 
         return losses_all, losses_constraint
 
-    @jit.to_static
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
@@ -187,11 +184,13 @@ class ExpressionSolver(nn.Layer):
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_losses = validator.loss(
-            output_dict,
-            label_dict,
-            weight_dict,
-        )
+        validator_losses: Dict[str, "paddle.Tensor"] = {}
+        if callable(validator.loss):
+            validator_losses = validator.loss(
+                output_dict,
+                label_dict,
+                weight_dict,
+            )
         return output_dict, validator_losses
 
     def visu_forward(
