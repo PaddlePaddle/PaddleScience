@@ -94,7 +94,7 @@
     | 域分解 | [XPINN](./zh/examples/xpinns.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.4208/cicp.OA-2020-0164)|
     | 布鲁塞尔扩散系统 | [3D-Brusselator](./zh/examples/brusselator3d.md) | 数据驱动 | LNO | 监督学习 | - | [Paper](https://arxiv.org/abs/2303.10528)|
     | 符号回归 | [Transformer4SR](./zh/examples/transformer4sr.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2312.04070)|
-    | 算子学习 | [隐空间神经算子LNO](https://github.com/L-I-M-I-T/LatentNeuralOperator) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2406.03923)|
+    | 算子学习 | [隐空间神经算子LNO](./zh/examples/latent_no.md) | 数据驱动 | Transformer | 监督学习 | - | [Paper](https://arxiv.org/abs/2406.03923)|
 
 === "技术科学"
 
@@ -164,6 +164,7 @@
     | 遥感图像分割 | [UNetFormer分割图像](./zh/examples/unetformer.md) | 数据驱动 | UNetformer | 监督学习 | [Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen) | [Paper](https://github.com/WangLibo1995/GeoSeg) |
     | 交通预测 | [TGCN 交通流量预测](./zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
     | 生成模型| [图像生成中的梯度惩罚应用](./zh/examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
+    | 遥感图像分割 | [UTAE 遥感时序语义/全景分割](./zh/examples/UTAE.md) | 数据驱动 | UTAE | 监督学习 | [PASTIS](https://zenodo.org/records/5012942) | [Paper](https://arxiv.org/abs/2107.07933) |
 
 === "化学科学"
 

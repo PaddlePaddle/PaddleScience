@@ -37,4 +37,5 @@
         - IFMMoeDataset
         - STAFNetDataset
         - ERA5ClimateDataset
+        - MoleculeDatasetIter
       show_root_heading: true

@@ -1,0 +1,60 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    dir: outputs_allen_cahn_piratenet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode}
+    chdir: false
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+mode: "train"
+seed: 42
+output_dir: ${hydra:run.dir}
+
+data:
+  train_features_path: "./data/cleaned/training.csv"
+  train_labels_path: "./data/cleaned/training_labels.csv"
+  val_features_path: "./data/cleaned/validation.csv"
+  val_labels_path: "./data/cleaned/validation_labels.csv"
+
+model:
+  num_layers: 4
+  hidden_size: [128, 96, 64, 32]
+  activation: "relu"
+  input_dim: 2808
+  output_dim: 1
+
+TRAIN:
+  epochs: 10
+  search_epochs: 3
+  batch_size: 64
+  learning_rate: 0.001
+  eval_during_train: true
+  eval_freq: 5
+  save_freq: 10
+  log_freq: 50
+  lr_scheduler:
+    gamma: 0.95
+    decay_steps: 5
+    warmup_epoch: 2
+    warmup_start_lr: 1.0e-6
+
+EVAL:
+  batch_size: 64
+  eval_with_no_grad: true
+  pretrained_model_path: null
+  log_freq: 50
