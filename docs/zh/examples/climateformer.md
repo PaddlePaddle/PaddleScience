@@ -63,6 +63,13 @@ ppsci/arch/climateformer.py:329:344
 
 ### 2.4 Climateformer模型结构
 
+模型的总体结构如图所示：
+
+<figure markdown>
+  ![climateformer-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/climateformer/climateformer.png){ loading=lazy style="margin:0 auto"}
+  <figcaption>Climateformer 网络模型</figcaption>
+</figure>
+
 Climateformer模型首先使用特征嵌入层对输入信号（多气象要素的过去几个周平均时间帧）进行空间特征编码：
 
 ``` py linenums="418" title="ppsci/arch/climateformer.py"
@@ -167,7 +174,7 @@ examples/climateformer/main.py:107:123
 --8<--
 ```
 
-#### 3.2.6 模型导出
+#### 3.2.6 训练时评估
 
 通过设置 `ppsci.solver.Solver` 中的 `eval_during_train` 参数，可以自动保存在验证集上效果最优的模型参数。
 

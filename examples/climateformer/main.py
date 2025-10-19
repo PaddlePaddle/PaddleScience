@@ -113,7 +113,7 @@ def train(cfg: DictConfig):
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
         log_freq=cfg.log_freq,
-        eval_during_train=True,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
