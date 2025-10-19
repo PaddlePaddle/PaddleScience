@@ -36,5 +36,5 @@
         - DrivAerNetPlusPlusDataset
         - IFMMoeDataset
         - STAFNetDataset
-        - ERA5ClimateDataset
+        - ERA5MeteoDataset
       show_root_heading: true

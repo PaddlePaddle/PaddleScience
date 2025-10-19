@@ -42,6 +42,6 @@
         - RegDGCNN
         - RegPointNet
         - IFMMLP
-        - Climateformer
+        - Meteoformer
       show_root_heading: true
       heading_level: 3

@@ -18,11 +18,13 @@ import datetime
 import numbers
 import os
 import random
-from typing import Dict, Optional, Tuple
+from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
-import xarray as xr
 import paddle
+import xarray as xr
 from paddle import io
 from paddle import vision
 
@@ -72,8 +74,8 @@ class ERA5MeteoDataset(io.Dataset):
         mean_ds = xr.open_dataset(mean_file_path)
         std_ds = xr.open_dataset(std_file_path)
 
-        self.mean = mean_ds['mean'].values.reshape(-1, 1, 1)
-        self.std = std_ds['std'].values.reshape(-1, 1, 1)
+        self.mean = mean_ds["mean"].values.reshape(-1, 1, 1)
+        self.std = std_ds["std"].values.reshape(-1, 1, 1)
 
         self.weight_dict = {} if weight_dict is None else weight_dict
         if weight_dict is not None:
@@ -89,7 +91,7 @@ class ERA5MeteoDataset(io.Dataset):
         if self.training:
             target_years = {"2016", "2017", "2018"}
         else:
-            target_years = {"2019"}
+            target_years = {"2016", "2019"}
 
         time_list = []
         for y in years:
@@ -117,8 +119,8 @@ class ERA5MeteoDataset(io.Dataset):
         for n in range(self.sq_length):
             y_list.append(self.load_data(global_idx + self.sq_length + n))
 
-        x = np.stack(x_list, axis=0)  
-        y = np.stack(y_list, axis=0)  
+        x = np.stack(x_list, axis=0)
+        y = np.stack(y_list, axis=0)
 
         # Normalize
         x = (x - self.mean) / self.std
@@ -150,10 +152,18 @@ class ERA5MeteoDataset(io.Dataset):
         day = f"{dt.day:02d}"
         hour = f"{dt.hour:02d}"
 
-        r_data = np.load(os.path.join(self.file_path, year, f"r_{year}{mon}{day}{hour}.npy"))
-        t_data = np.load(os.path.join(self.file_path, year, f"t_{year}{mon}{day}{hour}.npy"))
-        u_data = np.load(os.path.join(self.file_path, year, f"u_{year}{mon}{day}{hour}.npy"))
-        v_data = np.load(os.path.join(self.file_path, year, f"v_{year}{mon}{day}{hour}.npy"))
+        r_data = np.load(
+            os.path.join(self.file_path, year, f"r_{year}{mon}{day}{hour}.npy")
+        )
+        t_data = np.load(
+            os.path.join(self.file_path, year, f"t_{year}{mon}{day}{hour}.npy")
+        )
+        u_data = np.load(
+            os.path.join(self.file_path, year, f"u_{year}{mon}{day}{hour}.npy")
+        )
+        v_data = np.load(
+            os.path.join(self.file_path, year, f"v_{year}{mon}{day}{hour}.npy")
+        )
 
         data = np.concatenate([r_data, t_data, u_data, v_data])
         return data
@@ -161,14 +171,14 @@ class ERA5MeteoDataset(io.Dataset):
     def _random_crop(self, x, y):
         if isinstance(self.size, numbers.Number):
             self.size = (int(self.size), int(self.size))
-        
+
         th, tw = self.size
-        h, w = y.shape[-2], y.shape[-1] 
-        
+        h, w = y.shape[-2], y.shape[-1]
+
         x1 = random.randint(0, w - tw)
         y1 = random.randint(0, h - th)
 
         x_cropped = x[..., y1 : y1 + th, x1 : x1 + tw]
         y_cropped = y[..., y1 : y1 + th, x1 : x1 + tw]
-        
+
         return x_cropped, y_cropped

@@ -39,7 +39,6 @@ def train(cfg: DictConfig):
             "num_workers": 4,
         }
     else:
-        NUM_GPUS_PER_NODE = 8
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
@@ -55,7 +54,7 @@ def train(cfg: DictConfig):
             "batch_size": cfg.TRAIN.batch_size,
             "num_workers": 4,
         }
-        
+
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -77,9 +76,6 @@ def train(cfg: DictConfig):
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
         },
-        "sampler": {
-            "name": "BatchSampler",
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -89,6 +85,7 @@ def train(cfg: DictConfig):
         ppsci.loss.MSELoss(),
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
+            "MSE": ppsci.metric.MSE(keep_batch=True),
         },
         name="Sup_Validator",
     )
@@ -136,9 +133,6 @@ def evaluate(cfg: DictConfig):
             "training": False,
             "size": (cfg.IMG_H, cfg.IMG_W),
         },
-        "sampler": {
-            "name": "BatchSampler",
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -148,13 +142,14 @@ def evaluate(cfg: DictConfig):
         ppsci.loss.MSELoss(),
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
+            "MSE": ppsci.metric.MSE(keep_batch=True),
         },
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
 
     # set model
-    model = ppsci.arch.Preformer(**cfg.MODEL)
+    model = ppsci.arch.Meteoformer(**cfg.MODEL)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -170,7 +165,7 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="train.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="meteoformer.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

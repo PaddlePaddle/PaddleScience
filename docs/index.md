@@ -163,6 +163,7 @@
     | 地震波形反演 | [VelocityGAN 地震波形反演](./zh/examples/velocity_gan.md) | 数据驱动 | VelocityGAN | 监督学习 | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
     | 遥感图像分割 | [UNetFormer分割图像](./zh/examples/unetformer.md) | 数据驱动 | UNetformer | 监督学习 | [Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen) | [Paper](https://github.com/WangLibo1995/GeoSeg) |
     | 交通预测 | [TGCN 交通流量预测](./zh/examples/tgcn.md) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
+    | 天气预报 | [Meteoformer 多气象要素预测](./zh/examples/meteoformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
     | 生成模型| [图像生成中的梯度惩罚应用](./zh/examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
 
 === "化学科学"
@@ -171,7 +172,6 @@
     |-----|---------|-----|---------|----|---------|---------|
     | 化学分子生成 | [Moflow](./zh/examples/moflow.md) | 数据驱动 | moflow | 监督学习 | qm9/ zink250k | [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1) |
     | 化学反应预测 | [IFM](./zh/examples/ifm.md) | 数据驱动 | IFM-MLP | 监督学习 | tox21/sider/hiv/bace/bbbp | [Understanding the Limitations of Deep Models for Molecular property prediction: Insights and Solutions](https://openreview.net/pdf?id=NLFqlDeuzt) |
-| 天气预报 | [Climateformer 气候预测](./zh/examples/climateformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
 
 ## 🚀快速安装
 
