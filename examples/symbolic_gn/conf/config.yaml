@@ -1,0 +1,138 @@
+defaults:
+   - ppsci_default
+   - TRAIN: train_default
+   - TRAIN/ema: ema_default
+   - TRAIN/swa: swa_default
+   - EVAL: eval_default
+   - INFER: infer_default
+   - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+   - _self_
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_symbolic_gcn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+
+TRAIN:
+  epochs: 1000
+  batch_size: auto  # auto = int(64 * (4 / num_nodes) ** 2)
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 5
+  checkpoint_path: null
+  pretrained_model_path: null
+  train_split: 0.8  # Train/validation split ratio
+  optimizer:
+    learning_rate: 1e-3
+    weight_decay: 1e-8
+  lr_scheduler:
+    name: "OneCycleLR"
+    max_learning_rate: 1e-3
+    final_div_factor: 1e5
+  loss:
+    type: "MAE"  # MAE or MSE
+    physics_weight: 0.0  # Physical regularization weight
+  message_analysis:
+    enabled: true
+    record_interval: 1
+    test_sample_size: 1000
+
+
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size: 1024
+
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/ogn_model
+  device: gpu
+  engine: native
+  precision: fp32
+
+
+MODEL:
+  arch: "OGN"  # OGN, varOGN, HGN
+  input_keys: ["node_features", "edge_index"]
+  output_keys: ["acceleration"]
+  n_f: auto  # auto = dimension * 2 + 2
+  msg_dim: 100
+  ndim: auto  # auto = dimension
+  dt: 0.1
+  hidden: 300
+  aggr: "add"  # add, mean, max, min
+  regularization_type: "l1"  # l1, kl, energy, none
+  l1_strength: 1e-2
+
+DATA:
+  type: "spring"  # r1, r2, spring, string, charge, superposition, damped, discontinuous, string_ball
+  num_samples: 10000
+  num_nodes: 4
+  dimension: 2
+  time_steps: 1000
+  time_step_size: auto
+  downsample_factor: 5
+  sample_interval: 5  # Sampling interval for training data
+
+DATATYPE_TYPE:
+  - sim: "r1"
+    dt: [5e-3]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "r2"
+    dt: [1e-3]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "spring"
+    dt: [1e-2]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "string"
+    dt: [1e-2]
+    nt: [1000]
+    n: [30]
+    dim: [2]
+  - sim: "charge"
+    dt: [1e-3]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "superposition"
+    dt: [1e-3]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "damped"
+    dt: [2e-2]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "discontinuous"
+    dt: [1e-2]
+    nt: [1000]
+    n: [4, 8]
+    dim: [2, 3]
+  - sim: "string_ball"
+    dt: [1e-2]
+    nt: [1000]
+    n: [30]
+    dim: [2]
