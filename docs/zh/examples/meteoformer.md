@@ -2,7 +2,20 @@
 
 开始训练、评估前，请下载[ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download)数据集文件。
 
-开始评估前，请下载或训练生成预训练模型
+开始评估前，请下载或训练生成预训练模型。
+
+用于评估的数据集已保存，可通过以下链接进行下载、评估：
+[ERA5_201601.tar.gz](https://paddle-org.bj.bcebos.com/paddlescience/datasets/meteoformer/ERA5_201601.tar.gz)、
+[mean.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/mean.nc)、
+[std.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/std.nc)。
+
+下载或解压完成后，请保持以下目录形式：
+ERA5/
+├── mean.nc
+├── std.nc
+└── 2016/
+    ├── r_2016010100.npy
+    ├── ...
 
 === "模型训练命令"
 
@@ -13,7 +26,7 @@
 === "模型评估命令"
 
     ``` sh
-    python main.py mode=eval EVAL.pretrained_model_path=./outputs_meteoformer/checkpoints/best_model.pdparams
+    python main.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/meteoformer/meteoformer.pdparams"
     ```
 
 ## 1. 背景简介
@@ -103,7 +116,7 @@ ppsci/arch/meteoformer.py:427:429
 
 该案例基于 Meteoformer 模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="94" title="examples/meteoformer/mian.py"
+``` py linenums="94" title="examples/meteoformer/main.py"
 --8<--
 examples/meteoformer/main.py:94:95
 --8<--
