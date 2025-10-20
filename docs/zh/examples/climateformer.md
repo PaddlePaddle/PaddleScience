@@ -4,7 +4,7 @@
 
 开始评估前，请下载或训练生成预训练模型。
 
-2018年的ERA5数据已保存，可通过下面的链接进行下载，评估：
+用于评估的ERA5数据集2018年数据已保存，可通过以下链接进行下载、评估：
 [2018.h5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/2018.h5)、
 [mean.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/mean.nc)、
 [std.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/std.nc)。
