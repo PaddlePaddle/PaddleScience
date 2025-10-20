@@ -4,6 +4,21 @@
 
 开始评估前，请下载或训练生成预训练模型。
 
+用于评估的数据集已保存，可通过下面的链接进行下载、评估：
+[rain_2016_01.h5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/preformer/rain_2016_01.h5)、
+[ERA5_201601.tar.gz](https://paddle-org.bj.bcebos.com/paddlescience/datasets/meteoformer/ERA5_201601.tar.gz)、
+[mean.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/mean.nc)、
+[std.nc](https://paddle-org.bj.bcebos.com/paddlescience/datasets/climateformer/std.nc)。
+
+下载或解压完成后，请保持以下目录形式：
+ERA5/
+├── mean.nc
+├── std.nc
+├── rain_2016_01.h5
+└── 2016/
+    ├── r_2016010100.npy
+    ├── ...
+
 === "模型训练命令"
 
     ``` sh
@@ -13,7 +28,7 @@
 === "模型评估命令"
 
     ``` sh
-    python main.py mode=eval EVAL.pretrained_model_path=./outputs_preformer/checkpoints/best_model.pdparams
+    python main.py mode=eval EVAL.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/preformer/preformer.pdparams"
     ```
 
 ## 1. 背景简介
@@ -57,6 +72,13 @@ ppsci/arch/preformer.py:329:344
 ```
 
 ### 2.4 Preformer模型结构
+
+模型的总体结构如图所示：
+
+<figure markdown>
+  ![preformer-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/preformer/preformer.png){ loading=lazy style="margin:0 auto"}
+  <figcaption>Preformer 网络模型</figcaption>
+</figure>
 
 Preformer模型首先使用特征嵌入层对输入信号（过去几小时的气象要素）进行空间特征编码：
 
