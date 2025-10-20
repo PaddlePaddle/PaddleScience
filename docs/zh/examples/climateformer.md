@@ -108,7 +108,7 @@ ppsci/arch/climateformer.py:427:429
 
 该案例基于 Climateformer 模型实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="97" title="examples/climateformer/mian.py"
+``` py linenums="97" title="examples/climateformer/main.py"
 --8<--
 examples/climateformer/main.py:97:98
 --8<--

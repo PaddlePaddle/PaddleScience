@@ -23,10 +23,16 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-import h5py
+try:
+    import h5py
+except ModuleNotFoundError:
+    pass
+try:
+    import xarray as xr
+except ModuleNotFoundError:
+    pass
 import numpy as np
 import paddle
-import xarray as xr
 from paddle import io
 from paddle import vision
 
