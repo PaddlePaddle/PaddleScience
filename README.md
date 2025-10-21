@@ -147,6 +147,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 交通预测 | [TGCN 交通流量预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tgcn) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
 | 遥感图像分割 | [UNetFormer 遥感图像分割](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/unetformer) | 数据驱动 | UNetFormer | 监督学习 | [Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen) | [Paper](https://github.com/WangLibo1995/GeoSeg) |
 | 生成模型| [图像生成中的梯度惩罚应用](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/wgan_gp)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
+| 遥感图像分割 | [UTAE 遥感时序语义/全景分割](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/UTAE/) | 数据驱动 | UTAE | 监督学习 | [PASTIS](https://zenodo.org/records/5012942) | [Paper](https://arxiv.org/abs/2107.07933) |
 </details>
 
 <details>

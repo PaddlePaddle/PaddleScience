@@ -313,9 +313,9 @@ def compute_cuboid_self_attention_mask(
     """Compute the shift window attention mask
 
     Args:
-        data_shape (Tuple[int,....]): Should be (T, H, W).
-        cuboid_size (Tuple[int,....]): Size of the cuboid.
-        shift_size (Tuple[int,....]): The shift size.
+        data_shape (Tuple[int, ...]): Should be (T, H, W).
+        cuboid_size (Tuple[int, ...]): Size of the cuboid.
+        shift_size (Tuple[int, ...]): The shift size.
         strategy (str): The decomposition strategy.
         padding_type (str): Type of the padding.
         device (str): The device.
