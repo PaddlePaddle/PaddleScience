@@ -117,6 +117,7 @@ nav:
         - FuXi: zh/examples/fuxi.md
         - UNetFormer: zh/examples/unetformer.md
         - WGAN_GP: zh/examples/wgan_gp.md
+        - UTAE: zh/examples/UTAE.md
       - 化学科学(AI for Chemistry):
         - SMC Reac: zh/examples/smc_reac.md
         - Moflow: zh/examples/moflow.md

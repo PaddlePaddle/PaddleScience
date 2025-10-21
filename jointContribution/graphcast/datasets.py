@@ -452,10 +452,11 @@ class ERA5Data(paddle.io.Dataset):
             )
             targets = targets_fillna
 
-        targets = map_structure(
-            lambda t: self._subtract_input_and_normalize_target(intputs_fillna, t),
-            targets,
-        )
+        if config.mode == 'train':
+            targets = map_structure(
+                lambda t: self._subtract_input_and_normalize_target(intputs_fillna, t),
+                targets,
+            )
         inputs = self.normalize(inputs, stddev_data, mean_data)
         forcings = self.normalize(forcings, stddev_data, mean_data)
 
