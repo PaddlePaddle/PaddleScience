@@ -267,3 +267,16 @@ examples/preformer/main.py
 examples/preformer/conf/preformer.yaml
 --8<--
 ```
+
+## 5. 结果展示
+
+下图展示了Preformer模型在短时降水预测任务中的预测结果与真值结果对比。图中的横轴表示不同的时间段，每个时间段间隔为1小时，每次模型预测6帧降水量。
+
+<figure markdown>
+  ![result_precip](https://paddle-org.bj.bcebos.com/paddlescience/docs/preformer/result.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>Preformer模型预测结果（"Ours"）与真值结果（"GT"）</figcaption>
+</figure>
+
+## 6. 参考资料
+
+- [Preformer: Simple and Efficient Design for Precipitation Nowcasting With Transformers](https://ieeexplore.ieee.org/document/10288072)
