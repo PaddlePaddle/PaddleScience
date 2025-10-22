@@ -257,3 +257,12 @@ examples/climateformer/main.py
 examples/climateformer/conf/climateformer.yaml
 --8<--
 ```
+
+## 5. 结果展示
+
+下图展示了Climateformer模型在1000 hPa等气压层温度预测任务中的预测结果与真值对比。横轴表示不同的预测时间步，时间间隔为1周，每次模型预测未来6周的周平均值。
+
+<figure markdown>
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/climateformer/result.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>Climateformer模型预测结果（"Pred"）与真值结果（"GT"）</figcaption>
+</figure>
