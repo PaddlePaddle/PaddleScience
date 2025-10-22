@@ -207,7 +207,6 @@ python main.py --epochs 100
 4. **结果复现**：设置随机种子确保结果可复现
 5. **内存要求**：大数据集可能需要较大内存，建议分批处理
 
-
 ## 参考文献
 
 -Zheng Wan., et al. "XRDMatch: a semi-supervised learning framework to efficiently discover room temperature lithium superionic conductors." Energy Environ. Sci., 2024, 17, 9487(https://pubs.rsc.org/en/content/articlelanding/2024/ee/d4ee02970d)
