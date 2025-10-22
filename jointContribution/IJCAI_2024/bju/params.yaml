@@ -1,0 +1,13 @@
+GeomCFD:
+  in_out_dim: 64
+  n_heads: 4
+  d_head: 16
+  dropout: 0.1
+  context_dim: 512
+  gated_ff: True
+
+GeoCA3D:
+  in_out_dim: 64
+  dropout: 0.1
+  context_dim: 512
+  gated_ff: True

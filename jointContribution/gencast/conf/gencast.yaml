@@ -1,0 +1,107 @@
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: gencast/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+seed: 2024
+output_dir: ${hydra:run.dir}
+log_freq: 20
+num_ensemble_members: 8
+input_duration: "24h"
+target_lead_times: "12h"
+
+type: gencast
+data_path: ./data/dataset/gencast-dataset-source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc
+stddev_diffs_path: ./data/stats/gencast-stats-diffs_stddev_by_level.nc
+stddev_path: ./data/stats/gencast-stats-stddev_by_level.nc
+mean_path: ./data/stats/gencast-stats-mean_by_level.nc
+min_path: ./data/stats/gencast-stats-min_by_level.nc
+param_path: ./data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
+
+train:
+  learning_rate: 0.001
+  weight_decay: 0.1
+  num_epochs: 2000000
+  batch_size: 1
+  snapshot_freq: 10
+
+sampler_config:
+  max_noise_level: 80.0
+  min_noise_level: 0.03
+  num_noise_levels: 20
+  rho: 7.0
+  stochastic_churn_rate: 2.5
+  churn_min_noise_level: 0.75
+  churn_max_noise_level: inf
+  noise_level_inflation_factor: 1.05
+
+noise_config:
+  training_noise_level_rho: 7.0
+  training_max_noise_level: 88.0
+  training_min_noise_level: 0.02
+
+noise_encoder_config:
+  apply_log_first: true
+  base_period: 16.0
+  num_frequencies: 32
+  output_sizes: [32, 16]
+
+denoiser_architecture_config:
+  sparse_transformer_config:
+    attention_k_hop: 16
+    d_model: 512
+    num_layers: 16
+    num_heads: 4
+    attention_type: triblockdiag_mha
+    mask_type: lazy
+    block_q: 1024
+    block_kv: 512
+    block_kv_compute: 256
+    block_q_dkv: 512
+    block_kv_dkv: 1024
+    block_kv_dkv_compute: 1024
+    ffw_winit_final_mult: 1.0
+    attn_winit_final_mult: 1.0
+    attn_winit_mult: 2.0
+    ffw_hidden: 2048
+    mesh_node_dim: 186
+    mesh_node_emb_dim: 512
+    ffw_winit_mult: 2.0
+    value_size: 128
+    key_size: 128
+    norm_conditioning_feat: 16
+    activation: gelu
+  mesh_size: 4
+  latent_size: 512
+  hidden_layers: 1
+  radius_query_fraction_edge_length: 0.6
+  norm_conditioning_features: ['noise_level_encodings']
+  grid2mesh_aggregate_normalization: null
+  node_output_size: 84
+  grid_node_dim: 267
+  grid_node_emb_dim: 512
+  mesh_node_dim: 267
+  mesh_node_emb_dim: 512
+  mesh_edge_emb_dim: 512
+  mesh_edge_dim: 4
+  grid2mesh_edge_dim: 4
+  grid2mesh_edge_emb_dim: 512
+  mesh2grid_edge_dim: 4
+  mesh2grid_edge_emb_dim: 512
+  gnn_msg_steps: 16
+  node_output_dim: 84
+  norm_conditioning_feat: 16
+  mesh_node_num: 2562
+  grid_node_num: 65160
+  resolution: 1.0
+  name: gencast

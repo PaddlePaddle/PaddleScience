@@ -1,0 +1,7 @@
+mat73
+matplotlib
+numpy
+paddlepaddle-gpu
+pyaml
+sklearn
+tqdm

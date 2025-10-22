@@ -1,0 +1,3 @@
+[submodule "jointContribution/graphGalerkin/pycamotk"]
+	path = jointContribution/graphGalerkin/pycamotk
+	url = https://github.com/zlynna/pycamotk.git

@@ -210,4 +210,4 @@ python main.py --epochs 100
 
 ## 参考文献
 
-1. Zheng Wan., et al. "XRDMatch: a semi-supervised learning framework to efficiently discover room temperature lithium superionic conductors." Energy Environ. Sci., 2024, 17, 9487
+Zheng Wan., et al. "XRDMatch: a semi-supervised learning framework to efficiently discover room temperature lithium superionic conductors." Energy Environ. Sci., 2024, 17, 9487
