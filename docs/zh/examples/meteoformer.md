@@ -265,3 +265,12 @@ examples/meteoformer/main.py
 examples/meteoformer/conf/meteoformer.yaml
 --8<--
 ```
+
+## 5. 结果展示
+
+下图展示了Meteoformer模型在1000 hPa层风速预测任务中的预测结果与真值结果对比。横轴表示不同的预测时间步，时间间隔为1小时，模型一次可预测未来6个时间步。
+
+<figure markdown>
+  ![result_precip](https://paddle-org.bj.bcebos.com/paddlescience/docs/meteoformer/result.png){ loading=lazy style="margin:0 auto;"}
+  <figcaption>Meteoformer模型预测结果（"Pred"）与真值结果（"GT"）</figcaption>
+</figure>
