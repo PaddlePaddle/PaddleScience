@@ -4,9 +4,9 @@
     handler: python
     options:
       members:
+        - Arch
         - AFNONet
         - AMGNet
-        - Arch
         - AutoEncoder
         - ChipDeepONets
         - CrystalGraphConvNet
@@ -21,28 +21,29 @@
         - FNO1d
         - Generator
         - HEDeepONets
+        - IFMMLP
         - KAN
         - LatentNO
+        - LNO
         - LorenzEmbedding
         - MLP
         - ModelList
         - ModifiedMLP
+        - MoleculeModel
         - NowcastNet
+        - RegDGCNN
+        - RegPointNet
         - SFNONet
         - SPINN
         - STAFNet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - TGCN
         - Transformer
+        - Transolver
         - UNetEx
         - UNONet
         - USCNN
-        - LNO
-        - TGCN
-        - RegDGCNN
-        - RegPointNet
-        - IFMMLP
-        - MoleculeModel
       show_root_heading: true
       heading_level: 3

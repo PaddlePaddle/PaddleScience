@@ -4,37 +4,39 @@
     handler: python
     options:
       members:
-        - IterableNamedArrayDataset
-        - NamedArrayDataset
+        - build_dataset
+        - CGCNNDataset
         - ChipHeatDataset
-        - CSVDataset
-        - IterableCSVDataset
         - ContinuousNamedArrayDataset
+        - CSVDataset
+        - CylinderDataset
+        - DarcyFlowDataset
+        - DGMRDataset
+        - DrivAerNetDataset
+        - DrivAerNetPlusPlusDataset
         - ERA5Dataset
         - ERA5SampledDataset
         - ExtMoEENSODataset
+        - IFMMoeDataset
+        - IterableCSVDataset
         - IterableMatDataset
-        - MatDataset
+        - IterableNamedArrayDataset
         - IterableNPZDataset
-        - NPZDataset
-        - CylinderDataset
         - LorenzDataset
-        - RosslerDataset
-        - VtuDataset
+        - MatDataset
         - MeshAirfoilDataset
         - MeshCylinderDataset
-        - RadarDataset
-        - build_dataset
-        - DGMRDataset
-        - DarcyFlowDataset
-        - SphericalSWEDataset
-        - SEVIRDataset
-        - MOlFLOWDataset
-        - CGCNNDataset
-        - PEMSDataset
-        - DrivAerNetDataset
-        - DrivAerNetPlusPlusDataset
-        - IFMMoeDataset
-        - STAFNetDataset
         - MoleculeDatasetIter
+        - MoleculeDatasetIter
+        - MOlFLOWDataset
+        - NamedArrayDataset
+        - NPZDataset
+        - PEMSDataset
+        - RadarDataset
+        - RosslerDataset
+        - SEVIRDataset
+        - ShapeNetCarDataset
+        - SphericalSWEDataset
+        - STAFNetDataset
+        - VtuDataset
       show_root_heading: true

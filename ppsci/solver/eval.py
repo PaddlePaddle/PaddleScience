@@ -207,7 +207,7 @@ def _eval_by_batch(
             computed during evaluation.
     """
     target_metric: float = float("inf")
-    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
+    metric_dict_group: Dict[str, Dict[str, float]] = {}
     for _, _validator in solver.validator.items():
         num_samples = _get_dataset_length(_validator.data_loader)
 
@@ -243,9 +243,11 @@ def _eval_by_batch(
 
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
-                metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
+                metric_dict_group[metric_name] = {}
                 metric_dict = metric_func(output_dict, label_dict)
                 for var_name, metric_value in metric_dict.items():
+                    if var_name not in metric_dict_group[metric_name]:
+                        metric_dict_group[metric_name] = []
                     metric_dict_group[metric_name][var_name].append(
                         metric_value
                         if solver.world_size == 1

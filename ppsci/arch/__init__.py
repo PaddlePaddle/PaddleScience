@@ -17,6 +17,8 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING
 
+from ppsci.arch.transolver import Transolver
+
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
@@ -74,6 +76,7 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    "Transolver",
     "MoFlowNet",
     "MoFlowProp",
     "AFNONet",

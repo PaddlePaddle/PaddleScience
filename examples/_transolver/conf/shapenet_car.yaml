@@ -1,0 +1,98 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_transolver/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode}/
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+DATA:
+  input_keys: [x]
+  label_keys: [velo_vec, press]
+  data_dir: ./mlcfd_data/training_data
+  save_dir: ./mlcfd_data/preprocessed_data
+  val_fold_id: 0
+  preprocessed: true
+  use_cfd_mesh: false
+  r: 0.2
+
+# model settings
+MODEL:
+  input_keys: [x]
+  output_keys: [velo_vec, press] # vel: 3, press: 1
+  space_dim: 7
+  n_layers: 8
+  n_hidden: 256
+  dropout: 0
+  n_head: 8
+  act: gelu
+  mlp_ratio: 2
+  fun_dim: 0
+  out_dim: [3, 1]
+  slice_num: 32
+  ref: 8
+  unified_pos: false
+
+# training settings
+TRAIN:
+  epochs: 200
+  iters_per_epoch: -1
+  lr:
+    warmup_epoch: 60
+    max_lr: 1e-3
+    gamma: 0.999973
+    decay_steps: 1
+  batch_size: 1
+  press_weight: 1.0
+  save_freq: 20
+  eval_freq: 10
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 1
+  eval_with_no_grad: true
+  pretrained_model_path: ???
+
+# inference settings
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/transolver
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 1024

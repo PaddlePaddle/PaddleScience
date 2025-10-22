@@ -17,6 +17,7 @@ from __future__ import annotations
 import copy
 import sys
 from typing import TYPE_CHECKING
+from typing import Union
 
 from paddle import io
 
@@ -52,6 +53,7 @@ from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.pems_dataset import PEMSDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
+from ppsci.data.dataset.shapenet_car import ShapeNetCarDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
 from ppsci.data.dataset.synthemol_dataset import MoleculeDatasetIter
@@ -109,18 +111,23 @@ __all__ = [
     "LatentNODataset",
     "LatentNODataset_time",
     "MoleculeDatasetIter",
+    "ShapeNetCarDataset",
 ]
 
 
-def build_dataset(cfg: DictConfig) -> "io.Dataset":
+def build_dataset(cfg: Union[DictConfig, io.Dataset]) -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (DictConfig): Dataset config list.
+        cfg (Union[DictConfig, io.Dataset]): Dataset config or dataset.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
     """
+    # If cfg is already a Dataset instance, return it directly
+    if isinstance(cfg, io.Dataset):
+        return cfg
+
     cfg = copy.deepcopy(cfg)
 
     dataset_cls = cfg.pop("name")
