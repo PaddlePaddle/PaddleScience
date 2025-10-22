@@ -56,7 +56,6 @@ train_constraints:
     metric:
       - name: Accuracy
 
-
 eval_constraints:
   supervised:
     name: SupervisedConstraint
