@@ -1,4 +1,0 @@
-einops
-numpy
-paddlepaddle_gpu
-scipy
