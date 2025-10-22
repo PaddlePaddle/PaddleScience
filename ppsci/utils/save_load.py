@@ -146,8 +146,8 @@ def load_checkpoint(
         optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
-        ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
-        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
+        ema_model (Optional[ema.AveragedModel]): Average model. Defaults to None.
+        aggregator (Optional[mtl.LossAggregator]): Loss aggregator. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -241,8 +241,8 @@ def save_checkpoint(
         print_log (bool, optional): Whether print saving log information, mainly for
             keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
             Defaults to True.
-        ema_model: Optional[ema.AveragedModel]: Average model. Defaults to None.
-        aggregator: Optional[mtl.LossAggregator]: Loss aggregator. Defaults to None.
+        ema_model (Optional[ema.AveragedModel]): Average model. Defaults to None.
+        aggregator (Optional[mtl.LossAggregator]): Loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci

@@ -35,4 +35,6 @@
         - DrivAerNetDataset
         - DrivAerNetPlusPlusDataset
         - IFMMoeDataset
+        - STAFNetDataset
+        - MoleculeDatasetIter
       show_root_heading: true

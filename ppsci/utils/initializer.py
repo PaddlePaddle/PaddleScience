@@ -46,6 +46,8 @@ __all__ = [
     "kaiming_normal_",
     "linear_init_",
     "conv_init_",
+    "glorot_normal_",
+    "lecun_normal_",
 ]
 
 
@@ -378,7 +380,7 @@ def kaiming_uniform_(
         tensor (paddle.Tensor):  Paddle Tensor.
         a (float, optional): The negative slope of the rectifier used after this layer.
             Defaults to 0.
-        mode (Literal[&quot;fan_in&quot;, &quot;fan_out&quot;], optional):
+        mode (Literal['fan_in', 'fan_out'], optional):
             ["fan_in", "fan_out"]. Defaults to "fan_in".
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): Tensor data format order, False by default as
@@ -413,7 +415,7 @@ def kaiming_normal_(
         tensor (paddle.Tensor): Paddle Tensor.
         a (float, optional): The negative slope of the rectifier used after this layer.
             Defaults to 0.
-        mode (Literal[&quot;fan_in&quot;, &quot;fan_out&quot;], optional): Either
+        mode (Literal['fan_in', 'fan_out'], optional): Either
             'fan_in' (default) or 'fan_out'. Defaults to "fan_in".
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): Tensor data format order. Defaults to False.
@@ -493,6 +495,35 @@ def glorot_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
     fin, fout = tensor.shape
     var = 2.0 / (fin + fout)
     stddev = math.sqrt(var) * 0.87962566103423978
+    trunc_normal_(tensor)
+    tensor.set_value(tensor * stddev)
+    return tensor
+
+
+def lecun_normal_(tensor: paddle.Tensor) -> paddle.Tensor:
+    """Modify tensor inplace using jax-style lecun_normal.
+
+    References:
+        https://github.com/jax-ml/jax/blob/main/jax/_src/nn/initializers.py#L480-L513
+
+    Args:
+        tensor (paddle.Tensor): Paddle Tensor/Parameter.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.lecun_normal_(param)
+    """
+    assert (
+        tensor.ndim == 2
+    ), f"lecun_normal_ only support 2D tensor now, but got ndim={tensor.ndim}"
+    fin, _ = tensor.shape
+    var = 1.0 / fin
+    stddev = math.sqrt(var) / 0.87962566103423978
     trunc_normal_(tensor)
     tensor.set_value(tensor * stddev)
     return tensor

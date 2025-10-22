@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 
 from ppsci.geometry.geometry import Geometry
@@ -52,11 +54,17 @@ __all__ = [
 ]
 
 
-def build_geometry(cfg):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+
+def build_geometry(cfg: DictConfig):
     """Build geometry(ies)
 
     Args:
-        cfg (List[DictConfig]): Geometry config list.
+        cfg (DictConfig): Geometry config list.
 
     Returns:
         Dict[str, Geometry]: Geometry(ies) in dict.

@@ -18,6 +18,7 @@ import importlib.util
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from typing_extensions import Literal
 
@@ -213,7 +214,7 @@ if importlib.util.find_spec("pydantic") is not None:
             pdiparams_path: Optional[str] = None
             onnx_path: Optional[str] = None
             device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu"
-            engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
+            engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native"
             precision: Literal["fp32", "fp16", "int8"] = "fp32"
             ir_optim: bool = True
             min_subgraph_size: int = 30
@@ -226,14 +227,18 @@ if importlib.util.find_spec("pydantic") is not None:
             # Fine-grained validator(s) below
             @field_validator("engine")
             def engine_check(cls, v, info: ValidationInfo):
+                if v == "mkldnn":
+                    raise ValueError(
+                        "The 'mkldnn' engine is deprecated. Please use 'onednn' instead."
+                    )
                 if v == "tensorrt" and info.data["device"] != "gpu":
                     raise ValueError(
                         "'INFER.device' should be 'gpu' when 'INFER.engine' is 'tensorrt', "
                         f"but got '{info.data['device']}'"
                     )
-                if v == "mkldnn" and info.data["device"] != "cpu":
+                if v == "onednn" and info.data["device"] != "cpu":
                     raise ValueError(
-                        "'INFER.device' should be 'cpu' when 'INFER.engine' is 'mkldnn', "
+                        "'INFER.device' should be 'cpu' when 'INFER.engine' is 'onednn', "
                         f"but got '{info.data['device']}'"
                     )
 
@@ -297,7 +302,7 @@ if importlib.util.find_spec("pydantic") is not None:
             """
 
             # Global settings config
-            mode: Literal["train", "eval", "export", "infer"] = "train"
+            mode: Union[Literal["train", "eval", "export", "infer"], str] = "train"
             output_dir: Optional[str] = None
             log_freq: int = 20
             seed: int = 42
@@ -311,6 +316,7 @@ if importlib.util.find_spec("pydantic") is not None:
             to_static: bool = False
             prim: bool = False
             log_level: Literal["debug", "info", "warning", "error"] = "info"
+            trace: bool = False
 
             # Training related config
             TRAIN: Optional[TrainConfig] = None
@@ -408,6 +414,7 @@ if importlib.util.find_spec("pydantic") is not None:
             "to_static",
             "prim",
             "log_level",
+            "trace",
             "TRAIN.save_freq",
             "TRAIN.eval_during_train",
             "TRAIN.start_eval_epoch",
@@ -455,3 +462,4 @@ else:
     logger.error(
         "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
     )
+

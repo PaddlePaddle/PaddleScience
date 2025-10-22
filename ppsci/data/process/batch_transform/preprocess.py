@@ -69,6 +69,6 @@ class FunctionalBatchTransform:
 
     def __call__(
         self,
-        data_list: List[Tuple[Optional[Dict[str, np.ndarray]], ...]],
-    ) -> List[Tuple[Optional[Dict[str, np.ndarray]], ...]]:
+        data_list: List[Tuple[Optional[Dict[str, np.ndarray]]]],
+    ) -> List[Tuple[Optional[Dict[str, np.ndarray]]]]:
         return self.transform_func(data_list)

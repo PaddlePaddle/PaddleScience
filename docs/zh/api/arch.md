@@ -22,6 +22,7 @@
         - Generator
         - HEDeepONets
         - KAN
+        - LatentNO
         - LorenzEmbedding
         - MLP
         - ModelList
@@ -29,6 +30,7 @@
         - NowcastNet
         - SFNONet
         - SPINN
+        - STAFNet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
@@ -41,5 +43,6 @@
         - RegDGCNN
         - RegPointNet
         - IFMMLP
+        - MoleculeModel
       show_root_heading: true
       heading_level: 3

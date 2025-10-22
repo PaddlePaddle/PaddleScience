@@ -444,11 +444,12 @@ class ConstantNode(Node):
             or self.expr.is_Integer
             or self.expr.is_Boolean
             or self.expr.is_Rational
+            or isinstance(self.expr, sp.core.numbers.NumberSymbol)
         ):
             self.expr = float(self.expr)
         else:
             raise TypeError(
-                "expr({expr}) should be Float/Integer/Boolean/Rational, "
+                f"expr({expr}) should be Float/Integer/Boolean/Rational, "
                 f"but got {type(self.expr)}"
             )
         self.expr = paddle.to_tensor(self.expr)
@@ -695,7 +696,7 @@ def lambdify(
             else return one single callable function.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for
             computing forward result in `LayerNode`.
-        extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters.
+        extra_parameters (Optional[Sequence[paddle.Tensor]]): Extra learnable parameters.
             Defaults to None.
         graph_filename (Optional[str]): Save computational graph to `graph_filename.png`
             for given `expr`, if `graph_filename` is not None and a valid string,

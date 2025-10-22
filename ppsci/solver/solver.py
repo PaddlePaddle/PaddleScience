@@ -280,11 +280,27 @@ class Solver:
                 *[_v.metric.values() for _v in self.validator.values()]
             ):
                 if metric.keep_batch ^ self.compute_metric_by_batch:
+                    """
+                    Evaluation has two modes:
+                    1. compute_metric_by_batch=True:
+                        - The metric is computed for each batch separately, and the results
+                            are averaged across all batches.
+                        - Suitable for metrics that support additive aggregation (e.g. accuracy).
+                        - Saves memory since batch outputs are not stored.
+                        - In this mode, metric.keep_batch should be True.
+
+                    2. compute_metric_by_batch=False:
+                        - The outputs and labels of all batches are cached.
+                        - Metric is computed once on the concatenated results at the end.
+                        - Needed for metrics that cannot be computed additively (e.g. L2 relative error).
+                        - In this mode, metric.keep_batch should be False.
+                    """
                     raise ValueError(
                         f"{misc.typename(metric)}.keep_batch should be "
-                        f"{self.compute_metric_by_batch} when compute_metric_by_batch="
+                        f"{self.compute_metric_by_batch} when compute_metric_by_batch is "
                         f"{self.compute_metric_by_batch}."
                     )
+
             # check metric name uniqueness over all validators
             _count = {}
             for _validator in validator.values():
@@ -428,9 +444,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'visualdl' with `pip install visualdl` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
+            self.vdl_writer = vdl.LogWriter(osp.join(self.output_dir, "vdl"))
             logger.info(
                 "VisualDL is enabled for logging, you can view it by "
                 f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
@@ -449,6 +463,15 @@ class Solver:
                     "Please install 'wandb' with `pip install wandb` first."
                 )
             with misc.RankZeroOnly(self.rank) as is_master:
+                for key in ("http_proxy", "https_proxy"):
+                    if f"{key}_original" in os.environ and os.environ.get(
+                        "WANDB_MODE"
+                    ) not in ["offline", "disabled"]:
+                        os.environ[key] = os.environ.get(f"{key}_original")
+                        logger.warning(
+                            f"Environment variable '{key}' was restored from "
+                            f"'{key}_original' to avoid wandb online initialization.",
+                        )
                 if is_master:
                     self.wandb_writer = wandb.init(**self.wandb_config)
 
@@ -463,11 +486,11 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'tensorboardX' with `pip install tensorboardX` first."
                 )
-            with misc.RankZeroOnly(self.rank) as is_master:
-                if is_master:
-                    self.tbd_writer = tensorboardX.SummaryWriter(
-                        osp.join(self.output_dir, "tensorboard")
-                    )
+            # NOTE: To prevent program hangs, initialize the tensorboardX writer across all processes,
+            # but it will only be used in rank 0
+            self.tbd_writer = tensorboardX.SummaryWriter(
+                osp.join(self.output_dir, "tensorboard")
+            )
             logger.message(
                 "TensorboardX is enabled for logging, you can view it by "
                 f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
@@ -477,26 +500,31 @@ class Solver:
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
-            paddle_version = paddle.__version__
             if version.Version(paddle.__version__) < version.Version("2.6.0"):
                 logger.warning(
-                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    f"Detected paddlepaddle version is '{paddle.__version__}', "
                     "currently it is recommended to use paddlepaddle >= 2.6 or develop version."
                 )
-        else:
-            paddle_version = f"develop({paddle.version.commit[:7]})"
 
-        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(
+            f"Using paddlepaddle {paddle.version.full_version}({paddle.version.commit[:7]}) on device {self.device}"
+        )
 
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass. Defaults to False
         if not cfg:
             self.to_static = to_static
-        jit.enable_to_static(self.to_static)
-        logger.message(
-            f"Set to_static={self.to_static} for computational optimization."
-        )
+
+        if self.to_static:
+            jit.enable_to_static(self.to_static)
+            logger.message("Enable jit.to_static for computational optimization.")
+            self.forward_helper.train_forward = paddle.jit.to_static(
+                self.forward_helper.train_forward
+            )
+            self.forward_helper.eval_forward = paddle.jit.to_static(
+                self.forward_helper.eval_forward
+            )
 
         # convert sympy to callable object if exist
         extra_parameters = []
@@ -565,10 +593,25 @@ class Solver:
 
         start_epoch = self.best_metric["epoch"] + 1
 
-        if self.use_tbd and isinstance(self.cfg, DictConfig):
-            self.tbd_writer.add_text(
-                "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
-            )
+        if isinstance(self.cfg, DictConfig):
+            if self.use_tbd:
+                with misc.RankZeroOnly(self.rank) as is_master:
+                    if is_master:
+                        self.tbd_writer.add_text(
+                            "config", f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                        )
+            if self.use_wandb:
+                import wandb
+
+                with misc.RankZeroOnly(self.rank) as is_master:
+                    if is_master:
+                        self.wandb_writer.log(
+                            {
+                                "config": wandb.Html(
+                                    f"<pre>{str(OmegaConf.to_yaml(self.cfg))}</pre>"
+                                )
+                            }
+                        )
 
         if self.nvtx_flag:
             core.nvprof_start()
@@ -915,7 +958,7 @@ class Solver:
             full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
                 when set to True, where otherwise use Abstract Syntax Tree(AST) if False.
                 Defaults to True.
-            ignore_modules (List[ModuleType]): Adds modules that should be ignored during
+            ignore_modules (Optional[List[ModuleType]]): Adds modules that should be ignored during
                 conversion. Builtin modules that have been ignored are collections, pdb,
                 copy, inspect, re, numpy, logging, six. For example, einops can be added
                 here. Defaults to None.
