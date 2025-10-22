@@ -20,6 +20,10 @@
  [resnet18-v5-fold4](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
  [resnet18-v5-fold5](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) ||
 
+## 下载模型必要参数
+
+| [Saved_Output](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/Saved_Output.tar.gz) |
+
 ## 背景简介
 
 材料的极限抗拉强度（UTS）是衡量复合材料抗拉伸破坏的核心指标，直接决定其应用安全性与可靠性。它是结构设计的关键依据，确保构件在拉伸载荷下不失效；也是材料选型的重要标准，匹配不同场景的强度需求，最终保障复合材料制品的性能上限。但由于复杂的形态-性能关系，预测其机械性能仍然较为困难，使用传统机器学习方法很难对其做出有效的预测。
