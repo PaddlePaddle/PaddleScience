@@ -1,6 +1,6 @@
 mode: "train"
 seed: 42
-device: "cpu"
+device: "gpu:0"
 data:
   train_path: "./Dataset/Train_val"
   test_path: "./Dataset/Test"
