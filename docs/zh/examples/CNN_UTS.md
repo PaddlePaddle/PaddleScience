@@ -94,9 +94,9 @@ CNN_UTS/
 
 为了方便数据处理，我们使用了 `make_dataset` 函数来创建数据集：
 
-``` py linenums="72" title="examples/CNN_UTS/main.py"
+``` py linenums="73" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:72:74
+examples/CNN_UTS/main.py:73:74
 --8<--
 ```
 
