@@ -1,6 +1,7 @@
 import os
 
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 import tqdm
@@ -12,18 +13,42 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from sklearn.model_selection import StratifiedGroupKFold
 
-import ppsci
+
+def print_gpu_memory():
+    """打印GPU内存使用情况"""
+    if paddle.device.cuda.device_count() > 0:
+        try:
+            memory_allocated = paddle.device.cuda.memory_allocated() / 1024**3  # GB
+            memory_reserved = paddle.device.cuda.memory_reserved() / 1024**3  # GB
+            print(f"GPU内存使用: {memory_allocated:.2f}GB / {memory_reserved:.2f}GB")
+        except Exception:
+            print("无法获取GPU内存信息")
 
 
 def train(cfg):
     # 设置随机种子
     set_seed(cfg.seed)
     device = device2str(cfg.device)
+
+    # 检查GPU可用性
+    if "gpu" in device:
+        if not paddle.device.cuda.device_count():
+            print("警告：配置为GPU训练但未检测到GPU，将使用CPU")
+            device = "cpu"
+        else:
+            print(f"使用GPU设备: {device}")
+            # 设置GPU设备
+            paddle.set_device(device)
+
     num_epochs = cfg.train.epochs
     n_splits = cfg.train.n_splits
     Batch_size = cfg.train.batch_size
     lr = cfg.train.lr
     N_skip = cfg.data.N
+
+    # 创建输出目录
+    output_dir = cfg.output_dir
+    os.makedirs(output_dir, exist_ok=True)
 
     # 数据增强配置
     transforms_list = [paddle.vision.transforms.CenterCrop(size=224)]
@@ -61,6 +86,7 @@ def train(cfg):
         kf.split(train_val_dataset, uts_label, sample_id)
     ):
         print(f"\n===== Fold {fold+1}/{n_splits} 开始 =====")
+        print_gpu_memory()
         set_seed(cfg.seed)
         train_dataset = paddle.io.Subset(dataset=train_val_dataset, indices=train_index)
         val_dataset = paddle.io.Subset(dataset=train_val_dataset, indices=val_index)
@@ -68,24 +94,24 @@ def train(cfg):
             dataset=train_dataset,
             batch_size=Batch_size,
             shuffle=True,
+            num_workers=0,
         )
         val_loader = paddle.io.DataLoader(
             dataset=val_dataset,
             batch_size=128,
             shuffle=False,
+            num_workers=0,
         )
         test_loader = paddle.io.DataLoader(
             dataset=test_dataset,
             batch_size=128,
             shuffle=False,
+            num_workers=0,
         )
         # 定义模型
-        # model = paddle.vision.models.resnet18(pretrained=True)
-        model = ppsci.arch.ResNet(
-            num_blocks=(2, 2, 2, 2),  # ResNet18结构
-            num_classes=1,  # 回归任务
-            in_channels=3,  # 彩色图像
-        )
+        model = paddle.vision.models.resnet18(pretrained=True)
+        # 修改最后一层以适应回归任务
+        model.fc = paddle.nn.Linear(model.fc.weight.shape[0], 1)
         model.to(device)
         criterion = paddle.nn.MSELoss()
         optimizer = paddle.optimizer.Adam(
@@ -100,17 +126,29 @@ def train(cfg):
             model.train()
             set_seed(cfg.seed)
             batch_losses = []
-            for i, (images, group, labels) in enumerate(train_loader):
-                images = online_transforms(images)
-                outputs = model(images)
-                loss = criterion(outputs.squeeze(), labels)
-                optimizer.clear_gradients(set_to_zero=False)
-                loss.backward()
-                optimizer.step()
-                batch_losses.append(loss.item())
-                print(
-                    f"[Fold {fold+1}][Epoch {epoch+1}][Batch {i+1}/{len(train_loader)}] Loss: {loss.item():.6f}"
-                )
+            for i, (images, groups, labels) in enumerate(train_loader):
+                try:
+                    images = online_transforms(images)
+                    outputs = model(images)
+                    loss = criterion(outputs.squeeze(), labels)
+                    optimizer.clear_gradients(set_to_zero=False)
+                    loss.backward()
+                    optimizer.step()
+                    batch_losses.append(loss.item())
+                    print(
+                        f"[Fold {fold+1}][Epoch {epoch+1}][Batch {i+1}/{len(train_loader)}] Loss: {loss.item():.6f}"
+                    )
+                except RuntimeError as e:
+                    if "out of memory" in str(e).lower():
+                        print("GPU内存不足，跳过当前批次")
+                        paddle.device.cuda.empty_cache()
+                        continue
+                    else:
+                        print(f"训练过程中出现错误: {e}")
+                        continue
+                except Exception as e:
+                    print(f"训练过程中出现错误: {e}")
+                    continue
             avg_train_loss = (
                 sum(batch_losses) / len(batch_losses) if batch_losses else 0
             )
@@ -121,15 +159,27 @@ def train(cfg):
                 k = 0
                 preds_val = []
                 true_labels_val = []
-                for images, group, labels in val_loader:
-                    images = offline_transforms(images)
-                    outputs = model(images)
-                    val_loss += criterion(outputs.squeeze(), labels).item() * len(
-                        images
-                    )
-                    k += len(images)
-                    preds_val.append(outputs.squeeze())
-                    true_labels_val.append(labels)
+                for images, groups, labels in val_loader:
+                    try:
+                        images = offline_transforms(images)
+                        outputs = model(images)
+                        val_loss += criterion(outputs.squeeze(), labels).item() * len(
+                            images
+                        )
+                        k += len(images)
+                        preds_val.append(outputs.squeeze())
+                        true_labels_val.append(labels)
+                    except RuntimeError as e:
+                        if "out of memory" in str(e).lower():
+                            print("验证阶段GPU内存不足，跳过当前批次")
+                            paddle.device.cuda.empty_cache()
+                            continue
+                        else:
+                            print(f"验证过程中出现错误: {e}")
+                            continue
+                    except Exception as e:
+                        print(f"验证过程中出现错误: {e}")
+                        continue
                 val_loss /= k
                 preds_val = paddle.concat(x=preds_val, axis=0).detach().cpu().numpy()
                 true_labels_val = (
@@ -140,15 +190,27 @@ def train(cfg):
                 k = 0
                 preds_test = []
                 true_labels_test = []
-                for images, group, labels in test_loader:
-                    images = offline_transforms(images)
-                    outputs = model(images)
-                    test_loss += criterion(outputs.squeeze(), labels).item() * len(
-                        images
-                    )
-                    k += len(images)
-                    preds_test.append(outputs.squeeze())
-                    true_labels_test.append(labels)
+                for images, groups, labels in test_loader:
+                    try:
+                        images = offline_transforms(images)
+                        outputs = model(images)
+                        test_loss += criterion(outputs.squeeze(), labels).item() * len(
+                            images
+                        )
+                        k += len(images)
+                        preds_test.append(outputs.squeeze())
+                        true_labels_test.append(labels)
+                    except RuntimeError as e:
+                        if "out of memory" in str(e).lower():
+                            print("测试阶段GPU内存不足，跳过当前批次")
+                            paddle.device.cuda.empty_cache()
+                            continue
+                        else:
+                            print(f"测试过程中出现错误: {e}")
+                            continue
+                    except Exception as e:
+                        print(f"测试过程中出现错误: {e}")
+                        continue
                 test_loss /= k
                 preds_test = paddle.concat(x=preds_test, axis=0).detach().cpu().numpy()
                 true_labels_test = (
@@ -172,6 +234,119 @@ def train(cfg):
         min_epoch_all_fold.append(min_epoch + 1)
         test_loss_all_fold.append(test_loss_history[min_epoch])
         test_preds_history.append(test_preds_best)
+
+        # 收集当前fold的所有预测结果和标签
+        print(f"收集 Fold {fold+1} 的预测结果...")
+
+        # 训练集预测
+        model.eval()
+        with paddle.no_grad():
+            preds_train = []
+            true_labels_train = []
+            train_groups_fold = []
+            train_samples_id = []
+
+            for images, groups, labels in train_loader:
+                try:
+                    images = offline_transforms(images)
+                    outputs = model(images)
+                    preds_train.append(outputs.numpy())
+                    true_labels_train.append(labels.numpy())
+                    train_groups_fold.extend(groups[0].numpy())
+                    train_samples_id.extend(groups[1].numpy())
+                except Exception as e:
+                    print(f"训练集预测过程中出现错误: {e}")
+                    continue
+
+            # 验证集预测
+            preds_val = []
+            true_labels_val = []
+            val_groups_fold = []
+            val_samples_id = []
+
+            for images, groups, labels in val_loader:
+                try:
+                    images = offline_transforms(images)
+                    outputs = model(images)
+                    preds_val.append(outputs.numpy())
+                    true_labels_val.append(labels.numpy())
+                    val_groups_fold.extend(groups[0].numpy())
+                    val_samples_id.extend(groups[1].numpy())
+                except Exception as e:
+                    print(f"验证集预测过程中出现错误: {e}")
+                    continue
+
+            # 测试集预测
+            preds_test = []
+            true_labels_test = []
+            test_groups_fold = []
+            test_samples_id = []
+
+            for images, groups, labels in test_loader:
+                try:
+                    images = offline_transforms(images)
+                    outputs = model(images)
+                    preds_test.append(outputs.numpy())
+                    true_labels_test.append(labels.numpy())
+                    test_groups_fold.extend(groups[0].numpy())
+                    test_samples_id.extend(groups[1].numpy())
+                except Exception as e:
+                    print(f"测试集预测过程中出现错误: {e}")
+                    continue
+
+        # 展平结果
+        preds_train = np.concatenate(preds_train)
+        true_labels_train = np.concatenate(true_labels_train)
+        preds_val = np.concatenate(preds_val)
+        true_labels_val = np.concatenate(true_labels_val)
+        preds_test = np.concatenate(preds_test)
+        true_labels_test = np.concatenate(true_labels_test)
+
+        # 获取unique groups和sample id
+        unique_val_groups = sorted(set(val_groups_fold))
+        unique_sample_id = sorted(set(val_samples_id))
+
+        # 保存当前fold的预测结果和标签
+        np.save(os.path.join(output_dir, f"preds_train_fold{fold+1}.npy"), preds_train)
+        np.save(os.path.join(output_dir, f"preds_val_fold{fold+1}.npy"), preds_val)
+        np.save(os.path.join(output_dir, f"preds_test_fold{fold+1}.npy"), preds_test)
+        np.save(
+            os.path.join(output_dir, f"true_labels_train_fold{fold+1}.npy"),
+            true_labels_train,
+        )
+        np.save(
+            os.path.join(output_dir, f"true_labels_val_fold{fold+1}.npy"),
+            true_labels_val,
+        )
+        np.save(
+            os.path.join(output_dir, f"true_labels_test_fold{fold+1}.npy"),
+            true_labels_test,
+        )
+
+        # 保存样本ID
+        np.save(
+            os.path.join(output_dir, f"sample_ids_train_fold{fold+1}.npy"),
+            train_samples_id,
+        )
+        np.save(
+            os.path.join(output_dir, f"sample_ids_val_fold{fold+1}.npy"), val_samples_id
+        )
+        np.save(
+            os.path.join(output_dir, f"sample_ids_test_fold{fold+1}.npy"),
+            test_samples_id,
+        )
+
+        # 保存unique groups和sample id
+        np.save(
+            os.path.join(output_dir, f"unique_val_groups_fold_{fold+1}.npy"),
+            unique_val_groups,
+        )
+        np.save(
+            os.path.join(output_dir, f"unique_sample_id_fold_{fold+1}.npy"),
+            unique_sample_id,
+        )
+
+        print(f"Fold {fold+1} 预测结果已保存")
         print(
             f"===== Fold {fold+1} 完成，最佳验证集Loss: {val_loss_all_fold[-1]:.6f}，最佳epoch: {min_epoch+1} =====\n"
         )
@@ -187,6 +362,194 @@ def train(cfg):
         f"Mean test loss: {np.mean(test_loss_all_fold):.4f} ± {np.std(test_loss_all_fold):.4f}"
     )
 
+    # 集成预测
+    print("\n开始集成预测...")
+    # 确保test_preds_history是numpy数组
+    test_preds_history = np.array(test_preds_history)
+    print(f"集成预测形状: {test_preds_history.shape}")
+
+    # 确保数据形状正确，移除多余的维度
+    if test_preds_history.ndim == 3 and test_preds_history.shape[-1] == 1:
+        test_preds_history = test_preds_history.squeeze(-1)
+
+    ensemble_mean_preds = np.mean(test_preds_history, axis=0)
+    ensemble_median_preds = np.median(test_preds_history, axis=0)
+
+    # 保存集成预测结果
+    np.save(
+        os.path.join(output_dir, "ensemble_mean_preds_test.npy"), ensemble_mean_preds
+    )
+    np.save(
+        os.path.join(output_dir, "ensemble_median_preds_test.npy"),
+        ensemble_median_preds,
+    )
+
+    # 获取测试集真实标签（从最后一个fold获取）
+    true_labels_test = np.load(
+        os.path.join(output_dir, f"true_labels_test_fold{n_splits}.npy")
+    )
+
+    # 验证所有fold的测试集标签是否一致
+    print("验证测试集标签一致性...")
+    all_test_labels = []
+    for i in range(n_splits):
+        fold_labels = np.load(
+            os.path.join(output_dir, f"true_labels_test_fold{i+1}.npy")
+        )
+        all_test_labels.append(fold_labels)
+        print(f"  Fold {i+1} 测试集标签形状: {fold_labels.shape}")
+
+    # 检查标签是否一致
+    labels_consistent = all(
+        np.array_equal(all_test_labels[0], labels) for labels in all_test_labels[1:]
+    )
+    if labels_consistent:
+        print("  ✅ 所有fold的测试集标签一致")
+    else:
+        print("  [WARNING] 不同fold的测试集标签不一致，这可能导致集成学习效果不佳")
+        # 使用第一个fold的标签作为参考
+        true_labels_test = all_test_labels[0]
+
+    # 计算集成预测的性能指标
+    ensemble_mean_mse = mean_squared_error(true_labels_test, ensemble_mean_preds)
+    ensemble_mean_r2 = r2_score(true_labels_test, ensemble_mean_preds)
+    ensemble_median_mse = mean_squared_error(true_labels_test, ensemble_median_preds)
+    ensemble_median_r2 = r2_score(true_labels_test, ensemble_median_preds)
+
+    print("\n集成预测性能指标:")
+    print(f"  均值集成 - MSE: {ensemble_mean_mse:.4f}, R²: {ensemble_mean_r2:.4f}")
+    print(f"  中位数集成 - MSE: {ensemble_median_mse:.4f}, R²: {ensemble_median_r2:.4f}")
+
+    # 计算每个fold的性能
+    fold_performances = []
+    for i in range(n_splits):
+        fold_mse = mean_squared_error(true_labels_test, test_preds_history[i])
+        fold_r2 = r2_score(true_labels_test, test_preds_history[i])
+        fold_performances.append((fold_mse, fold_r2))
+        print(f"  Fold {i+1} - MSE: {fold_mse:.4f}, R²: {fold_r2:.4f}")
+
+    # 计算单fold平均性能
+    single_fold_mse = np.mean([perf[0] for perf in fold_performances])
+    single_fold_r2 = np.mean([perf[1] for perf in fold_performances])
+    print(f"  单fold平均 - MSE: {single_fold_mse:.4f}, R²: {single_fold_r2:.4f}")
+
+    # 找出最佳单fold性能
+    best_fold_idx = np.argmax([perf[1] for perf in fold_performances])
+    best_fold_r2 = fold_performances[best_fold_idx][1]
+    print(f"  最佳单fold (Fold {best_fold_idx+1}) - R²: {best_fold_r2:.4f}")
+
+    # 检查集成学习是否有效
+    print("\n集成学习效果分析:")
+    if ensemble_mean_r2 > single_fold_r2:
+        print(f"  [OK] 均值集成有效！比单fold平均提升了 {ensemble_mean_r2 - single_fold_r2:.4f} R²")
+    else:
+        print(
+            f"  [WARNING] 均值集成效果不明显，比单fold平均差了 {single_fold_r2 - ensemble_mean_r2:.4f} R²"
+        )
+
+    if ensemble_mean_r2 > best_fold_r2:
+        print(f"  [OK] 均值集成有效！比最佳单fold提升了 {ensemble_mean_r2 - best_fold_r2:.4f} R²")
+    else:
+        print(f"  [WARNING] 均值集成不如最佳单fold，差了 {best_fold_r2 - ensemble_mean_r2:.4f} R²")
+
+    # 尝试加权集成
+    print("\n尝试加权集成...")
+    # 根据每个fold的性能计算权重
+    fold_weights = np.array([perf[1] for perf in fold_performances])  # 使用R²作为权重
+    fold_weights = fold_weights / np.sum(fold_weights)  # 归一化
+    print(f"  Fold权重: {fold_weights}")
+
+    weighted_preds = np.average(test_preds_history, axis=0, weights=fold_weights)
+    weighted_mse = mean_squared_error(true_labels_test, weighted_preds)
+    weighted_r2 = r2_score(true_labels_test, weighted_preds)
+    print(f"  加权集成 - MSE: {weighted_mse:.4f}, R²: {weighted_r2:.4f}")
+
+    if weighted_r2 > ensemble_mean_r2:
+        print(f"  [OK] 加权集成比简单均值集成提升了 {weighted_r2 - ensemble_mean_r2:.4f} R²")
+        # 保存加权集成结果
+        np.save(
+            os.path.join(output_dir, "ensemble_weighted_preds_test.npy"), weighted_preds
+        )
+
+    np.save(os.path.join(output_dir, "ensemble_true_labels_test.npy"), true_labels_test)
+
+    # 生成可视化图表
+    print("生成可视化图表...")
+
+    # 1. 集成预测的parity plot
+    plt.figure(figsize=(8, 6))
+    plt.scatter(true_labels_test, ensemble_mean_preds, alpha=0.6)
+    plt.plot(
+        [true_labels_test.min(), true_labels_test.max()],
+        [true_labels_test.min(), true_labels_test.max()],
+        "r--",
+        lw=2,
+    )
+    plt.xlabel("True Values")
+    plt.ylabel("Predicted Values")
+    plt.title("Ensemble Parity Plot")
+    plt.savefig(
+        os.path.join(output_dir, "ensemble_parity_plot.png"),
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # 2. 集成预测的violin plot
+    plt.figure(figsize=(10, 6))
+    data_to_plot = [true_labels_test, ensemble_mean_preds]
+    plt.violinplot(data_to_plot, positions=[1, 2], showmeans=True, showmedians=True)
+    plt.xticks([1, 2], ["True Values", "Predicted Values"])
+    plt.ylabel("Values")
+    plt.title("Ensemble Violin Plot")
+    plt.savefig(
+        os.path.join(output_dir, "ensemble_violin_plot.png"),
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # 3. 每个fold的parity plot
+    for fold in range(n_splits):
+        fold_preds = np.load(os.path.join(output_dir, f"preds_test_fold{fold+1}.npy"))
+        fold_true = np.load(
+            os.path.join(output_dir, f"true_labels_test_fold{fold+1}.npy")
+        )
+
+        plt.figure(figsize=(8, 6))
+        plt.scatter(fold_true, fold_preds, alpha=0.6)
+        plt.plot(
+            [fold_true.min(), fold_true.max()],
+            [fold_true.min(), fold_true.max()],
+            "r--",
+            lw=2,
+        )
+        plt.xlabel("True Values")
+        plt.ylabel("Predicted Values")
+        plt.title(f"Fold {fold+1} Parity Plot")
+        plt.savefig(
+            os.path.join(output_dir, f"parity_plot_fold{fold+1}.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close()
+
+        # 4. 每个fold的violin plot
+        plt.figure(figsize=(10, 6))
+        data_to_plot = [fold_true, fold_preds]
+        plt.violinplot(data_to_plot, positions=[1, 2], showmeans=True, showmedians=True)
+        plt.xticks([1, 2], ["True Values", "Predicted Values"])
+        plt.ylabel("Values")
+        plt.title(f"Fold {fold+1} Violin Plot")
+        plt.savefig(
+            os.path.join(output_dir, f"violin_plot_fold{fold+1}.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close()
+
+    print("集成预测结果和可视化图表已保存")
+
 
 def evaluate(cfg):
     """
@@ -197,6 +560,16 @@ def evaluate(cfg):
 
     set_seed(cfg.seed)
     device = device2str(cfg.device)
+
+    # 检查GPU可用性
+    if "gpu" in device:
+        if not paddle.device.cuda.device_count():
+            print("警告：配置为GPU评估但未检测到GPU，将使用CPU")
+            device = "cpu"
+        else:
+            print(f"使用GPU设备进行评估: {device}")
+            paddle.set_device(device)
+
     n_splits = cfg.train.n_splits
     output_dir = cfg.output_dir
     os.makedirs(output_dir, exist_ok=True)
@@ -315,7 +688,7 @@ def evaluate(cfg):
 
             with paddle.no_grad():
                 # 训练集推理
-                for images, groups, labels, features in train_loader:
+                for images, groups, labels in train_loader:
                     images = offline_transforms(images)
                     outputs = model(images)
                     true_labels_train.append(labels.numpy())
@@ -324,7 +697,7 @@ def evaluate(cfg):
                     train_samples_id.extend(groups[1].numpy())
 
                 # 验证集推理
-                for images, groups, labels, features in val_loader:
+                for images, groups, labels in val_loader:
                     images = offline_transforms(images)
                     outputs = model(images)
                     true_labels_val.append(labels.numpy())
@@ -333,7 +706,7 @@ def evaluate(cfg):
                     val_samples_id.extend(groups[1].numpy())
 
                 # 测试集推理
-                for images, groups, labels, features in test_loader:
+                for images, groups, labels in test_loader:
                     images = offline_transforms(images)
                     outputs = model(images)
                     true_labels_test.append(labels.numpy())
@@ -402,27 +775,30 @@ def evaluate(cfg):
         test_mse_all_fold.append(mse_test)
 
         # 绘制parity plot
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(8, 6))
         ax.scatter(
             true_labels_train,
             preds_train,
             s=30,
             marker=".",
+            alpha=0.6,
             label=f"Train R-squared: {r_squared_train:.4f}",
         )
         ax.scatter(
             true_labels_val,
             preds_val,
-            s=10,
+            s=30,
             marker="*",
+            alpha=0.6,
             label=f"Validation R-squared: {r_squared_val:.4f}",
         )
         ax.scatter(
             true_labels_test,
             preds_test,
-            s=10,
+            s=30,
             marker="o",
             color="red",
+            alpha=0.6,
             label=f"Test R-squared: {r_squared_test:.4f}",
         )
         ax.plot(
@@ -430,22 +806,27 @@ def evaluate(cfg):
             [true_labels_train.min(), true_labels_train.max()],
             color="black",
             linestyle="--",
+            lw=2,
             label="Ideal fit",
         )
-        ax.set_xlabel("True UTS (MPa)")
-        ax.set_ylabel("Predicted UTS (MPa)")
+        ax.set_xlabel("True UTS (MPa)", fontsize=14)
+        ax.set_ylabel("Predicted UTS (MPa)", fontsize=14)
         ax.set_aspect("equal")
-        ax.set_title(f"Fold {fold + 1} Parity Plot")
-        ax.legend()
+        ax.set_title(f"Fold {fold + 1} Parity Plot", fontsize=16)
+        ax.legend(fontsize=12)
+        ax.grid(True, alpha=0.3)
+        plt.tight_layout()
         plt.savefig(
             os.path.join(output_dir, f"parity_plot_fold{fold+1}.png"),
             dpi=300,
             bbox_inches="tight",
         )
-        plt.show()
+        plt.close()
 
-        # 绘制violin plot
-        fig, ax = plt.subplots(figsize=(6, 6))
+        # 绘制复杂的violin plot (类似图片中的样式)
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        # 准备数据
         train_label_added = False
         val_label_added = False
         test_label_added = False
@@ -575,6 +956,7 @@ def evaluate(cfg):
                     alpha=0.6,
                 )
 
+        # 添加理想拟合线
         ax.plot(
             [true_labels_train_aligned.min(), true_labels_train_aligned.max()],
             [true_labels_train_aligned.min(), true_labels_train_aligned.max()],
@@ -587,15 +969,16 @@ def evaluate(cfg):
         ax.set_ylabel("Predicted UTS (MPa)", fontsize=18)
         ax.tick_params(axis="x", direction="in", top=True, length=3, width=1)
         ax.tick_params(axis="y", direction="in", right=True, length=3, width=1)
-        ax.set_title(f"Fold {fold+1} Parity Violin Plot")
+        ax.set_title(f"Fold {fold+1} Parity Violin Plot", fontsize=16)
         plt.xticks(np.arange(0, 5.2, 1), fontsize=16)
         plt.yticks(np.arange(0, 5.2, 1), fontsize=16)
+        plt.tight_layout()
         plt.savefig(
             os.path.join(output_dir, f"violin_plot_fold{fold+1}.png"),
             dpi=300,
             bbox_inches="tight",
         )
-        plt.show()
+        plt.close()
 
     # 最终统计结果
     print("\nFinal Statistics Across All Folds:")
@@ -621,10 +1004,19 @@ def evaluate(cfg):
     # 集成学习（Ensemble）
     print("\nEnsemble Learning for Test Data:")
     test_preds_history = np.array(test_preds_history)
+    print(f"集成预测形状: {test_preds_history.shape}")
+
+    # 计算每个fold的预测方差，用于评估集成学习的多样性
+    pred_variance = np.var(test_preds_history, axis=0)
+    print(f"预测方差统计: 均值={np.mean(pred_variance):.4f}, 标准差={np.std(pred_variance):.4f}")
 
     # 计算中位数和均值预测
-    median_preds_test = np.median(np.vstack(test_preds_history), axis=0)
-    mean_preds_test = np.mean(np.vstack(test_preds_history), axis=0)
+    # 确保数据形状正确，移除多余的维度
+    if test_preds_history.ndim == 3 and test_preds_history.shape[-1] == 1:
+        test_preds_history = test_preds_history.squeeze(-1)
+
+    median_preds_test = np.median(test_preds_history, axis=0)
+    mean_preds_test = np.mean(test_preds_history, axis=0)
 
     # 加载测试集真实标签（使用最后一个fold的结果）
     true_labels_test = np.load(
@@ -645,19 +1037,21 @@ def evaluate(cfg):
     )
 
     # 绘制集成预测的parity plot
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 6))
     ax.scatter(
         true_labels_test,
         median_preds_test,
-        s=10,
+        s=30,
         marker="o",
+        alpha=0.6,
         label=f"Median R-squared: {median_test_r2:.4f}",
     )
     ax.scatter(
         true_labels_test,
         mean_preds_test,
-        s=10,
+        s=30,
         marker="x",
+        alpha=0.6,
         label=f"Mean R-squared: {mean_test_r2:.4f}",
     )
     ax.plot(
@@ -665,22 +1059,27 @@ def evaluate(cfg):
         [true_labels_test.min(), true_labels_test.max()],
         color="black",
         linestyle="--",
+        lw=2,
         label="Ideal fit",
     )
-    ax.set_xlabel("True UTS (MPa)")
-    ax.set_ylabel("Predicted UTS (MPa)")
+    ax.set_xlabel("True UTS (MPa)", fontsize=14)
+    ax.set_ylabel("Predicted UTS (MPa)", fontsize=14)
     ax.set_aspect("equal")
-    ax.set_title("Test Data Parity Plot (Ensemble Predictions)")
-    ax.legend()
+    ax.set_title("Test Data Parity Plot (Ensemble Predictions)", fontsize=16)
+    ax.legend(fontsize=12)
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
     plt.savefig(
         os.path.join(output_dir, "ensemble_parity_plot.png"),
         dpi=300,
         bbox_inches="tight",
     )
-    plt.show()
+    plt.close()
 
-    # 绘制集成预测的violin plot
-    fig, ax = plt.subplots(figsize=(6, 6))
+    # 绘制集成预测的复杂violin plot
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # 为每个真实值范围创建violin plot
     test_label_added = False
     for i, label in enumerate(np.unique(true_labels_test)):
         mask = true_labels_test == label
@@ -714,6 +1113,7 @@ def evaluate(cfg):
                 alpha=0.6,
             )
 
+    # 添加理想拟合线
     ax.plot(
         [true_labels_test.min(), true_labels_test.max() + 0.4],
         [true_labels_test.min(), true_labels_test.max() + 0.4],
@@ -728,12 +1128,14 @@ def evaluate(cfg):
     ax.legend(loc="upper left", prop={"size": 12})
     plt.xticks(np.arange(0, 4.2, 1), fontsize=16)
     plt.yticks(np.arange(0, 4.2, 1), fontsize=16)
+    ax.set_title("Ensemble Parity Violin Plot", fontsize=16)
+    plt.tight_layout()
     plt.savefig(
         os.path.join(output_dir, "ensemble_violin_plot.png"),
         dpi=300,
         bbox_inches="tight",
     )
-    plt.show()
+    plt.close()
 
     # 保存集成预测结果
     np.save(
