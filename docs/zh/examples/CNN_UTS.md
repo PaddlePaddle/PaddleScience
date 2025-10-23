@@ -94,15 +94,15 @@ CNN_UTS/
 
 为了方便数据处理，我们使用了 `make_dataset` 函数来创建数据集：
 
-``` py linenums="63" title="examples/CNN_UTS/data_utils.py"
+``` py linenums="72" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/data_utils.py:63:155
+examples/CNN_UTS/main.py:72:74
 --8<--
 ```
 
 ### 3.2 模型构建
 
-本案例使用 PaddleScience 内置的 `ppsci.arch.ResNet` 构建ResNet-18模型。模型的主要参数包括：
+本案例使用 PaddlePaddle 内置的 `paddle.vision.models.resnet18` 构建ResNet-18模型。模型的主要参数包括：
 
 1. 网络结构：ResNet-18 (2,2,2,2)
 2. 输入通道：3（RGB图像）
@@ -111,9 +111,9 @@ examples/CNN_UTS/data_utils.py:63:155
 
 模型定义代码如下：
 
-``` py linenums="114" title="examples/CNN_UTS/main.py"
+``` py linenums="112" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:114:117
+examples/CNN_UTS/main.py:112:115
 --8<--
 ```
 
@@ -128,9 +128,9 @@ examples/CNN_UTS/main.py:114:117
 
 数据增强配置如下：
 
-``` py linenums="56" title="examples/CNN_UTS/main.py"
+``` py linenums="53" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:56:72
+examples/CNN_UTS/main.py:53:70
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/CNN_UTS/main.py:56:72
 
 训练过程包括：
 
-``` py linenums="87" title="examples/CNN_UTS/main.py"
+``` py linenums="85" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:87:94
+examples/CNN_UTS/main.py:85:98
 --8<--
 ```
 
@@ -154,17 +154,17 @@ examples/CNN_UTS/main.py:87:94
 
 使用均方误差损失函数进行回归任务：
 
-``` py linenums="118" title="examples/CNN_UTS/main.py"
+``` py linenums="116" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:118:118
+examples/CNN_UTS/main.py:116:116
 --8<--
 ```
 
 使用Adam优化器进行参数更新：
 
-``` py linenums="119" title="examples/CNN_UTS/main.py"
+``` py linenums="117" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:119:121
+examples/CNN_UTS/main.py:117:119
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/CNN_UTS/main.py:119:121
 
 评估器构建代码如下：
 
-``` py linenums="159" title="examples/CNN_UTS/main.py"
+``` py linenums="156" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:159:221
+examples/CNN_UTS/main.py:156:188
 --8<--
 ```
 
