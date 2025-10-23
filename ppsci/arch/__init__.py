@@ -17,6 +17,8 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING
 
+from ppsci.arch.vgg import VGG
+
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
@@ -129,6 +131,7 @@ __all__ = [
     "IFMMLP",
     "STAFNet",
     "MoleculeModel",
+    "VGG",
 ]
 
 

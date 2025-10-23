@@ -1,0 +1,67 @@
+Global:
+  seed: 42
+  device: cpu
+
+MODEL:
+  name: VGG16
+  in_channel: 1
+  num_classes: 10
+
+train_dataset:
+  name: BasicDatasetPaddle
+  data_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/train_data.npy
+  target_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/train_target.npy
+  num_classes: 10
+
+train_dataloader:
+  batch_size: 32
+  shuffle: true
+  num_workers: 4
+
+val_dataset:
+  name: BasicDatasetPaddle
+  data_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/val_data.npy
+  target_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/val_target.npy
+  num_classes: 10
+
+val_dataloader:
+  batch_size: 32
+  shuffle: false
+  num_workers: 4
+
+OPTIMIZER:
+  name: AdamW
+  learning_rate: 0.001
+  weight_decay: 0.01
+
+LOSS:
+  name: CrossEntropyLoss
+
+TRAIN:
+  epochs: 100
+  log_interval: 10
+  save_dir: ./savemodels/
+
+EVAL:
+  interval: 1
+  metric: acc
+
+train_constraints:
+  supervised:
+    name: SupervisedConstraint
+    dataset: train_dataset
+    dataloader_cfg: train_dataloader
+    loss: CrossEntropyLoss
+    weight: 1.0
+    metric:
+      - name: Accuracy
+
+eval_constraints:
+  supervised:
+    name: SupervisedConstraint
+    dataset: val_dataset
+    dataloader_cfg: val_dataloader
+    loss: CrossEntropyLoss
+    weight: 1.0
+    metric:
+      - name: Accuracy

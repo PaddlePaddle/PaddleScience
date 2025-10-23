@@ -100,6 +100,7 @@ nav:
         - psc_NN: zh/examples/perovskite_solar_cells_nn.md
         - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
+        - xrdmatch: zh/examples/xrdmatch.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
@@ -221,12 +222,12 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append("../")
+          # setup_commands:
+          #   - import sys
+          #   - sys.path.append("../")
           paths: [../ppsci]
-          selection:
-            new_path_syntax: true
+          # selection:
+          #   new_path_syntax: true
   - mkdocs-video
   - git-revision-date-localized:
       enable_creation_date: true
