@@ -32,15 +32,13 @@ class ResNetBlock(nn.Layer):
 
 
 class ResNet(base.Arch):
-    """
-    PaddleScience风格的ResNet实现，支持自定义输入输出、层数、特征提取等。
-    """
+    # resnet in paddle
 
     def __init__(
         self,
         input_keys,
         output_keys,
-        num_blocks=(2, 2, 2, 2),  # ResNet18默认
+        num_blocks=(2, 2, 2, 2),  # ResNet18
         num_classes=1,
         in_channels=3,
         base_channels=64,
@@ -76,7 +74,7 @@ class ResNet(base.Arch):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        # x: dict, 取input_keys
+        # x: dict, input_keys
         if isinstance(x, dict):
             x = x[self.input_keys[0]]
         x = self.conv1(x)
