@@ -9,7 +9,7 @@
 === "模型评估命令"
 
     ``` sh
-    python python main.py mode=eval
+    python main.py mode=eval
     ```
 
 ## 下载预训练模型
@@ -111,9 +111,9 @@ examples/CNN_UTS/data_utils.py:63:155
 
 模型定义代码如下：
 
-``` py linenums="84" title="examples/CNN_UTS/main.py"
+``` py linenums="114" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:84:88
+examples/CNN_UTS/main.py:114:117
 --8<--
 ```
 
@@ -128,9 +128,9 @@ examples/CNN_UTS/main.py:84:88
 
 数据增强配置如下：
 
-``` py linenums="28" title="examples/CNN_UTS/main.py"
+``` py linenums="56" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:28:45
+examples/CNN_UTS/main.py:56:72
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/CNN_UTS/main.py:28:45
 
 训练过程包括：
 
-``` py linenums="60" title="examples/CNN_UTS/main.py"
+``` py linenums="87" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:60:93
+examples/CNN_UTS/main.py:87:94
 --8<--
 ```
 
@@ -154,17 +154,17 @@ examples/CNN_UTS/main.py:60:93
 
 使用均方误差损失函数进行回归任务：
 
-``` py linenums="90" title="examples/CNN_UTS/main.py"
+``` py linenums="118" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:90:93
+examples/CNN_UTS/main.py:118:118
 --8<--
 ```
 
 使用Adam优化器进行参数更新：
 
-``` py linenums="91" title="examples/CNN_UTS/main.py"
+``` py linenums="119" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:91:93
+examples/CNN_UTS/main.py:119:121
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/CNN_UTS/main.py:91:93
 
 评估器构建代码如下：
 
-``` py linenums="191" title="examples/CNN_UTS/main.py"
+``` py linenums="159" title="examples/CNN_UTS/main.py"
 --8<--
-examples/CNN_UTS/main.py:191:216
+examples/CNN_UTS/main.py:159:221
 --8<--
 ```
 
