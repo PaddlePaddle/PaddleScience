@@ -1,62 +1,42 @@
 # XRDMatch
 
-## 概述
+=== "模型训练命令"
+``` sh
+原项目后续进行了一步模型集成学习，从而保留了较多的模型，但是这一步不是文章中的关键，从而舍弃了。而原项目也是采取的训练中直接调用评估模块进行评估从而保存合适的模型，从而评估模块内置在了训练中，只需要有数据文件即可训练评估。
 
-XRDMatch 是一个基于 PaddleScience 的 XRD 数据半监督学习示例，使用 FlexMatch 算法进行材料分类。该示例展示了如何使用少量有标签数据和大量无标签数据来训练高性能的分类模型，特别适用于材料科学中的 XRD 谱线分析。本工作目的是利用锂离子固态电解质材料的XRD数据训练，得到相应的结构和性能关系。
+    python main.py
+```
+## 背景简介
 
-## 背景
+XRDMatch 是一个基于 PaddleScience 的 XRD 数据半监督学习示例，使用 FlexMatch 算法进行材料分类。该示例展示了如何使用少量有标签数据和大量无标签数据来训练高性能的分类模型，特别适用于材料科学中的 XRD 谱线分析。
 
 X射线衍射（XRD）是材料科学中重要的表征技术，能够提供材料的晶体结构信息。在实际应用中，获取大量有标签的 XRD 数据成本高昂且耗时，而半监督学习可以充分利用大量无标签数据来提升模型性能，降低标注成本。
 
-## 方法
+本工作目的是利用锂离子固态电解质材料的XRD数据训练，得到相应的结构和性能关系。通过FlexMatch算法，结合数据增强、伪标签生成、动态阈值和一致性正则化等技术，实现高效的半监督学习。
 
-本示例采用 FlexMatch 算法，结合以下核心技术：
 
-- **数据增强**：对无标签数据进行弱增强和强增强，提高模型泛化能力
-- **伪标签生成**：基于模型预测生成伪标签，扩展训练数据
-- **动态阈值**：根据类别置信度动态调整选择阈值，平衡各类别样本
-- **一致性正则化**：确保模型对增强数据的一致性预测，提高鲁棒性
+## 模型原理
 
-## 快速开始
+该方法的主要思想是通过卷积神经网络建立XRD谱线数据与材料性能之间的非线性映射关系。模型采用VGG网络作为特征提取器，结合FlexMatch半监督学习算法，能够有效利用大量无标签数据提升模型性能。
 
-### 环境要求
+本案例采用VGG网络作为基础模型架构，主要包括以下几个部分：
 
-```bash
-pip install paddlepaddle ppsci numpy pandas scikit-learn tqdm
-```
+1. 输入层：接收 1×4501 的 XRD 谱线数据
+2. 卷积层：多层卷积块，提取局部特征模式
+3. 池化层：降维和特征聚合
+4. 全连接层：特征映射到分类结果
+5. 输出层：2类分类（正类/负类）
 
-### 数据准备
+通过FlexMatch算法，模型能够：
+- 基于弱增强数据生成伪标签
+- 使用强增强数据进行一致性训练
+- 动态调整选择阈值，平衡各类别样本
 
-```bash
-cd examples/ai4material/xrdmatch
-# 确保 xrd_data/ 目录下包含 lbs.csv 和 ulbs.csv 文件
-```
+## 模型实现
 
-### 运行示例
+### 数据格式说明
 
-```bash
-# 快速演示（单次实验，适合测试）
-python main.py --epochs 1 --batch_size 32
-
-# 完整训练（100次实验，完整性能评估）
-python main.py --epochs 100 --batch_size 32
-```
-
-### 配置参数
-
-主要参数说明：
-
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `--epochs` | 100 | 训练轮数 |
-| `--batch_size` | 32 | 批次大小 |
-| `--num_labels` | 20 | 有标签数据数量 |
-| `--lr` | 3e-4 | 学习率 |
-| `--data_dir` | `./xrd_data` | 数据目录路径 |
-
-## 数据格式
-
-### 输入数据
+数据集包含材料XRD谱线数据和对应的性能标签：
 
 - **`xrd_data/lbs.csv`**: 有标签数据
   - 包含样本名称、ID、标签和 XRD 谱线数据（4501维特征）
@@ -74,22 +54,17 @@ python main.py --epochs 100 --batch_size 32
    - **弱增强**：添加少量噪声（10%）和位移（100像素）
    - **强增强**：缩放（15%）、消除（15%）、大幅位移（500像素）
 
-## 模型架构
+### 模型构建
 
-使用 VGG 网络作为特征提取器：
+使用 PaddleScience 内置的 VGG 网络：
 
 ```python
 model = ppsci.arch.VGG(in_channel=1, num_classes=2)
 ```
 
-网络结构：
-- 输入：1×4501 的 XRD 谱线数据
-- 特征提取：VGG 卷积层
-- 分类：2类分类（正类/负类）
+### 训练策略
 
-## 训练策略
-
-### FlexMatch 算法流程
+采用 FlexMatch 半监督学习算法：
 
 1. **有标签数据训练**：使用交叉熵损失进行监督学习
 2. **无标签数据处理**：
@@ -114,7 +89,9 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - **优化器**：AdamW (lr=3e-4, weight_decay=0.01)
 - **学习率调度**：固定学习率
 - **批次大小**：有标签32，无标签96
-- **训练轮数**：100轮（每轮10个迭代）
+- **实验次数**：100次独立实验
+- **训练轮数**：每个实验100轮（每轮10个迭代）
+- **数据划分**：正类前20个，负类前75个用于训练
 
 ## 评估指标
 
@@ -123,6 +100,7 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - **召回率 (Recall)**：实际正类中被正确预测的比例
 - **F1 分数 (F1-Score)**：精确率和召回率的调和平均
 - **混淆矩阵 (Confusion Matrix)**：各类别预测结果的详细分布
+- **评估方法**：由于数据分离需要随机抽取，从而评估过程集中在训练过程中，无单独的评估模块。评估结果以日志输出。
 
 ## 结果示例
 
@@ -141,57 +119,48 @@ total_loss = loss_lb + lambda_u * loss_ulb
 [2025-07-14 20:59:47,745 INFO] recall: 0.7889
 [2025-07-14 20:59:47,746 INFO] f1: 0.6949
 Best model saved at epoch 1, score: 0.6949028236156949
+```
+
 ### 性能指标
+
 在标准测试集上的典型性能：
+
 | 指标 | 值 |
 |------|-----|
 | 准确率 | 0.797 |
 | 精确率 | 0.673 |
 | 召回率 | 0.789 |
 | F1分数 | 0.695 |
-## 文件结构
-```
-examples/ai4material/xrdmatch/
-├── main.py                    # 主训练脚本
-├── README.md                  # 使用说明
-├── configs/
-│   └── xrdmatch.yaml         # 配置文件
-├── xrd_data/                 # 数据目录
-│   ├── lbs.csv              # 有标签数据
-│   └── ulbs.csv             # 无标签数据
-├── saved_models_ppsci/       # 模型保存目录
-│   └── exp_0/               # 实验0的模型文件
-├── loss/                     # 损失函数模块
-├── datasets/                 # 数据集模块
-```
+
 ## 使用说明
+
 ### 1. 数据准备
 确保 `xrd_data/` 目录下包含：
 - `lbs.csv`: 有标签数据文件
 - `ulbs.csv`: 无标签数据文件
+
 ### 2. 快速测试
 ```bash
-# 单次实验，快速验证环境
-python main.py --epochs 1
+# 修改main.py中的实验次数从100改为1进行快速测试
+# 将 for k in range(100): 改为 for k in range(1):
+python main.py
 ```
 
 ### 3. 完整训练
-
 ```bash
 # 100次实验，完整性能评估
-python main.py --epochs 100
+python main.py
 ```
 
 ### 4. 结果查看
 
 训练完成后，查看以下文件：
-- `diver.txt`: 训练过程记录
-- `pred.txt`: 预测结果
-- `saved_models_ppsci/`: 保存的模型文件
+- `saved_models_ppsci/exp_X/log.txt`: 每个实验的训练日志
+- `saved_models_ppsci/exp_X/model_best_epoch_*.pdparams`: 最佳模型权重
 
 ## 注意事项
 
-1. **数据获取**：XRD 数据需要手动下载或联系作者获取
+1. **数据获取**：XRD 数据需要手动下载https://pan.baidu.com/s/1K-CjuBu05LFO_6r_UWg6Mw?pwd=a1VA ，其中的xrd_data就是相关数据和训练综合结果图片。和训练过程保存的部分模型文件。
 2. **计算资源**：完整训练需要较多计算资源，建议使用 GPU
 3. **参数调优**：可根据具体数据调整超参数
 4. **结果复现**：设置随机种子确保结果可复现
@@ -199,4 +168,4 @@ python main.py --epochs 100
 
 ## 参考文献
 
--Zheng Wan., et al. "XRDMatch: a semi-supervised learning framework to efficiently discover room temperature lithium superionic conductors." Energy Environ. Sci., 2024, 17, 9487(https://pubs.rsc.org/en/content/articlelanding/2024/ee/d4ee02970d)
+Zheng Wan., et al.** "XRDMatch: a semi-supervised learning framework to efficiently discover room temperature lithium superionic conductors." *Energy Environ. Sci.*, 2024, 17, 9487. (https://pubs.rsc.org/en/content/articlelanding/2024/ee/d4ee02970d)

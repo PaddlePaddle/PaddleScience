@@ -18,12 +18,12 @@ random.seed(0)
 np.random.seed(0)
 paddle.seed(0)
 
-# 数据路径
+# Data paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 ulbs_path = os.path.join(script_dir, "./xrd_data/ulbs.csv")
 lbs_path = os.path.join(script_dir, "./xrd_data/lbs.csv")
 
-# 数据增强函数（从paddle_only复制）
+# Data augmentation functions
 def normdata(data):
     min_x = min(data)
     max_x = max(data)
@@ -167,7 +167,7 @@ def main_eval(data):
     return dataset
 
 
-# PPSci风格的数据集类
+# PPSci-style dataset class
 class XRDDataset(paddle.io.Dataset):
     def __init__(
         self, data, target, transform=None, is_ulb=False, strong_transform=None
@@ -184,13 +184,13 @@ class XRDDataset(paddle.io.Dataset):
         target = self.target[index]
 
         if self.is_ulb:
-            # 无标签数据：返回弱增强和强增强两个版本
+            # Unlabeled data: return both weak and strong augmented versions
             x_ulb_w = self.transform(data)
             x_ulb_s = self.strong_transform(data) if self.strong_transform else x_ulb_w
 
             return {"idx_ulb": index, "x_ulb_w": x_ulb_w, "x_ulb_s": x_ulb_s}
         else:
-            # 有标签数据
+            # Labeled data
             x_lb = self.transform(data)
             y_lb = target
 
@@ -200,7 +200,7 @@ class XRDDataset(paddle.io.Dataset):
         return len(self.data)
 
 
-# === FlexMatch 损失函数迁移自 paddle_only ===
+# === FlexMatch loss function migrated from paddle_only ===
 class FlexMatchLoss:
     def __init__(self, config):
         self.T = getattr(config, "T", 0.5)
@@ -232,14 +232,14 @@ class FlexMatchLoss:
         return mask
 
     def __call__(self, model_output, batch):
-        # 有标签数据损失
+        # Labeled data loss
         if "x_lb" in batch and "y_lb" in batch:
             logits_lb = model_output["logits"]
             loss_lb = self.criterion(logits_lb, batch["y_lb"])
         else:
             loss_lb = paddle.to_tensor(0.0)
 
-        # 无标签数据损失（FlexMatch 机制）
+        # Unlabeled data loss (FlexMatch mechanism)
         if "x_ulb_w" in batch and "x_ulb_s" in batch:
             with paddle.no_grad():
                 logits_ulb_w = (
@@ -278,7 +278,7 @@ class FlexMatchLoss:
         return {"loss": total_loss, "loss_lb": loss_lb, "loss_ulb": loss_ulb}
 
 
-# 与 torch 版保持一致的文件输出
+# File output consistent
 f = open("diver.txt", "w")
 file_pre = open("pred.txt", "w")
 
@@ -290,7 +290,7 @@ def log_and_print(msg, log_file):
 
 
 def log_info(message, log_file=None):
-    """与 torch 版一致的日志格式"""
+    """Log format consistent"""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
     msg = f"[{timestamp} INFO] {message}"
     print(msg)
@@ -299,7 +299,7 @@ def log_info(message, log_file=None):
             f.write(msg + "\n")
 
 
-# 自定义训练器（PPSci风格）
+# Custom trainer (PPSci style)
 class SemiSupervisedTrainer:
     def __init__(
         self, config, model, optimizer, loss_fn, save_dir="./saved_models_ppsci"
@@ -312,11 +312,11 @@ class SemiSupervisedTrainer:
         self.best_f1 = 0.0
         self.best_epoch = 0
 
-        # 创建保存目录
+        # Create save directory
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        # 日志文件
+        # Log file
         self.log_file = os.path.join(save_dir, "log.txt")
 
     def train_epoch(self, train_lb_loader, train_ulb_loader, epoch):
@@ -326,7 +326,7 @@ class SemiSupervisedTrainer:
         total_loss_ulb = 0.0
         num_batches = 0
 
-        # 与paddle_only一致的训练循环，tqdm显示每个epoch内部的batch进度
+        # Training loop consistent  , tqdm shows batch progress within each epoch
         for batch_idx, (data_lb, data_ulb) in enumerate(
             tqdm(
                 zip(train_lb_loader, train_ulb_loader),
@@ -334,19 +334,19 @@ class SemiSupervisedTrainer:
                 desc=f"Epoch {epoch} Iter",
             )
         ):
-            # 合并批次数据
+            # Merge batch data
             batch = {}
             if data_lb:
                 batch.update(data_lb)
             if data_ulb:
                 batch.update(data_ulb)
 
-            # 前向传播
+            # Forward pass
             model_output = {}
-            # 有标签数据
+            # Labeled data
             if "x_lb" in batch:
                 model_output["logits"] = self.model(batch["x_lb"])["logits"]
-            # 无标签 weak/strong
+            # Unlabeled data weak/strong
             if "x_ulb_w" in batch:
                 with paddle.no_grad():
                     model_output["logits_ulb_w"] = self.model(batch["x_ulb_w"])[
@@ -355,7 +355,7 @@ class SemiSupervisedTrainer:
                 model_output["logits_ulb_s"] = self.model(batch["x_ulb_s"])["logits"]
             loss_dict = self.loss_fn(model_output, batch)
 
-            # 反向传播
+            # Backward pass
             self.optimizer.clear_grad()
             loss_dict["loss"].backward()
             self.optimizer.step()
@@ -390,7 +390,7 @@ class SemiSupervisedTrainer:
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
 
-        # 检查数据是否为空
+        # Check if data is empty
         if len(y_true) == 0 or len(y_pred) == 0:
             log_info("Warning: Empty evaluation data", log_file)
             result_dict = {"acc": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0}
@@ -402,20 +402,20 @@ class SemiSupervisedTrainer:
             self.model.train()
             return result_dict
 
-        # 计算指标
+        # Calculate metrics
         acc = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average="macro")
         recall = recall_score(y_true, y_pred, average="macro")
         f1 = f1_score(y_true, y_pred, average="macro")
         cf_mat = confusion_matrix(y_true, y_pred, normalize="true")
 
-        # 与 torch 版一致的条件判断和输出
+        # Condition judgment and output consistent
         if cf_mat.size > 0 and cf_mat.shape[0] > 0 and cf_mat.shape[1] > 0:
             if cf_mat[0, 0] > 0.6 and cf_mat[1, 1] > 0.6:
                 print((cf_mat[0, 0] + cf_mat[1, 1]) / 2, file=f)
                 print(cf_mat, file=f)
 
-        # 与paddle_only一致的日志输出
+        # Log output consistent
         log_info("confusion matrix", log_file)
         log_info(str(cf_mat), log_file)
         result_dict = {"acc": acc, "precision": precision, "recall": recall, "f1": f1}
@@ -455,7 +455,7 @@ def split_ssl_data(
     ulb_num_labels=None,
     include_lb_to_ulb=True,
 ):
-    # 类别均衡采样，支持 ulb_num_labels 限制
+    # Class-balanced sampling, support ulb_num_labels limitation
     lb_idx = []
     ulb_idx = []
     for c in range(num_classes):
@@ -481,7 +481,7 @@ def split_ssl_data(
 def main():
     print("Starting main function with PPSci framework...")
 
-    # 读取数据
+    # Read data
     print("Reading data...")
     ulb_dataset = pd.read_csv(ulbs_path)
     print("Unlabeled data loaded")
@@ -499,7 +499,7 @@ def main():
     lb_id = img_list[:, 1]
 
     print("Data preprocessing...")
-    # 数据预处理（与paddle_only一致）
+    # Data preprocessing (consistent  )
     a = 0
     c = 0
     pred_data = []
@@ -539,11 +539,11 @@ def main():
     un_ratio = 0.8
     print("Starting experiments...")
 
-    # 100次实验循环（与paddle_only一致）
+    # 100 experiment cycles (consistent  )
     for k in range(100):
         print(f"Starting experiment {k+1}/100")
 
-        # 配置参数（与paddle_only一致）
+        # Configuration parameters (consistent  )
         config_params = {
             "epoch": 100,
             "num_train_iter": 1000,
@@ -579,12 +579,14 @@ def main():
 
         print("unlb_data shape:", unlb_data.shape)
         print("train_data shape:", train_data.shape)
-        print("拼接后 data shape:", data.shape)
-        print("target分布：", np.sum(target == 0), np.sum(target == 1))
-        print("unlabeled数据量：", len(unlb_data[: int(len(unlb_data) * un_ratio)]))
+        print("Concatenated data shape:", data.shape)
+        print("Target distribution:", np.sum(target == 0), np.sum(target == 1))
+        print(
+            "Unlabeled data quantity:", len(unlb_data[: int(len(unlb_data) * un_ratio)])
+        )
         print("ulb_num_labels:", 10000)
 
-        # 半监督划分
+        # Semi-supervised split
         lb_data, lb_target, ulb_data, ulb_target = split_ssl_data(
             data,
             target,
@@ -601,7 +603,7 @@ def main():
         print("lb count:", lb_count)
         print("ulb count:", ulb_count)
 
-        # 使用PPSci的数据集
+        # Use PPSci dataset
         lb_dataset = XRDDataset(lb_data, lb_target, transform=main_weak, is_ulb=False)
         ulb_dataset = XRDDataset(
             ulb_data,
@@ -610,7 +612,7 @@ def main():
             is_ulb=True,
             strong_transform=main_strong,
         )
-        # === 补齐无标签数据采样，保证每个 epoch 固定 10 个 batch ===
+        # === Complete unlabeled data sampling to ensure 10 batches per epoch ===
         class RepeatDataset(paddle.io.Dataset):
             def __init__(self, dataset, total_len):
                 self.dataset = dataset
@@ -640,8 +642,8 @@ def main():
             pred_data, pred_target, transform=main_eval, is_ulb=False
         )
 
-        # 使用与paddle_only一致的DataLoader创建逻辑
-        # 首先添加DistributedSamplerPaddle类
+        # Use DataLoader creation logic consistent
+        # First add DistributedSamplerPaddle class
         class DistributedSamplerPaddle:
             def __init__(
                 self, dataset, num_replicas=1, rank=0, num_samples=None, seed=0
@@ -687,7 +689,7 @@ def main():
             def __len__(self):
                 return self.num_samples
 
-        # 使用与paddle_only一致的DataLoader
+        # Use DataLoader consistent
         lb_indices = list(
             DistributedSamplerPaddle(
                 lb_dataset,
@@ -726,69 +728,69 @@ def main():
             num_workers=0,
         )
 
-        # 数据量统计输出，仿照 torch 版
+        # Data quantity statistics output, similar
         print(
             f"unlabeled data number: {len(ulb_dataset)}, labeled data number: {len(lb_dataset)}"
         )
         print("Create train and test data loaders")
         print("[!] data loader keys: train_lb, train_ulb, eval, pred")
-        print(f"train_lb_loader 批次数: {len(train_lb_loader)}")
-        print(f"train_ulb_loader 批次数: {len(train_ulb_loader)}")
-        print(f"eval_loader 批次数: {len(eval_loader)}")
-        print(f"pred_loader 批次数: {len(pred_loader)}")
+        print(f"train_lb_loader batch count: {len(train_lb_loader)}")
+        print(f"train_ulb_loader batch count: {len(train_ulb_loader)}")
+        print(f"eval_loader batch count: {len(eval_loader)}")
+        print(f"pred_loader batch count: {len(pred_loader)}")
 
-        # 使用PPSci的模型
+        # Use PPSci model
         model = ppsci.arch.VGG(in_channel=1, num_classes=config_params["num_classes"])
 
-        # 使用PPSci的优化器
+        # Use PPSci optimizer
         optimizer = paddle.optimizer.AdamW(
             parameters=model.parameters(),
             learning_rate=config_params["lr"],
             weight_decay=0.01,
         )
 
-        # 使用PPSci的损失函数
+        # Use PPSci loss function
         loss_fn = FlexMatchLoss(config_params)
 
-        # 使用PPSci的Trainer进行训练
+        # Use PPSci Trainer for training
         trainer = SemiSupervisedTrainer(
             config_params, model, optimizer, loss_fn, config_params["save_dir"]
         )
 
         print(f"Starting training for experiment {k+1}")
 
-        # 完整的训练循环（与paddle_only一致）
+        # Complete training loop (consistent  )
         best_f1 = 0.0
         best_epoch = 0
         max_epoch = (
             config_params["num_train_iter"] // 10
-        )  # 每个 epoch 10 个 iter，与 paddle_only 一致
+        )  # 10 iterations per epoch, consistent
 
         for epoch in range(max_epoch):
-            # 与paddle_only一致的epoch输出
+            # Epoch output consistent
             log_and_print(f"Epoch: {epoch}", trainer.log_file)
 
-            # 训练一个epoch
+            # Train one epoch
             trainer.train_epoch(train_lb_loader, train_ulb_loader, epoch)
 
-            # 每个epoch都评估，与paddle_only一致
+            # Evaluate each epoch, consistent
             eval_result = trainer.evaluate(eval_loader, log_file=trainer.log_file)
 
             if eval_result["f1"] > best_f1:
                 best_f1 = eval_result["f1"]
                 best_epoch = epoch
 
-                # 预测并输出结果，与paddle_only一致
-                # 只有当pred_loader不为空时才评估
+                # Predict and output results, consistent
+                # Only evaluate when pred_loader is not empty
                 if len(pred_loader) > 0:
                     pred_result = trainer.evaluate(pred_loader)
                     print(1, best_f1, file=file_pre)
                     print(2, pred_result["f1"], file=file_pre)
                 else:
                     print(1, best_f1, file=file_pre)
-                    print(2, 0.0, file=file_pre)  # pred_loader为空时输出0.0
+                    print(2, 0.0, file=file_pre)  # Output 0.0 when pred_loader is empty
 
-                # 保存最佳模型
+                # Save best model
                 trainer.save_model(epoch, eval_result["f1"])
 
         log_and_print(
