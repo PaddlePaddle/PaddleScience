@@ -4,8 +4,8 @@ Reference: https://github.com/thuml/Transolver
 from __future__ import annotations
 
 from typing import List
-from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import einops
 import paddle
@@ -190,7 +190,7 @@ class Transolver(base.Arch):
         act: str = "gelu",
         mlp_ratio: int = 1,
         fun_dim: int = 1,
-        out_dim: Optional[int, List[int]] = 1,
+        out_dim: Union[int, List[int]] = 1,
         slice_num: int = 32,
         ref: int = 8,
         unified_pos: bool = False,
