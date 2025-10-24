@@ -71,6 +71,7 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   compute_metric_by_batch: true
+
   eval_with_no_grad: true
   batch_size: 8 # 16
 
