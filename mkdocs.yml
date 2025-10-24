@@ -107,6 +107,7 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
+        - Preformer: zh/examples/preformer.md
         - ClimateFormer: zh/examples/climateformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
