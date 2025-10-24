@@ -43,6 +43,7 @@
         - RegDGCNN
         - RegPointNet
         - IFMMLP
+        - Meteoformer
         - Climateformer
         - MoleculeModel
         - Preformer
