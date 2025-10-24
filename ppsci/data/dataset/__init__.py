@@ -62,6 +62,7 @@ from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
+from ppsci.data.dataset.era5_land_dataset import ToyTwoModalDataset
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -109,6 +110,7 @@ __all__ = [
     "LatentNODataset",
     "LatentNODataset_time",
     "MoleculeDatasetIter",
+    "ToyTwoModalDataset",
 ]
 
 
