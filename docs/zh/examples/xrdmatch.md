@@ -1,13 +1,14 @@
 # XRDMatch
 
+## 1.模型训练与评估
 === "模型训练命令"
 ``` sh
+    python main.py
+```
 原项目后续进行了一步模型集成学习，从而保留了较多的模型，但是这一步不是文章中的关键，从而舍弃了。
 而原项目也是采取的训练中直接调用评估模块进行评估从而保存合适的模型，从而评估模块内置在了训练中，只需要有数据文件即可训练评估。
 
-    python main.py
-```
-## 背景简介
+## 2.背景简介
 
 XRDMatch 是一个基于 PaddleScience 的 XRD 数据半监督学习示例，使用 FlexMatch 算法进行材料分类。该示例展示了如何使用少量有标签数据和大量无标签数据来训练高性能的分类模型，特别适用于材料科学中的 XRD 谱线分析。
 
@@ -16,7 +17,7 @@ X射线衍射（XRD）是材料科学中重要的表征技术，能够提供材�
 本工作目的是利用锂离子固态电解质材料的XRD数据训练，得到相应的结构和性能关系。通过FlexMatch算法，结合数据增强、伪标签生成、动态阈值和一致性正则化等技术，实现高效的半监督学习。
 
 
-## 模型原理
+## 3.模型原理
 
 该方法的主要思想是通过卷积神经网络建立XRD谱线数据与材料性能之间的非线性映射关系。模型采用VGG网络作为特征提取器，结合FlexMatch半监督学习算法，能够有效利用大量无标签数据提升模型性能。
 
@@ -33,9 +34,7 @@ X射线衍射（XRD）是材料科学中重要的表征技术，能够提供材�
 - 使用强增强数据进行一致性训练
 - 动态调整选择阈值，平衡各类别样本
 
-## 模型实现
-
-### 数据格式说明
+### 3.1数据格式说明
 
 数据集包含材料XRD谱线数据和对应的性能标签：
 
@@ -47,25 +46,25 @@ X射线衍射（XRD）是材料科学中重要的表征技术，能够提供材�
   - 包含样本名称、ID 和 XRD 谱线数据（4501维特征）
   - 无标签信息，用于半监督学习
 
-### 数据预处理
+### 3.2数据预处理与增强策略
 
 1. **归一化**：将 XRD 强度值归一化到 [0,1] 范围
 2. **噪声处理**：去除低强度噪声（阈值 < 0.1）
 3. **数据增强**：
    - **弱增强**：添加少量噪声（10%）和位移（100像素）
    - **强增强**：缩放（15%）、消除（15%）、大幅位移（500像素）
-
-### 模型构建
-
-使用 PaddleScience 内置的 VGG 网络：
-
-```python
-model = ppsci.arch.VGG(in_channel=1, num_classes=2)
+``` py linenums="27" title="examples/xrdmatch/main.py"
+--8<--
+examples/xrdmatch/main.py:27:170
+--8<--
 ```
-
-### 训练策略
-
-采用 FlexMatch 半监督学习算法：
+### 3.3自定义数据集类
+``` py linenums="171" title="examples/xrdmatch/main.py"
+--8<--
+examples/xrdmatch/main.py:171:203
+--8<--
+```
+### 3.4 FlexMatch 半监督损失函数
 
 1. **有标签数据训练**：使用交叉熵损失进行监督学习
 2. **无标签数据处理**：
@@ -73,9 +72,13 @@ model = ppsci.arch.VGG(in_channel=1, num_classes=2)
    - 基于弱增强版本生成伪标签
    - 使用强增强版本进行一致性训练
 3. **动态阈值**：根据类别置信度动态调整选择阈值
+``` py linenums="204" title="examples/xrdmatch/main.py"
+--8<--
+examples/xrdmatch/main.py:204:302
+--8<--
+```
 
-### 损失函数
-
+### 3.5 损失函数
 ```python
 total_loss = loss_lb + lambda_u * loss_ulb
 ```
@@ -85,7 +88,7 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - `loss_ulb`: 无标签数据的一致性损失
 - `lambda_u`: 无标签损失权重（默认1.0）
 
-### 训练配置
+### 3.6 训练配置
 
 - **优化器**：AdamW (lr=3e-4, weight_decay=0.01)
 - **学习率调度**：固定学习率
@@ -94,7 +97,7 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - **训练轮数**：每个实验100轮（每轮10个迭代）
 - **数据划分**：正类前20个，负类前75个用于训练
 
-## 评估指标
+## 3.7 评估指标
 
 - **准确率 (Accuracy)**：正确分类的样本比例
 - **精确率 (Precision)**：预测为正类中实际为正类的比例
@@ -102,8 +105,14 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - **F1 分数 (F1-Score)**：精确率和召回率的调和平均
 - **混淆矩阵 (Confusion Matrix)**：各类别预测结果的详细分布
 - **评估方法**：由于数据分离需要随机抽取，从而评估过程集中在训练过程中，无单独的评估模块。评估结果以日志输出。
+- **内置评估实现**：该函数会在训练过程中自动调用，并将日志保存到每个实验的 saved_models_ppsci/exp_*/log.txt 文件中；当混淆矩阵两类对角线值均大于 0.6 时，会向 diver.txt 写入平均对角线值并保存混淆矩阵。代码实现：
+``` py linenums="374" title="examples/xrdmatch/main.py"
+--8<--
+examples/xrdmatch/main.py:374:428
+--8<--
+```
 
-## 结果示例
+## 4.结果示例
 
 ### 训练日志示例
 
@@ -133,39 +142,12 @@ Best model saved at epoch 1, score: 0.6949028236156949
 | 召回率 | 0.789 |
 | F1分数 | 0.695 |
 
-## 使用说明
-
-### 1. 数据准备
-确保 `xrd_data/` 目录下包含：
-- `lbs.csv`: 有标签数据文件
-- `ulbs.csv`: 无标签数据文件
-
-### 2. 快速测试
-```bash
-# 修改main.py中的实验次数从100改为1进行快速测试
-# 将 for k in range(100): 改为 for k in range(1):
-python main.py
+## 5.完整代码
+``` py linenums="1" title="examples/xrdmatch/main.py"
+--8<--
+examples/xrdmatch/main.py
+--8<--
 ```
-
-### 3. 完整训练
-```bash
-# 100次实验，完整性能评估
-python main.py
-```
-
-### 4. 结果查看
-
-训练完成后，查看以下文件：
-- `saved_models_ppsci/exp_X/log.txt`: 每个实验的训练日志
-- `saved_models_ppsci/exp_X/model_best_epoch_*.pdparams`: 最佳模型权重
-
-## 注意事项
-
-1. **数据获取**：XRD 数据需要手动下载https://pan.baidu.com/s/1K-CjuBu05LFO_6r_UWg6Mw?pwd=a1VA ，其中的xrd_data就是相关数据和训练综合结果图片。和训练过程保存的部分模型文件。
-2. **计算资源**：完整训练需要较多计算资源，建议使用 GPU
-3. **参数调优**：可根据具体数据调整超参数
-4. **结果复现**：设置随机种子确保结果可复现
-5. **内存要求**：大数据集可能需要较大内存，建议分批处理
 
 ## 参考文献
 
