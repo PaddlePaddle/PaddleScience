@@ -100,6 +100,7 @@ nav:
         - psc_NN: zh/examples/perovskite_solar_cells_nn.md
         - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
+        - CNN_UTS: zh/examples/CNN_UTS.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
