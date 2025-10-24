@@ -24,6 +24,7 @@ from typing import Tuple
 
 import numpy as np
 import paddle
+
 try:
     import xarray as xr
 except ModuleNotFoundError:
