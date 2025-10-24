@@ -37,6 +37,7 @@ from ppsci.data.dataset.drivaernetplusplus_dataset import DrivAerNetPlusPlusData
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
+from ppsci.data.dataset.era5_land_dataset import ToyTwoModalDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
 from ppsci.data.dataset.ifm_moe_dataset import IFMMoeDataset
@@ -62,7 +63,6 @@ from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
-from ppsci.data.dataset.era5_land_dataset import ToyTwoModalDataset
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig

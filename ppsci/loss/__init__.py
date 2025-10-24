@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 from ppsci.loss import mtl
 from ppsci.loss.base import Loss
+from ppsci.loss.bce import BCELoss
+from ppsci.loss.bce import FocalLoss
 from ppsci.loss.chamfer import ChamferLoss
 from ppsci.loss.func import FunctionalLoss
 from ppsci.loss.integral import IntegralLoss
@@ -33,7 +35,6 @@ from ppsci.loss.mse import CausalMSELoss
 from ppsci.loss.mse import MSELoss
 from ppsci.loss.mse import MSELossWithL2Decay
 from ppsci.loss.mse import PeriodicMSELoss
-from ppsci.loss.bce import BCELoss,FocalLoss
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig

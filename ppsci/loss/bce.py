@@ -1,8 +1,14 @@
-from ppsci.loss import base
+from typing import Dict
+from typing import Optional
+from typing import Union
+
 import paddle
 import paddle.nn.functional as F
-from typing import Dict, Optional, Union
 from typing_extensions import Literal
+
+from ppsci.loss import base
+
+
 class BCELoss(base.Loss):
     r"""Binary cross-entropy (BCE) loss with logits.
 
@@ -37,23 +43,23 @@ class BCELoss(base.Loss):
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         if reduction not in ["mean", "sum"]:
-            raise ValueError(f"reduction should be 'mean' or 'sum', but got {reduction}")
+            raise ValueError(
+                f"reduction should be 'mean' or 'sum', but got {reduction}"
+            )
         super().__init__(reduction, weight)
 
     def forward(
         self, output_dict, label_dict, weight_dict=None
     ) -> Dict[str, "paddle.Tensor"]:
         losses: Dict[str, paddle.Tensor] = {}
-        #print(label_dict)
+        # print(label_dict)
         for key in label_dict:
             # logits and targets must have same shape
             logits = output_dict[key]
             targets = label_dict[key]
 
             # element-wise BCE with logits, no reduction
-            loss = F.binary_cross_entropy_with_logits(
-                logits, targets, reduction="none"
-            )
+            loss = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
 
             # aggregate over feature dimension (axis=1) to get per-sample loss
             # (keep the same aggregation pattern as your L2Loss, but without sqrt)
@@ -116,7 +122,9 @@ class FocalLoss(base.Loss):
         gamma: float = 2.0,
     ):
         if reduction not in ["mean", "sum"]:
-            raise ValueError(f"reduction should be 'mean' or 'sum', but got {reduction}")
+            raise ValueError(
+                f"reduction should be 'mean' or 'sum', but got {reduction}"
+            )
         if not (0.0 <= alpha <= 1.0):
             raise ValueError(f"alpha must be in [0,1], but got {alpha}")
         if gamma < 0:
@@ -136,9 +144,7 @@ class FocalLoss(base.Loss):
             targets = label_dict[key]
 
             # base BCE with logits (element-wise, no reduction)
-            bce = F.binary_cross_entropy_with_logits(
-                logits, targets, reduction="none"
-            )
+            bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
 
             # probabilities with sigmoid
             p = paddle.nn.functional.sigmoid(logits)
@@ -180,5 +186,3 @@ class FocalLoss(base.Loss):
             losses[key] = loss
 
         return losses
-
-
