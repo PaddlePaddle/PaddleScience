@@ -43,6 +43,7 @@
         - RegDGCNN
         - RegPointNet
         - IFMMLP
+        - Climateformer
         - MoleculeModel
       show_root_heading: true
       heading_level: 3
