@@ -1,67 +1,62 @@
 Global:
-  seed: 42
+  seed: 0
   device: cpu
 
 MODEL:
-  name: VGG16
+  name: VGG
   in_channel: 1
-  num_classes: 10
+  num_classes: 2
 
-train_dataset:
-  name: BasicDatasetPaddle
-  data_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/train_data.npy
-  target_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/train_target.npy
-  num_classes: 10
+# Semi-supervised learning configuration
+SEMI_SUPERVISED:
+  num_labels: 20
+  num_train_iter: 1000  # Total training iterations
+  num_eval_iter: 10     # Evaluate every 10 epochs
+  un_ratio: 0.8
+  ulb_num_labels: 10000
+  include_lb_to_ulb: true
 
-train_dataloader:
-  batch_size: 32
-  shuffle: true
-  num_workers: 4
+# Data path configuration
+DATA:
+  ulbs_path: ./xrd_data/ulbs.csv
+  lbs_path: ./xrd_data/lbs.csv
 
-val_dataset:
-  name: BasicDatasetPaddle
-  data_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/val_data.npy
-  target_path: ../XRDMatch-main/XRDMatch/paddle_only/xrd_data/val_target.npy
-  num_classes: 10
-
-val_dataloader:
-  batch_size: 32
-  shuffle: false
-  num_workers: 4
-
-OPTIMIZER:
-  name: AdamW
-  learning_rate: 0.001
-  weight_decay: 0.01
-
-LOSS:
-  name: CrossEntropyLoss
-
+# Training configuration
 TRAIN:
   epochs: 100
   log_interval: 10
-  save_dir: ./savemodels/
+  save_dir: ./saved_models_ppsci/
+  num_experiments: 100
 
+# Data loader configuration
+DATALOADER:
+  batch_size: 32
+  eval_batch_size: 32
+  shuffle: true
+  num_workers: 0
+
+# Optimizer configuration
+OPTIMIZER:
+  name: AdamW
+  learning_rate: 3e-4
+  weight_decay: 0.01
+
+# Loss function configuration
+LOSS:
+  name: CrossEntropyLoss
+
+# Evaluation configuration
 EVAL:
   interval: 1
-  metric: acc
+  metric: f1
 
-train_constraints:
-  supervised:
-    name: SupervisedConstraint
-    dataset: train_dataset
-    dataloader_cfg: train_dataloader
-    loss: CrossEntropyLoss
-    weight: 1.0
-    metric:
-      - name: Accuracy
-
-eval_constraints:
-  supervised:
-    name: SupervisedConstraint
-    dataset: val_dataset
-    dataloader_cfg: val_dataloader
-    loss: CrossEntropyLoss
-    weight: 1.0
-    metric:
-      - name: Accuracy
+# Data augmentation configuration
+AUGMENTATION:
+  weak_aug:
+    noise_ratio: 0.1
+    noise_peak: 0.05
+    move_gap: 100
+  strong_aug:
+    noise_ratio: 0.2
+    noise_peak: 0.1
+    move_gap: 200
