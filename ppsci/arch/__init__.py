@@ -70,6 +70,7 @@ from ppsci.arch.stafnet import STAFNet  # isort:skip
 from ppsci.arch.meteoformer import Meteoformer  # isort:skip
 from ppsci.arch.climateformer import Climateformer  # isort:skip
 from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
+from ppsci.arch.preformer import Preformer  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -133,6 +134,7 @@ __all__ = [
     "Meteoformer",
     "Climateformer",
     "MoleculeModel",
+    "Preformer",
 ]
 
 
