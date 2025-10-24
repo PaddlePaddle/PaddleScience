@@ -33,6 +33,7 @@ from ppsci.loss.mse import CausalMSELoss
 from ppsci.loss.mse import MSELoss
 from ppsci.loss.mse import MSELossWithL2Decay
 from ppsci.loss.mse import PeriodicMSELoss
+from ppsci.loss.bce import BCELoss,FocalLoss
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -55,6 +56,8 @@ __all__ = [
     "PeriodicMSELoss",
     "KLLoss",
     "mtl",
+    "FocalLoss",
+    "BCELoss",
 ]
 
 
