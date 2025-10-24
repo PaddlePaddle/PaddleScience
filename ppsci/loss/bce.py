@@ -1,19 +1,8 @@
-import paddle
-import paddle.nn.functional as F
-from typing import Dict, Optional, Union
-from typing_extensions import Literal
 from ppsci.loss import base
-# ------------------------------------------------------------
-# Binary Cross-Entropy Loss (with logits)
-# ------------------------------------------------------------
 import paddle
 import paddle.nn.functional as F
 from typing import Dict, Optional, Union
 from typing_extensions import Literal
-
-# ------------------------------------------------------------
-# Binary Cross-Entropy Loss (with logits)
-# ------------------------------------------------------------
 class BCELoss(base.Loss):
     r"""Binary cross-entropy (BCE) loss with logits.
 
@@ -191,4 +180,5 @@ class FocalLoss(base.Loss):
             losses[key] = loss
 
         return losses
+
 
