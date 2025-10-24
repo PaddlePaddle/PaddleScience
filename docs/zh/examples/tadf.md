@@ -35,17 +35,17 @@
     ``` sh
     # Est 评估：
     cd TADF_Est
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/Est/Est.dat \ https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/Est/Est.dat  https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
     python Est.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/Est/Est_model.pdparams
 
     # f 评估:
     cd TADF_f
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/f/f.dat \ https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/f/f.dat  https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
     python f.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/f/f_model.pdparams
 
     # angle 评估:
     cd TADF_angle
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/f/f.dat \ https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/f/f.dat  https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
     python angle.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/TADF/angle/angle_model.pdparams
     ```
 
