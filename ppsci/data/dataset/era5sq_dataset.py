@@ -25,7 +25,11 @@ from typing import Tuple
 import h5py
 import numpy as np
 import paddle
-import xarray as xr
+
+try:
+    import xarray as xr
+except ModuleNotFoundError:
+    pass
 from paddle import io
 from paddle import vision
 
