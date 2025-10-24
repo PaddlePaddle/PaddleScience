@@ -1,12 +1,7 @@
-import math
-from typing import Optional, Literal, Tuple
+from typing import Tuple
 import numpy as np
-import paddle
-import paddle.nn as nn
-import paddle.nn.functional as F
-from paddle.io import Dataset, DataLoader
-from paddle.vision.models import resnet18
-import matplotlib.pyplot as plt
+from paddle.io import Dataset
+import math
 # ====================== ToyDataset（T=365, N=24） ======================
 class ToyTwoModalDataset(Dataset):
     """
@@ -88,4 +83,5 @@ class ToyTwoModalDataset(Dataset):
         return {"video":self.video[idx],"vec": self.vec[idx]},{"y":self.y[idx]},{}
         # return self.video[idx], self.vec[idx], self.y[idx]
     def __len__(self): return self.n
+
     ###在这个基础上加constraint，构建已有约束，Loss Focal BCE，valid_dataloader_cfg,加input和label
