@@ -38,4 +38,5 @@
         - STAFNetDataset
         - ERA5ClimateDataset
         - MoleculeDatasetIter
+        - ERA5SQDataset
       show_root_heading: true
