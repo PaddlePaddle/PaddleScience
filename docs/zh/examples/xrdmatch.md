@@ -5,8 +5,7 @@
 ``` sh
     python main.py
 ```
-原项目后续进行了一步模型集成学习，从而保留了较多的模型，但是这一步不是文章中的关键，从而舍弃了。
-而原项目也是采取的训练中直接调用评估模块进行评估从而保存合适的模型，从而评估模块内置在了训练中，只需要有数据文件即可训练评估。
+原项目后续进行了一步模型集成学习，需要保留较多的模型，从而本项目方法仿照原项目进行。
 
 ## 2.背景简介
 
@@ -37,7 +36,11 @@ X射线衍射（XRD）是材料科学中重要的表征技术，能够提供材�
 ### 3.1数据格式说明
 
 数据集包含材料XRD谱线数据和对应的性能标签：
-
+- **数据连接**:
+```
+https://paddle-org.bj.bcebos.com/paddlescience/datasets/xrdmatch/lbs.csv
+https://paddle-org.bj.bcebos.com/paddlescience/datasets/xrdmatch/ulbs.csv
+```
 - **`xrd_data/lbs.csv`**: 有标签数据
   - 包含样本名称、ID、标签和 XRD 谱线数据（4501维特征）
   - 标签：0（正类）、1（负类）
