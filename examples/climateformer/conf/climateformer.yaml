@@ -1,0 +1,79 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_climateformer/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 1024
+output_dir: ${hydra:run.dir}
+log_freq: 20 # 20
+
+# set training hyper-parameters
+SQ_LEN: 6
+IMG_H: 192
+IMG_W: 256
+USE_SAMPLED_DATA: false
+
+# data years settings
+TRAIN_YEARS: ["2018"]
+EVAL_YEARS: ["2018"]
+
+# set train data path
+TRAIN_FILE_PATH: /data/ERA5/
+DATA_MEAN_PATH: /data/ERA5/mean.nc
+DATA_STD_PATH: /data/ERA5/std.nc
+
+# set evaluate data path
+VALID_FILE_PATH: /data/ERA5/
+
+# model settings
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["output"]
+  shape_in:
+    - 6
+    - 12
+    - ${IMG_H}
+    - ${IMG_W}
+
+# training settings
+TRAIN:
+  epochs: 20  # 150
+  save_freq: 5  # 20
+  eval_during_train: true
+  eval_freq: 5  # 20
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 0.001
+    by_epoch: true
+  batch_size: 8 # 16
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  compute_metric_by_batch: true
+  eval_with_no_grad: true
+  batch_size: 8 # 16
