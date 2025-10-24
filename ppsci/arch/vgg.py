@@ -122,8 +122,3 @@ class VGG(base.Arch):
             if "bn" in n or "bias" in n:
                 nwd.append(n)
         return nwd
-
-
-def vgg(config="vgg16", pretrained=False, pretrained_path=None, **kwargs):
-    model = VGG(config=config, **kwargs)
-    return model

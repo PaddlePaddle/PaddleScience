@@ -200,7 +200,7 @@ class XRDDataset(paddle.io.Dataset):
         return len(self.data)
 
 
-# === FlexMatch loss function migrated from paddle_only ===
+# === FlexMatch loss function migrated ===
 class FlexMatchLoss:
     def __init__(self, config):
         self.T = getattr(config, "T", 0.5)
@@ -299,7 +299,7 @@ def log_info(message, log_file=None):
             f.write(msg + "\n")
 
 
-# Custom trainer (PPSci style)
+# Custom trainer
 class SemiSupervisedTrainer:
     def __init__(
         self, config, model, optimizer, loss_fn, save_dir="./saved_models_ppsci"
