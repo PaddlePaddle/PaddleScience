@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.era5climate_dataset import ERA5ClimateDataset
+from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
 from ppsci.data.dataset.era5sq_dataset import ERA5SQDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
@@ -108,6 +109,7 @@ __all__ = [
     "STAFNetDataset",
     "TMTDataset",
     "register_to_dataset",
+    "ERA5MeteoDataset",
     "ERA5ClimateDataset",
     "LatentNODataset",
     "LatentNODataset_time",

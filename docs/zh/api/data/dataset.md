@@ -36,6 +36,7 @@
         - DrivAerNetPlusPlusDataset
         - IFMMoeDataset
         - STAFNetDataset
+        - ERA5MeteoDataset
         - ERA5ClimateDataset
         - MoleculeDatasetIter
         - ERA5SQDataset
