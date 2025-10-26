@@ -167,7 +167,7 @@ f1: 0.6480
 ## 5.完整代码
 ``` py linenums="1" title="examples/xrdmatch/main.py"
 --8<--
-main.py
+examples/xrdmatch/main.py
 --8<--
 ```
 
