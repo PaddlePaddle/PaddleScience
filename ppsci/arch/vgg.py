@@ -66,7 +66,7 @@ class VGG(base.Arch):
         self.output_keys = output_keys or ["logits"]
         self.features = self._make_layers(VGG_CONFIGS[config], in_channel)
         self.num_classes = num_classes
-        self.classifier = None  # Defer initialization
+        self.classifier = None
 
     def _make_layers(self, cfg, in_channel):
         layers = []
@@ -90,7 +90,6 @@ class VGG(base.Arch):
         x = self.features(x)
         x = paddle.flatten(x, 1)
         if self.classifier is None:
-            # Dynamically infer feature dimension after flattening
             in_features = x.shape[1]
             self.classifier = nn.Sequential(
                 nn.Linear(in_features, 1024),
@@ -101,7 +100,6 @@ class VGG(base.Arch):
                 nn.Dropout(0.5),
                 nn.Linear(256, self.num_classes),
             )
-            # Initialize weights
             for m in self.sublayers():
                 if isinstance(m, nn.Conv1D):
                     nn.initializer.XavierUniform()(m.weight)

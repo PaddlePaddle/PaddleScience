@@ -5,7 +5,10 @@
 ``` sh
     python main.py
 ```
-原项目后续进行了一步模型集成学习，需要保留较多的模型，从而本项目方法仿照原项目进行。
+=== "模型评估命令"
+``` sh
+    python main.py --mode eval --exp_id x --epoch x
+```
 
 ## 2.背景简介
 
@@ -55,16 +58,16 @@ https://paddle-org.bj.bcebos.com/paddlescience/datasets/xrdmatch/ulbs.csv
 2. **噪声处理**：去除低强度噪声（阈值 < 0.1）
 3. **数据增强**：
    - **弱增强**：添加少量噪声（10%）和位移（100像素）
-   - **强增强**：缩放（15%）、消除（15%）、大幅位移（500像素）
-``` py linenums="27" title="examples/xrdmatch/main.py"
+   - **强增强**：缩放（15%）、消除（15%）、大幅位移（200像素）和噪声（20%）
+``` py linenums="42" title="examples/xrdmatch/main.py"
 --8<--
-examples/xrdmatch/main.py:27:170
+examples/xrdmatch/main.py:42:89
 --8<--
 ```
 ### 3.3自定义数据集类
-``` py linenums="171" title="examples/xrdmatch/main.py"
+``` py linenums="201" title="examples/xrdmatch/main.py"
 --8<--
-examples/xrdmatch/main.py:171:203
+examples/xrdmatch/main.py:201:239
 --8<--
 ```
 ### 3.4 FlexMatch 半监督损失函数
@@ -75,9 +78,9 @@ examples/xrdmatch/main.py:171:203
    - 基于弱增强版本生成伪标签
    - 使用强增强版本进行一致性训练
 3. **动态阈值**：根据类别置信度动态调整选择阈值
-``` py linenums="204" title="examples/xrdmatch/main.py"
+``` py linenums="242" title="examples/xrdmatch/main.py"
 --8<--
-examples/xrdmatch/main.py:204:302
+examples/xrdmatch/main.py:242:327
 --8<--
 ```
 
@@ -94,11 +97,11 @@ total_loss = loss_lb + lambda_u * loss_ulb
 ### 3.6 训练配置
 
 - **优化器**：AdamW (lr=3e-4, weight_decay=0.01)
-- **学习率调度**：固定学习率
 - **批次大小**：有标签32，无标签96
 - **实验次数**：100次独立实验
 - **训练轮数**：每个实验100轮（每轮10个迭代）
 - **数据划分**：正类前20个，负类前75个用于训练
+- **模型保存**：仅当F1分数≥0.7时保存模型
 
 ## 3.7 评估指标
 
@@ -107,11 +110,14 @@ total_loss = loss_lb + lambda_u * loss_ulb
 - **召回率 (Recall)**：实际正类中被正确预测的比例
 - **F1 分数 (F1-Score)**：精确率和召回率的调和平均
 - **混淆矩阵 (Confusion Matrix)**：各类别预测结果的详细分布
-- **评估方法**：由于数据分离需要随机抽取，从而评估过程集中在训练过程中，无单独的评估模块。评估结果以日志输出。
-- **内置评估实现**：该函数会在训练过程中自动调用，并将日志保存到每个实验的 saved_models_ppsci/exp_*/log.txt 文件中；当混淆矩阵两类对角线值均大于 0.6 时，会向 diver.txt 写入平均对角线值并保存混淆矩阵。代码实现：
-``` py linenums="374" title="examples/xrdmatch/main.py"
+- **评估方法**：支持训练时评估和独立评估两种模式
+- **训练时评估**：在训练过程中自动调用，将日志保存到每个实验的 saved_models_ppsci/exp_*/log.txt 文件中
+- **独立评估**：使用 `--mode eval` 参数对已保存的模型进行评估，结果保存到 eval_log.txt 文件中
+- **模型保存策略**：仅当F1分数≥0.7时保存模型
+- **内置评估实现**：该函数会在训练过程中自动调用，并将日志保存到每个实验的 saved_models_ppsci/exp_*/log.txt 文件中。代码实现：
+``` py linenums="412" title="examples/xrdmatch/main.py"
 --8<--
-examples/xrdmatch/main.py:374:428
+examples/xrdmatch/main.py:412:457
 --8<--
 ```
 
@@ -120,18 +126,16 @@ examples/xrdmatch/main.py:374:428
 ### 训练日志示例
 
 ```
-[2025-07-14 20:59:47 INFO] Starting experiment 1/100
-[2025-07-14 20:59:47 INFO] unlabeled data number: 10000, labeled data number: 20
-[2025-07-14 20:59:47 INFO] Epoch: 0
-[2025-07-14 20:59:47,744 INFO] confusion matrix
-[2025-07-14 20:59:47,744 INFO] [[0.77777778 0.22222222]
+Epoch: 0
+[2025-8-27 02:40:12,747 INFO] confusion matrix
+[2025-8-27 02:40:12,748 INFO] [[0.22222222 0.77777778]
  [0.2        0.8       ]]
-[2025-07-14 20:59:47,744 INFO] evaluation metric
-[2025-07-14 20:59:47,745 INFO] acc: 0.7969
-[2025-07-14 20:59:47,745 INFO] precision: 0.6727
-[2025-07-14 20:59:47,745 INFO] recall: 0.7889
-[2025-07-14 20:59:47,746 INFO] f1: 0.6949
-Best model saved at epoch 1, score: 0.6949028236156949
+[2025-8-27 02:40:12,748 INFO] evaluation metric
+[2025-8-27 02:40:12,748 INFO] acc: 0.7188
+[2025-8-27 02:40:12,748 INFO] precision: 0.5083
+[2025-8-27 02:40:12,750 INFO] recall: 0.5111
+[2025-8-27 02:40:12,750 INFO] f1: 0.5060
+F1 score 0.5060 < 0.7, model not saved at epoch 0
 ```
 
 ### 性能指标
@@ -145,10 +149,25 @@ Best model saved at epoch 1, score: 0.6949028236156949
 | 召回率 | 0.789 |
 | F1分数 | 0.695 |
 
+### 评估日志示例
+
+```
+Evaluating experiment 0 epoch 11 model...
+Starting prediction...
+confusion matrix
+[[0.77777778 0.22222222]
+ [0.16363636 0.83636364]]
+evaluation metric
+acc: 0.6480
+precision: 0.6480
+recall: 0.6480
+f1: 0.6480
+```
+
 ## 5.完整代码
 ``` py linenums="1" title="examples/xrdmatch/main.py"
 --8<--
-examples/xrdmatch/main.py
+main.py
 --8<--
 ```
 

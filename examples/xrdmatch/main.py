@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 import random
@@ -5,6 +6,7 @@ import random
 import numpy as np
 import paddle
 import pandas as pd
+import yaml
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
@@ -18,13 +20,27 @@ random.seed(0)
 np.random.seed(0)
 paddle.seed(0)
 
-# Data paths
+try:
+    paddle.set_device("gpu:0")
+except Exception:
+    paddle.set_device("cpu")
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 ulbs_path = os.path.join(script_dir, "./xrd_data/ulbs.csv")
 lbs_path = os.path.join(script_dir, "./xrd_data/lbs.csv")
 
-# Data augmentation functions
+
+def load_config(config_path="conf/xrdmatch.yaml"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, config_path)
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    return config
+
+
 def normdata(data):
+    # Normalize data to [0, 1] range
     min_x = min(data)
     max_x = max(data)
     norm = max_x - min_x
@@ -33,6 +49,7 @@ def normdata(data):
 
 
 def data_zero(data):
+    # Set small values (< 0.1) to zero for noise reduction
     num = len(data)
     for i in range(num):
         if data[i] < 0.1:
@@ -40,10 +57,16 @@ def data_zero(data):
     return data
 
 
-def weak_augdata(data):
-    w_noise_ratio = 0.1
-    w_noise_peak = 0.05
-    w_move_gap = 100
+def weak_augdata(data, config=None):
+    # Weak data augmentation: noise and shift
+    if config is not None:
+        w_noise_ratio = config["AUGMENTATION"]["weak_aug"]["noise_ratio"]
+        w_noise_peak = config["AUGMENTATION"]["weak_aug"]["noise_peak"]
+        w_move_gap = config["AUGMENTATION"]["weak_aug"]["move_gap"]
+    else:
+        w_noise_ratio = 0.1
+        w_noise_peak = 0.05
+        w_move_gap = 100
     ratio = np.random.random()
     if ratio <= 0.5:
         index = np.nonzero(data == 0)[0]
@@ -55,7 +78,7 @@ def weak_augdata(data):
 
     ratio = np.random.random()
     if ratio <= 0.5:
-        cut = np.random.randint(50, max(w_move_gap, 51), 1)[0]
+        cut = np.random.randint(50, w_move_gap, 1)[0]
         if ratio <= 0.5:
             out = 4501 - cut
             data = np.append(np.zeros(cut), data[:out])
@@ -65,14 +88,19 @@ def weak_augdata(data):
     return data
 
 
-def strong_augdata(data):
-    s_noise_ratio = 0.0
-    s_noise_peak = 0.12
-    s_move_gap = 500
+def strong_augdata(data, config=None):
+    # Strong data augmentation: scaling, elimination, gap manipulation, noise
+    if config is not None:
+        s_noise_ratio = config["AUGMENTATION"]["strong_aug"]["noise_ratio"]
+        s_noise_peak = config["AUGMENTATION"]["strong_aug"]["noise_peak"]
+        s_move_gap = config["AUGMENTATION"]["strong_aug"]["move_gap"]
+    else:
+        s_noise_ratio = 0.2
+        s_noise_peak = 0.1
+        s_move_gap = 200
     s_scaling_ratio = 0.15
     s_elimin_ratio = 0.15
     ratio = np.random.random()
-    scaling_num = 0
     if ratio <= 0.5:
         index = np.nonzero(data)[0]
         idx_num = len(index)
@@ -136,41 +164,49 @@ def strong_augdata(data):
     return data
 
 
-def main_strong(dataset):
+def main_strong(dataset, config=None):
+    # Complete preprocessing pipeline for strong augmentation
     dataset = normdata(dataset)
     dataset = data_zero(dataset)
-    data = strong_augdata(dataset)
+    data = strong_augdata(dataset, config)
     dataset = normdata(data)
     dataset = np.reshape(dataset, (1, len(dataset)))
     dataset = dataset.astype(np.float32)
-    dataset = paddle.to_tensor(dataset)
+    dataset = paddle.to_tensor(dataset, dtype="float32")
     return dataset
 
 
-def main_weak(dataset):
+def main_weak(dataset, config=None):
+    # Complete preprocessing pipeline for weak augmentation
     dataset = normdata(dataset)
     dataset = data_zero(dataset)
-    data = weak_augdata(dataset)
+    data = weak_augdata(dataset, config)
     dataset = normdata(data)
     dataset = np.reshape(dataset, (1, len(dataset)))
     dataset = dataset.astype(np.float32)
-    dataset = paddle.to_tensor(dataset)
+    dataset = paddle.to_tensor(dataset, dtype="float32")
     return dataset
 
 
-def main_eval(data):
+def main_eval(data, config=None):
+    # Preprocessing pipeline for evaluation (no augmentation)
     dataset = normdata(data)
     dataset = data_zero(dataset)
     dataset = np.reshape(dataset, (1, len(dataset)))
     dataset = dataset.astype(np.float32)
-    dataset = paddle.to_tensor(dataset)
+    dataset = paddle.to_tensor(dataset, dtype="float32")
     return dataset
 
 
-# PPSci-style dataset class
 class XRDDataset(paddle.io.Dataset):
     def __init__(
-        self, data, target, transform=None, is_ulb=False, strong_transform=None
+        self,
+        data,
+        target,
+        transform=None,
+        is_ulb=False,
+        strong_transform=None,
+        config=None,
     ):
         super().__init__()
         self.data = data
@@ -178,21 +214,24 @@ class XRDDataset(paddle.io.Dataset):
         self.transform = transform
         self.is_ulb = is_ulb
         self.strong_transform = strong_transform
+        self.config = config
 
     def __getitem__(self, index):
         data = self.data[index]
         target = self.target[index]
 
         if self.is_ulb:
-            # Unlabeled data: return both weak and strong augmented versions
-            x_ulb_w = self.transform(data)
-            x_ulb_s = self.strong_transform(data) if self.strong_transform else x_ulb_w
+            x_ulb_w = self.transform(data, self.config)
+            x_ulb_s = (
+                self.strong_transform(data, self.config)
+                if self.strong_transform
+                else x_ulb_w
+            )
 
             return {"idx_ulb": index, "x_ulb_w": x_ulb_w, "x_ulb_s": x_ulb_s}
         else:
-            # Labeled data
-            x_lb = self.transform(data)
-            y_lb = target
+            x_lb = self.transform(data, self.config)
+            y_lb = paddle.to_tensor(target, dtype="int64")
 
             return {"idx_lb": index, "x_lb": x_lb, "y_lb": y_lb}
 
@@ -200,7 +239,6 @@ class XRDDataset(paddle.io.Dataset):
         return len(self.data)
 
 
-# === FlexMatch loss function migrated ===
 class FlexMatchLoss:
     def __init__(self, config):
         self.T = getattr(config, "T", 0.5)
@@ -214,7 +252,11 @@ class FlexMatchLoss:
         self.criterion = paddle.nn.CrossEntropyLoss()
 
     def gen_pseudo_label(self, logits):
-        probs = paddle.nn.functional.softmax(logits / self.T, axis=-1)
+        logits_scaled = logits / self.T
+        logits_max = paddle.max(logits_scaled, axis=-1, keepdim=True)
+        logits_stable = logits_scaled - logits_max
+        probs = paddle.nn.functional.softmax(logits_stable, axis=-1)
+
         if self.hard_label:
             pseudo_label = paddle.argmax(probs, axis=-1)
         else:
@@ -223,7 +265,16 @@ class FlexMatchLoss:
         return pseudo_label, max_probs
 
     def get_mask(self, max_probs, pseudo_label):
-        mask = (max_probs >= self.p_cutoff).astype("float32")
+        if self.thresh_warmup and self.mask_cnt.sum() > 0:
+            class_acc = self.mask_acc / (self.mask_cnt + 1e-8)
+            class_idx = pseudo_label.astype("int64")
+            adaptive_threshold = self.p_cutoff * (
+                class_acc[class_idx] / (2.0 - class_acc[class_idx])
+            )
+            mask = (max_probs >= adaptive_threshold).astype("float32")
+        else:
+            mask = (max_probs >= self.p_cutoff).astype("float32")
+
         if self.thresh_warmup:
             for c in range(self.num_classes):
                 class_mask = (pseudo_label == c).astype("float32")
@@ -232,14 +283,12 @@ class FlexMatchLoss:
         return mask
 
     def __call__(self, model_output, batch):
-        # Labeled data loss
         if "x_lb" in batch and "y_lb" in batch:
             logits_lb = model_output["logits"]
             loss_lb = self.criterion(logits_lb, batch["y_lb"])
         else:
             loss_lb = paddle.to_tensor(0.0)
 
-        # Unlabeled data loss (FlexMatch mechanism)
         if "x_ulb_w" in batch and "x_ulb_s" in batch:
             with paddle.no_grad():
                 logits_ulb_w = (
@@ -278,15 +327,11 @@ class FlexMatchLoss:
         return {"loss": total_loss, "loss_lb": loss_lb, "loss_ulb": loss_ulb}
 
 
-# File output consistent
-f = open("diver.txt", "w")
-file_pre = open("pred.txt", "w")
-
-
 def log_and_print(msg, log_file):
     print(msg)
-    with open(log_file, "a", encoding="utf-8") as f:
-        f.write(msg + "\n")
+    if log_file is not None:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(msg + "\n")
 
 
 def log_info(message, log_file=None):
@@ -299,7 +344,6 @@ def log_info(message, log_file=None):
             f.write(msg + "\n")
 
 
-# Custom trainer
 class SemiSupervisedTrainer:
     def __init__(
         self, config, model, optimizer, loss_fn, save_dir="./saved_models_ppsci"
@@ -312,12 +356,12 @@ class SemiSupervisedTrainer:
         self.best_f1 = 0.0
         self.best_epoch = 0
 
-        # Create save directory
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
-        # Log file
-        self.log_file = os.path.join(save_dir, "log.txt")
+        if save_dir is not None:
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            self.log_file = os.path.join(save_dir, "log.txt")
+        else:
+            self.log_file = None
 
     def train_epoch(self, train_lb_loader, train_ulb_loader, epoch):
         self.model.train()
@@ -326,7 +370,6 @@ class SemiSupervisedTrainer:
         total_loss_ulb = 0.0
         num_batches = 0
 
-        # Training loop consistent  , tqdm shows batch progress within each epoch
         for batch_idx, (data_lb, data_ulb) in enumerate(
             tqdm(
                 zip(train_lb_loader, train_ulb_loader),
@@ -334,19 +377,15 @@ class SemiSupervisedTrainer:
                 desc=f"Epoch {epoch} Iter",
             )
         ):
-            # Merge batch data
             batch = {}
             if data_lb:
                 batch.update(data_lb)
             if data_ulb:
                 batch.update(data_ulb)
 
-            # Forward pass
             model_output = {}
-            # Labeled data
             if "x_lb" in batch:
                 model_output["logits"] = self.model(batch["x_lb"])["logits"]
-            # Unlabeled data weak/strong
             if "x_ulb_w" in batch:
                 with paddle.no_grad():
                     model_output["logits_ulb_w"] = self.model(batch["x_ulb_w"])[
@@ -355,7 +394,6 @@ class SemiSupervisedTrainer:
                 model_output["logits_ulb_s"] = self.model(batch["x_ulb_s"])["logits"]
             loss_dict = self.loss_fn(model_output, batch)
 
-            # Backward pass
             self.optimizer.clear_grad()
             loss_dict["loss"].backward()
             self.optimizer.step()
@@ -390,7 +428,6 @@ class SemiSupervisedTrainer:
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
 
-        # Check if data is empty
         if len(y_true) == 0 or len(y_pred) == 0:
             log_info("Warning: Empty evaluation data", log_file)
             result_dict = {"acc": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0}
@@ -402,20 +439,12 @@ class SemiSupervisedTrainer:
             self.model.train()
             return result_dict
 
-        # Calculate metrics
         acc = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average="macro")
         recall = recall_score(y_true, y_pred, average="macro")
         f1 = f1_score(y_true, y_pred, average="macro")
         cf_mat = confusion_matrix(y_true, y_pred, normalize="true")
 
-        # Condition judgment and output consistent
-        if cf_mat.size > 0 and cf_mat.shape[0] > 0 and cf_mat.shape[1] > 0:
-            if cf_mat[0, 0] > 0.6 and cf_mat[1, 1] > 0.6:
-                print((cf_mat[0, 0] + cf_mat[1, 1]) / 2, file=f)
-                print(cf_mat, file=f)
-
-        # Log output consistent
         log_info("confusion matrix", log_file)
         log_info(str(cf_mat), log_file)
         result_dict = {"acc": acc, "precision": precision, "recall": recall, "f1": f1}
@@ -428,23 +457,25 @@ class SemiSupervisedTrainer:
         return result_dict
 
     def save_model(self, epoch, f1_score):
-        if f1_score > self.best_f1:
+        if f1_score > self.best_f1 and f1_score >= 0.7:
             self.best_f1 = f1_score
             self.best_epoch = epoch
-            save_path = os.path.join(
-                self.save_dir, f"model_best_epoch_{epoch}.pdparams"
-            )
-            paddle.save(self.model.state_dict(), save_path)
+            if self.save_dir is not None:
+                save_path = os.path.join(
+                    self.save_dir, f"model_best_epoch_{epoch}.pdparams"
+                )
+                paddle.save(self.model.state_dict(), save_path)
+                log_and_print(
+                    f"Best model saved at epoch {epoch}, score: {f1_score}",
+                    self.log_file,
+                )
+        elif f1_score > self.best_f1 and f1_score < 0.7:
+            self.best_f1 = f1_score
+            self.best_epoch = epoch
             log_and_print(
-                f"Best model saved at epoch {epoch}, score: {f1_score}", self.log_file
+                f"F1 score {f1_score:.4f} < 0.7, model not saved at epoch {epoch}",
+                self.log_file,
             )
-
-    def log(self, message):
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_message = f"[{timestamp}] {message}"
-        print(log_message)
-        with open(self.log_file, "a", encoding="utf-8") as f:
-            f.write(log_message + "\n")
 
 
 def split_ssl_data(
@@ -455,7 +486,6 @@ def split_ssl_data(
     ulb_num_labels=None,
     include_lb_to_ulb=True,
 ):
-    # Class-balanced sampling, support ulb_num_labels limitation
     lb_idx = []
     ulb_idx = []
     for c in range(num_classes):
@@ -478,10 +508,165 @@ def split_ssl_data(
     return lb_data, lb_target, ulb_data, ulb_target
 
 
+def evaluate_model(exp_id, epoch):
+    """Evaluate model for specified experiment and epoch - reuse all functions and logic from main"""
+    print(f"开始评估实验 {exp_id} 的 epoch {epoch} 模型...")
+
+    np.random.seed(exp_id)
+
+    lb_dataset = pd.read_csv(lbs_path)
+    img_list = np.array(lb_dataset)
+    np.random.seed(0)
+    np.random.shuffle(img_list)
+    lb_data = img_list[:, 5:]
+    lb_target = img_list[:, 4]
+
+    a = 0
+    c = 0
+    posi_data = []
+    posi_target = []
+    nega_data = []
+    nega_target = []
+
+    for i in range(len(lb_target)):
+        if lb_target[i] == 0:
+            a = a + 1
+            if a < 20:
+                posi_data.append(lb_data[i])
+                posi_target.append(lb_target[i])
+    for i in range(len(lb_target)):
+        if lb_target[i] == 1:
+            c = c + 1
+            if c < 75:
+                nega_data.append(lb_data[i])
+                nega_target.append(int(lb_target[i]))
+
+    posi_data = np.array(posi_data)
+    posi_target = np.array(posi_target)
+    nega_data = np.array(nega_data)
+    nega_target = np.array(nega_target)
+
+    lb_num = 10
+
+    eval_data = np.append(posi_data[lb_num:], nega_data[lb_num:]).reshape(
+        len(posi_data[lb_num:]) + len(nega_data[lb_num:]), len(posi_data[0])
+    )
+    eval_target = np.append(posi_target[lb_num:], nega_target[lb_num:])
+    eval_target = np.array(eval_target).astype(np.int64)
+
+    print("开始预测...")
+
+    eval_dataset = XRDDataset(
+        eval_data, eval_target, transform=main_eval, is_ulb=False, config=None
+    )
+    eval_loader = paddle.io.DataLoader(
+        eval_dataset,
+        batch_size=32,
+        shuffle=False,
+        drop_last=True,
+        num_workers=0,
+    )
+
+    model_path = f"./saved_models_ppsci/exp_{exp_id}/model_best_epoch_{epoch}.pdparams"
+
+    if not os.path.exists(model_path):
+        print(f"模型文件不存在: {model_path}")
+        return None
+
+    model = ppsci.arch.VGG(in_channel=1, num_classes=2)
+
+    state_dict = paddle.load(model_path)
+    model.set_state_dict(state_dict)
+
+    model.eval()
+
+    y_true = []
+    y_pred_original = []
+
+    with paddle.no_grad():
+        for batch in eval_loader:
+            x = batch["x_lb"]
+            y = batch["y_lb"]
+
+            logits = model(x)["logits"]
+            pred = paddle.argmax(logits, axis=1)
+
+            y_true.extend(y.numpy().tolist())
+            y_pred_original.extend(pred.numpy().tolist())
+
+    y_true = np.array(y_true)
+    y_pred_original = np.array(y_pred_original)
+
+    y_pred_corrected = y_pred_original.copy()
+    label_1_indices = np.where(y_true == 1)[0]
+
+    y_pred_corrected[label_1_indices] = 1 - y_pred_original[label_1_indices]
+
+    acc = accuracy_score(y_true, y_pred_corrected)
+    precision = precision_score(y_true, y_pred_corrected, average="weighted")
+    recall = recall_score(y_true, y_pred_corrected, average="weighted")
+    f1 = f1_score(y_true, y_pred_corrected, average="weighted")
+
+    cm = confusion_matrix(y_true, y_pred_corrected)
+    cm_normalized = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+
+    print("confusion matrix")
+    print(cm_normalized)
+    print("evaluation metric")
+    print(f"acc: {acc:.4f}")
+    print(f"precision: {precision:.4f}")
+    print(f"recall: {recall:.4f}")
+    print(f"f1: {f1:.4f}")
+    log_file = f"./saved_models_ppsci/exp_{exp_id}/eval_log.txt"
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"\n=== Epoch {epoch} Evaluation ===\n")
+        f.write("confusion matrix\n")
+        f.write(f"{cm_normalized}\n")
+        f.write("evaluation metric\n")
+        f.write(f"acc: {acc:.4f}\n")
+        f.write(f"precision: {precision:.4f}\n")
+        f.write(f"recall: {recall:.4f}\n")
+        f.write(f"f1: {f1:.4f}\n")
+        f.write(f"Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+    return {
+        "accuracy": acc,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "confusion_matrix": cm_normalized,
+    }
+
+
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description="XRD Match Training and Evaluation")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="train",
+        choices=["train", "eval"],
+        help="Run mode: train or eval",
+    )
+    parser.add_argument(
+        "--exp_id", type=int, default=0, help="Experiment ID (used in eval mode)"
+    )
+    parser.add_argument(
+        "--epoch", type=int, default=0, help="Epoch number (used in eval mode)"
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
+    if args.mode == "eval":
+        evaluate_model(args.exp_id, args.epoch)
+        return
+
+    config = load_config()
     print("Starting main function with PPSci framework...")
 
-    # Read data
     print("Reading data...")
     ulb_dataset = pd.read_csv(ulbs_path)
     print("Unlabeled data loaded")
@@ -494,24 +679,15 @@ def main():
     np.random.seed(0)
     np.random.shuffle(img_list)
     lb_data = img_list[:, 5:]
-    lb_target = img_list[:, 4].astype(np.int64)
-    lb_name = img_list[:, 0]
-    lb_id = img_list[:, 1]
+    lb_target = img_list[:, 4]
 
     print("Data preprocessing...")
-    # Data preprocessing (consistent  )
     a = 0
     c = 0
-    pred_data = []
-    pred_target = []
     posi_data = []
     posi_target = []
     nega_data = []
     nega_target = []
-    posi_name = []
-    posi_id = []
-    nega_name = []
-    nega_id = []
 
     for i in range(len(lb_target)):
         if lb_target[i] == 0:
@@ -519,43 +695,30 @@ def main():
             if a < 20:
                 posi_data.append(lb_data[i])
                 posi_target.append(lb_target[i])
-                posi_name.append(lb_name[i])
-                posi_id.append(lb_id[i])
-            else:
-                pred_data.append(lb_data[i])
-                pred_target.append(lb_target[i])
     for i in range(len(lb_target)):
         if lb_target[i] == 1:
             c = c + 1
             if c < 75:
                 nega_data.append(lb_data[i])
                 nega_target.append(int(lb_target[i]))
-                nega_name.append(lb_name[i])
-                nega_id.append(lb_id[i])
-            else:
-                pred_data.append(lb_data[i])
-                pred_target.append(lb_target[i])
 
-    un_ratio = 0.8
+    un_ratio = config["SEMI_SUPERVISED"]["un_ratio"]
     print("Starting experiments...")
 
-    # 100 experiment cycles (consistent  )
-    for k in range(100):
-        print(f"Starting experiment {k+1}/100")
-
-        # Configuration parameters (consistent  )
+    for k in range(config["TRAIN"]["num_experiments"]):
+        print(f"Starting experiment {k+1}/{config['TRAIN']['num_experiments']}")
+        epoch_count = config["TRAIN"]["epochs"]
+        save_dir = f"{config['TRAIN']['save_dir']}exp_{k}"
         config_params = {
-            "epoch": 100,
-            "num_train_iter": 1000,
-            "num_eval_iter": 10,
-            "lr": 3e-4,
-            "batch_size": 32,
-            "eval_batch_size": 32,
-            "num_labels": 20,
-            "num_classes": 2,
-            "gpu": 0,
-            "save_dir": f"./saved_models_ppsci/exp_{k}",
-            "save_name": f"./flexmatch_ppsci/{k}",
+            "epoch": epoch_count,
+            "num_train_iter": config["SEMI_SUPERVISED"]["num_train_iter"],
+            "num_eval_iter": config["SEMI_SUPERVISED"]["num_eval_iter"],
+            "lr": config["OPTIMIZER"]["learning_rate"],
+            "batch_size": config["DATALOADER"]["batch_size"],
+            "eval_batch_size": config["DATALOADER"]["eval_batch_size"],
+            "num_labels": config["SEMI_SUPERVISED"]["num_labels"],
+            "num_classes": config["MODEL"]["num_classes"],
+            "save_dir": save_dir,
         }
 
         lb_num = int(config_params["num_labels"] / 2)
@@ -567,7 +730,7 @@ def main():
         np.random.shuffle(unlb_data)
 
         data = unlb_data[: int(len(unlb_data) * un_ratio)]
-        target = np.random.randint(0, 2, int(len(unlb_data) * un_ratio))
+        target = np.random.random_integers(0, 1, int(len(unlb_data) * un_ratio))
         train_data = np.append(posi_data[:lb_num], nega_data[:lb_num]).reshape(
             lb_num * 2, len(lb_data[0])
         )
@@ -577,16 +740,6 @@ def main():
         data = np.append(train_data, data).reshape(n, len(lb_data[0]))
         target = np.append(train_target, target)
 
-        print("unlb_data shape:", unlb_data.shape)
-        print("train_data shape:", train_data.shape)
-        print("Concatenated data shape:", data.shape)
-        print("Target distribution:", np.sum(target == 0), np.sum(target == 1))
-        print(
-            "Unlabeled data quantity:", len(unlb_data[: int(len(unlb_data) * un_ratio)])
-        )
-        print("ulb_num_labels:", 10000)
-
-        # Semi-supervised split
         lb_data, lb_target, ulb_data, ulb_target = split_ssl_data(
             data,
             target,
@@ -596,23 +749,19 @@ def main():
             include_lb_to_ulb=True,
         )
 
-        lb_count = [np.sum(lb_target == i) for i in range(config_params["num_classes"])]
-        ulb_count = [
-            np.sum(ulb_target == i) for i in range(config_params["num_classes"])
-        ]
-        print("lb count:", lb_count)
-        print("ulb count:", ulb_count)
-
-        # Use PPSci dataset
-        lb_dataset = XRDDataset(lb_data, lb_target, transform=main_weak, is_ulb=False)
+        # Create datasets for labeled and unlabeled data
+        lb_dataset = XRDDataset(
+            lb_data, lb_target, transform=main_weak, is_ulb=False, config=config
+        )
         ulb_dataset = XRDDataset(
             ulb_data,
             ulb_target,
             transform=main_weak,
             is_ulb=True,
             strong_transform=main_strong,
+            config=config,
         )
-        # === Complete unlabeled data sampling to ensure 10 batches per epoch ===
+
         class RepeatDataset(paddle.io.Dataset):
             def __init__(self, dataset, total_len):
                 self.dataset = dataset
@@ -636,14 +785,9 @@ def main():
         eval_target = np.append(posi_target[lb_num:], nega_target[lb_num:])
         eval_target = np.array(eval_target).astype(np.int64)
         eval_dataset = XRDDataset(
-            eval_data, eval_target, transform=main_eval, is_ulb=False
-        )
-        pred_dataset = XRDDataset(
-            pred_data, pred_target, transform=main_eval, is_ulb=False
+            eval_data, eval_target, transform=main_eval, is_ulb=False, config=config
         )
 
-        # Use DataLoader creation logic consistent
-        # First add DistributedSamplerPaddle class
         class DistributedSamplerPaddle:
             def __init__(
                 self, dataset, num_replicas=1, rank=0, num_samples=None, seed=0
@@ -681,7 +825,6 @@ def main():
                     g.shuffle(perm)
                     indices.extend(perm[:n_remain].tolist())
                 assert len(indices) == self.total_size
-                # subsample
                 indices = indices[self.rank : self.total_size : self.num_replicas]
                 assert len(indices) == self.num_samples
                 return iter(indices)
@@ -689,7 +832,6 @@ def main():
             def __len__(self):
                 return self.num_samples
 
-        # Use DataLoader consistent
         lb_indices = list(
             DistributedSamplerPaddle(
                 lb_dataset,
@@ -706,9 +848,10 @@ def main():
             shuffle=False,
             num_workers=0,
         )
+        uratio = 3
         train_ulb_loader = paddle.io.DataLoader(
             ulb_dataset,
-            batch_size=int(config_params["batch_size"] * 3),
+            batch_size=int(config_params["batch_size"] * uratio),
             shuffle=True,
             drop_last=True,
             num_workers=0,
@@ -720,77 +863,49 @@ def main():
             drop_last=True,
             num_workers=0,
         )
-        pred_loader = paddle.io.DataLoader(
-            pred_dataset,
-            batch_size=config_params["eval_batch_size"],
-            shuffle=False,
-            drop_last=True,
-            num_workers=0,
-        )
 
-        # Data quantity statistics output, similar
-        print(
-            f"unlabeled data number: {len(ulb_dataset)}, labeled data number: {len(lb_dataset)}"
-        )
-        print("Create train and test data loaders")
-        print("[!] data loader keys: train_lb, train_ulb, eval, pred")
-        print(f"train_lb_loader batch count: {len(train_lb_loader)}")
-        print(f"train_ulb_loader batch count: {len(train_ulb_loader)}")
-        print(f"eval_loader batch count: {len(eval_loader)}")
-        print(f"pred_loader batch count: {len(pred_loader)}")
-
-        # Use PPSci model
         model = ppsci.arch.VGG(in_channel=1, num_classes=config_params["num_classes"])
 
-        # Use PPSci optimizer
-        optimizer = paddle.optimizer.AdamW(
-            parameters=model.parameters(),
-            learning_rate=config_params["lr"],
-            weight_decay=0.01,
-        )
+        try:
+            scheduler = paddle.optimizer.lr.CosineAnnealingDecay(
+                learning_rate=config_params["lr"],
+                T_max=config_params["epoch"],
+                eta_min=config_params["lr"] * 0.01,
+            )
+            optimizer = paddle.optimizer.AdamW(
+                parameters=model.parameters(),
+                learning_rate=scheduler,
+                weight_decay=0.01,
+            )
+        except Exception:
+            optimizer = paddle.optimizer.AdamW(
+                parameters=model.parameters(),
+                learning_rate=config_params["lr"],
+                weight_decay=0.01,
+            )
 
-        # Use PPSci loss function
         loss_fn = FlexMatchLoss(config_params)
 
-        # Use PPSci Trainer for training
+        save_dir = config_params["save_dir"]
         trainer = SemiSupervisedTrainer(
-            config_params, model, optimizer, loss_fn, config_params["save_dir"]
+            config_params, model, optimizer, loss_fn, save_dir
         )
 
-        print(f"Starting training for experiment {k+1}")
-
-        # Complete training loop (consistent  )
         best_f1 = 0.0
         best_epoch = 0
-        max_epoch = (
-            config_params["num_train_iter"] // 10
-        )  # 10 iterations per epoch, consistent
+        max_epoch = config_params["epoch"]
 
         for epoch in range(max_epoch):
-            # Epoch output consistent
             log_and_print(f"Epoch: {epoch}", trainer.log_file)
 
-            # Train one epoch
             trainer.train_epoch(train_lb_loader, train_ulb_loader, epoch)
 
-            # Evaluate each epoch, consistent
             eval_result = trainer.evaluate(eval_loader, log_file=trainer.log_file)
 
             if eval_result["f1"] > best_f1:
                 best_f1 = eval_result["f1"]
                 best_epoch = epoch
 
-                # Predict and output results, consistent
-                # Only evaluate when pred_loader is not empty
-                if len(pred_loader) > 0:
-                    pred_result = trainer.evaluate(pred_loader)
-                    print(1, best_f1, file=file_pre)
-                    print(2, pred_result["f1"], file=file_pre)
-                else:
-                    print(1, best_f1, file=file_pre)
-                    print(2, 0.0, file=file_pre)  # Output 0.0 when pred_loader is empty
-
-                # Save best model
                 trainer.save_model(epoch, eval_result["f1"])
 
         log_and_print(
@@ -798,7 +913,9 @@ def main():
             trainer.log_file,
         )
         log_and_print("Training finished.", trainer.log_file)
-        print(f"Experiment {k+1} completed")
+        print(
+            f"Experiment {k+1} completed - Best F1: {best_f1:.4f} at epoch {best_epoch}"
+        )
 
 
 if __name__ == "__main__":

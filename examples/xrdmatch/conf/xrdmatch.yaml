@@ -1,6 +1,6 @@
 Global:
   seed: 0
-  device: cpu
+  device: gpu
 
 MODEL:
   name: VGG
@@ -15,6 +15,7 @@ SEMI_SUPERVISED:
   un_ratio: 0.8
   ulb_num_labels: 10000
   include_lb_to_ulb: true
+  uratio: 3  # Unlabeled data ratio for batch size
 
 # Data path configuration
 DATA:
@@ -38,7 +39,7 @@ DATALOADER:
 # Optimizer configuration
 OPTIMIZER:
   name: AdamW
-  learning_rate: 3e-4
+  learning_rate: 0.0003
   weight_decay: 0.01
 
 # Loss function configuration
@@ -56,7 +57,3 @@ AUGMENTATION:
     noise_ratio: 0.1
     noise_peak: 0.05
     move_gap: 100
-  strong_aug:
-    noise_ratio: 0.2
-    noise_peak: 0.1
-    move_gap: 200
