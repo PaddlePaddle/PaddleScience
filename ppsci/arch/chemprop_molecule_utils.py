@@ -29,6 +29,7 @@ from itertools import zip_longest
 try:
     from tap import Tap
 except ModuleNotFoundError:
+    pass
 
     class Tap:
         def __init__(self, *args, **kwargs):
