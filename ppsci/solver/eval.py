@@ -78,7 +78,7 @@ def _eval_by_dataset(
             computed during evaluation.
     """
     target_metric: float = float("inf")
-    metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
+    metric_dict_group: Dict[str, Dict[str, float]] = {}
     for _, _validator in solver.validator.items():
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)

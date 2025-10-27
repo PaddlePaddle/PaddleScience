@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,6 +101,7 @@ nav:
         - psc_NN: zh/examples/perovskite_solar_cells_nn.md
         - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
+        - CNN_UTS: zh/examples/CNN_UTS.md
       - 地球科学(AI for Earth Science):
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
@@ -108,6 +109,9 @@ nav:
         - DGMR: zh/examples/dgmr.md
         - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
+        - MeteoFormer: zh/examples/meteoformer.md
+        - Preformer: zh/examples/preformer.md
+        - ClimateFormer: zh/examples/climateformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
         - VelocityGAN: zh/examples/velocity_gan.md

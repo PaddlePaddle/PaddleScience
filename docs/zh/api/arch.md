@@ -4,11 +4,12 @@
     handler: python
     options:
       members:
-        - Arch
         - AFNONet
         - AMGNet
+        - Arch
         - AutoEncoder
         - ChipDeepONets
+        - Climateformer
         - CrystalGraphConvNet
         - CuboidTransformer
         - CVit1D
@@ -26,11 +27,13 @@
         - LatentNO
         - LNO
         - LorenzEmbedding
+        - Meteoformer
         - MLP
         - ModelList
         - ModifiedMLP
         - MoleculeModel
         - NowcastNet
+        - Preformer
         - RegDGCNN
         - RegPointNet
         - SFNONet

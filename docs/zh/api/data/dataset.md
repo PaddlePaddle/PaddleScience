@@ -14,8 +14,11 @@
         - DGMRDataset
         - DrivAerNetDataset
         - DrivAerNetPlusPlusDataset
+        - ERA5ClimateDataset
         - ERA5Dataset
+        - ERA5MeteoDataset
         - ERA5SampledDataset
+        - ERA5SQDataset
         - ExtMoEENSODataset
         - IFMMoeDataset
         - IterableCSVDataset
@@ -27,7 +30,6 @@
         - MeshAirfoilDataset
         - MeshCylinderDataset
         - MoleculeDatasetIter
-        - MoleculeDatasetIter
         - MOlFLOWDataset
         - NamedArrayDataset
         - NPZDataset
@@ -38,5 +40,4 @@
         - ShapeNetCarDataset
         - SphericalSWEDataset
         - STAFNetDataset
-        - VtuDataset
       show_root_heading: true
