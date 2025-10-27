@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import os
+import os.path as osp
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
@@ -54,7 +55,7 @@ def _load_pretrain_from_path(
         model (nn.Layer): Model with parameters.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
-    if not (os.path.isdir(path) or os.path.exists(f"{path}.pdparams")):
+    if not (osp.isdir(path) or osp.exists(f"{path}.pdparams")):
         raise FileNotFoundError(
             f"Pretrained model path {path}.pdparams does not exists."
         )
@@ -63,7 +64,7 @@ def _load_pretrain_from_path(
     model.set_state_dict(param_state_dict)
     logger.message(f"Finish loading pretrained model from: {path}.pdparams")
     if equation is not None:
-        if not os.path.exists(f"{path}.pdeqn"):
+        if not osp.exists(f"{path}.pdeqn"):
             num_learnable_params = sum(
                 [len(eq.learnable_parameters) for eq in equation.values()]
             )
@@ -152,23 +153,27 @@ def load_checkpoint(
     Returns:
         Dict[str, Any]: Loaded metric information.
     """
-    if not os.path.exists(f"{path}.pdparams"):
+    if not osp.exists(f"{path}.pdparams"):
         raise FileNotFoundError(f"{path}.pdparams not exist.")
-    if not os.path.exists(f"{path}.pdopt"):
+    if not osp.exists(f"{path}.pdopt"):
         raise FileNotFoundError(f"{path}.pdopt not exist.")
-    if grad_scaler is not None and not os.path.exists(f"{path}.pdscaler"):
+    if grad_scaler is not None and not osp.exists(f"{path}.pdscaler"):
         raise FileNotFoundError(f"{path}.scaler not exist.")
 
     # load state dict
     model_dict = paddle.load(f"{path}.pdparams")
     optim_dict = paddle.load(f"{path}.pdopt")
     metric_dict = {}
-    if os.path.exists(f"{path}.pdstates"):
+    if osp.exists(f"{path}.pdstates"):
+        logger.message(f"* Loading metric checkpoint from {path}.pdstates")
         metric_dict = paddle.load(f"{path}.pdstates")
+
     if grad_scaler is not None:
+        logger.message(f"* Loading scaler checkpoint from {path}.pdscaler")
         scaler_dict = paddle.load(f"{path}.pdscaler")
+
     if equation is not None:
-        if not os.path.exists(f"{path}.pdeqn"):
+        if not osp.exists(f"{path}.pdeqn"):
             logger.warning(f"{path}.pdeqn not found.")
             equation_dict = None
         else:
@@ -192,20 +197,24 @@ def load_checkpoint(
     logger.message(f"* Loading optimizer checkpoint from {path}.pdopt")
     optimizer.set_state_dict(optim_dict)
 
+    # set grad scaler state dict
     if grad_scaler is not None:
         logger.message(f"* Loading grad scaler checkpoint from {path}.pdscaler")
         grad_scaler.load_state_dict(scaler_dict)
 
+    # set equation state dict
     if equation is not None and equation_dict is not None:
         logger.message(f"* Loading equation checkpoint from {path}.pdeqn")
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
+    # set ema model state dict
     if ema_model is not None:
         logger.message(f"* Loading EMA checkpoint from {path}_ema.pdparams")
         avg_model_dict = paddle.load(f"{path}_ema.pdparams")
         ema_model.set_state_dict(avg_model_dict)
 
+    # set loss aggregator state dict
     if aggregator is not None and aggregator.should_persist:
         logger.message(f"* Loading loss aggregator checkpoint from {path}.pdagg")
         aggregator_dict = paddle.load(f"{path}.pdagg")
@@ -259,8 +268,8 @@ def save_checkpoint(
         logger.warning("output_dir is None, skip save_checkpoint")
         return
 
-    ckpt_dir = os.path.join(output_dir, "checkpoints")
-    ckpt_path = os.path.join(ckpt_dir, prefix)
+    ckpt_dir = osp.join(output_dir, "checkpoints")
+    ckpt_path = osp.join(ckpt_dir, prefix)
     os.makedirs(ckpt_dir, exist_ok=True)
 
     paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
