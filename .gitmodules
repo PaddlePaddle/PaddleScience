@@ -25,3 +25,6 @@
 [submodule "ppsci/externals/paddle_sparse"]
 	path = ppsci/externals/paddle_sparse
 	url = https://github.com/PFCCLab/paddle_sparse.git
+[submodule "ppsci/externals/paddle_cluster"]
+	path = ppsci/externals/paddle_cluster
+	url = https://github.com/PFCCLab/paddle_cluster.git
