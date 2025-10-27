@@ -70,9 +70,9 @@ $$
 
 这里使用 Transolver 模型来表示这个映射函数,用 PaddleScience 代码表示如下:
 
-``` py linenums="24"
+``` py linenums="25"
 --8<--
-examples/transolver/main.py:24:25
+examples/transolver/main.py:25:27
 --8<--
 ```
 
@@ -82,7 +82,7 @@ examples/transolver/main.py:24:25
 
 ``` yaml linenums="43"
 --8<--
-examples/transolver/conf/shapenet_car.yaml:43:59
+examples/transolver/conf/shapenet_car.yaml:43:57
 --8<--
 ```
 
@@ -165,9 +165,9 @@ $$
 
 本案例使用 ShapeNet Car 数据集,包含不同汽车形状的 CFD 仿真结果。数据加载代码如下:
 
-``` py linenums="27"
+``` py linenums="29"
 --8<--
-examples/transolver/main.py:27:42
+examples/transolver/main.py:29:43
 --8<--
 ```
 
@@ -191,9 +191,9 @@ examples/transolver/conf/shapenet_car.yaml:31:40
 
 本案例使用监督学习约束,通过最小化预测流场与真实流场的误差来训练模型:
 
-``` py linenums="44"
+``` py linenums="45"
 --8<--
-examples/transolver/main.py:44:75
+examples/transolver/main.py:45:87
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/transolver/main.py:44:75
 
 使用 Adam 优化器配合指数衰减学习率策略:
 
-``` py linenums="78"
+``` py linenums="94"
 --8<--
-examples/transolver/main.py:78:89
+examples/transolver/main.py:94:109
 --8<--
 ```
 
@@ -231,9 +231,9 @@ examples/transolver/conf/shapenet_car.yaml:63:67
 
 在训练过程中使用验证集评估模型性能:
 
-``` py linenums="91"
+``` py linenums="111"
 --8<--
-examples/transolver/main.py:91:134
+examples/transolver/main.py:111:154
 --8<--
 ```
 
@@ -246,9 +246,9 @@ examples/transolver/main.py:91:134
 
 完成上述设置后,将实例化的对象传递给 `ppsci.solver.Solver`,然后启动训练和评估:
 
-``` py linenums="136"
+``` py linenums="156"
 --8<--
-examples/transolver/main.py:136:146
+examples/transolver/main.py:156:172
 --8<--
 ```
 
@@ -256,9 +256,9 @@ examples/transolver/main.py:136:146
 
 评估阶段除了计算常规的误差指标外,还会计算阻力系数的预测误差和斯皮尔曼相关系数:
 
-``` py linenums="148"
+``` py linenums="175"
 --8<--
-examples/transolver/main.py:148:244
+examples/transolver/main.py:175:271
 --8<--
 ```
 
