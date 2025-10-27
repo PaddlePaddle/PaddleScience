@@ -277,6 +277,15 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         python -m pip install ppsci/externals/paddle_sparse
         ```
 
+    === "paddle_cluster"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/paddle_cluster
+        # install from source(recommended)
+        python -m pip install ppsci/externals/paddle_cluster
+        ```
+
     === "tensorly"
 
         ``` sh
@@ -308,7 +317,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
     ``` python
     >>> from ppsci import externals
     >>> print(externals.__all__)
-    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'paddle_sparse', 'tensorly', 'warp']
+    ['deepali', 'neuraloperator', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'paddle_sparse', 'paddle_cluster', 'tensorly', 'warp']
 
     >>> tl = externals.tensorly
     >>> tl.set_backend("paddle")
