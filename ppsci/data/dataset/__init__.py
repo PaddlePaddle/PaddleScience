@@ -37,7 +37,6 @@ from ppsci.data.dataset.drivaernetplusplus_dataset import DrivAerNetPlusPlusData
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
-from ppsci.data.dataset.era5_land_dataset import ToyTwoModalDataset
 from ppsci.data.dataset.era5climate_dataset import ERA5ClimateDataset
 from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
 from ppsci.data.dataset.era5sq_dataset import ERA5SQDataset
@@ -115,7 +114,6 @@ __all__ = [
     "LatentNODataset",
     "LatentNODataset_time",
     "MoleculeDatasetIter",
-    "ToyTwoModalDataset",
     "ERA5SQDataset",
 ]
 

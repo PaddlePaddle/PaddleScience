@@ -7,10 +7,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 from paddle.io import DataLoader
 
-# 选中第 0 张 GPU；如有多卡改成 'gpu:1' 等
-# paddle.set_device('gpu:0')
 
-# ====================== 工具：正弦位置编码 ======================
 class SinusoidalPositionalEncoding(nn.Layer):
     def __init__(self, d_model: int, max_len: int = 4096):
         super().__init__()
@@ -28,7 +25,6 @@ class SinusoidalPositionalEncoding(nn.Layer):
         return x + self.pe[:T, :]
 
 
-# ====================== TabM（占位，可换你的实现） ======================
 class TabMFeatureExtractor(nn.Layer):
     def __init__(self, num_features: int, d_hidden: int = 512, dropout: float = 0.1):
         super().__init__()
@@ -45,7 +41,6 @@ class TabMFeatureExtractor(nn.Layer):
         return self.net(x_num)
 
 
-# ====================== 3D ResNet-18 体数据特征抽取 ======================
 class BasicBlock3D(nn.Layer):
     expansion = 1
 
@@ -148,7 +143,6 @@ class Volume3DEncoder(nn.Layer):
         return x
 
 
-# ====================== MoE（Top-k；gather_nd 选择专家） ======================
 class ExpertFFN(nn.Layer):
     def __init__(self, d_model, d_ff, dropout=0.1, act="relu"):
         super().__init__()
@@ -272,7 +266,6 @@ class MoEHead(nn.Layer):
         return y.squeeze(1), aux
 
 
-# ====================== Self-Attention Transformer（可 MoE） ======================
 class TransformerEncoderLayerMoE(nn.Layer):
     def __init__(
         self,
@@ -348,15 +341,7 @@ class TemporalTransformerFlexible(nn.Layer):
         return x, aux_total
 
 
-# ====================== AFNO(1D) + MoE FFN ======================
 class AFNO1DLayer(nn.Layer):
-    """
-    自适应傅里叶算子（时间 1D 版）：
-    - 对 (B,T,D) 沿 T 做 rFFT → (B,D,F)
-    - 仅保留前 K=modes 个频率，对每个频率在“通道组内”做两层复线性（W1,W2）+ GELU + Softshrink
-    - 把频谱其余部分置零 → irFFT → 残差 + Dropout + (可选 LN)
-    """
-
     def __init__(
         self,
         d_model: int,
@@ -372,7 +357,6 @@ class AFNO1DLayer(nn.Layer):
         self.num_blocks = num_blocks
         self.block = d_model // num_blocks
         self.shrink = shrink
-        # 复权重拆成实/虚：形状 (G, Cb, Cb)
         scale = 1.0 / math.sqrt(self.block)
 
         def param():
@@ -394,17 +378,12 @@ class AFNO1DLayer(nn.Layer):
         self.drop = nn.Dropout(dropout)
 
     def _complex_linear(self, xr, xi, Wr, Wi):
-        # xr, xi: (B, G, K, Cb); Wr/Wi: (G, Cb, Cb)
-        # (a+ib)*(Wr+iWi) = (a@Wr - b@Wi) + i(a@Wi + b@Wr)
-
         out_r = paddle.einsum("ngkc,gcd->ngkd", xr, Wr) - paddle.einsum(
             "ngkc,gcd->ngkd", xi, Wi
         )
         out_i = paddle.einsum("ngkc,gcd->ngkd", xr, Wi) + paddle.einsum(
             "ngkc,gcd->ngkd", xi, Wr
         )
-        # out_r = paddle.matmul(xr, Wr) - paddle.matmul(xi, Wi)
-        # out_i = paddle.matmul(xr, Wi) + paddle.matmul(xi, Wr)
         return out_r, out_i
 
     def forward(self, x):  # x: (B,T,D)
@@ -415,29 +394,18 @@ class AFNO1DLayer(nn.Layer):
         h = self.ln(x)  # PreNorm
         h_td = paddle.transpose(h, [0, 2, 1])  # (B,D,T)
         h_ft = paddle.fft.rfft(h_td)  # (B,D,F) complex64
-
-        # reshape 通道为 G 组： (B,G,Cb,F)
         h_ft = h_ft.reshape([B, self.num_blocks, self.block, Kmax])
-        # 仅前 K 频率： (B,G,Cb,K) → 交换到 (B,G,K,Cb) 方便 matmul
         xk = h_ft[:, :, :, :K].transpose([0, 1, 3, 2])
         xr, xi = paddle.real(xk), paddle.imag(xk)  # (B,G,K,Cb)
-
-        # 组内两层复线性 + GELU + Softshrink
         yr, yi = self._complex_linear(xr, xi, self.w1r, self.w1i)
         yr = F.gelu(yr)
         yi = F.gelu(yi)
-        # Softshrink（稀疏化）
-        # yr = F.softshrink(yr, lambd=self.shrink); yi = F.softshrink(yi, lambd=self.shrink)
         yr = F.softshrink(yr, threshold=self.shrink)
         yi = F.softshrink(yi, threshold=self.shrink)
         yr, yi = self._complex_linear(yr, yi, self.w2r, self.w2i)  # (B,G,K,Cb)
-
-        # 放回谱： (B,G,K,Cb) → (B,G,Cb,K) → (B,D,K)
         yk = paddle.complex(yr, yi).transpose([0, 1, 3, 2]).reshape([B, D, K])
         out_ft = paddle.zeros([B, D, Kmax], dtype="complex64")
         out_ft[:, :, :K] = yk
-
-        # 反变换 & 残差
         out_td = paddle.fft.irfft(out_ft, n=T)  # (B,D,T)
         out = paddle.transpose(out_td, [0, 2, 1])  # (B,T,D)
         out = self.drop(out)
@@ -445,10 +413,6 @@ class AFNO1DLayer(nn.Layer):
 
 
 class AFNOTransformerFlexible(nn.Layer):
-    """
-    堆叠若干 AFNO1DLayer；随后接 MoE FFN（与 Self-Attn 分支同构）
-    """
-
     def __init__(
         self,
         d_model=512,
@@ -485,6 +449,7 @@ class AFNOTransformerFlexible(nn.Layer):
         for layer in self.layers:
             x = layer(x)
         aux = 0.0
+
         if self.use_moe:
             x, aux = self.moe(x, domain_id=domain_id)
         else:
@@ -492,7 +457,6 @@ class AFNOTransformerFlexible(nn.Layer):
         return x, aux
 
 
-# ====================== Cross-Attention 融合 ======================
 class MultiHeadCrossAttention(nn.Layer):
     def __init__(self, d_model: int, nhead: int = 8, dropout: float = 0.1):
         super().__init__()
@@ -541,19 +505,15 @@ class BiModalCrossFusion(nn.Layer):
         return self.fuse(fused)
 
 
-# ====================== 总模型：Self-Attn + AFNO 并行 ======================
 class TwoModalMultiLabelModel(nn.Layer):
     def __init__(
         self,
-        # 视频模态
         vid_channels=20,
         vid_h=20,
         vid_w=20,
         vid_frames=365,
         depth_n=24,
-        # 结构化模态
         vec_dim=424,
-        # 维度与结构
         d_model=512,
         nhead=4,
         n_trans_layers=2,
@@ -561,21 +521,17 @@ class TwoModalMultiLabelModel(nn.Layer):
         tabm_hidden=512,
         dropout=0.1,
         num_labels=4,
-        # MoE 开关
         moe_temporal_attn: bool = True,
         moe_temporal_afno: bool = True,
         moe_fused: bool = False,
         moe_tabm: bool = False,
-        # AFNO 频率数
         afno_modes: int = 32,
-        # MoE 超参
         moe_cfg_temporal_attn: MoEConfig = None,
         moe_cfg_temporal_afno: MoEConfig = None,
         moe_cfg_fused: MoEConfig = None,
         moe_cfg_tabm: MoEConfig = None,
     ):
         super().__init__()
-        # 逐帧 3D ResNet18
         self.vol_encoder = Volume3DEncoder(in_channels=vid_channels, dropout=dropout)
         # Self-Attention Transformer
         self.trans_attn = TemporalTransformerFlexible(
@@ -616,13 +572,12 @@ class TwoModalMultiLabelModel(nn.Layer):
                 diversity_w=1e-3,
             ),
         )
-        # 两路拼接后投回 d_model
         self.video_merge = nn.Linear(2 * d_model, d_model)
-
         # TabM
         self.tabm = TabMFeatureExtractor(vec_dim, d_hidden=tabm_hidden, dropout=dropout)
         self.tabm_proj = nn.Linear(tabm_hidden, d_model)
         self.moe_tabm = moe_tabm
+
         if moe_tabm:
             self.tabm_moe = MoEHead(
                 d_model=d_model,
@@ -638,11 +593,11 @@ class TwoModalMultiLabelModel(nn.Layer):
                 ),
             )
 
-        # 融合
         self.fusion = BiModalCrossFusion(
             d_model=d_model, nhead=nhead, dropout=dropout, fuse_hidden=d_model
         )
         self.moe_fused = moe_fused
+
         if moe_fused:
             self.fused_moe = MoEHead(
                 d_model=d_model,
@@ -658,17 +613,12 @@ class TwoModalMultiLabelModel(nn.Layer):
                 ),
             )
 
-        # 分类头
         self.head = nn.Linear(self.fusion.out_dim, num_labels)
 
         self.vid_frames = vid_frames
         self.depth_n = depth_n
 
-    # 导出融合前 512 表示（用于检索库）
     def encode(self, x_video, x_vec, domain_id=None):
-        """
-        x_video: (B,T,C,H,W,N)  —— N 为体深度（24）
-        """
         B, T, C, H, W, N = x_video.shape
         assert N == self.depth_n, f"N mismatch: {N} vs {self.depth_n}"
         xvt = x_video.transpose([0, 1, 2, 5, 3, 4]).reshape([B * T, C, N, H, W])
@@ -681,15 +631,16 @@ class TwoModalMultiLabelModel(nn.Layer):
 
         z_tabm = self.tabm(x_vec)
         z_tabm = self.tabm_proj(z_tabm)  # (B,512)
+
         if self.moe_tabm:
             z_tabm, _ = self.tabm_moe(z_tabm, domain_id=domain_id)
 
         fused = self.fusion(z_vid, z_tabm)  # (B,512)
+
         if self.moe_fused:
             fused, _ = self.fused_moe(fused, domain_id=domain_id)
         return fused
 
-    # def forward(self, x_video, x_vec, domain_id=None):
     def forward(self, input_dict, domain_id=None):
         x_video, x_vec = input_dict["video"], input_dict["vec"]
         fused = self.encode(x_video, x_vec, domain_id=domain_id)
@@ -698,7 +649,6 @@ class TwoModalMultiLabelModel(nn.Layer):
         return {"y": logits}
 
 
-# ====================== 检索增强（cos / l2；k 邻居软加权；概率融合） ======================
 class Retriever:
     def __init__(
         self, sim_metric: str = "cos", k: int = 8, alpha: float = 0.3, tau: float = 0.5
@@ -728,6 +678,7 @@ class Retriever:
         self, model_probs: paddle.Tensor, test_feat: paddle.Tensor
     ) -> paddle.Tensor:
         B, D = test_feat.shape
+
         if self.sim_metric == "cos":
             q = F.normalize(test_feat, axis=-1)
             sim = paddle.matmul(q, self.keys_norm, transpose_y=True)
@@ -740,6 +691,7 @@ class Retriever:
             dot = paddle.matmul(test_feat, self.keys, transpose_y=True)
             dist2 = q2 + k2 - 2.0 * dot
             w = F.softmax(-dist2 / self.tau, axis=-1)
+
         topk_val, topk_idx = paddle.topk(w, k=min(self.k, w.shape[1]), axis=-1)
         picked_labels = paddle.gather(self.labels, topk_idx.reshape([-1]), axis=0)
         C = self.labels.shape[1]

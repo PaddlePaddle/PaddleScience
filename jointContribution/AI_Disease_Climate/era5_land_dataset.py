@@ -4,7 +4,6 @@ import numpy as np
 from paddle.io import Dataset
 
 
-# ====================== ToyDataset（T=365, N=24） ======================
 class ToyTwoModalDataset(Dataset):
     """
     A toy multimodal dataset generator combining spatiotemporal (video-like) data
@@ -59,16 +58,15 @@ class ToyTwoModalDataset(Dataset):
         file_path: str,
         input_keys: Tuple[str, ...] = ("input",),
         label_keys: Tuple[str, ...] = ("output",),
-        n: int = 3000,  # 样本总数
-        seed: int = 0,  # 随机种子
-        T: int = 12,  # 暴露日期年或者月
-        C: int = 10,  # 暴露变量
-        H: int = 10,  # 经纬度范围
-        W: int = 10,  # 经纬度范围
-        N: int = 24,  # 24小时
+        n: int = 3000,
+        seed: int = 0,
+        T: int = 12,
+        C: int = 10,
+        H: int = 10,
+        W: int = 10,
+        N: int = 24,
     ):
         super().__init__()
-        ### 加input和label
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -90,11 +88,7 @@ class ToyTwoModalDataset(Dataset):
         self.y = (probs > 0.5).astype("float32")
 
     def __getitem__(self, idx: int):
-        ###返回三个字典
         return {"video": self.video[idx], "vec": self.vec[idx]}, {"y": self.y[idx]}, {}
-        # return self.video[idx], self.vec[idx], self.y[idx]
 
     def __len__(self):
         return self.n
-
-    ###在这个基础上加constraint，构建已有约束，Loss Focal BCE，valid_dataloader_cfg,加input和label

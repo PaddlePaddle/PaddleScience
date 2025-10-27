@@ -1,12 +1,15 @@
 import hydra
 import paddle
+from era5_land_dataset import ToyTwoModalDataset
 from model import TwoModalMultiLabelModel
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.data import register_to_dataset
 
 
 def train(cfg: DictConfig):
+    register_to_dataset(ToyTwoModalDataset)
     ERA5_UKBiobank = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -60,10 +63,6 @@ def train(cfg: DictConfig):
         iters_per_epoch=cfg.TRAIN.iters_per_epoch,
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
-        # equation=equation,
-        # geom=geom,
-        # validator=validator,
-        # visualizer=visualizer,
     )
     solver.train()
 
@@ -80,9 +79,7 @@ def inference(cfg: DictConfig):
     pass
 
 
-@hydra.main(
-    version_base=None, config_path="./config", config_name="era5_ukb.yaml"
-)  # joint contribution文件夹下
+@hydra.main(version_base=None, config_path="./config", config_name="era5_ukb.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
