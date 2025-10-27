@@ -79,9 +79,6 @@ class BCELoss(base.Loss):
         return losses
 
 
-# ------------------------------------------------------------
-# Focal Loss (binary, with logits)
-# ------------------------------------------------------------
 class FocalLoss(base.Loss):
     r"""Binary Focal Loss (with logits), suitable for class-imbalance.
 

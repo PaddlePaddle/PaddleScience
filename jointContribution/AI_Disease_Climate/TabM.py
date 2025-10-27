@@ -229,4 +229,4 @@ class TabMFeatureExtractor(nn.Layer):
             x = self.min_adapter(x)
 
         feats = self.backbone(x)  # (B,K,H)
-        return feats.mean(axis=1) if self.reduce else feats  # (B,H) 或 (B,K,H)
+        return feats.mean(axis=1) if self.reduce else feats  # (B,H) or (B,K,H)
