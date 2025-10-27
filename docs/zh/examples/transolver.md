@@ -3,18 +3,22 @@
 === "模型训练命令"
 
     ``` sh
-    # 下载并解压数据集
     # linux
-    # wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/ShapeNetCar/mlcfd_data.tar
-    # tar -xvf mlcfd_data.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip
     # windows
-    # 请手动下载数据集并解压到 ./mlcfd_data/ 目录下
+    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.tar
+    tar -xvf mlcfd_data.tar
     python main.py
     ```
 
 === "模型评估命令"
 
     ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.tar
+    tar -xvf mlcfd_data.tar
     python main.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/transolver/transolver_pretrained.pdparams
     ```
 
@@ -193,7 +197,7 @@ examples/transolver/conf/shapenet_car.yaml:31:40
 
 ``` py linenums="45"
 --8<--
-examples/transolver/main.py:45:87
+examples/transolver/main.py:45:76
 --8<--
 ```
 
@@ -208,9 +212,9 @@ examples/transolver/main.py:45:87
 
 使用 Adam 优化器配合指数衰减学习率策略:
 
-``` py linenums="94"
+``` py linenums="78"
 --8<--
-examples/transolver/main.py:94:109
+examples/transolver/main.py:78:89
 --8<--
 ```
 
@@ -231,9 +235,9 @@ examples/transolver/conf/shapenet_car.yaml:63:67
 
 在训练过程中使用验证集评估模型性能:
 
-``` py linenums="111"
+``` py linenums="91"
 --8<--
-examples/transolver/main.py:111:154
+examples/transolver/main.py:91:129
 --8<--
 ```
 
@@ -246,9 +250,9 @@ examples/transolver/main.py:111:154
 
 完成上述设置后,将实例化的对象传递给 `ppsci.solver.Solver`,然后启动训练和评估:
 
-``` py linenums="156"
+``` py linenums="140"
 --8<--
-examples/transolver/main.py:156:172
+examples/transolver/main.py:140:142
 --8<--
 ```
 
@@ -256,9 +260,9 @@ examples/transolver/main.py:156:172
 
 评估阶段除了计算常规的误差指标外,还会计算阻力系数的预测误差和斯皮尔曼相关系数:
 
-``` py linenums="175"
+``` py linenums="145"
 --8<--
-examples/transolver/main.py:175:271
+examples/transolver/main.py:145:241
 --8<--
 ```
 
