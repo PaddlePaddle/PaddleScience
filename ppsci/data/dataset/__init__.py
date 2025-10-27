@@ -53,7 +53,6 @@ from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.pems_dataset import PEMSDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
-from ppsci.data.dataset.shapenet_car import ShapeNetCarDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
 from ppsci.data.dataset.synthemol_dataset import MoleculeDatasetIter
@@ -111,7 +110,6 @@ __all__ = [
     "LatentNODataset",
     "LatentNODataset_time",
     "MoleculeDatasetIter",
-    "ShapeNetCarDataset",
 ]
 
 

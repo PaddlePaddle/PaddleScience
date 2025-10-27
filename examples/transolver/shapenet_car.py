@@ -391,6 +391,8 @@ class ShapeNetCarDataset(paddle.io.Dataset):
             "surf": paddle.from_dlpack(sample.surf),
         }
         wei = {}
+        # lab["sdf"] = inp["x"][:, 3:4]
+        # lab["normal_vec"] = inp["x"][:, 4:]
 
         if not self.training:
             lab["shape"] = paddle.from_dlpack(shape)
