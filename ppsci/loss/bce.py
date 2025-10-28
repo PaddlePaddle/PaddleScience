@@ -65,7 +65,6 @@ class BCELoss(base.Loss):
         self, output_dict, label_dict, weight_dict=None
     ) -> Dict[str, "paddle.Tensor"]:
         losses: Dict[str, paddle.Tensor] = {}
-        # print(label_dict)
         for key in label_dict:
             # logits and targets must have same shape
             logits = output_dict[key]
@@ -86,9 +85,7 @@ class BCELoss(base.Loss):
                 loss = loss.mean()
 
             # final global/per-key weighting like in L2Loss
-
             losses[key] = loss
-        print(losses)
         return losses
 
 
@@ -196,3 +193,4 @@ class FocalLoss(base.Loss):
             losses[key] = loss
 
         return losses
+
