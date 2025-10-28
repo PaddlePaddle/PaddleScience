@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import itertools
 import os
+import os.path as osp
 import random
 from typing import List
 from typing import Optional
@@ -12,15 +13,27 @@ from typing import Tuple
 
 import numpy as np
 import paddle
+from sklearn.neighbors import NearestNeighbors
+from tqdm import tqdm
 
 try:
     import vtk
-    from sklearn.neighbors import NearestNeighbors
+except ModuleNotFoundError:
+    pass
+
+try:
     from torch import from_dlpack as torch_from_dlpack
+except ModuleNotFoundError:
+    pass
+
+try:
     from torch_geometric import nn as nng
     from torch_geometric.data import Data
     from torch_geometric.utils import k_hop_subgraph
-    from tqdm import tqdm
+except ModuleNotFoundError:
+    pass
+
+try:
     from vtk.util.numpy_support import vtk_to_numpy
 except ModuleNotFoundError:
     pass
@@ -149,80 +162,102 @@ def get_datalist(
     std_in, std_out = 0, 0
     for k, s in enumerate(tqdm(samples)):
         if preprocessed and savedir is not None:
-            save_path = os.path.join(savedir, s)
-            if not os.path.exists(save_path):
+            save_path = osp.join(savedir, s)
+            if not osp.exists(save_path):
                 continue
-            init = np.load(os.path.join(save_path, "x.npy"))
-            target = np.load(os.path.join(save_path, "y.npy"))
-            pos = np.load(os.path.join(save_path, "pos.npy"))
-            surf = np.load(os.path.join(save_path, "surf.npy"))
-            edge_index = np.load(os.path.join(save_path, "edge_index.npy"))
+            init = np.load(osp.join(save_path, "x.npy"))
+            target = np.load(osp.join(save_path, "y.npy"))
+            pos = np.load(osp.join(save_path, "pos.npy"))
+            surf = np.load(osp.join(save_path, "surf.npy"))
+            edge_index = np.load(osp.join(save_path, "edge_index.npy"))
         else:
-            file_name_press = os.path.join(root, os.path.join(s, "quadpress_smpl.vtk"))
-            file_name_velo = os.path.join(root, os.path.join(s, "hexvelo_smpl.vtk"))
-            if not os.path.exists(file_name_press) or not os.path.exists(
-                file_name_velo
-            ):
-                continue
-            unstructured_grid_data_press = load_unstructured_grid_data(file_name_press)
-            unstructured_grid_data_velo = load_unstructured_grid_data(file_name_velo)
-            velo = vtk_to_numpy(unstructured_grid_data_velo.GetPointData().GetVectors())
-            press = vtk_to_numpy(
-                unstructured_grid_data_press.GetPointData().GetScalars()
-            )
-            points_velo = vtk_to_numpy(
-                unstructured_grid_data_velo.GetPoints().GetData()
-            )
-            points_press = vtk_to_numpy(
-                unstructured_grid_data_press.GetPoints().GetData()
-            )
-            edges_press = get_edges(
-                unstructured_grid_data_press, points_press, cell_size=4
-            )
-            edges_velo = get_edges(
-                unstructured_grid_data_velo, points_velo, cell_size=8
-            )
-            sdf_velo, normal_velo = get_sdf(points_velo, points_press)
-            sdf_press = np.zeros(points_press.shape[0])
-            normal_press = get_normal(unstructured_grid_data_press)
-            surface = {tuple(p) for p in points_press}
-            exterior_indices = [
-                i for i, p in enumerate(points_velo) if tuple(p) not in surface
-            ]
-            velo_dict = {tuple(p): velo[i] for i, p in enumerate(points_velo)}
-            pos_ext = points_velo[exterior_indices]
-            pos_surf = points_press
-            sdf_ext = sdf_velo[exterior_indices]
-            sdf_surf = sdf_press
-            normal_ext = normal_velo[exterior_indices]
-            normal_surf = normal_press
-            velo_ext = velo[exterior_indices]
-            velo_surf = np.array(
+            if savedir is not None and all(
                 [
-                    (velo_dict[tuple(p)] if tuple(p) in velo_dict else np.zeros(3))
-                    for p in pos_surf
+                    osp.exists(path)
+                    for path in [
+                        osp.join(savedir, s, "x.npy"),
+                        osp.join(savedir, s, "y.npy"),
+                        osp.join(savedir, s, "pos.npy"),
+                        osp.join(savedir, s, "surf.npy"),
+                        osp.join(savedir, s, "edge_index.npy"),
+                    ]
                 ]
-            )
-            press_ext = np.zeros([len(exterior_indices), 1])
-            press_surf = press
-            init_ext = np.c_[pos_ext, sdf_ext, normal_ext]
-            init_surf = np.c_[pos_surf, sdf_surf, normal_surf]
-            target_ext = np.c_[velo_ext, press_ext]
-            target_surf = np.c_[velo_surf, press_surf]
-            surf = np.concatenate([np.zeros(len(pos_ext)), np.ones(len(pos_surf))])
-            pos = np.concatenate([pos_ext, pos_surf])
-            init = np.concatenate([init_ext, init_surf])
-            target = np.concatenate([target_ext, target_surf])
-            edge_index = get_edge_index(pos, edges_press, edges_velo)
-            if savedir is not None:
-                save_path = os.path.join(savedir, s)
-                if not os.path.exists(save_path):
-                    os.makedirs(save_path)
-                np.save(os.path.join(save_path, "x.npy"), init)
-                np.save(os.path.join(save_path, "y.npy"), target)
-                np.save(os.path.join(save_path, "pos.npy"), pos)
-                np.save(os.path.join(save_path, "surf.npy"), surf)
-                np.save(os.path.join(save_path, "edge_index.npy"), edge_index)
+            ):
+                init = np.load(osp.join(save_path, "x.npy"))
+                target = np.load(osp.join(save_path, "y.npy"))
+                pos = np.load(osp.join(save_path, "pos.npy"))
+                surf = np.load(osp.join(save_path, "surf.npy"))
+                edge_index = np.load(osp.join(save_path, "edge_index.npy"))
+            else:
+                file_name_press = osp.join(root, osp.join(s, "quadpress_smpl.vtk"))
+                file_name_velo = osp.join(root, osp.join(s, "hexvelo_smpl.vtk"))
+                if not osp.exists(file_name_press) or not osp.exists(file_name_velo):
+                    continue
+                unstructured_grid_data_press = load_unstructured_grid_data(
+                    file_name_press
+                )
+                unstructured_grid_data_velo = load_unstructured_grid_data(
+                    file_name_velo
+                )
+                velo = vtk_to_numpy(
+                    unstructured_grid_data_velo.GetPointData().GetVectors()
+                )
+                press = vtk_to_numpy(
+                    unstructured_grid_data_press.GetPointData().GetScalars()
+                )
+                points_velo = vtk_to_numpy(
+                    unstructured_grid_data_velo.GetPoints().GetData()
+                )
+                points_press = vtk_to_numpy(
+                    unstructured_grid_data_press.GetPoints().GetData()
+                )
+                edges_press = get_edges(
+                    unstructured_grid_data_press, points_press, cell_size=4
+                )
+                edges_velo = get_edges(
+                    unstructured_grid_data_velo, points_velo, cell_size=8
+                )
+                sdf_velo, normal_velo = get_sdf(points_velo, points_press)
+                sdf_press = np.zeros(points_press.shape[0])
+                normal_press = get_normal(unstructured_grid_data_press)
+                surface = {tuple(p) for p in points_press}
+                exterior_indices = [
+                    i for i, p in enumerate(points_velo) if tuple(p) not in surface
+                ]
+                velo_dict = {tuple(p): velo[i] for i, p in enumerate(points_velo)}
+                pos_ext = points_velo[exterior_indices]
+                pos_surf = points_press
+                sdf_ext = sdf_velo[exterior_indices]
+                sdf_surf = sdf_press
+                normal_ext = normal_velo[exterior_indices]
+                normal_surf = normal_press
+                velo_ext = velo[exterior_indices]
+                velo_surf = np.array(
+                    [
+                        (velo_dict[tuple(p)] if tuple(p) in velo_dict else np.zeros(3))
+                        for p in pos_surf
+                    ]
+                )
+                press_ext = np.zeros([len(exterior_indices), 1])
+                press_surf = press
+                init_ext = np.c_[pos_ext, sdf_ext, normal_ext]
+                init_surf = np.c_[pos_surf, sdf_surf, normal_surf]
+                target_ext = np.c_[velo_ext, press_ext]
+                target_surf = np.c_[velo_surf, press_surf]
+                surf = np.concatenate([np.zeros(len(pos_ext)), np.ones(len(pos_surf))])
+                pos = np.concatenate([pos_ext, pos_surf])
+                init = np.concatenate([init_ext, init_surf])
+                target = np.concatenate([target_ext, target_surf])
+                edge_index = get_edge_index(pos, edges_press, edges_velo)
+                if savedir is not None:
+                    save_path = osp.join(savedir, s)
+                    if not osp.exists(save_path):
+                        os.makedirs(save_path)
+                    np.save(osp.join(save_path, "x.npy"), init)
+                    np.save(osp.join(save_path, "y.npy"), target)
+                    np.save(osp.join(save_path, "pos.npy"), pos)
+                    np.save(osp.join(save_path, "surf.npy"), surf)
+                    np.save(osp.join(save_path, "edge_index.npy"), edge_index)
         surf = paddle.tensor(surf)
         pos = paddle.tensor(pos)
         x = paddle.tensor(init)
@@ -405,12 +440,12 @@ def get_samples(root: str) -> List[List[str]]:
     samples: List[List[str]] = []
     for fold in folds:
         fold_samples: List[str] = []
-        files = os.listdir(os.path.join(root, fold))
+        files = os.listdir(osp.join(root, fold))
 
         for file in files:
-            path = os.path.join(root, os.path.join(fold, file))
-            if os.path.isdir(path):
-                fold_samples.append(os.path.join(fold, file))
+            path = osp.join(root, osp.join(fold, file))
+            if osp.isdir(path):
+                fold_samples.append(osp.join(fold, file))
 
         samples.append(fold_samples)
 
