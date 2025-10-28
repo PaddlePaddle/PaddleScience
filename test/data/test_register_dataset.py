@@ -1,4 +1,5 @@
 import paddle
+import pytest
 
 
 def test_register_new_dataset(caplog):
@@ -16,4 +17,9 @@ def test_register_new_dataset_but_not_inherit(caplog):
     class NotInheritDataset:
         pass
 
-    register_to_dataset(NotInheritDataset)
+    with pytest.raises(ValueError, match="is not supported for registry"):
+        register_to_dataset(NotInheritDataset)
+
+
+if __name__ == "__main__":
+    pytest.main()
