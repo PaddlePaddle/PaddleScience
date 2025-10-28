@@ -57,11 +57,11 @@ def analytic_solution(out):
     ) / (1565 * x**2 - 76 * x * t + 68 * t**2 + 17) ** 2
 
     return (
-        np.real(EExact),
-        np.imag(EExact),
-        np.real(pExact),
-        np.imag(pExact),
-        etaExact,
+        np.real(EExact).astype(np.float32),
+        np.imag(EExact).astype(np.float32),
+        np.real(pExact).astype(np.float32),
+        np.imag(pExact).astype(np.float32),
+        etaExact.astype(np.float32),
     )
 
 
