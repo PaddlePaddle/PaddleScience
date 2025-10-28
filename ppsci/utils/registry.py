@@ -13,11 +13,13 @@
 # limitations under the License.
 from __future__ import annotations
 
-from ppsci.utils import logger
 from typing import TYPE_CHECKING
+
+from ppsci.utils import logger
 
 if TYPE_CHECKING:
     from types import ModuleType
+
 
 def register_cls_to_module(module: ModuleType, cls: type):
     cls_name = cls.__name__
