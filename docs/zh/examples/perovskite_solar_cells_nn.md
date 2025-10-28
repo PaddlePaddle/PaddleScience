@@ -9,7 +9,7 @@
 === "模型训练命令"
 
     ``` sh
-    python psc_nn.py mode=train
+    python psc_nn.py
     ```
 
 === "模型评估命令"
@@ -20,7 +20,7 @@
     ```
 
     ``` sh
-    # 或使用远程预训练模型
+    # 或使用提供的预训练模型
     python psc_nn.py mode=eval eval.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams"
     ```
 
