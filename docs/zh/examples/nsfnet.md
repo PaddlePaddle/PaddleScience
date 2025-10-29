@@ -2,24 +2,6 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7305373" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型评估命令"
-
-    ``` sh
-    # VP_NSFNet1
-    python VP_NSFNet1.py    mode=eval  pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet1.pdparams
-
-    # VP_NSFNet2
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
-
-    python VP_NSFNet2.py    mode=eval  data_dir=./data/cylinder_nektar_wake.mat  pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet2.pdparams
-
-    # VP_NSFNet3
-    python VP_NSFNet3.py    mode=eval  pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet3.pdparams
-    ```
-
 === "模型训练命令"
 
     ``` sh
@@ -35,6 +17,24 @@
 
     # VP_NSFNet3
     python VP_NSFNet3.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # VP_NSFNet1
+    python VP_NSFNet1.py mode=eval pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet1.pdparams
+
+    # VP_NSFNet2
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
+
+    python VP_NSFNet2.py mode=eval data_dir=./data/cylinder_nektar_wake.mat pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet2.pdparams
+
+    # VP_NSFNet3
+    python VP_NSFNet3.py mode=eval pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet3.pdparams
     ```
 
 

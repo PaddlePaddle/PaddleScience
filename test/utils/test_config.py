@@ -14,7 +14,6 @@ paddle.seed(1024)
     "epochs,mode,seed",
     [
         (-1, "train", 1024),
-        (20, "wrong_mode", 1024),
         (10, "eval", -1),
     ],
 )

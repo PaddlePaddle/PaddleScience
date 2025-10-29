@@ -12,8 +12,8 @@
 
 | 数据集名称 | 下载链接 |
 |-----------|---------|
-| 训练集 + 验证集 | [MP_data_down_loading(train+validate).csv](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2FMP_data_down_loading(train%2Bvalidate).csv) |
-| 训练集 + 验证集 + 测试集 | [MP_data_down_loading(train+validate+test).csv](https://paddle-org.bj.bcebos.com/paddlescience%2Fdocs%2FMP_data_down_loading(train%2Bvalidate%2Btest).csv) |
+| 训练集 + 验证集 | [MP_data_down_loading(train+validate).csv](https://paddle-org.bj.bcebos.com/paddlescience/docs/MP_data_down_loading(train+validate).csv) |
+| 训练集 + 验证集 + 测试集 | [MP_data_down_loading(train+validate+test).csv](https://paddle-org.bj.bcebos.com/paddlescience/docs/MP_data_down_loading(train+validate+test).csv) |
 
 数据读取需要额外安装依赖 `bayesian-optimization`，请运行安装命令 `pip install bayesian-optimization`。
 
@@ -28,7 +28,7 @@
 
 | 预训练模型                        |
 |-----------------------------------|
-| [MLP_LI_pretrained.pdparams]( https://paddle-org.bj.bcebos.com/paddlescience%2Fmodels%2FMLP_LI_pretrained.pdparams) |
+| [MLP_LI_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI_pretrained.pdparams) |
 
 
 ## 模型训练命令

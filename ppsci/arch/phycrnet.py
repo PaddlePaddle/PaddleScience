@@ -351,7 +351,7 @@ class ConvLSTMCell(nn.Layer):
         return ch, cc
 
     def init_hidden_tensor(self, prev_state):
-        return ((prev_state[0]).cuda(), (prev_state[1]).cuda())
+        return (prev_state[0], prev_state[1])
 
 
 class encoder_block(nn.Layer):

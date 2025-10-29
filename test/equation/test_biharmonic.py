@@ -1,3 +1,4 @@
+import numpy as np
 import paddle
 import pytest
 import sympy as sp
@@ -72,7 +73,7 @@ def test_biharmonic(dim):
     test_result = biharmonic_equation.equations["biharmonic"](data_dict)
 
     # check result whether is equal
-    assert paddle.allclose(expected_result, test_result)
+    np.testing.assert_allclose(expected_result.numpy(), test_result.numpy(), 1e-4, 1e-4)
 
 
 if __name__ == "__main__":

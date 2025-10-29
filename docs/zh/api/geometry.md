@@ -11,10 +11,10 @@
         - Hypersphere
         - Interval
         - Mesh
-        - SDFMesh
         - PointCloud
         - Polygon
         - Rectangle
+        - SDFMesh
         - Sphere
         - TimeDomain
         - TimeXGeometry
