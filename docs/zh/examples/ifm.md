@@ -11,7 +11,7 @@
     ``` sh
     # 在tox21/sider/hiv/bace/bbbp等数据上训练模型MLP-IFM,embed_name可选IFM/None
     # mode/data_label/MODEL.embed_name 等参数可在conf/ifm.yaml进行配置
-    python ifm.py mode=train data_label=tox21 MODEL.embed_name='IFM'
+    python ifm.py data_label=tox21 MODEL.embed_name='IFM'
     ```
 
 === "模型评估命令"

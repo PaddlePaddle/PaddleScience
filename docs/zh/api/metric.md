@@ -10,10 +10,10 @@
         - LatitudeWeightedACC
         - LatitudeWeightedRMSE
         - MAE
+        - MaxAE
         - MeanL2Rel
         - MSE
-        - RMSE
-        - MaxAE
         - R2Score
+        - RMSE
       show_root_heading: true
       heading_level: 3

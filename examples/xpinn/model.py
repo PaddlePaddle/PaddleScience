@@ -102,7 +102,7 @@ class Model(base.Arch):
         in_dim = size[0]
         out_dim = size[1]
         xavier_stddev = np.sqrt(2 / (in_dim + out_dim))
-        param = paddle.empty(size, "float64")
+        param = paddle.empty(size, "float32")
         param = ppsci.utils.initializer.trunc_normal_(param, 0.0, xavier_stddev)
         return nn.initializer.Assign(param)
 

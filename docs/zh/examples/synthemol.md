@@ -11,7 +11,7 @@
     ``` sh
     # 使用antibiotics等数据训练模型chemprop模型,实现Property Predict
     # 配置可在conf/synthemol.yaml进行修改
-    python main.py mode=train
+    python main.py
     ```
 
 === "Property Predictor模型评估命令"

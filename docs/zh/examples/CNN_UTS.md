@@ -3,7 +3,7 @@
 === "模型训练命令"
 
     ``` sh
-    python main.py mode=train
+    python main.py
     ```
 
 === "模型评估命令"
@@ -15,10 +15,10 @@
 ## 下载预训练模型
 
 | [resnet18-v5-fold1](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
- [resnet18-v5-fold2](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
- [resnet18-v5-fold3](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
- [resnet18-v5-fold4](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
- [resnet18-v5-fold5](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) ||
+[resnet18-v5-fold2](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+[resnet18-v5-fold3](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+[resnet18-v5-fold4](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
+[resnet18-v5-fold5](https://paddle-org.bj.bcebos.com/paddlescience/models/CNN_UTS/resnet18-v5-fold1.pdparams) |
 
 ## 下载模型必要参数
 
@@ -37,19 +37,19 @@
 ```
 CNN_UTS/
 │
-├─ conf/  
+├─ conf/
 │    └─ resnet.yaml
-├─ data_utils.py  
-├─ model_utils.py  
-├─ main.py  
-├─ requirements.txt  
-├─ readme.md  
-├─ resnet18-v5-finetune/  
-├─ outputs/  
-├─ Saved_Output/  
-└─ Dataset/  
-     ├─ Train_val/  
-     └─ Test/  
+├─ data_utils.py
+├─ model_utils.py
+├─ main.py
+├─ requirements.txt
+├─ readme.md
+├─ resnet18-v5-finetune/
+├─ outputs/
+├─ Saved_Output/
+└─ Dataset/
+     ├─ Train_val/
+     └─ Test/
 ```
 
 ## 2. 模型原理
