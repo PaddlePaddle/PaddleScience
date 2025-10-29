@@ -14,505 +14,440 @@
 
 import os
 import sys
+from typing import List, Optional
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 import hydra
 import ppsci
 from ppsci.utils import logger
+import matplotlib.pyplot as plt
 
 from simulate import SimulationDataset
 from ppsci.arch.symbolic_gn import OGN, VarOGN, HGN, get_edge_index
 
 
-
-class OGNDataset:
-    def __init__(self, cfg, mode="train"):
-        self.cfg = cfg
-        self.mode = mode
-        self.data = None
-        self.labels = None
-        self.input_keys = tuple(cfg.MODEL.input_keys)
-        self.label_keys = tuple(cfg.MODEL.output_keys)
-        self._prepare_data()
-
-    def _prepare_data(self):
-        # Get time step size for physics system
-        dt = 1e-2
-        for sim_set in self.cfg.DATATYPE_TYPE:
-            if sim_set['sim'] == self.cfg.DATA.type:
-                dt = sim_set['dt'][0]
-                break
-
-        # Generate simulation data
-        sim_dataset = SimulationDataset(
-            sim=self.cfg.DATA.type,
-            n=self.cfg.DATA.num_nodes,
-            dim=self.cfg.DATA.dimension,
-            dt=dt,
-            nt=self.cfg.DATA.time_steps,
-            seed=self.cfg.seed
+def create_ppsci_model(
+    model_type: str = 'OGN',
+    input_keys: List[str] = ['x', 'edge_index'],
+    output_keys: List[str] = ['acceleration'],
+    n_f: int = 6,
+    msg_dim: int = 100,
+    ndim: int = 2,
+    hidden: int = 300,
+    edge_index: Optional[np.ndarray] = None,
+    l1_strength: float = 0.0
+):
+    if model_type == 'OGN':
+        model = OGN(
+            input_keys=input_keys,
+            output_keys=output_keys,
+            n_f=n_f,
+            msg_dim=msg_dim,
+            ndim=ndim,
+            hidden=hidden,
+            edge_index=edge_index,
+            l1_strength=l1_strength
         )
-        sim_dataset.simulate(self.cfg.DATA.num_samples)
-        
-        # Compute target data based on model architecture
-        if self.cfg.MODEL.arch == "HGN":
-            raw_target_data = sim_dataset.get_derivative()  # [v, a] for HGN
-        else:
-            raw_target_data = sim_dataset.get_acceleration()  # Acceleration for OGN/VarOGN
-        
-        # Downsample data
-        downsample_factor = self.cfg.DATA.downsample_factor
-        input_data = np.concatenate([sim_dataset.data[:, i] for i in range(0, sim_dataset.data.shape[1], downsample_factor)])
-        target_data = np.concatenate([raw_target_data[:, i] for i in range(0, sim_dataset.data.shape[1], downsample_factor)])
+    elif model_type == 'HGN':
+        model = HGN(
+            input_keys=input_keys,
+            output_keys=output_keys,
+            n_f=n_f,
+            ndim=ndim,
+            hidden=hidden,
+            edge_index=edge_index
+        )
+    elif model_type == 'VarOGN':
+        model = VarOGN(
+            input_keys=input_keys,
+            output_keys=output_keys,
+            n_f=n_f,
+            msg_dim=msg_dim,
+            ndim=ndim,
+            hidden=hidden,
+            edge_index=edge_index,
+            l1_strength=l1_strength
+        )
+    else:
+        raise ValueError(f"未知的模型类型: {model_type}")
+    
+    return model
 
-        # Split train/validation set
-        from sklearn.model_selection import train_test_split
-        test_size = 1.0 - getattr(self.cfg.TRAIN, 'train_split', 0.8)
-        
-        if self.mode == "train":
-            input_data, _, target_data, _ = train_test_split(
-                input_data, target_data, test_size=test_size, shuffle=False
-            )
-        elif self.mode == "eval":
-            _, input_data, _, target_data = train_test_split(
-                input_data, target_data, test_size=test_size, shuffle=False
-            )
-        
-        # Generate edge indices
-        edge_index = get_edge_index(self.cfg.DATA.num_nodes, self.cfg.DATA.type)
 
-        self.data = {
-            "node_features": input_data.astype(np.float32),
-            "edge_index": np.tile(edge_index.T.numpy(), (len(input_data), 1, 1))
-        }
-        self.labels = {
-            list(self.cfg.MODEL.output_keys)[0]: target_data.astype(np.float32)
-        }
-
-    def __len__(self):
-        return len(self.data["node_features"])
-
-    def __getitem__(self, idx):
-        return {
-            "input": {
-                "node_features": self.data["node_features"][idx],
-                "edge_index": self.data["edge_index"][idx]
-            },
-            "label": {
-                list(self.cfg.MODEL.output_keys)[0]: self.labels[list(self.cfg.MODEL.output_keys)[0]][idx]
-            }
-        }
-        
-    def get_data_and_labels(self):
-        return self.data, self.labels
-        
-    def __call__(self):
-        return self
+def replicate_array(arr, n):
+    return np.tile(arr, (n,) + (1,) * arr.ndim)
 
 
 def create_loss_function(cfg):
-    def loss_function(input_dict, label_dict, model_output):
-        # Get loss type from config (MAE or MSE)
+    def loss_function(output_dict, label_dict, weight_dict=None):
         loss_type = getattr(cfg.TRAIN.loss, 'type', 'MAE')
         
-        # Get output key
-        output_key = list(cfg.MODEL.output_keys)[0] if cfg.MODEL.arch != "HGN" else "derivative"
+        output_key = list(cfg.MODEL.output_keys)[0]
         
-        # Compute base loss
-        if cfg.MODEL.arch == "HGN":
-            output_key = "derivative"
-            pred_accel = model_output[output_key][:, cfg.DATA.dimension:]
-            target_accel = label_dict[output_key][:, cfg.DATA.dimension:]
-            if loss_type == "MSE":
-                base_loss = paddle.mean(paddle.square(pred_accel - target_accel))
-            else:  # MAE
-                base_loss = paddle.mean(paddle.abs(pred_accel - target_accel))
+        target = label_dict[output_key]
+        pred = output_dict[output_key]
+        if loss_type == "MSE":
+            base_loss = paddle.mean(paddle.square(pred - target))
         else:
-            pred = model_output[output_key]
-            target = label_dict[output_key]
-            if loss_type == "MSE":
-                base_loss = paddle.mean(paddle.square(pred - target))
-            else:  # MAE
-                base_loss = paddle.mean(paddle.abs(pred - target))
+            base_loss = paddle.mean(paddle.abs(pred - target))
 
-        # Add regularization if configured
-        if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"]:
-            reg_loss = cfg.MODEL.l1_strength * paddle.mean(paddle.abs(input_dict["node_features"]))
-            return base_loss + reg_loss
+        if 'l1_regularization' in label_dict:
+            return base_loss + label_dict['l1_regularization']
 
-        return base_loss
+        return {output_key: base_loss}
     
     return loss_function
 
 
 def train(cfg):
-    # Set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     
-    # Parse automatic configuration parameters
+    if cfg.MODEL.arch == "HGN":
+        cfg.MODEL.output_keys = ["acceleration"]
+
+    # Create simulation dataset
+    sim = SimulationDataset(
+        sim=cfg.DATA.type,
+        n=cfg.DATA.num_nodes,
+        dim=cfg.DATA.dimension,
+        nt=cfg.DATA.time_steps,
+        dt=cfg.DATA.time_step_size
+    )
+    sim.simulate(cfg.DATA.num_samples)
+    accel_data = sim.get_acceleration()
+    
+    X_list = []
+    y_list = []
+    for sample_idx in range(cfg.DATA.num_samples):
+        for t in range(0, sim.data.shape[1], cfg.DATA.sample_interval):
+            X_list.append(sim.data[sample_idx, t])
+            y_list.append(accel_data[sample_idx, t])
+            
+    X = np.array(X_list, dtype=np.float32)
+    y = np.array(y_list, dtype=np.float32)
+    
     if cfg.MODEL.n_f == "auto":
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
-    if cfg.TRAIN.batch_size == "auto":
-        cfg.TRAIN.batch_size = int(64 * (4 / cfg.DATA.num_nodes) ** 2)
     
-    # Update output keys for HGN
-    if cfg.MODEL.arch == "HGN":
-        cfg.MODEL.output_keys = ["derivative"]
+    train_size = int(len(X) * 0.8)
+    X_train, X_val = X[:train_size], X[train_size:]
+    y_train, y_val = y[:train_size], y[train_size:]
+    edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
+    edge_index_train = replicate_array(edge_index, len(X_train))
+    edge_index_val = replicate_array(edge_index, len(X_val))
     
-    # Create datasets
-    logger.message(f"Creating {cfg.DATA.type} dataset using simulate.py...")
-    train_dataset = OGNDataset(cfg, mode="train")
-    eval_dataset = OGNDataset(cfg, mode="eval")
-    
-    # Get training and evaluation data
-    train_data, train_labels = train_dataset.get_data_and_labels()
-    eval_data, eval_labels = eval_dataset.get_data_and_labels()
-    
-    # Create model based on architecture
-    logger.message(f"Creating model: {cfg.MODEL.arch}")
-    if cfg.MODEL.arch == "OGN":
-        model = OGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "VarOGN":
-        model = VarOGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "HGN":
-        model = HGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            ndim=cfg.MODEL.ndim,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    else:
-        raise ValueError(f"Unsupported model architecture: {cfg.MODEL.arch}")
-    
-    # Create loss function and constraints
-    loss_fn = create_loss_function(cfg)
     train_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": train_data,
-                "label": train_labels
+                "input": {"x": X_train, "edge_index": edge_index_train},
+                "label": {cfg.MODEL.output_keys[0]: y_train},
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "sampler": {"name": "BatchSampler", "drop_last": False, "shuffle": True},
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": True,
+            },
         },
-        loss=loss_fn,
-        name="train_constraint",
+        create_loss_function(cfg),
+        name="sup_constraint",
     )
-    
     eval_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": eval_data,
-                "label": eval_labels
+                "input": {"x": X_val, "edge_index": edge_index_val},
+                "label": {cfg.MODEL.output_keys[0]: y_val},
             },
-            "batch_size": cfg.EVAL.batch_size,
-            "sampler": {"name": "BatchSampler", "drop_last": False, "shuffle": False},
+            "batch_size": cfg.TRAIN.batch_size,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
         },
-        loss=loss_fn,
+        create_loss_function(cfg),
         name="eval_constraint",
     )
-    
     constraint = {
         train_constraint.name: train_constraint,
         eval_constraint.name: eval_constraint,
     }
+    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+    model = create_ppsci_model(
+        model_type=cfg.MODEL.arch,
+        n_f=cfg.MODEL.n_f,
+        msg_dim=cfg.MODEL.msg_dim,
+        ndim=cfg.MODEL.ndim,
+        hidden=cfg.MODEL.hidden,
+        edge_index=edge_index,
+        l1_strength=l1_strength
+    )
     
-    # Calculate iterations per epoch
-    batch_per_epoch = int(1000*10 / (cfg.TRAIN.batch_size/32.0))
-    
-    # Create optimizer and learning rate scheduler
-    if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
-        lr_scheduler = paddle.optimizer.lr.OneCycleLR(
-            max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
-            total_steps=cfg.TRAIN.epochs*batch_per_epoch,
-            divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
-        )
-    else:
-        lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
-            learning_rate=cfg.TRAIN.optimizer.learning_rate,
-            gamma=0.9
-        )
+    # batch_per_epoch = int(1000*10 / (cfg.TRAIN.batch_size/32.0))
+    # if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
+    #     lr_scheduler = paddle.optimizer.lr.OneCycleLR(
+    #         max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
+    #         total_steps=cfg.TRAIN.epochs*batch_per_epoch,
+    #         divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
+    #     )
+    #     lr_scheduler.by_epoch = False
+    # else:
+    #     lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
+    #         learning_rate=cfg.TRAIN.optimizer.learning_rate,
+    #         gamma=0.9
+    #     )
+    #     lr_scheduler.by_epoch = True
     
     optimizer = paddle.optimizer.Adam(
-        learning_rate=lr_scheduler,
+        learning_rate=cfg.TRAIN.optimizer.learning_rate,#lr_scheduler,
         parameters=model.parameters(),
         weight_decay=cfg.TRAIN.optimizer.weight_decay
     )
     
-    # Create PaddleScience Solver and start training
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        optimizer=optimizer,
-        cfg=cfg,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
+        save_freq=cfg.TRAIN.save_freq,
     )
+
     solver.train()
+    solver.plot_loss_history(by_epoch=True, smooth_step=1)
 
 
 def evaluate(cfg: DictConfig):
-    # Parse automatic configuration parameters
+    # Set model
     if cfg.MODEL.n_f == "auto":
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
-    if cfg.MODEL.arch == "HGN":
-        cfg.MODEL.output_keys = ["derivative"]
     
-    # Create model based on architecture
-    if cfg.MODEL.arch == "OGN":
-        model = OGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "VarOGN":
-        model = VarOGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "HGN":
-        model = HGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            ndim=cfg.MODEL.ndim,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    else:
-        raise ValueError(f"Unsupported model architecture: {cfg.MODEL.arch}")
+    edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
+    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
     
-    # Create evaluation dataset
-    eval_dataset = OGNDataset(cfg, mode="eval")
-    eval_data, eval_labels = eval_dataset.get_data_and_labels()
-    
-    # Create loss function and constraint
-    loss_fn = create_loss_function(cfg)
-    eval_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "dataset": {
-                "name": "NamedArrayDataset",
-                "input": eval_data,
-                "label": eval_labels
-            },
-            "batch_size": cfg.EVAL.batch_size,
-            "sampler": {"name": "BatchSampler", "drop_last": False, "shuffle": False},
-        },
-        loss=loss_fn,
-        name="eval_constraint",
+    model = create_ppsci_model(
+        model_type=cfg.MODEL.arch,
+        n_f=cfg.MODEL.n_f,
+        msg_dim=cfg.MODEL.msg_dim,
+        ndim=cfg.MODEL.ndim,
+        hidden=cfg.MODEL.hidden,
+        edge_index=edge_index,
+        l1_strength=l1_strength
     )
     
-    constraint = {
-        eval_constraint.name: eval_constraint,
-    }
-    
-    # Create PaddleScience Solver
-    solver = ppsci.solver.Solver(model, constraint, cfg=cfg)
-    
-    # Run evaluation
-    logger.message("Starting evaluation...")
-    eval_result = solver.eval()
-    logger.message(f"Evaluation completed. Result: {eval_result}")
-
-
-def inference(cfg: DictConfig):
-    # Parse automatic configuration parameters
-    if cfg.MODEL.n_f == "auto":
-        cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
-    if cfg.MODEL.ndim == "auto":
-        cfg.MODEL.ndim = cfg.DATA.dimension
-    if cfg.MODEL.arch == "HGN":
-        cfg.MODEL.output_keys = ["derivative"]
-    
-    # Create model based on architecture
-    if cfg.MODEL.arch == "OGN":
-        model = OGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "VarOGN":
-        model = VarOGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "HGN":
-        model = HGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            ndim=cfg.MODEL.ndim,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    else:
-        raise ValueError(f"Unsupported model architecture: {cfg.MODEL.arch}")
-    
-    # Create PaddleScience Solver
-    solver = ppsci.solver.Solver(model, cfg=cfg)
+    # Load pretrained model
+    ppsci.utils.save_load.load_pretrain(
+        model,
+        cfg.EVAL.pretrained_model_path,
+    )
 
     # Generate test data
-    logger.message("Generating inference data using simulate.py...")
-    dt = 1e-2
-    for sim_set in cfg.DATATYPE_TYPE:
-        if sim_set['sim'] == cfg.DATA.type:
-            dt = sim_set['dt'][0]
-            break
-    
-    sim_dataset = SimulationDataset(
+    sim = SimulationDataset(
         sim=cfg.DATA.type,
         n=cfg.DATA.num_nodes,
         dim=cfg.DATA.dimension,
-        dt=dt,
-        nt=100,
-        seed=cfg.seed
+        nt=cfg.DATA.time_steps,
+        dt=cfg.DATA.time_step_size
     )
-    sim_dataset.simulate(1)
-
-    # Prepare input data (first time step)
-    node_features = sim_dataset.data[0, 0]
-    edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
+    sim.simulate(cfg.DATA.num_samples)
+    accel_data = sim.get_acceleration()
     
-    input_dict = {
-        "node_features": paddle.to_tensor(node_features, dtype='float32').unsqueeze(0),
-        "edge_index": edge_index.unsqueeze(0)
-    }
-
-    # Run inference
-    logger.message("Running inference...")
-    output_dict = solver.predict(input_dict, return_numpy=True)
-
-    # Display results
-    if cfg.MODEL.arch == "HGN":
-        dq_dt = output_dict["derivative"][0, :cfg.DATA.dimension]
-        dv_dt = output_dict["derivative"][0, cfg.DATA.dimension:]
-        logger.message(f"HGN inference - dq/dt: {dq_dt}, dv/dt (acceleration): {dv_dt}")
-    else:
-        acceleration = output_dict[list(cfg.MODEL.output_keys)[0]][0]
-        logger.message(f"{cfg.MODEL.arch} inference - acceleration: {acceleration}")
+    # Prepare test data
+    X_list = []
+    y_list = []
+    for sample_idx in range(cfg.DATA.num_samples):
+        for t in range(0, sim.data.shape[1], cfg.DATA.sample_interval):
+            X_list.append(sim.data[sample_idx, t])
+            y_list.append(accel_data[sample_idx, t])
+            
+    X = np.array(X_list, dtype=np.float32)
+    y = np.array(y_list, dtype=np.float32)
+    
+    # Evaluate on selected samples
+    sample_indices = [0, 1] if cfg.DATA.num_samples > 1 else [0]
+    
+    for sample_idx in sample_indices:
+        # Get data for this sample
+        sample_data = X[sample_idx:sample_idx+1]  # Shape: [1, num_nodes, n_f]
+        true_accel = y[sample_idx:sample_idx+1]  # Shape: [1, num_nodes, dim]
+        
+        # Prepare input - convert to PaddlePaddle tensors
+        input_dict = {
+            "x": paddle.to_tensor(sample_data, dtype="float32"),
+            "edge_index": paddle.to_tensor(edge_index, dtype="int64")
+        }
+        # Model prediction
+        with paddle.no_grad():
+            pred_output = model(input_dict)
+            pred_accel = pred_output[cfg.MODEL.output_keys[0]]  # Shape: [1, num_nodes, dim]
+        
+        # Calculate error
+        error = np.mean(np.abs(pred_accel.numpy() - true_accel))
+        
+        # Calculate relative error
+        rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(true_accel)
+        
+        # Visualization using simulate.py plot function
+        plt.figure(figsize=(10, 8))
+        sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
+        plt.title(f'{cfg.DATA.type.capitalize()} System - Sample {sample_idx}\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
+        plt.tight_layout()
+        
+        # Save plot
+        plot_path = os.path.join(cfg.output_dir, f"evaluation_sample_{sample_idx}.png")
+        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        logger.info(f"Evaluation plot saved to {plot_path}")
 
 
 def export(cfg: DictConfig):
-    # Parse automatic configuration parameters
+    if cfg.MODEL.arch == "HGN":
+        raise ValueError("HGN is not supported for export")
+    
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
     if cfg.MODEL.n_f == "auto":
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
-    if cfg.MODEL.arch == "HGN":
-        cfg.MODEL.output_keys = ["derivative"]
+    edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
+    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+    model = create_ppsci_model(
+        model_type=cfg.MODEL.arch,
+        n_f=cfg.MODEL.n_f,
+        msg_dim=cfg.MODEL.msg_dim,
+        ndim=cfg.MODEL.ndim,
+        hidden=cfg.MODEL.hidden,
+        edge_index=edge_index,
+        l1_strength=l1_strength
+    )
+
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
     
-    # Create model based on architecture
-    if cfg.MODEL.arch == "OGN":
-        model = OGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "VarOGN":
-        model = VarOGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            msg_dim=cfg.MODEL.msg_dim,
-            ndim=cfg.MODEL.ndim,
-            dt=cfg.MODEL.dt,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    elif cfg.MODEL.arch == "HGN":
-        model = HGN(
-            input_keys=tuple(cfg.MODEL.input_keys),
-            output_keys=tuple(cfg.MODEL.output_keys),
-            n_f=cfg.MODEL.n_f,
-            ndim=cfg.MODEL.ndim,
-            hidden=cfg.MODEL.hidden,
-            aggr=cfg.MODEL.aggr
-        )
-    else:
-        raise ValueError(f"Unsupported model architecture: {cfg.MODEL.arch}")
-    
-    # Create PaddleScience Solver
-    solver = ppsci.solver.Solver(model, cfg=cfg)
-    
-    # Define input specifications for export
     from paddle.static import InputSpec
+    
     input_spec = [
         {
-            "node_features": InputSpec([None, cfg.DATA.num_nodes, cfg.MODEL.n_f], "float32", "node_features"),
-            "edge_index": InputSpec([None, 2, cfg.DATA.num_nodes * (cfg.DATA.num_nodes - 1)], "int64", "edge_index")
-        }
+            key: InputSpec([None, cfg.DATA.num_nodes, cfg.MODEL.n_f], "float32", name=key)
+            if key == "x"
+            else InputSpec([2, 30], "int64", name=key)
+            for key in model.input_keys
+        },
     ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy import python_infer
+
+    try:
+        predictor = python_infer.GeneralPredictor(cfg)
+        use_predictor = True
+    except Exception as e:
+        logger.error(f"GeneralPredictor failed: {e}")
+        use_predictor = False
+
+    # Generate test data
+    sim = SimulationDataset(
+        sim=cfg.DATA.type,
+        n=cfg.DATA.num_nodes,
+        dim=cfg.DATA.dimension,
+        nt=cfg.DATA.time_steps,
+        dt=cfg.DATA.time_step_size
+    )
+    sim.simulate(cfg.DATA.num_samples)
     
-    # Export model to static graph
-    logger.message(f"Exporting model to {cfg.INFER.export_path}")
-    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
-    logger.message("Model export completed!")
+    # Prepare input data for inference
+    sample_idx = 0
+    sample_data = sim.data[sample_idx, 0]  # Shape: [num_nodes, n_f]
+    edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
+    
+    if use_predictor:
+        # Use GeneralPredictor
+        input_dict = {
+            "x": sample_data,
+            "edge_index": edge_index
+        }
+        output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+        pred_acceleration = output_dict[cfg.MODEL.output_keys[0]]
+    else:
+        # Direct model inference
+        if cfg.MODEL.n_f == "auto":
+            cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
+        if cfg.MODEL.ndim == "auto":
+            cfg.MODEL.ndim = cfg.DATA.dimension
+        
+        l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+        
+        model = create_ppsci_model(
+            model_type=cfg.MODEL.arch,
+            n_f=cfg.MODEL.n_f,
+            msg_dim=cfg.MODEL.msg_dim,
+            ndim=cfg.MODEL.ndim,
+            hidden=cfg.MODEL.hidden,
+            edge_index=edge_index,
+            l1_strength=l1_strength
+        )
+        
+        ppsci.utils.save_load.load_pretrain(
+            model,
+            cfg.INFER.pretrained_model_path,
+        )
+        
+        input_dict = {
+            "x": paddle.to_tensor(sample_data, dtype="float32"),
+            "edge_index": paddle.to_tensor(edge_index, dtype="int64")
+        }
+        
+        with paddle.no_grad():
+            pred_output = model(input_dict)
+            pred_acceleration = pred_output[cfg.MODEL.output_keys[0]].numpy()
+    
+    accel_data = sim.get_acceleration()
+    true_acceleration = accel_data[sample_idx, 0]
+    
+    # Calculate error
+    error = np.mean(np.abs(pred_acceleration - true_acceleration))
+    
+    rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(true_acceleration)
+    
+    # Visualization using simulate.py plot function
+    plt.figure(figsize=(10, 8))
+    sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
+    plt.title(f'{cfg.DATA.type.capitalize()} System - Inference\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
+    plt.tight_layout()
+    
+    # Save plot
+    plot_path = os.path.join(cfg.output_dir, "inference.png")
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    logger.info(f"Inference plot saved to {plot_path}")
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="config.yaml")
-def main(cfg: DictConfig):
+@hydra.main(version_base=None, config_path="./conf", config_name="config")
+def main(cfg: DictConfig) -> None:
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
-    elif cfg.mode == "infer":
-        inference(cfg)
     elif cfg.mode == "export":
         export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"Unsupported mode: {cfg.mode}")
+        raise ValueError(
+            "cfg.mode should in [train, eval, export, infer], but got {}".format(cfg.mode)
+        )
 
 
 if __name__ == "__main__":

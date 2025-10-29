@@ -31,7 +31,6 @@ def get_edge_index(n: int, sim: str) -> np.ndarray:
         numpy.ndarray: Edge indices with shape [2, num_edges].
     """
     if sim in ['string', 'string_ball']:
-        # Chain connection
         top = np.arange(0, n-1)
         bottom = np.arange(1, n)
         edge_index = np.concatenate([
@@ -39,7 +38,6 @@ def get_edge_index(n: int, sim: str) -> np.ndarray:
             np.concatenate([bottom, top])[None, :]
         ], axis=0)
     else:
-        # Full connection
         adj = (np.ones((n, n)) - np.eye(n)).astype(int)
         edge_index = np.array(np.where(adj))
     
@@ -56,7 +54,8 @@ class OGN(base.Arch):
         ndim: int = 2,
         hidden: int = 300,
         edge_index: Optional[np.ndarray] = None,
-        aggr: str = 'sum'
+        aggr: str = 'sum',
+        l1_strength: float = 0.0
     ):
         """
         Initialize Object-based Graph Network (OGN).
@@ -92,25 +91,22 @@ class OGN(base.Arch):
         """
         super().__init__()
         
-        # PaddleScience standard: store input/output keys
         self.input_keys = input_keys
         self.output_keys = output_keys
         
-        # Model parameters
         self.n_f = n_f
         self.msg_dim = msg_dim
         self.ndim = ndim
         self.hidden = hidden
         self.aggr = aggr
+        self.l1_strength = l1_strength
         
-        # Edge index (optional)
         if edge_index is not None:
             self.register_buffer('edge_index_buffer', 
                                paddle.to_tensor(edge_index, dtype='int64'))
         else:
             self.edge_index_buffer = None
         
-        # Message function network
         self.msg_fnc = nn.Sequential(
             nn.Linear(2*n_f, hidden),
             nn.ReLU(),
@@ -121,7 +117,6 @@ class OGN(base.Arch):
             nn.Linear(hidden, msg_dim)
         )
         
-        # Node update network
         self.node_fnc = nn.Sequential(
             nn.Linear(msg_dim + n_f, hidden),
             nn.ReLU(),
@@ -137,35 +132,59 @@ class OGN(base.Arch):
         Execute message passing.
         
         Args:
-            x: Node features with shape [n, n_f].
+            x: Node features with shape [n, n_f] or [batch*n, n_f].
             edge_index: Edge indices with shape [2, num_edges].
         
         Returns:
-            paddle.Tensor: Updated node features with shape [n, ndim].
+            paddle.Tensor: Updated node features with shape [n, ndim] or [batch*n, ndim].
         """
-        # Get source and target nodes
-        row, col = edge_index[0], edge_index[1]
+        if len(x.shape) == 3:
+            batch_size, n, n_f = x.shape
+            x_reshaped = x.reshape([-1, n_f])
+            
+            results = []
+            for b in range(batch_size):
+                start_idx = b * n
+                end_idx = (b + 1) * n
+                x_batch = x_reshaped[start_idx:end_idx]
+                
+                row, col = edge_index[0], edge_index[1]
+                
+                x_i = x_batch[col]
+                x_j = x_batch[row]
+                
+                msg_input = paddle.concat([x_i, x_j], axis=1)
+                msg = self.msg_fnc(msg_input)
+                
+                aggr_out = paddle.zeros([n, self.msg_dim], dtype=msg.dtype)
+                for i in range(len(col)):
+                    aggr_out[col[i]] += msg[i]
+                
+                node_input = paddle.concat([x_batch, aggr_out], axis=1)
+                out = self.node_fnc(node_input)
+                results.append(out)
+            
+            return paddle.stack(results, axis=0)
         
-        # Collect neighbor features
-        x_i = x[col]  # Target nodes
-        x_j = x[row]  # Source nodes
-        
-        # Compute messages
-        msg_input = paddle.concat([x_i, x_j], axis=1)
-        msg = self.msg_fnc(msg_input)
-        
-        # Aggregate messages to target nodes
-        num_nodes = x.shape[0]
-        aggr_out = paddle.zeros([num_nodes, self.msg_dim], dtype=msg.dtype)
-        
-        for i in range(len(col)):
-            aggr_out[col[i]] += msg[i]
-        
-        # Update nodes
-        node_input = paddle.concat([x, aggr_out], axis=1)
-        out = self.node_fnc(node_input)
-        
-        return out
+        else:
+            row, col = edge_index[0], edge_index[1]
+            
+            x_i = x[col]
+            x_j = x[row]
+            
+            msg_input = paddle.concat([x_i, x_j], axis=1)
+            msg = self.msg_fnc(msg_input)
+            
+            num_nodes = x.shape[0]
+            aggr_out = paddle.zeros([num_nodes, self.msg_dim], dtype=msg.dtype)
+            
+            for i in range(len(col)):
+                aggr_out[col[i]] += msg[i]
+            
+            node_input = paddle.concat([x, aggr_out], axis=1)
+            out = self.node_fnc(node_input)
+            
+            return out
     
     def forward(self, inputs: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         """
@@ -180,27 +199,30 @@ class OGN(base.Arch):
         Returns:
             Dict: Output dictionary containing:
                 - 'acceleration': Predicted acceleration [batch*n, ndim].
+                - 'l1_regularization': L1 regularization term (if enabled).
         """
-        # Extract input
         x = inputs['x']
         
-        # Get edge index
         if 'edge_index' in inputs:
-            # Get from input
             edge_index = inputs['edge_index']
             if isinstance(edge_index, paddle.Tensor):
                 edge_index = edge_index.numpy()
+            if len(edge_index.shape) == 3:
+                edge_index = edge_index[0]
         elif self.edge_index_buffer is not None:
-            # Use stored edge index
             edge_index = self.edge_index_buffer.numpy()
         else:
             raise ValueError("Must provide edge_index")
         
-        # Execute message passing
         acceleration = self.message_passing(x, edge_index)
         
-        # Return dictionary format (PaddleScience standard)
-        return {self.output_keys[0]: acceleration}
+        outputs = {self.output_keys[0]: acceleration}
+        
+        if hasattr(self, 'l1_strength') and self.l1_strength > 0:
+            l1_reg = self.l1_strength * paddle.mean(paddle.abs(x))
+            outputs['l1_regularization'] = l1_reg
+        
+        return outputs
     
     def compute_loss(
         self,
@@ -217,14 +239,11 @@ class OGN(base.Arch):
         Returns:
             paddle.Tensor: Loss scalar.
         """
-        # Forward propagation
         outputs = self.forward(inputs)
         
-        # Compute loss
         pred = outputs[self.output_keys[0]]
         true = labels.get('acceleration_true', labels.get(self.output_keys[0]))
         
-        # MAE loss
         loss = paddle.mean(paddle.abs(pred - true))
         
         return loss
@@ -279,14 +298,12 @@ class HGN(base.Arch):
         self.ndim = ndim
         self.hidden = hidden
         
-        # Edge index
         if edge_index is not None:
             self.register_buffer('edge_index_buffer',
                                paddle.to_tensor(edge_index, dtype='int64'))
         else:
             self.edge_index_buffer = None
         
-        # Pairwise energy network
         self.pair_energy = nn.Sequential(
             nn.Linear(2*n_f, hidden),
             nn.Softplus(),
@@ -297,7 +314,6 @@ class HGN(base.Arch):
             nn.Linear(hidden, 1)
         )
         
-        # Self energy network
         self.self_energy = nn.Sequential(
             nn.Linear(n_f, hidden),
             nn.Softplus(),
@@ -321,22 +337,18 @@ class HGN(base.Arch):
         """
         row, col = edge_index[0], edge_index[1]
         
-        # Compute pairwise energy
         x_i = x[col]
         x_j = x[row]
         edge_input = paddle.concat([x_i, x_j], axis=1)
         pair_energies = self.pair_energy(edge_input)
         
-        # Aggregate pairwise energy
         num_nodes = x.shape[0]
         aggr_pair = paddle.zeros([num_nodes, 1], dtype=pair_energies.dtype)
         for i in range(len(col)):
             aggr_pair[col[i]] += pair_energies[i]
         
-        # Compute self energy
         self_energies = self.self_energy(x)
         
-        # Total energy
         total_energy = aggr_pair + self_energies
         
         return total_energy
@@ -353,70 +365,120 @@ class HGN(base.Arch):
         Returns:
             Dict: Output dictionary.
         """
-        # Extract input
         x_input = inputs['x'].clone()
         
-        # Get edge index
         if 'edge_index' in inputs:
             edge_index = inputs['edge_index']
             if isinstance(edge_index, paddle.Tensor):
                 edge_index = edge_index.numpy()
+            if len(edge_index.shape) == 3:
+                edge_index = edge_index[0]
         elif self.edge_index_buffer is not None:
             edge_index = self.edge_index_buffer.numpy()
         else:
             raise ValueError("Must provide edge_index")
         
-        # Construct Hamiltonian coordinates
-        # Input: [q, v, other, m]
-        # Needed: [q, p=m*v, other]
-        q = x_input[:, :self.ndim]
-        v = x_input[:, self.ndim:2*self.ndim]
-        other = x_input[:, 2*self.ndim:]
+        if len(x_input.shape) == 3:
+            batch_size, n, n_f = x_input.shape
+            x_reshaped = x_input.reshape([-1, n_f])
+            
+            results = []
+            for b in range(batch_size):
+                start_idx = b * n
+                end_idx = (b + 1) * n
+                x_batch = x_reshaped[start_idx:end_idx]
+                
+                q = x_batch[:, :self.ndim]
+                v = x_batch[:, self.ndim:2*self.ndim]
+                other = x_batch[:, 2*self.ndim:]
+                
+                m_scalar = other[:, -1:]
+                m_vec = paddle.tile(m_scalar, [1, self.ndim])
+                
+                p = v * m_vec
+                
+                x_hamilton = paddle.concat([q, p, other], axis=1)
+                x_hamilton.stop_gradient = False
+                
+                total_energy = self.compute_energy(x_hamilton, edge_index)
+                total_energy_scalar = paddle.sum(total_energy)
+                
+                dH = paddle.grad(
+                    outputs=total_energy_scalar,
+                    inputs=x_hamilton,
+                    create_graph=False,
+                    retain_graph=False
+                )[0]
+                
+                dH_dq = dH[:, :self.ndim]
+                dH_dp = dH[:, self.ndim:2*self.ndim]
+                
+                dq_dt = dH_dp
+                dp_dt = -dH_dq
+                dv_dt = dp_dt / m_vec
+                
+                derivative = paddle.concat([dq_dt, dv_dt], axis=1)
+                results.append(derivative)
+            
+            derivative = paddle.stack(results, axis=0)
+            
+            outputs = {}
+            if 'velocity_derivative' in self.output_keys:
+                outputs['velocity_derivative'] = derivative[:, :, :self.ndim]
+            if 'acceleration' in self.output_keys:
+                outputs['acceleration'] = derivative[:, :, self.ndim:]
+            
+            if len(self.output_keys) == 1:
+                if self.output_keys[0] == 'acceleration':
+                    outputs['acceleration'] = derivative[:, :, self.ndim:]
+                else:
+                    outputs[self.output_keys[0]] = derivative
+            
+            return outputs
         
-        # Extract mass
-        m_scalar = other[:, -1:]
-        m_vec = paddle.tile(m_scalar, [1, self.ndim])
-        
-        # Compute momentum
-        p = v * m_vec
-        
-        # Construct Hamiltonian coordinates
-        x_hamilton = paddle.concat([q, p, other], axis=1)
-        x_hamilton.stop_gradient = False
-        
-        # Compute total energy
-        total_energy = self.compute_energy(x_hamilton, edge_index)
-        total_energy_scalar = paddle.sum(total_energy)
-        
-        # Compute Hamiltonian gradients
-        dH = paddle.grad(
-            outputs=total_energy_scalar,
-            inputs=x_hamilton,
-            create_graph=False,
-            retain_graph=False
-        )[0]
-        
-        # Extract gradients
-        dH_dq = dH[:, :self.ndim]
-        dH_dp = dH[:, self.ndim:2*self.ndim]
-        
-        # Hamilton's equations
-        dq_dt = dH_dp
-        dp_dt = -dH_dq
-        dv_dt = dp_dt / m_vec
-        
-        # Construct output dictionary
-        outputs = {}
-        if 'velocity_derivative' in self.output_keys:
-            outputs['velocity_derivative'] = dq_dt
-        if 'acceleration' in self.output_keys:
-            outputs['acceleration'] = dv_dt
-        
-        # If only one output key, return directly
-        if len(self.output_keys) == 1:
-            outputs[self.output_keys[0]] = paddle.concat([dq_dt, dv_dt], axis=1)
-        
-        return outputs
+        else:
+            q = x_input[:, :self.ndim]
+            v = x_input[:, self.ndim:2*self.ndim]
+            other = x_input[:, 2*self.ndim:]
+            
+            m_scalar = other[:, -1:]
+            m_vec = paddle.tile(m_scalar, [1, self.ndim])
+            
+            p = v * m_vec
+            
+            x_hamilton = paddle.concat([q, p, other], axis=1)
+            x_hamilton.stop_gradient = False
+            
+            total_energy = self.compute_energy(x_hamilton, edge_index)
+            total_energy_scalar = paddle.sum(total_energy)
+            
+            dH = paddle.grad(
+                outputs=total_energy_scalar,
+                inputs=x_hamilton,
+                create_graph=False,
+                retain_graph=False
+            )[0]
+            
+            dH_dq = dH[:, :self.ndim]
+            dH_dp = dH[:, self.ndim:2*self.ndim]
+            
+            dq_dt = dH_dp
+            dp_dt = -dH_dq
+            dv_dt = dp_dt / m_vec
+            
+            outputs = {}
+            if 'velocity_derivative' in self.output_keys:
+                outputs['velocity_derivative'] = dq_dt
+            if 'acceleration' in self.output_keys:
+                outputs['acceleration'] = dv_dt
+            
+            if len(self.output_keys) == 1:
+                if self.output_keys[0] == 'acceleration':
+                    outputs['acceleration'] = dv_dt
+                else:
+                    outputs[self.output_keys[0]] = paddle.concat([dq_dt, dv_dt], axis=1)
+            
+            return outputs
     
     def compute_loss(
         self,
@@ -435,22 +497,18 @@ class HGN(base.Arch):
         Returns:
             paddle.Tensor: Total loss.
         """
-        # Forward propagation
         outputs = self.forward(inputs)
         
-        # Base loss
         pred = outputs.get('acceleration', outputs.get(self.output_keys[0]))
         true = labels.get('acceleration_true', labels.get('acceleration'))
         
         base_loss = paddle.mean(paddle.abs(pred - true))
         
-        # Physical regularization: energy should not depend on non-physical quantities
         x_input = inputs['x'].clone()
         edge_index = inputs.get('edge_index', self.edge_index_buffer.numpy())
         if isinstance(edge_index, paddle.Tensor):
             edge_index = edge_index.numpy()
         
-        # Construct Hamiltonian coordinates
         q = x_input[:, :self.ndim]
         v = x_input[:, self.ndim:2*self.ndim]
         other = x_input[:, 2*self.ndim:]
@@ -462,10 +520,8 @@ class HGN(base.Arch):
         x_hamilton = paddle.concat([q, p, other], axis=1)
         x_hamilton.stop_gradient = False
         
-        # Compute energy
         total_energy = self.compute_energy(x_hamilton, edge_index)
         
-        # Regularization: penalize dependence on non-physical quantities
         regularization = reg_weight * paddle.mean(total_energy**2)
         
         return base_loss + regularization
@@ -482,7 +538,8 @@ class VarOGN(base.Arch):
         ndim: int = 2,
         hidden: int = 300,
         edge_index: Optional[np.ndarray] = None,
-        enable_sampling: bool = True
+        enable_sampling: bool = True,
+        l1_strength: float = 0.0
     ):
         """
         Initialize Variational Graph Network (VarGN).
@@ -525,15 +582,14 @@ class VarOGN(base.Arch):
         self.ndim = ndim
         self.hidden = hidden
         self.enable_sampling = enable_sampling
+        self.l1_strength = l1_strength
         
-        # Edge index
         if edge_index is not None:
             self.register_buffer('edge_index_buffer',
                                paddle.to_tensor(edge_index, dtype='int64'))
         else:
             self.edge_index_buffer = None
         
-        # Message function: outputs mu and logvar
         self.msg_fnc = nn.Sequential(
             nn.Linear(2*n_f, hidden),
             nn.ReLU(),
@@ -541,10 +597,9 @@ class VarOGN(base.Arch):
             nn.ReLU(),
             nn.Linear(hidden, hidden),
             nn.ReLU(),
-            nn.Linear(hidden, msg_dim*2)  # mu and logvar
+            nn.Linear(hidden, msg_dim*2)
         )
         
-        # Node update function
         self.node_fnc = nn.Sequential(
             nn.Linear(msg_dim + n_f, hidden),
             nn.ReLU(),
@@ -559,43 +614,86 @@ class VarOGN(base.Arch):
         """
         Variational message passing.
         
+        Args:
+            x: Node features with shape [n, n_f] or [batch*n, n_f].
+            edge_index: Edge indices with shape [2, num_edges].
+        
         Returns:
             Tuple[paddle.Tensor, paddle.Tensor]: (mean output, variance output).
         """
-        row, col = edge_index[0], edge_index[1]
+        if len(x.shape) == 3:
+            batch_size, n, n_f = x.shape
+            x_reshaped = x.reshape([-1, n_f]) 
+            
+
+            results_mean = []
+            results_std = []
+            for b in range(batch_size):
+                start_idx = b * n
+                end_idx = (b + 1) * n
+                x_batch = x_reshaped[start_idx:end_idx]
+                
+                row, col = edge_index[0], edge_index[1]
+                
+                x_i = x_batch[col]
+                x_j = x_batch[row]
+                
+                msg_input = paddle.concat([x_i, x_j], axis=1)
+                raw_msg = self.msg_fnc(msg_input)
+                
+                mu = raw_msg[:, 0::2]
+                logvar = raw_msg[:, 1::2]
+                
+                if self.enable_sampling and self.training:
+                    epsilon = paddle.randn(mu.shape)
+                    msg = mu + epsilon * paddle.exp(logvar / 2.0)
+                else:
+                    msg = mu
+                
+                aggr_out = paddle.zeros([n, self.msg_dim], dtype=msg.dtype)
+                for i in range(len(col)):
+                    aggr_out[col[i]] += msg[i]
+                
+                node_input = paddle.concat([x_batch, aggr_out], axis=1)
+                out_mean = self.node_fnc(node_input)
+                
+                out_std = paddle.exp(logvar.mean(axis=0, keepdim=True))
+                
+                results_mean.append(out_mean)
+                results_std.append(out_std)
+            
+            return paddle.stack(results_mean, axis=0), paddle.stack(results_std, axis=0)
         
-        x_i = x[col]
-        x_j = x[row]
-        
-        # Compute mu and logvar for messages
-        msg_input = paddle.concat([x_i, x_j], axis=1)
-        raw_msg = self.msg_fnc(msg_input)
-        
-        mu = raw_msg[:, 0::2]
-        logvar = raw_msg[:, 1::2]
-        
-        # Sample messages
-        if self.enable_sampling and self.training:
-            epsilon = paddle.randn(mu.shape)
-            msg = mu + epsilon * paddle.exp(logvar / 2.0)
         else:
-            msg = mu
-        
-        # Aggregate
-        num_nodes = x.shape[0]
-        aggr_out = paddle.zeros([num_nodes, self.msg_dim], dtype=msg.dtype)
-        
-        for i in range(len(col)):
-            aggr_out[col[i]] += msg[i]
-        
-        # Update nodes
-        node_input = paddle.concat([x, aggr_out], axis=1)
-        out_mean = self.node_fnc(node_input)
-        
-        # Compute output variance (simplified version)
-        out_std = paddle.exp(logvar.mean(axis=0, keepdim=True))
-        
-        return out_mean, out_std
+            row, col = edge_index[0], edge_index[1]
+            
+            x_i = x[col]
+            x_j = x[row]
+            
+            msg_input = paddle.concat([x_i, x_j], axis=1)
+            raw_msg = self.msg_fnc(msg_input)
+            
+            mu = raw_msg[:, 0::2]
+            logvar = raw_msg[:, 1::2]
+            
+            if self.enable_sampling and self.training:
+                epsilon = paddle.randn(mu.shape)
+                msg = mu + epsilon * paddle.exp(logvar / 2.0)
+            else:
+                msg = mu
+            
+            num_nodes = x.shape[0]
+            aggr_out = paddle.zeros([num_nodes, self.msg_dim], dtype=msg.dtype)
+            
+            for i in range(len(col)):
+                aggr_out[col[i]] += msg[i]
+            
+            node_input = paddle.concat([x, aggr_out], axis=1)
+            out_mean = self.node_fnc(node_input)
+            
+            out_std = paddle.exp(logvar.mean(axis=0, keepdim=True))
+            
+            return out_mean, out_std
     
     def forward(self, inputs: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         """
@@ -609,29 +707,31 @@ class VarOGN(base.Arch):
         """
         x = inputs['x']
         
-        # Get edge index
         if 'edge_index' in inputs:
             edge_index = inputs['edge_index']
             if isinstance(edge_index, paddle.Tensor):
                 edge_index = edge_index.numpy()
+            if len(edge_index.shape) == 3:
+                edge_index = edge_index[0]
         elif self.edge_index_buffer is not None:
             edge_index = self.edge_index_buffer.numpy()
         else:
             raise ValueError("Must provide edge_index")
         
-        # Execute variational message passing
         accel_mean, accel_std = self.message_passing(x, edge_index)
         
-        # Construct output
         outputs = {}
         if 'acceleration_mean' in self.output_keys:
             outputs['acceleration_mean'] = accel_mean
         if 'acceleration_std' in self.output_keys:
             outputs['acceleration_std'] = accel_std
         
-        # Default output
         if len(outputs) == 0:
             outputs[self.output_keys[0]] = accel_mean
+        
+        if hasattr(self, 'l1_strength') and self.l1_strength > 0:
+            l1_reg = self.l1_strength * paddle.mean(paddle.abs(x))
+            outputs['l1_regularization'] = l1_reg
         
         return outputs
     
@@ -654,14 +754,11 @@ class VarOGN(base.Arch):
         """
         outputs = self.forward(inputs)
         
-        # Reconstruction loss
         pred = outputs.get('acceleration_mean', outputs.get(self.output_keys[0]))
         true = labels.get('acceleration_true', labels.get('acceleration'))
         
         recon_loss = paddle.mean(paddle.abs(pred - true))
         
-        # KL divergence (simplified version)
-        # Full version needs to be computed in message_passing
-        kl_loss = paddle.to_tensor(0.0)  # Placeholder
+        kl_loss = paddle.to_tensor(0.0)
         
         return recon_loss + kl_weight * kl_loss
