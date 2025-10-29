@@ -17,6 +17,7 @@ from __future__ import annotations
 import copy
 import sys
 from typing import TYPE_CHECKING
+from typing import Union
 
 from paddle import io
 
@@ -118,15 +119,19 @@ __all__ = [
 ]
 
 
-def build_dataset(cfg: DictConfig) -> "io.Dataset":
+def build_dataset(cfg: Union[DictConfig, io.Dataset]) -> io.Dataset:
     """Build dataset
 
     Args:
-        cfg (DictConfig): Dataset config list.
+        cfg (Union[DictConfig, io.Dataset]): Dataset config or dataset.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
     """
+    # If cfg is already a Dataset instance, return it directly
+    if isinstance(cfg, io.Dataset):
+        return cfg
+
     cfg = copy.deepcopy(cfg)
 
     dataset_cls = cfg.pop("name")

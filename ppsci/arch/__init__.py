@@ -74,6 +74,7 @@ from ppsci.arch.climateformer import Climateformer  # isort:skip
 from ppsci.arch.resnet import ResNet  # isort:skip
 from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 from ppsci.arch.preformer import Preformer  # isort:skip
+from ppsci.arch.transolver import Transolver  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -139,6 +140,8 @@ __all__ = [
     "ResNet",
     "MoleculeModel",
     "VGG",
+    "Preformer",
+    "Transolver",
 ]
 
 

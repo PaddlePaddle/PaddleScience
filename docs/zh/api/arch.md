@@ -4,11 +4,12 @@
     handler: python
     options:
       members:
+        - Arch
         - AFNONet
         - AMGNet
-        - Arch
         - AutoEncoder
         - ChipDeepONets
+        - Climateformer
         - CrystalGraphConvNet
         - CuboidTransformer
         - CVit1D
@@ -21,31 +22,31 @@
         - FNO1d
         - Generator
         - HEDeepONets
+        - IFMMLP
         - KAN
         - LatentNO
+        - LNO
         - LorenzEmbedding
+        - Meteoformer
         - MLP
         - ModelList
         - ModifiedMLP
+        - MoleculeModel
         - NowcastNet
+        - Preformer
+        - RegDGCNN
+        - RegPointNet
         - SFNONet
         - SPINN
         - STAFNet
         - TFNO1dNet
         - TFNO2dNet
         - TFNO3dNet
+        - TGCN
         - Transformer
+        - Transolver
         - UNetEx
         - UNONet
         - USCNN
-        - LNO
-        - TGCN
-        - RegDGCNN
-        - RegPointNet
-        - IFMMLP
-        - Meteoformer
-        - Climateformer
-        - MoleculeModel
-        - Preformer
       show_root_heading: true
       heading_level: 3

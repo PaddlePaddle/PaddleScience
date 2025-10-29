@@ -100,6 +100,7 @@
 
     | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
     |-----|---------|-----|---------|----|---------|---------|
+    | 汽车表面阻力预测 | [Transolver](./zh/examples/transolver.md) | 数据驱动 | Transolver | 监督学习 | [Data](http://www.nobuyuki-umetani.com/publication/mlcfd_data.zip) | [Paper](https://arxiv.org/abs/2402.02366) |
     | 汽车表面阻力预测 | [DrivAerNet](./zh/examples/drivaernet.md) | 数据驱动 | RegDGCNN | 监督学习 | [Data](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar) | [Paper](https://www.researchgate.net/publication/378937154_DrivAerNet_A_Parametric_Car_Dataset_for_Data-Driven_Aerodynamic_Design_and_Graph-Based_Drag_Prediction) |
     | 一维线性对流问题 | [1D 线性对流](./zh/examples/adv_cvit.md) | 数据驱动 | ViT | 监督学习 | [Data](https://github.com/Zhengyu-Huang/Operator-Learning/tree/main/data) | [Paper](https://arxiv.org/abs/2405.13998) |
     | 非定常不可压流体 | [2D 方腔浮力驱动流](./zh/examples/ns_cvit.md) | 数据驱动 | ViT | 监督学习 | [Data](https://huggingface.co/datasets/pdearena/NavierStokes-2D) | [Paper](https://arxiv.org/abs/2405.13998) |
@@ -142,7 +143,7 @@
     | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
     |-----|---------|-----|---------|----|---------|---------|
     | 材料设计 | [散射板设计(反问题)](./zh/examples/hpinns.md) | 机理驱动 | Transformer | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
-    | 晶体材料属性预测 | [CGCNN](./zh/examples/cgcnn.md) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fcgcnn%2Fcgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
+    | 晶体材料属性预测 | [CGCNN](./zh/examples/cgcnn.md) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience/datasets/cgcnn/cgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
     | 二维材料生成与数据库 | [ML2DDB](./en/examples/ml2ddb.md) | 数据驱动 | GNN/Diffusion | 监督学习 | Coming Soon | [Paper](https://arxiv.org/pdf/2507.00584) |
 
 === "地球科学"
