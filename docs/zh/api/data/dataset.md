@@ -4,40 +4,40 @@
     handler: python
     options:
       members:
-        - IterableNamedArrayDataset
-        - NamedArrayDataset
-        - ChipHeatDataset
-        - CSVDataset
-        - IterableCSVDataset
-        - ContinuousNamedArrayDataset
-        - ERA5Dataset
-        - ERA5SampledDataset
-        - ExtMoEENSODataset
-        - IterableMatDataset
-        - MatDataset
-        - IterableNPZDataset
-        - NPZDataset
-        - CylinderDataset
-        - LorenzDataset
-        - RosslerDataset
-        - VtuDataset
-        - MeshAirfoilDataset
-        - MeshCylinderDataset
-        - RadarDataset
         - build_dataset
-        - DGMRDataset
-        - DarcyFlowDataset
-        - SphericalSWEDataset
-        - SEVIRDataset
-        - MOlFLOWDataset
         - CGCNNDataset
-        - PEMSDataset
+        - ChipHeatDataset
+        - ContinuousNamedArrayDataset
+        - CSVDataset
+        - CylinderDataset
+        - DarcyFlowDataset
+        - DGMRDataset
         - DrivAerNetDataset
         - DrivAerNetPlusPlusDataset
-        - IFMMoeDataset
-        - STAFNetDataset
-        - ERA5MeteoDataset
         - ERA5ClimateDataset
-        - MoleculeDatasetIter
+        - ERA5Dataset
+        - ERA5MeteoDataset
+        - ERA5SampledDataset
         - ERA5SQDataset
+        - ExtMoEENSODataset
+        - IFMMoeDataset
+        - IterableCSVDataset
+        - IterableMatDataset
+        - IterableNamedArrayDataset
+        - IterableNPZDataset
+        - LorenzDataset
+        - MatDataset
+        - MeshAirfoilDataset
+        - MeshCylinderDataset
+        - MoleculeDatasetIter
+        - MOlFLOWDataset
+        - NamedArrayDataset
+        - NPZDataset
+        - PEMSDataset
+        - RadarDataset
+        - RosslerDataset
+        - SEVIRDataset
+        - ShapeNetCarDataset
+        - SphericalSWEDataset
+        - STAFNetDataset
       show_root_heading: true
