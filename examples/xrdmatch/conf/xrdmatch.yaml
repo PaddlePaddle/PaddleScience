@@ -57,3 +57,7 @@ AUGMENTATION:
     noise_ratio: 0.1
     noise_peak: 0.05
     move_gap: 100
+  strong_aug:
+    noise_ratio: 0.2
+    noise_peak: 0.1
+    move_gap: 200
