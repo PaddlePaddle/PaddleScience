@@ -6,15 +6,15 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 ### 1.1 论文信息
 | 年份           | 期刊            | 作者                                                                                             | 引用数 | 论文PDF                                                                                                                                                                                                                                                                                                                                                                 |
 | -------------- | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3 January 2024 | Science Advance | Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio | 15     | [Paper](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/sciadv.adj1741_sm.pdf) |
+| 3 January 2024 | Science Advance | Tingtao Zhou, X Wan, DZ Huang, Zongyi Li, Z Peng, A Anandkumar, JF Brady, PW Sternberg, C Daraio | 15     | [Paper](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/2024 AI-aided geometric design of anti-infection catheters.pdf), [Supplementary PDF 1](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/sciadv.adj1741_sm.pdf) |
 
 ### 1.2 作者介绍
 
-- 第一作者：加州理工学院 Tingtao Zhou <br> 研究方向：统计物理学、流体力学、活性物质、无序材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter5.png)
+- 第一作者：加州理工学院 Tingtao Zhou <br> 研究方向：统计物理学、流体力学、活性物质、无序材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter5.png)
 
-- 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038) <br> 教师主页：https://www.eas.caltech.edu/people/daraio <br> 研究方向：力学 材料 非线性动力学 软物质 生物材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter6.png)
+- 通讯作者：加州理工学院 工程与应用科学部 Chiara Daraio (Cited 21038) <br> 教师主页：https://www.eas.caltech.edu/people/daraio <br> 研究方向：力学 材料 非线性动力学 软物质 生物材料 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter6.png)
 
-- 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555) <br> 教师主页：https://www.bbe.caltech.edu/people/paul-w-sternberg <br> 研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter7.png)
+- 通讯作者：加州理工学院 生物学和生物工程学部 Paul W. Sternberg (Cited 56555) <br> 教师主页：https://www.bbe.caltech.edu/people/paul-w-sternberg <br> 研究方向：秀丽隐杆线虫发育的系统生物学；性别与睡眠背后的神经回路；线虫功能基因组学与化学生态学；文本挖掘。 <br> ![alt text](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter7.png)
 
 - 其他作者所属机构 <br> 加州理工学院,工程与应用科学部\化学与化学工程系\生物与生物工程系 <br> 北京大学,北京国际数学研究中心 <br> Meta Platforms公司(前Facebook)，Reality Labs部门
 
@@ -22,16 +22,16 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 | 问题类型             | 在线运行                                                                                                                   | 神经网络           | 预训练模型                                                                                                                                                              | 指标              |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| 算子神经网络预测流场 | [人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783) | 傅立叶几何神经算子 | [GeoFNO_pretrained.pdparams](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams) | loss(MAE): 0.0664 |
+| 算子神经网络预测流场 | [人工智能辅助的抗感染导管几何设计](https://aistudio.baidu.com/projectdetail/8252779?sUid=1952564&shared=1&ts=172724369783) | 傅立叶几何神经算子 | [GeoFNO_pretrained.pdparams](<https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/result_GeoFNO.pdparams>) | loss(MAE): 0.0664 |
 
 
 === "模型训练命令"
 
     ``` sh
     # linux
-    wget https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip
+    wget -nc 'https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/data.zip'
     # windows
-    # curl https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/data.zip -o data.zip
+    # curl 'https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/data.zip' -o data.zip
     unzip data.zip
     python catheter.py
     ```
@@ -39,7 +39,7 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 === "预训练模型快速评估"
 
     ``` sh
-    python catheter.py mode=eval EVAL.pretrained_model=https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/result_GeoFNO.pdparams
+    python catheter.py mode=eval EVAL.pretrained_model=https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/result_GeoFNO.pdparams
     ```
 
 在狭窄管道内的流体环境中，细菌能借助流体动力学作用逆流迁移，对使用植入性导管的患者构成泌尿道感染的严重威胁。尽管已有提议采用涂层与结构化表面来抑制导管内的细菌滋生，但遗憾的是，至今尚无一种表面结构或涂层技术能从根本上解决污染难题。鉴于此，我们依据逆流游动的物理原理，创新性地提出了一种几何设计方案，并通过AI模型对细菌流入动力学进行预测与优化。相较于传统模拟方法，所采用的傅立叶神经算子人工智能技术实现了显著的速度提升。
@@ -74,7 +74,7 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
 我们致力于设计能够防止细菌逆流游动并最大程度减少污染的导管。为了优化导管的几何形状，我们将设计空间限制为在导管内壁放置三角形障碍物。我们捕捉了自驱动球体出现的最简单的逆流游动物理机制（27），并进行了流体和粒子动力学模拟，以找出几何设计原则（图1C）。我们将流体动力学和几何整流效应结合为一个随机偏微分方程（SPDE），以此模拟细菌的分布。然后，我们使用模拟数据训练了一个基于几何聚焦傅里叶神经算子（Geo-FNO）的人工智能（AI）模型（62, 63），以学习SPDE的解，并使用训练好的模型来优化导管的几何形状（图1D）。基于优化后的设计，我们制造了准二维（2D）微流控装置（图1E）和3D打印的原型导管（图1F），以评估我们的概念的有效性。实验结果表明，与我们的标准导管相比，细菌超污染抑制效果提高了多达两个数量级，这为导管相关尿路感染（CAUTI）的管理提供了一条新途径。
 
-![图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter.png)
+![图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter.png)
 
 **图1. 提出的导管相关尿路感染（CAUTI）机制与抗感染设计流程示意图**
 
@@ -119,7 +119,7 @@ $$
 
 设计优化的参数空间由四个参数表征：障碍物基底长度$L$、高度$h$、尖端位置$s$以及障碍物间距$d$；我们用W表示通道宽度（图2G）。为了优化这个空间，我们设定了两个约束条件。首先，如果相邻障碍物过于接近，它们尖端的涡旋就会开始重叠。由于这种重叠，最大有效涡旋强度（正好在障碍物尖端；有效涡旋的数学定义见补充材料）和涡旋的有效尺寸都会减小。此外，还会形成更大的边界层和滞流区（图S2，A和B）。因此，我们将障碍物间距约束为$d > 0.5W$（图S2G）。其次，在其他参数固定的情况下，随着h的增加，障碍物尖端的有效涡旋强度也会增加（图S2，C至H），这有利于促进涡旋重定向效应。然而，当$h = W/2$时，管道显然会发生堵塞。这种随着$h$增加而堵塞加剧的趋势反映在为了保持相同的有效流速而所需压力降的持续增加上（图S2I）。为了避免堵塞，我们将高度约束为$h < 0.3W$。
 
-![图2. 障碍物抑制上游游动和几何优化的物理机制](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter2.png)
+![图2. 障碍物抑制上游游动和几何优化的物理机制](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter2.png)
 
 **图2. 障碍物抑制上游游动和几何优化的物理机制**
 
@@ -144,7 +144,7 @@ $$
   - - 最后，将预测的细菌分布从潜在空间转换回物理空间。
   - - 右图展示了随机初始条件（黑色）和优化后的设计（粉色）的对比，以及通过流体和粒子动力学模拟验证的Geo-FnO预测结果（绿色虚线）。
 
-![图3. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter3.png)
+![图3. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter3.png)
 
 **图3. 微流控实验**
 
@@ -162,7 +162,7 @@ $$
 
 - **（E）脱落事件的统计**：提供了关于细菌脱落事件的统计数据。
 
-![图4. 3D打印导管原型的实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter4.png)
+![图4. 3D打印导管原型的实验](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter4.png)
 
 **Fig. 4. 3D打印导管原型的实验**
 
@@ -185,14 +185,14 @@ $$
 上述展示的机制和设计原则很容易扩展到导管上。在三维管道中，细菌可以通过横截面的任何切割线穿过管道（附图S2J）。由于与上述相同的机制（图2，A、B、F至I，以及附图S1），仅在壁附近的无量纲剪切率起作用（27），因此靠近边界移动的细菌（附图S2J中的轨迹1）仍然可以逆流游动。超污染细菌的游动距离可以超过1mm（32），这与重新缩放的障碍物尺寸相当，预计在这些尺度上整流效应会持续存在（61）。数量级估计表明，也可以采用伴随方法的雷诺数下降（71）。我们注意到，几何设计不能完全消除细菌的逆流游动，特别是在接近零流速的情况下。然而，它极大地减少了超污染的数量，并可能显著延长导管的留置时间。使用我们设计的导管预计不需要改变常规临床方案或重新培训医务人员。此外，我们的解决方案不会向导管中引入化学物质，因此是安全的，并且不需要额外的维护。我们的几何设计方法预计与其他程序措施、抗菌表面改性和环境控制方法兼容。
 
 
-![S1. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS1.png)
+![S1. 微流控实验](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheterS1.png)
 
 **图S1. 主动布朗粒子的模拟轨迹示例**
 
 在（A）（C）具有对称障碍物的通道中和（B）（D）具有不对称障碍物的通道中的轨迹。（A）（B）无流体流动。（C）（D）有流体流动。颜色表示局部归一化涡量。
 
-![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS2-1.png)
-![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS2-2.png)
+![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheterS2-1.png)
+![S2. 主动布朗粒子的模拟轨迹示例](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheterS2-2.png)
 
 **图S2. 几何优化约束和缩放的考虑因素**
 
@@ -248,7 +248,7 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 
 在给定的参数约束条件下，目标函数⟨$x_{up}$⟩关于这些设计变量既不是凸函数也不是单调函数，但通常随着h的增大、d的减小和s的增大而减小（见图S3）。最终优化得到的设计参数为：$d = 62.26 μm，h = 30.0 μm，s = −19.56 μm$，以及$L = 15.27 μm$。
 
-![S3. 优化细节](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheterS3.png)
+![S3. 优化细节](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheterS3.png)
 
 **图S3. 优化细节**
 
@@ -283,17 +283,17 @@ $$⟨x_{up}⟩ = - ∫^{-∞}_{0} ρ(x)xdx ≈ - \frac{1}{N} ∑_{i=1}^{N} xi$$
 实验在三天内进行，每天使用独立的E. coli培养批次，每天进行五次15分钟的记录。使用ImageJ软件（Fiji）进行视频后处理，以提取细菌的轨迹。通过轨迹的前向进展线性度进行过滤，以消除快速向下游移动的轨迹，并直观地突出向上游游动的轨迹。研究者估计向上游游动的时间间隔为$10s$，然后细菌会脱落。最大流速定义为沿通道中心线的最高流速。通过计算向上游脱落间隔期间，细菌和荧光珠沿中心线的最快速度的平均值，来估计瞬时最大流速。在补充材料中提供了几个视频记录。
 
 <video width="640"  controls>
-    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/adj1741_Movie_S1.mp4" type="video/mp4">
+    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/adj1741_Movie_S1.mp4" type="video/mp4">
 </video>
 
 <video width="640"  controls>
-    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/adj1741_Movie_S2.mp4" type="video/mp4">
+    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/adj1741_Movie_S2.mp4" type="video/mp4">
 </video>
 
 **视频S1-S2. 不同流动条件下细菌从壁面脱落的记录**
 
 <video width="640"  controls>
-    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/adj1741_Movie_S3.mp4" type="video/mp4">
+    <source src="https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/adj1741_Movie_S3.mp4" type="video/mp4">
 </video>
 
 **视频S3. 实时的优化设计**
@@ -373,15 +373,15 @@ examples/catheter/catheter.py:162:177
 
 === "第一次预测结果"
 
-    ![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter10.png)
+    ![1725427977357](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter10.png)
 
 === "最后一次预测结果"
 
-    ![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter9.png)
+    ![1725428017615](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter9.png)
 
 === "训练测试损失"
 
-    ![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024%20AI-aided%20geometric%20design%20of%20anti-infection%20catheters/catheter8.png)
+    ![1725894134717](https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/catheter8.png)
 
 可以看到模型预测结果与真实结果基本一致，优化后的导管具有特定的几何形状，如障碍物分布和间距等，这些形状特征能够显著影响流体动力学相互作用，从而抑制细菌的上游游泳行为。
 
