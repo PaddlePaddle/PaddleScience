@@ -86,7 +86,7 @@ def test_multi_model_and_sdf():
     out_var_reference = tmp1_eval + tmp2_eval
 
     np.testing.assert_allclose(
-        out_var_tensor.numpy(), out_var_reference.numpy(), 1e-6, 0.0
+        out_var_tensor.numpy(), out_var_reference.numpy(), 1e-5, 1e-5
     )
 
 

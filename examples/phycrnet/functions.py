@@ -65,7 +65,7 @@ def transform_out(input, out, model):
         output = paddle.concat(tuple(output), axis=0)
 
         # concatenate the initial state to the output for central diff
-        output = paddle.concat((u0.cuda(), output), axis=0)
+        output = paddle.concat((u0, output), axis=0)
 
         # get loss
         loss = compute_loss(output, loss_func)
@@ -88,7 +88,7 @@ def tranform_output_val(input, out, name="results.npz"):
 
     # shape: [t, c, h, w]
     output = paddle.concat(tuple(output), axis=0)
-    output = paddle.concat((input.cuda(), output), axis=0)
+    output = paddle.concat((input, output), axis=0)
 
     # Padding x and y axis due to periodic boundary condition
     output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)
@@ -280,9 +280,7 @@ def compute_loss(output, loss_func):
     # get physics loss
     mse_loss = nn.MSELoss()
     f_u, f_v = loss_func.get_phy_Loss(output)
-    loss = mse_loss(f_u, paddle.zeros_like(f_u).cuda()) + mse_loss(
-        f_v, paddle.zeros_like(f_v).cuda()
-    )
+    loss = mse_loss(f_u, paddle.zeros_like(f_u)) + mse_loss(f_v, paddle.zeros_like(f_v))
 
     return loss
 
@@ -343,7 +341,7 @@ def output_graph(model, input_dataset, fig_save_path, case_name):
     output = output_dataset["outputs"]
     input = input_dataset["input"][0]
     output = paddle.concat(tuple(output), axis=0)
-    output = paddle.concat((input.cuda(), output), axis=0)
+    output = paddle.concat((input, output), axis=0)
 
     # Padding x and y axis due to periodic boundary condition
     output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)

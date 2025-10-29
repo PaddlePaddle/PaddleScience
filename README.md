@@ -301,6 +301,7 @@ python -c "import paddle; paddle.utils.run_check()"
 | [Open3D](https://github.com/PFCCLab/Open3D.git) | 三维图形库 | 全量支持 |
 | [neuraloperator](https://github.com/PFCCLab/neuraloperator) | 神经算子库 | 全量支持 |
 | [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏聚合库 | 全量支持 |
+| [paddle_cluster](https://github.com/PFCCLab/paddle_cluster) | 几何采样聚合库 | 全量支持 |
 | [paddle_sparse](https://github.com/PFCCLab/paddle_sparse) | 张量稀疏计算库 | 全量支持 |
 | [paddle_harmonics](https://github.com/PFCCLab/paddle_harmonics.git) | 球面谐波变换库 | 全量支持 |
 | [deepali](https://github.com/PFCCLab/deepali) | 图像、点云配准库 | 全量支持 |

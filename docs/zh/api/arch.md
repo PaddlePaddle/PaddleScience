@@ -4,9 +4,9 @@
     handler: python
     options:
       members:
+        - Arch
         - AFNONet
         - AMGNet
-        - Arch
         - AutoEncoder
         - ChipDeepONets
         - Climateformer

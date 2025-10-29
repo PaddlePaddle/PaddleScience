@@ -21,9 +21,9 @@ import h5py
 import hydra
 import numpy as np
 import paddle
+import utils as fourcast_utils
 from omegaconf import DictConfig
 
-import examples.fourcastnet.utils as fourcast_utils
 import ppsci
 from ppsci.utils import logger
 

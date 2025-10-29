@@ -41,14 +41,11 @@ class ERA5SQDataset(io.Dataset):
         file_path (str): Dataset path.
         input_keys (Tuple[str, ...]): Input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
-        precip_file_path (Optional[str]): Precipitation data set path. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        vars_channel (Optional[Tuple[int, ...]]): The variable channel index in ERA5 dataset. Defaults to None.
-        num_label_timestamps (int, optional): Number of timestamp of label. Defaults to 1.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
         training (bool, optional): Whether in train mode. Defaults to True.
-        stride (int, optional): Stride of sampling data. Defaults to 1.
+        sq_length (int, optional): Length of sequence for time series data. Defaults to 6.
 
     Examples:
         >>> import ppsci
@@ -71,7 +68,6 @@ class ERA5SQDataset(io.Dataset):
         weight_dict: Optional[Dict[str, float]] = None,
         transforms: Optional[vision.Compose] = None,
         training: bool = True,
-        stride: int = 1,
         sq_length: int = 6,
     ):
         super().__init__()
