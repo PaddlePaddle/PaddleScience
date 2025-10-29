@@ -121,11 +121,11 @@ class STAFNetDataset(io.Dataset):
         self.AQStation_imformation = self.data["AQStation_imformation"]
         self.meteStation_imformation = self.data["meteStation_imformation"]
         mete_coords = np.array(
-            self.meteStation_imformation.loc[:, ["经度", "纬度"]]
-        ).astype("float64")
-        AQ_coords = np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float64")
+            self.meteStation_imformation.loc[:, ["经度", "纬度"]],
+        ).astype("float32")
+        AQ_coords = np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float32")
         self.aq_edge_index, self.aq_edge_attr, self.aq_node_coords = self.get_edge_attr(
-            np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float64")
+            np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float32")
         )
         (
             self.mete_edge_index,
@@ -133,7 +133,7 @@ class STAFNetDataset(io.Dataset):
             self.mete_node_coords,
         ) = self.get_edge_attr(
             np.array(self.meteStation_imformation.loc[:, ["经度", "纬度"]]).astype(
-                "float64"
+                "float32"
             )
         )
 
@@ -144,11 +144,13 @@ class STAFNetDataset(io.Dataset):
 
     def __getitem__(self, idx):
         aq_train_data = paddle.to_tensor(
-            data=self.AQdata[idx : idx + self.seq_len + self.pred_len]
-        ).astype(dtype="float32")
+            data=self.AQdata[idx : idx + self.seq_len + self.pred_len],
+            dtype="float32",
+        )
         mete_train_data = paddle.to_tensor(
-            data=self.metedata[idx : idx + self.seq_len + self.pred_len]
-        ).astype(dtype="float32")
+            data=self.metedata[idx : idx + self.seq_len + self.pred_len],
+            dtype="float32",
+        )
 
         input_item = {
             "aq_train_data": aq_train_data,
