@@ -161,8 +161,8 @@ def get_datalist(
     mean_in, mean_out = 0, 0
     std_in, std_out = 0, 0
     for k, s in enumerate(tqdm(samples)):
+        save_path = osp.join(savedir, s)
         if preprocessed and savedir is not None:
-            save_path = osp.join(savedir, s)
             if not osp.exists(save_path):
                 continue
             init = np.load(osp.join(save_path, "x.npy"))
@@ -175,11 +175,11 @@ def get_datalist(
                 [
                     osp.exists(path)
                     for path in [
-                        osp.join(savedir, s, "x.npy"),
-                        osp.join(savedir, s, "y.npy"),
-                        osp.join(savedir, s, "pos.npy"),
-                        osp.join(savedir, s, "surf.npy"),
-                        osp.join(savedir, s, "edge_index.npy"),
+                        osp.join(save_path, "x.npy"),
+                        osp.join(save_path, "y.npy"),
+                        osp.join(save_path, "pos.npy"),
+                        osp.join(save_path, "surf.npy"),
+                        osp.join(save_path, "edge_index.npy"),
                     ]
                 ]
             ):

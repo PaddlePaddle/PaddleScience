@@ -169,9 +169,7 @@ def get_normal(unstructured_grid_data):
 
 ############## calculate coefficient ##############
 def cal_coefficient(file_name, press_surf=None, velo_surf=None):
-    root = (
-        "/work/EquationFlow/Transolver/Car-Design-ShapeNetCar/mlcfd_data/training_data"
-    )
+    root = "./mlcfd_data/training_data"
     # save_path = (
     #     "/work/EquationFlow/Transolver/Car-Design-ShapeNetCar/mlcfd_data/preprocessed_data/param0/"
     #     + file_name
