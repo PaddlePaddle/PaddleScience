@@ -171,7 +171,7 @@ def get_normal(unstructured_grid_data):
 def cal_coefficient(file_name, press_surf=None, velo_surf=None):
     root = "./mlcfd_data/training_data"
     # save_path = (
-    #     "/work/EquationFlow/Transolver/Car-Design-ShapeNetCar/mlcfd_data/preprocessed_data/param0/"
+    #     "./mlcfd_data/preprocessed_data/param0/"
     #     + file_name
     # )
     file_name_press = "param0/" + file_name + "/quadpress_smpl.vtk"
