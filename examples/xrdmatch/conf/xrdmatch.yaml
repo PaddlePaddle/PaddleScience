@@ -27,7 +27,7 @@ TRAIN:
   epochs: 100
   log_interval: 10
   save_dir: ./saved_models_ppsci/
-  num_experiments: 100
+  num_experiments: 30
 
 # Data loader configuration
 DATALOADER:
