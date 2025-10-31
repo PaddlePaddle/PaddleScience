@@ -134,6 +134,7 @@ class FocalLoss(base.Loss):
             )
         if not (0.0 <= alpha <= 1.0):
             raise ValueError(f"alpha must be in [0,1], but got {alpha}")
+
         if gamma < 0:
             raise ValueError(f"gamma must be >= 0, but got {gamma}")
 
@@ -193,4 +194,3 @@ class FocalLoss(base.Loss):
             losses[key] = loss
 
         return losses
-
