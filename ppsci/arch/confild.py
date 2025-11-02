@@ -970,6 +970,10 @@ class GaussianDiffusion:
                     terms["loss"] = terms["mse"]
             else:
                 terms["valid_mse"] = mean_flat((target - model_output) ** 2)
+                if "vb" in terms:
+                    terms["loss"] = terms["valid_mse"] + terms["vb"]
+                else:
+                    terms["loss"] = terms["valid_mse"]
         else:
             raise NotImplementedError(self.loss_type)
 

@@ -687,10 +687,12 @@ def train(cfg):
     schedule_sampler = UniformSampler(diff_model)
 
     # 初始化EMA参数
-    ema_params = [
-        copy.deepcopy(unet_model.parameters())
-        for _ in range(len(ema_rate))
-    ]
+    ema_params = []
+    for _ in range(len(ema_rate)):
+        ema_param_dict = {}
+        for name, param in unet_model.named_parameters():
+            ema_param_dict[name] = copy.deepcopy(param.detach())
+        ema_params.append(ema_param_dict)
     
     # 清空损失记录
     global train_losses, valid_losses
@@ -707,13 +709,8 @@ def train(cfg):
             valid_batch = next(dl_valid)
             # 前向传播
             unet_model.train()
-            # def zero_grad(model_params):
-            for param in unet_model.parameters():
-                # Taken from https://pytorch.org/docs/stable/_modules/torch/optim/optimizer.html#Optimizer.add_param_group
-                if param.grad is not None:
-                    param.grad.detach_()
-                    param.grad.zero_()
-                    unet_model.clear_grad()
+            # 清零梯度（使用clear_grad更高效）
+            unet_model.clear_grad()
             
             for i in range(0, len(train_batch), microbatch):
                 # 获取当前微批次数据
@@ -727,19 +724,17 @@ def train(cfg):
                 t, weights = schedule_sampler.sample(len(micro))
 
                 # 创建部分应用的损失计算函数
-                new_micro = paddle.to_tensor(micro)
+                # 注意：micro已经是tensor（来自DataLoader），无需再次转换
                 compute_losses = functools.partial(
                     diff_model.training_losses,
                     unet_model,
-                    new_micro,
+                    micro,
                     t,
                     model_kwargs=micro_cond
                 )
 
                 # 计算损失
                 losses = compute_losses()
-                # 添加训练标记
-                losses["valid"] = False
 
                 # 如果使用损失感知采样器，则更新本地损失
                 if isinstance(schedule_sampler, LossAwareSampler):
@@ -750,38 +745,39 @@ def train(cfg):
                 # 计算加权平均损失
                 loss = (losses["loss"] * weights).mean()
                 
-                # 记录损失字典
+                # 记录损失字典（排除非张量类型的键）
                 log_loss_dict(
-                    diff_model, t, {k: v * weights for k, v in losses.items()}, is_valid=False
+                    diff_model, t, {k: v * weights for k, v in losses.items() if isinstance(v, paddle.Tensor)}, is_valid=False
                 )
                 
                 # 反向传播
                 # unet_model.backward(loss)
                 loss.backward()
 
-            # 不计算梯度，节省内存
+            # 不计算梯度，节省内存，设置模型为评估模式
+            unet_model.eval()
             with paddle.no_grad():
+                # 聚合所有微批次的验证损失
+                all_valid_losses = []
+                
                 # 同样分解成微批次处理
                 for i in range(0, len(valid_batch), microbatch):
                     # 获取当前微批次数据
                     micro = valid_batch[i : i + microbatch]
                     micro_cond = {
-                    k: v[i : i + microbatch]
-                    for k, v in cond.items()
+                        k: v[i : i + microbatch]
+                        for k, v in cond.items()
                     }
-                    
-                    # 判断是否为最后一个微批次
-                    last_batch = (i + microbatch) >= len(valid_batch)
                     
                     # 采样时间步
                     t, weights = schedule_sampler.sample(len(micro))
 
                     # 创建部分应用的损失计算函数
-                    new_micro = paddle.to_tensor(micro)
+                    # 注意：micro已经是tensor（来自DataLoader），无需再次转换
                     compute_losses = functools.partial(
                         diff_model.training_losses,
                         unet_model,
-                        new_micro,
+                        micro,
                         t,
                         model_kwargs=micro_cond,
                         valid=True
@@ -789,19 +785,31 @@ def train(cfg):
 
                     # 计算验证损失
                     losses = compute_losses()
-                    # 添加验证标记
-                    losses["valid"] = True
 
-                    # 记录验证损失
+                    # 记录验证损失（排除非张量类型的键，如布尔标记等）
+                    valid_loss_dict = {k: v * weights for k, v in losses.items() if isinstance(v, paddle.Tensor)}
+                    # 验证时不添加到列表，而是在外部聚合后统一添加
                     log_loss_dict(
-                        diff_model, t, {k: v * weights for k, v in losses.items()}, is_valid=True
+                        diff_model, t, valid_loss_dict, is_valid=True, add_to_list=False
                     )
+                    
+                    # 收集损失用于聚合
+                    if "loss" in valid_loss_dict:
+                        all_valid_losses.append(valid_loss_dict["loss"].mean().item())
+                
+                # 聚合整个验证批次的平均损失并添加一次
+                if len(all_valid_losses) > 0:
+                    avg_valid_loss = sum(all_valid_losses) / len(all_valid_losses)
+                    valid_losses.append(avg_valid_loss)
 
+            # 验证结束后切换回训练模式
+            unet_model.train()
+            
             grad_norm, param_norm = _compute_norms(unet_model)
             opt.step()
             # took_step = unet_model.optimize(opt)
             # 更新ema参数
-            _update_ema(ema_rate, ema_params, unet_model.parameters())
+            _update_ema(ema_rate, ema_params, unet_model)
             # 更新学习率
             _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, cfg.TRAIN.lr)
             
@@ -866,21 +874,21 @@ def _compute_norms(model, grad_scale=1.0):
     return np.sqrt(grad_norm) / grad_scale, np.sqrt(param_norm)
 
 
-def _update_ema(ema_rate, ema_params, source_params, rate=0.99):
+def _update_ema(ema_rate, ema_params, source_model):
         """
         更新EMA(指数移动平均)参数
         EMA有助于提高生成质量，减少模型权重噪声
         
         参数:
-            ema_rate: EMA衰减率
-            ema_params: EMA参数
-            source_params: 源参数
-            rate: 衰减率
+            ema_rate: EMA衰减率列表
+            ema_params: EMA参数字典列表
+            source_model: 源模型
         """
-        for rate, target_params in zip(ema_rate, ema_params):
-            for targ, src in zip(target_params, source_params):
-                updated = targ.detach() * rate + src * (1 - rate)
-                targ.set_value(updated)
+        for rate, target_params_dict in zip(ema_rate, ema_params):
+            for name, target_param in target_params_dict.items():
+                source_param = dict(source_model.named_parameters())[name]
+                updated = target_param.detach() * rate + source_param.detach() * (1 - rate)
+                target_param.set_value(updated)
 
 
 def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
@@ -903,7 +911,7 @@ def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
         opt.set_lr(new_lr)
 
 
-def log_loss_dict(diffusion, ts, losses, is_valid=False):
+def log_loss_dict(diffusion, ts, losses, is_valid=False, add_to_list=True):
     """
     记录损失字典的日志
     
@@ -912,6 +920,7 @@ def log_loss_dict(diffusion, ts, losses, is_valid=False):
         ts: 时间步张量
         losses: 损失字典
         is_valid: 是否为验证损失
+        add_to_list: 是否将损失添加到全局列表中（用于验证时聚合控制）
     """
     for key, values in losses.items():
         # 使用logger.info替代logger.logkv_mean记录平均损失值
@@ -921,8 +930,8 @@ def log_loss_dict(diffusion, ts, losses, is_valid=False):
             quartile = int(4 * sub_t / diffusion.num_timesteps)
             logger.info(f"{key}_q{quartile}: {sub_loss:.6f}")
         
-        # 记录训练和验证损失
-        if key == "loss":
+        # 记录训练和验证损失到全局列表
+        if key == "loss" and add_to_list:
             if is_valid:
                 valid_losses.append(values.mean().item())
             else:
