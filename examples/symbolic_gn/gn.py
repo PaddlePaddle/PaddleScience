@@ -93,7 +93,7 @@ def create_loss_function(cfg):
             base_loss = paddle.mean(paddle.abs(pred - target))
 
         if 'l1_regularization' in output_dict:
-            return base_loss + output_dict['l1_regularization']
+            base_loss = base_loss + output_dict['l1_regularization']
 
         return {output_key: base_loss}
     
@@ -192,7 +192,7 @@ def train(cfg):
     if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
         lr_scheduler = paddle.optimizer.lr.OneCycleLR(
             max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
-            total_steps=cfg.TRAIN.epochs*batch_per_epoch,
+            total_step=int(cfg.TRAIN.epochs*batch_per_epoch),
             divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
         )
         lr_scheduler.by_epoch = False
@@ -261,32 +261,22 @@ def evaluate(cfg: DictConfig):
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
     
-    # Prepare test data
-    X_list = []
-    y_list = []
-    for sample_idx in range(cfg.DATA.num_samples):
-        for t in range(0, sim.data.shape[1], cfg.DATA.sample_interval):
-            X_list.append(sim.data[sample_idx, t])
-            y_list.append(accel_data[sample_idx, t])
-            
-    X = np.array(X_list, dtype=np.float32)
-    y = np.array(y_list, dtype=np.float32)
+    # Calculate number of time steps per sample
+    num_time_steps_per_sample = len(range(0, sim.data.shape[1], cfg.DATA.sample_interval))
     
-    # Evaluate on selected samples
+    # Evaluate on selected samples (use original sim.data directly)
     sample_indices = [0, 1] if cfg.DATA.num_samples > 1 else [0]
     
     for sample_idx in sample_indices:
-        # Get data for this sample
-        sample_data = X[sample_idx:sample_idx+1]  # Shape: [1, num_nodes, n_f]
-        true_accel = y[sample_idx:sample_idx+1]  # Shape: [1, num_nodes, dim]
+        # Get data for this sample at first time step
+        sample_data = sim.data[sample_idx, 0:1]  # Shape: [1, num_nodes, n_f]
+        true_accel = accel_data[sample_idx, 0:1]  # Shape: [1, num_nodes, dim]
         
         # Prepare input - convert to PaddlePaddle tensors
         input_dict = {
             "x": paddle.to_tensor(sample_data, dtype="float32"),
             "edge_index": paddle.to_tensor(edge_index, dtype="int64")
         }
-        print("sample_data shape: ", sample_data.shape)
-        print("edge_index shape: ", edge_index.shape)
         
         # Model prediction
         with paddle.no_grad():
