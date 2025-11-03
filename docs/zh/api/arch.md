@@ -44,6 +44,7 @@
         - TFNO3dNet
         - TGCN
         - Transformer
+        - Transolver
         - UNetEx
         - UNONet
         - USCNN

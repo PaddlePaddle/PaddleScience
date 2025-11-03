@@ -77,6 +77,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 汽车表面阻力预测 | [Transolver](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/transolver/) | 数据驱动 | Transolver | 监督学习 | [Data](http://www.nobuyuki-umetani.com/publication/mlcfd_data.zip) | [Paper](https://arxiv.org/abs/2402.02366) |
 | 汽车表面阻力预测 | [DrivAerNet](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/drivaernet/) | 数据驱动 | RegDGCNN | 监督学习 | [Data](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar) | [Paper](https://www.researchgate.net/publication/378937154_DrivAerNet_A_Parametric_Car_Dataset_for_Data-Driven_Aerodynamic_Design_and_Graph-Based_Drag_Prediction) |
 | 一维线性对流问题 | [1D 线性对流](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/adv_cvit/) | 数据驱动 | ViT | 监督学习 | [Data](https://github.com/Zhengyu-Huang/Operator-Learning/tree/main/data) | [Paper](https://arxiv.org/abs/2405.13998) |
 | 非定常不可压流体 | [2D 方腔浮力驱动流](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ns_cvit/) | 数据驱动 | ViT | 监督学习 | [Data](https://huggingface.co/datasets/pdearena/NavierStokes-2D) | [Paper](https://arxiv.org/abs/2405.13998) |
