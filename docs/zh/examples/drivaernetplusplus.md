@@ -212,7 +212,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
 2. 使用 wget 或 curl 直接下载 Globus Connect Personal：
 ``` sh
-wget https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
+wget -nc https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
 ```
 
 3. 从下载的 tarball 中提取文件。
