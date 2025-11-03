@@ -43,7 +43,7 @@ $$
 ``` log
 smc_reac/
 ├──config/
-│   └── smc_reac.yaml  
+│   └── smc_reac.yaml
 ├── data_set.xlsx
 ├── requirements.txt
 └── smc_reac.py

@@ -14,7 +14,7 @@
 === "模型训练命令"
 
     ``` sh
-    # Est 预测:  
+    # Est 预测:
     cd TADF_Est
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/Est/Est.dat https://paddle-org.bj.bcebos.com/paddlescience/datasets/TADF/smis.txt
     python Est.py mode=train
@@ -64,15 +64,15 @@
 ``` log
 tadf/
 ├──TADF_angle/
-│   ├── config/  
-│   │    └── angle.yaml  
-│   ├── angle_model.py  
-│   ├── angle.dat  
-│   ├── angle.py  
-│   └── smis.txt  
+│   ├── config/
+│   │    └── angle.yaml
+│   ├── angle_model.py
+│   ├── angle.dat
+│   ├── angle.py
+│   └── smis.txt
 ├── TADF_Est/
-│   └── ...  
-├── TADF_f/  
+│   └── ...
+├── TADF_f/
 │   └── ...
 └── requirements.txt
 ```
