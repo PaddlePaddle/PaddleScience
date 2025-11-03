@@ -23,7 +23,7 @@
     # generalization experiments
     mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
       TRAIN.batch_size=$((BATCH_SIZE)) \
-      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \  
+      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \
       TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine. su2" \
       EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" \
       EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" \

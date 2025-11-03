@@ -354,5 +354,5 @@ paddle.incubate.optimizer.functional.minimize_lbfgs(objective_func, initial_posi
 | 支持硬件              | GPU、CPU     |
 | aistudio              | [notebook](https://aistudio.baidu.com/aistudio/projectdetail/5541961)     |
 
-请点击[此处](https://ai.baidu.com/docs#/AIStudio_Project_Notebook/a38e5576)查看本环境基本用法.  
+请点击[此处](https://ai.baidu.com/docs#/AIStudio_Project_Notebook/a38e5576)查看本环境基本用法.
 Please click [here](https://ai.baidu.com/docs#/AIStudio_Project_Notebook/a38e5576) for more detailed instructions.

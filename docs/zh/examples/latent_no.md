@@ -80,10 +80,10 @@
 本节将讲解如何基于PaddleScience代码，实现对于隐空间神经算子模型的构建、训练、测试和评估。案例的目录结构如下。
 ``` log
 LatentNO/
-├── config  
+├── config
 │     ├── LatentNO-Darcy.yaml
 │     └── ...
-├── datas  
+├── datas
 │   ├── Darcy_train.npy
 │   ├── Darcy_val.npy
 │   └── ...
