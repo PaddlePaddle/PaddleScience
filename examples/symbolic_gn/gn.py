@@ -92,8 +92,8 @@ def create_loss_function(cfg):
         else:
             base_loss = paddle.mean(paddle.abs(pred - target))
 
-        if 'l1_regularization' in label_dict:
-            return base_loss + label_dict['l1_regularization']
+        if 'l1_regularization' in output_dict:
+            return base_loss + output_dict['l1_regularization']
 
         return {output_key: base_loss}
     
@@ -188,23 +188,23 @@ def train(cfg):
         l1_strength=l1_strength
     )
     
-    # batch_per_epoch = int(1000*10 / (cfg.TRAIN.batch_size/32.0))
-    # if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
-    #     lr_scheduler = paddle.optimizer.lr.OneCycleLR(
-    #         max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
-    #         total_steps=cfg.TRAIN.epochs*batch_per_epoch,
-    #         divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
-    #     )
-    #     lr_scheduler.by_epoch = False
-    # else:
-    #     lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
-    #         learning_rate=cfg.TRAIN.optimizer.learning_rate,
-    #         gamma=0.9
-    #     )
-    #     lr_scheduler.by_epoch = True
+    batch_per_epoch = int(train_size / cfg.TRAIN.batch_size)
+    if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
+        lr_scheduler = paddle.optimizer.lr.OneCycleLR(
+            max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
+            total_steps=cfg.TRAIN.epochs*batch_per_epoch,
+            divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
+        )
+        lr_scheduler.by_epoch = False
+    else:
+        lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
+            learning_rate=cfg.TRAIN.optimizer.learning_rate,
+            gamma=0.9
+        )
+        lr_scheduler.by_epoch = True
     
     optimizer = paddle.optimizer.Adam(
-        learning_rate=cfg.TRAIN.optimizer.learning_rate,#lr_scheduler,
+        learning_rate=lr_scheduler,#cfg.TRAIN.lr_scheduler.max_learning_rate,
         parameters=model.parameters(),
         weight_decay=cfg.TRAIN.optimizer.weight_decay
     )
@@ -220,6 +220,8 @@ def train(cfg):
 
     solver.train()
     solver.plot_loss_history(by_epoch=True, smooth_step=1)
+    # 保存模型
+    paddle.save(model.state_dict(), os.path.join(f"{cfg.MODEL.arch}.pdparams"))
 
 
 def evaluate(cfg: DictConfig):
@@ -283,6 +285,9 @@ def evaluate(cfg: DictConfig):
             "x": paddle.to_tensor(sample_data, dtype="float32"),
             "edge_index": paddle.to_tensor(edge_index, dtype="int64")
         }
+        print("sample_data shape: ", sample_data.shape)
+        print("edge_index shape: ", edge_index.shape)
+        
         # Model prediction
         with paddle.no_grad():
             pred_output = model(input_dict)
@@ -290,9 +295,11 @@ def evaluate(cfg: DictConfig):
         
         # Calculate error
         error = np.mean(np.abs(pred_accel.numpy() - true_accel))
+        logger.info(f"Sample {sample_idx} - MAE error: {error:.6f}")
         
         # Calculate relative error
         rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(true_accel)
+        logger.info(f"Sample {sample_idx} - Relative error: {rel_error:.6f}")
         
         # Visualization using simulate.py plot function
         plt.figure(figsize=(10, 8))
@@ -328,7 +335,20 @@ def export(cfg: DictConfig):
         edge_index=edge_index,
         l1_strength=l1_strength
     )
-
+    
+    # 创建数据集
+    # sim = SimulationDataset(
+    #     sim=cfg.DATA.type,
+    #     n=cfg.DATA.num_nodes,
+    #     dim=cfg.DATA.dimension,
+    #     nt=cfg.DATA.time_steps,
+    #     dt=cfg.DATA.time_step_size
+    # )
+    # sim.simulate(cfg.DATA.num_samples)
+    # accel_data = sim.get_acceleration()
+    # # 打印维度
+    # logger.info(f"accel_data shape: {accel_data.shape}")
+    # logger.info(f"edge_index shape: {edge_index.shape}")
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
@@ -355,6 +375,7 @@ def inference(cfg: DictConfig):
         use_predictor = True
     except Exception as e:
         logger.error(f"GeneralPredictor failed: {e}")
+        logger.info("Switching to direct model inference...")
         use_predictor = False
 
     # Generate test data
@@ -413,13 +434,17 @@ def inference(cfg: DictConfig):
             pred_output = model(input_dict)
             pred_acceleration = pred_output[cfg.MODEL.output_keys[0]].numpy()
     
+    # Calculate true acceleration for comparison
     accel_data = sim.get_acceleration()
-    true_acceleration = accel_data[sample_idx, 0]
+    true_acceleration = accel_data[sample_idx, 0]  # Shape: [num_nodes, dim]
     
     # Calculate error
     error = np.mean(np.abs(pred_acceleration - true_acceleration))
+    logger.info(f"Inference error (MAE): {error:.6f}")
     
+    # Calculate relative error
     rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(true_acceleration)
+    logger.info(f"Inference relative error: {rel_error:.6f}")
     
     # Visualization using simulate.py plot function
     plt.figure(figsize=(10, 8))
@@ -434,7 +459,7 @@ def inference(cfg: DictConfig):
     logger.info(f"Inference plot saved to {plot_path}")
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="config")
+@hydra.main(version_base=None, config_path="./conf", config_name="config_hgn")
 def main(cfg: DictConfig) -> None:
     if cfg.mode == "train":
         train(cfg)

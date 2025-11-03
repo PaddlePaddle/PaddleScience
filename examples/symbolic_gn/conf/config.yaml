@@ -97,7 +97,7 @@ DATA:
   num_samples: 1000
   num_nodes: 6
   dimension: 2
-  time_steps: 10
+  time_steps: 100
   time_step_size: 0.01
   downsample_factor: 5
   sample_interval: 5  # Sampling interval for training data

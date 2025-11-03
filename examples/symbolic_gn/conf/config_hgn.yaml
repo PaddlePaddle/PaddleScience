@@ -30,7 +30,7 @@ log_freq: 20
 device: gpu
 
 TRAIN:
-  epochs: 10
+  epochs: 1000
   batch_size: 32
   save_freq: 10
   eval_during_train: true
@@ -82,8 +82,8 @@ MODEL:
   l1_strength: 0.0  # Not used in HGN
 
 DATA:
-  type: "spring"  # r1, r2, spring, string, charge, superposition, damped, discontinuous, string_ball
-  num_samples: 100
+  type: "r1"  # r1, r2, spring, string, charge, superposition, damped, discontinuous, string_ball
+  num_samples: 1000
   num_nodes: 4
   dimension: 2
   time_steps: 10
@@ -94,46 +94,46 @@ DATA:
 DATATYPE_TYPE:
   - sim: "r1"
     dt: [5e-3]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "r2"
     dt: [1e-3]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "spring"
     dt: [1e-2]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "string"
     dt: [1e-2]
-    nt: [100]
+    nt: [1000]
     n: [30]
     dim: [2]
   - sim: "charge"
     dt: [1e-3]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "superposition"
     dt: [1e-3]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "damped"
     dt: [2e-2]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "discontinuous"
     dt: [1e-2]
-    nt: [100]
+    nt: [1000]
     n: [4, 8]
     dim: [2, 3]
   - sim: "string_ball"
     dt: [1e-2]
-    nt: [100]
+    nt: [1000]
     n: [30]
     dim: [2]
