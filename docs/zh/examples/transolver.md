@@ -45,7 +45,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [transolver_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/transolver/transolver_pretrained.pdparams) | rho_d:, 0.99044<br>c_d: 0.01216<br>relative l2 error of press: 0.07827<br>relative l2 error of velocity: 0.02397<br>press: 4.97525<br>velocity: [0.12751131 0.15966374 0.4417494 ] 0.28101 |
+| [transolver_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/transolver/transolver_pretrained.pdparams) | rho_d:, 0.99314<br>c_d: 0.01136<br>relative l2 error of press: 0.07829<br>relative l2 error of velocity: 0.02304<br>press: 4.95888<br>velocity: [0.12163974 0.14851639 0.41583335] 0.26443 |
 
 ## 1. 背景简介
 

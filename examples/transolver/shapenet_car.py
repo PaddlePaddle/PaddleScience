@@ -21,15 +21,11 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    from torch import from_dlpack as torch_from_dlpack
-except ModuleNotFoundError:
-    pass
 
 try:
-    from torch_geometric import nn as nng
-    from torch_geometric.data import Data
-    from torch_geometric.utils import k_hop_subgraph
+    from paddle_geometric import nn as nng
+    from paddle_geometric.data import Data
+    from paddle_geometric.utils import k_hop_subgraph
 except ModuleNotFoundError:
     pass
 
@@ -368,7 +364,7 @@ def get_shape(data, max_n_point=8192, normalize=True, use_height=False):
 
 def create_edge_index_radius(data, r, max_neighbors=32) -> "torch.Tensor":  # noqa: F821
     data.edge_index = nng.radius_graph(
-        x=torch_from_dlpack(data.pos), r=r, loop=True, max_num_neighbors=max_neighbors
+        x=data.pos, r=r, loop=True, max_num_neighbors=max_neighbors
     )
     return data
 
