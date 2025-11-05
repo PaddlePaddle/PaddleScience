@@ -10,8 +10,8 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.tar
-    tar -xvf mlcfd_data.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.zip
+    unzip mlcfd_data.zip
     python main.py
     ```
 
@@ -21,8 +21,8 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.tar
-    tar -xvf mlcfd_data.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.zip
+    unzip mlcfd_data.zip
     python main.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/transolver/transolver_pretrained.pdparams
     ```
 
@@ -35,6 +35,11 @@
 === "模型推理命令"
 
     ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlecfd/datasets/pptransformer/mlcfd_data.zip -o mlcfd_data.zip
+    unzip mlcfd_data.zip
     python main.py mode=infer
     ```
 
