@@ -364,7 +364,7 @@ def get_shape(data, max_n_point=8192, normalize=True, use_height=False):
 
 def create_edge_index_radius(data, r, max_neighbors=32) -> "torch.Tensor":  # noqa: F821
     data.edge_index = nng.radius_graph(
-        x=paddle.from_dlpack(data.pos), r=r, loop=True, max_num_neighbors=max_neighbors
+        x=data.pos, r=r, loop=True, max_num_neighbors=max_neighbors
     )
     return data
 
