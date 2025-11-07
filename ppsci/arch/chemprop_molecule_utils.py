@@ -40,12 +40,15 @@ from typing_extensions import Literal
 
 # === featuriztion start ===
 def make_mol(s: str, keep_h: bool, add_h: bool):
-    """
-    Builds an RDKit molecule from a SMILES string.
+    """Builds an RDKit molecule from a SMILES string.
 
-    :param s: SMILES string.
-    :param keep_h: Boolean whether to keep hydrogens in the input smiles. This does not add hydrogens, it only keeps them if they are specified.
-    :return: RDKit molecule.
+    Args:
+        s (str): SMILES string.
+        keep_h (bool): Boolean whether to keep hydrogens in the input smiles. This does not add hydrogens, it only keeps them if they are specified.
+        add_h (bool): Boolean whether to add hydrogens to the molecule.
+
+    Returns:
+        Chem.Mol: RDKit molecule.
     """
     if keep_h:
         mol = Chem.MolFromSmiles(s, sanitize=False)
@@ -107,8 +110,10 @@ except NameError:
 
 
 def reset_featurization_parameters(logger: logging.Logger = None) -> None:
-    """
-    Function resets feature parameter values to defaults by replacing the parameters instance.
+    """Function resets feature parameter values to defaults by replacing the parameters instance.
+
+    Args:
+        logger (logging.Logger, optional): Logger instance for debug output. Defaults to None.
     """
     if logger is not None:
         debug = logger.debug
@@ -122,12 +127,14 @@ def reset_featurization_parameters(logger: logging.Logger = None) -> None:
 def get_atom_fdim(
     overwrite_default_atom: bool = False, is_reaction: bool = False
 ) -> int:
-    """
-    Gets the dimensionality of the atom feature vector.
+    """Gets the dimensionality of the atom feature vector.
 
-    :param overwrite_default_atom: Whether to overwrite the default atom descriptors
-    :param is_reaction: Whether to add :code:`EXTRA_ATOM_FDIM` for reaction input when :code:`REACTION_MODE` is not None
-    :return: The dimensionality of the atom feature vector.
+    Args:
+        overwrite_default_atom (bool, optional): Whether to overwrite the default atom descriptors. Defaults to False.
+        is_reaction (bool, optional): Whether to add EXTRA_ATOM_FDIM for reaction input when REACTION_MODE is not None. Defaults to False.
+
+    Returns:
+        int: The dimensionality of the atom feature vector.
     """
     if PARAMS.REACTION_MODE:
         return (
@@ -138,30 +145,29 @@ def get_atom_fdim(
 
 
 def set_explicit_h(explicit_h: bool) -> None:
-    """
-    Sets whether RDKit molecules will be constructed with explicit Hs.
+    """Sets whether RDKit molecules will be constructed with explicit Hs.
 
-    :param explicit_h: Boolean whether to keep explicit Hs from input.
+    Args:
+        explicit_h (bool): Boolean whether to keep explicit Hs from input.
     """
     PARAMS.EXPLICIT_H = explicit_h
 
 
 def set_adding_hs(adding_hs: bool) -> None:
-    """
-    Sets whether RDKit molecules will be constructed with adding the Hs to them.
+    """Sets whether RDKit molecules will be constructed with adding the Hs to them.
 
-    :param adding_hs: Boolean whether to add Hs to the molecule.
+    Args:
+        adding_hs (bool): Boolean whether to add Hs to the molecule.
     """
     PARAMS.ADDING_H = adding_hs
 
 
 def set_reaction(reaction: bool, mode: str) -> None:
-    """
-    Sets whether to use a reaction or molecule as input and adapts feature dimensions.
+    """Sets whether to use a reaction or molecule as input and adapts feature dimensions.
 
-    :param reaction: Boolean whether to except reactions as input.
-    :param mode: Reaction mode to construct atom and bond feature vectors.
-
+    Args:
+        reaction (bool): Boolean whether to except reactions as input.
+        mode (str): Reaction mode to construct atom and bond feature vectors.
     """
     PARAMS.REACTION = reaction
     if reaction:
@@ -171,21 +177,42 @@ def set_reaction(reaction: bool, mode: str) -> None:
 
 
 def is_explicit_h(is_mol: bool = True) -> bool:
-    """Returns whether to retain explicit Hs (for reactions only)"""
+    """Returns whether to retain explicit Hs (for reactions only).
+
+    Args:
+        is_mol (bool, optional): Whether input is a molecule. Defaults to True.
+
+    Returns:
+        bool: Whether to retain explicit Hs.
+    """
     if not is_mol:
         return PARAMS.EXPLICIT_H
     return False
 
 
 def is_adding_hs(is_mol: bool = True) -> bool:
-    """Returns whether to add explicit Hs to the mol (not for reactions)"""
+    """Returns whether to add explicit Hs to the mol (not for reactions).
+
+    Args:
+        is_mol (bool, optional): Whether input is a molecule. Defaults to True.
+
+    Returns:
+        bool: Whether to add explicit Hs.
+    """
     if is_mol:
         return PARAMS.ADDING_H
     return False
 
 
 def is_reaction(is_mol: bool = True) -> bool:
-    """Returns whether to use reactions as input"""
+    """Returns whether to use reactions as input.
+
+    Args:
+        is_mol (bool, optional): Whether input is a molecule. Defaults to True.
+
+    Returns:
+        bool: Whether to use reactions as input.
+    """
     if is_mol:
         return False
     if PARAMS.REACTION:
@@ -194,12 +221,20 @@ def is_reaction(is_mol: bool = True) -> bool:
 
 
 def reaction_mode() -> str:
-    """Returns the reaction mode"""
+    """Returns the reaction mode.
+
+    Returns:
+        str: The reaction mode.
+    """
     return PARAMS.REACTION_MODE
 
 
 def set_extra_atom_fdim(extra):
-    """Change the dimensionality of the atom feature vector."""
+    """Change the dimensionality of the atom feature vector.
+
+    Args:
+        extra: The extra dimensionality to set.
+    """
     PARAMS.EXTRA_ATOM_FDIM = extra
 
 
@@ -209,16 +244,18 @@ def get_bond_fdim(
     overwrite_default_atom: bool = False,
     is_reaction: bool = False,
 ) -> int:
-    """
-    Gets the dimensionality of the bond feature vector.
+    """Gets the dimensionality of the bond feature vector.
 
-    :param atom_messages: Whether atom messages are being used. If atom messages are used,
-                          then the bond feature vector only contains bond features.
-                          Otherwise it contains both atom and bond features.
-    :param overwrite_default_bond: Whether to overwrite the default bond descriptors
-    :param overwrite_default_atom: Whether to overwrite the default atom descriptors
-    :param is_reaction: Whether to add :code:`EXTRA_BOND_FDIM` for reaction input when :code:`REACTION_MODE:` is not None
-    :return: The dimensionality of the bond feature vector.
+    Args:
+        atom_messages (bool, optional): Whether atom messages are being used. If atom messages are used,
+            then the bond feature vector only contains bond features.
+            Otherwise it contains both atom and bond features. Defaults to False.
+        overwrite_default_bond (bool, optional): Whether to overwrite the default bond descriptors. Defaults to False.
+        overwrite_default_atom (bool, optional): Whether to overwrite the default atom descriptors. Defaults to False.
+        is_reaction (bool, optional): Whether to add EXTRA_BOND_FDIM for reaction input when REACTION_MODE is not None. Defaults to False.
+
+    Returns:
+        int: The dimensionality of the bond feature vector.
     """
     if PARAMS.REACTION_MODE:
         return (
@@ -241,18 +278,24 @@ def get_bond_fdim(
 
 
 def set_extra_bond_fdim(extra):
-    """Change the dimensionality of the bond feature vector."""
+    """Change the dimensionality of the bond feature vector.
+
+    Args:
+        extra: The extra dimensionality to set.
+    """
     PARAMS.EXTRA_BOND_FDIM = extra
 
 
 def onek_encoding_unk(value: int, choices: List[int]) -> List[int]:
-    """
-    Creates a one-hot encoding with an extra category for uncommon values.
+    """Creates a one-hot encoding with an extra category for uncommon values.
 
-    :param value: The value for which the encoding should be one.
-    :param choices: A list of possible values.
-    :return: A one-hot encoding of the :code:`value` in a list of length :code:`len(choices) + 1`.
-             If :code:`value` is not in :code:`choices`, then the final element in the encoding is 1.
+    Args:
+        value (int): The value for which the encoding should be one.
+        choices (List[int]): A list of possible values.
+
+    Returns:
+        List[int]: A one-hot encoding of the value in a list of length len(choices) + 1.
+            If value is not in choices, then the final element in the encoding is 1.
     """
     encoding = [0] * (len(choices) + 1)
     index = choices.index(value) if value in choices else -1
@@ -263,12 +306,14 @@ def onek_encoding_unk(value: int, choices: List[int]) -> List[int]:
 def atom_features(
     atom: Chem.rdchem.Atom, functional_groups: List[int] = None
 ) -> List[Union[bool, int, float]]:
-    """
-    Builds a feature vector for an atom.
+    """Builds a feature vector for an atom.
 
-    :param atom: An RDKit atom.
-    :param functional_groups: A k-hot vector indicating the functional groups the atom belongs to.
-    :return: A list containing the atom features.
+    Args:
+        atom (Chem.rdchem.Atom): An RDKit atom.
+        functional_groups (List[int], optional): A k-hot vector indicating the functional groups the atom belongs to. Defaults to None.
+
+    Returns:
+        List[Union[bool, int, float]]: A list containing the atom features.
     """
     if atom is None:
         features = [0] * PARAMS.ATOM_FDIM
@@ -299,11 +344,13 @@ def atom_features(
 
 
 def atom_features_zeros(atom: Chem.rdchem.Atom) -> List[Union[bool, int, float]]:
-    """
-    Builds a feature vector for an atom containing only the atom number information.
+    """Builds a feature vector for an atom containing only the atom number information.
 
-    :param atom: An RDKit atom.
-    :return: A list containing the atom features.
+    Args:
+        atom (Chem.rdchem.Atom): An RDKit atom.
+
+    Returns:
+        List[Union[bool, int, float]]: A list containing the atom features.
     """
     if atom is None:
         features = [0] * PARAMS.ATOM_FDIM
@@ -315,11 +362,13 @@ def atom_features_zeros(atom: Chem.rdchem.Atom) -> List[Union[bool, int, float]]
 
 
 def bond_features(bond: Chem.rdchem.Bond) -> List[Union[bool, int, float]]:
-    """
-    Builds a feature vector for a bond.
+    """Builds a feature vector for a bond.
 
-    :param bond: An RDKit bond.
-    :return: A list containing the bond features.
+    Args:
+        bond (Chem.rdchem.Bond): An RDKit bond.
+
+    Returns:
+        List[Union[bool, int, float]]: A list containing the bond features.
     """
     if bond is None:
         fbond = [1] + [0] * (PARAMS.BOND_FDIM - 1)
@@ -339,12 +388,17 @@ def bond_features(bond: Chem.rdchem.Bond) -> List[Union[bool, int, float]]:
 
 
 def map_reac_to_prod(mol_reac: Chem.Mol, mol_prod: Chem.Mol):
-    """
-    Build a dictionary of mapping atom indices in the reactants to the products.
+    """Build a dictionary of mapping atom indices in the reactants to the products.
 
-    :param mol_reac: An RDKit molecule of the reactants.
-    :param mol_prod: An RDKit molecule of the products.
-    :return: A dictionary of corresponding reactant and product atom indices.
+    Args:
+        mol_reac (Chem.Mol): An RDKit molecule of the reactants.
+        mol_prod (Chem.Mol): An RDKit molecule of the products.
+
+    Returns:
+        Tuple: A tuple containing:
+            - reac_id_to_prod_id (dict): Dictionary of corresponding reactant and product atom indices.
+            - only_prod_ids (list): List of product-only atom IDs.
+            - only_reac_ids (list): List of reactant-only atom IDs.
     """
     only_prod_ids = []
     prod_map_to_id = {}
@@ -401,12 +455,14 @@ class MolGraph:
         overwrite_default_atom_features: bool = False,
         overwrite_default_bond_features: bool = False,
     ):
-        """
-        :param mol: A SMILES or an RDKit molecule.
-        :param atom_features_extra: A list of 2D numpy array containing additional atom features to featurize the molecule
-        :param bond_features_extra: A list of 2D numpy array containing additional bond features to featurize the molecule
-        :param overwrite_default_atom_features: Boolean to overwrite default atom features by atom_features instead of concatenating
-        :param overwrite_default_bond_features: Boolean to overwrite default bond features by bond_features instead of concatenating
+        """Initialize MolGraph.
+
+        Args:
+            mol (Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]): A SMILES or an RDKit molecule.
+            atom_features_extra (np.ndarray, optional): A list of 2D numpy array containing additional atom features to featurize the molecule. Defaults to None.
+            bond_features_extra (np.ndarray, optional): A list of 2D numpy array containing additional bond features to featurize the molecule. Defaults to None.
+            overwrite_default_atom_features (bool, optional): Boolean to overwrite default atom features by atom_features instead of concatenating. Defaults to False.
+            overwrite_default_bond_features (bool, optional): Boolean to overwrite default bond features by bond_features instead of concatenating. Defaults to False.
         """
         self.is_mol = is_mol(mol)
         self.is_reaction = is_reaction(self.is_mol)
@@ -631,8 +687,10 @@ class BatchMolGraph:
     """
 
     def __init__(self, mol_graphs: List[MolGraph]):
-        """
-        :param mol_graphs: A list of :class:`MolGraph`\\ s from which to construct the :class:`BatchMolGraph`.
+        """Initialize BatchMolGraph.
+
+        Args:
+            mol_graphs (List[MolGraph]): A list of MolGraphs from which to construct the BatchMolGraph.
         """
         self.overwrite_default_atom_features = mol_graphs[
             0
@@ -697,23 +755,21 @@ class BatchMolGraph:
         List[Tuple[int, int]],
         List[Tuple[int, int]],
     ]:
-        """
-        Returns the components of the :class:`BatchMolGraph`.
+        """Returns the components of the BatchMolGraph.
 
-        The returned components are, in order:
+        Args:
+            atom_messages (bool, optional): Whether to use atom messages instead of bond messages. This changes the bond feature
+                vector to contain only bond features rather than both atom and bond features. Defaults to False.
 
-        * :code:`f_atoms`
-        * :code:`f_bonds`
-        * :code:`a2b`
-        * :code:`b2a`
-        * :code:`b2revb`
-        * :code:`a_scope`
-        * :code:`b_scope`
-
-        :param atom_messages: Whether to use atom messages instead of bond messages. This changes the bond feature
-                              vector to contain only bond features rather than both atom and bond features.
-        :return: A tuple containing tensors with the atom features, bond features, graph structure,
-                 and scope of the atoms and bonds (i.e., the indices of the molecules they belong to).
+        Returns:
+            Tuple: A tuple containing:
+                - f_atoms (paddle.Tensor): Atom features tensor.
+                - f_bonds (paddle.Tensor): Bond features tensor.
+                - a2b (paddle.Tensor): Atom to bond mapping.
+                - b2a (paddle.Tensor): Bond to atom mapping.
+                - b2revb (paddle.Tensor): Bond to reverse bond mapping.
+                - a_scope (List[Tuple[int, int]]): Scope of atoms (indices of molecules they belong to).
+                - b_scope (List[Tuple[int, int]]): Scope of bonds (indices of molecules they belong to).
         """
         if atom_messages:
             f_bonds = self.f_bonds[
@@ -737,10 +793,10 @@ class BatchMolGraph:
         )
 
     def get_b2b(self) -> paddle.int64:
-        """
-        Computes (if necessary) and returns a mapping from each bond index to all the incoming bond indices.
+        """Computes (if necessary) and returns a mapping from each bond index to all the incoming bond indices.
 
-        :return: A tensor containing the mapping from each bond index to all the incoming bond indices.
+        Returns:
+            paddle.Tensor: A tensor containing the mapping from each bond index to all the incoming bond indices.
         """
         if self.b2b is None:
             b2b = self.a2b[self.b2a]
@@ -752,10 +808,10 @@ class BatchMolGraph:
         return self.b2b
 
     def get_a2a(self) -> paddle.int64:
-        """
-        Computes (if necessary) and returns a mapping from each atom index to all neighboring atom indices.
+        """Computes (if necessary) and returns a mapping from each atom index to all neighboring atom indices.
 
-        :return: A tensor containing the mapping from each atom index to all the neighboring atom indices.
+        Returns:
+            paddle.Tensor: A tensor containing the mapping from each atom index to all the neighboring atom indices.
         """
         if self.a2a is None:
             self.a2a = self.b2a[self.a2b]
@@ -769,15 +825,17 @@ def mol2graph(
     overwrite_default_atom_features: bool = False,
     overwrite_default_bond_features: bool = False,
 ) -> BatchMolGraph:
-    """
-    Converts a list of SMILES or RDKit molecules to a :class:`BatchMolGraph` containing the batch of molecular graphs.
+    """Converts a list of SMILES or RDKit molecules to a BatchMolGraph containing the batch of molecular graphs.
 
-    :param mols: A list of SMILES or a list of RDKit molecules.
-    :param atom_features_batch: A list of 2D numpy array containing additional atom features to featurize the molecule
-    :param bond_features_batch: A list of 2D numpy array containing additional bond features to featurize the molecule
-    :param overwrite_default_atom_features: Boolean to overwrite default atom descriptors by atom_descriptors instead of concatenating
-    :param overwrite_default_bond_features: Boolean to overwrite default bond descriptors by bond_descriptors instead of concatenating
-    :return: A :class:`BatchMolGraph` containing the combined molecular graph for the molecules.
+    Args:
+        mols (Union[List[str], List[Chem.Mol], List[Tuple[Chem.Mol, Chem.Mol]]]): A list of SMILES or a list of RDKit molecules.
+        atom_features_batch (List[np.array], optional): A list of 2D numpy array containing additional atom features to featurize the molecule. Defaults to (None,).
+        bond_features_batch (List[np.array], optional): A list of 2D numpy array containing additional bond features to featurize the molecule. Defaults to (None,).
+        overwrite_default_atom_features (bool, optional): Boolean to overwrite default atom descriptors by atom_descriptors instead of concatenating. Defaults to False.
+        overwrite_default_bond_features (bool, optional): Boolean to overwrite default bond descriptors by bond_descriptors instead of concatenating. Defaults to False.
+
+    Returns:
+        BatchMolGraph: A BatchMolGraph containing the combined molecular graph for the molecules.
     """
     return BatchMolGraph(
         [
@@ -796,10 +854,13 @@ def mol2graph(
 
 
 def is_mol(mol: Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]) -> bool:
-    """Checks whether an input is a molecule or a reaction
+    """Checks whether an input is a molecule or a reaction.
 
-    :param mol: str, RDKIT molecule or tuple of molecules
-    :return: Whether the supplied input corresponds to a single molecule
+    Args:
+        mol (Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]): str, RDKIT molecule or tuple of molecules.
+
+    Returns:
+        bool: Whether the supplied input corresponds to a single molecule.
     """
     if isinstance(mol, str) and ">" not in mol:
         return True
@@ -812,21 +873,25 @@ def is_mol(mol: Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]) -> bool:
 
 # === nn_util start ===
 def compute_pnorm(model: paddle.nn.Layer) -> float:
-    """
-    Computes the norm of the parameters of a model.
+    """Computes the norm of the parameters of a model.
 
-    :param model: A model.
-    :return: The norm of the parameters of the model.
+    Args:
+        model (paddle.nn.Layer): A model.
+
+    Returns:
+        float: The norm of the parameters of the model.
     """
     return math.sqrt(sum([(p.norm().item() ** 2) for p in model.parameters()]))
 
 
 def compute_gnorm(model: paddle.nn.Layer) -> float:
-    """
-    Computes the norm of the gradients of a model.
+    """Computes the norm of the gradients of a model.
 
-    :param model: A model.
-    :return: The norm of the gradients of the model.
+    Args:
+        model (paddle.nn.Layer): A model.
+
+    Returns:
+        float: The norm of the gradients of the model.
     """
     return math.sqrt(
         sum(
@@ -840,34 +905,40 @@ def compute_gnorm(model: paddle.nn.Layer) -> float:
 
 
 def param_count(model: paddle.nn.Layer) -> int:
-    """
-    Determines number of trainable parameters.
+    """Determines number of trainable parameters.
 
-    :param model: A model.
-    :return: The number of trainable parameters in the model.
+    Args:
+        model (paddle.nn.Layer): A model.
+
+    Returns:
+        int: The number of trainable parameters in the model.
     """
     return sum(param.size for param in model.parameters() if not param.stop_gradient)
 
 
 def param_count_all(model: paddle.nn.Layer) -> int:
-    """
-    Determines number of trainable parameters.
+    """Determines number of all parameters.
 
-    :param model: A model.
-    :return: The number of trainable parameters in the model.
+    Args:
+        model (paddle.nn.Layer): A model.
+
+    Returns:
+        int: The number of all parameters in the model.
     """
     return sum(param.size for param in model.parameters())
 
 
 def index_select_ND(source: paddle.Tensor, index: paddle.Tensor) -> paddle.Tensor:
-    """
-    Selects the message features from source corresponding to the atom or bond indices in :code:`index`.
+    """Selects the message features from source corresponding to the atom or bond indices in index.
 
-    :param source: A tensor of shape :code:`(num_bonds, hidden_size)` containing message features.
-    :param index: A tensor of shape :code:`(num_atoms/num_bonds, max_num_bonds)` containing the atom or bond
-                  indices to select from :code:`source`.
-    :return: A tensor of shape :code:`(num_atoms/num_bonds, max_num_bonds, hidden_size)` containing the message
-             features corresponding to the atoms/bonds specified in index.
+    Args:
+        source (paddle.Tensor): A tensor of shape (num_bonds, hidden_size) containing message features.
+        index (paddle.Tensor): A tensor of shape (num_atoms/num_bonds, max_num_bonds) containing the atom or bond
+            indices to select from source.
+
+    Returns:
+        paddle.Tensor: A tensor of shape (num_atoms/num_bonds, max_num_bonds, hidden_size) containing the message
+            features corresponding to the atoms/bonds specified in index.
     """
     index_size = tuple(index.shape)
     suffix_dim = tuple(source.shape)[1:]
@@ -879,20 +950,18 @@ def index_select_ND(source: paddle.Tensor, index: paddle.Tensor) -> paddle.Tenso
 
 
 def get_activation_function(activation: str) -> paddle.nn.Layer:
-    """
-    Gets an activation function module given the name of the activation.
+    """Gets an activation function module given the name of the activation.
 
-    Supports:
+    Supports: ReLU, LeakyReLU, PReLU, tanh, SELU, ELU
 
-    * :code:`ReLU`
-    * :code:`LeakyReLU`
-    * :code:`PReLU`
-    * :code:`tanh`
-    * :code:`SELU`
-    * :code:`ELU`
+    Args:
+        activation (str): The name of the activation function.
 
-    :param activation: The name of the activation function.
-    :return: The activation function module.
+    Returns:
+        paddle.nn.Layer: The activation function module.
+
+    Raises:
+        ValueError: If activation is not supported.
     """
     if activation == "ReLU":
         return paddle.nn.ReLU()
@@ -911,10 +980,10 @@ def get_activation_function(activation: str) -> paddle.nn.Layer:
 
 
 def initialize_weights(model: paddle.nn.Layer) -> None:
-    """
-    Initializes the weights of a model in place.
+    """Initializes the weights of a model in place.
 
-    :param model: A model.
+    Args:
+        model (paddle.nn.Layer): A model.
     """
     for param in model.parameters():
         if param.dim() == 1:
@@ -947,14 +1016,23 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
         max_lr: List[float],
         final_lr: List[float],
     ):
-        """
-        :param optimizer: A optimizer.
-        :param warmup_epochs: The number of epochs during which to linearly increase the learning rate.
-        :param total_epochs: The total number of epochs.
-        :param steps_per_epoch: The number of steps (batches) per epoch.
-        :param init_lr: The initial learning rate.
-        :param max_lr: The maximum learning rate (achieved after :code:`warmup_epochs`).
-        :param final_lr: The final learning rate (achieved after :code:`total_epochs`).
+        """Initialize Noam learning rate scheduler.
+
+        The learning rate increases linearly from init_lr to max_lr over the course of
+        the first warmup_steps (where warmup_steps = warmup_epochs * steps_per_epoch).
+        Then the learning rate decreases exponentially from max_lr to final_lr over the
+        course of the remaining total_steps - warmup_steps (where total_steps =
+        total_epochs * steps_per_epoch). This is roughly based on the learning rate
+        schedule from Attention is All You Need, section 5.3.
+
+        Args:
+            optimizer (paddle.optimizer.Optimizer): A optimizer.
+            warmup_epochs (List[Union[float, int]]): The number of epochs during which to linearly increase the learning rate.
+            total_epochs (List[int]): The total number of epochs.
+            steps_per_epoch (int): The number of steps (batches) per epoch.
+            init_lr (List[float]): The initial learning rate.
+            max_lr (List[float]): The maximum learning rate (achieved after warmup_epochs).
+            final_lr (List[float]): The final learning rate (achieved after total_epochs).
         """
         if (
             not len(optimizer._param_groups)
@@ -986,19 +1064,19 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
         super(NoamLR, self).__init__(optimizer.get_lr())
 
     def get_lr(self) -> List[float]:
-        """
-        Gets a list of the current learning rates.
+        """Gets a list of the current learning rates.
 
-        :return: A list of the current learning rates.
+        Returns:
+            List[float]: A list of the current learning rates.
         """
         return list(self.lr)
 
     def step(self, current_step: int = None):
-        """
-        Updates the learning rate by taking a step.
+        """Updates the learning rate by taking a step.
 
-        :param current_step: Optionally specify what step to set the learning rate to.
-                             If None, :code:`current_step = self.current_step + 1`.
+        Args:
+            current_step (int, optional): Optionally specify what step to set the learning rate to.
+                If None, current_step = self.current_step + 1. Defaults to None.
         """
         if current_step is not None:
             self.current_step = current_step
@@ -1019,11 +1097,11 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
 
 
 def activate_dropout(module: paddle.nn.Layer, dropout_prob: float):
-    """
-    Set p of dropout layers and set to train mode during inference for uncertainty estimation.
+    """Set p of dropout layers and set to train mode during inference for uncertainty estimation.
 
-    :param model: A :class:`~chemprop.models.model.MoleculeModel`.
-    :param dropout_prob: A float on (0,1) indicating the dropout probability.
+    Args:
+        module (paddle.nn.Layer): A module.
+        dropout_prob (float): A float on (0,1) indicating the dropout probability.
     """
     if isinstance(module, paddle.nn.Dropout):
         module.p = dropout_prob
@@ -1041,11 +1119,13 @@ FEATURES_GENERATOR_REGISTRY = {}
 def register_features_generator(
     features_generator_name: str,
 ) -> Callable[[FeaturesGenerator], FeaturesGenerator]:
-    """
-    Creates a decorator which registers a features generator in a global dictionary to enable access by name.
+    """Creates a decorator which registers a features generator in a global dictionary to enable access by name.
 
-    :param features_generator_name: The name to use to access the features generator.
-    :return: A decorator which will add a features generator to the registry using the specified name.
+    Args:
+        features_generator_name (str): The name to use to access the features generator.
+
+    Returns:
+        Callable[[FeaturesGenerator], FeaturesGenerator]: A decorator which will add a features generator to the registry using the specified name.
     """
 
     def decorator(features_generator: FeaturesGenerator) -> FeaturesGenerator:
@@ -1056,11 +1136,16 @@ def register_features_generator(
 
 
 def get_features_generator(features_generator_name: str) -> FeaturesGenerator:
-    """
-    Gets a registered features generator by name.
+    """Gets a registered features generator by name.
 
-    :param features_generator_name: The name of the features generator.
-    :return: The desired features generator.
+    Args:
+        features_generator_name (str): The name of the features generator.
+
+    Returns:
+        FeaturesGenerator: The desired features generator.
+
+    Raises:
+        ValueError: If features generator is not found in registry.
     """
     if features_generator_name not in FEATURES_GENERATOR_REGISTRY:
         raise ValueError(
@@ -1070,7 +1155,11 @@ def get_features_generator(features_generator_name: str) -> FeaturesGenerator:
 
 
 def get_available_features_generators() -> List[str]:
-    """Returns a list of names of available features generators."""
+    """Returns a list of names of available features generators.
+
+    Returns:
+        List[str]: List of available features generator names.
+    """
     return list(FEATURES_GENERATOR_REGISTRY.keys())
 
 
@@ -1082,13 +1171,15 @@ MORGAN_NUM_BITS = 2048
 def morgan_binary_features_generator(
     mol: Molecule, radius: int = MORGAN_RADIUS, num_bits: int = MORGAN_NUM_BITS
 ) -> np.ndarray:
-    """
-    Generates a binary Morgan fingerprint for a molecule.
+    """Generates a binary Morgan fingerprint for a molecule.
 
-    :param mol: A molecule (i.e., either a SMILES or an RDKit molecule).
-    :param radius: Morgan fingerprint radius.
-    :param num_bits: Number of bits in Morgan fingerprint.
-    :return: A 1D numpy array containing the binary Morgan fingerprint.
+    Args:
+        mol (Molecule): A molecule (i.e., either a SMILES or an RDKit molecule).
+        radius (int, optional): Morgan fingerprint radius. Defaults to MORGAN_RADIUS.
+        num_bits (int, optional): Number of bits in Morgan fingerprint. Defaults to MORGAN_NUM_BITS.
+
+    Returns:
+        np.ndarray: A 1D numpy array containing the binary Morgan fingerprint.
     """
     mol = Chem.MolFromSmiles(mol) if type(mol) == str else mol
     features_vec = AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=num_bits)
@@ -1101,13 +1192,15 @@ def morgan_binary_features_generator(
 def morgan_counts_features_generator(
     mol: Molecule, radius: int = MORGAN_RADIUS, num_bits: int = MORGAN_NUM_BITS
 ) -> np.ndarray:
-    """
-    Generates a counts-based Morgan fingerprint for a molecule.
+    """Generates a counts-based Morgan fingerprint for a molecule.
 
-    :param mol: A molecule (i.e., either a SMILES or an RDKit molecule).
-    :param radius: Morgan fingerprint radius.
-    :param num_bits: Number of bits in Morgan fingerprint.
-    :return: A 1D numpy array containing the counts-based Morgan fingerprint.
+    Args:
+        mol (Molecule): A molecule (i.e., either a SMILES or an RDKit molecule).
+        radius (int, optional): Morgan fingerprint radius. Defaults to MORGAN_RADIUS.
+        num_bits (int, optional): Number of bits in Morgan fingerprint. Defaults to MORGAN_NUM_BITS.
+
+    Returns:
+        np.ndarray: A 1D numpy array containing the counts-based Morgan fingerprint.
     """
     mol = Chem.MolFromSmiles(mol) if type(mol) == str else mol
     features_vec = AllChem.GetHashedMorganFingerprint(mol, radius, nBits=num_bits)
@@ -1212,13 +1305,17 @@ SMILES_TO_MOL: Dict[str, Union["Chem.Mol", Tuple["Chem.Mol", "Chem.Mol"]]] = {}
 
 
 def empty_cache():
-    """Empties the cache of :class:`~chemprop.features.MolGraph` and RDKit molecules."""
+    """Empties the cache of MolGraph and RDKit molecules."""
     SMILES_TO_GRAPH.clear()
     SMILES_TO_MOL.clear()
 
 
 def set_cache_mol(cache_mol: bool) -> None:
-    """Sets whether RDKit molecules will be cached."""
+    """Sets whether RDKit molecules will be cached.
+
+    Args:
+        cache_mol (bool): Whether to cache molecules.
+    """
     global CACHE_MOL
     CACHE_MOL = cache_mol
 
@@ -1228,16 +1325,18 @@ def preprocess_smiles_columns(
     smiles_columns: Union[str, List[str]] = None,
     number_of_molecules: int = 1,
 ) -> List[str]:
-    """
-    Preprocesses the :code:`smiles_columns` variable to ensure that it is a list of column
-    headings corresponding to the columns in the data file holding SMILES. Assumes file has a header.
+    """Preprocesses the smiles_columns variable to ensure that it is a list of column headings.
 
-    :param path: Path to a CSV file.
-    :param smiles_columns: The names of the columns containing SMILES.
-                           By default, uses the first :code:`number_of_molecules` columns.
-    :param number_of_molecules: The number of molecules with associated SMILES for each
-                           data point.
-    :return: The preprocessed version of :code:`smiles_columns` which is guaranteed to be a list.
+    Assumes file has a header. Ensures that columns correspond to the columns in the data file holding SMILES.
+
+    Args:
+        path (str): Path to a CSV file.
+        smiles_columns (Union[str, List[str]], optional): The names of the columns containing SMILES.
+            By default, uses the first number_of_molecules columns. Defaults to None.
+        number_of_molecules (int, optional): The number of molecules with associated SMILES for each data point. Defaults to 1.
+
+    Returns:
+        List[str]: The preprocessed version of smiles_columns which is guaranteed to be a list.
     """
     if smiles_columns is None:
         if os.path.isfile(path):
@@ -1267,19 +1366,24 @@ def get_checkpoint_paths(
     checkpoint_dir: Optional[str] = None,
     ext: str = ".pt",
 ) -> Optional[List[str]]:
-    """
-    Gets a list of checkpoint paths either from a single checkpoint path or from a directory of checkpoints.
+    """Gets a list of checkpoint paths either from a single checkpoint path or from a directory of checkpoints.
 
-    If :code:`checkpoint_path` is provided, only collects that one checkpoint.
-    If :code:`checkpoint_paths` is provided, collects all of the provided checkpoints.
-    If :code:`checkpoint_dir` is provided, walks the directory and collects all checkpoints.
+    If checkpoint_path is provided, only collects that one checkpoint.
+    If checkpoint_paths is provided, collects all of the provided checkpoints.
+    If checkpoint_dir is provided, walks the directory and collects all checkpoints.
     A checkpoint is any file ending in the extension ext.
 
-    :param checkpoint_path: Path to a checkpoint.
-    :param checkpoint_paths: List of paths to checkpoints.
-    :param checkpoint_dir: Path to a directory containing checkpoints.
-    :param ext: The extension which defines a checkpoint file.
-    :return: A list of paths to checkpoints or None if no checkpoint path(s)/dir are provided.
+    Args:
+        checkpoint_path (Optional[str], optional): Path to a checkpoint. Defaults to None.
+        checkpoint_paths (Optional[List[str]], optional): List of paths to checkpoints. Defaults to None.
+        checkpoint_dir (Optional[str], optional): Path to a directory containing checkpoints. Defaults to None.
+        ext (str, optional): The extension which defines a checkpoint file. Defaults to ".pt".
+
+    Returns:
+        Optional[List[str]]: A list of paths to checkpoints or None if no checkpoint path(s)/dir are provided.
+
+    Raises:
+        ValueError: If more than one of checkpoint_dir, checkpoint_path, and checkpoint_paths is specified.
     """
     if (
         sum(
