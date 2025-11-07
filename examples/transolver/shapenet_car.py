@@ -421,13 +421,13 @@ class ShapeNetCarDataset(paddle.io.Dataset):
         velo_press = sample.y
 
         inp = {
-            "x": (sample.x),
+            "x": sample.x,
             # "pos": (sample.pos),
         }
         lab = {
             "velo_vec": velo_press[..., 0:3],  # x,y,z
             "press": velo_press[..., 3:],  # p
-            "surf": (sample.surf),
+            "surf": sample.surf,
         }
         wei = {}
         # lab["sdf"] = inp["x"][:, 3:4]
