@@ -236,7 +236,7 @@ class FeatureMapping:
                 loc=0.0, scale=gaussian_tau, size=(gaussian_mapping_size, in_features)
             )
         elif mode == "positional":
-            if pe_use_nyquist == "True" and pe_lowest_dim:
+            if pe_use_nyquist and pe_lowest_dim:
                 pe_num_freqs = self.get_num_frequencies_nyquist(pe_lowest_dim)
             self.B = pe_init_scale * np.vstack(
                 [(pe_scale**i * np.eye(in_features)) for i in range(pe_num_freqs)]
@@ -292,12 +292,12 @@ class FeatureMapping:
     def rbf_mapping(self, x):
         size = tuple(x.shape)[:-1] + tuple(self.centers.shape)
         x = x.unsqueeze(axis=-2).expand(shape=size)
-        distances = (x - self.centers).pow(y=2).sum(axis=-1) * self.sigmas
+        distances = paddle.pow(x - self.centers, 2).sum(axis=-1) * self.sigmas
         return self.gaussian(distances)
 
     @staticmethod
     def gaussian(alpha):
-        phi = paddle.exp(x=-1 * alpha.pow(y=2))
+        phi = paddle.exp(x=-1 * paddle.pow(alpha, 2))
         return phi
 
 
@@ -417,7 +417,7 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
 
     def disable_gradient(self):
         for param in self.parameters():
-            param.stop_gradient = not False
+            param.stop_gradient = True
 
 
 class LatentContainer(paddle.nn.Layer):
@@ -502,7 +502,7 @@ class ModelVarType(enum.Enum):
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
     res = (
         paddle.to_tensor(data=arr)[timesteps]
-        .astype(dtype="float32")
+        .astype(dtype=timesteps.dtype)
     )
     while len(tuple(res.shape)) < len(broadcast_shape):
         res = res[..., None]
@@ -537,7 +537,7 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
     # Force variances to be Tensors. Broadcasting helps convert scalars to
     # Tensors, but it does not work for th.exp().
     logvar1, logvar2 = [
-        x if isinstance(x, paddle.Tensor) else paddle.to_tensor(x).to(tensor)
+        x if isinstance(x, paddle.Tensor) else paddle.to_tensor(x, dtype=tensor.dtype, place=tensor.place)
         for x in (logvar1, logvar2)
     ]
 
@@ -780,7 +780,7 @@ class GaussianDiffusion:
         alpha_bar = _extract_into_tensor(self.alphas_cumprod, t, x.shape)
 
         eps = self._predict_eps_from_xstart(x, t, p_mean_var["pred_xstart"])
-        eps = eps - (1 - alpha_bar).sqrt() * cond_fn(
+        eps = eps - paddle.sqrt(1 - alpha_bar) * cond_fn(
             x, self._scale_timesteps(t), **model_kwargs
         )
 
@@ -940,7 +940,7 @@ class GaussianDiffusion:
                 model_output, model_var_values = split(model_output, C, axis=1)
                 # Learn the variance using the variational bound, but don't let
                 # it affect our mean prediction.
-                frozen_out = paddle.cat([model_output.detach(), model_var_values], dim=1)
+                frozen_out = paddle.concat([model_output.detach(), model_var_values], axis=1)
                 terms["vb"] = self._vb_terms_bpd(
                     model=lambda *args, r=frozen_out: r,
                     x_start=x_start,
@@ -1013,13 +1013,13 @@ def discretized_gaussian_log_likelihood(x, *, means, log_scales):
     cdf_plus = approx_standard_normal_cdf(plus_in)
     min_in = inv_stdv * (centered_x - 1.0 / 255.0)
     cdf_min = approx_standard_normal_cdf(min_in)
-    log_cdf_plus = paddle.log(cdf_plus.clamp(min=1e-12))
-    log_one_minus_cdf_min = paddle.log((1.0 - cdf_min).clamp(min=1e-12))
+    log_cdf_plus = paddle.log(cdf_plus.clip(min=1e-12))
+    log_one_minus_cdf_min = paddle.log((1.0 - cdf_min).clip(min=1e-12))
     cdf_delta = cdf_plus - cdf_min
     log_probs = paddle.where(
         x < -0.999,
         log_cdf_plus,
-        paddle.where(x > 0.999, log_one_minus_cdf_min, paddle.log(cdf_delta.clamp(min=1e-12))),
+        paddle.where(x > 0.999, log_one_minus_cdf_min, paddle.log(cdf_delta.clip(min=1e-12))),
     )
     assert log_probs.shape == x.shape
     return log_probs
@@ -1386,8 +1386,8 @@ class QKVAttention(paddle.nn.Layer):
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = paddle.einsum(# 非复数
             "bct,bcs->bts",
-            (q * scale).view(bs * self.n_heads, ch, length),
-            (k * scale).view(bs * self.n_heads, ch, length),
+            (q * scale).reshape([bs * self.n_heads, ch, length]),
+            (k * scale).reshape([bs * self.n_heads, ch, length]),
         )
         weight = paddle.nn.functional.softmax(
             x=weight.astype(dtype="float32"), axis=-1
@@ -1439,7 +1439,7 @@ class CheckpointFunction(paddle.autograd.PyLayer):
     def backward(ctx, *output_grads):
         ctx.input_tensors = [stop_gradient(x, stop=False) for x in ctx.input_tensors]
         with paddle.enable_grad():
-            shallow_copies = [x.view_as(other=x) for x in ctx.input_tensors]
+            shallow_copies = [x.reshape(x.shape) for x in ctx.input_tensors]
             # print(shallow_copies)
             output_tensors = ctx.run_function(*shallow_copies)
         input_grads = paddle.grad(
