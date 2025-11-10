@@ -11,8 +11,7 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    # dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
-    dir: ./outputs_confild_case1
+    dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -115,8 +114,8 @@ Uncondiction_INFER:
   noise_schedule: "cosine"
 
 Data:
-  data_path: /home/aistudio/work/extracted/data/Case1/data.npy
-  coor_path: /home/aistudio/work/extracted/data/Case1/coords.npy
+  data_path: data/Case1/case1_data.npy
+  coor_path: data/Case1/case1_coords.npy
   normalizer:
     method: "-11"
     dim: 0

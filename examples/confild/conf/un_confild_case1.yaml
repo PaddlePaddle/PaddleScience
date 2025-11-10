@@ -11,8 +11,7 @@ defaults:
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    # dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
-    dir: ./outputs_un_confild_case1
+    dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working directory unchanged
@@ -60,7 +59,7 @@ UNET:
   num_head_channels: 64
   attention_resolutions: "32,16,8"
   channel_mult: null
-  ema_path: /home/aistudio/work/extracted/data/Case1/diffusion/ema.pdparams
+  ema_path: data/Case1/diffusion/ema.pdparams
 
 Diff:
   steps: 1000
@@ -68,8 +67,8 @@ Diff:
 
 CNF:
   mutil_GPU: 1
-  data_path: /home/aistudio/work/extracted/data/Case1/data.npy
-  coor_path: /home/aistudio/work/extracted/data/Case1/coords.npy
+  data_path: data/Case1/data.npy
+  coor_path: data/Case1/coords.npy
   load_data_fn: load_elbow_flow
   normalizer:
     method: "-11"
@@ -88,5 +87,5 @@ CNF:
 DATA:
   max_val: 1.0
   min_val: -1.0
-  train_data: "/home/aistudio/work/extracted/data/Case1/train_data.npy"
-  valid_data: "/home/aistudio/work/extracted/data/Case1/valid_data.npy"
+  train_data: "data/Case1/train_data.npy"
+  valid_data: "data/Case1/valid_data.npy"
