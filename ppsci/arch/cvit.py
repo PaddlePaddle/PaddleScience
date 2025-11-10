@@ -808,7 +808,7 @@ class CVit1D(base.Arch):
             self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
         elif self.embedding_type == "mlp":
-            self.mlp = MlpBlock(self.latent_dim, self.dec_emb_dim, self.dec_emb_dim)
+            self.mlp = MlpBlock(self.coords_dim, self.dec_emb_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
 
         self.encoder = Encoder1D(
@@ -1011,7 +1011,7 @@ class CVit(base.Arch):
             self.fc = nn.Linear(self.latent_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
         elif self.embedding_type == "mlp":
-            self.mlp = MlpBlock(self.latent_dim, self.dec_emb_dim, self.dec_emb_dim)
+            self.mlp = MlpBlock(self.coords_dim, self.dec_emb_dim, self.dec_emb_dim)
             self.norm = nn.LayerNorm(self.dec_emb_dim, self.layer_norm_eps)
 
         self.encoder = Encoder(

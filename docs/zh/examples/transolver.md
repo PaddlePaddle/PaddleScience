@@ -2,7 +2,7 @@
 
 !!! note
 
-    第一次运行时，会对 mlcfd_data 进行预处理，大约需要一小时，请耐心等待
+    运行本案例前请先安装相关依赖库: `pip install -r requirements.txt`
 
 === "模型训练命令"
 
@@ -15,6 +15,10 @@
     python main.py
     ```
 
+    !!! note
+
+        第一次运行时，会对 mlcfd_data 进行预处理，大约需要一小时，请耐心等待
+
 === "模型评估命令"
 
     ``` sh
@@ -25,6 +29,10 @@
     unzip mlcfd_data.zip
     python main.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/transolver/transolver_pretrained.pdparams
     ```
+
+    !!! note
+
+        第一次运行时，会对 mlcfd_data 进行预处理，大约需要一小时，请耐心等待
 
 === "模型导出命令"
 
@@ -42,6 +50,10 @@
     unzip mlcfd_data.zip
     python main.py mode=infer
     ```
+
+    !!! note
+
+        第一次运行时，会对 mlcfd_data 进行预处理，大约需要一小时，请耐心等待
 
 | 预训练模型  | 指标 |
 |:--| :--|
