@@ -248,39 +248,45 @@ def signal_train(
     )
     losses = []
 
-    for i in range(cfg.TRAIN.epochs):
+    for epoch in range(cfg.TRAIN.epochs):
         cnf_model.train()
         latents_model.train()
-        if i != 0:
-            cnf_optimizer.step()
-            cnf_optimizer.clear_grad(set_to_zero=False)
         train_loss = []
         for batch_coords, batch_fois, idx in train_loader:
             idx = {"latent_x": idx}
             batch_latent = latents_model(idx)
             if isinstance(batch_coords, list):
-                batch_coords = [i for i in batch_coords]
+                batch_coords = [coord for coord in batch_coords]
             data = {
                 "confild_x": batch_coords,
                 "latent_z": batch_latent["latent_z"],
             }
             batch_output = cnf_model(data)
             loss = criterion(batch_output["confild_output"], batch_fois)
+            
+            # 清空梯度
+            cnf_optimizer.clear_grad(set_to_zero=False)
             latents_optimizer.clear_grad(set_to_zero=False)
+            
+            # 反向传播
             loss.backward()
+            
+            # 更新参数
+            cnf_optimizer.step()
             latents_optimizer.step()
             train_loss.append(loss)
         epoch_loss = paddle.stack(x=train_loss).mean().item()
         losses.append(epoch_loss)
-        print("epoch {}, train loss {}".format(i + 1, epoch_loss))
-        if (i + 1) % cfg.log_freq == 0:
+
+        print("epoch {}, train loss {}".format(epoch + 1, epoch_loss))
+        if epoch % 100 == 0:
             test_error = []
             cnf_model.eval()
             latents_model.eval()
             with paddle.no_grad():
                 for test_coords, test_fois, idx in test_loader:
                     if isinstance(test_coords, list):
-                        test_coords = [i for i in test_coords]
+                        test_coords = [coord for coord in test_coords]
                     prediction = out_normalizer.denormalize(
                         cnf_model(
                             {
@@ -296,14 +302,9 @@ def signal_train(
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-        if (i + 1) % cfg.log_freq == 0:
-            paddle.save(
-                cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{i+1}.pdparams"
-            )
-            paddle.save(
-                latents_model.state_dict(),
-                f"{cfg.output_dir}/latents_model_{i+1}.pdparams",
-            )
+
+            paddle.save(cnf_model.state_dict(), f"cnf_model_{epoch}.pdparams")
+            paddle.save(latents_model.state_dict(), f"latents_model_{epoch}.pdparams")
     # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -377,39 +378,44 @@ def mutil_train(
     criterion = paddle.nn.MSELoss()
     losses = []
 
-    for i in range(cfg.TRAIN.epochs):
+    for epoch in range(cfg.TRAIN.epochs):
         cnf_model.train()
         latents_model.train()
-        if i != 0:
-            cnf_optimizer.step()
-            cnf_optimizer.clear_grad(set_to_zero=False)
         train_loss = []
         for batch_coords, batch_fois, idx in train_loader:
             idx = {"latent_x": idx}
             batch_latent = latents_model(idx)
             if isinstance(batch_coords, list):
-                batch_coords = [i for i in batch_coords]
+                batch_coords = [coord for coord in batch_coords]
             data = {
                 "confild_x": batch_coords,
                 "latent_z": batch_latent["latent_z"],
             }
             batch_output = cnf_model(data)
             loss = criterion(batch_output["confild_output"], batch_fois)
+            
+            # 清空梯度
+            cnf_optimizer.clear_grad(set_to_zero=False)
             latents_optimizer.clear_grad(set_to_zero=False)
+            
+            # 反向传播
             loss.backward()
+            
+            # 更新参数
+            cnf_optimizer.step()
             latents_optimizer.step()
             train_loss.append(loss)
         epoch_loss = paddle.stack(x=train_loss).mean().item()
         losses.append(epoch_loss)
-        print("epoch {}, train loss {}".format(i + 1, epoch_loss))
-        if i % 100 == 0:
+        print("epoch {}, train loss {}".format(epoch + 1, epoch_loss))
+        if epoch % 100 == 0:
             test_error = []
             cnf_model.eval()
             latents_model.eval()
             with paddle.no_grad():
                 for test_coords, test_fois, idx in test_loader:
                     if isinstance(test_coords, list):
-                        test_coords = [i for i in test_coords]
+                        test_coords = [coord for coord in test_coords]
                     prediction = out_normalizer.denormalize(
                         cnf_model(
                             {
@@ -425,9 +431,8 @@ def mutil_train(
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-        if i % 100 == 0:
-            paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
-            paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
+            paddle.save(cnf_model.state_dict(), f"cnf_model_{epoch}.pdparams")
+            paddle.save(latents_model.state_dict(), f"latents_model_{epoch}.pdparams")
     # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -504,8 +509,9 @@ def evaluate(cfg: DictConfig):
             normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
         )
 
-    time = paddle.to_tensor(
-        np.array([i for i in range(t_std, t_std + normed_fois.shape[0])]), dtype="int64"
+
+    idx = paddle.to_tensor(
+        np.arange(normed_fois.shape[0]), dtype="int64"
     )
     # set model
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
@@ -526,7 +532,7 @@ def evaluate(cfg: DictConfig):
         latent,
         cfg.EVAL.latent_pretrained_model_path,
     )
-    latent_test_pred = latent({"latent_x": time})
+    latent_test_pred = latent({"latent_x": idx})
     y_test_pred = []
     for i in range(normed_coords.shape[0]):
         ouput = confild(
@@ -565,11 +571,12 @@ def inference(cfg):
         )
 
     fois_len = normed_fois.shape[0]
-    times = np.array([i for i in range(fois_len)])
+
+    idxs = np.arange(fois_len)
     from deploy import python_infer
 
     latent_predictor = python_infer.GeneralPredictor(cfg.INFER.Latent)
-    input_dict = {"latent_x": times}
+    input_dict = {"latent_x": idxs}
     output_dict = latent_predictor.predict(input_dict, cfg.INFER.batch_size)
 
     cnf_predictor = python_infer.GeneralPredictor(cfg.INFER.Confild)
