@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import enum
-import math
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,12 +22,8 @@ from paddle.io import DataLoader
 from paddle.io import DistributedBatchSampler
 
 import ppsci
-from ppsci.arch import UNetModel
 from ppsci.arch import LatentContainer
 from ppsci.arch import SIRENAutodecoder_film
-from ppsci.arch import SpacedDiffusion
-from ppsci.arch import ModelVarType
-from ppsci.arch import ModelMeanType
 from ppsci.utils import logger
 
 
@@ -121,13 +115,9 @@ class Normalizer_ts(object):
     @staticmethod
     def fnormalize(data, params, method):
         if method == "-11":
-            return (data - params[1]) / (
-                params[0] - params[1]
-            ) * 2 - 1
+            return (data - params[1]) / (params[0] - params[1]) * 2 - 1
         elif method == "01":
-            return (data - params[1]) / (
-                params[0] - params[1]
-            )
+            return (data - params[1]) / (params[0] - params[1])
         elif method == "ms":
             return (data - params[0]) / params[1]
         elif method == "none":
@@ -138,9 +128,7 @@ class Normalizer_ts(object):
         if method == "-11":
             return (data_norm + 1) / 2 * (params[0] - params[1]) + params[1]
         elif method == "01":
-            return data_norm * (
-                params[0] - params[1]
-            ) + params[1]
+            return data_norm * (params[0] - params[1]) + params[1]
         elif method == "ms":
             return data_norm * params[1] + params[0]
         elif method == "none":
@@ -154,7 +142,11 @@ class basic_set(paddle.io.Dataset):
         self.total_samples = tuple(fois.shape)[0]
         self.coords = coord.numpy()
         # 存储全局索引
-        self.global_indices = global_indices if global_indices is not None else np.arange(self.total_samples)
+        self.global_indices = (
+            global_indices
+            if global_indices is not None
+            else np.arange(self.total_samples)
+        )
 
     def __len__(self):
         return self.total_samples
@@ -165,7 +157,11 @@ class basic_set(paddle.io.Dataset):
         if hasattr(self, "extra_in"):
             extra_id = idx % tuple(self.fois.shape)[1]
             idb = idx // tuple(self.fois.shape)[1]
-            return (self.coords, self.extra_in[extra_id]), self.fois[idb, extra_id], global_idx
+            return (
+                (self.coords, self.extra_in[extra_id]),
+                self.fois[idb, extra_id],
+                global_idx,
+            )
         else:
             return self.coords, self.fois[idx], global_idx
 
@@ -187,9 +183,7 @@ def getdata(cfg):
     # 计算空间形状和轴
     spatio_shape = fois.shape[1:-1]
     spatio_axis = list(
-        range(
-            fois.ndim if isinstance(fois, np.ndarray) else fois.dim()
-        )
+        range(fois.ndim if isinstance(fois, np.ndarray) else fois.dim())
     )[1:-1]
 
     ###### read data - coordinate ######
@@ -202,11 +196,7 @@ def getdata(cfg):
     fois = fois.astype("float32")
 
     ###### convert to tensor ######
-    fois = (
-        paddle.to_tensor(fois)
-        if not isinstance(fois, paddle.Tensor)
-        else fois
-    )
+    fois = paddle.to_tensor(fois) if not isinstance(fois, paddle.Tensor) else fois
     coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
     N_samples = fois.shape[0]
 
@@ -219,13 +209,22 @@ def getdata(cfg):
     out_normalizer.fit_normalize(
         fois if cfg.Latent.lumped else fois.flatten(0, cfg.Latent.dims)
     )
-    normed_coords = in_normalizer.normalize(coord)# 训练集就是测试集
+    normed_coords = in_normalizer.normalize(coord)  # 训练集就是测试集
     normed_fois = out_normalizer.normalize(fois)
 
     return normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer
 
 
-def signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio_axis, out_normalizer, train_indices, test_indices):
+def signal_train(
+    cfg,
+    normed_coords,
+    train_normed_fois,
+    test_normed_fois,
+    spatio_axis,
+    out_normalizer,
+    train_indices,
+    test_indices,
+):
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
     latents_model = LatentContainer(**cfg.Latent)
 
@@ -274,7 +273,7 @@ def signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio
         epoch_loss = paddle.stack(x=train_loss).mean().item()
         losses.append(epoch_loss)
         print("epoch {}, train loss {}".format(i + 1, epoch_loss))
-        if i % 100 == 0:
+        if (i + 1) % cfg.log_freq == 0:
             test_error = []
             cnf_model.eval()
             latents_model.eval()
@@ -297,9 +296,14 @@ def signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-        if i % 100 == 0:
-            paddle.save(cnf_model.state_dict(), f"cnf_model_{i}.pdparams")
-            paddle.save(latents_model.state_dict(), f"latents_model_{i}.pdparams")
+        if (i + 1) % cfg.log_freq == 0:
+            paddle.save(
+                cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{i+1}.pdparams"
+            )
+            paddle.save(
+                latents_model.state_dict(),
+                f"{cfg.output_dir}/latents_model_{i+1}.pdparams",
+            )
     # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -323,7 +327,16 @@ def signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio
     plt.show()
 
 
-def mutil_train(cfg, normed_coords, train_normed_fois, test_normed_fois, spatio_axis, out_normalizer, train_indices, test_indices):
+def mutil_train(
+    cfg,
+    normed_coords,
+    train_normed_fois,
+    test_normed_fois,
+    spatio_axis,
+    out_normalizer,
+    train_indices,
+    test_indices,
+):
     fleet.init(is_collective=True)
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
     cnf_model = fleet.distributed_model(cnf_model)
@@ -447,30 +460,52 @@ def train(cfg):
     test_normed_fois = normed_fois
     train_indices = list(range(N_samples))
     test_indices = list(range(N_samples))
-    
-    
+
     if world_size > 1:
         import paddle.distributed as dist
+
         dist.init_parallel_env()
-        mutil_train(cfg, normed_coords, train_normed_fois, test_normed_fois, 
-                    spatio_axis, out_normalizer, train_indices, test_indices)
+        mutil_train(
+            cfg,
+            normed_coords,
+            train_normed_fois,
+            test_normed_fois,
+            spatio_axis,
+            out_normalizer,
+            train_indices,
+            test_indices,
+        )
     else:
-        signal_train(cfg, normed_coords, train_normed_fois, test_normed_fois, 
-                    spatio_axis, out_normalizer, train_indices, test_indices)
+        signal_train(
+            cfg,
+            normed_coords,
+            train_normed_fois,
+            test_normed_fois,
+            spatio_axis,
+            out_normalizer,
+            train_indices,
+            test_indices,
+        )
 
 
 def evaluate(cfg: DictConfig):
     # set data
     # normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer = getdata(cfg)
     normed_coords, normed_fois, _, spatio_axis, out_normalizer = getdata(cfg)
-
+    # [918,2]
+    # [16000,918,3]
+    print(normed_coords.shape)
+    print(normed_fois.shape)
+    t_std = 15698
+    normed_fois = normed_fois[t_std:]
+    # exit()
     if len(normed_coords.shape) + 1 == len(normed_fois.shape):
         normed_coords = paddle.tile(
             normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
         )
 
-    idx = paddle.to_tensor(
-        np.array([i for i in range(normed_fois.shape[0])]), dtype="int64"
+    time = paddle.to_tensor(
+        np.array([i for i in range(t_std, t_std + normed_fois.shape[0])]), dtype="int64"
     )
     # set model
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
@@ -491,23 +526,34 @@ def evaluate(cfg: DictConfig):
         latent,
         cfg.EVAL.latent_pretrained_model_path,
     )
-    latent_test_pred = latent({"latent_x": idx})
+    latent_test_pred = latent({"latent_x": time})
     y_test_pred = []
     for i in range(normed_coords.shape[0]):
-        y_test_pred.append(
-            confild(
-                {
-                    "confild_x": normed_coords[i],
-                    "latent_z": latent_test_pred["latent_z"][i],
-                }
-            )["confild_output"].numpy()
-        )
-    y_test_pred = paddle.to_tensor(np.array(y_test_pred))
+        ouput = confild(
+            {
+                "confild_x": normed_coords[i],
+                "latent_z": latent_test_pred["latent_z"][i],
+            }
+        )["confild_output"].numpy()
+        y_test_pred.append(ouput)
 
+    y_test_pred = paddle.to_tensor(np.array(y_test_pred))
     y_test_pred = out_normalizer.denormalize(y_test_pred)
     y_test = out_normalizer.denormalize(normed_fois)
 
-    logger.info("Result is {}".format(y_test.numpy()))
+    def calc_err():
+        var_name = ["u", "v", "p"]
+        for i, var in enumerate(var_name):
+            u_true_mean = paddle.mean(y_test[:, :, i], axis=0)
+            u_label_mean = paddle.mean(y_test_pred[:, :, i], axis=0)
+            u_true_std = paddle.std(y_test[:, :, i], axis=0)
+            u_label_std = paddle.std(y_test_pred[:, :, i], axis=0)
+            avg_discrepancy = paddle.mean(paddle.abs(u_true_mean - u_label_mean))
+            std_discrepancy = paddle.mean(paddle.abs(u_true_std - u_label_std))
+            print(f"Average Discrepancy [{var}] Value: {avg_discrepancy:.3f}")
+            print(f"Standard Deviation of [{var}] Magnitude: {std_discrepancy:.4f}")
+
+    calc_err()
 
 
 def inference(cfg):
@@ -519,11 +565,11 @@ def inference(cfg):
         )
 
     fois_len = normed_fois.shape[0]
-    idxs = np.array([i for i in range(fois_len)])
+    times = np.array([i for i in range(fois_len)])
     from deploy import python_infer
 
     latent_predictor = python_infer.GeneralPredictor(cfg.INFER.Latent)
-    input_dict = {"latent_x": idxs}
+    input_dict = {"latent_x": times}
     output_dict = latent_predictor.predict(input_dict, cfg.INFER.batch_size)
 
     cnf_predictor = python_infer.GeneralPredictor(cfg.INFER.Confild)
