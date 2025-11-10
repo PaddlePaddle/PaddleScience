@@ -302,9 +302,13 @@ def signal_train(
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
+            import os
+            if not os.path.exists(cfg.output_dir):
+                os.makedirs(cfg.output_dir, exist_ok=True)
+                
+            paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
+            paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
 
-            paddle.save(cnf_model.state_dict(), f"cnf_model_{epoch}.pdparams")
-            paddle.save(latents_model.state_dict(), f"latents_model_{epoch}.pdparams")
     # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -431,8 +435,14 @@ def mutil_train(
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-            paddle.save(cnf_model.state_dict(), f"cnf_model_{epoch}.pdparams")
-            paddle.save(latents_model.state_dict(), f"latents_model_{epoch}.pdparams")
+                
+            import os
+            if not os.path.exists(cfg.output_dir):
+                os.makedirs(cfg.output_dir, exist_ok=True)
+                
+            paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
+            paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
+    
     # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
