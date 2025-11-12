@@ -1,0 +1,13 @@
+mode: "train"
+seed: 42
+device: "gpu:0"
+data:
+  train_path: "./Dataset/Train_val"
+  test_path: "./Dataset/Test"
+  N: 1
+train:
+  epochs: 32
+  n_splits: 5
+  batch_size: 32
+  lr: 0.0009761248347350309
+output_dir: "./Saved_Output"

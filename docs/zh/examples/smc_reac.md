@@ -12,7 +12,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
     # windows
-    curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
     python smc_reac.py
     ```
 
@@ -22,7 +22,7 @@
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
     # windows
-    curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
     python smc_reac.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/smc_reac/smc_reac_model.pdparams
     ```
 
@@ -43,7 +43,7 @@ $$
 ``` log
 smc_reac/
 ├──config/
-│   └── smc_reac.yaml  
+│   └── smc_reac.yaml
 ├── data_set.xlsx
 ├── requirements.txt
 └── smc_reac.py

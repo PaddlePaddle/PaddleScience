@@ -7,11 +7,13 @@
     3. 将yaml配置文件中的`anno`参数与数据集对应。
 
 === "模型训练命令"
+
     ``` sh
     python velocityGAN.py
     ```
 
 === "模型评估命令"
+
     ``` sh
     python velocityGAN.py model=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/velocitygan/velocitygan_pretrained.pdparams
     ```

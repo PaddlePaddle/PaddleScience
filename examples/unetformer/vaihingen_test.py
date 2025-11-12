@@ -67,7 +67,6 @@ def main():
         os.path.join(config.weights_path, config.test_weights_name + ".pdparams"),
         config=config,
     )
-    model.to(device="gpu")
     model.eval()
     evaluator = Evaluator(num_class=config.num_classes)
     evaluator.reset()

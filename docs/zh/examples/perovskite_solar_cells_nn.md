@@ -9,18 +9,22 @@
 === "模型训练命令"
 
     ``` sh
-    python psc_nn.py mode=train
+    python psc_nn.py
     ```
 
 === "模型评估命令"
 
     ``` sh
     # 使用本地预训练模型
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
+    unzip data.zip
     python psc_nn.py mode=eval eval.pretrained_model_path="Your pdparams path"
     ```
 
     ``` sh
-    # 或使用远程预训练模型
+    # 或使用提供的预训练模型
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
+    unzip data.zip
     python psc_nn.py mode=eval eval.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams"
     ```
 
@@ -59,7 +63,7 @@
 
 ### 3.1 数据集介绍
 
-本案例使用的数据集包含 [Perovskite Database Project(PDP) 数据](https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2Fpsc%2Fdata.zip)。数据集分为以下几个部分：
+本案例使用的数据集包含 [Perovskite Database Project(PDP) 数据](https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip)。数据集分为以下几个部分：
 
 1. 训练集：
    - 特征数据：`data/cleaned/training.csv`

@@ -11,7 +11,7 @@
     ``` sh
     # 使用antibiotics等数据训练模型chemprop模型,实现Property Predict
     # 配置可在conf/synthemol.yaml进行修改
-    python main.py mode=train
+    python main.py
     ```
 
 === "Property Predictor模型评估命令"
@@ -60,46 +60,46 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 ### SyntheMol MCTS Algorithm
 
-**Requires:**  
+**Requires:**
 
-- Synthesis tree `T`  
-- Property prediction model `M`  
-- Maximum number of rollouts `n_rollout`  
-- Maximum number of reactions `n_reaction`  
-
----
-
-**function `MCTS()`:**  
-&nbsp;&nbsp;&nbsp;&nbsp;**for** `i = 1` to `n_rollout` **do**:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rollout(T.root)`  
-&nbsp;&nbsp;&nbsp;&nbsp;**end for**  
-&nbsp;&nbsp;&nbsp;&nbsp;**return** all visited nodes in `T` with:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 molecule and ≥ 1 reaction  
+- Synthesis tree `T`
+- Property prediction model `M`
+- Maximum number of rollouts `n_rollout`
+- Maximum number of reactions `n_reaction`
 
 ---
 
-**function `rollout(N)`:**  
-&nbsp;&nbsp;&nbsp;&nbsp;**if** node `N` has undergone `≥ n_reaction` reactions **then**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**return** property prediction score of `M` applied to molecules in `N`  
-&nbsp;&nbsp;&nbsp;&nbsp;**end if**  
-&nbsp;&nbsp;&nbsp;&nbsp;`E ← expand_node(N)`  
-&nbsp;&nbsp;&nbsp;&nbsp;`S ← select` child node in `E` with largest MCTS score  
-&nbsp;&nbsp;&nbsp;&nbsp;**return** `rollout(S)`  
+**function `MCTS()`:**
+&nbsp;&nbsp;&nbsp;&nbsp;**for** `i = 1` to `n_rollout` **do**:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rollout(T.root)`
+&nbsp;&nbsp;&nbsp;&nbsp;**end for**
+&nbsp;&nbsp;&nbsp;&nbsp;**return** all visited nodes in `T` with:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 molecule and ≥ 1 reaction
 
 ---
 
-**function `expand_node(N)`:**  
-&nbsp;&nbsp;&nbsp;&nbsp;`E ← empty set of nodes`  
-&nbsp;&nbsp;&nbsp;&nbsp;**foreach** reaction `R` **do**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**if** `R` is compatible with molecules in `N` **then**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add new node to `E` with each product of `R` applied to molecules in `N`  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**end if**  
-&nbsp;&nbsp;&nbsp;&nbsp;**end for**  
-&nbsp;&nbsp;&nbsp;&nbsp;**foreach** building block `B` **do**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**if** any reaction is compatible with `B` and molecules in `N` **then**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add new node to `E` with `B` and molecules in `N`  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**end if**  
-&nbsp;&nbsp;&nbsp;&nbsp;**end for**  
+**function `rollout(N)`:**
+&nbsp;&nbsp;&nbsp;&nbsp;**if** node `N` has undergone `≥ n_reaction` reactions **then**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**return** property prediction score of `M` applied to molecules in `N`
+&nbsp;&nbsp;&nbsp;&nbsp;**end if**
+&nbsp;&nbsp;&nbsp;&nbsp;`E ← expand_node(N)`
+&nbsp;&nbsp;&nbsp;&nbsp;`S ← select` child node in `E` with largest MCTS score
+&nbsp;&nbsp;&nbsp;&nbsp;**return** `rollout(S)`
+
+---
+
+**function `expand_node(N)`:**
+&nbsp;&nbsp;&nbsp;&nbsp;`E ← empty set of nodes`
+&nbsp;&nbsp;&nbsp;&nbsp;**foreach** reaction `R` **do**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**if** `R` is compatible with molecules in `N` **then**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add new node to `E` with each product of `R` applied to molecules in `N`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**end if**
+&nbsp;&nbsp;&nbsp;&nbsp;**end for**
+&nbsp;&nbsp;&nbsp;&nbsp;**foreach** building block `B` **do**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**if** any reaction is compatible with `B` and molecules in `N` **then**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add new node to `E` with `B` and molecules in `N`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**end if**
+&nbsp;&nbsp;&nbsp;&nbsp;**end for**
 &nbsp;&nbsp;&nbsp;&nbsp;**return** `E`
 
 ## 3. Synthemol模型实现
@@ -110,18 +110,18 @@ SyntheMol 是一种生成式模型，它在组合化学空间中进行探索，�
 
 数据集采用了作者仓库 [Synthemol](https://github.com/swansonk14/SyntheMol) 的 Data.zip 数据集。
 
-训练集由 3 个化合物库组成：  
+训练集由 3 个化合物库组成：
 
-- 库 1 共 2371 个分子，来自 Pharmakon-1760 库（含 1 360 种 FDA 批准药物和 400 种国际批准药物）以及 800 种从植物、动物和微生物来源分离的天然产物。  
-- 库 2 为 Broad Drug Repurposing Hub，共 6 680 个分子，其中多数为 FDA 批准药物或临床候选化合物。  
+- 库 1 共 2371 个分子，来自 Pharmakon-1760 库（含 1 360 种 FDA 批准药物和 400 种国际批准药物）以及 800 种从植物、动物和微生物来源分离的天然产物。
+- 库 2 为 Broad Drug Repurposing Hub，共 6 680 个分子，其中多数为 FDA 批准药物或临床候选化合物。
 - 库 3 为一个小分子合成筛选库，含 5 376 个分子，系从 Broad Institute 更大的化合物库中随机抽样获得。
 
 所有 3 个库均以两次生物学重复的形式，对鲍曼不动杆菌 ATCC 17978 进行生长抑制活性筛选。实验流程如下：
 
-1. 将菌株于 37 °C 在 2 ml LB 培养基中过夜培养，随后以 1:10 000 稀释于新鲜 LB。  
-2. 取 49.5 µl（384 孔板）或 99 µl（96 孔板）菌液，使用手工或 Agilent Bravo 移液系统加入 Corning 平底微孔板。  
-3. 每孔加入待测化合物，终浓度 50 µM，终体积 50 µl（384 孔板）或 100 µl（96 孔板）。  
-4. 37 °C 静置孵育 16 h。  
+1. 将菌株于 37 °C 在 2 ml LB 培养基中过夜培养，随后以 1:10 000 稀释于新鲜 LB。
+2. 取 49.5 µl（384 孔板）或 99 µl（96 孔板）菌液，使用手工或 Agilent Bravo 移液系统加入 Corning 平底微孔板。
+3. 每孔加入待测化合物，终浓度 50 µM，终体积 50 µl（384 孔板）或 100 µl（96 孔板）。
+4. 37 °C 静置孵育 16 h。
 5. 使用 SpectraMax M3 酶标仪（Molecular Devices）于 600 nm 读取吸光度，数据按板内四分位均值归一化，随后进行汇总与阳性命中判定。
 
 更多详细信息，包括每个模型的超参数调整空间等，请参考作者原始论文。本仓库使用的具体超参数已在yaml配置文件中预设，可根据情况自行调节。
