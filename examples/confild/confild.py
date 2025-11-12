@@ -511,7 +511,7 @@ def evaluate(cfg: DictConfig):
     # [16000,918,3]
     print(normed_coords.shape)
     print(normed_fois.shape)
-    t_std = 15698
+    t_std = cfg.get("t_std", 15698)  # Use configurable parameter, default to 15698
     normed_fois = normed_fois[t_std:]
     # exit()
     if len(normed_coords.shape) + 1 == len(normed_fois.shape):
