@@ -149,7 +149,7 @@ def gaussian_integrate(
             return paddle.meshgrid(*args, **kwargs)
 
     def _roots(N: int) -> np.ndarray:
-        return np.polynomial.legendre.leggauss(N)[0]
+        return np.polynomial.legendre.leggauss(N)[0].astype("float32")
 
     def _calculate_grid(
         N: int,
@@ -176,7 +176,7 @@ def gaussian_integrate(
         ):  # scale from [-1,1] to [a,b]
             a = integration_domain[0]
             b = integration_domain[1]
-            return ((b - a) / 2) * roots + ((a + b) / 2)
+            return (((b - a) / 2) * roots + ((a + b) / 2)).astype("float32")
 
         for dim in range(_dim):
             grid_1d.append(_resize_roots(integration_domains[dim], _roots(n_per_dim)))
@@ -220,7 +220,8 @@ def gaussian_integrate(
             ):  # if the the integrand is multi-dimensional, we need to reshape/repeat weights so they can be broadcast in the *=
                 integrand_shape = result.shape[1:]
                 weights = paddle.repeat_interleave(
-                    paddle.unsqueeze(weights, axis=1), np.prod(integrand_shape)
+                    paddle.unsqueeze(weights, axis=1),
+                    np.prod(integrand_shape, dtype="int64"),
                 ).reshape((weights.shape[0], *(integrand_shape)))
             result *= weights
 
