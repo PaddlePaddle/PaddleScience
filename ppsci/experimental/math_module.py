@@ -24,6 +24,7 @@ from typing import Union
 
 import numpy as np
 import paddle
+from scipy.special import gammaln
 from typing_extensions import Literal
 
 
@@ -394,7 +395,7 @@ def fractional_diff(
         return _finite_derivative(func, s, dx=h) / (t - s) ** (alpha)
 
     result = (
-        1.0 / paddle.exp(paddle.lgamma(paddle.to_tensor(1.0 - alpha, dtype=dtype)))
+        1.0 / paddle.exp(paddle.to_tensor(gammaln(1.0 - alpha), dtype="float32"))
     ) * gaussian_integrate(
         int_func, dim=1, N=2**10 + 1, integration_domains=[[a, t]], dtype=dtype
     )
