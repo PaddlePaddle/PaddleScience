@@ -1225,11 +1225,7 @@ class Solver:
         Args:
             callback_fn : Callable[[Solver]]
                 A function that takes a Solver instance as an argument. This function
-                will be called at the end of every iteration.
-
-        Returns:
-        -------
-        None
+                will be called at the start of every iteration.
         """
         self.callbacks_on_iter_end.append(callback_fn)
 
