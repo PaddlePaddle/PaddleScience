@@ -325,7 +325,9 @@ class FunctionalTransform:
         self, *data: Tuple[Dict[str, np.ndarray], ...]
     ) -> Tuple[Dict[str, np.ndarray], ...]:
         data_dict, label_dict, weight_dict = data
-        data_dict_copy = {**data_dict}
-        label_dict_copy = {**label_dict}
-        weight_dict_copy = {**weight_dict} if weight_dict is not None else {}
+        data_dict_copy: Dict[str, np.ndarray] = {**data_dict}
+        label_dict_copy: Dict[str, np.ndarray] = {**label_dict}
+        weight_dict_copy: Dict[str, np.ndarray] = (
+            {**weight_dict} if weight_dict is not None else {}
+        )
         return self.transform_func(data_dict_copy, label_dict_copy, weight_dict_copy)
