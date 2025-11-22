@@ -1488,7 +1488,7 @@ class CommonArgs(Tap):
     @property
     def cuda(self) -> bool:
         """Whether to use CUDA (i.e., GPUs) or not."""
-        return not self.no_cuda and paddle.device.cuda.device_count() >= 1
+        return not self.no_cuda and paddle.device.device_count() >= 1
 
     @cuda.setter
     def cuda(self, cuda: bool) -> None:
@@ -1534,9 +1534,7 @@ class CommonArgs(Tap):
         self._bond_features_size = bond_features_size
 
     def configure(self) -> None:
-        self.add_argument(
-            "--gpu", choices=list(range(paddle.device.cuda.device_count()))
-        )
+        self.add_argument("--gpu", choices=list(range(paddle.device.device_count())))
         self.add_argument(
             "--features_generator", choices=get_available_features_generators()
         )

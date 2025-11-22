@@ -290,14 +290,14 @@ def evaluate(cfg: DictConfig):
         np.linspace(start=0, stop=cfg.LENGTH, num=num_x, endpoint=True),
         np.linspace(start=0, stop=cfg.WIDTH, num=num_y, endpoint=True),
     )
-    x_faltten = paddle.to_tensor(
+    x_flatten = paddle.to_tensor(
         x_grad.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
     )
-    y_faltten = paddle.to_tensor(
+    y_flatten = paddle.to_tensor(
         y_grad.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
     )
     outs_pred = solver.predict(
-        {"x": x_faltten, "y": y_faltten}, batch_size=num_cords, no_grad=False
+        {"x": x_flatten, "y": y_flatten}, batch_size=num_cords, no_grad=False
     )
 
     # generate label
@@ -309,11 +309,11 @@ def evaluate(cfg: DictConfig):
         paddle.to_tensor(Q, dtype=paddle.get_default_dtype())
         * paddle.sin(
             paddle.to_tensor(np.pi / cfg.LENGTH, dtype=paddle.get_default_dtype())
-            * x_faltten,
+            * x_flatten,
         )
         * paddle.sin(
             paddle.to_tensor(np.pi / cfg.WIDTH, dtype=paddle.get_default_dtype())
-            * y_faltten,
+            * y_flatten,
         )
     )
 
@@ -334,10 +334,10 @@ def evaluate(cfg: DictConfig):
         Q_y = -jacobian((w_x2 + w_y2), y) * D
         return {"Mx": M_x, "Mxy": M_xy, "My": M_y, "Qx": Q_x, "Qy": Q_y, "w": w}
 
-    outs = compute_outs(outs_pred["u"], x_faltten, y_faltten)
+    outs = compute_outs(outs_pred["u"], x_flatten, y_flatten)
 
     # plotting
-    griddata_points = paddle.concat([x_faltten, y_faltten], axis=-1).numpy()
+    griddata_points = paddle.concat([x_flatten, y_flatten], axis=-1).numpy()
     griddata_xi = (x_grad, y_grad)
     boundary = [0, cfg.LENGTH, 0, cfg.WIDTH]
     plotting(
@@ -410,12 +410,13 @@ def inference(cfg: DictConfig):
             start=0, stop=cfg.WIDTH, num=num_y, endpoint=True, dtype=np.float32
         ),
     )
-    x_faltten = x_grad.reshape(-1, 1)
-    y_faltten = y_grad.reshape(-1, 1)
+    x_flatten = x_grad.reshape(-1, 1)
+    y_flatten = y_grad.reshape(-1, 1)
 
-    output_dict = predictor.predict(
-        {"x": x_faltten, "y": y_faltten}, cfg.INFER.batch_size
-    )
+    with ppsci.misc.Timer("infer"):
+        output_dict = predictor.predict(
+            {"x": x_flatten, "y": y_flatten}, cfg.INFER.batch_size
+        )
 
     # mapping data to cfg.INFER.output_keys
     output_dict = {
@@ -424,7 +425,7 @@ def inference(cfg: DictConfig):
     }
 
     # plotting
-    griddata_points = np.concatenate([x_faltten, y_faltten], axis=-1)
+    griddata_points = np.concatenate([x_flatten, y_flatten], axis=-1)
     griddata_xi = (x_grad, y_grad)
     boundary = [0, cfg.LENGTH, 0, cfg.WIDTH]
     plotting(
