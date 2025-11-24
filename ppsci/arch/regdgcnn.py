@@ -98,7 +98,7 @@ def get_graph_feature(x, k=20, idx=None):
         .contiguous()
     )
     del x, idx, idx_base
-    paddle.device.cuda.empty_cache()
+    paddle.device.empty_cache()
     return feature
 
 
