@@ -247,7 +247,7 @@ def _eval_by_batch(
                 metric_dict = metric_func(output_dict, label_dict)
                 for var_name, metric_value in metric_dict.items():
                     if var_name not in metric_dict_group[metric_name]:
-                        metric_dict_group[metric_name] = []
+                        metric_dict_group[metric_name][var_name] = []
                     metric_dict_group[metric_name][var_name].append(
                         metric_value
                         if solver.world_size == 1
