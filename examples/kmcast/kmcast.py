@@ -6,15 +6,10 @@ import hydra
 import model as Model
 from omegaconf import DictConfig
 
-import ppsci
 from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
     # initialize datasets
     train_set = Data.create_dataset(cfg.datasets, "train")
@@ -103,10 +98,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
     # initialize datasets
     val_set = Data.create_dataset(cfg.datasets, "eval")
@@ -114,22 +105,22 @@ def evaluate(cfg: DictConfig):
     lr_min, lr_max = cfg.eval.lr_min, cfg.eval.lr_max
     hr_min, hr_max = cfg.eval.hr_min, cfg.eval.hr_max
     lat, lon = val_set.lat, val_set.lon
-    logger.init_logger("Initial Dataset Finished")
+    logger.message("Initial Dataset Finished")
 
     # set model
     diffusion = Model.create_model(cfg)
-    logger.init_logger("Initial Model Finished")
+    logger.message("Initial Model Finished")
     current_step = diffusion.begin_step
     current_epoch = diffusion.begin_epoch
 
     if cfg.eval.pretrained_model_path:
-        logger.init_logger(
+        logger.message(
             "Resuming training from epoch: {}, iter: {}.".format(
                 current_epoch, current_step
             )
         )
 
-    logger.init_logger("Evaling...")
+    logger.message("Evaling...")
     avg_rmse = 0.0
     idx = 0
     result_path = "{}/{}".format(cfg["path"]["results"], current_epoch)

@@ -1,9 +1,8 @@
 import functools
-import logging
 
 import paddle
 
-logger = logging.getLogger("base")
+from ppsci.utils import logger
 
 
 def weights_init_normal(m, std=0.02):

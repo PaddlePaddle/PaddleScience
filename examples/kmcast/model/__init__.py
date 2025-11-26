@@ -1,6 +1,4 @@
-import logging
-
-logger = logging.getLogger("base")
+from ppsci.utils import logger
 
 
 def create_model(cfg):

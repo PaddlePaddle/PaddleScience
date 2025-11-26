@@ -1,5 +1,7 @@
 # KMCast
 
+<a href="https://aistudio.baidu.com/projectdetail/9801067" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 开始训练、评估前，请下载数据集:
 
 ``` sh
@@ -138,7 +140,6 @@ NCEP全球预报系统（GFS）分析资料和预报数据可在 [https://rda.uc
 ## 4 模型代码说明
 
 - **`conf/kmcast.yaml`**：配置文件，定义模型运行的参数和设置，用于控制模型的行为和参数配置。
-- **`core/logger.py`**：日志记录模块，用于记录模型运行过程中的信息和错误。
 - **`core/metrics.py`**：性能指标计算模块，用于评估模型的预测效果。
 - **`data/LRHR_dataset.py`**：定义数据集加载与预处理流程的脚本。
 - **`model/sr3_modules`**：包含模型中的核心模块和子模型。

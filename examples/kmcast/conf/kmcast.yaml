@@ -49,6 +49,7 @@ datasets:
   eval:
     batch_size: 32
     data_len: 50  # data length in validation
+
 model:
   which_model_G: sr3  # use the ddpm or sr3 network structure
   finetune_norm: false
@@ -76,6 +77,7 @@ model:
     image_W: 256
     channels: 1  # sample channel
     conditional: true  # unconditional generation or super-resolution
+
 train:
   n_iter: 597500
   val_freq: 2500

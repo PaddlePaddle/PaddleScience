@@ -1,13 +1,12 @@
-import logging
 import os
 from collections import OrderedDict
 
 import model.networks as networks
 import paddle
 
-from .base_model import BaseModel
+from ppsci.utils import logger
 
-logger = logging.getLogger("base")
+from .base_model import BaseModel
 
 
 class DDPM(BaseModel):
@@ -113,7 +112,6 @@ class DDPM(BaseModel):
         logger.info(
             "Network G structure: {}, with parameters: {:,d}".format(net_struc_str, n)
         )
-        # logger.info(s)
 
     def save_network(self, epoch, iter_step):
         gen_path = os.path.join(
