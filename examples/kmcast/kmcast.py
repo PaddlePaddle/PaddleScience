@@ -165,9 +165,7 @@ def main(cfg: DictConfig):
     elif cfg.mode == "eval":
         evaluate(cfg)
     else:
-        raise ValueError(
-            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
-        )
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
