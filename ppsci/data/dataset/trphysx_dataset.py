@@ -277,6 +277,8 @@ class CylinderDataset(io.Dataset):
     def read_data(self, file_path: str, block_size: int, stride: int):
         data = []
         visc = []
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"{file_path} do not exist")
         with h5py.File(file_path, "r") as f:
             data_num = 0
             for key in f.keys():

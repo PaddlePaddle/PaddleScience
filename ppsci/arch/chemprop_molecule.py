@@ -25,14 +25,17 @@ from ppsci.arch.chemprop_molecule_utils import index_select_ND
 
 
 class MPNEncoder(paddle.nn.Layer):
-    """An :class:`MPNEncoder` is a message passing neural network for encoding a molecule.
+    """Message Passing Neural Network encoder for molecules.
 
-    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
-    :param atom_fdim: Atom feature vector dimension.
-    :param bond_fdim: Bond feature vector dimension.
-    :param hidden_size: Hidden layers dimension
-    :param bias: Whether to add bias to linear layers
-    :param depth: Number of message passing steps
+    Encodes atom/bond features via iterative message passing.
+
+    Args:
+        args: Model arguments in a `TrainArgs` instance.
+        atom_fdim: Atom feature vector dimension.
+        bond_fdim: Bond feature vector dimension.
+        hidden_size: Hidden layer dimension.
+        bias: Whether to add bias to linear layers.
+        depth: Number of message passing steps.
     """
 
     def __init__(
@@ -96,13 +99,17 @@ class MPNEncoder(paddle.nn.Layer):
     def forward(
         self, mol_graph, atom_descriptors_batch: List[np.ndarray] = None
     ) -> paddle.float32:
-        """
-        Encodes a batch of molecular graphs.
+        """Encode a batch of molecular graphs.
 
-        :param mol_graph: A :class:`~chemprop.features.featurization.BatchMolGraph` representing
-                          a batch of molecular graphs.
-        :param atom_descriptors_batch: A list of numpy arrays containing additional atomic descriptors
-        :return: A Paddle tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
+        Args:
+            mol_graph: A `BatchMolGraph` representing a batch of molecular graphs.
+            atom_descriptors_batch: Optional list of numpy arrays with additional atomic descriptors.
+
+        Returns:
+            `paddle.Tensor`: Shape `(num_molecules, hidden_size)` with the encoding of each molecule.
+
+        Raises:
+            ValueError: If descriptor count does not match the number of atoms.
         """
         if atom_descriptors_batch is not None:
             atom_descriptors_batch = [
@@ -178,10 +185,12 @@ class MPNEncoder(paddle.nn.Layer):
 
 
 class MPN(paddle.nn.Layer):
-    """An :class:`MPN` is a wrapper around :class:`MPNEncoder` which featurizes input as needed.
-    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
-    :param atom_fdim: Atom feature vector dimension.
-    :param bond_fdim: Bond feature vector dimension.
+    """Wrapper around `MPNEncoder` which handles input featurization.
+
+    Args:
+        args: Model arguments in a `TrainArgs` instance.
+        atom_fdim: Atom feature vector dimension.
+        bond_fdim: Bond feature vector dimension.
     """
 
     def __init__(self, args: TrainArgs, atom_fdim: int = None, bond_fdim: int = None):
@@ -253,18 +262,18 @@ class MPN(paddle.nn.Layer):
         atom_features_batch: List[np.ndarray] = None,
         bond_features_batch: List[np.ndarray] = None,
     ) -> paddle.float32:
-        """
-        Encodes a batch of molecules.
+        """Encode a batch of molecules.
 
-        :param batch: A list of list of SMILES, a list of list of RDKit molecules, or a
-                      list of :class:`~chemprop.features.featurization.BatchMolGraph`.
-                      The outer list or BatchMolGraph is of length :code:`num_molecules` (number of datapoints in batch),
-                      the inner list is of length :code:`number_of_molecules` (number of molecules per datapoint).
-        :param features_batch: A list of numpy arrays containing additional features.
-        :param atom_descriptors_batch: A list of numpy arrays containing additional atom descriptors.
-        :param atom_features_batch: A list of numpy arrays containing additional atom features.
-        :param bond_features_batch: A list of numpy arrays containing additional bond features.
-        :return: A Paddle tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
+        Args:
+            batch: List of lists of SMILES or RDKit molecules, or a list of `BatchMolGraph`.
+                Outer list length is `num_molecules`; inner list length is `number_of_molecules`.
+            features_batch: Optional list of numpy arrays with additional features.
+            atom_descriptors_batch: Optional list of numpy arrays with atom descriptors.
+            atom_features_batch: Optional list of numpy arrays with atom features.
+            bond_features_batch: Optional list of numpy arrays with bond features.
+
+        Returns:
+            `paddle.Tensor`: Shape `(num_molecules, hidden_size)` containing encodings per molecule.
         """
         """
         if type(batch[0]) != BatchMolGraph:
@@ -335,21 +344,25 @@ def split(x, num_or_sections, axis=0):
 
 
 def compute_pnorm(model: paddle.nn.Layer) -> float:
-    """
-    Computes the norm of the parameters of a model.
+    """Compute the L2 norm of model parameters.
 
-    :param model: A Paddle model.
-    :return: The norm of the parameters of the model.
+    Args:
+        model: A Paddle model.
+
+    Returns:
+        float: L2 norm of all parameters.
     """
     return math.sqrt(sum([(p.norm().item() ** 2) for p in model.parameters()]))
 
 
 def compute_gnorm(model: paddle.nn.Layer) -> float:
-    """
-    Computes the norm of the gradients of a model.
+    """Compute the L2 norm of model gradients.
 
-    :param model: A Paddle model.
-    :return: The norm of the gradients of the model.
+    Args:
+        model: A Paddle model.
+
+    Returns:
+        float: L2 norm of all available gradients.
     """
     return math.sqrt(
         sum(
@@ -363,30 +376,36 @@ def compute_gnorm(model: paddle.nn.Layer) -> float:
 
 
 def param_count(model: paddle.nn.Layer) -> int:
-    """
-    Determines number of trainable parameters.
+    """Count the number of trainable parameters.
 
-    :param model: An Paddle model.
-    :return: The number of trainable parameters in the model.
+    Args:
+        model: A Paddle model.
+
+    Returns:
+        int: Number of trainable parameters.
     """
     return sum(param.size for param in model.parameters() if not param.stop_gradient)
 
 
 def param_count_all(model: paddle.nn.Layer) -> int:
-    """
-    Determines number of trainable parameters.
+    """Count the total number of parameters (trainable and frozen).
 
-    :param model: An Paddle model.
-    :return: The number of trainable parameters in the model.
+    Args:
+        model: A Paddle model.
+
+    Returns:
+        int: Total number of parameters.
     """
     return sum(param.size for param in model.parameters())
 
 
 def initialize_weights(model: paddle.nn.Layer) -> None:
-    """
-    Initializes the weights of a model in place.
+    """Initialize model weights in place.
 
-    :param model: An Paddle model.
+    Uses Constant for biases (1D) and XavierNormal for other parameters.
+
+    Args:
+        model: A Paddle model.
     """
     for param in model.parameters():
         if param.dim() == 1:
@@ -398,22 +417,20 @@ def initialize_weights(model: paddle.nn.Layer) -> None:
 
 
 class NoamLR(paddle.optimizer.lr.LRScheduler):
-    """
-    Noam learning rate scheduler with piecewise linear increase and exponential decay.
+    """Noam learning rate scheduler with warmup and exponential decay.
 
-    The learning rate increases linearly from init_lr to max_lr over the course of
-    the first warmup_steps (where :code:`warmup_steps = warmup_epochs * steps_per_epoch`).
-    Then the learning rate decreases exponentially from :code:`max_lr` to :code:`final_lr` over the
-    course of the remaining :code:`total_steps - warmup_steps` (where :code:`total_steps =
-    total_epochs * steps_per_epoch`). This is roughly based on the learning rate
-    schedule from `Attention is All You Need <https://arxiv.org/abs/1706.03762>`_, section 5.3.
-        :param optimizer: A Paddle optimizer.
-        :param warmup_epochs: The number of epochs during which to linearly increase the learning rate.
-        :param total_epochs: The total number of epochs.
-        :param steps_per_epoch: The number of steps (batches) per epoch.
-        :param init_lr: The initial learning rate.
-        :param max_lr: The maximum learning rate (achieved after :code:`warmup_epochs`).
-        :param final_lr: The final learning rate (achieved after :code:`total_epochs`).
+    Learning rate increases linearly from `init_lr` to `max_lr` over
+    `warmup_epochs * steps_per_epoch`, then decays exponentially to `final_lr`
+    over the remaining steps, following Section 5.3 of "Attention is All You Need".
+
+    Args:
+        optimizer: Paddle optimizer.
+        warmup_epochs: Number of epochs to linearly increase LR.
+        total_epochs: Total number of epochs.
+        steps_per_epoch: Number of steps (batches) per epoch.
+        init_lr: Initial learning rate per param group.
+        max_lr: Maximum learning rate per param group.
+        final_lr: Final learning rate per param group.
     """
 
     def __init__(
@@ -456,19 +473,18 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
         super(NoamLR, self).__init__(optimizer.get_lr())
 
     def get_lr(self) -> List[float]:
-        """
-        Gets a list of the current learning rates.
+        """Return current learning rates per parameter group.
 
-        :return: A list of the current learning rates.
+        Returns:
+            list[float]: Current learning rates.
         """
         return list(self.lr)
 
     def step(self, current_step: int = None):
-        """
-        Updates the learning rate by taking a step.
+        """Advance scheduler and update optimizer learning rates.
 
-        :param current_step: Optionally specify what step to set the learning rate to.
-                             If None, :code:`current_step = self.current_step + 1`.
+        Args:
+            current_step: Optional explicit step index. If None, increments by 1.
         """
         if current_step is not None:
             self.current_step = current_step
@@ -489,11 +505,13 @@ class NoamLR(paddle.optimizer.lr.LRScheduler):
 
 
 def activate_dropout(module: paddle.nn.Layer, dropout_prob: float):
-    """
-    Set p of dropout layers and set to train mode during inference for uncertainty estimation.
+    """Enable dropout during inference for uncertainty estimation.
 
-    :param model: A :class:`~chemprop.models.model.MoleculeModel`.
-    :param dropout_prob: A float on (0,1) indicating the dropout probability.
+    Sets `p` on dropout layers and forces train mode.
+
+    Args:
+        module: Module to potentially modify if it is a dropout layer.
+        dropout_prob: Dropout probability in (0, 1).
     """
     if isinstance(module, paddle.nn.Dropout):
         module.p = dropout_prob
@@ -501,8 +519,10 @@ def activate_dropout(module: paddle.nn.Layer, dropout_prob: float):
 
 
 class MoleculeModel(paddle.nn.Layer):
-    """A :class:`MoleculeModel` is a model which contains a message passing network following by feed-forward layers.
-    :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+    """Model with an MPN encoder followed by feed-forward layers.
+
+    Args:
+        cfg: Hydra `DictConfig` used to build internal `TrainArgs`.
     """
 
     def __init__(self, cfg: DictConfig):
@@ -598,10 +618,10 @@ class MoleculeModel(paddle.nn.Layer):
         return args
 
     def create_encoder(self, args: TrainArgs) -> None:
-        """
-        Creates the message passing encoder for the model.
+        """Create the message passing encoder for the model.
 
-        :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+        Args:
+            args: Model arguments in a `TrainArgs` instance.
         """
         self.encoder = MPN(args)
         if args.checkpoint_frzn is not None:
@@ -613,10 +633,10 @@ class MoleculeModel(paddle.nn.Layer):
                     param.stop_gradient = not False
 
     def create_ffn(self, args: TrainArgs) -> None:
-        """
-        Creates the feed-forward layers for the model.
+        """Create the feed-forward layers for the model.
 
-        :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
+        Args:
+            args: Model arguments in a `TrainArgs` instance.
         """
         self.multiclass = args.dataset_type == "multiclass"
         if self.multiclass:
@@ -702,18 +722,22 @@ class MoleculeModel(paddle.nn.Layer):
         bond_features_batch: List[np.ndarray] = None,
         fingerprint_type: str = "MPN",
     ) -> paddle.Tensor:
-        """
-        Encodes the latent representations of the input molecules from intermediate stages of the model.
+        """Return latent representations (fingerprints) from intermediate stages.
 
-        :param batch: A list of list of SMILES, a list of list of RDKit molecules, or a
-                      list of :class:`~chemprop.features.featurization.BatchMolGraph`.
-                      The outer list or BatchMolGraph is of length :code:`num_molecules` (number of datapoints in batch),
-                      the inner list is of length :code:`number_of_molecules` (number of molecules per datapoint).
-        :param features_batch: A list of numpy arrays containing additional features.
-        :param atom_descriptors_batch: A list of numpy arrays containing additional atom descriptors.
-        :param fingerprint_type: The choice of which type of latent representation to return as the molecular fingerprint. Currently
-                                 supported MPN for the output of the MPNN portion of the model or last_FFN for the input to the final readout layer.
-        :return: The latent fingerprint vectors.
+        Args:
+            batch: List of lists of SMILES or RDKit molecules, or a list of `BatchMolGraph`.
+            features_batch: Optional list of numpy arrays with additional features.
+            atom_descriptors_batch: Optional list of numpy arrays with atom descriptors.
+            atom_features_batch: Optional list of numpy arrays with atom features.
+            bond_features_batch: Optional list of numpy arrays with bond features.
+            fingerprint_type: Which latent representation to return. Supported: "MPN" (output of MPN) or
+                "last_FFN" (input to the final readout layer).
+
+        Returns:
+            `paddle.Tensor`: Fingerprint vectors.
+
+        Raises:
+            ValueError: If `fingerprint_type` is unsupported.
         """
         if fingerprint_type == "MPN":
             return self.encoder(
@@ -749,18 +773,18 @@ class MoleculeModel(paddle.nn.Layer):
         atom_features_batch: List[np.ndarray] = None,
         bond_features_batch: List[np.ndarray] = None,
     ) -> paddle.float32:
-        """
-        Runs the :class:`MoleculeModel` on input.
+        """Run the model forward pass on input.
 
-        :param batch: A list of list of SMILES, a list of list of RDKit molecules, or a
-                      list of :class:`~chemprop.features.featurization.BatchMolGraph`.
-                      The outer list or BatchMolGraph is of length :code:`num_molecules` (number of datapoints in batch),
-                      the inner list is of length :code:`number_of_molecules` (number of molecules per datapoint).
-        :param features_batch: A list of numpy arrays containing additional features.
-        :param atom_descriptors_batch: A list of numpy arrays containing additional atom descriptors.
-        :param atom_features_batch: A list of numpy arrays containing additional atom features.
-        :param bond_features_batch: A list of numpy arrays containing additional bond features.
-        :return: The output of the :class:`MoleculeModel`, containing a list of property predictions
+        Args:
+            batch: Dictionary with keys `mol_batch`, `features_batch`,
+                `atom_descriptors_batch`, `atom_features_batch`, `bond_features_batch`.
+            features_batch: Unused (kept for API symmetry), see `batch`.
+            atom_descriptors_batch: Unused, see `batch`.
+            atom_features_batch: Unused, see `batch`.
+            bond_features_batch: Unused, see `batch`.
+
+        Returns:
+            dict: `{"pred": tensor}` predictions (and transformed for special losses).
         """
 
         mol_batch = batch["mol_batch"]
