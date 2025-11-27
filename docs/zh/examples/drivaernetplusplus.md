@@ -18,12 +18,12 @@ DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dyna
 
     ``` sh
     mkdir -p data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
     tar -xvf DrivAer++_Points.tar -C ./data
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
     mv ./data/workspace/gino_data/14_DrivAer++/paddle_tensor ./data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
     rm -rf data/workspace
 
@@ -34,12 +34,12 @@ DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dyna
 
     ``` sh
     mkdir -p data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
     tar -xvf DrivAer++_Points.tar -C ./data
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
     mv ./data/workspace/gino_data/14_DrivAer++/paddle_tensor ./data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
     rm -rf data/workspace
 
@@ -190,12 +190,12 @@ avg_r2 = total_r2 / len(test_dataloader)
 
 ``` sh
 mkdir -p data/subset_dir
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
+wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAer%2B%2B_Points.tar
 tar -xvf DrivAer++_Points.tar -C ./data
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
-wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
+wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/DrivAerNetPlusPlus_Drag_8k.csv -P ./data
+wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/test_design_ids.txt -P ./data/subset_dir
+wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/train_design_ids.txt -P ./data/subset_dir
+wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/val_design_ids.txt -P ./data/subset_dir
 mv ./data/workspace/gino_data/14_DrivAer++/paddle_tensor ./data/DrivAerNetPlusPlus_Processed_Point_Clouds_100k_paddle
 rm -rf data/workspace
 ```
@@ -212,7 +212,7 @@ stl 源数据集下载教程参考，从[数据集下载地址](https://datavers
 
 2. 使用 wget 或 curl 直接下载 Globus Connect Personal：
 ``` sh
-wget -nc https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
+wget -c https://downloads.globus.org/globus-connect-personal/linux/stable/globusconnectpersonal-latest.tgz
 ```
 
 3. 从下载的 tarball 中提取文件。

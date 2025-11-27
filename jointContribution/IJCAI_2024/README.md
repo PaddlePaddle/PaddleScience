@@ -15,7 +15,7 @@ Donwload checkpoints:
 ``` sh
 cd PaddleScience/jointContribution/IJCAI_2024
 # linux
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJCAI_2024_ckpts.tar.gz
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJCAI_2024_ckpts.tar.gz
 # windows
 # curl https://paddle-org.bj.bcebos.com/paddlescience/models/contrib/IJCAI_2024_ckpts.tar.gz
 ```

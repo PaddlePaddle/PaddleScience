@@ -39,7 +39,7 @@
     python MLP_LI.py --train
 
     # 下载预训练模型（如果需要）
-    wget -nc "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams"
+    wget -c "https://paddle-org.bj.bcebos.com/paddlescience/models/MLP_LI/MLP_LI_pretrained.pdparams"
 
 ## 完整代码
 

@@ -10,7 +10,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
     python smc_reac.py
@@ -20,7 +20,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/SMCReac/data_set.xlsx -o data_set.xlsx
     python smc_reac.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/smc_reac/smc_reac_model.pdparams

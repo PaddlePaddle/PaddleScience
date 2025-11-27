@@ -13,7 +13,7 @@
     export PYTHONPATH=$PWD:$PYTHONPAT
     # 下载模型参数
     cd gencast/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/gencast/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams -P ./data/params/
     # 运行评估脚本
     python run_gencast.py
     ```

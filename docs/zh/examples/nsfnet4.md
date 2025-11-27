@@ -7,7 +7,7 @@
     ``` sh
     # VP_NSFNet4
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
@@ -21,7 +21,7 @@
     ``` sh
     # VP_NSFNet4
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
@@ -40,7 +40,7 @@
     ``` sh
     # VP_NSFNet4
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip

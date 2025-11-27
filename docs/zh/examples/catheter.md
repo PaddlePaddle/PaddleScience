@@ -29,7 +29,7 @@ Distributed under a creative commons Attribution license 4.0 (CC BY).
 
     ``` sh
     # linux
-    wget -nc 'https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/data.zip'
+    wget -c 'https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/data.zip'
     # windows
     # curl 'https://dataset.bj.bcebos.com/PaddleScience/2024 AI-aided geometric design of anti-infection catheters/data.zip' -o data.zip
     unzip data.zip

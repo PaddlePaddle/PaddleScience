@@ -4,12 +4,12 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/params.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/template_graph.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/stats.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/graphcast-jax2paddle.csv -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/params.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/graphcast/template_graph.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/stats.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/graphcast-jax2paddle.csv -P ./data/
 
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset.zip -o dataset.zip
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/graphcast/dataset-step12.zip -o dataset-step12.zip

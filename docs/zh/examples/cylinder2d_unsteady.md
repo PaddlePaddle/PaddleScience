@@ -6,7 +6,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar -o cylinder2d_unsteady_Re100_dataset.tar
     # unzip it
@@ -18,7 +18,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar -o cylinder2d_unsteady_Re100_dataset.tar
     # unzip it
@@ -36,7 +36,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar -o cylinder2d_unsteady_Re100_dataset.tar
     # unzip it
@@ -144,7 +144,7 @@ $$
 在开始构建代码之前，请先按照下列命令下载训练、评估所需的数据集
 
 ``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
 tar -xf cylinder2d_unsteady_Re100_dataset.tar
 ```
 

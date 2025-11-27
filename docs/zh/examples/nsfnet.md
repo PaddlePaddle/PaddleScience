@@ -10,7 +10,7 @@
 
     # VP_NSFNet2
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
     python VP_NSFNet2.py data_dir=./data/cylinder_nektar_wake.mat
@@ -27,7 +27,7 @@
 
     # VP_NSFNet2
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat -P ./data/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/cylinder_nektar_wake.mat --create-dirs -o ./data/cylinder_nektar_wake.mat
 
