@@ -134,9 +134,9 @@ def evaluate(cfg: DictConfig):
         hr_tensor = Metrics.tensor2rawdata(visuals["HR"], hr_min, hr_max)
         lr_tensor = Metrics.tensor2rawdata(visuals["LR"], lr_min, lr_max)
         idx += len(sr_tensor)
-        sr_img = sr_tensor[:9:3].astype(dtype="float32").cpu().numpy()
-        hr_img = hr_tensor[:9:3].astype(dtype="float32").cpu().numpy()
-        lr_img = lr_tensor[:9:3].astype(dtype="float32").cpu().numpy()
+        sr_img = sr_tensor[:9:3].astype(dtype="float32").numpy()
+        hr_img = hr_tensor[:9:3].astype(dtype="float32").numpy()
+        lr_img = lr_tensor[:9:3].astype(dtype="float32").numpy()
         Metrics.save_img(
             (sr_img, hr_img, lr_img),
             (lat, lon),
