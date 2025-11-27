@@ -601,8 +601,8 @@ class SEVIRDataset(io.Dataset):
 
         Args:
             data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): The dict of data.
-            data_types (Sequence[str]) : The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
-            layout (str) : consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'.
+            data_types (Sequence[str]): The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
+            layout (str): consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'.
             rescale (str):
                 'sevir': use the offsets and scale factors in original implementation.
                 '01': scale all values to range 0 to 1, currently only supports 'vil'.
