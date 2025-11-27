@@ -104,6 +104,7 @@ nav:
         - xrdmatch: zh/examples/xrdmatch.md
         - CNN_UTS: zh/examples/CNN_UTS.md
       - 地球科学(AI for Earth Science):
+        - KMCast: zh/examples/kmcast.md
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
