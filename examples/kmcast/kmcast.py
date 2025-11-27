@@ -10,7 +10,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-
     # initialize datasets
     train_set = Data.create_dataset(cfg.datasets, "train")
     train_loader = Data.create_dataloader(train_set, cfg.datasets, "train")
