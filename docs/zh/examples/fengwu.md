@@ -16,11 +16,11 @@
 
     ``` sh
     # Download sample input data
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input1.npy -P ./data
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input2.npy -P ./data
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input1.npy -P ./data
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/input2.npy -P ./data
 
     # Download pretrain model weight
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/fengwu_v2.onnx -P ./inference
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/Fengwu/fengwu_v2.onnx -P ./inference
 
     # inference
     python predict.py

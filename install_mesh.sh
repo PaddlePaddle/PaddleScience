@@ -13,7 +13,7 @@ if command -v cmake >/dev/null 2>&1; then
     echo "CMake found: $(cmake --version | head -n 1)"
 else
     echo "CMake not found. Installing temporary CMake 3.23.0 ..."
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
     tar -zxf cmake-3.23.0-linux-x86_64.tar.gz --checkpoint=.100 --totals
     rm -f cmake-3.23.0-linux-x86_64.tar.gz
     export PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
@@ -24,7 +24,7 @@ echo "CMake environment ready."
 
 echo "==== Step 3: Downloading PyMesh Package ===="
 # Download PyMesh package if not already present.
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
 echo "Download completed. Extracting package..."
 tar -zxf PyMesh.tar.gz --checkpoint=.1000 --totals
 echo "PyMesh package extracted."

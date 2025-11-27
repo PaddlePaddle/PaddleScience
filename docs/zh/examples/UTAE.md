@@ -29,14 +29,14 @@
 
     ``` sh
     # 语义分割任务
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams -P ./pretrained/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/utae/semantic.pdparams -P ./pretrained/
     python test_semantic.py \
       --weight_file ./pretrained/semantic.pdparams \
       --dataset_folder "./data/PASTIS" \
       --device gpu
       --num_workers 0
     # 全景分割任务
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams -P ./pretrained/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/utae/panoptic.pdparams -P ./pretrained/
     python test_panoptic.py \
       --weight_folder ./pretrained/panoptic.pdparams \
       --dataset_folder ./data/PASTIS \

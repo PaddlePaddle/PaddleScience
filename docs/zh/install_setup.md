@@ -28,7 +28,7 @@
     ``` sh
     git clone https://github.com/PaddlePaddle/PaddleScience.git
     cd PaddleScience/docker/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
     bash run.sh
     ```
 
@@ -136,13 +136,13 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
 
     # 在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否已安装 cmake。
     # 如果未安装，可以按照下列命令下载并解压 cmake 包，然后将其添加到 PATH 变量中。
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
     tar -zxvf cmake-3.23.0-linux-x86_64.tar.gz
     rm -f cmake-3.23.0-linux-x86_64.tar.gz
     export PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
 
     # 推荐以 setup 的方式安装 PyMesh 库，命令如下：
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
     tar -zxvf PyMesh.tar.gz
 
     # 也可以使用 git 命令下载，速度可能会比较慢

@@ -8,7 +8,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar -o mrms.tar
     mkdir ./datasets
@@ -26,7 +26,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar -o mrms.tar
     mkdir ./datasets

@@ -9,7 +9,7 @@
 === "模型训练命令"
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/IFM/dataset.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/IFM/dataset.zip
     unzip dataset.zip
     # 在tox21/sider/hiv/bace/bbbp等数据上训练模型MLP-IFM,embed_name可选IFM/None
     # mode/data_label/MODEL.embed_name 等参数可在conf/ifm.yaml进行配置
@@ -19,7 +19,7 @@
 === "模型评估命令"
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/IFM/dataset.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/IFM/dataset.zip
     unzip dataset.zip
     # 在tox21/sider/hiv/bace/bbbp等数据上评估模型MLP-IFM,embed_name可选IFM/None
     # 预训练模型的路径例如： pretrained/IFM/bace/model.pdparams 或使用自行训练的模型路径

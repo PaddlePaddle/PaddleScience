@@ -6,9 +6,9 @@
 
 ``` sh
 # GFS 数据
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/kmcast/GFS_all_spinup.nc -P ./dataset/
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/kmcast/GFS_all_spinup.nc -P ./dataset/
 # WRF 数据
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/kmcast/WRF_all_spinup.nc -P ./dataset/
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/kmcast/WRF_all_spinup.nc -P ./dataset/
 ```
 
 === "模型训练命令"
@@ -21,8 +21,8 @@ wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/kmcast/WRF_all_
 
     ``` sh
     # 下载模型权重文件
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/kmcast/I597500_E184_gen.pdparams
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/kmcast/I597500_E184_opt.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/kmcast/I597500_E184_gen.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/kmcast/I597500_E184_opt.pdparams
     # 运行评估
     python kmcast.py mode=eval eval.pretrained_model_path=./I597500_E184
     ```

@@ -16,14 +16,14 @@
 
     ``` sh
     # 使用本地预训练模型
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
     unzip data.zip
     python psc_nn.py mode=eval eval.pretrained_model_path="Your pdparams path"
     ```
 
     ``` sh
     # 或使用提供的预训练模型
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/psc/data.zip
     unzip data.zip
     python psc_nn.py mode=eval eval.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/PerovskiteSolarCells/solar_cell_pretrained.pdparams"
     ```

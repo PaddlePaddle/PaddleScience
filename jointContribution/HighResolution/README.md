@@ -14,8 +14,8 @@ Download demo dataset:
 ``` sh
 cd PaddleScience/jointContribution/HighResolution
 # linux
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/patient001.zip
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/Hammersmith_myo2.zip
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/patient001.zip
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/Hammersmith_myo2.zip
 # windows
 # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/patient001.zip
 # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/HighResolution/Hammersmith_myo2.zip
