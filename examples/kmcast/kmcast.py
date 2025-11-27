@@ -97,7 +97,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-
     # initialize datasets
     val_set = Data.create_dataset(cfg.datasets, "eval")
     val_loader = Data.create_dataloader(val_set, cfg.datasets, "eval")
