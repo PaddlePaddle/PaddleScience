@@ -16,12 +16,16 @@ from __future__ import annotations
 
 import os
 import os.path as osp
+import pickle
+import random
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
 from typing import Optional
 
+import numpy as np
 import paddle
+from paddle import distributed as dist
 
 from ppsci.utils import download
 from ppsci.utils import logger
@@ -174,10 +178,73 @@ def load_checkpoint(
 
     if equation is not None:
         if not osp.exists(f"{path}.pdeqn"):
-            logger.warning(f"{path}.pdeqn not found.")
+            num_learnable_params = sum(
+                [len(eq.learnable_parameters) for eq in equation.values()]
+            )
+            if num_learnable_params > 0:
+                logger.warning(
+                    f"There are a total of {num_learnable_params} learnable parameters"
+                    f" in the equation, but {path}.pdeqn not found."
+                )
             equation_dict = None
         else:
             equation_dict = paddle.load(f"{path}.pdeqn")
+
+    # load random states
+    if osp.exists(f"{path}.pdrng"):
+        logger.message(f"* Loading random states from {path}.pdrng")
+        with open(f"{path}.pdrng", "rb") as f:
+            rng_dict = pickle.load(f)
+
+        # restore Python random state
+        if "python_random_state" in rng_dict:
+            random.setstate(rng_dict["python_random_state"])
+
+        # restore NumPy random state
+        if "numpy_random_state" in rng_dict:
+            np.random.set_state(rng_dict["numpy_random_state"])
+
+        # restore Paddle CPU random state
+        if "paddle_random_state" in rng_dict:
+            paddle.framework.core.default_cpu_generator().set_state(
+                rng_dict["paddle_random_state"]
+            )
+
+        # restore Paddle CUDA random state (single GPU or all GPUs)
+        if paddle.is_compiled_with_cuda():
+            if (
+                "paddle_cuda_random_state_all" in rng_dict
+                and rng_dict["paddle_cuda_random_state_all"] is not None
+            ):
+                # restore all GPU states (for distributed training)
+                num_devices = dist.get_world_size() if dist.is_initialized() else 1
+                num_saved_rng_states = len(rng_dict["paddle_cuda_random_state_all"])
+                if num_saved_rng_states > num_devices:
+                    logger.warning(
+                        f"Number of saved CUDA RNG states ({num_saved_rng_states}) is greater than "
+                        f"current number of devices ({num_devices}). Some RNG states will be ignored."
+                    )
+                elif num_saved_rng_states < num_devices:
+                    logger.warning(
+                        f"Number of saved CUDA RNG states ({num_saved_rng_states}) is less than "
+                        f"current number of devices ({num_devices}). Some devices will use default RNG states."
+                    )
+                for i, state in enumerate(rng_dict["paddle_cuda_random_state_all"]):
+                    if i < num_devices:
+                        paddle.framework.core.default_cuda_generator(i).set_state(state)
+            elif (
+                "paddle_cuda_random_state" in rng_dict
+                and rng_dict["paddle_cuda_random_state"] is not None
+            ):
+                # restore single GPU state
+                paddle.framework.core.default_cuda_generator(
+                    paddle.framework._current_expected_place().gpu_device_id()
+                ).set_state(rng_dict["paddle_cuda_random_state"])
+    else:
+        logger.warning(
+            f"{path}.pdrng not found. Random states will not be restored, "
+            "which may affect training reproducibility."
+        )
 
     # set model state dict
     logger.message(f"* Loading model checkpoint from {path}.pdparams")
@@ -261,7 +328,7 @@ def save_checkpoint(
         >>> optimizer = ppsci.optimizer.Adam(0.001)(model)
         >>> save_load.save_checkpoint(model, optimizer, {"RMSE": 0.1}, output_dir="path/to/output/dir") # doctest: +SKIP
     """
-    if paddle.distributed.get_rank() != 0:
+    if dist.get_rank() != 0:
         return
 
     if output_dir is None:
@@ -298,6 +365,37 @@ def save_checkpoint(
 
     if aggregator is not None and aggregator.should_persist:
         paddle.save(aggregator.state_dict(), f"{ckpt_path}.pdagg")
+
+    # save random states for reproducible training
+    rng_dict = {
+        "python_random_state": random.getstate(),
+        "numpy_random_state": np.random.get_state(),
+        "paddle_random_state": paddle.framework.core.default_cpu_generator().get_state(),
+    }
+
+    # save CUDA random states if available
+    if paddle.is_compiled_with_cuda():
+        # get current GPU device id
+        try:
+            current_device = paddle.framework._current_expected_place().gpu_device_id()
+            rng_dict[
+                "paddle_cuda_random_state"
+            ] = paddle.framework.core.default_cuda_generator(current_device).get_state()
+
+            # for distributed training, save all GPU states
+            num_gpus = dist.get_world_size() if dist.is_initialized() else 1
+            if num_gpus > 1:
+                rng_dict["paddle_cuda_random_state_all"] = [
+                    paddle.framework.core.default_cuda_generator(i).get_state()
+                    for i in range(num_gpus)
+                ]
+        except Exception as e:
+            logger.warning(f"Failed to save CUDA random state: {e}")
+            rng_dict["paddle_cuda_random_state"] = None
+            rng_dict["paddle_cuda_random_state_all"] = None
+
+    with open(f"{ckpt_path}.pdrng", "wb") as f:
+        pickle.dump(rng_dict, f)
 
     if print_log:
         log_str = f"Finish saving checkpoint to: {ckpt_path}"
