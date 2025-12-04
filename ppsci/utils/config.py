@@ -18,6 +18,7 @@ import importlib.util
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from typing_extensions import Literal
 
@@ -301,7 +302,7 @@ if importlib.util.find_spec("pydantic") is not None:
             """
 
             # Global settings config
-            mode: Literal["train", "eval", "export", "infer"] = "train"
+            mode: Union[Literal["train", "eval", "export", "infer"], str] = "train"
             output_dir: Optional[str] = None
             log_freq: int = 20
             seed: int = 42
@@ -461,3 +462,4 @@ else:
     logger.error(
         "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
     )
+

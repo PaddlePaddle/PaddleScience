@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ repo_name: PaddleScience
 repo_url: "https://github.com/PaddlePaddle/PaddleScience"
 
 # Copyright
-copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
+copyright: Copyright &copy; 2022 - 2025 PaddlePaddle
 
 # Page tree
 nav:
@@ -58,6 +58,7 @@ nav:
       - 技术科学(AI for Technology):
         - 流体:
           - Fundiff: zh/examples/fundiff.md
+          - Transolver: zh/examples/transolver.md
           - Catheter: zh/examples/catheter.md
           - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
@@ -97,15 +98,22 @@ nav:
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
         - CGCNN: zh/examples/cgcnn.md
+        - psc_NN: zh/examples/perovskite_solar_cells_nn.md
         - Battery_LI: zh/examples/MLP_LI.md
         - ML2DDB: en/examples/ml2ddb.md
+        - xrdmatch: zh/examples/xrdmatch.md
+        - CNN_UTS: zh/examples/CNN_UTS.md
       - 地球科学(AI for Earth Science):
+        - KMCast: zh/examples/kmcast.md
         - Extformer-MoE: zh/examples/extformer_moe.md
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
         - DGMR: zh/examples/dgmr.md
         - STAFNet: zh/examples/stafnet.md
         - EarthFormer: zh/examples/earthformer.md
+        - MeteoFormer: zh/examples/meteoformer.md
+        - Preformer: zh/examples/preformer.md
+        - ClimateFormer: zh/examples/climateformer.md
         - GraphCast: zh/examples/graphcast.md
         - GenCast: zh/examples/gencast.md
         - VelocityGAN: zh/examples/velocity_gan.md
@@ -116,10 +124,13 @@ nav:
         - FuXi: zh/examples/fuxi.md
         - UNetFormer: zh/examples/unetformer.md
         - WGAN_GP: zh/examples/wgan_gp.md
+        - UTAE: zh/examples/UTAE.md
       - 化学科学(AI for Chemistry):
         - SMC Reac: zh/examples/smc_reac.md
         - Moflow: zh/examples/moflow.md
         - IFM: zh/examples/ifm.md
+        - Synthemol: zh/examples/synthemol.md
+        - TADF: zh/examples/tadf.md
 
   - API 文档:
     - ppsci:

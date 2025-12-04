@@ -283,7 +283,7 @@ class MOlFLOWDataset(io.Dataset):
     Args:
     file_path (str): Data set path.
     data_name (str): Data name,  "qm9" or "zinc250k"
-    valid_idx (List[int, ...]): Data for validate
+    valid_idx (List[int]): Data for validate
     mode (str): "train" or "eval", output Data
     input_keys (Tuple[str, ...]): Input keys, such as ("nodes","edges",).
     label_keys (Tuple[str, ...]): labels (str or list or None) .
@@ -299,7 +299,7 @@ class MOlFLOWDataset(io.Dataset):
         self,
         file_path: str,
         data_name: str,
-        valid_idx: List[int, ...],
+        valid_idx: List[int],
         mode: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],

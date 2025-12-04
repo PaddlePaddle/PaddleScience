@@ -4,7 +4,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar.gz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar.gz
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar.gz -o data_generated.tar.gz
     # unzip it
@@ -87,7 +87,7 @@ python generate_datasets.py
 我们也提前生成了一个比原始训练数据规模小 10 倍的数据集（即`num_init_trials`为 100000），以便简单的进行模型训练，并提供了下载链接：
 
 ``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer4sr/data_generated.tar
 tar -xvf data_generated.tar
 ```
 

@@ -210,8 +210,8 @@ class Visualizer2DPlot(Visualizer2D):
         batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int, optional): Number of timestamps.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float, ...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float, ...]]): The list of ytick locations. Defaults to None.
         prefix (str, optional): Prefix for output file. Defaults to "plot2d".
 
     Examples:

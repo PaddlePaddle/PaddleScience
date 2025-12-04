@@ -21,12 +21,12 @@ input_duration: "24h"
 target_lead_times: "12h"
 
 type: gencast
-data_path: data/dataset/source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc
-stddev_diffs_path: data/stats/gencast_stats_diffs_stddev_by_level.nc
-stddev_path: data/stats/gencast_stats_stddev_by_level.nc
-mean_path: data/stats/gencast_stats_mean_by_level.nc
-min_path: data/stats/gencast_stats_min_by_level.nc
-param_path: data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
+data_path: ./data/dataset/gencast-dataset-source-era5_date-2019-03-29_res-1.0_levels-13_steps-12.nc
+stddev_diffs_path: ./data/stats/gencast-stats-diffs_stddev_by_level.nc
+stddev_path: ./data/stats/gencast-stats-stddev_by_level.nc
+mean_path: ./data/stats/gencast-stats-mean_by_level.nc
+min_path: ./data/stats/gencast-stats-min_by_level.nc
+param_path: ./data/params/gencast_params_GenCast-1p0deg-Mini-_2019.pdparams
 
 train:
   learning_rate: 0.001

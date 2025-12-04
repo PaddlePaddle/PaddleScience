@@ -6,8 +6,9 @@
     2. 将[Vaihingen数据集]下载到`data`目录中对应的子目录（如`data/vaihingen/train_images`）。
     3. 运行tools/vaihingen_patch_split.py处理原数据集，得到可供训练的数据。
 
-文件数据集结构如下  
-```none
+文件数据集结构如下
+
+```sh
 airs
 ├── unetformer(code)
 ├── model_weights (save the model weights trained on ISPRS vaihingen)
@@ -41,11 +42,11 @@ airs
 === "模型评估命令"
 
     ``` sh
-    # 下载处理好的[Vaihingen测试数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/unetformer/test.zip)，并解压。  
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/unetformer/test.zip -P ./data/vaihingen/
+    # 下载处理好的[Vaihingen测试数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/unetformer/test.zip)，并解压。
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/unetformer/test.zip -P ./data/vaihingen/
     unzip -q ./data/vaihingen/test.zip -d data/vaihingen/
     # 下载预训练模型文件
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/unetformer/unetformer-r18-512-crop-ms-e105_epoch0_best.pdparams -P ./model_weights/vaihingen/unetformer-r18-512-crop-ms-e105/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/unetformer/unetformer-r18-512-crop-ms-e105_epoch0_best.pdparams -P ./model_weights/vaihingen/unetformer-r18-512-crop-ms-e105/
     python vaihingen_test.py -c config/vaihingen/unetformer.py -o fig_results/vaihingen/unetformer --rgb
     ```
 
@@ -77,15 +78,15 @@ UNetFormer是一种基于transformer的解码器的深度学习网络，下图�
 
 $$
 \mathcal{L}_{c e}=-\frac{1}{N} \sum_{n=1}^{N} \sum_{k=1}^{K} y_{k}^{(n)} \log \hat{y}_{k}^{(n)}
-$$  
+$$
 
 $$
 \mathcal{L}_{\text {dice }}=1-\frac{2}{N} \sum_{n=1}^{N} \sum_{k=1}^{K} \frac{\hat{y}_{k}^{(n)} y_{k}^{(n)}}{\hat{y}_{k}^{(n)}+y_{k}^{(n)}}
-$$  
+$$
 
 $$
 \mathcal{L}_{\text {p }}=\mathcal{L}_{c e}+\mathcal{L}_{\text {dice }}
-$$  
+$$
 
 其中N、K分别表示样本数量和类别数量。$y^{(n)}$和$\hat{y}^{(n)}$表示标签的one-hot编码和相应的softmax输出，$\mathrm{n} \in[1, \ldots, \mathrm{n}]$。
 
@@ -162,7 +163,7 @@ examples/unetformer/geoseg/losses/dice.py:36:145
 --8<--
 ```
 
-#### 3.4.2 JointLoss  
+#### 3.4.2 JointLoss
 SoftCrossEntropyLoss和DiceLoss将使用JointLoss进行组合
 
 ``` py linenums="23"
@@ -170,7 +171,7 @@ SoftCrossEntropyLoss和DiceLoss将使用JointLoss进行组合
 examples/unetformer/geoseg/losses/joint_loss.py:23:40
 --8<--
 ```
-#### 3.4.2 UNetFormerLoss  
+#### 3.4.2 UNetFormerLoss
 ``` py linenums="93"
 --8<--
 examples/unetformer/geoseg/losses/useful_loss.py:93:114
@@ -210,7 +211,7 @@ examples/unetformer/vaihingen_test.py:61:121
 
 |  F1  |  mIOU  |  OA  |
 | :----: | :----: | :----: |
-| 0.9062 | 0.8318 | 0.9283 |  
+| 0.9062 | 0.8318 | 0.9283 |
 
 ![image-vaihingen1](https://paddle-org.bj.bcebos.com/paddlescience/docs/unetformer/top_mosaic_09cm_area38_0_6.tif)
 

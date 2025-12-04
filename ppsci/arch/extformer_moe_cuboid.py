@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Sequence
 from typing import Tuple
 from typing import Union
@@ -921,7 +923,7 @@ class ExtFormerMoECuboid(base.Arch):
             raise NotImplementedError
         return initial_z
 
-    def forward(self, x: "paddle.Tensor", verbose: bool = False) -> "paddle.Tensor":
+    def forward(self, x: paddle.Tensor, verbose: bool = False) -> paddle.Tensor:
         """
         Args:
             x (paddle.Tensor): Tensor with shape (B, T, H, W, C).

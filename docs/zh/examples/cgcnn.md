@@ -11,6 +11,7 @@
     ``` sh
     python CGCNN.py TRAIN_DIR="Your train dataset path" VALID_DIR="Your evaluate dataset path"
     ```
+
 === "模型评估命令"
 
     ``` sh

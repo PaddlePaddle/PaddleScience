@@ -77,6 +77,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 汽车表面阻力预测 | [Transolver](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/transolver/) | 数据驱动 | Transolver | 监督学习 | [Data](http://www.nobuyuki-umetani.com/publication/mlcfd_data.zip) | [Paper](https://arxiv.org/abs/2402.02366) |
 | 汽车表面阻力预测 | [DrivAerNet](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/drivaernet/) | 数据驱动 | RegDGCNN | 监督学习 | [Data](https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar) | [Paper](https://www.researchgate.net/publication/378937154_DrivAerNet_A_Parametric_Car_Dataset_for_Data-Driven_Aerodynamic_Design_and_Graph-Based_Drag_Prediction) |
 | 一维线性对流问题 | [1D 线性对流](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/adv_cvit/) | 数据驱动 | ViT | 监督学习 | [Data](https://github.com/Zhengyu-Huang/Operator-Learning/tree/main/data) | [Paper](https://arxiv.org/abs/2405.13998) |
 | 非定常不可压流体 | [2D 方腔浮力驱动流](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/ns_cvit/) | 数据驱动 | ViT | 监督学习 | [Data](https://huggingface.co/datasets/pdearena/NavierStokes-2D) | [Paper](https://arxiv.org/abs/2405.13998) |
@@ -132,6 +133,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
+| 气象降尺度 | [KMCast](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/kmcast) | 数据驱动 | Diffusion | 监督学习 | [GFS](https://rda.ucar.edu/datasets/d084006/) | - |
 | 天气预报 | [Extformer-MoE 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/extformer_moe) | 数据驱动 | Transformer | 监督学习 | [enso](https://tianchi.aliyun.com/dataset/98942) | - |
 | 天气预报 | [FourCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/fourcastnet) | 数据驱动 | AFNO | 监督学习 | [ERA5](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 | 天气预报 | [NowCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/nowcastnet) | 数据驱动 | GAN | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
@@ -147,6 +149,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 交通预测 | [TGCN 交通流量预测](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/tgcn) | 数据驱动 | GCN & CNN | 监督学习 | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
 | 遥感图像分割 | [UNetFormer 遥感图像分割](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/unetformer) | 数据驱动 | UNetFormer | 监督学习 | [Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen) | [Paper](https://github.com/WangLibo1995/GeoSeg) |
 | 生成模型| [图像生成中的梯度惩罚应用](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/wgan_gp)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
+| 遥感图像分割 | [UTAE 遥感时序语义/全景分割](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/UTAE/) | 数据驱动 | UTAE | 监督学习 | [PASTIS](https://zenodo.org/records/5012942) | [Paper](https://arxiv.org/abs/2107.07933) |
 </details>
 
 <details>
@@ -299,6 +302,7 @@ python -c "import paddle; paddle.utils.run_check()"
 | [Open3D](https://github.com/PFCCLab/Open3D.git) | 三维图形库 | 全量支持 |
 | [neuraloperator](https://github.com/PFCCLab/neuraloperator) | 神经算子库 | 全量支持 |
 | [paddle_scatter](https://github.com/PFCCLab/paddle_scatter) | 张量稀疏聚合库 | 全量支持 |
+| [paddle_cluster](https://github.com/PFCCLab/paddle_cluster) | 几何采样聚合库 | 全量支持 |
 | [paddle_sparse](https://github.com/PFCCLab/paddle_sparse) | 张量稀疏计算库 | 全量支持 |
 | [paddle_harmonics](https://github.com/PFCCLab/paddle_harmonics.git) | 球面谐波变换库 | 全量支持 |
 | [deepali](https://github.com/PFCCLab/deepali) | 图像、点云配准库 | 全量支持 |

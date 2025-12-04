@@ -6,11 +6,11 @@
 
     ``` sh
     # only linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
     unzip data.zip
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
     tar -xvf meshes.tar
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
     tar -zxvf SU2Bin.tgz
 
     # set BATCH_SIZE = number of cpu cores
@@ -23,7 +23,7 @@
     # generalization experiments
     mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
       TRAIN.batch_size=$((BATCH_SIZE)) \
-      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \  
+      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \
       TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine. su2" \
       EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" \
       EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" \
@@ -62,9 +62,9 @@
 执行以下命令，下载并解压数据集。
 
 ``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
 unzip data.zip
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
 tar -xvf meshes.tar
 ```
 
@@ -78,7 +78,7 @@ SU2 流体模拟器以预编译库的形式嵌入在网络中，我们需要下�
 执行以下命令，下载并解压预编译库。
 
 ``` sh
-wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
+wget -c -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
 tar -zxvf SU2Bin.tgz
 ```
 

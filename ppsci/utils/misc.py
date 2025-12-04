@@ -19,6 +19,7 @@ import functools
 import os
 import random
 import time
+import warnings
 from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
@@ -32,6 +33,7 @@ import numpy as np
 import paddle
 from matplotlib import pyplot as plt
 from paddle import distributed as dist
+from paddle.incubate.distributed.models.moe.moe_layer import AllGather
 
 from ppsci.utils import logger
 
@@ -326,7 +328,10 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
 
 def all_gather(
-    tensor: paddle.Tensor, concat: bool = True, axis: int = 0
+    tensor: paddle.Tensor,
+    concat: bool = True,
+    axis: int = 0,
+    requires_grad: bool = False,
 ) -> Union[paddle.Tensor, List[paddle.Tensor]]:
     """Gather tensor from all devices, concatenate them along given axis if specified.
 
@@ -334,6 +339,7 @@ def all_gather(
         tensor (paddle.Tensor): Tensor to be gathered from all GPUs.
         concat (bool, optional): Whether to concatenate gathered Tensors. Defaults to True.
         axis (int, optional): Axis which concatenated along. Defaults to 0.
+        requires_grad (bool, optional): Whether to require gradient. Defaults to False.
 
     Returns:
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors.
@@ -354,7 +360,7 @@ def all_gather(
          [ 7  8  9]
          [10 11 12]]
     """
-    result: List[paddle.Tensor] = []
+    result: Union[paddle.Tensor, List[paddle.Tensor]] = []
 
     # NOTE: Put tensor to CUDAPlace from CUDAPinnedPlace to use communication.
     if tensor.place.is_cuda_pinned_place():
@@ -363,10 +369,27 @@ def all_gather(
     # TODO(HydrogenSulfate): As non-contiguous(strided) tensor is not supported in
     # dist.all_gather, manually convert given Tensor to contiguous below. Strided tensor
     # will be supported in future.
-    dist.all_gather(result, tensor.contiguous())
+    if not requires_grad:
+        dist.all_gather(result, tensor.contiguous())
+        if concat:
+            if tensor.ndim == 0:
+                warnings.warn(
+                    "given tensor is a 0-dim tensor, so we use `paddle.stack` to replace `paddle.concat`",
+                    category=UserWarning,
+                    stacklevel=2,
+                )
+                result = paddle.stack(result, axis)
+            else:
+                result = paddle.concat(result, axis)
+    else:
+        assert (
+            tensor.ndim > 0
+        ), "`all_gather` is not supported for 0-dim tensor when requires_grad=True"
+        assert concat is True, "`requires_grad=True` only support `concat=True`"
+        result = AllGather.apply(
+            tensor.contiguous(), dist.get_rank(), dist.get_world_size(), None
+        )
 
-    if concat:
-        return paddle.concat(result, axis)
     return result
 
 
