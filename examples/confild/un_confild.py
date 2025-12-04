@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# 导入必要的库
 from abc import ABC, abstractmethod
 import copy
 import enum
@@ -36,31 +35,10 @@ from ppsci.arch import LossType
 
 
 def mean_flat(tensor):
-    """
-    计算张量除批次维度外所有维度的平均值
-    
-    参数:
-        tensor: 输入张量
-        
-    返回:
-        除批次维度外所有维度的平均值
-    """
     return tensor.mean(axis=list(range(1, len(tensor.shape))))
 
 
 def normal_kl(mean1, logvar1, mean2, logvar2):
-    """
-    计算两个高斯分布之间的KL散度
-    
-    参数:
-        mean1: 第一个高斯分布的均值
-        logvar1: 第一个高斯分布的对数方差
-        mean2: 第二个高斯分布的均值
-        logvar2: 第二个高斯分布的对数方差
-        
-    返回:
-        两个高斯分布之间的KL散度
-    """
     return 0.5 * (
         -1.0
         + logvar2
@@ -71,27 +49,14 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
 
 
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
-    """
-    从一维numpy数组中为一批索引提取值
-    
-    参数:
-        arr: 一维numpy数组
-        timesteps: 时间步索引
-        broadcast_shape: 广播形状
-        
-    返回:
-        提取并广播后的张量
-    """
-    # 修复类型转换：先指定dtype再索引
     res = paddle.to_tensor(arr, dtype=timesteps.dtype)[timesteps]
     while len(res.shape) < len(broadcast_shape):
         res = res[..., None]
     return res.expand(broadcast_shape)
 
 
-# 添加用于存储训练和验证损失的全局变量
-train_losses = []  # 存储训练损失
-valid_losses = []  # 存储验证损失
+train_losses = []
+valid_losses = []
 
 
 def create_model(
@@ -114,32 +79,6 @@ def create_model(
     use_fp16=False,
     use_new_attention_order=False,
 ):
-    """
-    创建UNet模型
-    
-    参数:
-        image_size: 图像尺寸
-        num_channels: 模型通道数
-        num_res_blocks: 每个下采样级别的残差块数
-        dims: 数据维度(1=1D, 2=2D, 3=3D)
-        out_channels: 输出张量的通道数
-        channel_mult: 每个级别的通道乘数
-        learn_sigma: 是否学习方差
-        class_cond: 是否使用类别条件
-        use_checkpoint: 是否启用梯度检查点
-        attention_resolutions: 应用注意力的下采样率
-        num_heads: 注意力头数
-        num_head_channels: 每个注意力头的通道数
-        num_heads_upsample: 上采样块的注意力头数
-        use_scale_shift_norm: 是否使用FiLM-like调节
-        dropout: Dropout概率
-        resblock_updown: 是否使用残差块进行重采样
-        use_fp16: 是否使用float16精度
-        use_new_attention_order: 是否使用优化的注意力模式
-        
-    返回:
-        UNet模型实例
-    """
     if channel_mult is None:
         if image_size == 512:
             channel_mult = (0.5, 1, 1, 2, 2, 4, 4)
@@ -152,7 +91,6 @@ def create_model(
         else:
             raise ValueError(f"unsupported image size: {image_size}")
     else:
-        # 修复channel_mult处理逻辑，确保类型正确
         if isinstance(channel_mult, str):
             channel_mult = tuple(int(ch_mult) for ch_mult in channel_mult.split(","))
 
@@ -164,7 +102,7 @@ def create_model(
         image_size=image_size,
         in_channels=out_channels,
         model_channels=num_channels,
-        out_channels=(out_channels if not learn_sigma else 2*out_channels),#(3 if not learn_sigma else 6),
+        out_channels=(out_channels if not learn_sigma else 2*out_channels),
         num_res_blocks=num_res_blocks,
         attention_resolutions=tuple(attention_ds),
         dropout=dropout,
@@ -182,37 +120,8 @@ def create_model(
     )
 
 
-# class LossType(enum.Enum):
-#     """
-#     损失类型枚举
-#     """
-#     MSE = enum.auto()  # 使用原始MSE损失(学习方差时使用KL)
-#     RESCALED_MSE = (
-#         enum.auto()
-#     )  # 使用原始MSE损失(学习方差时使用RESCALED_KL)
-#     KL = enum.auto()  # 使用变分下界
-#     RESCALED_KL = enum.auto()  # 类似KL，但重新缩放以估计完整的VLB
-
-#     def is_vb(self):
-#         """
-#         判断是否为变分下界损失
-#         """
-#         return self == LossType.KL or self == LossType.RESCALED_KL
-
-
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
-    """
-    获取命名的beta调度
-    
-    参数:
-        schedule_name: 调度名称("linear"或"cosine")
-        num_diffusion_timesteps: 扩散步骤数
-        
-    返回:
-        beta值数组
-    """
     if schedule_name == "linear":
-        # Ho等人的线性调度，扩展为适用于任何数量的扩散步骤
         scale = 1000 / num_diffusion_timesteps
         beta_start = scale * 0.0001
         beta_end = scale * 0.02
@@ -229,17 +138,6 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
 
 
 def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
-    """
-    基于alpha_bar创建betas
-    
-    参数:
-        num_diffusion_timesteps: 扩散步骤数
-        alpha_bar: 累积alpha值函数
-        max_beta: beta的最大值
-        
-    返回:
-        beta值数组
-    """
     betas = []
     for i in range(num_diffusion_timesteps):
         t1 = i / num_diffusion_timesteps
@@ -249,16 +147,6 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
 
 
 def space_timesteps(num_timesteps, section_counts):
-    """
-    在基础扩散过程中跳过步骤的时间步空间化
-    
-    参数:
-        num_timesteps: 原始时间步数
-        section_counts: 每个部分的时间步数
-        
-    返回:
-        保留的时间步集合
-    """
     if isinstance(section_counts, str):
         if section_counts.startswith("ddim"):
             desired_count = int(section_counts[len("ddim") :])
@@ -305,23 +193,6 @@ def create_gaussian_diffusion(
     rescale_learned_sigmas=False,
     timestep_respacing="",
 ):
-    """
-    创建高斯扩散过程
-    
-    参数:
-        steps: 扩散步骤数
-        learn_sigma: 是否学习方差
-        sigma_small: 是否使用小方差
-        noise_schedule: 噪声调度("linear"或"cosine")
-        use_kl: 是否使用KL损失
-        predict_xstart: 是否预测初始x
-        rescale_timesteps: 是否重新缩放时间步
-        rescale_learned_sigmas: 是否重新缩放学习的sigma
-        timestep_respacing: 时间步重新间隔
-        
-    返回:
-        高斯扩散过程实例
-    """
     betas = get_named_beta_schedule(noise_schedule, steps)
     if use_kl:
         loss_type = LossType.RESCALED_KL
@@ -352,15 +223,6 @@ def create_gaussian_diffusion(
 
 
 def load_elbow_flow(path):
-    """
-    加载肘管流数据
-    
-    参数:
-        path: 数据文件路径
-        
-    返回:
-        肘管流数据(从索引1开始)
-    """
     return np.load(f"{path}")[1:]
 
 
@@ -370,76 +232,26 @@ def load_channel_flow(
     t_end=1200,
     t_every=1,
 ):
-    """
-    加载通道流数据
-    
-    参数:
-        path: 数据文件路径
-        t_start: 起始时间步
-        t_end: 结束时间步
-        t_every: 采样间隔
-        
-    返回:
-        通道流数据
-    """
     return np.load(f"{path}")[t_start:t_end:t_every]
 
 
 def load_periodic_hill_flow(path):
-    """
-    加载周期性山丘流数据
-    
-    参数:
-        path: 数据文件路径
-        
-    返回:
-        周期性山丘流数据
-    """
     data = np.load(f"{path}")
     return data
 
 
 def load_3d_flow(path):
-    """
-    加载3D流数据
-    
-    参数:
-        path: 数据文件路径
-        
-    返回:
-        3D流数据
-    """
     data = np.load(f"{path}")
     return data
 
 
 class Normalizer_ts(object):
-    """
-    时间序列归一化器
-    """
     def __init__(self, params=[], method="-11", dim=None):
-        """
-        初始化归一化器
-        
-        参数:
-            params: 归一化参数
-            method: 归一化方法("-11", "01", "ms", "none")
-            dim: 归一化维度
-        """
         self.params = params
         self.method = method
         self.dim = dim
 
     def fit_normalize(self, data):
-        """
-        拟合并归一化数据
-        
-        参数:
-            data: 输入数据
-            
-        返回:
-            归一化后的数据
-        """
         assert type(data) == paddle.Tensor
         if len(self.params) == 0:
             if self.method == "-11" or self.method == "01":
@@ -469,29 +281,11 @@ class Normalizer_ts(object):
         return self.fnormalize(data, self.params, self.method)
 
     def normalize(self, new_data):
-        """
-        归一化新数据
-        
-        参数:
-            new_data: 新数据
-            
-        返回:
-            归一化后的数据
-        """
         if not new_data.place == self.params[0].place:
             self.params = self.params[0], self.params[1]
         return self.fnormalize(new_data, self.params, self.method)
 
     def denormalize(self, new_data_norm):
-        """
-        反归一化数据
-        
-        参数:
-            new_data_norm: 归一化后的数据
-            
-        返回:
-            反归一化后的数据
-        """
         if not new_data_norm.place == self.params[0].place:
             self.params = self.params[0], self.params[1]
         return self.fdenormalize(new_data_norm, self.params, self.method)

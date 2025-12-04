@@ -10,22 +10,18 @@ defaults:
 
 hydra:
   run:
-    # dynamic output directory according to running time and override name
-    # dir: outputs_confild_case1/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
     dir: ./outputs_un_confild_case4
   job:
-    name: ${mode} # name of logfile
-    chdir: false # keep current working directory unchanged
+    name: ${mode}
+    chdir: false
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
   sweep:
-    # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
 
-# general settings
-mode: eval # running mode: infer
+mode: eval
 seed: 2025
 output_dir: ${hydra:run.dir}
 log_freq: 20
@@ -35,12 +31,12 @@ TRAIN:
   batch_size : 8
   test_batch_size : 8
   ema_rate: "0.9999"
-  lr_anneal_steps: 10000  # 学习率衰减步数，设置为0表示不衰减
-  lr : 5.e-5             # 为diffusion损失降低学习率
+  lr_anneal_steps: 10000
+  lr : 5.e-5
   weight_decay: 0.0
-  final_lr: 1.e-5        # 最终学习率
+  final_lr: 1.e-5
   microbatch: -1
-  max_steps: 10000       # 总训练步数
+  max_steps: 10000
 
 EVAL:
   mutil_GPU: 2

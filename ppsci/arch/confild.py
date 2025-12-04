@@ -243,13 +243,13 @@ class FeatureMapping:
             )
             self.dim = tuple(self.B.shape)[0] * 2
         elif mode == "rbf":
-            self.centers = paddle.base.framework.EagerParamBase.from_tensor(
-                tensor=paddle.empty(
+            self.centers = paddle.nn.Parameter(
+                paddle.empty(
                     shape=(rbf_out_features, in_features), dtype="float32"
                 )
             )
-            self.sigmas = paddle.base.framework.EagerParamBase.from_tensor(
-                tensor=paddle.empty(shape=rbf_out_features, dtype="float32")
+            self.sigmas = paddle.nn.Parameter(
+                paddle.empty(shape=rbf_out_features, dtype="float32")
             )
             init_Uniform = paddle.nn.initializer.Uniform(
                 low=-1 * rbf_range, high=rbf_range

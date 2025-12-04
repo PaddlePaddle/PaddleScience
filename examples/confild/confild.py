@@ -135,13 +135,12 @@ class Normalizer_ts(object):
             return data_norm
 
 
-class basic_set(paddle.io.Dataset):
+class BasicSet(paddle.io.Dataset):
     def __init__(self, fois, coord, global_indices=None, extra_siren_in=None) -> None:
         super().__init__()
         self.fois = fois.numpy()
         self.total_samples = tuple(fois.shape)[0]
         self.coords = coord.numpy()
-        # 存储全局索引
         self.global_indices = (
             global_indices
             if global_indices is not None
@@ -152,7 +151,6 @@ class basic_set(paddle.io.Dataset):
         return self.total_samples
 
     def __getitem__(self, idx):
-        # 使用全局索引
         global_idx = self.global_indices[idx]
         if hasattr(self, "extra_in"):
             extra_id = idx % tuple(self.fois.shape)[1]
@@ -166,9 +164,7 @@ class basic_set(paddle.io.Dataset):
             return self.coords, self.fois[idx], global_idx
 
 
-# build data
 def getdata(cfg):
-    ###### read data - fois ######
     if cfg.Data.load_data_fn == "load_3d_flow":
         fois = load_3d_flow(cfg.Data.data_path)
     elif cfg.Data.load_data_fn == "load_elbow_flow":
@@ -180,7 +176,6 @@ def getdata(cfg):
     else:
         fois = np.load(cfg.Data.data_path)
 
-    # 计算空间形状和轴
     spatio_shape = fois.shape[1:-1]
     spatio_axis = list(
         range(fois.ndim if isinstance(fois, np.ndarray) else fois.dim())
@@ -228,9 +223,8 @@ def signal_train(
     cnf_model = SIRENAutodecoder_film(**cfg.CONFILD)
     latents_model = LatentContainer(**cfg.Latent)
 
-    # 创建训练集和测试集，传入全局索引
-    train_dataset = basic_set(train_normed_fois, normed_coords, train_indices)
-    test_dataset = basic_set(test_normed_fois, normed_coords, test_indices)
+    train_dataset = BasicSet(train_normed_fois, normed_coords, train_indices)
+    test_dataset = BasicSet(test_normed_fois, normed_coords, test_indices)
 
     criterion = paddle.nn.MSELoss()
 
@@ -263,15 +257,12 @@ def signal_train(
             }
             batch_output = cnf_model(data)
             loss = criterion(batch_output["confild_output"], batch_fois)
-            
-            # 清空梯度
+
             cnf_optimizer.clear_grad(set_to_zero=False)
             latents_optimizer.clear_grad(set_to_zero=False)
-            
-            # 反向传播
+
             loss.backward()
-            
-            # 更新参数
+
             cnf_optimizer.step()
             latents_optimizer.step()
             train_loss.append(loss)
@@ -309,27 +300,20 @@ def signal_train(
             paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
             paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
 
-    # 绘制损失图
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
 
-    # 添加标题和标签
     plt.title("Training Loss over Epochs")
     plt.xlabel("Epochs")
     plt.xticks(rotation=45)
     plt.ylabel("Loss")
 
-    # 添加图例
     plt.legend()
 
-    # 显示网格线
     plt.grid(True)
 
-    # 保存为 PNG 格式
     plt.savefig("case.png")
 
-    # 显示图形
-    plt.show()
 
 
 def mutil_train(
@@ -356,9 +340,8 @@ def mutil_train(
     )
     latents_optimizer = fleet.distributed_optimizer(latents_optimizer)
 
-    # 创建训练集和测试集，传入全局索引
-    train_dataset = basic_set(train_normed_fois, normed_coords, train_indices)
-    test_dataset = basic_set(test_normed_fois, normed_coords, test_indices)
+    train_dataset = BasicSet(train_normed_fois, normed_coords, train_indices)
+    test_dataset = BasicSet(test_normed_fois, normed_coords, test_indices)
 
     train_sampler = DistributedBatchSampler(
         train_dataset, cfg.TRAIN.batch_size, shuffle=True, drop_last=True
@@ -397,15 +380,12 @@ def mutil_train(
             }
             batch_output = cnf_model(data)
             loss = criterion(batch_output["confild_output"], batch_fois)
-            
-            # 清空梯度
+
             cnf_optimizer.clear_grad(set_to_zero=False)
             latents_optimizer.clear_grad(set_to_zero=False)
-            
-            # 反向传播
+
             loss.backward()
-            
-            # 更新参数
+
             cnf_optimizer.step()
             latents_optimizer.step()
             train_loss.append(loss)
@@ -442,34 +422,25 @@ def mutil_train(
                 
             paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
             paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
-    
-    # 绘制损失图
+
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
 
-    # 添加标题和标签
     plt.title("Training Loss over Epochs")
     plt.xlabel("Epochs")
     plt.xticks(rotation=45)
     plt.ylabel("Loss")
 
-    # 添加图例
     plt.legend()
 
-    # 显示网格线
     plt.grid(True)
 
-    # 保存为 PNG 格式
     plt.savefig("case.png")
 
-    # 显示图形
-    plt.show()
 
 
 def train(cfg):
-    # 获取GPU数量，检查是否是多卡训练
     world_size = cfg.TRAIN.mutil_GPU
-    # 获取数据
     normed_coords, normed_fois, N_samples, spatio_axis, out_normalizer = getdata(cfg)
     train_normed_fois = normed_fois
     test_normed_fois = normed_fois
@@ -573,7 +544,6 @@ def evaluate(cfg: DictConfig):
 
 
 def inference(cfg):
-    # 获取分割后的数据集
     normed_coords, normed_fois, _, _, _ = getdata(cfg)
     if len(normed_coords.shape) + 1 == len(normed_fois.shape):
         normed_coords = paddle.tile(
