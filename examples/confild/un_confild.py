@@ -291,9 +291,6 @@ class Normalizer_ts(object):
         return self.fdenormalize(new_data_norm, self.params, self.method)
 
     def get_params(self):
-        """
-        获取归一化参数
-        """
         if self.method == "ms":
             print("returning mean and std")
         elif self.method == "01":
@@ -306,17 +303,6 @@ class Normalizer_ts(object):
 
     @staticmethod
     def fnormalize(data, params, method):
-        """
-        执行归一化
-        
-        参数:
-            data: 输入数据
-            params: 归一化参数
-            method: 归一化方法
-            
-        返回:
-            归一化后的数据
-        """
         if method == "-11":
             return (data - params[1]) / (
                 params[0] - params[1]
@@ -332,17 +318,6 @@ class Normalizer_ts(object):
 
     @staticmethod
     def fdenormalize(data_norm, params, method):
-        """
-        执行反归一化
-        
-        参数:
-            data_norm: 归一化后的数据
-            params: 归一化参数
-            method: 归一化方法
-            
-        返回:
-            反归一化后的数据
-        """
         if method == "-11":
             return (data_norm + 1) / 2 * (params[0] - params[1]) + params[1]
         elif method == "01":
@@ -356,15 +331,6 @@ class Normalizer_ts(object):
 
 
 def create_slim(cfg):
-    """
-    创建SLIM模型
-    
-    参数:
-        cfg: 配置对象
-        
-    返回:
-        CNF模型、输入归一化器、输出归一化器和坐标
-    """
     ###### read data - fois ######
     if cfg.CNF.load_data_fn == "load_3d_flow":
         fois = load_3d_flow(cfg.CNF.data_path)
@@ -377,7 +343,6 @@ def create_slim(cfg):
     else:
         fois = np.load(cfg.CNF.data_path)
 
-    # 计算空间形状和轴
     spatio_shape = fois.shape[1:-1]
 
     ###### read data - coordinate ######
@@ -401,7 +366,6 @@ def create_slim(cfg):
     ###### normalizer ######
     in_normalizer = Normalizer_ts(**cfg.CNF.normalizer)
     out_normalizer = Normalizer_ts(**cfg.CNF.normalizer)
-    # 使用最新的模型参数
     norm_params = paddle.load(cfg.CNF.normalizer_params_path)
     in_normalizer.params = norm_params["x_normalizer_params"]
     out_normalizer.params = norm_params["y_normalizer_params"]
@@ -412,27 +376,11 @@ def create_slim(cfg):
 
 
 def dl_iter(dl):
-    """
-    数据加载器迭代器
-    
-    参数:
-        dl: 数据加载器
-        
-    返回:
-        无限迭代数据加载器
-    """
     while True:
         yield from dl 
 
 
 def train(cfg):
-    """
-    训练函数
-    
-    参数:
-        cfg: 配置对象
-    """
-    # create parameters
     batch_size = cfg.TRAIN.batch_size
     test_batch_size = cfg.TRAIN.test_batch_size
     ema_rate = cfg.TRAIN.ema_rate
@@ -448,7 +396,6 @@ def train(cfg):
     resume_step = 0
     microbatch = cfg.TRAIN.microbatch if cfg.TRAIN.microbatch > 0 else batch_size
 
-    ## Data Preprocessing
     train_data = np.load(cfg.DATA.train_data)
     valid_data = np.load(cfg.DATA.valid_data)
     print(f"Train data shape: {train_data.shape}, range: [{train_data.min():.3f}, {train_data.max():.3f}]")
@@ -481,7 +428,6 @@ def train(cfg):
                                         )
     print(f"Diffusion model created with {cfg.Diff.steps} steps, noise schedule: {cfg.Diff.noise_schedule}")
 
-    # 初始化AdamW优化器
     opt = paddle.optimizer.AdamW(
         parameters=unet_model.parameters(), learning_rate=cfg.TRAIN.lr, weight_decay=cfg.TRAIN.weight_decay
     )
@@ -489,7 +435,6 @@ def train(cfg):
     
     schedule_sampler = UniformSampler(diff_model)
 
-    # 初始化EMA参数
     ema_params = []
     for _ in range(len(ema_rate)):
         ema_param_dict = {}
@@ -507,19 +452,14 @@ def train(cfg):
 
     while step + resume_step < max_steps:
         cond = {}
-        # 获取训练批次数据
         train_batch = next(dl_train)
 
-        # 前向传播
         unet_model.train()
-        # 清零梯度
         opt.clear_grad()
 
-        # 用于累积整个step的损失
         step_losses = []
 
         for i in range(0, len(train_batch), microbatch):
-            # 获取当前微批次数据
             micro = train_batch[i : i + microbatch]
             micro_cond = {
                 k: v[i : i + microbatch]
@@ -535,7 +475,6 @@ def train(cfg):
                 t,
                 model_kwargs=micro_cond
             )
-            # 计算损失
             losses = compute_losses()
 
             if isinstance(schedule_sampler, LossAwareSampler):
@@ -543,10 +482,8 @@ def train(cfg):
                     t, losses["loss"].detach()
                 )
 
-            # 计算加权平均损失
             loss = (losses["loss"] * weights).mean()
 
-            # 检查损失值
             if step == 0 and i == 0:
                 print(f"First loss computation - loss: {loss.item():.6f}, losses keys: {list(losses.keys())}")
                 if 'mse' in losses:
@@ -554,7 +491,6 @@ def train(cfg):
                 if 'vb' in losses:
                     print(f"VB loss: {losses['vb'].mean().item():.6f}")
 
-            # 收集每个微批次的损失用于计算step平均损失
             step_losses.append(loss.item())
 
             if i == 0:
@@ -562,57 +498,43 @@ def train(cfg):
                     diff_model, t, {k: v * weights for k, v in losses.items() if isinstance(v, paddle.Tensor)}, is_valid=False
                 )
 
-            # 反向传播（梯度累积）
             loss.backward()
 
-        # 梯度裁剪，防止梯度爆炸
         paddle.nn.utils.clip_grad_norm_(unet_model.parameters(), max_norm=1.0)
 
-        # 更新参数
         grad_norm, param_norm = _compute_norms(unet_model)
         opt.step()
 
-        # 计算并记录整个step的平均训练损失
         if step_losses:
             avg_step_loss = sum(step_losses) / len(step_losses)
             train_losses.append(avg_step_loss)
 
-            # 调试信息：每50步打印一次详细信息
             if step % 50 == 0:
                 current_lr = opt.get_lr()
                 print(f"Step {step}: Loss={avg_step_loss:.6f}, GradNorm={grad_norm:.6f}, ParamNorm={param_norm:.6f}, LR={current_lr:.2e}")
 
-
-        # 更新EMA参数
         _update_ema(ema_rate, ema_params, unet_model)
 
-        # 更新学习率
         if lr_anneal_steps is not None and lr_anneal_steps != 0:
             _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, cfg.TRAIN.lr)
 
         step += 1
-        
-        # 定期执行验证（每valid_interval步）
+
         if step % valid_interval == 0:
             unet_model.eval()
             with paddle.no_grad():
-                # 获取验证批次
                 valid_batch = next(dl_valid)
                 all_valid_losses = []
-                
-                # 分解成微批次处理
+
                 for i in range(0, len(valid_batch), microbatch):
-                    # 获取当前微批次数据
                     micro = valid_batch[i : i + microbatch]
                     micro_cond = {
                         k: v[i : i + microbatch]
                         for k, v in cond.items()
                     }
-                    
-                    # 采样时间步
+
                     t, weights = schedule_sampler.sample(len(micro))
 
-                    # 计算验证损失
                     compute_losses = functools.partial(
                         diff_model.training_losses,
                         unet_model,
@@ -623,30 +545,22 @@ def train(cfg):
                     )
                     losses = compute_losses()
 
-                    # 收集损失
                     if "loss" in losses:
                         all_valid_losses.append((losses["loss"] * weights).mean().item())
-                
-                # 聚合并记录验证损失
+
                 if len(all_valid_losses) > 0:
                     avg_valid_loss = sum(all_valid_losses) / len(all_valid_losses)
                     valid_losses.append(avg_valid_loss)
                     print(f"Step {step}: Train Loss: {train_losses[-1]:.6f}, Valid Loss: {avg_valid_loss:.6f}")
-            
-            # 切换回训练模式
+
             unet_model.train()
-    
-    # 保存模型
+
     paddle.save(unet_model.state_dict(), "unet.pdparams")
-    
-    # 绘制训练和验证损失曲线
+
     plot_losses()
 
 
 def plot_losses():
-    """
-    绘制训练和验证损失曲线
-    """
     if len(train_losses) == 0 or len(valid_losses) == 0:
         print("没有足够的数据来绘制损失曲线")
         return
@@ -656,8 +570,7 @@ def plot_losses():
     # 绘制训练损失
     plt.plot(train_losses, label='Training Loss', alpha=0.8)
 
-    # 绘制验证损失，需要对齐到正确的训练步数位置
-    valid_interval = 100  # 验证间隔
+    valid_interval = 100
     valid_steps = [(i + 1) * valid_interval for i in range(len(valid_losses))]
     plt.plot(valid_steps, valid_losses, label='Validation Loss', alpha=0.8, marker='o')
 
@@ -670,23 +583,12 @@ def plot_losses():
 
     # 保存图像
     plt.savefig('loss_curve.png', dpi=300, bbox_inches='tight')
-    print("损失曲线已保存为 loss_curve.png")
 
     # 显示图像
     plt.show()
 
 
 def _compute_norms(model, grad_scale=1.0):
-    """
-    计算模型参数和梯度的范数
-    
-    参数:
-        model: 模型
-        grad_scale: 梯度缩放因子
-        
-    返回:
-        梯度范数和参数范数
-    """
     grad_norm = 0.0
     param_norm = 0.0
     for p in model.parameters():
@@ -698,15 +600,6 @@ def _compute_norms(model, grad_scale=1.0):
 
 
 def _update_ema(ema_rate, ema_params, source_model):
-        """
-        更新EMA(指数移动平均)参数
-        EMA有助于提高生成质量，减少模型权重噪声
-        
-        参数:
-            ema_rate: EMA衰减率列表
-            ema_params: EMA参数字典列表
-            source_model: 源模型
-        """
         for rate, target_params_dict in zip(ema_rate, ema_params):
             for name, target_param in target_params_dict.items():
                 source_param = dict(source_model.named_parameters())[name]
@@ -715,18 +608,6 @@ def _update_ema(ema_rate, ema_params, source_model):
 
 
 def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
-        """
-        学习率退火调整
-        根据训练进度线性降低学习率
-        
-        参数:
-            lr_anneal_steps: 学习率退火步数
-            step: 当前步数
-            resume_step: 恢复步数
-            opt: 优化器
-            final_lr: 最终学习率
-            lr: 初始学习率
-        """
         if not lr_anneal_steps:
             return
         frac_done = (step + resume_step) / lr_anneal_steps
@@ -735,28 +616,10 @@ def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
 
 
 def log_loss_dict(diffusion, ts, losses, is_valid=False, add_to_list=True):
-    """
-    记录损失字典的日志
-    
-    参数:
-        diffusion: 扩散模型对象
-        ts: 时间步张量
-        losses: 损失字典
-        is_valid: 是否为验证损失
-        add_to_list: 是否将损失添加到全局列表中（用于验证时聚合控制）
-    """
     for key, values in losses.items():
-        # 记录平均损失值
         mean_loss = values.mean().item()
         logger.info(f"{key}: {mean_loss:.6f}")
-        
-        # ts_numpy = ts.cpu().numpy() if ts.place.is_gpu_place() else ts.numpy()
-        # values_numpy = values.detach().cpu().numpy() if values.place.is_gpu_place() else values.detach().numpy()
-        # for sub_t, sub_loss in zip(ts_numpy, values_numpy):
-        #     quartile = int(4 * sub_t / diffusion.num_timesteps)
-        #     logger.info(f"{key}_q{quartile}: {sub_loss:.6f}")
-        
-        # 记录训练和验证损失到全局列表
+
         if key == "loss" and add_to_list:
             if is_valid:
                 valid_losses.append(mean_loss)
@@ -765,13 +628,6 @@ def log_loss_dict(diffusion, ts, losses, is_valid=False, add_to_list=True):
 
 
 def evaluate(cfg):
-    """
-    评估函数
-    
-    参数:
-        cfg: 配置对象
-    """
-    ## Create model and diffusion
     unet_model = create_model(image_size=cfg.UNET.image_size,
                             num_channels=cfg.UNET.num_channels,
                             num_res_blocks=cfg.UNET.num_res_blocks,
@@ -793,7 +649,6 @@ def evaluate(cfg):
     max_val, min_val = paddle.to_tensor(max_val), paddle.to_tensor(min_val)
     gen_latents = (gen_latents + 1)*(max_val - min_val)/2. + min_val
 
-    # 获取模型
     nf, in_normalizer, out_normalizer, coord = create_slim(cfg)
     nf.set_state_dict(paddle.load(cfg.CNF.model_path))
     coord = in_normalizer.normalize(coord)
@@ -805,7 +660,6 @@ def evaluate(cfg):
     for sample_index in range(n_samples):
         for i in range(gen_latents.shape[1]//batch_size):
             new_latents = gen_latents[sample_index, i*batch_size:(i+1)*batch_size]
-            # coord = in_normalizer.normalize(coord)
             if len(coord.shape) > 2:
                 new_latents = new_latents[:, None, None]
             else:
@@ -825,12 +679,6 @@ def evaluate(cfg):
 
 @hydra.main(version_base=None, config_path="./conf", config_name="un_confild_case1.yaml")
 def main(cfg: DictConfig):
-    """
-    主函数
-    
-    参数:
-        cfg: 配置对象
-    """
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
