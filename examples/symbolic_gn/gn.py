@@ -106,7 +106,6 @@ def train(cfg):
     if cfg.MODEL.arch == "HGN":
         cfg.MODEL.output_keys = ["acceleration"]
 
-    # Create simulation dataset
     sim = SimulationDataset(
         sim=cfg.DATA.type,
         n=cfg.DATA.num_nodes,
@@ -204,7 +203,7 @@ def train(cfg):
         lr_scheduler.by_epoch = True
     
     optimizer = paddle.optimizer.Adam(
-        learning_rate=lr_scheduler,#cfg.TRAIN.lr_scheduler.max_learning_rate,
+        learning_rate=lr_scheduler,
         parameters=model.parameters(),
         weight_decay=cfg.TRAIN.optimizer.weight_decay
     )
@@ -220,12 +219,10 @@ def train(cfg):
 
     solver.train()
     solver.plot_loss_history(by_epoch=True, smooth_step=1)
-    # 保存模型
     paddle.save(model.state_dict(), os.path.join(f"{cfg.MODEL.arch}.pdparams"))
 
 
 def evaluate(cfg: DictConfig):
-    # Set model
     if cfg.MODEL.n_f == "auto":
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
@@ -244,13 +241,11 @@ def evaluate(cfg: DictConfig):
         l1_strength=l1_strength
     )
     
-    # Load pretrained model
     ppsci.utils.save_load.load_pretrain(
         model,
         cfg.EVAL.pretrained_model_path,
     )
 
-    # Generate test data
     sim = SimulationDataset(
         sim=cfg.DATA.type,
         n=cfg.DATA.num_nodes,
@@ -261,47 +256,40 @@ def evaluate(cfg: DictConfig):
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
     
-    # Calculate number of time steps per sample
+    num_time_steps_per_sample = len(range(0, sim.data.shape[1], cfg.DATA.sample_interval))
     num_time_steps_per_sample = len(range(0, sim.data.shape[1], cfg.DATA.sample_interval))
     
-    # Evaluate on selected samples (use original sim.data directly)
     sample_indices = [0, 1] if cfg.DATA.num_samples > 1 else [0]
     
     for sample_idx in sample_indices:
-        # Get data for this sample at first time step
-        sample_data = sim.data[sample_idx, 0:1]  # Shape: [1, num_nodes, n_f]
-        true_accel = accel_data[sample_idx, 0:1]  # Shape: [1, num_nodes, dim]
+        sample_data = sim.data[sample_idx, 0:1]
+        true_accel = accel_data[sample_idx, 0:1]
         
-        # Prepare input - convert to PaddlePaddle tensors
         input_dict = {
             "x": paddle.to_tensor(sample_data, dtype="float32"),
             "edge_index": paddle.to_tensor(edge_index, dtype="int64")
         }
         
-        # Model prediction
         with paddle.no_grad():
             pred_output = model(input_dict)
-            pred_accel = pred_output[cfg.MODEL.output_keys[0]]  # Shape: [1, num_nodes, dim]
+            pred_accel = pred_output[cfg.MODEL.output_keys[0]]
         
-        # Calculate error
         error = np.mean(np.abs(pred_accel.numpy() - true_accel))
         logger.info(f"Sample {sample_idx} - MAE error: {error:.6f}")
         
-        # Calculate relative error
         rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(true_accel)
         logger.info(f"Sample {sample_idx} - Relative error: {rel_error:.6f}")
         
-        # Visualization using simulate.py plot function
         plt.figure(figsize=(10, 8))
         sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
         plt.title(f'{cfg.DATA.type.capitalize()} System - Sample {sample_idx}\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
         plt.tight_layout()
         
-        # Save plot
         plot_path = os.path.join(cfg.output_dir, f"evaluation_sample_{sample_idx}.png")
         plt.savefig(plot_path, dpi=300, bbox_inches='tight')
         plt.close()
         logger.info(f"Evaluation plot saved to {plot_path}")
+        
 
 
 def export(cfg: DictConfig):
@@ -326,19 +314,6 @@ def export(cfg: DictConfig):
         l1_strength=l1_strength
     )
     
-    # 创建数据集
-    # sim = SimulationDataset(
-    #     sim=cfg.DATA.type,
-    #     n=cfg.DATA.num_nodes,
-    #     dim=cfg.DATA.dimension,
-    #     nt=cfg.DATA.time_steps,
-    #     dt=cfg.DATA.time_step_size
-    # )
-    # sim.simulate(cfg.DATA.num_samples)
-    # accel_data = sim.get_acceleration()
-    # # 打印维度
-    # logger.info(f"accel_data shape: {accel_data.shape}")
-    # logger.info(f"edge_index shape: {edge_index.shape}")
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
@@ -368,7 +343,6 @@ def inference(cfg: DictConfig):
         logger.info("Switching to direct model inference...")
         use_predictor = False
 
-    # Generate test data
     sim = SimulationDataset(
         sim=cfg.DATA.type,
         n=cfg.DATA.num_nodes,
@@ -378,13 +352,11 @@ def inference(cfg: DictConfig):
     )
     sim.simulate(cfg.DATA.num_samples)
     
-    # Prepare input data for inference
     sample_idx = 0
-    sample_data = sim.data[sample_idx, 0]  # Shape: [num_nodes, n_f]
+    sample_data = sim.data[sample_idx, 0]
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
     
     if use_predictor:
-        # Use GeneralPredictor
         input_dict = {
             "x": sample_data,
             "edge_index": edge_index
@@ -392,7 +364,6 @@ def inference(cfg: DictConfig):
         output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
         pred_acceleration = output_dict[cfg.MODEL.output_keys[0]]
     else:
-        # Direct model inference
         if cfg.MODEL.n_f == "auto":
             cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
         if cfg.MODEL.ndim == "auto":
@@ -424,30 +395,25 @@ def inference(cfg: DictConfig):
             pred_output = model(input_dict)
             pred_acceleration = pred_output[cfg.MODEL.output_keys[0]].numpy()
     
-    # Calculate true acceleration for comparison
     accel_data = sim.get_acceleration()
-    true_acceleration = accel_data[sample_idx, 0]  # Shape: [num_nodes, dim]
+    true_acceleration = accel_data[sample_idx, 0]
     
-    # Calculate error
     error = np.mean(np.abs(pred_acceleration - true_acceleration))
     logger.info(f"Inference error (MAE): {error:.6f}")
     
-    # Calculate relative error
     rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(true_acceleration)
     logger.info(f"Inference relative error: {rel_error:.6f}")
     
-    # Visualization using simulate.py plot function
     plt.figure(figsize=(10, 8))
     sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
     plt.title(f'{cfg.DATA.type.capitalize()} System - Inference\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
     plt.tight_layout()
     
-    # Save plot
     plot_path = os.path.join(cfg.output_dir, "inference.png")
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
     logger.info(f"Inference plot saved to {plot_path}")
-
+    
 
 @hydra.main(version_base=None, config_path="./conf", config_name="config_hgn")
 def main(cfg: DictConfig) -> None:

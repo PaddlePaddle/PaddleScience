@@ -9,21 +9,18 @@ defaults:
    - _self_
 hydra:
   run:
-    # dynamic output directory according to running time and override name
     dir: outputs_symbolic_gcn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
-    name: ${mode} # name of logfile
-    chdir: false # keep current working directory unchanged
+    name: ${mode}
+    chdir: false
   callbacks:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
   sweep:
-    # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
 
-# general settings
-mode: train # running mode: train/eval/export/inference
+mode: train
 seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
@@ -37,7 +34,7 @@ TRAIN:
   eval_freq: 5
   checkpoint_path: null
   pretrained_model_path: null
-  train_split: 0.8  # Train/validation split ratio
+  train_split: 0.8
   optimizer:
     learning_rate: 1e-3
     weight_decay: 1e-8
@@ -46,8 +43,8 @@ TRAIN:
     max_learning_rate: 1e-3
     final_div_factor: 1e5
   loss:
-    type: "MAE"  # MAE or MSE
-    physics_weight: 0.0  # Physical regularization weight
+    type: "MAE"
+    physics_weight: 0.0
   message_analysis:
     enabled: true
     record_interval: 1
@@ -58,7 +55,6 @@ EVAL:
   eval_with_no_grad: true
   batch_size: 1024
 
-# export settings
 export_path: "./exported_model_varogn"
 
 INFER:
@@ -69,27 +65,27 @@ INFER:
   precision: fp32
 
 MODEL:
-  arch: "VarOGN"  # Variational Object-based Graph Network
+  arch: "VarOGN"
   input_keys: ["x", "edge_index"]
-  output_keys: ["acceleration"]  # VarOGN outputs mean acceleration
-  n_f: auto  # auto = dimension * 2 + 2
+  output_keys: ["acceleration"]
+  n_f: auto
   msg_dim: 100
-  ndim: auto  # auto = dimension
+  ndim: auto
   dt: 0.1
   hidden: 300
-  aggr: "add"  # add, mean, max, min
-  regularization_type: "kl"  # VarOGN uses KL divergence regularization
-  l1_strength: 1e-3  # L1 regularization strength
+  aggr: "add"
+  regularization_type: "kl"
+  l1_strength: 1e-3
 
 DATA:
-  type: "string"  # r1, r2, spring, string, charge, superposition, damped, discontinuous, string_ball
+  type: "string"
   num_samples: 1000
   num_nodes: 4
   dimension: 2
   time_steps: 10
   time_step_size: 0.01
   downsample_factor: 5
-  sample_interval: 5  # Sampling interval for training data
+  sample_interval: 5
 
 DATATYPE_TYPE:
   - sim: "r1"

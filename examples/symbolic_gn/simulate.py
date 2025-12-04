@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np  # Standard Numpy for numerical computation
-import paddle  # PaddlePaddle for automatic differentiation
+import numpy as np
+import paddle
 from matplotlib import pyplot as plt
-from scipy.integrate import odeint  # Scipy ODE solver
+from scipy.integrate import odeint
 import matplotlib as mpl
 from functools import partial
 from tqdm import tqdm
-from celluloid import Camera  # For creating animations
+from celluloid import Camera
 
 def make_transparent_color(ntimes, fraction):
     """
@@ -37,19 +37,14 @@ def make_transparent_color(ntimes, fraction):
         numpy.ndarray: RGBA color array with shape (ntimes, 4).
                       Each row represents the color [R, G, B, Alpha] at a time step.
     """
-    # Initialize RGBA array, all set to 1 (white, fully opaque)
     rgba = np.ones((ntimes, 4))
     
-    # Create transparency gradient from 0 (fully transparent) to 1 (fully opaque)
     alpha = np.linspace(0, 1, ntimes)[:, np.newaxis]
     
-    # Select base color from spectrum according to fraction
     color = np.array(mpl.colors.to_rgba(mpl.cm.gist_ncar(fraction)))[np.newaxis, :]
     
-    # Linear interpolation: from white (1) to target color
     rgba[:, :] = 1*(1-alpha) + color*alpha
     
-    # Set alpha channel
     rgba[:, 3] = alpha[:, 0]
     
     return rgba
@@ -79,7 +74,7 @@ def get_potential(sim, sim_obj):
     Returns:
         function: Potential energy function that takes two particle states and returns their potential energy.
     """
-    dim = sim_obj._dim  # Spatial dimension (2D or 3D)
+    dim = sim_obj._dim
 
     def potential(x1, x2):
         """
@@ -96,63 +91,50 @@ def get_potential(sim, sim_obj):
         Returns:
             float: Potential energy value between the two particles.
         """
-        # Calculate Euclidean distance between two particles
         dist = np.sqrt(np.sum(np.square(x1[:dim] - x2[:dim])))
         
-        # Prevent numerical singularity (division by zero), add minimum distance limit
         min_dist = 1e-2
         bounded_dist = dist + min_dist
 
-        # ========== Potential energy functions for different physical scenarios ==========
-        
         if sim == 'r2':
-            # Inverse square law potential: U = -G*m1*m2/r
-            # Physical scenarios: universal gravitation, Coulomb attraction
             return -x1[-1]*x2[-1]/bounded_dist
             
         elif sim == 'r1':
-            # Logarithmic potential: U = m1*m2*ln(r)
             return x1[-1]*x2[-1]*np.log(bounded_dist)
             
         elif sim in ['spring', 'damped']:
-            # Spring potential: U = (r - r0)^2, where r0=1 is natural length
             potential_val = (bounded_dist - 1)**2
             
             if sim == 'damped':
-                # Add damping dissipation term (velocity-dependent)
                 damping = 1
-                potential_val += damping*x1[1]*x1[1+sim_obj._dim]/sim_obj._n  # y direction
-                potential_val += damping*x1[0]*x1[0+sim_obj._dim]/sim_obj._n  # x direction
+                potential_val += damping*x1[1]*x1[1+sim_obj._dim]/sim_obj._n
+                potential_val += damping*x1[0]*x1[0+sim_obj._dim]/sim_obj._n
                 if sim_obj._dim == 3:
-                    potential_val += damping*x1[2]*x1[2+sim_obj._dim]/sim_obj._n  # z direction
+                    potential_val += damping*x1[2]*x1[2+sim_obj._dim]/sim_obj._n
 
             return potential_val
             
         elif sim == 'string':
-            # String potential: spring potential + gravitational potential
+            
             return (bounded_dist - 1)**2 + x1[1]*x1[-1]
             
         elif sim == 'string_ball':
-            # String potential with ball obstacle
             potential_val = (bounded_dist - 1)**2 + x1[1]*x1[-1]
             
-            # Calculate distance from particle to ball center
             r = np.sqrt((x1[1] + 15)**2 + (x1[0] - 5)**2)
-            radius = 4.0  # Ball radius
-            
-            # Soft boundary repulsion potential (using more stable form)
+            radius = 4.0
             k_repel = 100.0
             potential_val += k_repel / np.maximum(r - radius + 0.5, 0.01)
             return potential_val
 
         elif sim in ['charge', 'superposition']:
-            # Charge interaction: U = q1*q2/r (Coulomb's law)
+            
             charge1 = x1[-2]
             charge2 = x2[-2]
             potential_val = charge1*charge2/bounded_dist
             
             if sim in ['superposition']:
-                # Superposition: contains both gravity and charge interaction
+                
                 m1 = x1[-1]
                 m2 = x2[-1]
                 potential_val += -m1*m2/bounded_dist
@@ -160,16 +142,13 @@ def get_potential(sim, sim_obj):
             return potential_val
             
         elif sim in ['discontinuous']:
-            # Piecewise discontinuous potential function
+            
             m1 = x1[-1]
             m2 = x2[-1]
             
-            # Define potential in three regions
-            pot_a = 0.0                      # r < 1: no interaction
-            pot_b = 0.0                      # 1 <= r < 2: no interaction
-            pot_c = (bounded_dist - 1)**2    # r >= 2: spring potential
-
-            # Implement piecewise function using conditional expressions
+            pot_a = 0.0
+            pot_b = 0.0
+            pot_c = (bounded_dist - 1)**2
             potential_val = (
                 pot_a * (bounded_dist < 1) +
                 (bounded_dist >= 1) * (
@@ -233,13 +212,13 @@ class SimulationDataset(object):
         self.nt = nt
         self.data = None
         
-        # Generate uniform time series
+        
         self.times = np.linspace(0, self.dt*self.nt, num=self.nt)
         
-        self.G = 1  # Gravitational constant
+        self.G = 1
         self.extra_potential = extra_potential
         
-        # Get pairwise potential function for the simulation type
+        
         self.pairwise = get_potential(sim=sim, sim_obj=self)
 
     def simulate(self, ns, seed=0):
@@ -262,13 +241,13 @@ class SimulationDataset(object):
         Returns:
             None: Results are stored in self.data.
         """
-        # Set random seed
+        
         np.random.seed(seed)
         
         n = self._n
         dim = self._dim
         sim = self._sim
-        params = 2  # charge + mass
+        params = 2
         total_dim = dim*2 + params
         times = self.times
         G = self.G
@@ -294,10 +273,10 @@ class SimulationDataset(object):
             
             for i in range(n - 1):
                 if sim in ['string', 'string_ball']:
-                    # String type: only adjacent particles interact
+
                     sum_potential += G * self.pairwise(xt[i], xt[i+1])
                 else:
-                    # Other types: fully connected
+
                     for j in range(i+1, n):
                         sum_potential += G * self.pairwise(xt[i], xt[j])
             
@@ -323,101 +302,101 @@ class SimulationDataset(object):
             Returns:
                 numpy.ndarray: Force on each particle with shape (n, dim).
             """
-            # Convert numpy array to Paddle Tensor (improved precision: float32 → float64)
+
             xt_tensor = paddle.to_tensor(xt, dtype='float64', stop_gradient=False)
             
-            # Calculate gradient only for position coordinates
+
             positions = xt_tensor[:, :dim]
             positions.stop_gradient = False
             
-            # Rebuild complete state for potential energy calculation
+
             xt_for_potential = paddle.concat([
                 positions,
                 xt_tensor[:, dim:]
             ], axis=1)
             
-            # Calculate total potential energy (using float64 for higher precision)
+
             sum_potential = paddle.to_tensor(0.0, dtype='float64')
             
-            # Iterate through all particle pairs to calculate potential energy
+
             for i in range(n - 1):
                 if sim in ['string', 'string_ball']:
-                    # ========== String type: only calculate adjacent particles ==========
+
                     x1 = xt_for_potential[i]
                     x2 = xt_for_potential[i+1]
                     dist = paddle.sqrt(paddle.sum(paddle.square(x1[:dim] - x2[:dim])))
                     bounded_dist = dist + 1e-2
                     
                     if sim == 'string':
-                        # String potential: spring + gravity
+
                         pot = (bounded_dist - 1)**2 + x1[1]*x1[-1]
                     
                     elif sim == 'string_ball':
-                        # String potential with ball obstacle
+
                         pot = (bounded_dist - 1)**2 + x1[1]*x1[-1]
                         
-                        # Calculate distance to ball center
+
                         r = paddle.sqrt((x1[1] + 15)**2 + (x1[0] - 5)**2)
                         radius = paddle.to_tensor(4.0, dtype='float64')
                         
-                        # Soft boundary repulsion potential (reduced strength to avoid numerical instability)
-                        # More stable repulsion potential: strong repulsion when r < radius
-                        k_repel = 100.0  # Reduced repulsion strength
+
+
+                        k_repel = 100.0
                         pot = pot + k_repel / paddle.maximum(r - radius + 0.5, paddle.to_tensor(0.01, dtype='float64'))
                     
                     sum_potential = sum_potential + G * pot
                 
                 else:
-                    # ========== Fully connected type: calculate all particle pairs ==========
+
                     for j in range(i+1, n):
                         x1 = xt_for_potential[i]
                         x2 = xt_for_potential[j]
                         dist = paddle.sqrt(paddle.sum(paddle.square(x1[:dim] - x2[:dim])))
                         bounded_dist = dist + 1e-2
                         
-                        # Calculate potential based on simulation type
+
                         if sim == 'r2':
-                            # Inverse square law: universal gravitation
+
                             pot = -x1[-1]*x2[-1]/bounded_dist
                         
                         elif sim == 'r1':
-                            # Logarithmic potential
+
                             pot = x1[-1]*x2[-1]*paddle.log(bounded_dist)
                         
                         elif sim in ['spring', 'damped']:
-                            # Spring potential
+
                             pot = (bounded_dist - 1)**2
                             
-                            # Add damping term
+
                             if sim == 'damped':
                                 damping = paddle.to_tensor(1.0, dtype='float64')
-                                # Damping dissipation term: proportional to position-velocity product
-                                pot = pot + damping*x1[1]*x1[1+dim]/n  # y direction
-                                pot = pot + damping*x1[0]*x1[0+dim]/n  # x direction
+
+                                pot = pot + damping*x1[1]*x1[1+dim]/n
+                                pot = pot + damping*x1[0]*x1[0+dim]/n
                                 if dim == 3:
-                                    pot = pot + damping*x1[2]*x1[2+dim]/n  # z direction
+                                    pot = pot + damping*x1[2]*x1[2+dim]/n
                         
                         elif sim in ['charge', 'superposition']:
-                            # Charge interaction (Coulomb's law)
+
                             charge1 = x1[-2]
                             charge2 = x2[-2]
                             pot = charge1*charge2/bounded_dist
                             
                             if sim == 'superposition':
-                                # Superposition: contains both charge and gravity
+
                                 m1 = x1[-1]
                                 m2 = x2[-1]
                                 pot = pot + (-m1*m2/bounded_dist)
                         
                         elif sim == 'discontinuous':
-                            # Piecewise discontinuous potential
-                            # Define potential in three regions
-                            pot_a = paddle.to_tensor(0.0, dtype='float64')  # r < 1
-                            pot_b = paddle.to_tensor(0.0, dtype='float64')  # 1 <= r < 2
-                            pot_c = (bounded_dist - 1)**2                   # r >= 2
+
+
+                            pot_a = paddle.to_tensor(0.0, dtype='float64')
+                            pot_b = paddle.to_tensor(0.0, dtype='float64')
+                            pot_c = (bounded_dist - 1)**2
                             
-                            # Implement piecewise function using conditional expressions
-                            # Paddle's conditional operations automatically handle gradients
+
+
                             cond1 = paddle.cast(bounded_dist < 1, 'float64')
                             cond2 = paddle.cast(bounded_dist >= 1, 'float64') * paddle.cast(bounded_dist < 2, 'float64')
                             cond3 = paddle.cast(bounded_dist >= 2, 'float64')
@@ -425,31 +404,31 @@ class SimulationDataset(object):
                             pot = pot_a * cond1 + pot_b * cond2 + pot_c * cond3
                         
                         else:
-                            # Default: spring potential
+
                             pot = (bounded_dist - 1)**2
                         
                         sum_potential = sum_potential + G * pot
             
-            # Add external potential support
+
             if self.extra_potential is not None:
-                # Note: extra_potential needs to be Paddle-compatible
-                # If user provides a numpy function, there will be issues
-                # Suggestion: use numerical gradients or require Paddle version from user
+
+
+
                 for i in range(n):
-                    # Assume extra_potential returns scalar
-                    # May need adjustment in actual use
+
+
                     try:
                         extra_pot = self.extra_potential(xt_for_potential[i])
                         if not isinstance(extra_pot, paddle.Tensor):
                             extra_pot = paddle.to_tensor(extra_pot, dtype='float64')
                         sum_potential = sum_potential + extra_pot
                     except:
-                        # If extra_potential is not Paddle-compatible, skip
-                        # Should give warning in actual use
+
+
                         pass
             
-            # Calculate gradient: F = -dU/dx
-            # Use paddle.grad for automatic differentiation
+
+
             grads = paddle.grad(
                 outputs=sum_potential,
                 inputs=positions,
@@ -457,7 +436,7 @@ class SimulationDataset(object):
                 retain_graph=False
             )[0]
             
-            # Convert back to numpy
+
             force = -grads.numpy()
             
             return force
@@ -473,7 +452,7 @@ class SimulationDataset(object):
                 numpy.ndarray: Acceleration.
             """
             force = force_paddle(xt)
-            masses = xt[:, -1:]  # Shape (n, 1)
+            masses = xt[:, -1:]
             return force / masses
         
         def odefunc(y, t):
@@ -487,17 +466,17 @@ class SimulationDataset(object):
             Returns:
                 numpy.ndarray: Time derivative of the state.
             """
-            # Restore shape
+
             y = y.reshape((n, total_dim))
             
-            # Calculate acceleration
+
             a = acceleration(y)
             
-            # Construct derivative
+
             dydt = np.concatenate([
-                y[:, dim:2*dim],      # dx/dt = v
-                a,                     # dv/dt = a
-                np.zeros((n, params))  # d(q,m)/dt = 0
+                y[:, dim:2*dim],
+                a,
+                np.zeros((n, params))
             ], axis=1)
             
             return dydt.flatten()
@@ -513,21 +492,21 @@ class SimulationDataset(object):
                 numpy.ndarray: Simulation trajectory with shape (nt, n, total_dim).
             """
             if sim in ['string', 'string_ball']:
-                # String type initialization
+
                 x0 = np.random.randn(n, total_dim)
-                x0[:, -1] = 1.0  # Fixed mass
-                x0[:, 0] = np.arange(n) + x0[:, 0]*0.5  # Evenly spaced x-coordinates
-                x0[:, 2:3] = 0.0  # vx = 0
+                x0[:, -1] = 1.0
+                x0[:, 0] = np.arange(n) + x0[:, 0]*0.5
+                x0[:, 2:3] = 0.0
             else:
-                # General initialization
+
                 x0 = np.random.randn(n, total_dim)
-                x0[:, -1] = np.exp(x0[:, -1])  # Positive mass
+                x0[:, -1] = np.exp(x0[:, -1])
                 
                 if sim in ['charge', 'superposition']:
-                    x0[:, -2] = np.sign(x0[:, -2])  # Charge ±1
+                    x0[:, -2] = np.sign(x0[:, -2])
             
-            # Solve ODE using scipy.odeint
-            # Migration point: JAX odeint → scipy.integrate.odeint
+
+
             x_times = odeint(
                 odefunc,
                 x0.flatten(),
@@ -537,13 +516,13 @@ class SimulationDataset(object):
             
             return x_times
         
-        # Generate samples in batch
+
         data = []
         print(f"Start generating {ns} samples...")
         for i in tqdm(range(ns)):
             data.append(make_sim(i))
         
-        # Convert to numpy array
+
         self.data = np.array(data)
         print(f"Generation complete! Data shape: {self.data.shape}")
 
@@ -565,7 +544,7 @@ class SimulationDataset(object):
         sim = self._sim
         G = self.G
         
-        # Pre-allocate acceleration array
+
         accelerations = np.zeros((ns, nt, n, dim))
         
         print("Calculating acceleration...")
@@ -573,12 +552,12 @@ class SimulationDataset(object):
             for time_idx in range(nt):
                 xt = self.data[sample_idx, time_idx]
                 
-                # Calculate acceleration using PaddlePaddle (using float64 for higher precision)
+
                 xt_tensor = paddle.to_tensor(xt, dtype='float64', stop_gradient=False)
                 positions = xt_tensor[:, :dim]
                 positions.stop_gradient = False
                 
-                # Calculate total potential
+
                 xt_for_potential = paddle.concat([
                     positions,
                     xt_tensor[:, dim:]
@@ -586,10 +565,10 @@ class SimulationDataset(object):
                 
                 sum_potential = paddle.to_tensor(0.0, dtype='float64')
                 
-                # Iterate through all particle pairs to calculate potential (identical to force_paddle)
+
                 for i in range(n - 1):
                     if sim in ['string', 'string_ball']:
-                        # ========== String type ==========
+
                         x1 = xt_for_potential[i]
                         x2 = xt_for_potential[i+1]
                         dist = paddle.sqrt(paddle.sum(paddle.square(x1[:dim] - x2[:dim])))
@@ -598,17 +577,17 @@ class SimulationDataset(object):
                         if sim == 'string':
                             pot = (bounded_dist - 1)**2 + x1[1]*x1[-1]
                         elif sim == 'string_ball':
-                            # Complete implementation
+
                             pot = (bounded_dist - 1)**2 + x1[1]*x1[-1]
                             r = paddle.sqrt((x1[1] + 15)**2 + (x1[0] - 5)**2)
                             radius = paddle.to_tensor(4.0, dtype='float64')
-                            # More stable repulsion potential
+
                             k_repel = 100.0
                             pot = pot + k_repel / paddle.maximum(r - radius + 0.5, paddle.to_tensor(0.01, dtype='float64'))
                         
                         sum_potential = sum_potential + G * pot
                     else:
-                        # ========== Fully connected type ==========
+
                         for j in range(i+1, n):
                             x1 = xt_for_potential[i]
                             x2 = xt_for_potential[j]
@@ -622,7 +601,7 @@ class SimulationDataset(object):
                             elif sim in ['spring', 'damped']:
                                 pot = (bounded_dist - 1)**2
                                 
-                                # Add damping term
+
                                 if sim == 'damped':
                                     damping = paddle.to_tensor(1.0, dtype='float64')
                                     pot = pot + damping*x1[1]*x1[1+dim]/n
@@ -640,7 +619,7 @@ class SimulationDataset(object):
                                     pot = pot + (-m1*m2/bounded_dist)
                             
                             elif sim == 'discontinuous':
-                                # Piecewise discontinuous potential
+
                                 pot_a = paddle.to_tensor(0.0, dtype='float64')
                                 pot_b = paddle.to_tensor(0.0, dtype='float64')
                                 pot_c = (bounded_dist - 1)**2
@@ -656,7 +635,7 @@ class SimulationDataset(object):
                             
                             sum_potential = sum_potential + G * pot
                 
-                # Add external potential support
+
                 if self.extra_potential is not None:
                     for i in range(n):
                         try:
@@ -667,7 +646,7 @@ class SimulationDataset(object):
                         except:
                             pass
                 
-                # Calculate force
+
                 grads = paddle.grad(
                     outputs=sum_potential,
                     inputs=positions,
@@ -706,7 +685,7 @@ class SimulationDataset(object):
         masses = x_times[:, :, -1]
         
         if not animate:
-            # Static plot
+
             if sim in ['string', 'string_ball']:
                 rgba = make_transparent_color(len(times), 0)
                 for idx in range(0, len(times), len(times)//10):
@@ -724,7 +703,7 @@ class SimulationDataset(object):
                         plt.scatter(x_times[:, j, 0], x_times[:, j, 1], 
                                   color=rgba, s=s_size)
         else:
-            # Animation
+
             if sim in ['string', 'string_ball']:
                 raise NotImplementedError("Animation mode not yet supported for string type")
             
