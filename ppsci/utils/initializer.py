@@ -380,7 +380,7 @@ def kaiming_uniform_(
         tensor (paddle.Tensor):  Paddle Tensor.
         a (float, optional): The negative slope of the rectifier used after this layer.
             Defaults to 0.
-        mode (Literal[&quot;fan_in&quot;, &quot;fan_out&quot;], optional):
+        mode (Literal['fan_in', 'fan_out'], optional):
             ["fan_in", "fan_out"]. Defaults to "fan_in".
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): Tensor data format order, False by default as
@@ -415,7 +415,7 @@ def kaiming_normal_(
         tensor (paddle.Tensor): Paddle Tensor.
         a (float, optional): The negative slope of the rectifier used after this layer.
             Defaults to 0.
-        mode (Literal[&quot;fan_in&quot;, &quot;fan_out&quot;], optional): Either
+        mode (Literal['fan_in', 'fan_out'], optional): Either
             'fan_in' (default) or 'fan_out'. Defaults to "fan_in".
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): Tensor data format order. Defaults to False.

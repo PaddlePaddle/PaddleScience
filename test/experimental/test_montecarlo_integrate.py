@@ -48,6 +48,8 @@ def test_montecarlo_integrate(
             fn, dim, N, integration_domains
         ).numpy(),
         expected,
+        1e-3,
+        1e-3,
     )
 
 

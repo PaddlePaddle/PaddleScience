@@ -41,14 +41,16 @@
 
     ``` sh
     # 下载风速预测小样本数据
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6_precip.npy -P ./datasets/era5/test/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-04-04_n6.npy -P ./datasets/era5/test/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/FourcastNet/global_stds.npy -P ./datasets/era5/stat/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/FourcastNet/global_means.npy -P ./datasets/era5/stat/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/FourcastNet/2018-04-04_n6_precip.npy -P ./datasets/era5/test/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/FourcastNet/2018-04-04_n6.npy -P ./datasets/era5/test/
+    # 下载降水量预测小样本数据
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/FourcastNet/2018-09-08_n32.npy -P ./datasets/era5/test/
     # 风速预训练模型推理
     python train_pretrain.py mode=infer
     # 风速微调模型推理
     python train_finetune.py mode=infer
-    # 下载降水量预测小样本数据
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience%2Fdatasets%2FFourcastNet%2F2018-09-08_n32.npy -P ./datasets/era5/test/
     # 降水量模型推理
     python train_precip.py mode=infer
     ```

@@ -381,11 +381,12 @@ def evaluate(cfg: DictConfig):
     logger.info("L2 error picture is saved")
 
     grid_x, grid_y = np.mgrid[
-        x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
-    ].astype(paddle.get_default_dtype())
-    x_plot = paddle.to_tensor(grid_x.reshape(-1, 1))
-    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1))
-    z_plot = paddle.to_tensor(z_star.min() * paddle.ones(y_plot.shape))
+        x_star.min().item() : x_star.max().item() : 100j,
+        y_star.min().item() : y_star.max().item() : 100j,
+    ]
+    x_plot = paddle.to_tensor(grid_x.reshape(-1, 1), paddle.float32)
+    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1), paddle.float32)
+    z_plot = paddle.to_tensor(z_star.min() * paddle.ones(y_plot.shape), paddle.float32)
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape), paddle.float32)
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
@@ -414,7 +415,8 @@ def evaluate(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, "z=0 plane"))
 
     grid_y, grid_z = np.mgrid[
-        y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
+        y_star.min().item() : y_star.max().item() : 100j,
+        z_star.min().item() : z_star.max().item() : 100j,
     ].astype(paddle.get_default_dtype())
     z_plot = paddle.to_tensor(grid_z.reshape(-1, 1))
     y_plot = paddle.to_tensor(grid_y.reshape(-1, 1))
@@ -529,7 +531,8 @@ def inference(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, "error.jpg"))
 
     grid_x, grid_y = np.mgrid[
-        x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
+        x_star.min().item() : x_star.max().item() : 100j,
+        y_star.min().item() : y_star.max().item() : 100j,
     ].astype(np.float32)
     x_plot = grid_x.reshape(-1, 1)
     y_plot = grid_y.reshape(-1, 1)
@@ -568,7 +571,8 @@ def inference(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, "z=0 plane"))
 
     grid_y, grid_z = np.mgrid[
-        y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
+        y_star.min().item() : y_star.max().item() : 100j,
+        z_star.min().item() : z_star.max().item() : 100j,
     ].astype(np.float32)
     z_plot = grid_z.reshape(-1, 1)
     y_plot = grid_y.reshape(-1, 1)

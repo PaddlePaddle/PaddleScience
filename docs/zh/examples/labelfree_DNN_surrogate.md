@@ -11,7 +11,7 @@
     案例二：Aneurysm Flow
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
     python aneurysm_flow.py
@@ -28,7 +28,7 @@
     案例二：Aneurysm Flow
 
     ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
     python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams

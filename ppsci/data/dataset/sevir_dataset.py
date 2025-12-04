@@ -559,7 +559,7 @@ class SEVIRDataset(io.Dataset):
             event_batch_size (int): Event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
 
         Returns:
-            event_batch (List[np.array,...]): List of event batches.
+            event_batch (List[np.array]): List of event batches.
                 event_batch[i] is the event batch of the i-th data type.
                 Each event_batch[i] is a np.ndarray with shape = (event_batch_size, height, width, raw_seq_len)
         """
@@ -601,8 +601,8 @@ class SEVIRDataset(io.Dataset):
 
         Args:
             data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): The dict of data.
-            data_types (Sequence[str]) : The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
-            layout (str) : consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'.
+            data_types (Sequence[str]): The data types that we want to rescale. This mainly excludes "mask" from preprocessing.
+            layout (str): consists of batch_size 'N', seq_len 'T', channel 'C', height 'H', width 'W'.
             rescale (str):
                 'sevir': use the offsets and scale factors in original implementation.
                 '01': scale all values to range 0 to 1, currently only supports 'vil'.

@@ -1,0 +1,95 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: kmcast/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2024
+log_freq: 20
+output_dir: ${hydra:run.dir}
+gpu_ids: [0]
+distributed: False
+
+path:
+  log: ${hydra:run.dir}/logs
+  tb_logger: ${hydra:run.dir}/tb_logger
+  results: ${hydra:run.dir}/results
+  checkpoint: ${hydra:run.dir}/checkpoint
+datasets:
+  val_samples: 2000
+  dataroot: dataset
+  ds_gfs_path: ./dataset/GFS_all_spinup.nc
+  ds_wrf_path: ./dataset/WRF_all_spinup.nc
+  train:
+    batch_size: 4
+    num_workers: 1
+    use_shuffle: true
+    data_len: -1  # -1 represents all data used in train
+  eval:
+    batch_size: 32
+    data_len: 50  # data length in validation
+
+model:
+  which_model_G: sr3  # use the ddpm or sr3 network structure
+  finetune_norm: false
+  unet:
+    in_channel: 3
+    out_channel: 1
+    inner_channel: 32
+    channel_multiplier: [1,2,4,8,8]
+    res_blocks: 2
+    dropout: 0.2
+    norm_groups: 32
+  beta_schedule:
+    train:
+      schedule: linear
+      n_timestep: 2000
+      linear_start: 1e-6
+      linear_end: 1e-2
+    eval:
+      schedule: linear
+      n_timestep: 2000
+      linear_start: 1e-6
+      linear_end: 1e-2
+  diffusion:
+    image_H: 196
+    image_W: 256
+    channels: 1  # sample channel
+    conditional: true  # unconditional generation or super-resolution
+
+train:
+  n_iter: 597500
+  val_freq: 2500
+  save_checkpoint_freq: 2500
+  print_freq: 50
+  optimizer:
+    type: adam
+    lr: 0.0001
+
+eval:
+  pretrained_model_path: null
+  hr_min: -33.122757
+  hr_max: 57.7706
+  lr_min: -34.006493
+  lr_max: 34.886944

@@ -12,7 +12,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
@@ -23,7 +23,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
@@ -37,7 +37,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
@@ -48,7 +48,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip -o data.zip
         # unzip it
@@ -93,7 +93,7 @@
 执行以下命令，下载并解压数据集。
 
 ``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
 unzip data.zip
 ```
 

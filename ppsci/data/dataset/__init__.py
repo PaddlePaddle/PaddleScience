@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2025 PaddlePaddle Authors. All Rights Reserved.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ from __future__ import annotations
 import copy
 import sys
 from typing import TYPE_CHECKING
+from typing import Union
 
 from paddle import io
 
@@ -37,6 +38,9 @@ from ppsci.data.dataset.drivaernetplusplus_dataset import DrivAerNetPlusPlusData
 from ppsci.data.dataset.enso_dataset import ENSODataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
+from ppsci.data.dataset.era5climate_dataset import ERA5ClimateDataset
+from ppsci.data.dataset.era5meteo_dataset import ERA5MeteoDataset
+from ppsci.data.dataset.era5sq_dataset import ERA5SQDataset
 from ppsci.data.dataset.ext_moe_enso_dataset import ExtMoEENSODataset
 from ppsci.data.dataset.fwi_dataset import FWIDataset
 from ppsci.data.dataset.ifm_moe_dataset import IFMMoeDataset
@@ -54,6 +58,7 @@ from ppsci.data.dataset.radar_dataset import RadarDataset
 from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 from ppsci.data.dataset.spherical_swe_dataset import SphericalSWEDataset
 from ppsci.data.dataset.stafnet_dataset import STAFNetDataset
+from ppsci.data.dataset.synthemol_dataset import MoleculeDatasetIter
 from ppsci.data.dataset.tmtdataset import TMTDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
@@ -105,20 +110,28 @@ __all__ = [
     "STAFNetDataset",
     "TMTDataset",
     "register_to_dataset",
+    "ERA5MeteoDataset",
+    "ERA5ClimateDataset",
     "LatentNODataset",
     "LatentNODataset_time",
+    "MoleculeDatasetIter",
+    "ERA5SQDataset",
 ]
 
 
-def build_dataset(cfg: DictConfig) -> "io.Dataset":
+def build_dataset(cfg: Union[DictConfig, io.Dataset]) -> io.Dataset:
     """Build dataset
 
     Args:
-        cfg (DictConfig): Dataset config list.
+        cfg (Union[DictConfig, io.Dataset]): Dataset config or dataset.
 
     Returns:
         Dict[str, io.Dataset]: dataset.
     """
+    # If cfg is already a Dataset instance, return it directly
+    if isinstance(cfg, io.Dataset):
+        return cfg
+
     cfg = copy.deepcopy(cfg)
 
     dataset_cls = cfg.pop("name")

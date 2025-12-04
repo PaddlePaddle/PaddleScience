@@ -1,0 +1,63 @@
+Global:
+  seed: 0
+  device: gpu
+
+MODEL:
+  name: VGG
+  in_channel: 1
+  num_classes: 2
+
+# Semi-supervised learning configuration
+SEMI_SUPERVISED:
+  num_labels: 20
+  num_train_iter: 1000  # Total training iterations
+  num_eval_iter: 10     # Evaluate every 10 epochs
+  un_ratio: 0.8
+  ulb_num_labels: 10000
+  include_lb_to_ulb: true
+  uratio: 3  # Unlabeled data ratio for batch size
+
+# Data path configuration
+DATA:
+  ulbs_path: ./xrd_data/ulbs.csv
+  lbs_path: ./xrd_data/lbs.csv
+
+# Training configuration
+TRAIN:
+  epochs: 100
+  log_interval: 10
+  save_dir: ./saved_models_ppsci/
+  num_experiments: 10
+
+# Data loader configuration
+DATALOADER:
+  batch_size: 32
+  eval_batch_size: 32
+  shuffle: true
+  num_workers: 0
+
+# Optimizer configuration
+OPTIMIZER:
+  name: AdamW
+  learning_rate: 0.0003
+  weight_decay: 0.01
+
+# Loss function configuration
+LOSS:
+  name: CrossEntropyLoss
+
+# Evaluation configuration
+EVAL:
+  interval: 1
+  metric: f1
+
+# Data augmentation configuration
+AUGMENTATION:
+  weak_aug:
+    noise_ratio: 0.1
+    noise_peak: 0.05
+    move_gap: 100
+  strong_aug:
+    noise_ratio: 0.2
+    noise_peak: 0.1
+    move_gap: 200

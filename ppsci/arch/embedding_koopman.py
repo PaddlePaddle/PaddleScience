@@ -315,7 +315,10 @@ class CylinderEmbedding(base.Arch):
         self.output_keys = output_keys
         self.embed_size = embed_size
 
-        X, Y = np.meshgrid(np.linspace(-2, 14, 128), np.linspace(-4, 4, 64))
+        X, Y = np.meshgrid(
+            np.linspace(-2, 14, 128, dtype=paddle.get_default_dtype()),
+            np.linspace(-4, 4, 64, dtype=paddle.get_default_dtype()),
+        )
         self.mask = paddle.to_tensor(np.sqrt(X**2 + Y**2)).unsqueeze(0).unsqueeze(0)
 
         encoder_channels = (

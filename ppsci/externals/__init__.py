@@ -9,6 +9,7 @@ EXTERNAL_PACKAGES_LIST = [
     "paddle_harmonics",
     "paddle_scatter",
     "paddle_sparse",
+    "paddle_cluster",
     "tensorly",
     "warp",
 ]

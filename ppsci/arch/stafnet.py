@@ -597,7 +597,6 @@ class STAFNet(base.Arch):
         super(STAFNet, self).__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.device = str("cuda").replace("cuda", "gpu")
         self.output_attention = output_attention
         self.seq_len = seq_len
         self.pred_len = pred_len
@@ -612,7 +611,7 @@ class STAFNet(base.Arch):
             gat_edge_dim,
             self.gat_embed_dim,
             dropout,
-        ).to(self.device)
+        )
         self.mete_gat_node_num = mete_gat_node_num
         self.mete_gat_node_features = mete_gat_node_features
         self.mete_GAT = GAT_Encoder(
@@ -621,7 +620,7 @@ class STAFNet(base.Arch):
             gat_edge_dim,
             self.gat_embed_dim,
             dropout,
-        ).to(self.device)
+        )
         self.pos_fc = paddle.nn.Linear(
             in_features=2, out_features=self.gat_embed_dim, bias_attr=True
         )

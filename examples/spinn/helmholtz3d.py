@@ -171,7 +171,7 @@ def train(cfg: DictConfig):
         nx = len(data_dict["x"])
         ny = len(data_dict["y"])
         nz = len(data_dict["z"])
-        return {"u": np.zeros([nx, ny, nz, 1])}
+        return {"u": np.zeros([nx, ny, nz, 1], dtype=dtype)}
 
     for i in range(6):
         bc_constraint_i = ppsci.constraint.SupervisedConstraint(

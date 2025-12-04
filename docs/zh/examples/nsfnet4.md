@@ -2,31 +2,31 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7305374" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型评估命令"
-
-    ``` sh
-    # VP_NSFNet4
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
-    unzip ./data/NSF4_data.zip
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
-    # unzip ./data/NSF4_data.zip
-    python VP_NSFNet4.py    mode=eval  data_dir=./data/  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
-    ```
-
 === "模型训练命令"
 
     ``` sh
     # VP_NSFNet4
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
     # unzip ./data/NSF4_data.zip
     python VP_NSFNet4.py data_dir=./data/
 
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # VP_NSFNet4
+    # linux
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    unzip ./data/NSF4_data.zip
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip
+    # unzip ./data/NSF4_data.zip
+    python VP_NSFNet4.py mode=eval data_dir=./data/ EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
     ```
 
 === "模型导出命令"
@@ -40,7 +40,7 @@
     ``` sh
     # VP_NSFNet4
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --create-dirs -o ./data/NSF4_data.zip

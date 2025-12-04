@@ -28,7 +28,7 @@
     ``` sh
     git clone https://github.com/PaddlePaddle/PaddleScience.git
     cd PaddleScience/docker/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz
     bash run.sh
     ```
 
@@ -123,54 +123,33 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
     [Bracket](./examples/aneurysm.md)、[Aneurysm](./examples/aneurysm.md) 等个别案例使用了 `ppsci.geometry.Mesh` 接口构建复杂几何，因此这些案例运行前需要按照下方给出的命令，安装 open3d、
     pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动**中已安装上述依赖库）。如使用 `ppsci.geometry.SDFMesh` 接口构建复杂几何，则只需要安装 `warp-lang` 即可。
 
-=== "open3d 安装命令"
+=== "一键安装[推荐]"
 
-    ``` sh
-    python -m pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```sh
+    bash PaddleScience/install_mesh.sh
     ```
 
-=== "pybind11 安装命令"
+=== "手动安装"
 
     ``` sh
-    python -m pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
-    ```
+    python -m pip install open3d pybind11 pysdf-i https://pypi.tuna.tsinghua.edu.cn/simple
 
-=== "pysdf 安装命令"
-
-    ``` sh
-    python -m pip install pysdf
-    ```
-
-=== "PyMesh 安装命令"
-
-    在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否已安装 cmake。
-    如果未安装，可以按照下列命令下载并解压 cmake 包，然后将其添加到 PATH 变量中以完成安装。
-
-    ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
+    # 在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否已安装 cmake。
+    # 如果未安装，可以按照下列命令下载并解压 cmake 包，然后将其添加到 PATH 变量中。
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
     tar -zxvf cmake-3.23.0-linux-x86_64.tar.gz
     rm -f cmake-3.23.0-linux-x86_64.tar.gz
-    PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
+    export PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
 
-    # cmake --version
-    # cmake version 3.23.0
-
-    # CMake suite maintained and supported by Kitware (kitware.com/cmake).
-    ```
-
-    推荐以 setup 的方式安装 PyMesh 库，命令如下：
-
-    ``` sh
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
+    # 推荐以 setup 的方式安装 PyMesh 库，命令如下：
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
     tar -zxvf PyMesh.tar.gz
 
     # 也可以使用 git 命令下载，速度可能会比较慢
     # git clone https://github.com/PyMesh/PyMesh.git
     # git submodule update --init --recursive --progress
 
-    cd PyMesh
-    export PYMESH_PATH=`pwd`
-
+    # 安装必要依赖包
     apt-get install \
         libeigen3-dev \
         libgmp-dev \
@@ -181,16 +160,11 @@ PaddleScience 提供了两种复杂几何类型，如下所示：
         libtbb-dev \
         python3-dev
 
-    python -m pip install --user -r $PYMESH_PATH/python/requirements.txt
+    cd PyMesh
+    export PYMESH_PATH=`pwd`
+    python -m pip install -r $PYMESH_PATH/python/requirements.txt
     python setup.py build
-    python setup.py install --user
-
-    # test whether installed successfully
-    python -c "import pymesh; pymesh.test()"
-
-    # Ran 175 tests in 3.150s
-
-    # OK (SKIP=2)
+    python setup.py install
     ```
 
     !!! warning "安装注意事项"
@@ -277,6 +251,15 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         python -m pip install ppsci/externals/paddle_sparse
         ```
 
+    === "paddle_cluster"
+
+        ``` sh
+        cd PaddleScience
+        git submodule update --init ppsci/externals/paddle_cluster
+        # install from source(recommended)
+        python -m pip install ppsci/externals/paddle_cluster
+        ```
+
     === "tensorly"
 
         ``` sh
@@ -308,7 +291,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
     ``` python
     >>> from ppsci import externals
     >>> print(externals.__all__)
-    ['deepali', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'paddle_sparse', 'tensorly', 'warp']
+    ['deepali', 'neuraloperator', 'open3d', 'paddle_harmonics', 'paddle_scatter', 'paddle_sparse', 'paddle_cluster', 'tensorly', 'warp']
 
     >>> tl = externals.tensorly
     >>> tl.set_backend("paddle")

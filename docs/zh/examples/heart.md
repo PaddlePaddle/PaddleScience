@@ -8,7 +8,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         tar -xvf heart_dataset.tar
@@ -19,7 +19,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         tar -xvf heart_dataset.tar
@@ -32,7 +32,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         tar -xvf heart_dataset.tar
@@ -43,7 +43,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/heart/heart_dataset.tar
         tar -xvf heart_dataset.tar

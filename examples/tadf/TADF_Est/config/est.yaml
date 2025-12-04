@@ -1,0 +1,61 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_Est/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+use_tbd: false
+VIV_DATA_PATH: "./Est.dat"
+data_dir: "./Est.dat"
+sim_dir: "./smis.txt"
+
+# model settings
+MODEL:
+  output_keys: ["u"]
+  activation: "relu"
+  dropout: 0.5
+
+# training settings
+TRAIN:
+  epochs: 200
+  iters_per_epoch: 20
+  save_freq: 100
+  eval_during_train: False
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 1e-5
+  pretrained_model_path: null
+  checkpoint_path: null
+  k: 9
+  i: 2
+
+# evaluation settings
+EVAL:
+  test_size: 0.1
+  pretrained_model_path: null
+  batch_size: 8
+  seed: 20

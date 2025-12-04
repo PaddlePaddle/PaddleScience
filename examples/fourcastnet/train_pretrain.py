@@ -18,9 +18,9 @@ from os import path as osp
 import hydra
 import numpy as np
 import paddle.distributed as dist
+import utils as fourcast_utils
 from omegaconf import DictConfig
 
-import examples.fourcastnet.utils as fourcast_utils
 import ppsci
 from ppsci.utils import logger
 
