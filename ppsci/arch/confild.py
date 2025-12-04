@@ -500,10 +500,7 @@ class ModelVarType(enum.Enum):
 
 
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
-    res = (
-        paddle.to_tensor(data=arr)[timesteps]
-        .astype(dtype=timesteps.dtype)
-    )
+    res = paddle.to_tensor(data=arr, dtype=paddle.float32)[timesteps]
     while len(tuple(res.shape)) < len(broadcast_shape):
         res = res[..., None]
     return res.expand(shape=broadcast_shape)

@@ -35,11 +35,12 @@ TRAIN:
   batch_size : 8
   test_batch_size : 8
   ema_rate: "0.9999"
-  lr_anneal_steps: 0
-  lr : 5.e-5
+  lr_anneal_steps: 10000  # 学习率衰减步数，设置为0表示不衰减
+  lr : 5.e-5             # 为diffusion损失降低学习率
   weight_decay: 0.0
-  final_lr: 0.
+  final_lr: 1.e-5        # 最终学习率
   microbatch: -1
+  max_steps: 10000       # 总训练步数
 
 EVAL:
   mutil_GPU: 2
@@ -61,7 +62,7 @@ UNET:
   num_head_channels: 64
   attention_resolutions: "32,16,8"
   channel_mult: "1, 1, 2, 2, 4, 4"
-  ema_path: /home/aistudio/work/extracted/data/Case4/diffusion/ema.pdparams
+  ema_path: /home/aistudio/work/data/Case4/diffusion/ema.pdparams
 
 Diff:
   steps: 1000
@@ -69,8 +70,8 @@ Diff:
 
 CNF:
   mutil_GPU: 1
-  data_path: /home/aistudio/work/extracted/data/Case4/data.npy
-  coor_path: /home/aistudio/work/extracted/data/Case4/coords.npy
+  data_path: /home/aistudio/work/data/Case4/data.npy
+  coor_path: /home/aistudio/work/data/Case4/coords.npy
   normalizer:
     method: "-11"
     dim: 0
@@ -83,11 +84,11 @@ CNF:
     hidden_features: 384
     in_coord_features: 3
     in_latent_features: 384
-  normalizer_params_path: /home/aistudio/work/extracted/data/Case4/cnf/normalizer_params.pdparams
-  model_path: ./outputs_confild_case4/confild_case4/epoch_99999
+  normalizer_params_path: /home/aistudio/work/data/Case4/cnf/normalizer_params.pdparams
+  model_path: /home/aistudio/work/PaddleScience/examples/confild/cnf_model.pdparams
 
 DATA:
   min_val: -1.0
   max_val: 1.0
-  train_data: "/home/aistudio/work/extracted/data/Case4/train_data.npy"
-  valid_data: "/home/aistudio/work/extracted/data/Case4/valid_data.npy"
+  train_data: "/home/aistudio/work/data/Case4/train_data.npy"
+  valid_data: "/home/aistudio/work/data/Case4/valid_data.npy"

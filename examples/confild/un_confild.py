@@ -657,9 +657,14 @@ def train(cfg):
     ## Data Preprocessing
     train_data = np.load(cfg.DATA.train_data)
     valid_data = np.load(cfg.DATA.valid_data)
+    print(f"Train data shape: {train_data.shape}, range: [{train_data.min():.3f}, {train_data.max():.3f}]")
+    print(f"Valid data shape: {valid_data.shape}, range: [{valid_data.min():.3f}, {valid_data.max():.3f}]")
+
     max_val, min_val = np.max(train_data, keepdims=True), np.min(train_data, keepdims=True)
     norm_train_data = -1 + (train_data - min_val)*2. / (max_val - min_val)
     norm_valid_data = -1 + (valid_data - min_val)*2. / (max_val - min_val)
+
+    print(f"After normalization: train range: [{norm_train_data.min():.3f}, {norm_train_data.max():.3f}]")
 
     norm_train_data = paddle.to_tensor(norm_train_data[:, None, ...])
     norm_valid_data = paddle.to_tensor(norm_valid_data[:, None, ...])
@@ -675,14 +680,18 @@ def train(cfg):
                         attention_resolutions=cfg.UNET.attention_resolutions,
                         channel_mult=cfg.UNET.channel_mult
                         )
+    print(f"Model created with {sum(p.numel() for p in unet_model.parameters()):,} parameters")
+
     diff_model = create_gaussian_diffusion(steps=cfg.Diff.steps,
                                         noise_schedule=cfg.Diff.noise_schedule
                                         )
+    print(f"Diffusion model created with {cfg.Diff.steps} steps, noise schedule: {cfg.Diff.noise_schedule}")
 
     # 初始化AdamW优化器
     opt = paddle.optimizer.AdamW(
         parameters=unet_model.parameters(), learning_rate=cfg.TRAIN.lr, weight_decay=cfg.TRAIN.weight_decay
     )
+    print(f"Optimizer initialized with lr={cfg.TRAIN.lr}, weight_decay={cfg.TRAIN.weight_decay}")
     
     schedule_sampler = UniformSampler(diff_model)
 
@@ -698,18 +707,23 @@ def train(cfg):
     train_losses.clear()
     valid_losses.clear()
 
-    valid_interval = 100
-    
-    while lr_anneal_steps and (step + resume_step < lr_anneal_steps):
+    valid_interval = 50 
+    max_steps = cfg.TRAIN.max_steps if hasattr(cfg.TRAIN, 'max_steps') else 10000
+    print(f"Starting training with max_steps={max_steps}, lr_anneal_steps={lr_anneal_steps}")
+
+    while step + resume_step < max_steps:
         cond = {}
         # 获取训练批次数据
         train_batch = next(dl_train)
-        
+
         # 前向传播
         unet_model.train()
         # 清零梯度
         opt.clear_grad()
-        
+
+        # 用于累积整个step的损失
+        step_losses = []
+
         for i in range(0, len(train_batch), microbatch):
             # 获取当前微批次数据
             micro = train_batch[i : i + microbatch]
@@ -723,11 +737,10 @@ def train(cfg):
             compute_losses = functools.partial(
                 diff_model.training_losses,
                 unet_model,
-                micro,
+                paddle.stack(micro),
                 t,
                 model_kwargs=micro_cond
             )
-
             # 计算损失
             losses = compute_losses()
 
@@ -738,29 +751,51 @@ def train(cfg):
 
             # 计算加权平均损失
             loss = (losses["loss"] * weights).mean()
-            
-            num_microbatches = (len(train_batch) + microbatch - 1) // microbatch
-            if num_microbatches > 1:
-                loss = loss / num_microbatches
-            
+
+            # 检查损失值
+            if step == 0 and i == 0:
+                print(f"First loss computation - loss: {loss.item():.6f}, losses keys: {list(losses.keys())}")
+                if 'mse' in losses:
+                    print(f"MSE loss: {losses['mse'].mean().item():.6f}")
+                if 'vb' in losses:
+                    print(f"VB loss: {losses['vb'].mean().item():.6f}")
+
+            # 收集每个微批次的损失用于计算step平均损失
+            step_losses.append(loss.item())
+
             if i == 0:
                 log_loss_dict(
                     diff_model, t, {k: v * weights for k, v in losses.items() if isinstance(v, paddle.Tensor)}, is_valid=False
                 )
-            
+
             # 反向传播（梯度累积）
             loss.backward()
+
+        # 梯度裁剪，防止梯度爆炸
+        paddle.nn.utils.clip_grad_norm_(unet_model.parameters(), max_norm=1.0)
 
         # 更新参数
         grad_norm, param_norm = _compute_norms(unet_model)
         opt.step()
-        
+
+        # 计算并记录整个step的平均训练损失
+        if step_losses:
+            avg_step_loss = sum(step_losses) / len(step_losses)
+            train_losses.append(avg_step_loss)
+
+            # 调试信息：每50步打印一次详细信息
+            if step % 50 == 0:
+                current_lr = opt.get_lr()
+                print(f"Step {step}: Loss={avg_step_loss:.6f}, GradNorm={grad_norm:.6f}, ParamNorm={param_norm:.6f}, LR={current_lr:.2e}")
+
+
         # 更新EMA参数
         _update_ema(ema_rate, ema_params, unet_model)
-        
+
         # 更新学习率
-        _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, cfg.TRAIN.lr)
-        
+        if lr_anneal_steps is not None and lr_anneal_steps != 0:
+            _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, cfg.TRAIN.lr)
+
         step += 1
         
         # 定期执行验证（每valid_interval步）
@@ -787,7 +822,7 @@ def train(cfg):
                     compute_losses = functools.partial(
                         diff_model.training_losses,
                         unet_model,
-                        micro,
+                        paddle.stack(micro),
                         t,
                         model_kwargs=micro_cond,
                         valid=True
@@ -821,21 +856,28 @@ def plot_losses():
     if len(train_losses) == 0 or len(valid_losses) == 0:
         print("没有足够的数据来绘制损失曲线")
         return
-    
+
     plt.figure(figsize=(10, 6))
+
+    # 绘制训练损失
     plt.plot(train_losses, label='Training Loss', alpha=0.8)
-    plt.plot(valid_losses, label='Validation Loss', alpha=0.8)
+
+    # 绘制验证损失，需要对齐到正确的训练步数位置
+    valid_interval = 100  # 验证间隔
+    valid_steps = [(i + 1) * valid_interval for i in range(len(valid_losses))]
+    plt.plot(valid_steps, valid_losses, label='Validation Loss', alpha=0.8, marker='o')
+
     plt.xlabel('Training Steps')
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    
+
     # 保存图像
     plt.savefig('loss_curve.png', dpi=300, bbox_inches='tight')
     print("损失曲线已保存为 loss_curve.png")
-    
+
     # 显示图像
     plt.show()
 

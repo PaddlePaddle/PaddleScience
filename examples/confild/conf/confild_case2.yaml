@@ -31,8 +31,8 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 TRAIN:
-  batch_size: 40
-  test_batch_size: 40
+  batch_size: 10
+  test_batch_size: 10
   epochs: 44500
   mutil_GPU: 1
   lr:

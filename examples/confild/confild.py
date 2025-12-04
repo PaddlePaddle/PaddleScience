@@ -187,7 +187,7 @@ def getdata(cfg):
     )[1:-1]
 
     ###### read data - coordinate ######
-    if cfg.Data.coor_path is None:
+    if cfg.Data.get("coor_path", None) is None:
         coord = [np.linspace(0, 1, i) for i in spatio_shape]
         coord = np.stack(np.meshgrid(*coord, indexing="ij"), axis=-1)
     else:
