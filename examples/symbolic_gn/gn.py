@@ -13,18 +13,22 @@
 # limitations under the License.
 
 import os
-import sys
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
+import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-import hydra
-import ppsci
-from ppsci.utils import logger
-import matplotlib.pyplot as plt
-
 from simulate import SimulationDataset
-from ppsci.arch.symbolic_gn import OGN, VarOGN, HGN, get_edge_index
+
+import ppsci
+from ppsci.arch.symbolic_gn import HGN
+from ppsci.arch.symbolic_gn import OGN
+from ppsci.arch.symbolic_gn import VarOGN
+from ppsci.arch.symbolic_gn import get_edge_index
+from ppsci.utils import logger
 
 
 def create_ppsci_model(
@@ -71,7 +75,7 @@ def create_ppsci_model(
         )
     else:
         raise ValueError(f"未知的模型类型: {model_type}")
-    
+
     return model
 
 
@@ -102,7 +106,7 @@ def create_loss_function(cfg):
 
 def train(cfg):
     ppsci.utils.misc.set_random_seed(cfg.seed)
-    
+
     if cfg.MODEL.arch == "HGN":
         cfg.MODEL.output_keys = ["acceleration"]
 
@@ -115,17 +119,17 @@ def train(cfg):
     )
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
-    
+
     X_list = []
     y_list = []
     for sample_idx in range(cfg.DATA.num_samples):
         for t in range(0, sim.data.shape[1], cfg.DATA.sample_interval):
             X_list.append(sim.data[sample_idx, t])
             y_list.append(accel_data[sample_idx, t])
-            
+
     X = np.array(X_list, dtype=np.float32)
     y = np.array(y_list, dtype=np.float32)
-    
+
     if cfg.MODEL.n_f == "auto":
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
@@ -137,7 +141,7 @@ def train(cfg):
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
     edge_index_train = replicate_array(edge_index, len(X_train))
     edge_index_val = replicate_array(edge_index, len(X_val))
-    
+
     train_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -186,7 +190,7 @@ def train(cfg):
         edge_index=edge_index,
         l1_strength=l1_strength
     )
-    
+
     batch_per_epoch = int(train_size / cfg.TRAIN.batch_size)
     if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
         lr_scheduler = paddle.optimizer.lr.OneCycleLR(
@@ -201,13 +205,13 @@ def train(cfg):
             gamma=0.9
         )
         lr_scheduler.by_epoch = True
-    
+
     optimizer = paddle.optimizer.Adam(
         learning_rate=lr_scheduler,
         parameters=model.parameters(),
         weight_decay=cfg.TRAIN.optimizer.weight_decay
     )
-    
+
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -227,10 +231,10 @@ def evaluate(cfg: DictConfig):
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
-    
+
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
     l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
-    
+
     model = create_ppsci_model(
         model_type=cfg.MODEL.arch,
         n_f=cfg.MODEL.n_f,
@@ -240,7 +244,7 @@ def evaluate(cfg: DictConfig):
         edge_index=edge_index,
         l1_strength=l1_strength
     )
-    
+
     ppsci.utils.save_load.load_pretrain(
         model,
         cfg.EVAL.pretrained_model_path,
@@ -255,10 +259,7 @@ def evaluate(cfg: DictConfig):
     )
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
-    
-    num_time_steps_per_sample = len(range(0, sim.data.shape[1], cfg.DATA.sample_interval))
-    num_time_steps_per_sample = len(range(0, sim.data.shape[1], cfg.DATA.sample_interval))
-    
+
     sample_indices = [0, 1] if cfg.DATA.num_samples > 1 else [0]
     
     for sample_idx in sample_indices:
@@ -269,33 +270,32 @@ def evaluate(cfg: DictConfig):
             "x": paddle.to_tensor(sample_data, dtype="float32"),
             "edge_index": paddle.to_tensor(edge_index, dtype="int64")
         }
-        
+
         with paddle.no_grad():
             pred_output = model(input_dict)
             pred_accel = pred_output[cfg.MODEL.output_keys[0]]
-        
+
         error = np.mean(np.abs(pred_accel.numpy() - true_accel))
         logger.info(f"Sample {sample_idx} - MAE error: {error:.6f}")
-        
+
         rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(true_accel)
         logger.info(f"Sample {sample_idx} - Relative error: {rel_error:.6f}")
-        
+
         plt.figure(figsize=(10, 8))
         sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
         plt.title(f'{cfg.DATA.type.capitalize()} System - Sample {sample_idx}\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
         plt.tight_layout()
-        
+
         plot_path = os.path.join(cfg.output_dir, f"evaluation_sample_{sample_idx}.png")
         plt.savefig(plot_path, dpi=300, bbox_inches='tight')
         plt.close()
         logger.info(f"Evaluation plot saved to {plot_path}")
-        
 
 
 def export(cfg: DictConfig):
     if cfg.MODEL.arch == "HGN":
         raise ValueError("HGN is not supported for export")
-    
+
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
     if cfg.MODEL.n_f == "auto":
@@ -313,14 +313,14 @@ def export(cfg: DictConfig):
         edge_index=edge_index,
         l1_strength=l1_strength
     )
-    
+
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    
+
     from paddle.static import InputSpec
-    
+
     input_spec = [
         {
             key: InputSpec([None, cfg.DATA.num_nodes, cfg.MODEL.n_f], "float32", name=key)
@@ -351,11 +351,11 @@ def inference(cfg: DictConfig):
         dt=cfg.DATA.time_step_size
     )
     sim.simulate(cfg.DATA.num_samples)
-    
+
     sample_idx = 0
     sample_data = sim.data[sample_idx, 0]
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
-    
+
     if use_predictor:
         input_dict = {
             "x": sample_data,
@@ -368,9 +368,9 @@ def inference(cfg: DictConfig):
             cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
         if cfg.MODEL.ndim == "auto":
             cfg.MODEL.ndim = cfg.DATA.dimension
-        
+
         l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
-        
+
         model = create_ppsci_model(
             model_type=cfg.MODEL.arch,
             n_f=cfg.MODEL.n_f,
@@ -380,40 +380,40 @@ def inference(cfg: DictConfig):
             edge_index=edge_index,
             l1_strength=l1_strength
         )
-        
+
         ppsci.utils.save_load.load_pretrain(
             model,
             cfg.INFER.pretrained_model_path,
         )
-        
+
         input_dict = {
             "x": paddle.to_tensor(sample_data, dtype="float32"),
             "edge_index": paddle.to_tensor(edge_index, dtype="int64")
         }
-        
+
         with paddle.no_grad():
             pred_output = model(input_dict)
             pred_acceleration = pred_output[cfg.MODEL.output_keys[0]].numpy()
-    
+
     accel_data = sim.get_acceleration()
     true_acceleration = accel_data[sample_idx, 0]
-    
+
     error = np.mean(np.abs(pred_acceleration - true_acceleration))
     logger.info(f"Inference error (MAE): {error:.6f}")
-    
+
     rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(true_acceleration)
     logger.info(f"Inference relative error: {rel_error:.6f}")
-    
+
     plt.figure(figsize=(10, 8))
     sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
     plt.title(f'{cfg.DATA.type.capitalize()} System - Inference\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
     plt.tight_layout()
-    
+
     plot_path = os.path.join(cfg.output_dir, "inference.png")
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
     logger.info(f"Inference plot saved to {plot_path}")
-    
+
 
 @hydra.main(version_base=None, config_path="./conf", config_name="config_hgn")
 def main(cfg: DictConfig) -> None:
