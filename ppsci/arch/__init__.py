@@ -54,7 +54,7 @@ from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.sfnonet import SFNONet  # isort:skip
 from ppsci.arch.spinn import SPINN  # isort:skip
-from ppsci.arch.symbolic_gn import OGN, VarOGN, HGN, get_edge_index  # isort:skip
+from ppsci.arch.symbolic_gn import OGN, VarOGN, HGN  # isort:skip
 from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
 from ppsci.arch.transformer import Transformer  # isort:skip
 from ppsci.arch.unetex import UNetEx  # isort:skip
@@ -105,7 +105,6 @@ __all__ = [
     "ExtFormerMoECuboid",
     "FNO1d",
     "Generator",
-    "get_edge_index",
     "GraphCastNet",
     "HEDeepONets",
     "HGN",
