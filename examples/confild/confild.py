@@ -18,12 +18,10 @@ import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle.distributed import fleet
-from paddle.io import DataLoader
-from paddle.io import DistributedBatchSampler
+from paddle.io import DataLoader, DistributedBatchSampler
 
 import ppsci
-from ppsci.arch import LatentContainer
-from ppsci.arch import SIRENAutodecoder_film
+from ppsci.arch import LatentContainer, SIRENAutodecoder_film
 from ppsci.utils import logger
 
 
@@ -294,11 +292,17 @@ def signal_train(
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
             import os
+
             if not os.path.exists(cfg.output_dir):
                 os.makedirs(cfg.output_dir, exist_ok=True)
-                
-            paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
-            paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
+
+            paddle.save(
+                cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams"
+            )
+            paddle.save(
+                latents_model.state_dict(),
+                f"{cfg.output_dir}/latents_model_{epoch}.pdparams",
+            )
 
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -313,7 +317,6 @@ def signal_train(
     plt.grid(True)
 
     plt.savefig("case.png")
-
 
 
 def mutil_train(
@@ -415,13 +418,19 @@ def mutil_train(
                     test_error.append(error)
                 test_error = paddle.concat(x=test_error).mean(axis=0)
                 print("test MAE: ", test_error)
-                
+
             import os
+
             if not os.path.exists(cfg.output_dir):
                 os.makedirs(cfg.output_dir, exist_ok=True)
-                
-            paddle.save(cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams")
-            paddle.save(latents_model.state_dict(), f"{cfg.output_dir}/latents_model_{epoch}.pdparams")
+
+            paddle.save(
+                cnf_model.state_dict(), f"{cfg.output_dir}/cnf_model_{epoch}.pdparams"
+            )
+            paddle.save(
+                latents_model.state_dict(),
+                f"{cfg.output_dir}/latents_model_{epoch}.pdparams",
+            )
 
     plt.figure(figsize=(10, 6))
     plt.plot(range(cfg.TRAIN.epochs), losses, label="Training Loss")
@@ -436,7 +445,6 @@ def mutil_train(
     plt.grid(True)
 
     plt.savefig("case.png")
-
 
 
 def train(cfg):
@@ -490,10 +498,7 @@ def evaluate(cfg: DictConfig):
             normed_coords, [normed_fois.shape[0]] + [1] * len(normed_coords.shape)
         )
 
-
-    idx = paddle.to_tensor(
-        np.arange(normed_fois.shape[0]), dtype="int64"
-    )
+    idx = paddle.to_tensor(np.arange(normed_fois.shape[0]), dtype="int64")
     # set model
     confild = SIRENAutodecoder_film(**cfg.CONFILD)
     latent = LatentContainer(**cfg.Latent)

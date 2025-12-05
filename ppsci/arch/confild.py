@@ -1,20 +1,23 @@
-import math
 import enum
-from collections import OrderedDict
+import math
 from abc import abstractmethod
+from collections import OrderedDict
+
 import numpy as np
 import paddle
 
 DEFAULT_W0 = 30.0
 
+
 ###################### ConFILD Model #######################
 class Swish(paddle.nn.Layer):
     """
     Swish activation function: f(x) = x * sigmoid(x).
-    
+
     A smooth, non-monotonic activation function that has been shown to work
     better than ReLU on deeper models across a number of challenging datasets.
     """
+
     def __init__(self):
         super().__init__()
         self.Sigmoid = paddle.nn.Sigmoid()
@@ -22,10 +25,10 @@ class Swish(paddle.nn.Layer):
     def forward(self, x):
         """
         Apply Swish activation.
-        
+
         Args:
             x (paddle.Tensor): Input tensor.
-            
+
         Returns:
             paddle.Tensor: Output tensor with same shape as input.
         """
@@ -35,10 +38,11 @@ class Swish(paddle.nn.Layer):
 class Sine(paddle.nn.Layer):
     """
     Sine activation function for SIREN (Sinusoidal Representation Networks).
-    
+
     Args:
         w0 (float, optional): Frequency parameter for sine activation. Defaults to DEFAULT_W0 (30.0).
     """
+
     def __init__(self, w0=DEFAULT_W0):
         self.w0 = w0
         super().__init__()
@@ -46,10 +50,10 @@ class Sine(paddle.nn.Layer):
     def forward(self, input):
         """
         Apply sine activation with frequency modulation.
-        
+
         Args:
             input (paddle.Tensor): Input tensor.
-            
+
         Returns:
             paddle.Tensor: sin(w0 * input).
         """
@@ -59,10 +63,10 @@ class Sine(paddle.nn.Layer):
 def sine_init(m, w0=DEFAULT_W0):
     """
     Weight initialization for SIREN hidden layers.
-    
+
     Initializes weights uniformly in [-√(6/n)/w0, √(6/n)/w0] where n is input dimension.
     This initialization is critical for maintaining stable signal propagation in SIREN networks.
-    
+
     Args:
         m (paddle.nn.Layer): Layer to initialize (must have 'weight' attribute).
         w0 (float, optional): Frequency parameter. Defaults to DEFAULT_W0.
@@ -78,10 +82,10 @@ def sine_init(m, w0=DEFAULT_W0):
 def first_layer_sine_init(m):
     """
     Weight initialization for SIREN first layer.
-    
+
     Initializes weights uniformly in [-1/n, 1/n] where n is input dimension.
     Different from hidden layers to handle raw coordinate inputs properly.
-    
+
     Args:
         m (paddle.nn.Layer): Layer to initialize (must have 'weight' attribute).
     """
@@ -143,14 +147,14 @@ NLS_AND_INITS = {
 class BatchLinear(paddle.nn.Linear):
     """
     Batch-wise linear transformation layer that supports manual parameter injection.
-    
+
     This layer extends paddle.nn.Linear to allow passing parameters explicitly,
     which is useful for meta-learning and hypernetwork applications.
-    
+
     Args:
         in_features (int): Size of input features.
         out_features (int): Size of output features.
-        
+
     Note:
         - Weight shape: (out_features, in_features)
         - Bias shape: (out_features,)
@@ -161,12 +165,12 @@ class BatchLinear(paddle.nn.Linear):
     def forward(self, input, params=None):
         """
         Forward pass with optional external parameters.
-        
+
         Args:
             input (paddle.Tensor): Input tensor of shape (..., in_features).
             params (OrderedDict, optional): External parameters dict containing 'weight' and optionally 'bias'.
                                            If None, uses internal parameters. Defaults to None.
-        
+
         Returns:
             paddle.Tensor: Output tensor of shape (..., out_features).
         """
@@ -184,12 +188,12 @@ class BatchLinear(paddle.nn.Linear):
 class FeatureMapping:
     """
     Feature mapping class for Fourier Feature Networks.
-    
+
     Supports multiple mapping strategies including Gaussian random Fourier features,
     positional encoding, and radial basis functions (RBF) for improving coordinate-based
     neural network representations.
-    
-    Reference: 
+
+    Reference:
         Tancik et al. "Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains"
     """
 
@@ -211,7 +215,7 @@ class FeatureMapping:
     ):
         """
         Initialize feature mapping.
-        
+
         Args:
             in_features (int): Number of input features.
             mode (str, optional): Mapping mode. Options: "basic", "gaussian", "positional", "rbf". Defaults to "basic".
@@ -244,9 +248,7 @@ class FeatureMapping:
             self.dim = tuple(self.B.shape)[0] * 2
         elif mode == "rbf":
             self.centers = paddle.nn.Parameter(
-                paddle.empty(
-                    shape=(rbf_out_features, in_features), dtype="float32"
-                )
+                paddle.empty(shape=(rbf_out_features, in_features), dtype="float32")
             )
             self.sigmas = paddle.nn.Parameter(
                 paddle.empty(shape=rbf_out_features, dtype="float32")
@@ -272,11 +274,11 @@ class FeatureMapping:
     def fourier_mapping(x, B):
         """
         Apply Fourier feature mapping: [sin(2πxB^T), cos(2πxB^T)].
-        
+
         Args:
             x (paddle.Tensor): Input coordinates of shape (..., in_features).
             B (np.ndarray): Frequency matrix of shape (mapping_size, in_features).
-        
+
         Returns:
             paddle.Tensor: Fourier features of shape (..., 2 * mapping_size).
         """
@@ -304,11 +306,11 @@ class FeatureMapping:
 class SIRENAutodecoder_film(paddle.nn.Layer):
     """
     SIREN (Sinusoidal Representation Networks) with FiLM conditioning for autodecoding.
-    
+
     This architecture uses sine activations and latent code modulation (FiLM) for
     implicit neural representations. It takes both coordinate inputs and latent codes,
     making it suitable for learning multiple shapes/scenes with a single network.
-    
+
     Reference:
         Sitzmann et al. "Implicit Neural Representations with Periodic Activation Functions" (NeurIPS 2020)
 
@@ -423,11 +425,11 @@ class SIRENAutodecoder_film(paddle.nn.Layer):
 class LatentContainer(paddle.nn.Layer):
     """
     Learnable latent code container for autodecoding applications.
-    
+
     This module stores and retrieves per-sample latent codes, which can be used
     for representing multiple instances (shapes, scenes) with a single decoder network.
     Supports multi-GPU training and different dimensional arrangements.
-    
+
     Reference:
         Park et al. "DeepSDF: Learning Continuous Signed Distance Functions for Shape Representation" (CVPR 2019)
 
@@ -490,6 +492,7 @@ class LatentContainer(paddle.nn.Layer):
         expanded_latents = selected_latents.reshape(getShape)
         return {self.output_keys[0]: expanded_latents}
 
+
 ###################### GaussianDiffusion Model #######################
 class ModelVarType(enum.Enum):
 
@@ -508,7 +511,7 @@ def _extract_into_tensor(arr, timesteps, broadcast_shape):
 
 def split(x, num_or_sections, axis=0):
     if isinstance(num_or_sections, int):
-        return paddle.split(x, x.shape[axis]//num_or_sections, axis)
+        return paddle.split(x, x.shape[axis] // num_or_sections, axis)
     else:
         return paddle.split(x, num_or_sections, axis)
 
@@ -534,7 +537,11 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
     # Force variances to be Tensors. Broadcasting helps convert scalars to
     # Tensors, but it does not work for th.exp().
     logvar1, logvar2 = [
-        x if isinstance(x, paddle.Tensor) else paddle.to_tensor(x, dtype=tensor.dtype, place=tensor.place)
+        (
+            x
+            if isinstance(x, paddle.Tensor)
+            else paddle.to_tensor(x, dtype=tensor.dtype, place=tensor.place)
+        )
         for x in (logvar1, logvar2)
     ]
 
@@ -550,14 +557,14 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
 class GaussianDiffusion:
     """
     Gaussian diffusion process for denoising diffusion probabilistic models (DDPM).
-    
+
     Implements the forward diffusion process q(x_t|x_0) and reverse denoising process p(x_{t-1}|x_t).
     Supports various parameterizations (epsilon, x_0, x_{t-1}) and variance schedules.
-    
+
     Reference:
         Ho et al. "Denoising Diffusion Probabilistic Models" (NeurIPS 2020)
         Nichol & Dhariwal "Improved Denoising Diffusion Probabilistic Models" (ICML 2021)
-    
+
     Args:
         betas (np.ndarray): Noise schedule β_t for t=0,...,T-1.
         model_mean_type (ModelMeanType): Parameterization of model output.
@@ -565,6 +572,7 @@ class GaussianDiffusion:
         loss_type (LossType): Loss function type (MSE, KL, etc.).
         rescale_timesteps (bool, optional): Rescale timesteps to [0, 1000]. Defaults to False.
     """
+
     def __init__(
         self,
         *,
@@ -578,7 +586,7 @@ class GaussianDiffusion:
         self.model_var_type = model_var_type
         self.loss_type = loss_type
         self.rescale_timesteps = rescale_timesteps
-        
+
         # Use float64 for accuracy.
         betas = np.array(betas, dtype=np.float64)
         self.betas = betas
@@ -615,18 +623,26 @@ class GaussianDiffusion:
         )
 
     def q_mean_variance(self, x_start, t):
-        mean = _extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
+        mean = (
+            _extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
+        )
         variance = _extract_into_tensor(1.0 - self.alphas_cumprod, t, x_start.shape)
-        log_variance = _extract_into_tensor(self.log_one_minus_alphas_cumprod, t, x_start.shape)
+        log_variance = _extract_into_tensor(
+            self.log_one_minus_alphas_cumprod, t, x_start.shape
+        )
         return mean, variance, log_variance
 
     def q_sample(self, x_start, t, noise=None):
         if noise is None:
             noise = paddle.randn(x_start.shape)
-            
-        sqrt_alpha_cumprod_t = _extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape)
-        sqrt_one_minus_alpha_cumprod_t = _extract_into_tensor(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape)
-            
+
+        sqrt_alpha_cumprod_t = _extract_into_tensor(
+            self.sqrt_alphas_cumprod, t, x_start.shape
+        )
+        sqrt_one_minus_alpha_cumprod_t = _extract_into_tensor(
+            self.sqrt_one_minus_alphas_cumprod, t, x_start.shape
+        )
+
         return sqrt_alpha_cumprod_t * x_start + sqrt_one_minus_alpha_cumprod_t * noise
 
     def _predict_xstart_from_xprev(self, x_t, t, xprev):
@@ -641,7 +657,7 @@ class GaussianDiffusion:
             )
             * x_t
         )
-    
+
     def _predict_xstart_from_eps(self, x_t, t, eps):
         assert tuple(x_t.shape) == tuple(eps.shape)
         return (
@@ -729,7 +745,7 @@ class GaussianDiffusion:
             "log_variance": model_log_variance,
             "pred_xstart": pred_xstart,
         }
-    
+
     def q_posterior_mean_variance(self, x_start, x_t, t):
         assert tuple(x_start.shape) == tuple(x_t.shape)
         posterior_mean = (
@@ -811,7 +827,9 @@ class GaussianDiffusion:
         )
         noise = paddle.randn(shape=x.shape, dtype=x.dtype)
         nonzero_mask = (
-            (t != 0).astype(dtype="float32").reshape([-1, *([1] * (len(tuple(x.shape)) - 1))])
+            (t != 0)
+            .astype(dtype="float32")
+            .reshape([-1, *([1] * (len(tuple(x.shape)) - 1))])
         )
         if cond_fn is not None:
             out["mean"] = self.condition_mean(
@@ -897,21 +915,23 @@ class GaussianDiffusion:
                 yield out
                 img = out["sample"]
 
-    def training_losses(self, model, x_start, t,  model_kwargs=None, noise=None, valid=False):
+    def training_losses(
+        self, model, x_start, t, model_kwargs=None, noise=None, valid=False
+    ):
         if model_kwargs is None:
             model_kwargs = {}
         if noise is None:
             noise = paddle.randn(x_start.shape)
-                
+
         x_t = self.q_sample(x_start=x_start, t=t, noise=noise)
         # terms = {}
         # model_output = model(x_t, t)
-            
+
         # # Handle different model outputs
         # if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
         #     assert model_output.shape[1] == 2 * x_start.shape[1], "Output channels must be 2x input channels"
         #     model_output, model_var_values = split(model_output, 2, axis=1)
-            
+
         # Calculate the MSE loss for epsilon prediction
         terms = {}
         if self.loss_type == LossType.KL or self.loss_type == LossType.RESCALED_KL:
@@ -937,7 +957,9 @@ class GaussianDiffusion:
                 model_output, model_var_values = split(model_output, C, axis=1)
                 # Learn the variance using the variational bound, but don't let
                 # it affect our mean prediction.
-                frozen_out = paddle.concat([model_output.detach(), model_var_values], axis=1)
+                frozen_out = paddle.concat(
+                    [model_output.detach(), model_var_values], axis=1
+                )
                 terms["vb"] = self._vb_terms_bpd(
                     model=lambda *args, r=frozen_out: r,
                     x_start=x_start,
@@ -958,7 +980,7 @@ class GaussianDiffusion:
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
             assert model_output.shape == target.shape == x_start.shape
-            
+
             if valid == False:
                 terms["mse"] = mean_flat((target - model_output) ** 2)
                 if "vb" in terms:
@@ -1016,7 +1038,9 @@ def discretized_gaussian_log_likelihood(x, *, means, log_scales):
     log_probs = paddle.where(
         x < -0.999,
         log_cdf_plus,
-        paddle.where(x > 0.999, log_one_minus_cdf_min, paddle.log(cdf_delta.clip(min=1e-12))),
+        paddle.where(
+            x > 0.999, log_one_minus_cdf_min, paddle.log(cdf_delta.clip(min=1e-12))
+        ),
     )
     assert log_probs.shape == x.shape
     return log_probs
@@ -1027,7 +1051,9 @@ def approx_standard_normal_cdf(x):
     A fast approximation of the cumulative distribution function of the
     standard normal.
     """
-    return 0.5 * (1.0 + paddle.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * paddle.pow(x, 3))))
+    return 0.5 * (
+        1.0 + paddle.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * paddle.pow(x, 3)))
+    )
 
 
 class LossType(enum.Enum):
@@ -1045,10 +1071,10 @@ class LossType(enum.Enum):
 class SpacedDiffusion(GaussianDiffusion):
     """
     Accelerated diffusion process that skips timesteps for faster sampling.
-    
+
     Implements DDIM-style sampling by using a subset of timesteps from the original
     diffusion process, enabling faster inference without retraining the model.
-    
+
     Reference:
         Song et al. "Denoising Diffusion Implicit Models" (ICLR 2021)
 
@@ -1105,7 +1131,7 @@ class _WrappedModel:
 
     def __call__(self, x, ts, **kwargs):
         map_tensor = paddle.to_tensor(
-            data=self.timestep_map, dtype=ts.dtype#, place=ts.place
+            data=self.timestep_map, dtype=ts.dtype  # , place=ts.place
         )
         new_ts = map_tensor[ts]
         if self.rescale_timesteps:
@@ -1140,10 +1166,10 @@ class TimestepBlock(paddle.nn.Layer):
 class ResBlock(TimestepBlock):
     """
     Residual block with timestep embedding for diffusion models.
-    
+
     Implements a residual connection with two convolutional layers, timestep conditioning,
     and optional up/downsampling. Supports FiLM-style adaptive normalization.
-    
+
     Args:
         channels (int): Number of input channels.
         emb_channels (int): Number of timestep embedding channels.
@@ -1156,6 +1182,7 @@ class ResBlock(TimestepBlock):
         up (bool, optional): Apply upsampling. Defaults to False.
         down (bool, optional): Apply downsampling. Defaults to False.
     """
+
     def __init__(
         self,
         channels,
@@ -1272,15 +1299,16 @@ def avg_pool_nd(dims, *args, **kwargs):
 class Downsample(paddle.nn.Layer):
     """
     Spatial downsampling layer (2x reduction).
-    
+
     Can use either strided convolution or average pooling for downsampling.
-    
+
     Args:
         channels (int): Number of input channels.
         use_conv (bool): Use strided conv (True) or avg pooling (False).
         dims (int, optional): Spatial dimensions. Defaults to 2.
         out_channels (int, optional): Number of output channels. Defaults to channels.
     """
+
     def __init__(self, channels, use_conv, dims=2, out_channels=None):
         super().__init__()
         self.channels = channels
@@ -1305,15 +1333,16 @@ class Downsample(paddle.nn.Layer):
 class Upsample(paddle.nn.Layer):
     """
     Spatial upsampling layer (2x expansion).
-    
+
     Uses nearest-neighbor interpolation followed by optional convolution.
-    
+
     Args:
         channels (int): Number of input channels.
         use_conv (bool): Apply convolution after upsampling.
         dims (int, optional): Spatial dimensions. Defaults to 2.
         out_channels (int, optional): Number of output channels. Defaults to channels.
     """
+
     def __init__(self, channels, use_conv, dims=2, out_channels=None):
         super().__init__()
         self.channels = channels
@@ -1381,7 +1410,7 @@ class QKVAttention(paddle.nn.Layer):
         ch = width // (3 * self.n_heads)
         (q, k, v) = qkv.chunk(chunks=3, axis=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
-        weight = paddle.einsum(# 非复数
+        weight = paddle.einsum(  # 非复数
             "bct,bcs->bts",
             (q * scale).reshape([bs * self.n_heads, ch, length]),
             (k * scale).reshape([bs * self.n_heads, ch, length]),
@@ -1449,13 +1478,13 @@ class CheckpointFunction(paddle.autograd.PyLayer):
         del ctx.input_tensors
         del ctx.input_params
         del output_tensors
-        
+
         # 确保将input_grads转换为元组，然后与(None, None)连接
         # PyLayer要求backward方法返回元组类型
         # if input_grads:
         return tuple(input_grads)
         # else:
-            # return (None, None)
+        # return (None, None)
 
 
 def stop_gradient(input, stop):
@@ -1466,10 +1495,10 @@ def stop_gradient(input, stop):
 class AttentionBlock(paddle.nn.Layer):
     """
     Self-attention block for spatial feature maps.
-    
+
     Applies multi-head self-attention over spatial locations in feature maps,
     allowing the model to capture long-range dependencies.
-    
+
     Args:
         channels (int): Number of input/output channels.
         num_heads (int, optional): Number of attention heads. Defaults to 1.
@@ -1477,6 +1506,7 @@ class AttentionBlock(paddle.nn.Layer):
         use_checkpoint (bool, optional): Use gradient checkpointing. Defaults to False.
         use_new_attention_order (bool, optional): Use optimized attention implementation. Defaults to False.
     """
+
     def __init__(
         self,
         channels,
@@ -1532,15 +1562,15 @@ def convert_module_to_f32(l):
 def timestep_embedding(timesteps, dim, max_period=10000):
     """
     Create sinusoidal timestep embeddings for diffusion models.
-    
+
     Similar to positional encodings in transformers, but for continuous timesteps.
     Uses sinusoids of exponentially increasing frequencies.
-    
+
     Args:
         timesteps (paddle.Tensor): Timestep values of shape (batch_size,).
         dim (int): Embedding dimension.
         max_period (int, optional): Maximum period for sinusoids. Defaults to 10000.
-    
+
     Returns:
         paddle.Tensor: Timestep embeddings of shape (batch_size, dim).
     """
@@ -1549,7 +1579,7 @@ def timestep_embedding(timesteps, dim, max_period=10000):
         x=-math.log(max_period)
         * paddle.arange(start=0, end=half, dtype="float32")
         / half
-    )#.to(paddle.CUDAPlace(0))
+    )  # .to(paddle.CUDAPlace(0))
     args = timesteps[:, None].astype(dtype="float32") * freqs[None]
     embedding = paddle.concat(x=[paddle.cos(x=args), paddle.sin(x=args)], axis=-1)
     if dim % 2:
@@ -1562,11 +1592,11 @@ def timestep_embedding(timesteps, dim, max_period=10000):
 class UNetModel(paddle.nn.Layer):
     """
     Full UNet model with attention and timestep embedding for diffusion models.
-    
+
     Implements a U-Net architecture with residual blocks, self-attention at multiple resolutions,
     and timestep conditioning via adaptive normalization (FiLM). Designed for denoising diffusion
     probabilistic models (DDPM) and can be conditioned on class labels.
-    
+
     Reference:
         Ronneberger et al. "U-Net: Convolutional Networks for Biomedical Image Segmentation" (MICCAI 2015)
         Dhariwal & Nichol "Diffusion Models Beat GANs on Image Synthesis" (NeurIPS 2021)
@@ -1591,7 +1621,7 @@ class UNetModel(paddle.nn.Layer):
         use_scale_shift_norm (bool, optional): Use FiLM-style conditioning in ResBlocks. Defaults to False.
         resblock_updown (bool, optional): Use ResBlocks for up/downsampling instead of conv layers. Defaults to False.
         use_new_attention_order (bool, optional): Use optimized QKV attention implementation. Defaults to False.
-    
+
     Examples:
         >>> import ppsci
         >>> import paddle

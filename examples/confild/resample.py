@@ -4,6 +4,7 @@ import numpy as np
 import paddle as th
 import paddle.distributed as dist
 
+
 def create_named_schedule_sampler(name, diffusion):
     if name == "uniform":
         return UniformSampler(diffusion)
@@ -27,9 +28,9 @@ class ScheduleSampler(ABC):
         w = self.weights()
         p = w / np.sum(w)
         indices_np = np.random.choice(len(p), size=(batch_size,), p=p)
-        indices = th.to_tensor(indices_np, dtype='int64')
+        indices = th.to_tensor(indices_np, dtype="int64")
         weights_np = 1 / (len(p) * p[indices_np])
-        weights = th.to_tensor(weights_np, dtype='float32')
+        weights = th.to_tensor(weights_np, dtype="float32")
         return indices, weights
 
 
@@ -44,7 +45,7 @@ class UniformSampler(ScheduleSampler):
 
 class LossAwareSampler(ScheduleSampler):
     def update_with_local_losses(self, local_ts, local_losses):
-        
+
         batch_sizes = [
             th.to_tensor([0], dtype=th.int32, place=local_ts.device)
             for _ in range(dist.get_world_size())
@@ -99,7 +100,7 @@ class LossSecondMomentResampler(LossAwareSampler):
     def weights(self):
         if not self._warmed_up():
             return np.ones([self.diffusion.num_timesteps], dtype=np.float64)
-        weights = np.sqrt(np.mean(self._loss_history ** 2, axis=-1))
+        weights = np.sqrt(np.mean(self._loss_history**2, axis=-1))
         weights /= np.sum(weights)
         weights *= 1 - self.uniform_prob
         weights += self.uniform_prob / len(weights)

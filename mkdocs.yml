@@ -64,6 +64,7 @@ nav:
           - Aneurysm: zh/examples/aneurysm.md
           - BubbleNet: zh/examples/bubble.md
           - CFDGCN: zh/examples/cfdgcn.md
+          - CONFILD: zh/examples/confild.md
           - CVit(Advection): zh/examples/adv_cvit.md
           - CVit(NS): zh/examples/ns_cvit.md
           - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md

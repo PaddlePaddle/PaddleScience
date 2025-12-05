@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
 import copy
 import enum
 import functools
 import math
+import os
+from abc import ABC, abstractmethod
+
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
-import os
 from omegaconf import DictConfig
-from resample import UniformSampler, LossAwareSampler
+from resample import LossAwareSampler, UniformSampler
 
-from ppsci.arch import UNetModel
-from ppsci.arch import SIRENAutodecoder_film
-from ppsci.arch import SpacedDiffusion
-from ppsci.arch import ModelVarType
-from ppsci.arch import ModelMeanType
+from ppsci.arch import (
+    LossType,
+    ModelMeanType,
+    ModelVarType,
+    SIRENAutodecoder_film,
+    SpacedDiffusion,
+    UNetModel,
+)
 from ppsci.utils import logger
-from ppsci.arch import LossType
 
 
 def mean_flat(tensor):
@@ -102,7 +105,7 @@ def create_model(
         image_size=image_size,
         in_channels=out_channels,
         model_channels=num_channels,
-        out_channels=(out_channels if not learn_sigma else 2*out_channels),
+        out_channels=(out_channels if not learn_sigma else 2 * out_channels),
         num_res_blocks=num_res_blocks,
         attention_resolutions=tuple(attention_ds),
         dropout=dropout,
@@ -116,7 +119,7 @@ def create_model(
         use_scale_shift_norm=use_scale_shift_norm,
         resblock_updown=resblock_updown,
         use_new_attention_order=use_new_attention_order,
-        dims=dims
+        dims=dims,
     )
 
 
@@ -209,11 +212,7 @@ def create_gaussian_diffusion(
             ModelMeanType.EPSILON if not predict_xstart else ModelMeanType.START_X
         ),
         model_var_type=(
-            (
-                ModelVarType.FIXED_LARGE
-                if not sigma_small
-                else ModelVarType.FIXED_SMALL
-            )
+            (ModelVarType.FIXED_LARGE if not sigma_small else ModelVarType.FIXED_SMALL)
             if not learn_sigma
             else ModelVarType.LEARNED_RANGE
         ),
@@ -304,13 +303,9 @@ class Normalizer_ts(object):
     @staticmethod
     def fnormalize(data, params, method):
         if method == "-11":
-            return (data - params[1]) / (
-                params[0] - params[1]
-            ) * 2 - 1
+            return (data - params[1]) / (params[0] - params[1]) * 2 - 1
         elif method == "01":
-            return (data - params[1]) / (
-                params[0] - params[1]
-            )
+            return (data - params[1]) / (params[0] - params[1])
         elif method == "ms":
             return (data - params[0]) / params[1]
         elif method == "none":
@@ -321,9 +316,7 @@ class Normalizer_ts(object):
         if method == "-11":
             return (data_norm + 1) / 2 * (params[0] - params[1]) + params[1]
         elif method == "01":
-            return data_norm * (
-                params[0] - params[1]
-            ) + params[1]
+            return data_norm * (params[0] - params[1]) + params[1]
         elif method == "ms":
             return data_norm * params[1] + params[0]
         elif method == "none":
@@ -355,11 +348,7 @@ def create_slim(cfg):
     fois = fois.astype("float32")
 
     ###### convert to tensor ######
-    fois = (
-        paddle.to_tensor(fois)
-        if not isinstance(fois, paddle.Tensor)
-        else fois
-    )
+    fois = paddle.to_tensor(fois) if not isinstance(fois, paddle.Tensor) else fois
     coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
     N_samples = fois.shape[0]
 
@@ -377,7 +366,7 @@ def create_slim(cfg):
 
 def dl_iter(dl):
     while True:
-        yield from dl 
+        yield from dl
 
 
 def train(cfg):
@@ -385,10 +374,10 @@ def train(cfg):
     test_batch_size = cfg.TRAIN.test_batch_size
     ema_rate = cfg.TRAIN.ema_rate
     ema_rate = (
-            [ema_rate]
-            if isinstance(ema_rate, float)
-            else [float(x) for x in ema_rate.split(",")]
-        )
+        [ema_rate]
+        if isinstance(ema_rate, float)
+        else [float(x) for x in ema_rate.split(",")]
+    )
 
     lr_anneal_steps = cfg.TRAIN.lr_anneal_steps
     final_lr = cfg.TRAIN.final_lr
@@ -398,41 +387,70 @@ def train(cfg):
 
     train_data = np.load(cfg.DATA.train_data)
     valid_data = np.load(cfg.DATA.valid_data)
-    print(f"Train data shape: {train_data.shape}, range: [{train_data.min():.3f}, {train_data.max():.3f}]")
-    print(f"Valid data shape: {valid_data.shape}, range: [{valid_data.min():.3f}, {valid_data.max():.3f}]")
+    print(
+        f"Train data shape: {train_data.shape}, range: [{train_data.min():.3f}, {train_data.max():.3f}]"
+    )
+    print(
+        f"Valid data shape: {valid_data.shape}, range: [{valid_data.min():.3f}, {valid_data.max():.3f}]"
+    )
 
-    max_val, min_val = np.max(train_data, keepdims=True), np.min(train_data, keepdims=True)
-    norm_train_data = -1 + (train_data - min_val)*2. / (max_val - min_val)
-    norm_valid_data = -1 + (valid_data - min_val)*2. / (max_val - min_val)
+    max_val, min_val = np.max(train_data, keepdims=True), np.min(
+        train_data, keepdims=True
+    )
+    norm_train_data = -1 + (train_data - min_val) * 2.0 / (max_val - min_val)
+    norm_valid_data = -1 + (valid_data - min_val) * 2.0 / (max_val - min_val)
 
-    print(f"After normalization: train range: [{norm_train_data.min():.3f}, {norm_train_data.max():.3f}]")
+    print(
+        f"After normalization: train range: [{norm_train_data.min():.3f}, {norm_train_data.max():.3f}]"
+    )
 
     norm_train_data = paddle.to_tensor(norm_train_data[:, None, ...])
     norm_valid_data = paddle.to_tensor(norm_valid_data[:, None, ...])
 
-    dl_train = dl_iter(paddle.io.DataLoader(paddle.io.TensorDataset(norm_train_data), batch_size=batch_size, shuffle=True))
-    dl_valid = dl_iter(paddle.io.DataLoader(paddle.io.TensorDataset(norm_valid_data), batch_size=test_batch_size, shuffle=True))
+    dl_train = dl_iter(
+        paddle.io.DataLoader(
+            paddle.io.TensorDataset(norm_train_data),
+            batch_size=batch_size,
+            shuffle=True,
+        )
+    )
+    dl_valid = dl_iter(
+        paddle.io.DataLoader(
+            paddle.io.TensorDataset(norm_valid_data),
+            batch_size=test_batch_size,
+            shuffle=True,
+        )
+    )
 
-    unet_model = create_model(image_size=cfg.UNET.image_size,
-                        num_channels= cfg.UNET.num_channels,
-                        num_res_blocks= cfg.UNET.num_res_blocks,
-                        num_heads=cfg.UNET.num_heads,
-                        num_head_channels=cfg.UNET.num_head_channels,
-                        attention_resolutions=cfg.UNET.attention_resolutions,
-                        channel_mult=cfg.UNET.channel_mult
-                        )
-    print(f"Model created with {sum(p.numel() for p in unet_model.parameters()):,} parameters")
+    unet_model = create_model(
+        image_size=cfg.UNET.image_size,
+        num_channels=cfg.UNET.num_channels,
+        num_res_blocks=cfg.UNET.num_res_blocks,
+        num_heads=cfg.UNET.num_heads,
+        num_head_channels=cfg.UNET.num_head_channels,
+        attention_resolutions=cfg.UNET.attention_resolutions,
+        channel_mult=cfg.UNET.channel_mult,
+    )
+    print(
+        f"Model created with {sum(p.numel() for p in unet_model.parameters()):,} parameters"
+    )
 
-    diff_model = create_gaussian_diffusion(steps=cfg.Diff.steps,
-                                        noise_schedule=cfg.Diff.noise_schedule
-                                        )
-    print(f"Diffusion model created with {cfg.Diff.steps} steps, noise schedule: {cfg.Diff.noise_schedule}")
+    diff_model = create_gaussian_diffusion(
+        steps=cfg.Diff.steps, noise_schedule=cfg.Diff.noise_schedule
+    )
+    print(
+        f"Diffusion model created with {cfg.Diff.steps} steps, noise schedule: {cfg.Diff.noise_schedule}"
+    )
 
     opt = paddle.optimizer.AdamW(
-        parameters=unet_model.parameters(), learning_rate=cfg.TRAIN.lr, weight_decay=cfg.TRAIN.weight_decay
+        parameters=unet_model.parameters(),
+        learning_rate=cfg.TRAIN.lr,
+        weight_decay=cfg.TRAIN.weight_decay,
     )
-    print(f"Optimizer initialized with lr={cfg.TRAIN.lr}, weight_decay={cfg.TRAIN.weight_decay}")
-    
+    print(
+        f"Optimizer initialized with lr={cfg.TRAIN.lr}, weight_decay={cfg.TRAIN.weight_decay}"
+    )
+
     schedule_sampler = UniformSampler(diff_model)
 
     ema_params = []
@@ -441,14 +459,16 @@ def train(cfg):
         for name, param in unet_model.named_parameters():
             ema_param_dict[name] = copy.deepcopy(param.detach())
         ema_params.append(ema_param_dict)
-    
+
     global train_losses, valid_losses
     train_losses.clear()
     valid_losses.clear()
 
-    valid_interval = 50 
-    max_steps = cfg.TRAIN.max_steps if hasattr(cfg.TRAIN, 'max_steps') else 10000
-    print(f"Starting training with max_steps={max_steps}, lr_anneal_steps={lr_anneal_steps}")
+    valid_interval = 50
+    max_steps = cfg.TRAIN.max_steps if hasattr(cfg.TRAIN, "max_steps") else 10000
+    print(
+        f"Starting training with max_steps={max_steps}, lr_anneal_steps={lr_anneal_steps}"
+    )
 
     while step + resume_step < max_steps:
         cond = {}
@@ -461,10 +481,7 @@ def train(cfg):
 
         for i in range(0, len(train_batch), microbatch):
             micro = train_batch[i : i + microbatch]
-            micro_cond = {
-                k: v[i : i + microbatch]
-                for k, v in cond.items()
-            }
+            micro_cond = {k: v[i : i + microbatch] for k, v in cond.items()}
 
             t, weights = schedule_sampler.sample(len(micro))
 
@@ -473,29 +490,36 @@ def train(cfg):
                 unet_model,
                 paddle.stack(micro),
                 t,
-                model_kwargs=micro_cond
+                model_kwargs=micro_cond,
             )
             losses = compute_losses()
 
             if isinstance(schedule_sampler, LossAwareSampler):
-                schedule_sampler.update_with_local_losses(
-                    t, losses["loss"].detach()
-                )
+                schedule_sampler.update_with_local_losses(t, losses["loss"].detach())
 
             loss = (losses["loss"] * weights).mean()
 
             if step == 0 and i == 0:
-                print(f"First loss computation - loss: {loss.item():.6f}, losses keys: {list(losses.keys())}")
-                if 'mse' in losses:
+                print(
+                    f"First loss computation - loss: {loss.item():.6f}, losses keys: {list(losses.keys())}"
+                )
+                if "mse" in losses:
                     print(f"MSE loss: {losses['mse'].mean().item():.6f}")
-                if 'vb' in losses:
+                if "vb" in losses:
                     print(f"VB loss: {losses['vb'].mean().item():.6f}")
 
             step_losses.append(loss.item())
 
             if i == 0:
                 log_loss_dict(
-                    diff_model, t, {k: v * weights for k, v in losses.items() if isinstance(v, paddle.Tensor)}, is_valid=False
+                    diff_model,
+                    t,
+                    {
+                        k: v * weights
+                        for k, v in losses.items()
+                        if isinstance(v, paddle.Tensor)
+                    },
+                    is_valid=False,
                 )
 
             loss.backward()
@@ -511,7 +535,9 @@ def train(cfg):
 
             if step % 50 == 0:
                 current_lr = opt.get_lr()
-                print(f"Step {step}: Loss={avg_step_loss:.6f}, GradNorm={grad_norm:.6f}, ParamNorm={param_norm:.6f}, LR={current_lr:.2e}")
+                print(
+                    f"Step {step}: Loss={avg_step_loss:.6f}, GradNorm={grad_norm:.6f}, ParamNorm={param_norm:.6f}, LR={current_lr:.2e}"
+                )
 
         _update_ema(ema_rate, ema_params, unet_model)
 
@@ -528,10 +554,7 @@ def train(cfg):
 
                 for i in range(0, len(valid_batch), microbatch):
                     micro = valid_batch[i : i + microbatch]
-                    micro_cond = {
-                        k: v[i : i + microbatch]
-                        for k, v in cond.items()
-                    }
+                    micro_cond = {k: v[i : i + microbatch] for k, v in cond.items()}
 
                     t, weights = schedule_sampler.sample(len(micro))
 
@@ -541,17 +564,21 @@ def train(cfg):
                         paddle.stack(micro),
                         t,
                         model_kwargs=micro_cond,
-                        valid=True
+                        valid=True,
                     )
                     losses = compute_losses()
 
                     if "loss" in losses:
-                        all_valid_losses.append((losses["loss"] * weights).mean().item())
+                        all_valid_losses.append(
+                            (losses["loss"] * weights).mean().item()
+                        )
 
                 if len(all_valid_losses) > 0:
                     avg_valid_loss = sum(all_valid_losses) / len(all_valid_losses)
                     valid_losses.append(avg_valid_loss)
-                    print(f"Step {step}: Train Loss: {train_losses[-1]:.6f}, Valid Loss: {avg_valid_loss:.6f}")
+                    print(
+                        f"Step {step}: Train Loss: {train_losses[-1]:.6f}, Valid Loss: {avg_valid_loss:.6f}"
+                    )
 
             unet_model.train()
 
@@ -568,21 +595,21 @@ def plot_losses():
     plt.figure(figsize=(10, 6))
 
     # 绘制训练损失
-    plt.plot(train_losses, label='Training Loss', alpha=0.8)
+    plt.plot(train_losses, label="Training Loss", alpha=0.8)
 
     valid_interval = 100
     valid_steps = [(i + 1) * valid_interval for i in range(len(valid_losses))]
-    plt.plot(valid_steps, valid_losses, label='Validation Loss', alpha=0.8, marker='o')
+    plt.plot(valid_steps, valid_losses, label="Validation Loss", alpha=0.8, marker="o")
 
-    plt.xlabel('Training Steps')
-    plt.ylabel('Loss')
-    plt.title('Training and Validation Loss')
+    plt.xlabel("Training Steps")
+    plt.ylabel("Loss")
+    plt.title("Training and Validation Loss")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
 
     # 保存图像
-    plt.savefig('loss_curve.png', dpi=300, bbox_inches='tight')
+    plt.savefig("loss_curve.png", dpi=300, bbox_inches="tight")
 
     # 显示图像
     plt.show()
@@ -600,19 +627,19 @@ def _compute_norms(model, grad_scale=1.0):
 
 
 def _update_ema(ema_rate, ema_params, source_model):
-        for rate, target_params_dict in zip(ema_rate, ema_params):
-            for name, target_param in target_params_dict.items():
-                source_param = dict(source_model.named_parameters())[name]
-                updated = target_param.detach() * rate + source_param.detach() * (1 - rate)
-                target_param.set_value(updated)
+    for rate, target_params_dict in zip(ema_rate, ema_params):
+        for name, target_param in target_params_dict.items():
+            source_param = dict(source_model.named_parameters())[name]
+            updated = target_param.detach() * rate + source_param.detach() * (1 - rate)
+            target_param.set_value(updated)
 
 
 def _anneal_lr(lr_anneal_steps, step, resume_step, opt, final_lr, lr):
-        if not lr_anneal_steps:
-            return
-        frac_done = (step + resume_step) / lr_anneal_steps
-        new_lr = final_lr * (frac_done) + lr * (1 - frac_done)
-        opt.set_lr(new_lr)
+    if not lr_anneal_steps:
+        return
+    frac_done = (step + resume_step) / lr_anneal_steps
+    new_lr = final_lr * (frac_done) + lr * (1 - frac_done)
+    opt.set_lr(new_lr)
 
 
 def log_loss_dict(diffusion, ts, losses, is_valid=False, add_to_list=True):
@@ -628,46 +655,52 @@ def log_loss_dict(diffusion, ts, losses, is_valid=False, add_to_list=True):
 
 
 def evaluate(cfg):
-    unet_model = create_model(image_size=cfg.UNET.image_size,
-                            num_channels=cfg.UNET.num_channels,
-                            num_res_blocks=cfg.UNET.num_res_blocks,
-                            num_heads=cfg.UNET.num_heads,
-                            num_head_channels=cfg.UNET.num_head_channels,
-                            attention_resolutions=cfg.UNET.attention_resolutions
-                            )
+    unet_model = create_model(
+        image_size=cfg.UNET.image_size,
+        num_channels=cfg.UNET.num_channels,
+        num_res_blocks=cfg.UNET.num_res_blocks,
+        num_heads=cfg.UNET.num_heads,
+        num_head_channels=cfg.UNET.num_head_channels,
+        attention_resolutions=cfg.UNET.attention_resolutions,
+    )
 
     unet_model.set_state_dict(paddle.load(cfg.UNET.ema_path))
 
-    diff_model = create_gaussian_diffusion(steps=cfg.Diff.steps,
-                                        noise_schedule=cfg.Diff.noise_schedule
-                                        )
+    diff_model = create_gaussian_diffusion(
+        steps=cfg.Diff.steps, noise_schedule=cfg.Diff.noise_schedule
+    )
 
     sample_fn = diff_model.p_sample_loop
-    gen_latents = sample_fn(unet_model, (cfg.EVAL.test_batch_size, 1, cfg.EVAL.time_length, cfg.EVAL.latent_length))[:, 0]
+    gen_latents = sample_fn(
+        unet_model,
+        (cfg.EVAL.test_batch_size, 1, cfg.EVAL.time_length, cfg.EVAL.latent_length),
+    )[:, 0]
 
-    max_val, min_val = cfg.DATA.max_val, cfg.DATA.min_val#np.load(cfg.DATA.max_val), np.load(cfg.DATA.min_val)
+    max_val, min_val = (
+        cfg.DATA.max_val,
+        cfg.DATA.min_val,
+    )  # np.load(cfg.DATA.max_val), np.load(cfg.DATA.min_val)
     max_val, min_val = paddle.to_tensor(max_val), paddle.to_tensor(min_val)
-    gen_latents = (gen_latents + 1)*(max_val - min_val)/2. + min_val
+    gen_latents = (gen_latents + 1) * (max_val - min_val) / 2.0 + min_val
 
     nf, in_normalizer, out_normalizer, coord = create_slim(cfg)
     nf.set_state_dict(paddle.load(cfg.CNF.model_path))
     coord = in_normalizer.normalize(coord)
 
-    batch_size = 1 
+    batch_size = 1
     n_samples = gen_latents.shape[0]
     gen_fields = []
 
     for sample_index in range(n_samples):
-        for i in range(gen_latents.shape[1]//batch_size):
-            new_latents = gen_latents[sample_index, i*batch_size:(i+1)*batch_size]
+        for i in range(gen_latents.shape[1] // batch_size):
+            new_latents = gen_latents[
+                sample_index, i * batch_size : (i + 1) * batch_size
+            ]
             if len(coord.shape) > 2:
                 new_latents = new_latents[:, None, None]
             else:
                 new_latents = new_latents[:, None]
-            input_data = {
-                "confild_x": coord,
-                "latent_z": new_latents
-            }
+            input_data = {"confild_x": coord, "latent_z": new_latents}
             out = nf(input_data)["confild_output"]
             out = out_normalizer.denormalize(out)
             gen_fields.append(out.detach().cpu().numpy())
@@ -677,16 +710,16 @@ def evaluate(cfg):
     np.save(cfg.save_path, gen_fields)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="un_confild_case1.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="un_confild_case1.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
     else:
-        raise ValueError(
-            f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'"
-        )
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
