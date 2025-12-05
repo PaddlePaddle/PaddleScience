@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 import hydra
 import matplotlib.pyplot as plt
@@ -24,25 +23,22 @@ from omegaconf import DictConfig
 from simulate import SimulationDataset
 
 import ppsci
-from ppsci.arch.symbolic_gn import HGN
-from ppsci.arch.symbolic_gn import OGN
-from ppsci.arch.symbolic_gn import VarOGN
-from ppsci.arch.symbolic_gn import get_edge_index
+from ppsci.arch.symbolic_gn import HGN, OGN, VarOGN, get_edge_index
 from ppsci.utils import logger
 
 
 def create_ppsci_model(
-    model_type: str = 'OGN',
-    input_keys: List[str] = ['x', 'edge_index'],
-    output_keys: List[str] = ['acceleration'],
+    model_type: str = "OGN",
+    input_keys: List[str] = ["x", "edge_index"],
+    output_keys: List[str] = ["acceleration"],
     n_f: int = 6,
     msg_dim: int = 100,
     ndim: int = 2,
     hidden: int = 300,
     edge_index: Optional[np.ndarray] = None,
-    l1_strength: float = 0.0
+    l1_strength: float = 0.0,
 ):
-    if model_type == 'OGN':
+    if model_type == "OGN":
         model = OGN(
             input_keys=input_keys,
             output_keys=output_keys,
@@ -51,18 +47,18 @@ def create_ppsci_model(
             ndim=ndim,
             hidden=hidden,
             edge_index=edge_index,
-            l1_strength=l1_strength
+            l1_strength=l1_strength,
         )
-    elif model_type == 'HGN':
+    elif model_type == "HGN":
         model = HGN(
             input_keys=input_keys,
             output_keys=output_keys,
             n_f=n_f,
             ndim=ndim,
             hidden=hidden,
-            edge_index=edge_index
+            edge_index=edge_index,
         )
-    elif model_type == 'VarOGN':
+    elif model_type == "VarOGN":
         model = VarOGN(
             input_keys=input_keys,
             output_keys=output_keys,
@@ -71,7 +67,7 @@ def create_ppsci_model(
             ndim=ndim,
             hidden=hidden,
             edge_index=edge_index,
-            l1_strength=l1_strength
+            l1_strength=l1_strength,
         )
     else:
         raise ValueError(f"未知的模型类型: {model_type}")
@@ -85,10 +81,10 @@ def replicate_array(arr, n):
 
 def create_loss_function(cfg):
     def loss_function(output_dict, label_dict, weight_dict=None):
-        loss_type = getattr(cfg.TRAIN.loss, 'type', 'MAE')
-        
+        loss_type = getattr(cfg.TRAIN.loss, "type", "MAE")
+
         output_key = list(cfg.MODEL.output_keys)[0]
-        
+
         target = label_dict[output_key]
         pred = output_dict[output_key]
         if loss_type == "MSE":
@@ -96,11 +92,11 @@ def create_loss_function(cfg):
         else:
             base_loss = paddle.mean(paddle.abs(pred - target))
 
-        if 'l1_regularization' in output_dict:
-            base_loss = base_loss + output_dict['l1_regularization']
+        if "l1_regularization" in output_dict:
+            base_loss = base_loss + output_dict["l1_regularization"]
 
         return {output_key: base_loss}
-    
+
     return loss_function
 
 
@@ -115,7 +111,7 @@ def train(cfg):
         n=cfg.DATA.num_nodes,
         dim=cfg.DATA.dimension,
         nt=cfg.DATA.time_steps,
-        dt=cfg.DATA.time_step_size
+        dt=cfg.DATA.time_step_size,
     )
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
@@ -134,7 +130,7 @@ def train(cfg):
         cfg.MODEL.n_f = cfg.DATA.dimension * 2 + 2
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
-    
+
     train_size = int(len(X) * 0.8)
     X_train, X_val = X[:train_size], X[train_size:]
     y_train, y_val = y[:train_size], y[train_size:]
@@ -180,7 +176,11 @@ def train(cfg):
         train_constraint.name: train_constraint,
         eval_constraint.name: eval_constraint,
     }
-    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+    l1_strength = (
+        cfg.MODEL.l1_strength
+        if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"]
+        else 0.0
+    )
     model = create_ppsci_model(
         model_type=cfg.MODEL.arch,
         n_f=cfg.MODEL.n_f,
@@ -188,28 +188,27 @@ def train(cfg):
         ndim=cfg.MODEL.ndim,
         hidden=cfg.MODEL.hidden,
         edge_index=edge_index,
-        l1_strength=l1_strength
+        l1_strength=l1_strength,
     )
 
     batch_per_epoch = int(train_size / cfg.TRAIN.batch_size)
     if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
         lr_scheduler = paddle.optimizer.lr.OneCycleLR(
             max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
-            total_step=int(cfg.TRAIN.epochs*batch_per_epoch),
-            divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor
+            total_step=int(cfg.TRAIN.epochs * batch_per_epoch),
+            divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor,
         )
         lr_scheduler.by_epoch = False
     else:
         lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
-            learning_rate=cfg.TRAIN.optimizer.learning_rate,
-            gamma=0.9
+            learning_rate=cfg.TRAIN.optimizer.learning_rate, gamma=0.9
         )
         lr_scheduler.by_epoch = True
 
     optimizer = paddle.optimizer.Adam(
         learning_rate=lr_scheduler,
         parameters=model.parameters(),
-        weight_decay=cfg.TRAIN.optimizer.weight_decay
+        weight_decay=cfg.TRAIN.optimizer.weight_decay,
     )
 
     solver = ppsci.solver.Solver(
@@ -233,7 +232,11 @@ def evaluate(cfg: DictConfig):
         cfg.MODEL.ndim = cfg.DATA.dimension
 
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
-    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+    l1_strength = (
+        cfg.MODEL.l1_strength
+        if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"]
+        else 0.0
+    )
 
     model = create_ppsci_model(
         model_type=cfg.MODEL.arch,
@@ -242,7 +245,7 @@ def evaluate(cfg: DictConfig):
         ndim=cfg.MODEL.ndim,
         hidden=cfg.MODEL.hidden,
         edge_index=edge_index,
-        l1_strength=l1_strength
+        l1_strength=l1_strength,
     )
 
     ppsci.utils.save_load.load_pretrain(
@@ -255,20 +258,20 @@ def evaluate(cfg: DictConfig):
         n=cfg.DATA.num_nodes,
         dim=cfg.DATA.dimension,
         nt=cfg.DATA.time_steps,
-        dt=cfg.DATA.time_step_size
+        dt=cfg.DATA.time_step_size,
     )
     sim.simulate(cfg.DATA.num_samples)
     accel_data = sim.get_acceleration()
 
     sample_indices = [0, 1] if cfg.DATA.num_samples > 1 else [0]
-    
+
     for sample_idx in sample_indices:
         sample_data = sim.data[sample_idx, 0:1]
         true_accel = accel_data[sample_idx, 0:1]
-        
+
         input_dict = {
             "x": paddle.to_tensor(sample_data, dtype="float32"),
-            "edge_index": paddle.to_tensor(edge_index, dtype="int64")
+            "edge_index": paddle.to_tensor(edge_index, dtype="int64"),
         }
 
         with paddle.no_grad():
@@ -278,16 +281,20 @@ def evaluate(cfg: DictConfig):
         error = np.mean(np.abs(pred_accel.numpy() - true_accel))
         logger.info(f"Sample {sample_idx} - MAE error: {error:.6f}")
 
-        rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(true_accel)
+        rel_error = np.linalg.norm(pred_accel.numpy() - true_accel) / np.linalg.norm(
+            true_accel
+        )
         logger.info(f"Sample {sample_idx} - Relative error: {rel_error:.6f}")
 
         plt.figure(figsize=(10, 8))
         sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
-        plt.title(f'{cfg.DATA.type.capitalize()} System - Sample {sample_idx}\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
+        plt.title(
+            f"{cfg.DATA.type.capitalize()} System - Sample {sample_idx}\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}"
+        )
         plt.tight_layout()
 
         plot_path = os.path.join(cfg.output_dir, f"evaluation_sample_{sample_idx}.png")
-        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+        plt.savefig(plot_path, dpi=300, bbox_inches="tight")
         plt.close()
         logger.info(f"Evaluation plot saved to {plot_path}")
 
@@ -303,7 +310,11 @@ def export(cfg: DictConfig):
     if cfg.MODEL.ndim == "auto":
         cfg.MODEL.ndim = cfg.DATA.dimension
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
-    l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+    l1_strength = (
+        cfg.MODEL.l1_strength
+        if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"]
+        else 0.0
+    )
     model = create_ppsci_model(
         model_type=cfg.MODEL.arch,
         n_f=cfg.MODEL.n_f,
@@ -311,7 +322,7 @@ def export(cfg: DictConfig):
         ndim=cfg.MODEL.ndim,
         hidden=cfg.MODEL.hidden,
         edge_index=edge_index,
-        l1_strength=l1_strength
+        l1_strength=l1_strength,
     )
 
     solver = ppsci.solver.Solver(
@@ -323,9 +334,13 @@ def export(cfg: DictConfig):
 
     input_spec = [
         {
-            key: InputSpec([None, cfg.DATA.num_nodes, cfg.MODEL.n_f], "float32", name=key)
-            if key == "x"
-            else InputSpec([2, 30], "int64", name=key)
+            key: (
+                InputSpec(
+                    [None, cfg.DATA.num_nodes, cfg.MODEL.n_f], "float32", name=key
+                )
+                if key == "x"
+                else InputSpec([2, 30], "int64", name=key)
+            )
             for key in model.input_keys
         },
     ]
@@ -348,7 +363,7 @@ def inference(cfg: DictConfig):
         n=cfg.DATA.num_nodes,
         dim=cfg.DATA.dimension,
         nt=cfg.DATA.time_steps,
-        dt=cfg.DATA.time_step_size
+        dt=cfg.DATA.time_step_size,
     )
     sim.simulate(cfg.DATA.num_samples)
 
@@ -357,10 +372,7 @@ def inference(cfg: DictConfig):
     edge_index = get_edge_index(cfg.DATA.num_nodes, cfg.DATA.type)
 
     if use_predictor:
-        input_dict = {
-            "x": sample_data,
-            "edge_index": edge_index
-        }
+        input_dict = {"x": sample_data, "edge_index": edge_index}
         output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
         pred_acceleration = output_dict[cfg.MODEL.output_keys[0]]
     else:
@@ -369,7 +381,12 @@ def inference(cfg: DictConfig):
         if cfg.MODEL.ndim == "auto":
             cfg.MODEL.ndim = cfg.DATA.dimension
 
-        l1_strength = cfg.MODEL.l1_strength if cfg.MODEL.regularization_type == "l1" and cfg.MODEL.arch in ["OGN", "VarOGN"] else 0.0
+        l1_strength = (
+            cfg.MODEL.l1_strength
+            if cfg.MODEL.regularization_type == "l1"
+            and cfg.MODEL.arch in ["OGN", "VarOGN"]
+            else 0.0
+        )
 
         model = create_ppsci_model(
             model_type=cfg.MODEL.arch,
@@ -378,7 +395,7 @@ def inference(cfg: DictConfig):
             ndim=cfg.MODEL.ndim,
             hidden=cfg.MODEL.hidden,
             edge_index=edge_index,
-            l1_strength=l1_strength
+            l1_strength=l1_strength,
         )
 
         ppsci.utils.save_load.load_pretrain(
@@ -388,7 +405,7 @@ def inference(cfg: DictConfig):
 
         input_dict = {
             "x": paddle.to_tensor(sample_data, dtype="float32"),
-            "edge_index": paddle.to_tensor(edge_index, dtype="int64")
+            "edge_index": paddle.to_tensor(edge_index, dtype="int64"),
         }
 
         with paddle.no_grad():
@@ -401,16 +418,20 @@ def inference(cfg: DictConfig):
     error = np.mean(np.abs(pred_acceleration - true_acceleration))
     logger.info(f"Inference error (MAE): {error:.6f}")
 
-    rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(true_acceleration)
+    rel_error = np.linalg.norm(pred_acceleration - true_acceleration) / np.linalg.norm(
+        true_acceleration
+    )
     logger.info(f"Inference relative error: {rel_error:.6f}")
 
     plt.figure(figsize=(10, 8))
     sim.plot(sample_idx, animate=False, plot_size=True, s_size=2)
-    plt.title(f'{cfg.DATA.type.capitalize()} System - Inference\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}')
+    plt.title(
+        f"{cfg.DATA.type.capitalize()} System - Inference\nMAE: {error:.4f}, Rel Error: {rel_error:.4f}"
+    )
     plt.tight_layout()
 
     plot_path = os.path.join(cfg.output_dir, "inference.png")
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
     logger.info(f"Inference plot saved to {plot_path}")
 
@@ -427,7 +448,9 @@ def main(cfg: DictConfig) -> None:
         inference(cfg)
     else:
         raise ValueError(
-            "cfg.mode should in [train, eval, export, infer], but got {}".format(cfg.mode)
+            "cfg.mode should in [train, eval, export, infer], but got {}".format(
+                cfg.mode
+            )
         )
 
 

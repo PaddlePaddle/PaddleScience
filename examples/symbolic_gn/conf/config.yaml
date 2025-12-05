@@ -17,7 +17,6 @@ hydra:
     init_callback:
       _target_: ppsci.utils.callbacks.InitCallback
   sweep:
-    
     dir: ${hydra.run.dir}
     subdir: ./
 
@@ -26,7 +25,6 @@ seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
 device: gpu
-
 
 TRAIN:
   epochs: 1000
@@ -48,14 +46,12 @@ TRAIN:
     type: "MAE"
     physics_weight: 0.0
 
-
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
   batch_size: 32
   message_analysis:
     enabled: true
-
 
 export_path: "./exported_model"
 
@@ -75,7 +71,6 @@ INFER:
   gpu_id: 0
   max_batch_size: 1024
   num_cpu_threads: 10
-
 
 MODEL:
   arch: "OGN"
