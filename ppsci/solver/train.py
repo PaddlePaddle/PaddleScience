@@ -88,7 +88,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
-                _constraint.data_iter = iter(_constraint.data_loader)
+                with misc.Synchronized(solver.world_size > 1):
+                    _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
             if solver.nvtx_flag:  # only for nsight analysis
