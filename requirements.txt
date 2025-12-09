@@ -6,6 +6,7 @@ imageio
 matplotlib
 meshio==5.3.4
 numpy>=1.20.0,<2.0.0
+psutil
 pydantic>=2.5.0
 pyevtk
 pyyaml
