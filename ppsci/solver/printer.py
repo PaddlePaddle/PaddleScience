@@ -90,14 +90,12 @@ def log_train_info(
         )
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
 
-    # CPU memory
-    _process = psutil.Process()
-    _mem_full = _process.memory_full_info()
-    uss_msg = (
-        f"USS: {_mem_full.uss // (1 << 20)} MB"  # Unique Set Size (USS) memory in MB
-    )
-    pss_msg = f"PSS: {_mem_full.pss // (1 << 20)} MB"  # Proportional Set Size (PSS) memory in MB
-    log_str += f", {uss_msg}, {pss_msg}"
+        # CPU memory
+        _process = psutil.Process()
+        _mem_full = _process.memory_full_info()
+        uss_msg = f"USS: {_mem_full.uss // (1 << 20)} MB"  # Unique Set Size (USS) memory in MB
+        pss_msg = f"PSS: {_mem_full.pss // (1 << 20)} MB"  # Proportional Set Size (PSS) memory in MB
+        log_str += f", {uss_msg}, {pss_msg}"
     logger.info(log_str)
 
     # reset time information after printing
