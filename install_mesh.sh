@@ -8,7 +8,7 @@ echo "==== Python Environment Verified ===="
 
 
 echo "==== Step 2: Checking CMake Environment ===="
-# Verify if cmake exists in current environment. If not, download a temporary version.
+# Always install a temporary version of CMake 3.23.0, regardless of existing installations.
 echo "Installing temporary CMake 3.23.0 ..."
 wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
 tar -zxf cmake-3.23.0-linux-x86_64.tar.gz --checkpoint=.100 --totals
