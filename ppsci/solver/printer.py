@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Optional
 
+import psutil
 from paddle import device
 
 from ppsci.utils import logger
@@ -24,7 +25,6 @@ from ppsci.utils import misc
 
 if TYPE_CHECKING:
     from ppsci import solver
-import psutil
 
 
 def update_train_loss(
