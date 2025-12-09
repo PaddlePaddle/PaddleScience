@@ -89,6 +89,12 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
                 with misc.Synchronized(solver.world_size > 1):
+                    if hasattr(_constraint, "data_iter"):
+                        del _constraint.data_iter
+                        import gc
+
+                        gc.collect()
+                with misc.Synchronized(solver.world_size > 1):
                     _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
@@ -246,8 +252,16 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
-                _constraint.data_iter = iter(_constraint.data_loader)
+                with misc.Synchronized(solver.world_size > 1):
+                    if hasattr(_constraint, "data_iter"):
+                        del _constraint.data_iter
+                        import gc
+
+                        gc.collect()
+                with misc.Synchronized(solver.world_size > 1):
+                    _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+
             reader_cost += time.perf_counter() - reader_tic
 
             for v in input_dict.values():
