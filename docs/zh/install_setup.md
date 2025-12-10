@@ -239,7 +239,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_scatter
         # install from source(recommended)
-        python -m pip install ppsci/externals/paddle_scatter
+        python -m pip install ppsci/externals/paddle_scatter --no-build-isolation
         ```
 
     === "paddle_sparse"
@@ -248,7 +248,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_sparse
         # install from source(recommended)
-        python -m pip install ppsci/externals/paddle_sparse
+        python -m pip install ppsci/externals/paddle_sparse --no-build-isolation
         ```
 
     === "paddle_cluster"
@@ -257,7 +257,7 @@ PaddleScience 提供了多种第三方库供用户在开发时使用，这些库
         cd PaddleScience
         git submodule update --init ppsci/externals/paddle_cluster
         # install from source(recommended)
-        python -m pip install ppsci/externals/paddle_cluster
+        python -m pip install ppsci/externals/paddle_cluster --no-build-isolation
         ```
 
     === "tensorly"
