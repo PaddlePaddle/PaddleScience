@@ -43,6 +43,7 @@ __all__ = [
     "Prettydefaultdict",
     "RankZeroOnly",
     "RankZeroFirst",
+    "Synchronized",
     "Timer",
     "all_gather",
     "concat_dict_list",
@@ -224,6 +225,43 @@ class RankZeroFirst(ContextDecorator):
     def __exit__(self, type, value, traceback):
         if self.world_size > 1 and self.is_master:
             dist.barrier()  # Allow others to proceed
+
+
+class Synchronized(ContextDecorator):
+    """
+    A context manager/decorator that ensures code blocks are synchronized across all processes.
+
+    It calls barrier before and after the code block execution to ensure synchronization
+    among all processes.
+
+    Args:
+        enabled (bool): Whether to enable synchronization. Defaults to True.
+
+    Examples:
+        >>> import paddle
+        >>> from paddle import distributed as dist
+        >>> dist.init_parallel_env()
+        >>> with Synchronized(dist.get_world_size() > 1):
+        ...     x = paddle.randn(2, 2) * 2
+    """
+
+    def __init__(self, enabled: bool = True):
+        if enabled and not dist.is_initialized():
+            logger.warning(
+                "Distributed environment is not initialized, but `Synchronized` is enabled. "
+                "This may cause unexpected behavior. Please ensure distributed environment is properly initialized "
+                "when using `Synchronized` with `enabled=True`.",
+            )
+        self.enabled = enabled
+
+    def __enter__(self):
+        if self.enabled and dist.is_initialized():
+            dist.barrier()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.enabled and dist.is_initialized():
+            dist.barrier()
 
 
 class Timer(ContextDecorator):

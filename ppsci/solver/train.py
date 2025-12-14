@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import gc
 import sys
 import time
 from typing import TYPE_CHECKING
@@ -88,7 +89,11 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
-                _constraint.data_iter = iter(_constraint.data_loader)
+                with misc.Synchronized(solver.world_size > 1):
+                    if hasattr(_constraint, "data_iter"):
+                        del _constraint.data_iter
+                        gc.collect()
+                    _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
             if solver.nvtx_flag:  # only for nsight analysis
@@ -245,7 +250,11 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
-                _constraint.data_iter = iter(_constraint.data_loader)
+                with misc.Synchronized(solver.world_size > 1):
+                    if hasattr(_constraint, "data_iter"):
+                        del _constraint.data_iter
+                        gc.collect()
+                    _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
 
