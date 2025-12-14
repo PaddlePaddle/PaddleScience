@@ -18,10 +18,12 @@ import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle.distributed import fleet
-from paddle.io import DataLoader, DistributedBatchSampler
+from paddle.io import DataLoader
+from paddle.io import DistributedBatchSampler
 
 import ppsci
-from ppsci.arch import LatentContainer, SIRENAutodecoder_film
+from ppsci.arch import LatentContainer
+from ppsci.arch import SIRENAutodecoder_film
 from ppsci.utils import logger
 
 

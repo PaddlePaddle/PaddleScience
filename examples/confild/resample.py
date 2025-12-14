@@ -1,4 +1,5 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 
 import numpy as np
 import paddle as th
@@ -15,7 +16,6 @@ def create_named_schedule_sampler(name, diffusion):
 
 
 class ScheduleSampler(ABC):
-
     @abstractmethod
     def weights(self):
         """

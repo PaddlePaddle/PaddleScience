@@ -13,27 +13,23 @@
 # limitations under the License.
 
 import copy
-import enum
 import functools
 import math
-import os
-from abc import ABC, abstractmethod
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from resample import LossAwareSampler, UniformSampler
+from resample import LossAwareSampler
+from resample import UniformSampler
 
-from ppsci.arch import (
-    LossType,
-    ModelMeanType,
-    ModelVarType,
-    SIRENAutodecoder_film,
-    SpacedDiffusion,
-    UNetModel,
-)
+from ppsci.arch import LossType
+from ppsci.arch import ModelMeanType
+from ppsci.arch import ModelVarType
+from ppsci.arch import SIRENAutodecoder_film
+from ppsci.arch import SpacedDiffusion
+from ppsci.arch import UNetModel
 from ppsci.utils import logger
 
 
@@ -350,7 +346,6 @@ def create_slim(cfg):
     ###### convert to tensor ######
     fois = paddle.to_tensor(fois) if not isinstance(fois, paddle.Tensor) else fois
     coord = paddle.to_tensor(coord) if not isinstance(coord, paddle.Tensor) else coord
-    N_samples = fois.shape[0]
 
     ###### normalizer ######
     in_normalizer = Normalizer_ts(**cfg.CNF.normalizer)
