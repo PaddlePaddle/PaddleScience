@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import os
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import hydra
 import matplotlib.pyplot as plt
@@ -23,7 +24,10 @@ from omegaconf import DictConfig
 from simulate import SimulationDataset
 
 import ppsci
-from ppsci.arch.symbolic_gn import HGN, OGN, VarOGN, get_edge_index
+from ppsci.arch.symbolic_gn import HGN
+from ppsci.arch.symbolic_gn import OGN
+from ppsci.arch.symbolic_gn import VarOGN
+from ppsci.arch.symbolic_gn import get_edge_index
 from ppsci.utils import logger
 
 
@@ -195,7 +199,7 @@ def train(cfg):
     if cfg.TRAIN.lr_scheduler.name == "OneCycleLR":
         lr_scheduler = paddle.optimizer.lr.OneCycleLR(
             max_learning_rate=cfg.TRAIN.lr_scheduler.max_learning_rate,
-            total_step=int(cfg.TRAIN.epochs * batch_per_epoch),
+            total_steps=int(cfg.TRAIN.epochs * batch_per_epoch),
             divide_factor=cfg.TRAIN.lr_scheduler.final_div_factor,
         )
         lr_scheduler.by_epoch = False

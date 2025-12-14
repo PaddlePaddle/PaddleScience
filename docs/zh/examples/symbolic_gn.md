@@ -265,7 +265,7 @@ TRAIN:
      l1_strength: 1e-2
    ```
 
-2. **提取消息数据**：训练过程中可以记录消息向量（需要修改代码添加钩子）
+2. **提取消息数据**：训练过程中可以记录消息向量
    ```python
    messages = model.msg_fnc(edge_features)  # [num_edges, msg_dim]
    # 保存消息及对应的物理特征（dx, dy, r, m1, m2等）
@@ -274,10 +274,10 @@ TRAIN:
 3. **符号回归**：使用工具如 [PySR](https://github.com/MilesCranmer/PySR) 拟合符号表达式
    ```python
    from pysr import PySRRegressor
-   
+
    # 选择最活跃的消息通道
    active_channels = np.argsort(np.std(messages, axis=0))[-5:]
-   
+
    # 对每个活跃通道进行符号回归
    for ch in active_channels:
        model = PySRRegressor(
