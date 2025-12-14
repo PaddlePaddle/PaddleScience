@@ -413,10 +413,9 @@ def inference(cfg: DictConfig):
     x_flatten = x_grad.reshape(-1, 1)
     y_flatten = y_grad.reshape(-1, 1)
 
-    with ppsci.misc.Timer("infer"):
-        output_dict = predictor.predict(
-            {"x": x_flatten, "y": y_flatten}, cfg.INFER.batch_size
-        )
+    output_dict = predictor.predict(
+        {"x": x_flatten, "y": y_flatten}, cfg.INFER.batch_size
+    )
 
     # mapping data to cfg.INFER.output_keys
     output_dict = {
