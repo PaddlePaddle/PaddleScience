@@ -303,7 +303,10 @@ examples/symbolic_gn/gn.py
 
 
 ## 5. 预期结果
-
+![](../../images/symbolic_gn/image.png)
+![](../../images/symbolic_gn/ogn_loss.png)
+![](../../images/symbolic_gn/r2_animation.gif)
+![](../../images/symbolic_gn/spring_animation.gif)
 
 ## 6. 参考资料
 
