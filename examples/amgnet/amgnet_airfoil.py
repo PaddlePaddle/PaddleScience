@@ -86,6 +86,7 @@ def train(cfg: DictConfig):
         loss=ppsci.loss.FunctionalLoss(train_mse_func),
         name="Sup",
     )
+    cfg.TRAIN.iters_per_epoch = len(sup_constraint.data_loader)
     # wrap constraints together
     constraint = {sup_constraint.name: sup_constraint}
 
@@ -121,16 +122,9 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        cfg.output_dir,
-        optimizer,
-        None,
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
+        optimizer=optimizer,
         validator=validator,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        cfg=cfg,
     )
     # train model
     solver.train()

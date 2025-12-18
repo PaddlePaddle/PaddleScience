@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Optional
 
+import psutil
 from paddle import device
 
 from ppsci.utils import logger
@@ -80,6 +81,7 @@ def log_train_info(
         + ", ".join(filter(None, [metric_msg, time_msg, ips_msg, eta_msg]))
     )
     if solver.benchmark_flag:
+        # GPU memory
         max_mem_reserved_msg = (
             f"max_mem_reserved: {device.max_memory_reserved() // (1 << 20)} MB"
         )
@@ -87,6 +89,13 @@ def log_train_info(
             f"max_mem_allocated: {device.max_memory_allocated() // (1 << 20)} MB"
         )
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
+
+        # CPU memory
+        _process = psutil.Process()
+        _mem_full = _process.memory_full_info()
+        uss_msg = f"USS: {_mem_full.uss // (1 << 20)} MB"  # Unique Set Size (USS) memory in MB
+        pss_msg = f"PSS: {_mem_full.pss // (1 << 20)} MB"  # Proportional Set Size (PSS) memory in MB
+        log_str += f", {uss_msg}, {pss_msg}"
     logger.info(log_str)
 
     # reset time information after printing

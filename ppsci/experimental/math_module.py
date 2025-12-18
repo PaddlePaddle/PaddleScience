@@ -160,7 +160,7 @@ def gaussian_integrate(
 
         Args:
             N (int): Number of points.
-            integration_domain (paddle.Tensor): Integration domain.
+            integration_domains (paddle.Tensor): Integration domain.
 
         Returns:
             Tuple[paddle.Tensor, paddle.Tensor, int]: Grid points, grid widths and

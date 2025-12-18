@@ -120,10 +120,10 @@ class GaussianDistance(object):
         Apply Gaussian distance filter to a numpy distance array.
 
         Args:
-            distance (np.array): n-dimensional distance matrix of any shape.
+            distances(np.ndarray): n-dimensional distance matrix of any shape.
 
         Returns:
-            np.array: Expanded distance matrix with the last dimension of length len(self.filter).
+            np.ndarray: Expanded distance matrix with the last dimension of length len(self.filter).
         """
 
         return np.exp(

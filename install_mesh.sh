@@ -8,19 +8,14 @@ echo "==== Python Environment Verified ===="
 
 
 echo "==== Step 2: Checking CMake Environment ===="
-# Verify if cmake exists in current environment. If not, download a temporary version.
-if command -v cmake >/dev/null 2>&1; then
-    echo "CMake found: $(cmake --version | head -n 1)"
-else
-    echo "CMake not found. Installing temporary CMake 3.23.0 ..."
-    wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
-    tar -zxf cmake-3.23.0-linux-x86_64.tar.gz --checkpoint=.100 --totals
-    rm -f cmake-3.23.0-linux-x86_64.tar.gz
-    export PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
-    echo "Temporary CMake installed: $(cmake --version | head -n 1)"
-fi
+# Always install a temporary version of CMake 3.23.0, regardless of existing installations.
+echo "Installing temporary CMake 3.23.0 ..."
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
+tar -zxf cmake-3.23.0-linux-x86_64.tar.gz --checkpoint=.100 --totals
+rm -f cmake-3.23.0-linux-x86_64.tar.gz
+export PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
+echo "Temporary CMake installed: $(cmake --version | head -n 1)"
 echo "CMake environment ready."
-
 
 echo "==== Step 3: Downloading PyMesh Package ===="
 # Download PyMesh package if not already present.
@@ -28,7 +23,6 @@ wget -c https://paddle-org.bj.bcebos.com/paddlescience/PyMesh.tar.gz
 echo "Download completed. Extracting package..."
 tar -zxf PyMesh.tar.gz --checkpoint=.1000 --totals
 echo "PyMesh package extracted."
-
 
 echo "==== Step 4: Entering PyMesh Directory ===="
 cd PyMesh
