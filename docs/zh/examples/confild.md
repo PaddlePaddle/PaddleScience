@@ -101,3 +101,5 @@ examples/confild/confild.py:218:503
 
 ## 5. 实验结果
 ![](https://ai-studio-static-online.cdn.bcebos.com/1f81af1d579b4b41a525f867ac0fde19d59fb6fc44f8406aa84345c6015938c9)
+![](../../images/confild/image.png)
+![](../../images/confild/data_animation.gif)
