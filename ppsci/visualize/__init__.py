@@ -62,8 +62,6 @@ def build_visualizer(cfg: DictConfig):
 
     Args:
         cfg (DictConfig): Visualizer(s) config list.
-        geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
-        equation_dict (Dct[str, Equation]): Equation(s) in dict.
 
     Returns:
         Dict[str, Visualizer]: Visualizer(s) in dict.

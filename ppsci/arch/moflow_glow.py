@@ -303,7 +303,6 @@ class Block(nn.Layer):
 
         Args:
             x (paddle.Tensor): Input to squeeze or unsqueeze.
-            reverse (bool): Reverse the operation, i.e., unsqueeze.
 
         Returns:
             x (paddle.Tensor): Squeezed or unsqueezed tensor.

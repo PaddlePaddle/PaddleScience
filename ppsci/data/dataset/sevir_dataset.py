@@ -555,7 +555,7 @@ class SEVIRDataset(io.Dataset):
         """Loads a selected batch of events (not batch of sequences) into memory.
 
         Args:
-            idx (int): The index of the event in the batch.
+            event_idx (int): The index of the event in the batch.
             event_batch_size (int): Event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
 
         Returns:

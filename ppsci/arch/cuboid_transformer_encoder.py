@@ -79,10 +79,10 @@ class PatchMerging3D(nn.Layer):
         """
 
         Args:
-            x : (B, T, H, W, C)
+            x: (B, T, H, W, C)
 
         Returns:
-            out : Shape (B, T // downsample[0], H // downsample[1], W // downsample[2], out_dim)
+            out: Shape (B, T // downsample[0], H // downsample[1], W // downsample[2], out_dim)
         """
 
         B, T, H, W, C = x.shape
@@ -218,10 +218,10 @@ class PositionwiseFFN(nn.Layer):
     def forward(self, data):
         """
         Args:
-            x : Shape (B, seq_length, C_in)
+            data: Shape (B, seq_length, C_in)
 
         Returns:
-            out : Shape (B, seq_length, C_out)
+            out: Shape (B, seq_length, C_out)
         """
 
         residual = data
@@ -1464,7 +1464,7 @@ class CuboidTransformerEncoder(nn.Layer):
         """Get the shape of the output memory based on the input shape. This can be used for constructing the decoder.
 
         Returns:
-            mem_shapes : A list of shapes of the output memory
+            mem_shapes: A list of shapes of the output memory
         """
 
         if self.num_blocks == 1:
@@ -1480,7 +1480,7 @@ class CuboidTransformerEncoder(nn.Layer):
     def forward(self, x, global_vectors=None):
         """
         Args:
-            x : Shape (B, T, H, W, C)
+            x: Shape (B, T, H, W, C)
 
         Returns:
             out (List[paddle.Tensor,..]): A list of tensors from the bottom layer to the top layer of the encoder. For
