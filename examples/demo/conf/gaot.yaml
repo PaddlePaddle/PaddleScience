@@ -1,0 +1,128 @@
+# GAOT (Geometry-Aware Operator Transformer) Configuration
+# For reproducing Poisson-Gauss benchmark results
+
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    dir: outputs_gaot/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode}
+    chdir: false
+  sweep:
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# ============================================================================
+# General Settings
+# ============================================================================
+mode: train  # running mode: train/eval/export/infer
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# ============================================================================
+# Data Settings
+# ============================================================================
+DATA:
+  # Path to NetCDF data file
+  # Download from: https://huggingface.co/datasets/shiwen0710/Datasets_for_GAOT
+  data_path: "./datasets/time_indep/Poisson-Gauss.nc"
+  
+  # Data split sizes
+  train_size: 1024
+  val_size: 128
+  test_size: 256
+  
+  # Point cloud sampling rate (1.0 = use all points)
+  sample_rate: 1.0
+  
+  # DataLoader settings
+  num_workers: 4
+
+# ============================================================================
+# Model Settings
+# ============================================================================
+MODEL:
+  # Input/Output keys
+  input_keys: ["x", "c"]
+  output_keys: ["u"]
+  
+  # Coordinate dimension (2 for 2D problems, 3 for 3D)
+  coord_dim: 2
+  
+  # Feature dimensions
+  input_dim: 1   # Condition dimension
+  output_dim: 1  # Solution dimension
+  
+  # Architecture parameters
+  hidden_dim: 256    # Hidden dimension for MLPs
+  latent_dim: 64     # Latent space dimension
+  num_layers: 4      # Number of transformer layers
+  num_heads: 8       # Number of attention heads
+  dropout: 0.0       # Dropout rate
+
+  # ---- Full GAOT parameters (for future implementation) ----
+  # MAGNO:
+  #   radius: 0.033
+  #   hidden_size: 64
+  #   mlp_layers: 3
+  #   lifting_channels: 32
+  #   scales: [1.0]
+  #   use_attention: true
+  #   use_geoembed: true
+  # 
+  # Transformer:
+  #   patch_size: 4
+  #   positional_embedding: "absolute"
+
+# ============================================================================
+# Training Settings
+# ============================================================================
+TRAIN:
+  epochs: 500
+  iters_per_epoch: 16  # Adjust based on dataset size / batch_size
+  batch_size: 64
+  
+  # Learning rate scheduler
+  lr_scheduler:
+    learning_rate: 1.0e-3
+    T_max: 500
+    eta_min: 1.0e-6
+  
+  # Weight decay for AdamW
+  weight_decay: 1.0e-4
+  
+  # Checkpointing
+  save_freq: 50
+  
+  # Validation during training
+  eval_during_train: true
+  eval_freq: 10
+  
+  # Pretrained model (optional)
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# ============================================================================
+# Evaluation Settings
+# ============================================================================
+EVAL:
+  batch_size: 64
+  pretrained_model_path: null
+  eval_with_no_grad: true
+
+# ============================================================================
+# Inference/Export Settings
+# ============================================================================
+INFER:
+  pretrained_model_path: null
+  export_path: "./inference_model/gaot"

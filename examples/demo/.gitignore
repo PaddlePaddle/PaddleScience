@@ -1,0 +1,64 @@
+# Python缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 日志文件
+*.log
+logs/
+
+# 训练输出
+outputs*/
+checkpoints/
+*.pdparams
+*.pdopt
+*.pdiparams
+*.pdmodel
+
+# 数据文件
+datasets/
+data/
+*.nc
+*.h5
+*.hdf5
+
+# 临时测试文件
+test_*.py
+temp_*.py
+scratch_*.py
+
+# Markdown文档（暂不提交）
+*.md
+# !README.md
+
+# Comate临时文件
+.comate/
+_COMATE_*/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# 编译产物
+build/
+dist/
+*.egg-info/
+
+# 系统文件
+Thumbs.db
+.DS_Store

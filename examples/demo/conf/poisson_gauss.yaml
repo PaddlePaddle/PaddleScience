@@ -1,0 +1,127 @@
+# Poisson-Gauss Benchmark Configuration for GAOT
+# Target: Relative L1 error <= 0.02024
+
+hydra:
+  run:
+    dir: outputs_poisson_gauss
+  job:
+    name: gaot_poisson_gauss
+    chdir: false
+
+# Execution mode
+mode: train  # train, eval, export, infer
+
+# Random seed
+seed: 42
+
+# Output directory
+output_dir: ${hydra:run.dir}
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+MODEL:
+  # Input/Output keys
+  input_keys: ["x", "c"]
+  output_keys: ["u"]
+  
+  # Coordinate and feature dimensions
+  coord_dim: 2  # 2D problem
+  input_dim: 1  # Input condition dimension
+  output_dim: 1  # Output solution dimension
+  
+  # Latent grid configuration
+  latent_tokens_size: [64, 64]  # 64x64 latent grid
+  
+  # MAGNO configuration
+  radius: 0.033  # Neighbor search radius
+  scales: [1.0, 0.5, 0.25]  # Multi-scale factors
+  use_attention: true
+  use_geoembed: true
+  lifting_channels: 64  # Lifting layer output channels
+  hidden_size: 64  # Hidden dimension for MLP layers
+  mlp_layers: 3  # Number of MLP layers
+  
+  # Transformer configuration
+  patch_size: 2  # Patch size for vision transformer
+  num_transformer_layers: 3  # Number of transformer layers
+  num_heads: 8  # Number of attention heads
+  positional_embedding: "absolute"  # Position encoding type
+
+# =============================================================================
+# Data Configuration
+# =============================================================================
+DATA:
+  # Dataset path
+  data_path: /work/GAOT/datasets/time_indep/Poisson-Gauss.nc
+  
+  # Data splits
+  train_size: 2048
+  val_size: 128
+  test_size: 256
+  
+  # Sampling
+  sample_rate: 1.0  # Point cloud subsampling rate
+  
+  # DataLoader
+  num_workers: 4
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
+TRAIN:
+  # Training epochs and iterations
+  epochs: 100
+  iters_per_epoch: 32  # Will be overridden by actual dataset size
+  
+  # Batch size
+  batch_size: 64
+  
+  # Optimizer
+  weight_decay: 1.0e-5
+  
+  # Learning rate scheduler
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 8.0e-4
+    by_epoch: true
+    warmup_epoch: 5
+    warmup_start_lr: 1.0e-4
+    end_lr: 5.0e-5
+    eta_min: 1.0e-4
+  
+  # Checkpointing
+  save_freq: 10
+  eval_during_train: true
+  eval_freq: 2
+  
+  # Logging
+  log_freq: 20
+
+# =============================================================================
+# Evaluation Configuration
+# =============================================================================
+EVAL:
+  batch_size: 64
+  pretrained_model_path: null
+  eval_with_no_grad: true
+
+# =============================================================================
+# Export Configuration
+# =============================================================================
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/poisson_gauss
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 64
+  num_cpu_threads: 10
