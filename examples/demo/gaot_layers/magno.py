@@ -660,8 +660,9 @@ class MAGNODecoder(nn.Layer):
                 decoded = paddle.stack(decoded_scales, axis=0).mean(axis=0)
 
         # Final projection
-        decoded = decoded.transpose([0, 2, 1])
-        decoded = self.projection(decoded).transpose([0, 2, 1])
+        # decoded: [batch, num_nodes, in_channels]
+        # projection expects: [batch, num_nodes, in_channels]
+        decoded = self.projection(decoded)  # [batch, num_nodes, out_channels]
 
         return decoded
 

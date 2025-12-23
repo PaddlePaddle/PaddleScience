@@ -27,7 +27,6 @@ Paper: "Geometry Aware Operator Transformer as an Efficient and Accurate
         Neural Surrogate for PDEs on Arbitrary Domains" (NeurIPS 2025)
 """
 
-from __future__ import annotations
 
 import argparse
 import json

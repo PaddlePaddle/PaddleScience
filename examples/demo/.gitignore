@@ -44,7 +44,8 @@ scratch_*.py
 
 # Markdown文档（暂不提交）
 *.md
-# !README.md
+!README.md
+!*/README.md
 
 # Comate临时文件
 .comate/
