@@ -482,7 +482,7 @@ class SEVIRDataset(io.Dataset):
             data (Dict,optional): , data[imgt] is a data tensor with shape = (tmp_batch_size, height, width, raw_seq_len).
 
         Returns:
-            data (np.array): Updated data. Updated shape = (tmp_batch_size + 1, height, width, raw_seq_len).
+            data (np.ndarray): Updated data. Updated shape = (tmp_batch_size + 1, height, width, raw_seq_len).
         """
 
         imgtyps = np.unique([x.split("_")[0] for x in list(row.keys())])

@@ -128,7 +128,7 @@ class Graph:
         Args:
             center_index (int): center node index
             neighbor_index (int): neighbor node index
-            image (np.array): the periodic cell image the neighbor is from
+            image (np.ndarray): the periodic cell image the neighbor is from
             distance (float): distance between center and neighbor.
             dist_tol (float): tolerance for distance comparison between edges.
                 Default = 1e-6

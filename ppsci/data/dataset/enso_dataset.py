@@ -82,7 +82,7 @@ def fold(data, size=36, stride=12):
         stride (int, optional): The step.Defaults to 12.
 
     Returns:
-        outdata (np.array): (N_, *).N/size is the number/width of sliding blocks
+        outdata (np.ndarray): (N_, *).N/size is the number/width of sliding blocks
     """
     if size % stride != 0:
         raise ValueError("size modulo stride should be zero")

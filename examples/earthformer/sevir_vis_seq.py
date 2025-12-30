@@ -49,9 +49,9 @@ def get_cmap_dict(s):
 
 
 def visualize_result(
-    in_seq: np.array,
-    target_seq: np.array,
-    pred_seq_list: List[np.array],
+    in_seq: np.ndarray,
+    target_seq: np.ndarray,
+    pred_seq_list: List[np.ndarray],
     label_list: List[str],
     interval_real_time: float = 10.0,
     idx=0,
@@ -64,8 +64,8 @@ def visualize_result(
 ):
     """
     Args:
-        in_seq (np.array):
-        target_seq (np.array):
+        in_seq (np.ndarray):
+        target_seq (np.ndarray):
         interval_real_time (float): The minutes of each plot interval
     """
 
@@ -214,9 +214,9 @@ def save_example_vis_results(
 ):
     """
     Args:
-    in_seq (np.array): float value 0-1
-    target_seq (np.array): float value 0-1
-    pred_seq (np.array): float value 0-1
+    in_seq (np.ndarray): float value 0-1
+    target_seq (np.ndarray): float value 0-1
+    pred_seq (np.ndarray): float value 0-1
     interval_real_time (float): The minutes of each plot interval
     """
 
