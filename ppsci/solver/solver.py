@@ -1074,6 +1074,7 @@ class Solver:
 
         Args:
             enable (bool): Enable no_sync.
+            ddp_model (paddle.DataParallel): Model to apply `no_sync` on.
 
         Returns:
             contextlib.AbstractContextManager: Smart no_sync context manager.

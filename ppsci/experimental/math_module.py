@@ -160,7 +160,7 @@ def gaussian_integrate(
 
         Args:
             N (int): Number of points.
-            integration_domain (paddle.Tensor): Integration domain.
+            integration_domains (paddle.Tensor): Integration domains.
 
         Returns:
             Tuple[paddle.Tensor, paddle.Tensor, int]: Grid points, grid widths and
@@ -275,6 +275,7 @@ def gaussian_integrate(
             dim (int): Dimensionality.
             n_per_dim (int): Number of grid slices per dimension.
             hs (paddle.Tensor): Distances between grid slices for each dimension.
+            integration_domains (paddle.Tensor): Integration domains.
 
         Returns:
             paddle.Tensor: Quadrature result.

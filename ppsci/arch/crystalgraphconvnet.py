@@ -123,10 +123,10 @@ class CrystalGraphConvNet(base.Arch):
 
         Args:
             input (list): List of input, which includes the following elements:
-                atom_fea (paddle.Tensor): Shape (N, orig_atom_fea_len). Atom features from atom type.
-                nbr_fea (paddle.Tensor): Shape (N, M, nbr_fea_len). Bond features of each atom's M neighbors.
-                nbr_fea_idx (paddle.Tensor): Shape (N, M). Indices of M neighbors of each atom.
-                crystal_atom_idx (list): List of paddle.Tensor of length N0. Mapping from the crystal idx to atom idx.
+                - atom_fea (paddle.Tensor): Shape (N, orig_atom_fea_len). Atom features from atom type.
+                - nbr_fea (paddle.Tensor): Shape (N, M, nbr_fea_len). Bond features of each atom's M neighbors.
+                - nbr_fea_idx (paddle.Tensor): Shape (N, M). Indices of M neighbors of each atom.
+                - crystal_atom_idx (list): List of paddle.Tensor of length N0. Mapping from the crystal idx to atom idx.
 
         Returns:
             paddle.Tensor: Shape (N,). Atom hidden features after convolution.

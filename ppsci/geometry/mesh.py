@@ -1320,6 +1320,8 @@ def sample_in_triangle(v0, v1, v2, n, random="pseudo", criteria=None):
         v1 (np.ndarray): Coordinates of the second vertex of an triangle with shape of [3, ].
         v2 (np.ndarray): Coordinates of the third vertex of an triangle with shape of [3, ].
         n (int): Number of points to be sampled.
+        random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
+        criteria (Optional[Callable[..., np.ndarray]]): Criteria function to filter sampled points. Defaults to None.
 
     Returns:
         np.ndarray: Coordinates of sampled n points with shape of [n, 3].

@@ -50,6 +50,7 @@ def load_csv_file(
         keys (Tuple[str, ...]): Required fetching keys.
         alias_dict (Optional[Dict[str, str]]): Alias for keys,
             i.e. {inner_key: outer_key}. Defaults to None.
+        delimiter (str, optional): Delimiter used to split columns. Defaults to ",".
         encoding (str, optional): Encoding code when open file. Defaults to "utf-8".
 
     Returns:
