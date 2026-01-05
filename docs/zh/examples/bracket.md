@@ -74,6 +74,45 @@ examples/bracket/bracket.py:21:30
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
+### 3.0 数据集说明
+
+本项目所使用的数据包含：几何模型文件（STL）和物理场评估数据（TXT）。
+
+#### 3.0.1 几何模型（STL 文件）
+
+几何区域由以下 STL 文件定义，用于构建本案例中的金属连接件的几何结构，包含边界与内部孔洞：
+
+- `./stl/support.stl`  
+- `./stl/bracket.stl`  
+- `./stl/aux_lower.stl`  
+- `./stl/aux_upper.stl`  
+- `./stl/cylinder_hole.stl`  
+- `./stl/cylinder_lower.stl`  
+- `./stl/cylinder_upper.stl`
+
+#### 3.0.2 物理场评估数据（TXT 文件）
+
+评估数据，包含位移场与应力场精度：
+
+- `./data/deformation_x.txt`：x 方向位移
+- `./data/deformation_y.txt`：y 方向位移
+- `./data/deformation_z.txt`：z 方向位移
+- `./data/normal_x.txt`：x 方向法向应力
+- `./data/normal_y.txt`：y 方向法向应力
+- `./data/normal_z.txt`：z 方向法向应力
+- `./data/shear_xy.txt`：xy 平面剪应力
+- `./data/shear_xz.txt`：xz 平面剪应力
+- `./data/shear_yz.txt`：yz 平面剪应力
+
+每行格式为：
+
+```
+id    x    y    z    value
+```
+
+其中 `(x, y, z)` 为空间坐标，`value` 为对应物理量的真值（或高精度数值解），`id` 为采样点索引。
+
+
 ### 3.1 模型构建
 
 在 bracket 问题中，每一个已知的坐标点 $(x, y, z)$ 都有对应的待求解的未知量：三个方向的应变 $(u, v, w)$ 和应力 $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$。
