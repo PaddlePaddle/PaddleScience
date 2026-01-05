@@ -65,10 +65,10 @@ class PosEmbed(nn.Layer):
     def forward(self, x):
         """
         Args:
-            x : Shape (B, T, H, W, C)
+            x (paddle.Tensor): Shape (B, T, H, W, C).
 
         Returns:
-            out : the x + positional embeddings
+            out (paddle.Tensor): The input plus positional embeddings.
         """
 
         _, T, H, W, _ = x.shape
@@ -900,10 +900,10 @@ class Upsample3DLayer(nn.Layer):
         """
 
         Args:
-            x : (B, T, H, W, C) or (B, C, T, H, W)
+            x (paddle.Tensor): (B, T, H, W, C) or (B, C, T, H, W).
 
         Returns:
-            out : (B, T, H_new, W_out, C_out) or (B, C, T, H_out, W_out)
+            out (paddle.Tensor): (B, T, H_new, W_out, C_out) or (B, C, T, H_out, W_out).
         """
 
         if self.layout == "THWC":
@@ -1304,8 +1304,9 @@ class CuboidTransformerDecoder(nn.Layer):
     def forward(self, x, mem_l, mem_global_vector_l=None):
         """
         Args:
-            x : Shape (B, T_top, H_top, W_top, C).
-            mem_l : A list of memory tensors.
+            x (paddle.Tensor): Shape (B, T_top, H_top, W_top, C).
+            mem_l (List[paddle.Tensor]): A list of memory tensors.
+            mem_global_vector_l (Optional[List[paddle.Tensor]]): Optional list of global memory vectors.
         """
 
         B, T_top, H_top, W_top, C = x.shape

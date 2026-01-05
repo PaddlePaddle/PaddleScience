@@ -267,7 +267,9 @@ class Featurization:
         Args:
             s: SMILES string.
             keep_h: Boolean whether to keep hydrogens in the input smiles. This does not add hydrogens, it only keeps them if they are specified.
-        return:
+            add_h: Whether to add hydrogens to the molecule.
+
+        Returns:
             RDKit molecule.
         """
         if keep_h:

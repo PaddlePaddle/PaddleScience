@@ -555,7 +555,7 @@ class SEVIRDataset(io.Dataset):
         """Loads a selected batch of events (not batch of sequences) into memory.
 
         Args:
-            idx (int): The index of the event in the batch.
+            event_idx (int): The index of the event in the batch.
             event_batch_size (int): Event_batch[i] = all_type_i_available_events[idx:idx + event_batch_size]
 
         Returns:
@@ -686,8 +686,10 @@ class SEVIRDataset(io.Dataset):
 
         Args:
             data_dict (Dict[str, Union[np.array, paddle.Tensor]]): The dict of data.
+            data_types (Optional[Sequence[str]]): Data types to be downsampled. Defaults to all keys in `data_dict`.
             factors_dict (Optional[Dict[str, Sequence[int]]]):each element `factors` is
                 a Sequence of int, representing (t_factor, h_factor, w_factor).
+            layout (str): Layout string, such as \"NHWT\".
 
         Returns:
             downsampled_data_dict (Dict[str, paddle.Tensor]): Modify on a deep copy of

@@ -78,6 +78,8 @@ def get_path_from_url(url, root_dir, md5sum=None, check_exist=True, decompress=T
         root_dir (str): Root dir for downloading, it should be
                         WEIGHTS_HOME or DATASET_HOME
         md5sum (str): md5 sum of download package
+        check_exist (bool): Whether to skip download if file exists and matches md5. Defaults to True.
+        decompress (bool): Whether to decompress tar/zip files after download. Defaults to True.
 
     Returns:
         str: a local path to save downloaded models & weights & datasets.
