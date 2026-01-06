@@ -38,9 +38,9 @@
 
 ### 1.2 python 环境安装[可选]
 
-如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
+如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Miniforge 安装并配置 python 环境，否则可以忽略本步骤。
 
-1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包并手动安装。
+1. 根据系统环境，从 [Miniforge](https://conda-forge.org/download/) 中下载对应的 Miniforge 安装包并手动安装。
 2. 创建 python 3.10 环境，并进入该环境。
 
     ``` sh
