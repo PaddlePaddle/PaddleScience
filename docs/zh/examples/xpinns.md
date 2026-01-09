@@ -4,7 +4,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --create-dirs -o ./data/XPINN_2D_PoissonEqn.mat
     python xpinn.py
@@ -14,7 +14,7 @@
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat --create-dirs -o ./data/XPINN_2D_PoissonEqn.mat
     python xpinn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/XPINN/xpinn_pretrained.pdparams
@@ -65,7 +65,7 @@ $$ \gamma_2 =0.34+0.04 sin(5θ)+0.18 cos(3θ)+0.1 cos(6θ), θ \in [0,2π) $$
 执行以下命令，下载并解压数据集。
 
 ``` sh
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
+wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/XPINN/XPINN_2D_PoissonEqn.mat -P ./data/
 ```
 
 ### 3.2 模型构建

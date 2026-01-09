@@ -43,18 +43,18 @@
     # 方式二：采用提供预训模型，下载优化后的模型进行预测结果生成输出
     # qm9 数据集预训练模型优化
     mkdir -p ./outputs_moflow_optimize/qm9/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/qed_model.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/qed_model.pdparams
     python optimize_moflow.py data_name=qm9  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams  OPTIMIZE.property_name=qed
 
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/plogp_model.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/qm9/plogp_model.pdparams
     python optimize_moflow.py data_name=qm9  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/qm9/qm9_pretrained.pdparams  OPTIMIZE.property_name=plogp
 
     # zinc250k 数据集预训练模型优化
     mkdir -p ./outputs_moflow_optimize/zinc250k/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/qed_model.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/qed_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/qed_model.pdparams
     python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams OPTIMIZE.property_name=qed
 
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/plogp_model.pdparams
+    wget -c https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/plogp_opt_pretrained.pdparams -O ./outputs_moflow_optimize/zinc250k/plogp_model.pdparams
     python optimize_moflow.py data_name=zinc250k  TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/MoFlow/zinc250k/zinc250k_pretrained.pdparams OPTIMIZE.property_name=plogp
     ```
 

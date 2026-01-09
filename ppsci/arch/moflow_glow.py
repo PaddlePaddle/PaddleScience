@@ -303,7 +303,6 @@ class Block(nn.Layer):
 
         Args:
             x (paddle.Tensor): Input to squeeze or unsqueeze.
-            reverse (bool): Reverse the operation, i.e., unsqueeze.
 
         Returns:
             x (paddle.Tensor): Squeezed or unsqueezed tensor.
@@ -345,15 +344,16 @@ class BlockOnGraph(nn.Layer):
         mask_row_stride=1,
         affine=True,
     ):
-        """
+        """Flow block operating on graph-structured inputs.
 
-        :param n_node:
-        :param in_dim:
-        :param hidden_dim:
-        :param n_flow:
-        :param mask_row_size: number of rows to be masked for update
-        :param mask_row_stride: number of steps between two masks' firs row
-        :param affine:
+        Args:
+            n_node: Number of nodes in the graph.
+            in_dim: Input feature dimension per node.
+            hidden_dim_dict: Dict with keys `gnn` and `linear` listing hidden dims.
+            n_flow: Number of flows in the block.
+            mask_row_size: Number of rows to be masked for update.
+            mask_row_stride: Stride between the first row of consecutive masks.
+            affine: Whether to use affine coupling (vs additive).
         """
         super(BlockOnGraph, self).__init__()
         assert 0 < mask_row_size < n_node

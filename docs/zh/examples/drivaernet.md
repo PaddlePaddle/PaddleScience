@@ -17,7 +17,7 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 === "模型训练命令"
 
     ``` sh
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
     tar -xvf data.tar
 
     python drivaernet.py
@@ -26,7 +26,7 @@ DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Grap
 === "模型评估命令"
 
     ``` sh
-    wget -nc https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
+    wget -c https://dataset.bj.bcebos.com/PaddleScience/DNNFluid-Car/DrivAer%2B%2B/data.tar
     tar -xvf data.tar
 
     python drivaernet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DrivAerNet/CdPrediction_DrivAerNet_r2_100epochs_5k_pretrained.pdparams

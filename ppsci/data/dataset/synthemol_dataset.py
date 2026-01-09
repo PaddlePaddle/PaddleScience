@@ -41,8 +41,10 @@ from ppsci.arch.chemprop_molecule_utils import map_reac_to_prod
 
 
 class Featurization:
-    """
-    A class holding molecule featurization parameters as attributes.
+    """Holds molecule featurization parameters and helper methods.
+
+    Provides constants and utilities for atom/bond feature construction
+    and reaction handling.
     """
 
     def __init__(self):
@@ -79,12 +81,13 @@ class Featurization:
         self.ADDING_H = False
 
     def is_mol(self, mol: Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]]):
-        """Checks whether an input is a molecule or a reaction
+        """Check whether input is a single molecule (vs reaction).
 
         Args:
-            mol: str, RDKIT molecule or tuple of molecules
-        return:
-            bool: Whether the supplied input corresponds to a single molecule
+            mol: SMILES string, RDKit `Chem.Mol`, or tuple of reactant/product molecules.
+
+        Returns:
+            bool: True if a single molecule input.
         """
         if isinstance(mol, str) and ">" not in mol:
             return True
@@ -93,19 +96,19 @@ class Featurization:
         return False
 
     def is_explicit_h(self, is_mol=True):
-        """Returns whether to retain explicit Hs (for reactions only)"""
+        """Whether to retain explicit Hs (reactions only)."""
         if not is_mol:
             return self.EXPLICIT_H
         return False
 
     def is_adding_hs(self, is_mol=True):
-        """Returns whether to add explicit Hs to the mol (not for reactions)"""
+        """Whether to add explicit Hs to molecules (not for reactions)."""
         if is_mol:
             return self.ADDING_H
         return False
 
     def is_reaction(self, is_mol=True):
-        """Returns whether to use reactions as input"""
+        """Whether the input should be treated as a reaction."""
         if is_mol:
             return False
         if self.REACTION:
@@ -113,18 +116,20 @@ class Featurization:
         return False
 
     def reaction_mode(self):
-        """Returns the reaction mode"""
+        """Return the reaction mode string (or None)."""
         return self.REACTION_MODE
 
     def onek_encoding_unk(self, value: int, choices: List[int]) -> List[int]:
-        """Creates a one-hot encoding with an extra category for uncommon values.
-            If :code:`value` is not in :code:`choices`, then the final element in the encoding is 1.
+        """One-hot encode with an extra bucket for unknown values.
+
+        If `value` is not in `choices`, the last element is set to 1.
 
         Args:
-            value: The value for which the encoding should be one.
-            choices: A list of possible values.
-        :return:
-            encoding: A one-hot encoding of the :code:`value` in a list of length :code:`len(choices) + 1`.
+            value: The value to encode.
+            choices: Ordered list of valid choices.
+
+        Returns:
+            list[int]: One-hot vector of length `len(choices) + 1`.
         """
         encoding = [0] * (len(choices) + 1)
         index = choices.index(value) if value in choices else -1
@@ -134,13 +139,14 @@ class Featurization:
     def atom_features(
         self, atom: Chem.rdchem.Atom, functional_groups: List[int] = None
     ) -> List[Union[bool, int, float]]:
-        """Builds a feature vector for an atom.
+        """Build a feature vector for an atom.
 
         Args:
-            atom: An RDKit atom.
-            functional_groups: A k-hot vector indicating the functional groups the atom belongs to.
-        return:
-            features: A list containing the atom features.
+            atom: RDKit atom.
+            functional_groups: Optional k-hot vector of functional groups.
+
+        Returns:
+            list[bool|int|float]: Atom feature list.
         """
         if atom is None:
             features = [0] * self.ATOM_FDIM
@@ -172,12 +178,13 @@ class Featurization:
         return features
 
     def bond_features(self, bond: Chem.rdchem.Bond) -> List[Union[bool, int, float]]:
-        """Builds a feature vector for a bond.
+        """Build a feature vector for a bond.
 
         Args:
-            bond: An RDKit bond.
-        return:
-            fbond: A list containing the bond features.
+            bond: RDKit bond.
+
+        Returns:
+            list[bool|int|float]: Bond feature list.
         """
         if bond is None:
             fbond = [1] + [0] * (self.BOND_FDIM - 1)
@@ -198,13 +205,14 @@ class Featurization:
     def get_atom_fdim(
         self, overwrite_default_atom: bool = False, is_reaction: bool = False
     ) -> int:
-        """Gets the dimensionality of the atom feature vector.
+        """Get the dimensionality of the atom feature vector.
 
         Args:
-            overwrite_default_atom: Whether to overwrite the default atom descriptors
-            is_reaction: Whether to add :code:`EXTRA_ATOM_FDIM` for reaction input when :code:`REACTION_MODE` is not None
-        return:
-            The dimensionality of the atom feature vector.
+            overwrite_default_atom: Overwrite default atom descriptors.
+            is_reaction: Add `EXTRA_ATOM_FDIM` for reaction input when `REACTION_MODE` is not None.
+
+        Returns:
+            int: Atom feature dimension.
         """
         if self.REACTION_MODE:
             return (
@@ -220,17 +228,16 @@ class Featurization:
         overwrite_default_atom: bool = False,
         is_reaction: bool = False,
     ) -> int:
-        """Gets the dimensionality of the bond feature vector.
+        """Get the dimensionality of the bond feature vector.
 
         Args:
-            atom_messages: Whether atom messages are being used. If atom messages are used,
-                            then the bond feature vector only contains bond features.
-                            Otherwise it contains both atom and bond features.
-            overwrite_default_bond: Whether to overwrite the default bond descriptors
-            overwrite_default_atom: Whether to overwrite the default atom descriptors
-            is_reaction: Whether to add :code:`EXTRA_BOND_FDIM` for reaction input when :code:`REACTION_MODE:` is not None
-        return:
-            The dimensionality of the bond feature vector.
+            atom_messages: If True, only bond features are used; otherwise atom+bond features.
+            overwrite_default_bond: Overwrite default bond descriptors.
+            overwrite_default_atom: Overwrite default atom descriptors.
+            is_reaction: Add `EXTRA_BOND_FDIM` for reaction input when `REACTION_MODE` is not None.
+
+        Returns:
+            int: Bond feature dimension.
         """
         if self.REACTION_MODE:
             return (
@@ -260,7 +267,9 @@ class Featurization:
         Args:
             s: SMILES string.
             keep_h: Boolean whether to keep hydrogens in the input smiles. This does not add hydrogens, it only keeps them if they are specified.
-        return:
+            add_h: Whether to add hydrogens to the molecule.
+
+        Returns:
             RDKit molecule.
         """
         if keep_h:
@@ -278,32 +287,16 @@ class Featurization:
 
 
 class MolGraph:
-    """
-    MolGraph represents the graph structure and featurization of a single molecule.
-    A MolGraph computes the following attributes:
+    """Graph structure and featurization of a single molecule.
+
+    Computes atom/bond features and connectivity for RDKit molecules or reactions.
 
     Args:
-        mol: A SMILES or an RDKit molecule.
-        atom_features_extra: A list of 2D numpy array containing additional atom features to featurize the molecule
-        bond_features_extra: A list of 2D numpy array containing additional bond features to featurize the molecule
-        overwrite_default_atom_features: Boolean to overwrite default atom features by atom_features instead of concatenating
-        overwrite_default_bond_features: Boolean to overwrite default bond features by bond_features instead of concatenating
-
-    Returns:
-        n_atoms: The number of atoms in the molecule.
-        n_bonds: The number of bonds in the molecule.
-        f_atoms: A mapping from an atom index to a list of atom features.
-        f_bonds: A mapping from a bond index to a list of bond features.
-        a2b: A mapping from an atom index to a list of incoming bond indices.
-        b2a: A mapping from a bond index to the index of the atom the bond originates from.
-        b2revb: A mapping from a bond index to the index of the reverse bond.
-        overwrite_default_atom_features: A boolean to overwrite default atom descriptors.
-        overwrite_default_bond_features: A boolean to overwrite default bond descriptors.
-        is_mol: A boolean whether the input is a molecule.
-        is_reaction: A boolean whether the molecule is a reaction.
-        is_explicit_h: A boolean whether to retain explicit Hs (for reaction mode)
-        is_adding_hs: A boolean whether to add explicit Hs (not for reaction mode)
-        reaction_mode:  Reaction mode to construct atom and bond feature vectors
+        mol: SMILES string, RDKit `Chem.Mol`, or tuple of reactant/product molecules.
+        atom_features_extra: Optional 2D numpy array of additional atom features.
+        bond_features_extra: Optional 2D numpy array of additional bond features.
+        overwrite_default_atom_features: Overwrite default atom features instead of concatenating.
+        overwrite_default_bond_features: Overwrite default bond features instead of concatenating.
     """
 
     def __init__(
@@ -546,43 +539,28 @@ SMILES_TO_GRAPH: Dict[str, MolGraph] = {}
 
 
 def cache_graph():
-    """
-    Returns whether MolGraphs will be cached.
-    """
+    """Return whether `MolGraph`s will be cached."""
     return CACHE_GRAPH
 
 
 def empty_cache():
-    """
-    Empties the cache of MolGraph and RDKit molecules.
-    """
+    """Empty caches for `MolGraph` and RDKit molecules."""
     SMILES_TO_GRAPH.clear()
     SMILES_TO_MOL.clear()
 
 
 def cache_mol() -> bool:
-    """
-    Returns whether RDKit molecules will be cached.
-    """
+    """Return whether RDKit molecules will be cached."""
     return CACHE_MOL
 
 
 class BatchMolGraph:
-    """
-    BatchMolGraph represents the graph structure and featurization of a batch of molecules.
-    A BatchMolGraph contains the attributes of a class `MolGraph` plus:
+    """Batch graph featurization for multiple molecules.
+
+    Contains batched atom/bond features and graph connectivity derived from `MolGraph`s.
 
     Args:
-        mol_graphs: A list of class `MolGraph`s from which to construct the class `BatchMolGraph`.
-
-    Returns:
-        atom_fdim: The dimensionality of the atom feature vector.
-        bond_fdim: The dimensionality of the bond feature vector (technically the combined atom/bond features).
-        a_scope: A list of tuples indicating the start and end atom indices for each molecule.
-        b_scope: A list of tuples indicating the start and end bond indices for each molecule.
-        max_num_bonds: The maximum number of bonds neighboring an atom in this batch.
-        b2b: (Optional) A mapping from a bond index to incoming bond indices.
-        a2a: (Optional): A mapping from an atom index to neighboring atom indices.
+        mol_graphs: List of `MolGraph` instances to batch.
     """
 
     def __init__(self, mol_graphs: List[MolGraph]):
@@ -640,16 +618,13 @@ class BatchMolGraph:
         self.a2a = None
 
     def get_components(self, atom_messages: bool = False):
-        """
-        A tuple containing Paddle tensors with the atom features, bond features, graph structure,
-        Returns the components of the class `BatchMolGraph`.
+        """Return batched components (features and connectivity).
 
         Args:
-            atom_messages: Whether to use atom messages instead of bond messages. This changes the bond feature
-                                vector to contain only bond features rather than both atom and bond features.
-        :return: A tuple containing tensors with the atom features, bond features, graph structure,
-                 and scope of the atoms and bonds (i.e., the indices of the molecules they belong to).
-                 in order: f_atoms f_bonds a2b b2a b2revb a_scope b_scope
+            atom_messages: If True, only bond features are returned for bonds (exclude atom part).
+
+        Returns:
+            tuple: `(f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope)`.
         """
         if atom_messages:
             f_bonds = self.f_bonds[
@@ -673,12 +648,7 @@ class BatchMolGraph:
         )
 
     def get_b2b(self):
-        """
-        Computes (if necessary) and returns a mapping from each bond index to all the incoming bond indices.
-
-        return:
-            A tensor containing the mapping from each bond index to all the incoming bond indices.
-        """
+        """Compute/return mapping from each bond to incoming bonds (b2b)."""
         if self.b2b is None:
             b2b = self.a2b[self.b2a]
             revmask = (
@@ -689,12 +659,7 @@ class BatchMolGraph:
         return self.b2b
 
     def get_a2a(self):
-        """
-        Computes (if necessary) and returns a mapping from each atom index to all neighboring atom indices.
-
-        return:
-            A tensor containing the mapping from each atom index to all the neighboring atom indices.
-        """
+        """Compute/return mapping from each atom to neighboring atoms (a2a)."""
         if self.a2a is None:
             self.a2a = self.b2a[self.a2b]
         return self.a2a

@@ -1074,6 +1074,7 @@ class Solver:
 
         Args:
             enable (bool): Enable no_sync.
+            ddp_model (paddle.DataParallel): Model to apply `no_sync` on.
 
         Returns:
             contextlib.AbstractContextManager: Smart no_sync context manager.
@@ -1184,7 +1185,7 @@ class Solver:
         Registers a callback function to be executed at the beginning of each training epoch.
 
         Args:
-            callback_fn : Callable[[Solver]]
+            callback_fn (Callable[[Solver]]):
                 A function that takes a Solver instance as an argument. This function
                 will be called at the start of every epoch.
         """
@@ -1197,7 +1198,7 @@ class Solver:
         Registers a callback function to be executed at the end of each training epoch.
 
         Args:
-            callback_fn : Callable[[Solver]]
+            callback_fn (Callable[[Solver]]):
                 A function that takes a Solver instance as an argument. This function
                 will be called at the end of every epoch.
         """
@@ -1210,7 +1211,7 @@ class Solver:
         Registers a callback function to be executed at the beginning of each training iteration.
 
         Args:
-            callback_fn : Callable[[Solver]]
+            callback_fn (Callable[[Solver]]):
                 A function that takes a Solver instance as an argument. This function
                 will be called at the start of every iteration.
         """
@@ -1223,13 +1224,9 @@ class Solver:
         Registers a callback function to be executed at the end of each training iteration.
 
         Args:
-            callback_fn : Callable[[Solver]]
+            callback_fn (Callable[[Solver]]):
                 A function that takes a Solver instance as an argument. This function
-                will be called at the end of every iteration.
-
-        Returns:
-        -------
-        None
+                will be called at the start of every iteration.
         """
         self.callbacks_on_iter_end.append(callback_fn)
 

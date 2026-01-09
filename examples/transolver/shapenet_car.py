@@ -21,15 +21,17 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    from torch import from_dlpack as torch_from_dlpack
-except ModuleNotFoundError:
-    pass
 
 try:
-    from torch_geometric import nn as nng
-    from torch_geometric.data import Data
-    from torch_geometric.utils import k_hop_subgraph
+    from paddle_geometric import nn as nng
+except ModuleNotFoundError:
+    pass
+try:
+    from paddle_geometric.data import Data
+except ModuleNotFoundError:
+    pass
+try:
+    from paddle_geometric.utils import k_hop_subgraph
 except ModuleNotFoundError:
     pass
 
@@ -366,9 +368,11 @@ def get_shape(data, max_n_point=8192, normalize=True, use_height=False):
     return shape_pc
 
 
-def create_edge_index_radius(data, r, max_neighbors=32) -> "torch.Tensor":  # noqa: F821
+def create_edge_index_radius(
+    data, r, max_neighbors=32
+) -> "paddle.Tensor":  # noqa: F821
     data.edge_index = nng.radius_graph(
-        x=torch_from_dlpack(data.pos), r=r, loop=True, max_num_neighbors=max_neighbors
+        x=data.pos, r=r, loop=True, max_num_neighbors=max_neighbors
     )
     return data
 
@@ -414,23 +418,23 @@ class ShapeNetCarDataset(paddle.io.Dataset):
     def __getitem__(self, idx):
         sample = self.datalist[idx]
         shape = get_shape(sample, use_height=self.use_height)
-        velo_press = paddle.from_dlpack(sample.y)
+        velo_press = sample.y
 
         inp = {
-            "x": paddle.from_dlpack(sample.x),
-            # "pos": paddle.from_dlpack(sample.pos),
+            "x": sample.x,
+            # "pos": (sample.pos),
         }
         lab = {
             "velo_vec": velo_press[..., 0:3],  # x,y,z
             "press": velo_press[..., 3:],  # p
-            "surf": paddle.from_dlpack(sample.surf),
+            "surf": sample.surf,
         }
         wei = {}
         # lab["sdf"] = inp["x"][:, 3:4]
         # lab["normal_vec"] = inp["x"][:, 4:]
 
         if not self.training:
-            lab["shape"] = paddle.from_dlpack(shape)
+            lab["shape"] = shape
 
         return inp, lab, wei
 

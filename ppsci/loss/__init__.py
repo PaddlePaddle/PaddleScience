@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 from ppsci.loss import mtl
 from ppsci.loss.base import Loss
+from ppsci.loss.bce import BCELoss
+from ppsci.loss.bce import FocalLoss
 from ppsci.loss.chamfer import ChamferLoss
 from ppsci.loss.func import FunctionalLoss
 from ppsci.loss.integral import IntegralLoss
@@ -55,6 +57,8 @@ __all__ = [
     "PeriodicMSELoss",
     "KLLoss",
     "mtl",
+    "FocalLoss",
+    "BCELoss",
 ]
 
 

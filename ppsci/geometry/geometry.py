@@ -139,10 +139,10 @@ class Geometry:
 
         Args:
             n (int): Number of points.
-            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
-                pseudo: Pseudo random.
-                Halton: Halton sequence.
-                LHS: Latin Hypercube Sampling.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo". Options:
+                - "pseudo": Pseudo random.
+                - "Halton": Halton sequence.
+                - "LHS": Latin Hypercube Sampling.
             criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
                 coords from different dimension and return a boolean array with shape [n,].
                 Defaults to None.
@@ -241,10 +241,10 @@ class Geometry:
 
         Args:
             n (int): Number of points.
-            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
-                pseudo: Pseudo random.
-                Halton: Halton sequence.
-                LHS: Latin Hypercube Sampling.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo". Options:
+                - "pseudo": Pseudo random.
+                - "Halton": Halton sequence.
+                - "LHS": Latin Hypercube Sampling.
             criteria (Optional[Callable[..., np.ndarray]]): Criteria function. Given
                 coords from different dimension and return a boolean array with shape [n,].
                 Defaults to None.
@@ -351,10 +351,10 @@ class Geometry:
 
         Args:
             n (int): Number of points.
-            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
-                pseudo: Pseudo random.
-                Halton: Halton sequence.
-                LHS: Latin Hypercube Sampling.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo". Options:
+                - "pseudo": Pseudo random.
+                - "Halton": Halton sequence.
+                - "LHS": Latin Hypercube Sampling.
 
         Returns:
             np.ndarray: Random points in the geometry. The shape is [N, D].
@@ -400,10 +400,10 @@ class Geometry:
 
         Args:
             n (int): Number of points.
-            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo".
-                pseudo: Pseudo random.
-                Halton: Halton sequence.
-                LHS: Latin Hypercube Sampling.
+            random (Literal["pseudo", "Halton", "LHS"]): Random method. Defaults to "pseudo". Options:
+                - "pseudo": Pseudo random.
+                - "Halton": Halton sequence.
+                - "LHS": Latin Hypercube Sampling.
 
         Returns:
             np.ndarray: Random points on the boundary. The shape is [N, D].

@@ -50,6 +50,7 @@ def load_csv_file(
         keys (Tuple[str, ...]): Required fetching keys.
         alias_dict (Optional[Dict[str, str]]): Alias for keys,
             i.e. {inner_key: outer_key}. Defaults to None.
+        delimiter (str, optional): Delimiter used to split columns. Defaults to ",".
         encoding (str, optional): Encoding code when open file. Defaults to "utf-8".
 
     Returns:
@@ -177,8 +178,8 @@ def load_vtk_file(
     Returns:
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
     """
-    input_dict = {var: [] for var in input_keys}
-    label_dict = {var: [] for var in label_keys}
+    input_dict: Dict[str, list] = {var: [] for var in input_keys}
+    label_dict: Dict[str, list] = {var: [] for var in label_keys}
     for index in time_index:
         file = filename_without_timeid + f"{index}.vtu"
         mesh = meshio.read(file)
@@ -227,7 +228,7 @@ def load_vtk_with_time_file(file: str) -> Dict[str, np.ndarray]:
 
 def load_dat_file(
     file_path: str,
-    keys: Tuple[str, ...] = None,
+    keys: Optional[Tuple[str, ...]] = None,
     alias_dict: Optional[Dict[str, str]] = None,
 ) -> Dict[str, np.ndarray]:
     """Load *.dat file and fetch data as given keys.

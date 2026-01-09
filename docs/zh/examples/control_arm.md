@@ -8,7 +8,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py
@@ -18,7 +18,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
@@ -30,7 +30,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
@@ -40,7 +40,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
@@ -66,7 +66,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python forward_analysis.py mode=infer
@@ -76,7 +76,7 @@
 
         ``` sh
         # linux
-        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        wget -c https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --create-dirs -o ./datasets/control_arm.stl
         python inverse_parameter.py mode=infer
@@ -137,6 +137,10 @@ examples/control_arm/forward_analysis.py:32:34
 
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+
+### 3.0 数据集说明
+
+本项目所使用的数据包含几何模型文件（STL）:`./datasets/control_arm.stl`, 用于构建本案例中的汽车悬挂控制臂结构的几何结构。
 
 ### 3.1 受力分析求解
 
