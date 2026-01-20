@@ -1,0 +1,52 @@
+# Arch (Network Model) Module
+
+::: ppsci.arch
+    handler: python
+    options:
+      members:
+        - Arch
+        - AFNONet
+        - AMGNet
+        - AutoEncoder
+        - ChipDeepONets
+        - Climateformer
+        - CrystalGraphConvNet
+        - CuboidTransformer
+        - CVit1D
+        - CylinderEmbedding
+        - DeepONet
+        - DeepPhyLSTM
+        - DGMR
+        - Discriminator
+        - ExtFormerMoECuboid
+        - FNO1d
+        - Generator
+        - HEDeepONets
+        - IFMMLP
+        - KAN
+        - LatentNO
+        - LNO
+        - LorenzEmbedding
+        - Meteoformer
+        - MLP
+        - ModelList
+        - ModifiedMLP
+        - MoleculeModel
+        - NowcastNet
+        - Preformer
+        - RegDGCNN
+        - RegPointNet
+        - SFNONet
+        - SPINN
+        - STAFNet
+        - TFNO1dNet
+        - TFNO2dNet
+        - TFNO3dNet
+        - TGCN
+        - Transformer
+        - Transolver
+        - UNetEx
+        - UNONet
+        - USCNN
+      show_root_heading: true
+      heading_level: 3

@@ -8,6 +8,7 @@ mkdocs-glightbox
 mkdocs-include-markdown-plugin
 mkdocs-material
 mkdocs-material-extensions
+mkdocs-static-i18n
 mkdocs-video
 mkdocstrings==0.29.0
 mkdocstrings-python==1.16.12
