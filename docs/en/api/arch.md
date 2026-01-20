@@ -1,4 +1,4 @@
-# Arch (Network Model) Module
+# Arch Module
 
 ::: ppsci.arch
     handler: python

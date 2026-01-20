@@ -50,9 +50,9 @@
 
 ## 1. Background Introduction
 
-The problem of flow around a cylinder can be applied to many fields. For example, in industrial design, it can be used to simulate and optimize fluid flow in various equipment, such as wind turbines, hydrodynamic performance of cars and aircraft, etc. In the field of environmental protection, the problem of flow around a cylinder also has applications, such as predicting and controlling river floods, studying the diffusion of pollutants, etc. In addition, in engineering practice, such as fluid dynamics, hydrostatics, heat exchange, aerodynamics and other fields, the problem of flow around a cylinder also has practical significance.
+The flow around a cylinder is a fundamental problem with applications in diverse fields. In industrial design, it is used to simulate and optimize fluid dynamics in equipment such as wind turbines, as well as the aerodynamic performance of automobiles and aircraft. In environmental engineering, it aids in predicting river flooding and modeling pollutant dispersion. Furthermore, it holds significant practical value in broader engineering contexts, including fluid dynamics, heat transfer, and aerodynamics.
 
-2D Flow Around a Cylinder refers to the flow pattern of low-speed steady flow around a two-dimensional cylinder, which is only related to the $Re$ number. When $Re \le 1$, the inertial force in the flow field occupies a secondary position compared with the viscous force, the streamlines upstream and downstream of the cylinder are symmetrical, and the drag coefficient is approximately inversely proportional to $Re$ (drag coefficient is 10~60). The flow around this $Re$ number range is called the Stokes region; as $Re$ increases, the streamlines upstream and downstream of the cylinder gradually lose symmetry.
+2D flow around a cylinder describes the flow pattern of low-speed steady flow past a two-dimensional cylinder, governed primarily by the Reynolds number ($Re$). When $Re \le 1$ (the Stokes region), inertial forces are negligible compared to viscous forces; streamlines are symmetrical upstream and downstream, and the drag coefficient is approximately inversely proportional to $Re$ (ranging from 10 to 60). As $Re$ increases, this symmetry is gradually lost.
 
 ## 2. Problem Definition
 
@@ -88,15 +88,15 @@ $p^* = \rho {U_0}^2$
 
 Dimensionless time $\tau = \dfrac{t}{t^*}$
 
-Dimensionless coordinate $x：X = \dfrac{x}{x^*}$; Dimensionless coordinate $y：Y = \dfrac{y}{y^*}$
+Dimensionless coordinate $x: X = \dfrac{x}{x^*}$; Dimensionless coordinate $y: Y = \dfrac{y}{y^*}$
 
-Dimensionless velocity $x：U = \dfrac{u}{u^*}$; Dimensionless velocity $y：V = \dfrac{v}{u^*}$
+Dimensionless velocity $x: U = \dfrac{u}{u^*}$; Dimensionless velocity $y: V = \dfrac{v}{u^*}$
 
 Dimensionless pressure $P = \dfrac{p}{p^*}$
 
 Reynolds number $Re = \dfrac{L U_0}{\nu}$
 
-The following dimensionless Navier-Stokes equations can be obtained and applied to the interior of the fluid domain:
+The following dimensionless Navier-Stokes equations apply to the interior of the fluid domain:
 
 Mass conservation:
 
@@ -150,7 +150,7 @@ tar -xf cylinder2d_unsteady_Re100_dataset.tar
 
 ### 3.1 Model Construction
 
-In the 2D-Cylinder problem, each known coordinate point $(t, x, y)$ has three unknown quantities to be solved: lateral velocity $u$, longitudinal velocity $v$, and pressure $p$. Here we use a relatively simple MLP (Multilayer Perceptron) to represent the mapping function $f: \mathbb{R}^3 \to \mathbb{R}^3$ from $(t, x, y)$ to $(u, v, p)$, i.e.:
+In the 2D-Cylinder problem, for each spatiotemporal coordinate $(t, x, y)$, there are three unknown quantities to solve: lateral velocity $u$, longitudinal velocity $v$, and pressure $p$. We employ a Multilayer Perceptron (MLP) to approximate the mapping function $f: \mathbb{R}^3 \to \mathbb{R}^3$ from $(t, x, y)$ to $(u, v, p)$, such that:
 
 $$
 u, v, p = f(t, x, y)
@@ -164,13 +164,13 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:33:34
 --8<--
 ```
 
-In order to access the value of specific variables accurately and quickly during calculation, we specify the input variable name of the network model as `["t", "x", "y"]` and the output variable name as `["u", "v", "p"]`, these names are consistent with the subsequent code.
+To ensure accurate and efficient variable access during computation, we define the model's input keys as `["t", "x", "y"]` and output keys as `["u", "v", "p"]`, maintaining consistency with the code.
 
-Then by specifying the number of layers, number of neurons and activation function of MLP, we instantiated a neural network model `model` with 9 hidden layers, 50 neurons per layer, using "tanh" as the activation function.
+We instantiate the MLP model with 9 hidden layers, 50 neurons per layer, and the `tanh` activation function.
 
 ### 3.2 Equation Construction
 
-Since 2D-Cylinder uses the 2D transient form of the Navier-Stokes equation, `NavierStokes` built in PaddleScience can be used directly.
+Since this problem involves the 2D transient Navier-Stokes equations, we can directly use the built-in `NavierStokes` class in PaddleScience.
 
 ``` py linenums="36"
 --8<--
@@ -182,7 +182,7 @@ When instantiating the `NavierStokes` class, necessary parameters need to be spe
 
 ### 3.3 Computational Domain Construction
 
-The computational domain of 2D-Cylinder in this article is composed of point clouds stored in CSV files, so the point cloud geometry `PointCloud` and time domain `TimeDomain` built in PaddleScience can be used directly to combine into a time-space `TimeXGeometry` computational domain.
+The computational domain is defined by point clouds stored in CSV files. We combine the built-in `PointCloud` geometry and `TimeDomain` to construct a spatiotemporal `TimeXGeometry` domain.
 
 ``` py linenums="41"
 # set timestamps
@@ -303,41 +303,26 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:86:98
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation expression, used to describe how to calculate the constraint target. Here, fill in `equation["NavierStokes"].equations` instantiated in the [3.2 Equation Construction](#32) chapter;
-
-The second parameter is the target value of the constraint variable. In this problem, we hope that the three intermediate results `continuity`, `momentum_x`, `momentum_y` generated by the Navier-Stokes equation are optimized to 0, so all their target values are set to 0;
-
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["time_rect"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
-
-The fourth parameter is the sampling configuration on the computational domain. Here we use full data points for training, so the `dataset` field is set to "IterableNamedArrayDataset" and `iters_per_epoch` is also set to 1, and the sampling point number `batch_size` is set to 9420 * 30 (indicating 9420 data points generated at one moment, a total of 30 moments);
-
-The fifth parameter is the loss function. Here we choose the commonly used MSE function, and `reduction` is set to `"mean"`, that is, we will sum and average the loss terms generated by all data points involved in the calculation;
-
-The sixth parameter is the name of the constraint condition. We need to name each constraint condition for subsequent indexing. Here we name it "EQ".
+- **Equation Expression**: Specifies how to calculate the constraint target. We use `equation["NavierStokes"].equations` from Section 3.2.
+- **Target Values**: The target values for the constraint variables. We aim to minimize the residuals of `continuity`, `momentum_x`, and `momentum_y` to 0.
+- **Computational Domain**: The domain where the constraint applies. We use `geom["time_rect"]` from Section 3.3.
+- **Sampling Configuration**: Specifies how data is sampled. We use full data points (`IterableNamedArrayDataset`, `iters_per_epoch=1`) with a `batch_size` of 9420 * 30 (9420 spatial points × 30 timestamps).
+- **Loss Function**: We use the Mean Squared Error (MSE) with `reduction="mean"` to average the loss across all points.
+- **Name**: A unique name for the constraint, set here as "EQ".
 
 #### 3.4.2 Boundary Constraint
 
-Similarly, we also need to construct Dirichlet boundary constraints for the inflow boundary, outflow boundary, and circumference boundary of the fluid domain. Taking `bc_inlet_cylinder` boundary constraint as an example, since the action area is the boundary and the data on the boundary is recorded by CSV file, we use the `SupervisedConstraint` class and specify the first parameter `dataloader_cfg` configuration dictionary according to the following rules:
+We also construct Dirichlet boundary constraints for the inflow, outflow, and cylinder circumference boundaries. Taking `bc_inlet_cylinder` as an example, we use `SupervisedConstraint` since the boundary data is provided in a CSV file. The `dataloader_cfg` is configured as follows:
 
-- The first parameter of the configuration dictionary is the configuration dictionary including the path of the CSV file `./datasets/domain_inlet_cylinder.csv`;
+- **Dataset Class**: `IterableCSVDataset` for loading full data.
+- **File Path**: `./datasets/domain_inlet_cylinder.csv`.
+- **Input Keys**: `("x", "y")` to be read from the file.
+- **Label Keys**: `("u", "v")` to be read from the file.
+- **Alias Dict**: Maps file column names to standard keys, e.g., `{"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}`.
+- **Weight Dict**: Assigns weights to labels. We amplify "u" and "v" weights to 10: `{"u": 10, "v": 10}`.
+- **Timestamps**: Specifies the time information, set here to `train_timestamps`.
 
-- The first parameter of the configuration dictionary specifies the data loading method. Here we use `IterableCSVDataset` as the full data loader;
-
-- The second parameter of the configuration dictionary specifies the data loading path. Here fill in `./datasets/domain_inlet_cylinder.csv`;
-
-- The third parameter of the configuration dictionary specifies the input columns to be read from the file, corresponding to the transformed keyword. Here fill in `("x", "y")`;
-
-- The fourth parameter of the configuration dictionary specifies the label columns to be read from the file, corresponding to the transformed keyword. Here fill in `("u", "v")`;
-
-- Considering that the same variable may have different field names in different CSV files, and some field names are too long and easy to write wrong when writing code, the fifth parameter of the configuration dictionary is used to specify the alias of the field column. Here fill in `{"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}`;
-
-- The sixth parameter of the configuration dictionary specifies the weight of each label when calculating the loss. Here we amplify the weights of "u" and "v" to 10, fill in `{"u": 10, "v": 10}`;
-
-- The seventh parameter of the configuration dictionary specifies whether data reading involves time information. Here we set it to the training timestamp, that is, fill in `train_timestamps`;
-
-The second parameter is the loss function. Here we choose the commonly used MSE function, and `reduction` is set to `"mean"`, that is, we will sum and average the loss terms generated by all data points involved in the calculation;
-
-The third parameter is the name of the constraint condition. We need to name each constraint condition for subsequent indexing. Here we name it "BC_inlet_cylinder".
+We use the MSE loss function with `reduction="mean"` and name the constraint "BC_inlet_cylinder".
 
 The remaining `bc_outlet` is constructed according to the same principle, the code is as follows:
 
@@ -449,7 +434,7 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py
 
 ## 5. Result Display
 
-The prediction results are shown below. The horizontal axis of the image is the horizontal direction, and the vertical axis represents the vertical direction. The fluid flow direction is from left to right. The picture shows the result of the lateral flow velocity $u(t,x,y)$ of the corresponding flow field predicted by the model at 50 moments.
+The prediction results are displayed below. The horizontal axis represents the x-direction, and the vertical axis represents the y-direction, with fluid flowing from left to right. The figure illustrates the predicted lateral flow velocity $u(t,x,y)$ at 50 time steps.
 
 ???+ info "Note"
 

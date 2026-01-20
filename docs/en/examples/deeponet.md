@@ -44,45 +44,38 @@
 
 ## 1. Background Introduction
 
-According to the universal approximation theorem in the field of machine learning, a neural network model can not only fit the functional mapping relationship from input data to output data, but also be extended to fit the mapping relationship between functions, which is called "operator" learning.
+Based on the universal approximation theorem for operators, neural networks can approximate not just functions, but also nonlinear operators that map one function space to another. This is the core concept of "operator learning."
 
-Therefore, DeepONet has considerable potential in various fields. Here are some possible application areas:
+DeepONet, a prominent operator learning framework, demonstrates significant potential across diverse fields:
 
-1. **Fluid Dynamics Simulation**: DeepONet can be used for numerical solution of fluid dynamics equations, such as Navier-Stokes equations. This makes DeepONet directly applicable in fields such as aerodynamics, fluid machinery, and climate simulation.
-2. **Image Processing and Computer Vision**: DeepONet can learn features in images and be used for tasks such as classification, segmentation, and detection. For example, it can be used for medical image analysis, including disease detection and prognosis prediction.
-3. **Signal Processing**: DeepONet can be used for various signal processing tasks, such as denoising, compression, and restoration. In fields such as communications, radar, and sonar, DeepONet has potential applications.
-4. **Control Systems**: DeepONet can be used for the design and optimization of control systems. For example, it can learn the dynamic behavior of the system and be used to predict and control the future behavior of the system.
-5. **Finance**: DeepONet can be used for financial forecasting and analysis, such as stock price prediction, risk assessment, credit risk analysis, etc.
-6. **Human-Computer Interaction**: DeepONet can be used for tasks such as speech recognition, natural language processing, and gesture recognition, making human-computer interaction more intelligent and natural.
-7. **Environmental Science**: DeepONet can be used for tasks such as climate model prediction, ecosystem simulation, and environmental pollution detection.
+- **Fluid Dynamics**: Solving partial differential equations (PDEs) like the Navier-Stokes equations for aerodynamics and climate modeling.
+- **Computer Vision**: Learning complex mappings for image classification, segmentation, and medical analysis.
+- **Signal Processing**: Applications in denoising, compression, and restoration for communications and radar.
+- **Control Systems**: Modeling system dynamics for predictive control and optimization.
+- **Finance & Environment**: Risk assessment, market forecasting, and climate prediction.
 
-It should be noted that although DeepONet has potential applications in many fields, each field has its unique problems and challenges. When applying DeepONet to a specific field, a deep understanding of the problems in that field is required, and model adjustments and optimizations may be needed for that field.
+While DeepONet is versatile, successful application requires domain-specific adaptation and optimization.
 
 ## 2. Problem Definition
 
-Assume there is the following ODE system:
+Consider the following Ordinary Differential Equation (ODE) system:
 
 $$
-\begin{equation}
-\left\{\begin{array}{l}
-\frac{d}{d x} \mathbf{s}(x)=\mathbf{g}(\mathbf{s}(x), u(x), x) \\
-\mathbf{s}(a)=s_0
-\end{array}\right.
-\end{equation}
+\begin{cases}
+\frac{d}{dx} \mathbf{s}(x) = \mathbf{g}(\mathbf{s}(x), u(x), x) \\
+\mathbf{s}(a) = s_0
+\end{cases}
 $$
 
-where $u \in V$ (and $u$ is continuous on $[a, b]$) serves as the input signal, and $\mathbf{s}: [a,b] \rightarrow \mathbb{R}^K$ is the solution of this equation, serving as the output signal.
-Therefore, an operator $G$ can be defined, which satisfies:
+Here, $u \in V$ (continuous on $[a, b]$) is the input signal, and the solution $\mathbf{s}: [a,b] \rightarrow \mathbb{R}^K$ is the output. We define an operator $G$ such that $\mathbf{s}(x) = (G u)(x)$. This can be expressed in integral form:
 
 $$
-\begin{equation}
-(G u)(x)=s_0+\int_a^x \mathbf{g}((G u)(t), u(t), t) d t
-\end{equation}
+(G u)(x) = s_0 + \int_a^x \mathbf{g}((G u)(t), u(t), t) dt
 $$
 
-Therefore, a neural network model can be used, with $u$ and $x$ as inputs and $G(u)(x)$ as output, to perform supervised training to fit the $G$ operator itself.
+Our goal is to train a neural network that takes the function $u$ and a coordinate $x$ as inputs and predicts the value $(G u)(x)$. Essentially, we aim to learn the operator $G$.
 
-Note: According to the above formula, it can be found that the operator $G$ is an integral operator "$\int$", which acts on a given function $u$ to obtain its original function $G(u)$ under a certain initial value condition (in this problem, the initial value condition is $G(u)(0)=0$).
+**Note**: In this specific example, $G$ acts as an integral operator (antiderivative) with the initial condition $(G u)(0)=0$.
 
 ## 3. Problem Solving
 
@@ -113,7 +106,7 @@ The data file description is as follows:
 
 ### 3.2 Model Construction
 
-In the above problem, we determined that the input is $u$ and $y$, and the output is $G(u)$. According to the DeepONet paper, we use `DeepONet` containing branch and trunk sub-networks to create the network model, expressed in PaddleScience code as follows:
+The inputs are the function $u$ and the coordinate $y$, and the output is the value $G(u)(y)$. Following the DeepONet architecture, we employ a Branch Net (for $u$) and a Trunk Net (for $y$).
 
 ``` py linenums="27"
 --8<--
@@ -121,13 +114,11 @@ examples/operator_learning/deeponet.py:27:27
 --8<--
 ```
 
-In order to access the value of specific variables accurately and quickly during calculation, we specify the input variable name of the network model as `u` and `y` and the output variable name as `G`. Then by specifying the number of SENSORS, number of feature channels, number of hidden layers, number of neurons and activation functions of sub-networks of `DeepONet`, we instantiated the `DeepONet` neural network model `model`.
+We specify input keys as `u` and `y`, and the output key as `G`. The `DeepONet` model is instantiated by configuring the number of sensors, feature channels, hidden layers, neurons, and activation functions.
 
 ### 3.3 Constraint Construction
 
-This article uses supervised learning to constrain the model output $G(u)$.
-
-Before defining constraints, data reading configuration such as file path needs to be specified for supervised constraint, including file path, input data field name, label data field name, alias dictionary before and after data conversion.
+We use supervised learning to train the model. First, we configure the data loader, specifying file paths, input/label keys, and aliases.
 
 ``` py linenums="30"
 --8<--
@@ -145,13 +136,11 @@ examples/operator_learning/deeponet.py:40:44
 --8<--
 ```
 
-The first parameter of `SupervisedConstraint` is the reading configuration of supervised constraint, here fill in `train_dataloader_cfg` instantiated in [3.4 Constraint Construction](#34) chapter;
+- **Dataloader**: Uses `train_dataloader_cfg`.
+- **Loss**: MSE with `reduction="mean"`.
+- **Target**: The model output `G`.
 
-The second parameter is the loss function. Here we choose the commonly used MSE function, and `reduction` is the default value `"mean"`, that is, we will sum and average the loss terms generated by all data points involved in the calculation;
-
-The third parameter is the equation expression, used to describe how to calculate the constraint target. Here we only need to get the output corresponding to the output field `G` from the output dictionary;
-
-After the supervised constraint is constructed, encapsulate it into a dictionary with the names we just named as keys for subsequent access.
+The constraint is then stored in a dictionary.
 
 ``` py linenums="45"
 --8<--
@@ -161,7 +150,7 @@ examples/operator_learning/deeponet.py:45:46
 
 ### 3.4 Hyperparameter Setting
 
-Next, we need to specify the number of training epochs and learning rate. Here, based on experimental experience, we use 10,000 training epochs, and evaluate the model accuracy every 500 epochs.
+We set the training epochs to 10,000 and the evaluation interval to 500 epochs.
 
 ``` yaml linenums="49"
 --8<--
@@ -171,7 +160,7 @@ examples/operator_learning/conf/deeponet.yaml:49:55
 
 ### 3.5 Optimizer Construction
 
-The training process will call the optimizer to update model parameters. Here, the more commonly used `Adam` optimizer is selected, and the learning rate is set to `0.001`.
+We use the `Adam` optimizer with a learning rate of `0.001`.
 
 ``` py linenums="48"
 --8<--
@@ -181,7 +170,7 @@ examples/operator_learning/deeponet.py:48:49
 
 ### 3.6 Validator Construction
 
-Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator.
+To monitor performance, we construct a `SupervisedValidator` for periodic evaluation on the test set.
 
 ``` py linenums="51"
 --8<--
@@ -195,7 +184,7 @@ Other configurations are similar to the settings of [Constraint Construction](#3
 
 ### 3.7 Model Training and Evaluation
 
-After completing the above settings, you only need to pass the instantiated objects to `ppsci.solver.Solver` in order, and then start training and evaluation.
+With all components configured, we pass them to `ppsci.solver.Solver` to commence training and evaluation.
 
 ``` py linenums="71"
 --8<--
@@ -205,7 +194,7 @@ examples/operator_learning/deeponet.py:71:90
 
 ### 3.8 Result Visualization
 
-After the model training is completed, we can manually construct $u$ and $y$ and discretize them within an appropriate range to obtain corresponding input data, then predict $G(u)(y)$, and plot the image together with the standard solution of $G(u)$ for comparison. (Here we constructed 9 sets of $u-G(u)$ function pairs) for testing
+Post-training, we verify the model by constructing 9 synthetic $u-G(u)$ function pairs. We discretize $u$ and $y$, predict $G(u)(y)$, and compare the results with the analytical solutions.
 
 ``` py linenums="92"
 --8<--

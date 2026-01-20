@@ -1,6 +1,6 @@
 # PaddleScience Introduction
 
-PaddleScience is divided into 12 modules in terms of code structure. From the perspective of a general deep learning workflow, these 12 modules are responsible for input data construction, neural network model construction, loss function construction, optimizer construction, training, evaluation, visualization, etc., respectively. From the perspective of scientific computing, some modules undertake functions different from CV and NLP tasks. For example, the Equation module for physical mechanism-driven tasks defines equation formulas and assists in high-order differential calculations; the Geometry module for geometric scene sampling defines simple and complex geometric shapes and samples internal and boundary data; the Constraint module regards different optimization objectives as a kind of "constraint", allowing the suite to unify three different solving processes: physical mechanism-driven, data-driven, and mathematical-physical fusion, using a single set of training code.
+PaddleScience comprises 12 modules structured by code functionality. From a general deep learning workflow perspective, these modules handle input data construction, neural network model architecture, loss function definition, optimizer configuration, training, evaluation, and visualization. In the context of scientific computing, certain modules serve distinct functions compared to traditional CV and NLP tasks. For instance, the **Equation** module, designed for physics-driven tasks, defines governing equations and facilitates higher-order differential calculations; the **Geometry** module handles geometric scene sampling, defining both simple and complex shapes to sample interior and boundary data; and the **Constraint** module unifies different optimization objectives as "constraints." This design allows the suite to standardize three distinct solving paradigms—physics-driven, data-driven, and physics-data fusion—within a single training framework.
 
 <!-- --8<-- [start:panorama] -->
 <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" alt="panorama" width="100%" height="auto">
@@ -12,26 +12,26 @@ PaddleScience is divided into 12 modules in terms of code structure. From the pe
   ![workflow](../images/overview/workflow.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
-The figure above is a schematic diagram of the PaddleScience workflow (taking geometry-based problem solving as an example). The process description is as follows:
+The figure above illustrates the PaddleScience workflow (using a geometry-based problem as an example). The process is described as follows:
 
-1.  Geometry is responsible for constructing geometry and sampling on it to complete data construction;
-2.  Use the Model module to accept input and get model output;
-3.  Scientific computing tasks are special. Model output is often not the end point of forward calculation, and further calculation of variables required by equation formulas according to Equation is needed;
-4.  Calculate the loss function and use the framework's automatic differentiation mechanism to calculate the gradients of all parameters;
-5.  The above optimization objectives can be applied to different areas of geometry, such as interior and boundary areas, so there can be multiple Constraints in the figure above;
-6.  Accumulate the gradients contributed by all Constraints and use them to update model parameters;
-7.  If evaluation and visualization functions are enabled during training, the current model will be automatically evaluated and the prediction results will be visualized at a certain frequency;
-8.  Solver is the global scheduling module for the operation of the entire suite, responsible for repeating the above process according to the number of rounds and frequency specified by the user.
+1.  **Geometry** constructs the geometric domain and performs sampling to generate input data.
+2.  The **Model** module accepts inputs and computes model outputs.
+3.  Scientific computing tasks often require further processing. Model outputs are typically not the final result; additional calculations of variables required by the governing equations are performed via the **Equation** module.
+4.  The loss function is computed, and the framework's automatic differentiation mechanism calculates gradients for all parameters.
+5.  Optimization objectives can apply to different geometric regions (e.g., interior and boundary areas), resulting in multiple **Constraints** as shown in the figure.
+6.  Gradients from all **Constraints** are accumulated to update model parameters.
+7.  If evaluation and visualization are enabled, the model is automatically evaluated, and prediction results are visualized at specified intervals.
+8.  **Solver** acts as the global scheduler, managing the entire suite's operation and repeating the process according to user-defined epochs and frequencies.
 
 ## 2. Module Introduction
 
 ### 2.1 [Arch](./api/arch.md)
 
-The Arch module is responsible for network model assembly, parameter initialization, forward calculation, etc., and has built-in multiple models for users to use.
+The **Arch** module handles network model assembly, parameter initialization, and forward calculation. It includes multiple built-in models for immediate use.
 
 ### 2.2 [AutoDiff](./api/autodiff.md)
 
-The AutoDiff module is responsible for calculating high-order differential functions. It has built-in global singletons `jacobian` and `hessian` based on Paddle's automatic differentiation mechanism for users to use.
+The **AutoDiff** module calculates higher-order differentials. It provides built-in global singletons, `jacobian` and `hessian`, based on PaddlePaddle's automatic differentiation mechanism.
 
 ### 2.3 [Constraint](./api/constraint.md)
 
@@ -39,18 +39,20 @@ The AutoDiff module is responsible for calculating high-order differential funct
   ![constraint](../images/overview/constraint.jpg){ loading=lazy style="height:50%;width:50%"}
 </figure>
 
-In order to unify the three solving methods of physical information-driven, data-driven, and mathematical-physical fusion in the suite, we record the necessary interfaces such as data construction, input-to-output calculation process, and loss function in the Constraint module after they are defined. With these interfaces, Constraint can represent different training objectives, such as:
+To unify the three solving paradigms—physics-driven, data-driven, and physics-data fusion—the **Constraint** module encapsulates necessary interfaces for data construction, the input-to-output calculation process, and loss functions. Using these interfaces, **Constraint** can represent various training objectives, such as:
 
-- `InteriorConstraint` defines that within a given geometric region, according to the given input-to-output calculation process, the loss function is used to optimize the model parameters so that the model output meets the given conditions;
-- `BoundaryConstraint` defines that on the boundary of a given geometric region, according to the given input-to-output calculation process, the loss function is used to optimize the model parameters so that the model output meets the given conditions;
-- `SupervisedConstraint` defines that on the given supervised data (equivalent to supervised training in CV and NLP), according to the given input-to-output calculation process, the loss function is used to optimize the model parameters so that the model output meets the given conditions.
+- `InteriorConstraint`: Applies loss functions within a specified geometric interior to optimize model parameters, ensuring outputs satisfy given conditions.
+- `BoundaryConstraint`: Applies loss functions on geometric boundaries to optimize model parameters, ensuring outputs satisfy boundary conditions.
+- `SupervisedConstraint`: Applies loss functions to labeled data (analogous to supervised training in CV and NLP) to optimize model parameters.
 - ...
 
-This module has two main functions. One is to unify two different optimization paradigms, physical information-driven and data-driven (the former is similar to supervised training, and the latter is similar to unsupervised training), in the code flow. The second is to enable the suite to be applied in scenarios of mathematical-physical fusion. You only need to construct different Constraints separately and let them participate in training together.
+This module serves two main functions:
+1.  **Unification**: It standardizes the code flow for both physics-driven (often unsupervised) and data-driven (supervised) optimization paradigms.
+2.  **Fusion**: It facilitates physics-data fusion by allowing users to construct distinct **Constraints** and train them jointly.
 
 ### 2.4 Data
 
-The Data module is responsible for data reading, wrapping, and preprocessing, as shown below.
+The **Data** module handles data reading, encapsulation, and preprocessing, as detailed below.
 
 | Submodule Name | Submodule Function |
 | :-- | :-- |
@@ -64,7 +66,7 @@ The Data module is responsible for data reading, wrapping, and preprocessing, as
   ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
-The Equation module is responsible for defining calculation functions for various common equations, such as `NavierStokes` for N-S equations and `Vibration` for vibration equations. Each equation contains calculation functions for related variables internally.
+The **Equation** module defines calculation functions for common governing equations, such as `NavierStokes` for N-S equations and `Vibration` for vibration equations. Each equation class encapsulates the logic for computing related variables.
 
 ### 2.6 [Geometry](./api/geometry.md)
 
@@ -72,7 +74,7 @@ The Equation module is responsible for defining calculation functions for variou
   ![geometry](../images/overview/geometry.jpg#center){ loading=lazy style="height:50%;width:50%" }
 </figure>
 
-The Geometry module is responsible for defining various common geometric shapes, such as `Interval` line segment geometry, `Rectangle` rectangle geometry, and `Sphere` spherical geometry.
+The **Geometry** module defines common geometric shapes, including `Interval` (line segment), `Rectangle`, and `Sphere`.
 
 ### 2.7 [Loss](./api/loss/loss.md)
 
@@ -94,13 +96,13 @@ The Optimizer module includes two submodules: [`ppsci.optimizer.optimizer`](./ap
 
 ### 2.9 [Solver](./api/solver.md)
 
-The Solver module is responsible for defining the solver as the startup and management engine for training, evaluation, inference, and visualization.
+The **Solver** module defines the solver, acting as the startup and management engine for training, evaluation, inference, and visualization.
 
 ### 2.10 Utils
 
-The Utils module stores some utility classes and functions suitable for multiple scenarios, such as data reading functions in `reader.py`, log printing functions in `logger.py`, and equation calculation classes in `expression.py`.
+The **Utils** module contains utility classes and functions applicable to various scenarios, such as data reading in `reader.py`, logging in `logger.py`, and equation calculations in `expression.py`.
 
-It is subdivided into the following 8 submodules according to its function:
+It is subdivided into the following 8 submodules based on functionality:
 
 | Submodule Name | Submodule Function |
 | :-- | :-- |
@@ -116,8 +118,8 @@ It is subdivided into the following 8 submodules according to its function:
 
 ### 2.11 [Validate](./api/validate.md)
 
-The Validator module is responsible for defining various validators for evaluating on specified data (optional, evaluation is not enabled by default during training) and obtaining evaluation metrics.
+The **Validator** module defines various validators for evaluating the model on specified data (optional; evaluation is not enabled by default during training) and computing evaluation metrics.
 
 ### 2.12 [Visualize](./api/visualize.md)
 
-The Visualizer module is responsible for defining various visualizers for predicting on specified data after model evaluation (optional, visualization is not enabled by default during training) and saving the results as visualized files.
+The **Visualizer** module defines visualizers for generating predictions on specified data after model evaluation (optional; visualization is not enabled by default during training) and saving the results as visualization files.

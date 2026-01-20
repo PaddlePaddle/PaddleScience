@@ -32,13 +32,13 @@
 
 ## 1. Background Introduction
 
-Darcy Flow is a tool based on Darcy's Law for calculating fluid flow. Darcy Flow is widely used in fields such as groundwater modeling, hydrology, hydrogeology, and petroleum engineering.
+Darcy flow describes fluid movement through porous media based on Darcy's Law, finding extensive applications in groundwater modeling, hydrology, hydrogeology, and petroleum engineering.
 
-For example, in petroleum engineering, Darcy Flow is used to predict and simulate the flow of oil in porous media. Porous media is a substance composed of small particles with voids between them. Oil fills these voids and flows through them. With Darcy Flow, engineers can predict and control the flow of oil, thereby optimizing oil extraction and production processes.
+In petroleum engineering, Darcy flow is essential for predicting and simulating oil movement within porous rock formations. By modeling flow through the voids between particles, engineers can optimize extraction and production processes.
 
-In addition, Darcy Flow is also used to study and predict groundwater flow. For example, in agriculture, simulating groundwater flow can predict the impact of irrigation on soil moisture, thereby optimizing crop irrigation plans. in urban planning and environmental protection, Darcy Flow is also used to predict and prevent groundwater pollution.
+In hydrogeology and agriculture, Darcy flow models are used to study groundwater dynamics. This includes predicting the effects of irrigation on soil moisture to optimize crop planning, as well as forecasting and mitigating groundwater pollution in urban planning.
 
-2D-Darcy is a type of Darcy flow. When fluid flows in porous media, the seepage velocity is small, the flow obeys Darcy's law, and there is a linear relationship between seepage velocity and pressure gradient. This flow is called linear seepage.
+The 2D-Darcy problem focuses on linear seepage in a two-dimensional plane. When fluid velocity in porous media is low, flow adheres to Darcy's law, exhibiting a linear relationship between seepage velocity and the pressure gradient.
 
 ## 2. Problem Definition
 
@@ -61,7 +61,7 @@ In order to quickly understand PaddleScience, only key steps such as model const
 
 ### 3.1 Model Construction
 
-In the darcy-2d problem, each known coordinate point $(x, y)$ has a corresponding unknown quantity $p$ to be solved. We use a relatively simple MLP (Multilayer Perceptron) here to represent the mapping function $f: \mathbb{R}^2 \to \mathbb{R}^1$ from $(x, y)$ to $p$, i.e.:
+In the 2D-Darcy problem, for each coordinate $(x, y)$, the unknown pressure $p$ must be determined. We use a Multilayer Perceptron (MLP) to approximate the mapping function $f: \mathbb{R}^2 \to \mathbb{R}^1$ from $(x, y)$ to $p$, such that:
 
 $$
 p = f(x, y)
@@ -75,13 +75,13 @@ examples/darcy/darcy2d.py:33:34
 --8<--
 ```
 
-In order to access the value of specific variables accurately and quickly during calculation, we specify the input variable name of the network model as `("x", "y")` and the output variable name as `"p"`, these names are consistent with the subsequent code.
+To ensure accurate and efficient variable access during computation, we define the model's input keys as `("x", "y")` and the output key as `"p"`, maintaining consistency with the code.
 
-Then by specifying the number of layers and neurons of MLP, we instantiated a neural network model `model` with 5 hidden layers and 20 neurons per layer.
+We instantiate the MLP model with 5 hidden layers and 20 neurons per layer.
 
 ### 3.2 Equation Construction
 
-Since 2D-Poisson uses the 2D form of the Poisson equation, the `Poisson` built in PaddleScience can be used directly, specifying the parameter `dim` of this class as 2.
+Since this problem involves the 2D Poisson equation, we can directly use the built-in `Poisson` class in PaddleScience, setting the `dim` parameter to 2.
 
 ``` py linenums="36"
 --8<--
@@ -91,7 +91,7 @@ examples/darcy/darcy2d.py:36:37
 
 ### 3.3 Computational Domain Construction
 
-In this article, the 2D darcy problem acts on a two-dimensional rectangular area with (0.0, 0.0), (1.0, 1.0) as diagonals, so the spatial geometry `Rectangle` built in PaddleScience can be used directly as the computational domain.
+The 2D-Darcy problem is defined on a rectangular domain with diagonal corners at (0.0, 0.0) and (1.0, 1.0). We can directly use the built-in `Rectangle` geometry in PaddleScience.
 
 ``` py linenums="39"
 --8<--
@@ -101,9 +101,9 @@ examples/darcy/darcy2d.py:39:40
 
 ### 3.4 Constraint Construction
 
-In this case, we use two constraints to guide the training of the model in the computational domain, namely the darcy equation constraint acting on the sampling points and the constraint acting on the boundary points.
+We use two constraints to guide model training: the Darcy equation constraint on internal points and boundary constraints on the domain edges.
 
-Before defining constraints, you need to specify the number of sampling points for each constraint, indicating the number of sampled data for each constraint in its corresponding computational domain, as well as general sampling configuration.
+Before defining these constraints, we specify the sampling configuration, including the number of points for each constraint.
 
 ``` py linenums="42"
 --8<--
@@ -121,23 +121,17 @@ examples/darcy/darcy2d.py:48:65
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation expression, used to describe how to calculate the constraint target. Here, fill in `equation["Poisson"].equations` instantiated in the [3.2 Equation Construction](#32) chapter;
-
-The second parameter is the target value of the constraint variable. In this problem, we hope that the result generated by the Poisson equation is optimized to be consistent with its standard solution, so set all its target values to the result generated by `poisson_ref_compute_func`;
-
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["rect"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
-
-The fourth parameter is the sampling configuration on the computational domain. Here we use full data points for training, so the `dataset` field is set to "IterableNamedArrayDataset" and `iters_per_epoch` is also set to 1, and the sampling point number `batch_size` is set to 9801 (indicating a 99x99 sampling grid);
-
-The fifth parameter is the loss function. Here we choose the commonly used MSE function, and `reduction` is set to `"sum"`, that is, we will sum the loss terms generated by all data points involved in the calculation;
-
-The sixth parameter is to choose whether to perform equidistant sampling on the computational domain. Here we choose to enable equidistant sampling, so that the training points can be evenly distributed on the computational domain, which is conducive to training convergence;
-
-The seventh parameter is the name of the constraint condition. We need to name each constraint condition for subsequent indexing. Here we name it "EQ".
+- **Equation Expression**: Specifies how to calculate the constraint target. We use `equation["Poisson"].equations` from Section 3.2.
+- **Target Values**: The target values for the constraint variables. We set these to the results generated by `poisson_ref_compute_func` to match the standard solution.
+- **Computational Domain**: The domain where the constraint applies. We use `geom["rect"]` from Section 3.3.
+- **Sampling Configuration**: We use full data points (`IterableNamedArrayDataset`, `iters_per_epoch=1`) with a `batch_size` of 9801 (a 99x99 grid).
+- **Loss Function**: We use the MSE function with `reduction="sum"` to sum the loss across all points.
+- **Equidistant Sampling**: We enable equidistant sampling to distribute training points evenly across the domain, facilitating convergence.
+- **Name**: A unique name for the constraint, set here as "EQ".
 
 #### 3.4.2 Boundary Constraint
 
-Similarly, we also need to construct constraints for the four boundaries of the rectangle. However, unlike constructing `InteriorConstraint`, since the action area is the boundary, we use the `BoundaryConstraint` class, code as follows:
+We also construct constraints for the four boundaries of the rectangle. Since these apply to the boundary, we use the `BoundaryConstraint` class:
 
 ``` py linenums="67"
 --8<--
@@ -145,17 +139,17 @@ examples/darcy/darcy2d.py:67:77
 --8<--
 ```
 
-The first parameter of the `BoundaryConstraint` class indicates that we directly use the output result `out["p"]` of the network model as the constraint object during program operation;
+The first parameter specifies the constraint object, which is the model output `out["p"]`.
 
-The second parameter refers to how to obtain the true value of our constraint object. Here we calculate it directly through its analytical solution. The code for defining the analytical solution is as follows:
+The second parameter defines the target value, calculated directly via the analytical solution:
 
 ``` py
 lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 ```
 
-The meanings of other parameters of the `BoundaryConstraint` class are basically consistent with `InteriorConstraint` and will not be introduced here.
+Other parameters for `BoundaryConstraint` are similar to those in `InteriorConstraint`.
 
-After the differential equation constraint, boundary constraint, and initial value constraint are constructed, encapsulate them into a dictionary with the names we just named as keys for subsequent access.
+Finally, we encapsulate the constraints into a dictionary for easy access.
 
 ``` py linenums="78"
 --8<--
@@ -242,7 +236,7 @@ examples/darcy/darcy2d.py
 
 ## 5. Result Display
 
-The following shows the prediction results, reference results, and the difference between the two for pressure $p(x,y)$, x (horizontal) direction velocity $u(x,y)$, and y (vertical) direction velocity $v(x,y)$ at each point in the square computational domain.
+The figures below display the prediction results, reference values, and errors for pressure $p(x,y)$, x-velocity $u(x,y)$, and y-velocity $v(x,y)$ across the computational domain.
 
 <figure markdown>
   ![darcy 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/Darcy2D/darcy2d_p.png){ loading=lazy }

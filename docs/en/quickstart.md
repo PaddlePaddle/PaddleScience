@@ -2,15 +2,15 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/6665190?contributionType=1&sUid=438690&shared=1&ts=1692616326196" class="md-button md-button--primary" style>AI Studio Quick Experience</a>
 
-This article introduces how to use PaddleScience to train a model, solve a class of equation learning and prediction problems, and visualize prediction results through a simple demo and its extended problems.
+This guide demonstrates how to use PaddleScience to train a model, solve equation learning and prediction problems, and visualize results through a simple demo and its extension.
 
 ## 1. Problem Introduction
 
-Suppose we want to use a neural network model to fit the function $u=\sin(x)$ in the interval $x \in [-\pi, \pi]$. In two scenarios where the fitted function is known and unknown, how to fit $u=\sin(x)$ as accurately as possible.
+Consider the task of using a neural network to fit the function $u=\sin(x)$ over the interval $x \in [-\pi, \pi]$. We explore two scenarios to fit $u=\sin(x)$ as accurately as possible: one where the target function is known, and another where it is unknown.
 
-In the first scenario, assuming that the analytical solution of the target function $u$ is known to be $u=\sin(x)$, we adopt the idea of supervised training, directly generating the label dependent variable $u$ using this formula, and training the model together with the independent variable $x$ as supervised data.
+In the **first scenario**, assuming the analytical solution $u=\sin(x)$ is known, we employ supervised learning. We generate labeled data pairs $(x, u)$ using the formula and train the model to map the independent variable $x$ to the dependent variable $u$.
 
-In the second scenario, assuming that the analytical solution of the target function $u$ is unknown, but we know that it satisfies a certain differential relationship, we take one of the differential equations satisfying the condition $\dfrac{\partial u} {\partial x}=\cos(x)$ as an example to introduce how to generate data for training.
+In the **second scenario**, assuming the analytical solution $u$ is unknown but satisfies a specific differential relationship, we demonstrate how to train the model using a differential equation, specifically $\dfrac{\partial u} {\partial x}=\cos(x)$, along with boundary conditions.
 
 ## 2. Scenario 1
 
@@ -30,7 +30,7 @@ examples/quick_start/case1.py:1:4
 --8<--
 ```
 
-Then create log and model saving directories for training process recording and saving, which is an operation that needs to be performed before most examples officially start.
+Next, create directories for logging and model checkpoints. This step is standard practice before initializing most training tasks.
 
 ``` py linenums="6"
 --8<--
@@ -38,9 +38,9 @@ examples/quick_start/case1.py:6:13
 --8<--
 ```
 
-Next, officially start writing code.
+Now, we proceed with the core implementation.
 
-First define the problem interval. We use `ppsci.geometry.Interval` to define a line segment geometry shape to facilitate subsequent sampling of $x$ on this line segment.
+First, define the problem domain. We use `ppsci.geometry.Interval` to define a 1D line segment, facilitating the sampling of points $x$ within this domain.
 
 ``` py linenums="15"
 --8<--
@@ -56,9 +56,9 @@ examples/quick_start/case1.py:19:20
 --8<--
 ```
 
-The above code indicates that the model accepts the independent variable $x$ as input and outputs the prediction result $\hat{u}$.
+This configuration specifies that the model takes the independent variable $x$ as input and outputs the prediction $\hat{u}$.
 
-Then we define the calculation function of the known $u=\sin(x)$ as a parameter of `ppsci.constraint.InteriorConstraint`, which is used to calculate label data. `InteriorConstraint` means taking the data in the given geometric shape or dataset as input, combined with the given label data, to guide the model for optimization.
+Next, we define the calculation function for the known solution $u=\sin(x)$ and use it within `ppsci.constraint.InteriorConstraint` to generate label data. `InteriorConstraint` guides model optimization by enforcing consistency between model predictions and label data sampled within the specified geometry.
 
 ``` py linenums="22"
 --8<--
@@ -66,9 +66,9 @@ examples/quick_start/case1.py:22:47
 --8<--
 ```
 
-Here `interior_constraint` represents a training objective, that is, we hope that in the interval $[-\pi, \pi]$, the model is optimized so that the model's prediction result $\hat{u}$ is as close as possible to its label value $u$.
+Here, `interior_constraint` encapsulates the training objective: optimizing the model such that its prediction $\hat{u}$ approximates the label value $u$ as closely as possible within the interval $[-\pi, \pi]$.
 
-Next, we can start defining model training related content, such as training epochs, optimizer, and visualizer.
+We then define the training configuration, including epochs, the optimizer, and the visualizer.
 
 ``` py linenums="48"
 --8<--
@@ -76,7 +76,7 @@ examples/quick_start/case1.py:48:66
 --8<--
 ```
 
-Finally, pass the objects defined above to the training scheduling class `Solver` to start model training.
+Finally, pass the defined objects to the `Solver` class to initiate model training.
 
 ``` py linenums="67"
 --8<--
@@ -84,7 +84,7 @@ examples/quick_start/case1.py:67:79
 --8<--
 ```
 
-After training, calculate the L2-relative error with the standard solution using the 1000 points just taken.
+Post-training, we calculate the L2 relative error against the analytical solution using the 1,000 sampled points.
 
 ``` py linenums="81"
 --8<--
@@ -100,7 +100,7 @@ examples/quick_start/case1.py:88:89
 --8<--
 ```
 
-The training record is shown below.
+The training log is displayed below.
 
 ``` log
 ...
@@ -128,7 +128,7 @@ examples/quick_start/case1.py:81:86
 --8<--
 ```
 
-It can be seen that using the standard solution to supervise the training model, there is still good prediction ability near the standard solution, and the L2-relative error is 0.02677.
+The results demonstrate that supervised training using the analytical solution yields strong predictive performance, achieving an L2 relative error of 0.02677.
 
 The prediction result visualization is shown below.
 
@@ -144,11 +144,11 @@ examples/quick_start/case1.py
 
 ## 3. Scenario 2
 
-It can be seen that the supervised training method in Scenario 1 can solve the function fitting problem well, but in general we cannot know the analytical expression of the fitted function itself, so we cannot directly construct supervised data for the dependent variable.
+While the supervised approach in Scenario 1 effectively solves the fitting problem, the analytical expression of the target function is often unknown in practice, preventing direct construction of supervised labels.
 
-Although the analytical formula cannot be calculated to directly construct supervised data, it is often possible to use relevant mathematical knowledge to derive a certain mathematical relationship that the target fitting function conforms to, and achieve the purpose of optimizing the model by means of "indirect supervision" by training the model to satisfy this mathematical relationship.
+However, even without an analytical formula, the target function often satisfies specific mathematical relationships, such as differential equations. We can thus optimize the model via "indirect supervision" by enforcing these relationships.
 
-Suppose we no longer use the prior formula $u=\sin(x)$, and thus cannot calculate the label data $u$. Therefore, the following equation system is used, which contains a partial differential equation and boundary conditions:
+In this scenario, we assume the formula $u=\sin(x)$ is unavailable. Instead, we rely on the following system, comprising a differential equation and a boundary condition:
 
 $$
 \begin{cases}
@@ -159,10 +159,10 @@ $$
 \end{cases}
 $$
 
-Construct data pairs $(x_i, \cos(x_i)), i=1,...,N$.
-This means that we can still keep the input and output of the model unchanged, but the optimization objective becomes: let $\dfrac{\partial \hat{u}} {\partial x}$ be as close as possible to $\cos(x)$, and $\hat{u}(-\pi)$ should also be as close as possible to $2$.
+We construct data pairs $(x_i, \cos(x_i))$ for $i=1,...,N$.
+The model input and output remain unchanged, but the optimization objective shifts: we aim to minimize the difference between $\dfrac{\partial \hat{u}} {\partial x}$ and $\cos(x)$, while ensuring $\hat{u}(-\pi)$ approximates $2$.
 
-Based on the above theory, we can obtain the code for Scenario 2 by slightly rewriting the code for Scenario 1.
+Based on this principle, we adapt the code from Scenario 1 for Scenario 2.
 
 First, since we need to use the first-order differential operation, we need to import the first-order differential API at the beginning of the code.
 
@@ -172,7 +172,7 @@ examples/quick_start/case2.py:1:5
 --8<--
 ```
 
-Then add a differential label value calculation function below the original label calculation function.
+Add a function to calculate the differential label value.
 
 ``` py linenums="28" hl_lines="4"
 --8<--
@@ -180,7 +180,7 @@ examples/quick_start/case2.py:28:30
 --8<--
 ```
 
-Then change the constraint condition `interior_constraint` from constraining "model output" to constraining "first-order differential of model output with respect to input".
+Modify the `interior_constraint` to constrain the "first-order derivative of the model output with respect to the input" rather than the output itself.
 
 ``` py linenums="33" hl_lines="4"
 --8<--
@@ -188,7 +188,7 @@ examples/quick_start/case2.py:33:49
 --8<--
 ```
 
-Considering that in general cases, the solution of partial differential equations will have undetermined coefficients, which need to be determined by definite conditions (initial (boundary) value conditions), an additional boundary condition constraint `bc_constraint` needs to be added after the `interior_constraint` construction code, as shown below.
+Since differential equations typically involve undetermined coefficients resolved by definite conditions (initial or boundary values), we add a boundary condition constraint, `bc_constraint`, following the `interior_constraint`.
 
 ``` py linenums="50"
 --8<--
@@ -222,7 +222,7 @@ examples/quick_start/case2.py:91:102
 --8<--
 ```
 
-The training log is shown below.
+The training log is displayed below.
 
 ``` log
 ...
@@ -249,13 +249,13 @@ examples/quick_start/case2.py:104:109
 --8<--
 ```
 
-It can be seen that the model trained by the differential equation still has good prediction ability near the standard solution, and the L2-relative error is 0.00564.
+The model, trained using the differential equation, exhibits strong predictive capability relative to the analytical solution, achieving an L2 relative error of 0.00564.
 
 The prediction result visualization is shown below.
 
 ![u=sin(x)+2 prediction](../images/quickstart/u_pred_case2.png)
 
-It can be found that the model trained by using the differential relationship still has good predictive ability, and combined with the definite condition, it can learn the correct solution model that conforms to both the differential equation and the definite condition.
+This demonstrates that training with differential relationships, combined with boundary conditions, allows the model to effectively learn the correct solution satisfying both the physics (equation) and the constraints.
 
 The complete code for Scenario 2 is shown below.
 

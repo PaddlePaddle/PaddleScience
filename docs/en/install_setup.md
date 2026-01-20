@@ -32,7 +32,7 @@
     bash run.sh
     ```
 
-    If apt download errors occur during docker build due to network problems, repeat `bash run.sh` until the build is complete.
+    If `apt` download errors occur during the docker build due to network issues, repeat `bash run.sh` until the build completes.
 
     For more information on the installation and use of Paddle Docker, please refer to [Docker Installation](https://www.paddlepaddle.org.cn/documentation/docs/en/install/docker/fromdocker.html).
 

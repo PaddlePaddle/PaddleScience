@@ -246,26 +246,26 @@ plugins:
             功能介绍: Overview
             安装使用: Installation & Setup
             快速开始: Quick Start
-            多硬件支持: Multi-Device Support
+            多硬件支持: Multi-Hardware Support
             学习资料: Tutorials
-            经典案例: Classic Cases
-            数学(AI for Math): Mathematics (AI for Math)
-            技术科学(AI for Technology): Technology (AI for Technology)
+            经典案例: Case Studies
+            数学(AI for Math): AI for Math
+            技术科学(AI for Technology): AI for Engineering
             流体: Fluid Dynamics
-            结构: Structure
+            结构: Structural Mechanics
             传热: Heat Transfer
-            材料科学(AI for Material): Material Science (AI for Material)
-            地球科学(AI for Earth Science): Earth Science (AI for Earth Science)
-            化学科学(AI for Chemistry): Chemistry (AI for Chemistry)
+            材料科学(AI for Material): AI for Material
+            地球科学(AI for Earth Science): AI for Earth Science
+            化学科学(AI for Chemistry): AI for Chemistry
             API 文档: API Documentation
             使用指南: User Guide
-            开发与复现指南: Development & Reproduction Guide
+            开发与复现指南: Development
             开发指南: Development Guide
-            复现指南: Reproduction Guide
-            学术成果: Academic Achievements
-            技术稿件: Technical Documents
+            复现指南: Reproducibility Guide
+            学术成果: Publications
+            技术稿件: Technical Reports
             共创计划: Collaboration Program
-            实训社区: Training Community
+            实训社区: Practice Community
   - glightbox
   - mkdocstrings:
       handlers:
