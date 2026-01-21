@@ -140,11 +140,11 @@ examples/biharmonic2d/biharmonic2d.py:205:214
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["Biharmonic"].equations` instantiated in the [3.2 Equation Construction](#32) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["Biharmonic"].equations` instantiated in the [3.2 Equation Construction](#32-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that 1 value `biharmonic` related to the Biharmonic equation is optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.3 Computational Domain Construction](#33-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here, `batch_size` is set to:
 
@@ -170,7 +170,7 @@ The eighth parameter is the name of the constraint condition. Each constraint co
 
 #### 3.4.2 Boundary Constraint
 
-As mentioned in [2. Problem Definition](#2), the deflection $w$ at $x=0$ is 0. There are the following boundary conditions, and the other 7 boundary conditions are similar:
+As mentioned in [2. Problem Definition](#2-problem-definition), the deflection $w$ at $x=0$ is 0. There are the following boundary conditions, and the other 7 boundary conditions are similar:
 
 ``` py linenums="108"
 --8<--

@@ -114,11 +114,11 @@ examples/ntopo/ntopo.py:74:86
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `problem.equation["EEquation"].equations` instantiated in the [3.4 Equation Construction](#34) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `problem.equation["EEquation"].equations` instantiated in the [3.4 Equation Construction](#34-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that the $E$ value `E_xyz` or `E_xy` related to the equation is optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in the computational domain `problem.geom["geo"]` of the corresponding problem instantiated in the [3.5 Problem Construction](#35-loss) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in the computational domain `problem.geom["geo"]` of the corresponding problem instantiated in the [3.5 Problem Construction](#35-problem-construction-including-loss) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain.
 

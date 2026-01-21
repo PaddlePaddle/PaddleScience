@@ -1085,7 +1085,7 @@ If you want to enable automatic mixed precision in training, you can choose one 
 
 ### 2.4 Gradient Accumulation
 
-Next, we introduce how to correctly use PaddleScience's gradient accumulation function. The principle of gradient accumulation can be found in: [Paddle - User Guide - Performance Tuning - Automatic Mixed Precision Training (AMP) - Using Gradient Accumulation under Dynamic Graph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia).
+Next, we introduce how to correctly use PaddleScience's gradient accumulation function. The principle of gradient accumulation can be found in: [Paddle - User Guide - Performance Tuning - Automatic Mixed Precision Training (AMP) - Using Gradient Accumulation under Dynamic Graph](https://www.paddlepaddle.org.cn/documentation/docs/en/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia).
 
 When instantiating `Solver`, specify the `update_freq` parameter as a positive integer greater than 1. As shown in the highlighted line in the code, `update_freq` can be set to 2 or a larger integer. It is recommended to use 2, 4, 8. At this time, for the training task, the global `batch size` is equivalent to `update_freq * batch size`. Gradient accumulation method can indirectly expand the number of samples in each batch in most scenarios, thereby making each batch distribution closer to the real data distribution and improving the performance of the training task.
 
@@ -1110,7 +1110,7 @@ When instantiating `Solver`, specify the `update_freq` parameter as a positive i
 
 ### 2.5 Multi-task Learning
 
-In mechanism-driven and mathematical-physical fusion scenarios, it is often necessary to optimize multiple loss terms at the same time, such as governing equation residual loss, (initial) boundary value condition loss, etc. During the training process, the gradient directions of these loss terms on the parameters may conflict with each other, hindering the convergence of training accuracy, which is exactly the problem that multi-task learning methods can solve. Therefore, PaddleScience introduces several common algorithms in the multi-task learning module, which mainly alleviate this problem by adjusting the weights or generated gradients of different tasks, and ultimately improve model convergence accuracy. Taking the [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) algorithm as an example, the usage is as follows:
+In mechanism-driven and mathematical-physical fusion scenarios, it is often necessary to optimize multiple loss terms at the same time, such as governing equation residual loss, (initial) boundary value condition loss, etc. During the training process, the gradient directions of these loss terms on the parameters may conflict with each other, hindering the convergence of training accuracy, which is exactly the problem that multi-task learning methods can solve. Therefore, PaddleScience introduces several common algorithms in the multi-task learning module, which mainly alleviate this problem by adjusting the weights or generated gradients of different tasks, and ultimately improve model convergence accuracy. Taking the [`Relobralo`](https://paddlescience-docs.readthedocs.io/en/latest/en/api/loss/mtl/#ppsci.loss.mtl.Relobralo) algorithm as an example, the usage is as follows:
 
 1. Instantiate an object of a multi-task learning method
 

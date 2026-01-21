@@ -152,7 +152,7 @@ examples/cfdgcn/cfdgcn.py:96:97
 
 ### 3.7 Validator Construction
 
-Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#34), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
+Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#34-constraint-construction), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
 
 ``` py linenums="100"
 --8<--

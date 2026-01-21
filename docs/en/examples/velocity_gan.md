@@ -2,7 +2,7 @@
 
 !!! note
 
-    1. Before running, it is recommended to quickly understand [Dataset](#31) and [Data Reading Method](#32-dataset-api).
+    1. Before running, it is recommended to quickly understand [Dataset](#31-dataset-introduction) and [Data Reading Method](#32-build-dataset-api).
     2. Download [OpenFWI Dataset](https://openfwi-lanl.github.io/docs/data.html#vel) to the corresponding subdirectory in `FWIOpenData` directory (e.g. `Flatvel_A`).
     3. Correspond the `anno` parameter in the yaml configuration file to the dataset.
 
@@ -62,7 +62,7 @@ Where $w$ and $h$ are the width and height of the velocity map respectively, $v(
 
 ## 3. Model Construction
 
-Next, we will explain how to use the PaddleScience framework to implement VelocityGAN. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/api/arch/).
+Next, we will explain how to use the PaddleScience framework to implement VelocityGAN. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/en/latest/en/api/arch/).
 
 ### 3.1 Dataset Introduction
 

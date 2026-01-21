@@ -137,11 +137,11 @@ examples/NLS-MB/NLS-MB_optical_soliton.py:150:169
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `equation["NLS-MB"].equations` instantiated in the [3.2 Equation Construction](#32) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `equation["NLS-MB"].equations` instantiated in the [3.2 Equation Construction](#32-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that each equation of NLS-MB is optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["time_interval"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["time_interval"]` instantiated in the [3.3 Computational Domain Construction](#33-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here `batch_size` is set to `20000`.
 

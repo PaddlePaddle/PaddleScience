@@ -180,7 +180,7 @@ examples/operator_learning/deeponet.py:51:60
 
 For evaluation metric `metric`, select `ppsci.metric.L2Rel`.
 
-Other configurations are similar to the settings of [Constraint Construction](#33).
+Other configurations are similar to the settings of [Constraint Construction](#33-constraint-construction).
 
 ### 3.7 Model Training and Evaluation
 

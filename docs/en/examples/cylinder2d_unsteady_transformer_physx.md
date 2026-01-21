@@ -140,7 +140,7 @@ $$
 
 ## 3. Problem Solving
 
-Next, we will explain how to solve this problem using deep learning methods based on PaddleScience code. This case is solved based on the method of the paper [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957). For the theoretical part of this method, please refer to [this document](lorenz.md#31) or [original paper](https://arxiv.org/abs/2010.03957). Next, the dataset used will be introduced first, and then the supervised constraint construction and model construction of the two training steps of this method (Embedding model training, Transformer model training) will be explained. For other details, please refer to [API Documentation](../api/arch.md).
+Next, we will explain how to solve this problem using deep learning methods based on PaddleScience code. This case is solved based on the method of the paper [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957). For the theoretical part of this method, please refer to [this document](lorenz.md#31-method-introduction) or [original paper](https://arxiv.org/abs/2010.03957). Next, the dataset used will be introduced first, and then the supervised constraint construction and model construction of the two training steps of this method (Embedding model training, Transformer model training) will be explained. For other details, please refer to [API Documentation](../api/arch.md).
 
 ### 3.1 Dataset Introduction
 

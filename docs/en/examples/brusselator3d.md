@@ -68,7 +68,7 @@ The above figure shows the overall LNO architecture and the schematic diagram of
 
 In the Laplace layer, the top row represents applying the pole-residue method to calculate the transient response residue $\gamma_{n}$ based on the system pole $\mu_{n}$ and residue $\beta_{n}$, representing the transient response in the Laplace domain. The bottom row represents applying the pole-residue method to calculate the steady-state response residue $i\lambda_{l}$ based on the input pole $i\omega_{l}$ and residue $i\alpha_{l}$, representing the steady-state response in the Laplace domain.
 
-For specific code, please refer to the `lno.py` file in [Complete Code](#4).
+For specific code, please refer to the `lno.py` file in [Complete Code](#4-complete-code).
 
 Before building the network, it is necessary to use `linespace` to clarify the length of each dimension according to the parameter settings, so that the LNO network can initialize $\lambda$. Expressed in PaddleScience code as follows:
 

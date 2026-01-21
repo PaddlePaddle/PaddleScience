@@ -374,6 +374,5 @@ examples/moflow/moflow_train.py
 ```
 
 ## 5. References
-[Article] [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1)
-
-[Code] [Moflow](https://github.com/calvin-zcx/moflow)
+- [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1)
+- [Moflow](https://github.com/calvin-zcx/moflow)

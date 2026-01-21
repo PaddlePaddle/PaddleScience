@@ -2,7 +2,7 @@
 
 !!! note
 
-    1. Before running, it is recommended to quickly understand [Dataset](#31) and [Data Reading Method](#32-dataset-api).
+    1. Before running, it is recommended to quickly understand [Dataset](#31-dataset-introduction) and [Data Reading Method](#32-build-dataset-api).
     2. Download [Vaihingen Dataset] to the corresponding subdirectory in `data` directory (e.g. `data/vaihingen/train_images`).
     3. Run tools/vaihingen_patch_split.py to process the original dataset and get trainable data.
 

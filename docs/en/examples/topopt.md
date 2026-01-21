@@ -190,7 +190,7 @@ The first parameter of `SupervisedConstraint` is the reading configuration of su
 
 The `"batch_size"` field in the reading configuration represents the batch size specified during training, and the `"sampler"` field represents the relevant sampling configuration of dataloader.
 
-The second parameter is the loss function. Here [custom loss](#381-loss) is used, and the value corresponding to $\beta$ in the loss formula is determined by `cfg.vol_coeff`.
+The second parameter is the loss function. Here [custom loss](#381-loss-construction) is used, and the value corresponding to $\beta$ in the loss formula is determined by `cfg.vol_coeff`.
 
 The third parameter is the name of the constraint condition, which is convenient for subsequent indexing. Here it is named `"sup_constraint"`.
 

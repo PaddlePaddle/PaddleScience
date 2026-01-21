@@ -265,7 +265,7 @@ examples/hpinns/holography.py:133:181
 
 The evaluation metric `metric` is `FunctionalMetric`, which is a custom metric function class reserved by PaddleScience. This class supports defining the calculation method of metric when writing code, rather than using existing methods such as `MSE`, `L2`, etc. For custom metric function code, please refer to the next section [Custom loss and metric](#38-custom-loss-and-metric).
 
-Other configurations are similar to the settings of [Constraint Construction](#36).
+Other configurations are similar to the settings of [Constraint Construction](#36-constraint-construction).
 
 ### 3.8 Custom loss and metric
 
@@ -295,7 +295,7 @@ examples/hpinns/holography.py:183:200
 --8<--
 ```
 
-Since there are multiple training modes in this problem, $[2,1+k]$ complete training and evaluations will be performed according to different modes. For specific code, please refer to the holography.py file in [Complete Code](#4).
+Since there are multiple training modes in this problem, $[2,1+k]$ complete training and evaluations will be performed according to different modes. For specific code, please refer to the holography.py file in [Complete Code](#4-complete-code).
 
 ### 3.10 Visualization
 
@@ -307,7 +307,7 @@ examples/hpinns/holography.py:279:292
 --8<--
 ```
 
-For custom code, please refer to the plotting.py file in [Complete Code](#4).
+For custom code, please refer to the plotting.py file in [Complete Code](#4-complete-code).
 
 ## 4. Complete Code
 
@@ -333,7 +333,7 @@ examples/hpinns/plotting.py
 
 ## 5. Result Display
 
-Refer to [Problem Definition](#2), the following figure shows the changes in loss during training, changes in parameter lambda and parameter mu with training round k in the augmented Lagrangian method, and the final predicted values of electric field E and permittivity epsilon.
+Refer to [Problem Definition](#2-problem-definition), the following figure shows the changes in loss during training, changes in parameter lambda and parameter mu with training round k in the augmented Lagrangian method, and the final predicted values of electric field E and permittivity epsilon.
 
 The figure below shows the prediction of electromagnetic wave propagation within a defined square domain. The prediction results are basically consistent with the results of the finite difference frequency domain (FDFD) method.
 

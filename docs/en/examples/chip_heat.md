@@ -189,7 +189,7 @@ examples/chip_heat/chip_heat.py:97:192
 
 Before constructing constraints, we need to introduce `ChipHeatDataset`, which inherits from `Dataset` class and can iteratively read array datasets composed of different `numpy.ndarray`. Due to the large number of model branch networks used, the amount of data used is large. If the data is combined first, the memory occupied by the input data will be large, so `ChipHeatDataset` is used to iteratively read data.
 
-The chip thermal simulation problem consists of equations described in [2.1 Problem Description](#21). At this time, we set five constraint conditions for left, right, top, bottom and internal data respectively. Next, use `SupervisedConstraint` built in PaddleScience to construct the above four constraint conditions. The code is as follows:
+The chip thermal simulation problem consists of equations described in [2.1 Problem Description](#21-problem-description). At this time, we set five constraint conditions for left, right, top, bottom and internal data respectively. Next, use `SupervisedConstraint` built in PaddleScience to construct the above four constraint conditions. The code is as follows:
 
 ``` py linenums="194"
 --8<--
@@ -242,7 +242,7 @@ examples/chip_heat/chip_heat.py:394:495
 --8<--
 ```
 
-The configuration is similar to the setting of [3.4 Constraint Construction](#34). It should be noted that since the amount of data used for evaluation is not very large, we do not need to use `ChipHeatDataset` to iteratively read data, but use `NamedArrayDataset` to read data here.
+The configuration is similar to the setting of [3.4 Constraint Construction](#34-constraint-construction). It should be noted that since the amount of data used for evaluation is not very large, we do not need to use `ChipHeatDataset` to iteratively read data, but use `NamedArrayDataset` to read data here.
 
 ### 3.7 Model Training
 

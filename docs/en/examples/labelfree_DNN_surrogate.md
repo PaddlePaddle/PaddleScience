@@ -163,7 +163,7 @@ examples/pipe/poiseuille_flow.py:45:69
 
 #### 2.2.4 Constraint Construction
 
-According to the formulas and boundary conditions obtained in [2.1 Problem Definition](#21), corresponding to several constraints guiding model training in the computational domain, namely:
+According to the formulas and boundary conditions obtained in [2.1 Problem Definition](#21-problem-definition), corresponding to several constraints guiding model training in the computational domain, namely:
 
 - Navier-Stokes equation constraints imposed on internal points of the fluid domain
 

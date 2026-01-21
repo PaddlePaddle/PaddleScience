@@ -217,7 +217,7 @@ examples/bubble/bubble.py:104:116
 
 ### 3.4 Constraint Construction
 
-According to the loss function expression defined in [2.2 BubbleNet (Semi-PINNs Method)](#22-bubblenetsemi-pinns), corresponding to the two constraints guiding model training in the computational domain, next use the `InteriorConstraint` and `SupervisedConstraint` built in PaddleScience to construct the above two constraints.
+According to the loss function expression defined in [2.2 BubbleNet (Semi-PINNs Method)](#22-bubblenet-semi-pinns-method), corresponding to the two constraints guiding model training in the computational domain, next use the `InteriorConstraint` and `SupervisedConstraint` built in PaddleScience to construct the above two constraints.
 
 #### 3.4.1 Interior Point Constraint
 
@@ -233,7 +233,7 @@ The first parameter of `InteriorConstraint` is the equation expression, used to 
 
 The second parameter is the target value of the constraint variable. In this problem, we hope that the result of $\nabla^2 p_{(i)}$ is optimized to 0, so set the target value to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["time_rect"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["time_rect"]` instantiated in the [3.3 Computational Domain Construction](#33-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here we use full data points for training, so the `dataset` field is set to "IterableNamedArrayDataset" and `iters_per_epoch` is also set to 1, and the sampling point number `batch_size` is set to 228595;
 
@@ -301,7 +301,7 @@ examples/bubble/bubble.py:165:186
 --8<--
 ```
 
-The configuration is similar to the setting of [3.4 Constraint Construction](#34).
+The configuration is similar to the setting of [3.4 Constraint Construction](#34-constraint-construction).
 
 ### 3.8 Model Training and Evaluation
 

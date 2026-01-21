@@ -54,16 +54,20 @@
     }
 </style>
 
+## 👀Description
+
 --8<--
 ./README.md:description
 --8<--
+
+## ✨Feature
 
 --8<--
 ./README.md:feature
 --8<--
 
 --8<--
-./docs/zh/overview.md:panorama
+./docs/en/overview.md:panorama
 --8<--
 
 ## 📝Case List
@@ -206,17 +210,25 @@
 ./README.md:adaptation
 --8<--
 
+## 💬Support
+
 --8<--
 ./README.md:support
 --8<--
+
+## 👫Contribution
 
 --8<--
 ./README.md:contribution
 --8<--
 
+## 🎯Collaboration
+
 --8<--
 ./README.md:collaboration
 --8<--
+
+## ❤️Thanks
 
 --8<--
 ./README.md:thanks
@@ -243,6 +255,8 @@
 ## 🤝Partner Organizations
 
 ![cooperation](./images/overview/cooperation.png)
+
+## 📜License
 
 --8<--
 ./README.md:license

@@ -186,7 +186,7 @@ examples/deepcfd/deepcfd.py:274:314
 
 Evaluation metric `metric` here defines four indicators Total_MSE, Ux_MSE, Uy_MSE and p_MSE.
 
-Other configurations are similar to the settings of [Constraint Construction](#33).
+Other configurations are similar to the settings of [Constraint Construction](#33-constraint-construction).
 
 ### 3.7 Model Training and Evaluation
 

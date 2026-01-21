@@ -94,7 +94,7 @@ Different from simple MLP networks, depending on different problems to be solved
 
 The Generator in this problem is a model with 4 layers of improved Res Block, Discriminator and Discriminator_tempo are the same model with 4 layers of convolution results, both have the same network structure but different inputs. The network parameters of Generator, Discriminator and Discriminator_tempo also need to be defined additionally.
 
-For specific code, please refer to the gan.py file in [Complete Code](#4).
+For specific code, please refer to the gan.py file in [Complete Code](#4-complete-code).
 
 Since the intermediate results of the generator and discriminator in the GAN network need to be called mutually and participate in each other's loss calculation, Model List is used for implementation, expressed in PaddleScience code as follows:
 

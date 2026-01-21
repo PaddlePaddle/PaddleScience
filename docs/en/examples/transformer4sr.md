@@ -193,7 +193,7 @@ examples/transformer4sr/transformer4sr.py:92:94
 
 ### 3.6 Validator Construction
 
-Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#35).
+Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#35-constraint-construction).
 
 ``` py linenums="95"
 --8<--

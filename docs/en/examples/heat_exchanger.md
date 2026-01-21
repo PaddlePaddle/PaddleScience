@@ -196,7 +196,7 @@ examples/heat_exchanger/heat_exchanger.py:65:124
 
 ### 3.4 Equation Construction
 
-The heat exchanger thermal simulation problem consists of equations described in [2.1 Problem Description](#21). Here we define the `HeatEquation` equation class built in PaddleScience to construct this equation. Specify that the parameters of this class are all 1. The code is as follows:
+The heat exchanger thermal simulation problem consists of equations described in [2.1 Problem Description](#21-problem-description). Here we define the `HeatEquation` equation class built in PaddleScience to construct this equation. Specify that the parameters of this class are all 1. The code is as follows:
 
 ``` py linenums="126"
 --8<--
@@ -206,7 +206,7 @@ examples/heat_exchanger/heat_exchanger.py:126:136
 
 ### 3.5 Constraint Construction
 
-The heat exchanger thermal simulation problem consists of equations described in [2.1 Problem Description](#21). We set the following boundary conditions:
+The heat exchanger thermal simulation problem consists of equations described in [2.1 Problem Description](#21-problem-description). We set the following boundary conditions:
 
 $$
 \begin{aligned}
@@ -274,7 +274,7 @@ examples/heat_exchanger/heat_exchanger.py:275:349
 --8<--
 ```
 
-The configuration is similar to the setting of [3.5 Constraint Construction](#35).
+The configuration is similar to the setting of [3.5 Constraint Construction](#35-constraint-construction).
 
 ### 3.8 Model Training
 

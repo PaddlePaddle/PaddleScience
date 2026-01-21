@@ -283,8 +283,8 @@ We provide reference accuracy and corresponding pre-trained model weights based 
 
 5. If the model documentation provides model export and inference commands, please verify whether model export and inference can be executed normally on the new hardware and align with CUDA inference results according to the model export and inference commands.
 
-6. After completing the above steps, you can add your hardware support information (✅) to the corresponding model in the table of [1. Hardware Support List](#1), and then submit a PR to PaddleScience. Your PR should include at least the following contents:
-    * Add running instructions for using the model based on your hardware environment in [2. Running Guide](#2)
+6. After completing the above steps, you can add your hardware support information (✅) to the corresponding model in the table of [1. Hardware Support List](#1-hardware-support-list), and then submit a PR to PaddleScience. Your PR should include at least the following contents:
+    * Add running instructions for using the model based on your hardware environment in [2. Running Guide](#2-running-guide)
     * Best model weight file saved during training (`.pdparams` file)
     * Running logs such as training/evaluation (`.log` file)
     * Software versions used to verify model accuracy, including but not limited to:

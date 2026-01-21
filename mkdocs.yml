@@ -264,7 +264,7 @@ plugins:
             复现指南: Reproducibility Guide
             学术成果: Publications
             技术稿件: Technical Reports
-            共创计划: Collaboration Program
+            共创计划: Collaboration
             实训社区: Practice Community
   - glightbox
   - mkdocstrings:

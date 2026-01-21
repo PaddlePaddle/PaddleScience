@@ -219,7 +219,7 @@ The training process will call the optimizer to update model parameters. Here, t
 
 ### 3.6 Validator Construction
 
-Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#33), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
+Usually during the training process, the training status of the current model is evaluated using the validation set (test set) at a certain epoch interval, so `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction](#33-constraint-construction), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
 
 === "airfoil"
 

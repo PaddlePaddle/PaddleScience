@@ -239,7 +239,7 @@ geom = {
 
 ### 3.4 Constraint Construction
 
-According to the dimensionless formulas and boundary conditions obtained in [2. Problem Definition](#2), corresponding to the three constraint conditions guiding model training in the computational domain, namely:
+According to the dimensionless formulas and boundary conditions obtained in [2. Problem Definition](#2-problem-definition), corresponding to the three constraint conditions guiding model training in the computational domain, namely:
 
 1. Dimensionless Navier-Stokes equation constraint applied to internal points of the fluid domain (after simple term shifting)
 
@@ -390,17 +390,17 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:171:189
 --8<--
 ```
 
-The equation setting is the same as the setting of [Constraint Construction](#32), indicating how to calculate the target variables to be evaluated;
+The equation setting is the same as the setting of [Constraint Construction](#34-constraint-construction), indicating how to calculate the target variables to be evaluated;
 
 Here we set the label value to 0 for the three target variables `momentum_x`, `continuity`, `momentum_y`;
 
-The computational domain is the same as the setting of [Constraint Construction](#32), indicating evaluation on the specified computational domain;
+The computational domain is the same as the setting of [Constraint Construction](#34-constraint-construction), indicating evaluation on the specified computational domain;
 
 The sampling point configuration needs to specify the total number of evaluation points `total_size`. Here we set it to 9662 \* 50 (9420 points in the fluid domain + 161 fluid domain inflow boundary points + 81 fluid domain outflow boundary points, a total of 50 evaluation moments);
 
 For evaluation metric `metric`, select `ppsci.metric.MSE`;
 
-Other configurations are similar to the settings of [Constraint Construction](#32).
+Other configurations are similar to the settings of [Constraint Construction](#34-constraint-construction).
 
 ### 3.8 Visualizer Construction
 

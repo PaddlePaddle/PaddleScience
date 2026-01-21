@@ -14,7 +14,7 @@ Unless otherwise specified, model reproduction requires PaddleScience by default
 
 - PaddleScience
 
-    An AI4S suite based on PaddlePaddle, providing general functions for the AI4S field, such as complex geometric shape analysis, general differential equations, data-driven/physical mechanism/mathematical-physical fusion solvers, etc., facilitating the development of AI4S field related models. For details, please refer to [PaddleScience Documentation](https://paddlescience-docs.readthedocs.io/zh-cn/latest/).
+    An AI4S suite based on PaddlePaddle, providing general functions for the AI4S field, such as complex geometric shape analysis, general differential equations, data-driven/physical mechanism/mathematical-physical fusion solvers, etc., facilitating the development of AI4S field related models. For details, please refer to [PaddleScience Documentation](https://paddlescience-docs.readthedocs.io/en/latest/).
 
 - PaddlePaddle
 
@@ -194,4 +194,4 @@ PaddleScience Official Website Documentation Needs to Satisfy:
 - If the model depends on dependencies not covered by PaddlePaddle (such as pandas), you need to explain which dependencies need to be installed at the beginning of the document.
 - Random control, need to fix the random seed of modules containing random factors as much as possible to ensure that the model can be reproduced normally (PaddleScience suite provides `ppsci.utils.misc.set_random_seed(seed_num)` statement to control global random numbers).
 - Hyperparameters: Internal hyperparameters of the model are forbidden to be hard-coded, and should be configured through configuration files as much as possible.
-- Attach reference papers, reference code URLs, and download links for reproduced trained model parameters at the end of the document. Overall document writing can refer to: [Document Reference Example (darcy2d)](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/darcy2d/).
+- Attach reference papers, reference code URLs, and download links for reproduced trained model parameters at the end of the document. Overall document writing can refer to: [Document Reference Example (darcy2d)](https://paddlescience-docs.readthedocs.io/en/latest/en/examples/darcy2d/).

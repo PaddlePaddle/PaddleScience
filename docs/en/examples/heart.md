@@ -168,7 +168,7 @@ The geometric area of this problem is specified by the stl file. Download and ex
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must first install the open3d, pysdf, and PyMesh 3 geometric dependency packages according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must first install the open3d, pysdf, and PyMesh 3 geometric dependency packages according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
 
 Then, through the STL geometry class `ppsci.geometry.Mesh` built into PaddleScience, you can read and parse the geometry file, obtain the computational domain, and obtain the geometric structure boundary:
 
@@ -208,11 +208,11 @@ examples/heart/forward.py:85:102
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `equation["Hooke"].equations` instantiated in the [3.1.3 Equation Construction](#313) section;
+The first parameter of `InteriorConstraint` is the equation (system) expression, used to describe how to calculate the constraint target. Here, fill in `equation["Hooke"].equations` instantiated in the [3.1.3 Equation Construction](#313-equation-construction) section;
 
 The second parameter is the target value of the constraint variable. In this problem, `hooke_x`, `hooke_y`, `hooke_z` are optimized to 0;
 
-The third parameter is the computational domain where the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.1.4 Computational Domain Construction](#314) section;
+The third parameter is the computational domain where the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.1.4 Computational Domain Construction](#314-computational-domain-construction) section;
 
 The fourth parameter is the sampling configuration on the computational domain. Here, set `batch_size` as:
 
@@ -232,7 +232,7 @@ The eighth parameter is the name of the constraint condition. Each constraint co
 
 ##### 3.1.6.2 Boundary Constraint
 
-Refer to [2. Problem Definition](#2) for constraints on the endocardium, epicardium, and basal plane respectively:
+Refer to [2. Problem Definition](#2-problem-definition) for constraints on the endocardium, epicardium, and basal plane respectively:
 
 ``` py linenums="57"
 --8<--

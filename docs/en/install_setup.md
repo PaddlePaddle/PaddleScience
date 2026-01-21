@@ -311,7 +311,7 @@ Please download, install and use the third-party libraries you need according to
 
     If `PaddleScience is installed successfully.✨ 🍰 ✨` appears, the installation verification is successful.
 
-- [Optional] If the 4 dependent libraries have been correctly installed according to [1.4.2 Install Mesh Geometry](#142-install-mesh-geometry), you can execute the following code to verify whether the `ppsci.geometry.Mesh` module of PaddleScience works properly.
+- [Optional] If the 4 dependent libraries have been correctly installed according to [1.4.2 Install Mesh Geometry](#142-install-mesh-geometry-optional), you can execute the following code to verify whether the `ppsci.geometry.Mesh` module of PaddleScience works properly.
 
     ``` sh
     python -c "import ppsci; ppsci.run_check_mesh()"

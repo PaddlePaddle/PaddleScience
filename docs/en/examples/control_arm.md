@@ -182,7 +182,7 @@ The geometric area of this problem is specified by the stl file. Follow the "Mod
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `ppsci.geometry.Mesh` to read and parse the geometric file, obtain the computational domain, and obtain the geometric structure boundary:
 
@@ -232,11 +232,11 @@ examples/control_arm/forward_analysis.py:102:138
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.1.2 Equation Construction](#312) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.1.2 Equation Construction](#312-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that the 9 values `equilibrium_x`, `equilibrium_y`, `equilibrium_z`, `stress_disp_xx`, `stress_disp_yy`, `stress_disp_zz`, `stress_disp_xy`, `stress_disp_xz`, `stress_disp_yz` related to the LinearElasticity equation are all optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.1.3 Computational Domain Construction](#313) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.1.3 Computational Domain Construction](#313-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here, `batch_size` is set to:
 
@@ -256,7 +256,7 @@ The eighth parameter is the name of the constraint condition. Each constraint co
 
 ##### 3.1.6.2 Boundary Constraint
 
-The inner surface of the left ring of the structure is stressed, and each point on it is subjected to a uniformly distributed load. Referring to [2. Problem Definition](#2), the magnitude is stored in parameter $T$. Actually, it is a load in the negative x direction with a magnitude of $0.0025$, and the stress in other directions is 0. There are the following boundary constraint conditions:
+The inner surface of the left ring of the structure is stressed, and each point on it is subjected to a uniformly distributed load. Referring to [2. Problem Definition](#2-problem-definition), the magnitude is stored in parameter $T$. Actually, it is a load in the negative x direction with a magnitude of $0.0025$, and the stress in other directions is 0. There are the following boundary constraint conditions:
 
 ``` py linenums="62"
 --8<--
@@ -348,7 +348,7 @@ examples/control_arm/forward_analysis.py:214:281
 
 #### 3.2.1 Model Construction
 
-The premise of parameter inversion is to know each known coordinate point $(x, y, z)$, and the corresponding strain $(u, v, w)$ and stress $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ in three directions. The source of these variables can be real data, or numerical simulation data, or a trained forward problem model. In this case, we do not use any data, but use the model trained in chapter [3.1 Stress Analysis Solution](#31) to obtain these variables, so we still need to build this part of the model, and load the weight parameters obtained from the forward problem solution for `disp_net` and `stress_net` as pretrained models. Note that these two models should be frozen to reduce backpropagation time and memory usage.
+The premise of parameter inversion is to know each known coordinate point $(x, y, z)$, and the corresponding strain $(u, v, w)$ and stress $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ in three directions. The source of these variables can be real data, or numerical simulation data, or a trained forward problem model. In this case, we do not use any data, but use the model trained in chapter [3.1 Stress Analysis Solution](#31-stress-analysis-solution) to obtain these variables, so we still need to build this part of the model, and load the weight parameters obtained from the forward problem solution for `disp_net` and `stress_net` as pretrained models. Note that these two models should be frozen to reduce backpropagation time and memory usage.
 
 In parameter inversion, two unknown quantities need to be solved: parameters $\lambda$ and $\mu$ of the linear elasticity equation. Two models are used to predict these two sets of physical quantities respectively:
 
@@ -387,7 +387,7 @@ The geometric area of this problem is specified by the stl file. Follow the "Mod
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `ppsci.geometry.Mesh` to read and parse the geometric file, obtain the computational domain, and obtain the geometric structure boundary:
 
@@ -409,7 +409,7 @@ examples/control_arm/conf/inverse_parameter.yaml:73:75
 
 #### 3.2.5 Optimizer Construction
 
-Since the role of `disp_net` and `stress_net` models is only to provide values of strain $(u, v, w)$ and stress $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ in three directions, and does not need training, so when constructing the optimizer, note not to use `ModelList` encapsulated in [3.2.1 Model Construction](#321) as parameter, but use the tuple composed of `inverse_lambda_net` and `inverse_mu_net` as parameter.
+Since the role of `disp_net` and `stress_net` models is only to provide values of strain $(u, v, w)$ and stress $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ in three directions, and does not need training, so when constructing the optimizer, note not to use `ModelList` encapsulated in [3.2.1 Model Construction](#321-model-construction) as parameter, but use the tuple composed of `inverse_lambda_net` and `inverse_mu_net` as parameter.
 
 The training process will call the optimizer to update model parameters. Here, the more commonly used `Adam` optimizer is selected, and the `ExponentialDecay` learning rate adjustment strategy commonly used in machine learning is used together.
 
@@ -429,11 +429,11 @@ examples/control_arm/inverse_parameter.py:50:83
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.2.2 Equation Construction](#322) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.2.2 Equation Construction](#322-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that the 6 values `stress_disp_xx`, `stress_disp_yy`, `stress_disp_zz`, `stress_disp_xy`, `stress_disp_xz`, `stress_disp_yz` related to the LinearElasticity equation and containing parameters $\lambda$ and $\mu$ are all optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.2.3 Computational Domain Construction](#323) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.2.3 Computational Domain Construction](#323-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here, `batch_size` is set to:
 

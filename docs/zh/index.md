@@ -54,9 +54,13 @@
     }
 </style>
 
+## 👀简介
+
 --8<--
 ./README.md:description
 --8<--
+
+## ✨特性
 
 --8<--
 ./README.md:feature
@@ -144,7 +148,7 @@
     |-----|---------|-----|---------|----|---------|---------|
     | 材料设计 | [散射板设计(反问题)](./examples/hpinns.md) | 机理驱动 | Transformer | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
     | 晶体材料属性预测 | [CGCNN](./examples/cgcnn.md) | 数据驱动 | GNN | 监督学习 | [MP](https://next-gen.materialsproject.org/) / [Perovskite](https://cmr.fysik.dtu.dk/cubic_perovskites/cubic_perovskites.html) / [C2DB](https://cmr.fysik.dtu.dk/c2db/c2db.html) / [test](https://paddle-org.bj.bcebos.com/paddlescience/datasets/cgcnn/cgcnn-test.zip) | [Paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.145301) |
-    | 二维材料生成与数据库 | [ML2DDB](./en/examples/ml2ddb.md) | 数据驱动 | GNN/Diffusion | 监督学习 | Coming Soon | [Paper](https://arxiv.org/pdf/2507.00584) |
+    | 二维材料生成与数据库 | [ML2DDB](./examples/ml2ddb.md) | 数据驱动 | GNN/Diffusion | 监督学习 | Coming Soon | [Paper](https://arxiv.org/pdf/2507.00584) |
 
 === "地球科学"
 
@@ -206,17 +210,25 @@
 ./README.md:adaptation
 --8<--
 
+## 💬支持与建议
+
 --8<--
 ./README.md:support
 --8<--
+
+## 👫开源共建
 
 --8<--
 ./README.md:contribution
 --8<--
 
+## 🎯共创计划
+
 --8<--
 ./README.md:collaboration
 --8<--
+
+## ❤️致谢
 
 --8<--
 ./README.md:thanks
@@ -243,6 +255,8 @@
 ## 🤝合作单位
 
 ![cooperation](./images/overview/cooperation.png)
+
+## 📜开源协议
 
 --8<--
 ./README.md:license

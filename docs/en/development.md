@@ -57,7 +57,7 @@ Before starting PaddleScience-related paper reproduction and API development tas
 
     If you have already committed the code, you can manually execute the pre-commit command after installing the above pre-commit to format the code: `pre-commit run --files your/committed/code/file/or/folder`, then manually `git add` the modified files, and then `git commit`.
 
-    For details on pre-commit, please refer to [Paddle Code Style Check Guide](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/dev_guides/git_guides/codestyle_check_guide_cn.html).
+    For details on pre-commit, please refer to [Paddle Code Style Check Guide](https://www.paddlepaddle.org.cn/documentation/docs/en/develop/dev_guides/git_guides/codestyle_check_guide_cn.html).
 
 ## 2. Write Code
 
@@ -901,14 +901,14 @@ If your development environment is VSCode, it is recommended to install the [mar
 
 ### 3.4 Preview Document
 
-Assuming the location of the written document is `PaddleScience/docs/zh/examples/your_exmaple.md`, in order to display it in the left directory of PaddleScience official website [Classic Cases](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/examples/allen_cahn/), you need to modify `PaddleScience/mkdocs.yml`. Add the relative path of `your_exmaple.md` to the list under `- Classic Cases:` following other cases, as shown in the highlighted line below.
+Assuming the location of the written document is `PaddleScience/docs/en/examples/your_exmaple.md`, in order to display it in the left directory of PaddleScience official website [Classic Cases](https://paddlescience-docs.readthedocs.io/en/latest/en/examples/allen_cahn/), you need to modify `PaddleScience/mkdocs.yml`. Add the relative path of `your_exmaple.md` to the list under `- Classic Cases:` following other cases, as shown in the highlighted line below.
 
 ``` yaml hl_lines="23" title="PaddleScience/mkdocs.yml"
 ...
 --8<--
 mkdocs.yml:38:58
 --8<--
-        - EXAMPLE_NAME: docs/zh/examples/your_exmaple.md
+        - EXAMPLE_NAME: docs/en/examples/your_exmaple.md
 ...
 ```
 
@@ -926,7 +926,7 @@ mkdocs serve
 # INFO     -  [07:39:35] Watching paths for changes: 'docs', 'mkdocs.yml'
 # INFO     -  [07:39:35] Serving on http://127.0.0.1:8000/PaddlePaddle/PaddleScience/
 # INFO     -  [07:39:41] Browser connected: http://127.0.0.1:58903/PaddlePaddle/PaddleScience/
-# INFO     -  [07:40:41] Browser connected: http://127.0.0.1:58903/PaddlePaddle/PaddleScience/zh/development/
+# INFO     -  [07:40:41] Browser connected: http://127.0.0.1:58903/PaddlePaddle/PaddleScience/en/development/
 ```
 
 !!! tip "Manually Specify Service Address and Port Number"

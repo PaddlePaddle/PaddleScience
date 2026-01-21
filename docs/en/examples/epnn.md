@@ -103,7 +103,7 @@ After the constraint is constructed, encapsulate it into a dictionary with the n
 
 ### 3.4 Validator Construction
 
-Similar to constraints, this problem uses `ppsci.validate.SupervisedValidator` to build a validator. The parameter meanings are also similar to [Constraint Construction](#33). The only difference is the evaluation metric `metric`. The code is as follows:
+Similar to constraints, this problem uses `ppsci.validate.SupervisedValidator` to build a validator. The parameter meanings are also similar to [Constraint Construction](#33-constraint-construction). The only difference is the evaluation metric `metric`. The code is as follows:
 
 ``` py linenums="88"
 --8<--

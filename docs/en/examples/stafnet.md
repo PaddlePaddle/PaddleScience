@@ -127,7 +127,7 @@ examples/stafnet/stafnet.py:46:51
 
 ### 3.6 Validator Construction
 
-During the training process, the training status of the current model is usually evaluated using the validation set (test set) at a certain epoch interval. Therefore, `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction 3.5](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/zh/examples/stafnet.md#36), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
+During the training process, the training status of the current model is usually evaluated using the validation set (test set) at a certain epoch interval. Therefore, `ppsci.validate.SupervisedValidator` is used to construct the validator. The construction process is similar to [Constraint Construction 3.5](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/en/examples/stafnet.md#36), just change the data directory to the directory of the test set, and set `EVAL.batch_size=1` in the configuration file.
 
 ``` py linenums="52" title="examples/stafnet/stafnet.py"
 --8<--

@@ -145,7 +145,7 @@
 | 7 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
 | 8 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
 
-*Note: According to [Reference](#6), the effect of No. 3 is poor.*
+*Note: According to [Reference](#6-references), the effect of No. 3 is poor.*
 
 ## 1. Background Introduction
 
@@ -323,7 +323,7 @@ examples/deephpms/burgers.py:187:196
 --8<--
 ```
 
-The meaning of each parameter is consistent with [First Stage Constraint Construction](#361). The only difference is the second parameter in this constraint, the loss function, which uses the custom loss function class `FunctionalLoss` reserved by PaddleScience. This class supports customizing the calculation method of loss when writing code, rather than using existing methods such as `MSE`. For the custom loss function code in this constraint, please refer to [Custom loss and metric](#38-loss-metric).
+The meaning of each parameter is consistent with [First Stage Constraint Construction](#361-first-stage-constraint-construction). The only difference is the second parameter in this constraint, the loss function, which uses the custom loss function class `FunctionalLoss` reserved by PaddleScience. This class supports customizing the calculation method of loss when writing code, rather than using existing methods such as `MSE`. For the custom loss function code in this constraint, please refer to [Custom loss and metric](#38-custom-loss-and-metric).
 
 After the constraint is constructed, encapsulate it into a dictionary with the names we just named as keys for subsequent access.
 
@@ -341,7 +341,7 @@ After the constraint is constructed, encapsulate it into a dictionary with the n
 
 ### 3.7 Validator Construction
 
-Similar to constraints, although this problem partly uses supervised learning and partly uses unsupervised learning, `ppsci.validate.SupervisedValidator` can still be used to construct the validator. The meaning of parameters is also the same as [Constraint Construction](#36), the only difference is the evaluation metric `metric`.
+Similar to constraints, although this problem partly uses supervised learning and partly uses unsupervised learning, `ppsci.validate.SupervisedValidator` can still be used to construct the validator. The meaning of parameters is also the same as [Constraint Construction](#36-constraint-construction), the only difference is the evaluation metric `metric`.
 
 #### 3.7.1 First Stage Validator Construction
 
@@ -355,7 +355,7 @@ examples/deephpms/burgers.py:148:155
 
 #### 3.7.2 Second Stage Validator Construction
 
-The evaluation metric `metric` is `FunctionalMetric`, which is a custom metric function class reserved by PaddleScience. This class supports customizing the calculation method of metric when writing code, rather than using existing methods such as `MSE`, `L2`, etc. For custom metric function code, please refer to the next part [Custom loss and metric](#38-loss-metric).
+The evaluation metric `metric` is `FunctionalMetric`, which is a custom metric function class reserved by PaddleScience. This class supports customizing the calculation method of metric when writing code, rather than using existing methods such as `MSE`, `L2`, etc. For custom metric function code, please refer to the next part [Custom loss and metric](#38-custom-loss-and-metric).
 
 ``` py linenums="209"
 --8<--
@@ -457,7 +457,7 @@ examples/deephpms/plotting.py
 
 ## 5. Result Display
 
-Refer to [Problem Definition](#2), the horizontal and vertical coordinates of the figure below are time and position parameters respectively, the color represents the solution u of burgers, and the size refers to the color card on the right side of the picture. Applying the burgers equation to different problems, u has different meanings, here u value can be simply considered as speed.
+Refer to [Problem Definition](#2-problem-definition), the horizontal and vertical coordinates of the figure below are time and position parameters respectively, the color represents the solution u of burgers, and the size refers to the color card on the right side of the picture. Applying the burgers equation to different problems, u has different meanings, here u value can be simply considered as speed.
 
 The figure below shows the change of u with x as t increases under certain initial conditions (u value corresponding to x at t=0 moment). The true value of u and the model prediction result are as follows, which are basically consistent with traditional spectral methods.
 

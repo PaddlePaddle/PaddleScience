@@ -174,7 +174,7 @@ After unzipping, the `bracket/stl` folder stores the stl geometric files require
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `Mesh` to read and parse these geometric files, and combine each computational domain through Boolean operations. The code is as follows:
 
@@ -204,11 +204,11 @@ examples/bracket/bracket.py:106:142
 --8<--
 ```
 
-The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.2 Equation Construction](#32) chapter;
+The first parameter of `InteriorConstraint` is the equation (system) expression, which is used to describe how to calculate the constraint target. Here, fill in `equation["LinearElasticity"].equations` instantiated in the [3.2 Equation Construction](#32-equation-construction) chapter;
 
 The second parameter is the target value of the constraint variable. In this problem, it is hoped that the 9 values `equilibrium_x`, `equilibrium_y`, `equilibrium_z`, `stress_disp_xx`, `stress_disp_yy`, `stress_disp_zz`, `stress_disp_xy`, `stress_disp_xz`, `stress_disp_yz` related to the LinearElasticity equation are all optimized to 0;
 
-The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.3 Computational Domain Construction](#33) chapter;
+The third parameter is the computational domain on which the constraint equation acts. Here, fill in `geom["geo"]` instantiated in the [3.3 Computational Domain Construction](#33-computational-domain-construction) chapter;
 
 The fourth parameter is the sampling configuration on the computational domain. Here, `batch_size` is set to `2048`.
 

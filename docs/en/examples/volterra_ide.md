@@ -171,7 +171,7 @@ examples/ide/volterra_ide.py:147:161
 
 Evaluation metric `metric` selects `ppsci.metric.L2Rel`;
 
-Other configurations are similar to the settings in [3.4 Constraint Construction](#34).
+Other configurations are similar to the settings in [3.4 Constraint Construction](#34-constraint-construction).
 
 ### 3.8 Model Training
 
