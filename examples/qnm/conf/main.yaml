@@ -1,0 +1,181 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - override hydra/launcher: joblib
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_${model}_${mode}/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+model: deeponet
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+# QNM equation settings
+a: [0.0, 0.1, 0.2]
+l: 2
+m: 0
+s: -2
+n: 0
+w_real: 0.74734 # initial guess of real component of w
+w_img: -0.17793 # initial guess of imagine component of w
+A_img: 0.0 # initial guess of imagine component of A
+
+
+# model settings
+MODEL:
+  DEEPONET:
+    trunk_input_keys: [x, u]
+    branch_a_input_keys: [a]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    trunk_num_layers: 3
+    trunk_hidden_size: 256
+    trunk_activation: tanh
+
+    branch_input_dim: 1
+    branch_num_layers: 2
+    branch_hidden_size: 128
+    branch_activation: tanh
+
+    hidden_out_size: 128
+
+  PIRATE:
+    trunk_input_keys: [x, u]
+    branch_a_input_keys: [a]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    trunk_num_blocks: 3
+    trunk_hidden_size: 256
+    trunk_activation: tanh
+
+    branch_input_dim: 1
+    branch_num_blocks: 2
+    branch_hidden_size: 256
+    branch_activation: tanh
+
+    hidden_out_size: 128
+
+    trunk_fourier:
+      dim: ${MODEL.PIRATE.trunk_hidden_size}
+      scale: 0.7
+    branch_fourier:
+      dim: ${MODEL.PIRATE.branch_hidden_size}
+      scale: 0.7
+    random_weight:
+      mean: 1.0
+      std: 0.1
+
+
+  KAN:
+    input_keys: [x, u]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    num_layers: 2
+    hidden_size: 10
+    kan_grid_size: 3
+    edge_function: "fourier"
+  PIRAKAN:
+    input_keys: [x, u]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    num_blocks: 1
+    hidden_size: 6
+    kan_grid_size: 3
+    activation: tanh
+    fourier:
+      scale: 0.7
+      dim: ${MODEL.PIRAKAN.hidden_size}
+    random_weight:
+      mean: 1.0
+      std: 0.1
+
+  # num_layers: 4
+  # hidden_size: 256
+  # activation: tanh
+
+# training settings
+TRAIN:
+  epochs: 100
+  iters_per_epoch: 1000
+  save_freq: 0
+  eval_during_train: false
+  eval_freq: 10
+  optim: soap
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 5000
+    by_epoch: false
+    warmup_epoch: 0
+  pde_batch_size: 128
+  num_sensors: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+  lbfgs:
+    epochs: 0
+    iters_per_epoch: 1
+    output_dir: ${output_dir}_LBFGS
+    learning_rate: 1.0
+    max_iter: 5000
+    eval_freq: ${TRAIN.eval_freq}
+    eval_during_train: ${TRAIN.eval_during_train}
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  epochs: 4
+  iters_per_epoch: 1000
+  pde_batch_size: 128
+  num_sensors: 1
+  optim: adam
+  lr_scheduler:
+    epochs: ${EVAL.epochs}
+    iters_per_epoch: ${EVAL.iters_per_epoch}
+    learning_rate: 1.0e-4
+    gamma: 0.9
+    decay_steps: 1000
+    by_epoch: false
+    warmup_epoch: 0
+  eval_with_no_grad: true
+  batch_size: 4096
+
+# inference settings
+INFER:
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/AllenCahn/allen_cahn_piratenet_pretrained.pdparams
+  export_path: ./inference/allen_cahn
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
+  device: gpu
+  engine: native
+  precision: fp32
+  ir_optim: true
+  min_subgraph_size: 5
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 1024
