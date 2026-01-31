@@ -1,0 +1,178 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - INFER: infer_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - override hydra/launcher: joblib
+  - _self_
+
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_${model}_${mode}/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+model: deepopirakan # deeponet or deepopirate or deepopirakan
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 100
+
+# QNM equation settings
+a: [0.0, 0.005, 0.1, 0.105, 0.2, 0.3, 0.4, 0.45, 0.49, 0.4999]
+l: 2
+m: 1
+s: -2
+n: 0
+w_real: 0.7 # initial guess of real component of w
+w_img: -2.50185116648838 # initial guess of imagine component of w
+A_img: 0.0 # initial guess of imagine component of A
+
+
+# model settings
+MODEL:
+  DEEPONET:
+    trunk_input_keys: [x, u]
+    branch_a_input_keys: [a]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    trunk_num_layers: 4
+    trunk_hidden_size: 512
+    trunk_activation: tanh
+
+    branch_input_dim: 1
+    branch_num_layers: 4
+    branch_hidden_size: 256
+    branch_activation: tanh
+
+    hidden_out_size: 256
+    branch_n_dim: null
+    branch_m_dim: null
+
+  PIRATE:
+    trunk_input_keys: [x, u]
+    branch_a_input_keys: [a]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    trunk_num_blocks: 3
+    trunk_hidden_size: 256
+    trunk_activation: tanh
+
+    branch_input_dim: 1
+    branch_num_blocks: 3
+    branch_hidden_size: 256
+    branch_activation: tanh
+
+    hidden_out_size: 512
+
+    trunk_fourier:
+      dim: ${MODEL.PIRATE.trunk_hidden_size}
+      scale: 0.7
+    branch_fourier:
+      dim: ${MODEL.PIRATE.branch_hidden_size}
+      scale: ${MODEL.PIRATE.trunk_fourier.scale}
+    random_weight:
+      mean: 1.0
+      std: 0.1
+    branch_n_dim: null
+
+  PIRAKAN:
+    trunk_input_keys: [x, u]
+    branch_a_input_keys: [a]
+    output_keys: [f_r, f_i, g_r, g_i]
+
+    trunk_num_blocks: 1
+    trunk_hidden_size: 64
+    trunk_kan_grid_size: 1
+    trunk_activation: tanh
+
+    branch_input_dim: 1
+    branch_num_blocks: 2
+    branch_hidden_size: 64
+    branch_kan_grid_size: 1
+    branch_activation: tanh
+
+    hidden_out_size: 128
+
+    trunk_fourier:
+      dim: ${MODEL.PIRAKAN.trunk_hidden_size}
+      scale: 0.7
+    branch_fourier:
+      dim: ${MODEL.PIRAKAN.branch_hidden_size}
+      scale: ${MODEL.PIRAKAN.trunk_fourier.scale}
+    random_weight:
+      mean: 1.0
+      std: 0.1
+    branch_n_dim: 64
+    branch_m_dim: null
+
+  # num_layers: 4
+  # hidden_size: 256
+  # activation: tanh
+
+# training settings
+TRAIN:
+  n_list: [0, 1, 2, 3, 4, 5, 6, 7]
+  m_list: [0] #[0, 1, 2]
+  a_num: 100 # number of random sampled a values in one training batch
+  epochs: 500
+  iters_per_epoch: 1000
+  save_freq: 0
+  eval_during_train: false
+  eval_freq: 10
+  optim: soap
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 5000
+    by_epoch: false
+    warmup_epoch: 0
+  pde_batch_size: 128
+  num_sensors: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+  lbfgs:
+    epochs: 0
+    iters_per_epoch: 5
+    output_dir: ${output_dir}_LBFGS
+    learning_rate: 1.0
+    max_iter: 5000
+    tolerance_grad: 1.0e-15
+    tolerance_change: 1.0e-15
+    eval_freq: ${TRAIN.eval_freq}
+    eval_during_train: ${TRAIN.eval_during_train}
+
+# evaluation settings
+EVAL:
+  n_list: [3, 7]
+  pretrained_model_path: ./ckpt/m_0/checkpoints/latest.pdparams #./ckpt/m_1_n_0-7/checkpoints/latest.pdparams
+  epochs: 2
+  iters_per_epoch: 1000
+  pde_batch_size: 128
+  num_sensors: 1
+  optim: adam
+  lr_scheduler:
+    epochs: ${EVAL.epochs}
+    iters_per_epoch: ${EVAL.iters_per_epoch}
+    learning_rate: 1.0e-3
+    gamma: 0.9
+    decay_steps: 400
+    by_epoch: false
+    warmup_epoch: 0
+  eval_with_no_grad: true
+  batch_size: 4096
