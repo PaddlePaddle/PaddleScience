@@ -1360,44 +1360,38 @@ def sample_in_triangle(v0, v1, v2, n, random="pseudo", criteria=None):
 
 
 def make_sdf(vectors: np.ndarray):
-    def sdf_func(points: np.ndarray, compute_sdf_derivatives=False):
-        points = points.copy()
-        x_min, y_min, z_min = np.min(points, axis=0)
-        x_max, y_max, z_max = np.max(points, axis=0)
-        max_dis = max(max((x_max - x_min), (y_max - y_min)), (z_max - z_min))
-        store_triangles = vectors.copy()
-        store_triangles[:, :, 0] -= x_min
-        store_triangles[:, :, 1] -= y_min
-        store_triangles[:, :, 2] -= z_min
-        store_triangles *= 1 / max_dis
-        store_triangles = store_triangles.reshape([-1, 3])
-        points[:, 0] -= x_min
-        points[:, 1] -= y_min
-        points[:, 2] -= z_min
-        points *= 1 / max_dis
-        points = points.astype(np.float64).ravel()
+    verts = vectors.reshape(-1, 3)
+    v_min = verts.min(axis=0)
+    v_max = verts.max(axis=0)
+    max_dis = np.max(v_max - v_min)
+    norm_mesh = (verts - v_min) / max_dis
 
-        # compute sdf values
-        sdf = sdf_module.signed_distance_field(
-            store_triangles,
-            np.arange((store_triangles.shape[0])),
-            points,
+    mesh_vertices = [tuple(v) for v in norm_mesh.tolist()]
+    mesh_indices = np.arange(len(mesh_vertices), dtype=np.int32)
+
+    def sdf_func(points: np.ndarray, compute_sdf_derivatives=False):
+        pts = (points - v_min) / max_dis
+
+        input_points = [tuple(p) for p in pts.tolist()]
+
+        ret = sdf_module.signed_distance_field(
+            mesh_vertices,
+            mesh_indices,
+            input_points,
             include_hit_points=compute_sdf_derivatives,
         )
-        if compute_sdf_derivatives:
-            sdf, sdf_derives = sdf
-
-        sdf = sdf.numpy()
-        sdf = np.expand_dims(max_dis * sdf, axis=1)
 
         if compute_sdf_derivatives:
-            sdf_derives = sdf_derives.numpy().reshape(-1)
-            sdf_derives = -(sdf_derives - points)
-            sdf_derives = np.reshape(sdf_derives, (sdf_derives.shape[0] // 3, 3))
-            sdf_derives = sdf_derives / np.linalg.norm(
-                sdf_derives, axis=1, keepdims=True
-            )
-            return sdf, sdf_derives
+            sdf, grad = ret
+        else:
+            sdf = ret
+            grad = None
+
+        sdf = sdf.numpy().reshape(-1, 1) * max_dis
+
+        if grad is not None:
+            grad = grad.numpy().reshape(-1, 3)
+            return sdf, grad
 
         return sdf
 
