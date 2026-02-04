@@ -1382,15 +1382,19 @@ def make_sdf(vectors: np.ndarray):
         )
 
         if compute_sdf_derivatives:
-            sdf, grad = ret
+            sdf, hit_points = ret
         else:
             sdf = ret
-            grad = None
+            hit_points = None
 
         sdf = sdf.numpy().reshape(-1, 1) * max_dis
 
-        if grad is not None:
-            grad = grad.numpy().reshape(-1, 3)
+        if hit_points is not None:
+            hit_points = hit_points.numpy().reshape(-1, 3)
+            grad_vec = pts - hit_points
+            norms = np.linalg.norm(grad_vec, axis=1, keepdims=True)
+            norms[norms < 1e-6] = 1.0
+            grad = grad_vec / norms
             return sdf, grad
 
         return sdf
