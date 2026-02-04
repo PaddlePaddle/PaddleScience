@@ -22,20 +22,17 @@
 [🤔 问题反馈](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose)
 
 <!-- --8<-- [start:announcement] -->
-🔥 [飞桨AI for Science共创计划2期](https://aistudio.baidu.com/activitydetail/1502019365)，免费提供海量算力等资源，欢迎报名。
-
-🔥 [飞桨AI for Science前沿讲座系列课程 & 代码入门与实操课程进行中](https://mp.weixin.qq.com/s/n-vGnGM9di_3IByTC56hUw)，清华、北大、中科院等高校机构知名学者分享前沿研究成果，火热报名中。
 <!-- --8<-- [end:announcement] -->
 
-<!-- --8<-- [start:description] -->
 ## 👀简介
 
+<!-- --8<-- [start:description] -->
 PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
 <!-- --8<-- [end:description] -->
 
-<!-- --8<-- [start:feature] -->
 ## ✨特性
 
+<!-- --8<-- [start:feature] -->
 - 支持 **[实验源码跟踪](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#112)，[一键启动并行实验](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/user_guide/#114)**，提高科研效率。
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
@@ -309,15 +306,15 @@ python -c "import paddle; paddle.utils.run_check()"
 | [DLPACK(v0.8)](https://dmlc.github.io/dlpack/latest/index.html) | 跨框架张量内存共享协议 | 全量支持 |
 <!-- --8<-- [end:adaptation] -->
 
-<!-- --8<-- [start:support] -->
 ## 💬支持与建议
 
+<!-- --8<-- [start:support] -->
 如在使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 中提出，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue，会有专业的研发人员进行解答。
 <!-- --8<-- [end:support] -->
 
-<!-- --8<-- [start:contribution] -->
 ## 👫开源共建
 
+<!-- --8<-- [start:contribution] -->
 PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会不定期推出开源活动。
 
 > 在开源活动中如需使用 PaddleScience 进行开发，可参考 [**PaddleScience 开发与贡献指南**](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/development/) 以提升开发效率和质量。
@@ -328,9 +325,9 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
     [PaddleScience 快乐开源活动表单](https://github.com/PaddlePaddle/PaddleScience/issues/379)
 <!-- --8<-- [end:contribution] -->
 
-<!-- --8<-- [start:collaboration] -->
 ## 🎯共创计划
 
+<!-- --8<-- [start:collaboration] -->
 PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨AI for Science共创计划](https://aistudio.baidu.com/activitydetail/1502019365)。
 <!-- --8<-- [end:collaboration] -->
 
@@ -372,8 +369,8 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 
 ![cooperation](./docs/images/overview/cooperation.png)
 
-<!-- --8<-- [start:license] -->
 ## 📜开源协议
 
+<!-- --8<-- [start:license] -->
 [Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
 <!-- --8<-- [end:license] -->

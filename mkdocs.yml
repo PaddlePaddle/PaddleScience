@@ -25,156 +25,156 @@ repo_name: PaddleScience
 repo_url: "https://github.com/PaddlePaddle/PaddleScience"
 
 # Copyright
-copyright: Copyright &copy; 2022 - 2025 PaddlePaddle
+copyright: Copyright &copy; 2022 - 2026 PaddlePaddle
 
 # Page tree
 nav:
   - PaddleScience:
       - 主页: index.md
-      - 功能介绍: zh/overview.md
-      - 安装使用: zh/install_setup.md
-      - 快速开始: zh/quickstart.md
-      - 多硬件支持: zh/multi_device.md
-      - 学习资料: zh/tutorials.md
+      - 功能介绍: overview.md
+      - 安装使用: install_setup.md
+      - 快速开始: quickstart.md
+      - 多硬件支持: multi_device.md
+      - 学习资料: tutorials.md
   - 经典案例:
     - " ":
       - 数学(AI for Math):
-        - AllenCahn: zh/examples/allen_cahn.md
-        - DeepHPMs: zh/examples/deephpms.md
-        - DeepONet: zh/examples/deeponet.md
-        - Euler_Beam: zh/examples/euler_beam.md
-        - Laplace2D: zh/examples/laplace2d.md
-        - Lorenz_transform_physx: zh/examples/lorenz.md
-        - PIRBN: zh/examples/pirbn.md
-        - Rossler_transform_physx: zh/examples/rossler.md
-        - Volterra_IDE: zh/examples/volterra_ide.md
-        - NLSMB: zh/examples/nlsmb.md
-        - SPINN: zh/examples/spinn.md
-        - XPINN: zh/examples/xpinns.md
-        - NeuralOperator: zh/examples/neuraloperator.md
-        - Brusselator3D: zh/examples/brusselator3d.md
-        - Transformer4SR: zh/examples/transformer4sr.md
-        - LatentNO: zh/examples/latent_no.md
+        - AllenCahn: examples/allen_cahn.md
+        - DeepHPMs: examples/deephpms.md
+        - DeepONet: examples/deeponet.md
+        - Euler_Beam: examples/euler_beam.md
+        - Laplace2D: examples/laplace2d.md
+        - Lorenz_transform_physx: examples/lorenz.md
+        - PIRBN: examples/pirbn.md
+        - Rossler_transform_physx: examples/rossler.md
+        - Volterra_IDE: examples/volterra_ide.md
+        - NLSMB: examples/nlsmb.md
+        - SPINN: examples/spinn.md
+        - XPINN: examples/xpinns.md
+        - NeuralOperator: examples/neuraloperator.md
+        - Brusselator3D: examples/brusselator3d.md
+        - Transformer4SR: examples/transformer4sr.md
+        - LatentNO: examples/latent_no.md
       - 技术科学(AI for Technology):
         - 流体:
-          - Fundiff: zh/examples/fundiff.md
-          - Transolver: zh/examples/transolver.md
-          - Catheter: zh/examples/catheter.md
-          - AMGNet: zh/examples/amgnet.md
-          - Aneurysm: zh/examples/aneurysm.md
-          - BubbleNet: zh/examples/bubble.md
-          - CFDGCN: zh/examples/cfdgcn.md
-          - CVit(Advection): zh/examples/adv_cvit.md
-          - CVit(NS): zh/examples/ns_cvit.md
-          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
-          - Darcy2D: zh/examples/darcy2d.md
-          - DeepCFD: zh/examples/deepcfd.md
-          - DrivAerNet: zh/examples/drivaernet.md
-          - DrivAerNetPlusPlus: zh/examples/drivaernetplusplus.md
-          - LDC2D_steady: zh/examples/ldc2d_steady.md
-          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
-          - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
-          - NSFNets: zh/examples/nsfnet.md
-          - PhyCRNet: zh/examples/phycrnet.md
-          - ShockWave: zh/examples/shock_wave.md
-          - tempoGAN: zh/examples/tempoGAN.md
-          - NSFNet4: zh/examples/nsfnet4.md
-          - ViV: zh/examples/viv.md
+          - Fundiff: examples/fundiff.md
+          - Transolver: examples/transolver.md
+          - Catheter: examples/catheter.md
+          - AMGNet: examples/amgnet.md
+          - Aneurysm: examples/aneurysm.md
+          - BubbleNet: examples/bubble.md
+          - CFDGCN: examples/cfdgcn.md
+          - CVit(Advection): examples/adv_cvit.md
+          - CVit(NS): examples/ns_cvit.md
+          - Cylinder2D_unsteady: examples/cylinder2d_unsteady.md
+          - Cylinder2D_unsteady_transform_physx: examples/cylinder2d_unsteady_transformer_physx.md
+          - Darcy2D: examples/darcy2d.md
+          - DeepCFD: examples/deepcfd.md
+          - DrivAerNet: examples/drivaernet.md
+          - DrivAerNetPlusPlus: examples/drivaernetplusplus.md
+          - LDC2D_steady: examples/ldc2d_steady.md
+          - LDC2D_unsteady: examples/ldc2d_unsteady.md
+          - Labelfree_DNN_surrogate: examples/labelfree_DNN_surrogate.md
+          - NSFNets: examples/nsfnet.md
+          - PhyCRNet: examples/phycrnet.md
+          - ShockWave: examples/shock_wave.md
+          - tempoGAN: examples/tempoGAN.md
+          - NSFNet4: examples/nsfnet4.md
+          - ViV: examples/viv.md
         - 结构:
-          - Biharmonic2D: zh/examples/biharmonic2d.md
-          - Bracket: zh/examples/bracket.md
-          - Control_arm: zh/examples/control_arm.md
-          - EPNN: zh/examples/epnn.md
-          - Phy-LSTM: zh/examples/phylstm.md
-          - TopOpt: zh/examples/topopt.md
-          - NTopo: zh/examples/ntopo.md
-          - Heart: zh/examples/heart.md
+          - Biharmonic2D: examples/biharmonic2d.md
+          - Bracket: examples/bracket.md
+          - Control_arm: examples/control_arm.md
+          - EPNN: examples/epnn.md
+          - Phy-LSTM: examples/phylstm.md
+          - TopOpt: examples/topopt.md
+          - NTopo: examples/ntopo.md
+          - Heart: examples/heart.md
         - 传热:
-          - Heat_Exchanger: zh/examples/heat_exchanger.md
-          - Heat_PINN: zh/examples/heat_pinn.md
-          - PhyGeoNet: zh/examples/phygeonet.md
-          - Chip_heat: zh/examples/chip_heat.md
+          - Heat_Exchanger: examples/heat_exchanger.md
+          - Heat_PINN: examples/heat_pinn.md
+          - PhyGeoNet: examples/phygeonet.md
+          - Chip_heat: examples/chip_heat.md
       - 材料科学(AI for Material):
-        - hPINNs: zh/examples/hpinns.md
-        - CGCNN: zh/examples/cgcnn.md
-        - psc_NN: zh/examples/perovskite_solar_cells_nn.md
-        - Battery_LI: zh/examples/MLP_LI.md
-        - ML2DDB: en/examples/ml2ddb.md
-        - xrdmatch: zh/examples/xrdmatch.md
-        - CNN_UTS: zh/examples/CNN_UTS.md
+        - hPINNs: examples/hpinns.md
+        - CGCNN: examples/cgcnn.md
+        - psc_NN: examples/perovskite_solar_cells_nn.md
+        - Battery_LI: examples/MLP_LI.md
+        - ML2DDB: examples/ml2ddb.md
+        - xrdmatch: examples/xrdmatch.md
+        - CNN_UTS: examples/CNN_UTS.md
       - 地球科学(AI for Earth Science):
-        - KMCast: zh/examples/kmcast.md
-        - Extformer-MoE: zh/examples/extformer_moe.md
-        - FourCastNet: zh/examples/fourcastnet.md
-        - NowcastNet: zh/examples/nowcastnet.md
-        - DGMR: zh/examples/dgmr.md
-        - STAFNet: zh/examples/stafnet.md
-        - EarthFormer: zh/examples/earthformer.md
-        - MeteoFormer: zh/examples/meteoformer.md
-        - Preformer: zh/examples/preformer.md
-        - ClimateFormer: zh/examples/climateformer.md
-        - GraphCast: zh/examples/graphcast.md
-        - GenCast: zh/examples/gencast.md
-        - VelocityGAN: zh/examples/velocity_gan.md
-        - TGCN: zh/examples/tgcn.md
-        - IOPS: zh/examples/iops.md
-        - Pang-Weather: zh/examples/pangu_weather.md
-        - FengWu: zh/examples/fengwu.md
-        - FuXi: zh/examples/fuxi.md
-        - UNetFormer: zh/examples/unetformer.md
-        - WGAN_GP: zh/examples/wgan_gp.md
-        - UTAE: zh/examples/UTAE.md
+        - KMCast: examples/kmcast.md
+        - Extformer-MoE: examples/extformer_moe.md
+        - FourCastNet: examples/fourcastnet.md
+        - NowcastNet: examples/nowcastnet.md
+        - DGMR: examples/dgmr.md
+        - STAFNet: examples/stafnet.md
+        - EarthFormer: examples/earthformer.md
+        - MeteoFormer: examples/meteoformer.md
+        - Preformer: examples/preformer.md
+        - ClimateFormer: examples/climateformer.md
+        - GraphCast: examples/graphcast.md
+        - GenCast: examples/gencast.md
+        - VelocityGAN: examples/velocity_gan.md
+        - TGCN: examples/tgcn.md
+        - IOPS: examples/iops.md
+        - Pang-Weather: examples/pangu_weather.md
+        - FengWu: examples/fengwu.md
+        - FuXi: examples/fuxi.md
+        - UNetFormer: examples/unetformer.md
+        - WGAN_GP: examples/wgan_gp.md
+        - UTAE: examples/UTAE.md
       - 化学科学(AI for Chemistry):
-        - SMC Reac: zh/examples/smc_reac.md
-        - Moflow: zh/examples/moflow.md
-        - IFM: zh/examples/ifm.md
-        - Synthemol: zh/examples/synthemol.md
-        - TADF: zh/examples/tadf.md
+        - SMC Reac: examples/smc_reac.md
+        - Moflow: examples/moflow.md
+        - IFM: examples/ifm.md
+        - Synthemol: examples/synthemol.md
+        - TADF: examples/tadf.md
 
   - API 文档:
     - ppsci:
-      - ppsci.arch: zh/api/arch.md
-      - ppsci.autodiff: zh/api/autodiff.md
-      - ppsci.constraint: zh/api/constraint.md
+      - ppsci.arch: api/arch.md
+      - ppsci.autodiff: api/autodiff.md
+      - ppsci.constraint: api/constraint.md
       - ppsci.data:
-        - ppsci.data.dataset: zh/api/data/dataset.md
-        - ppsci.data.transform: zh/api/data/process/transform.md
-        - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
-      - ppsci.equation: zh/api/equation.md
-      - ppsci.geometry: zh/api/geometry.md
+        - ppsci.data.dataset: api/data/dataset.md
+        - ppsci.data.transform: api/data/process/transform.md
+        - ppsci.data.batch_transform: api/data/process/batch_transform.md
+      - ppsci.equation: api/equation.md
+      - ppsci.geometry: api/geometry.md
       - ppsci.loss:
-        - ppsci.loss.loss: zh/api/loss/loss.md
-        - ppsci.loss.mtl: zh/api/loss/mtl.md
-      - ppsci.metric: zh/api/metric.md
+        - ppsci.loss.loss: api/loss/loss.md
+        - ppsci.loss.mtl: api/loss/mtl.md
+      - ppsci.metric: api/metric.md
       - ppsci.optimizer:
-        - ppsci.optimizer.optimizer: zh/api/optimizer.md
-        - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
-      - ppsci.solver: zh/api/solver.md
+        - ppsci.optimizer.optimizer: api/optimizer.md
+        - ppsci.optimizer.lr_scheduler: api/lr_scheduler.md
+      - ppsci.solver: api/solver.md
       - ppsci.utils:
-        - ppsci.utils.checker: zh/api/utils/checker.md
-        - ppsci.utils.expression: zh/api/utils/expression.md
-        - ppsci.utils.initializer: zh/api/utils/initializer.md
-        - ppsci.utils.logger: zh/api/utils/logger.md
-        - ppsci.utils.misc: zh/api/utils/misc.md
-        - ppsci.utils.ema: zh/api/utils/ema.md
-        - ppsci.utils.reader: zh/api/utils/reader.md
-        - ppsci.utils.writer: zh/api/utils/writer.md
-        - ppsci.utils.save_load: zh/api/utils/save_load.md
-        - ppsci.utils.symbolic: zh/api/utils/symbolic.md
-      - ppsci.validate: zh/api/validate.md
-      - ppsci.visualize: zh/api/visualize.md
-      - ppsci.experimental: zh/api/experimental.md
-      - ppsci.probability: zh/api/probability.md
+        - ppsci.utils.checker: api/utils/checker.md
+        - ppsci.utils.expression: api/utils/expression.md
+        - ppsci.utils.initializer: api/utils/initializer.md
+        - ppsci.utils.logger: api/utils/logger.md
+        - ppsci.utils.misc: api/utils/misc.md
+        - ppsci.utils.ema: api/utils/ema.md
+        - ppsci.utils.reader: api/utils/reader.md
+        - ppsci.utils.writer: api/utils/writer.md
+        - ppsci.utils.save_load: api/utils/save_load.md
+        - ppsci.utils.symbolic: api/utils/symbolic.md
+      - ppsci.validate: api/validate.md
+      - ppsci.visualize: api/visualize.md
+      - ppsci.experimental: api/experimental.md
+      - ppsci.probability: api/probability.md
     - deploy:
-      - deploy.python_infer: zh/api/depoly/python_infer.md
-  - 使用指南: zh/user_guide.md
+      - deploy.python_infer: api/depoly/python_infer.md
+  - 使用指南: user_guide.md
   - 开发与复现指南:
-    - 开发指南: zh/development.md
-    - 复现指南: zh/reproduction.md
-  - 学术成果: zh/academic.md
-  - 技术稿件: zh/technical_doc.md
-  - 共创计划: zh/cooperation.md
+    - 开发指南: development.md
+    - 复现指南: reproduction.md
+  - 学术成果: academic.md
+  - 技术稿件: technical_doc.md
+  - 共创计划: cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
 
 # Configuration
@@ -223,7 +223,49 @@ theme:
 # Plugins
 plugins:
   - include-markdown
-  - search
+  - search:
+      lang:
+        - zh
+        - en
+  - i18n:
+      docs_structure: folder
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            PaddleScience: PaddleScience
+            主页: Home
+            功能介绍: Overview
+            安装使用: Installation & Setup
+            快速开始: Quick Start
+            多硬件支持: Multi-Hardware Support
+            学习资料: Tutorials
+            经典案例: Case Studies
+            数学(AI for Math): AI for Math
+            技术科学(AI for Technology): AI for Engineering
+            流体: Fluid Dynamics
+            结构: Structural Mechanics
+            传热: Heat Transfer
+            材料科学(AI for Material): AI for Material
+            地球科学(AI for Earth Science): AI for Earth Science
+            化学科学(AI for Chemistry): AI for Chemistry
+            API 文档: API Documentation
+            使用指南: User Guide
+            开发与复现指南: Development
+            开发指南: Development Guide
+            复现指南: Reproducibility Guide
+            学术成果: Publications
+            技术稿件: Technical Reports
+            共创计划: Collaboration
+            实训社区: Practice Community
   - glightbox
   - mkdocstrings:
       handlers:
@@ -282,13 +324,6 @@ extra_css:
 
 # Extra
 extra:
-  alternate:
-    - name: 简体中文
-      link: /zh/
-      lang: zh
-    - name: English
-      link: /en/
-      lang: en
   version:
     provider: mike
     alias: true
