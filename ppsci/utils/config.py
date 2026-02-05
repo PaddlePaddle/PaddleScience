@@ -215,7 +215,7 @@ if importlib.util.find_spec("pydantic") is not None:
             onnx_path: Optional[str] = None
             device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu"
             engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native"
-            precision: Literal["fp32", "fp16", "int8"] = "fp32"
+            precision: Literal["tf32", "fp32", "fp16", "int8"] = "tf32"
             ir_optim: bool = True
             min_subgraph_size: int = 30
             gpu_mem: int = 2000
@@ -462,4 +462,5 @@ else:
     logger.error(
         "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
     )
+
 
