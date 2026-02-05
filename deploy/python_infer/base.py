@@ -56,7 +56,7 @@ class Predictor:
         *,
         device: Literal["cpu", "gpu", "npu", "xpu", "sdaa"] = "cpu",
         engine: Literal["native", "tensorrt", "onnx", "onednn"] = "native",
-        precision: Literal["fp32", "fp16", "int8"] = "fp32",
+        precision: Literal["tf32", "fp32", "fp16", "int8"] = "tf32",
         onnx_path: Optional[str] = None,
         ir_optim: bool = True,
         min_subgraph_size: int = 15,
@@ -233,7 +233,7 @@ class Predictor:
             )
 
     def _check_precision(self, precision: str):
-        if precision not in ["fp32", "fp16", "int8"]:
+        if precision not in ["tf32", "fp32", "fp16", "int8"]:
             raise ValueError(
                 "Inference only supports 'fp32', 'fp16' and 'int8' "
                 f"precision, but got {precision}."
