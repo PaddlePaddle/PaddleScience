@@ -77,7 +77,7 @@ Where $\mathbb{P}_g$ is the generator distribution
 
 ## 3. Model Construction
 
-Next, we will explain how to use the PaddleScience framework to implement WGAN-GP. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/en/latest/en/api/arch/).
+Next, we will explain how to use the PaddleScience framework to implement WGAN-GP. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/api/arch/).
 
 ### 3.1 Dataset Introduction
 

@@ -168,7 +168,7 @@ The geometric area of this problem is specified by the stl file. Download and ex
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must first install the open3d, pysdf, and PyMesh 3 geometric dependency packages according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must first install the open3d, pysdf, and PyMesh 3 geometric dependency packages according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/install_setup/#142-mesh) document.**
 
 Then, through the STL geometry class `ppsci.geometry.Mesh` built into PaddleScience, you can read and parse the geometry file, obtain the computational domain, and obtain the geometric structure boundary:
 

@@ -174,7 +174,7 @@ After unzipping, the `bracket/stl` folder stores the stl geometric files require
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `Mesh` to read and parse these geometric files, and combine each computational domain through Boolean operations. The code is as follows:
 

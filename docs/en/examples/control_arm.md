@@ -182,7 +182,7 @@ The geometric area of this problem is specified by the stl file. Follow the "Mod
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `ppsci.geometry.Mesh` to read and parse the geometric file, obtain the computational domain, and obtain the geometric structure boundary:
 
@@ -387,7 +387,7 @@ The geometric area of this problem is specified by the stl file. Follow the "Mod
 
 ???+ warning "Note"
 
-    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/en/latest/en/install_setup/#142-mesh) document.**
+    **Before using the `Mesh` class, you must install the three geometric dependency packages open3d, pysdf, and PyMesh according to the [1.4.2 Install Mesh Geometry [Optional]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/install_setup/#142-mesh) document.**
 
 Then use PaddleScience's built-in STL geometry class `ppsci.geometry.Mesh` to read and parse the geometric file, obtain the computational domain, and obtain the geometric structure boundary:
 
