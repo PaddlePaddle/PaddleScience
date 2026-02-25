@@ -135,7 +135,7 @@ class DomainPadding(nn.Layer):
 
     def unpad(self, x):
         """Remove the padding from padding inputs"""
-        unpad_indices = self._unpad_indices[f"{x.shape[2:]}"]
+        unpad_indices = self._unpad_indices[f"{list(x.shape)[2:]}"]
 
         return x[unpad_indices]
 
