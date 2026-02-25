@@ -16,7 +16,7 @@
 site_name: PaddleScience Docs
 site_description: An out-of-the-box open source library for scientific computing based on deep learning.
 site_author: PaddlePaddle
-site_url: "https://github.com/PaddlePaddle/PaddleScience"
+site_url: "https://paddlescience-docs.readthedocs.io/zh-cn/latest/"
 edit_uri: edit/develop/docs/
 strict: false
 
