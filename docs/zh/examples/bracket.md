@@ -82,12 +82,12 @@ examples/bracket/bracket.py:21:30
 
 几何区域由以下 STL 文件定义，用于构建本案例中的金属连接件的几何结构，包含边界与内部孔洞：
 
-- `./stl/support.stl`  
-- `./stl/bracket.stl`  
-- `./stl/aux_lower.stl`  
-- `./stl/aux_upper.stl`  
-- `./stl/cylinder_hole.stl`  
-- `./stl/cylinder_lower.stl`  
+- `./stl/support.stl`
+- `./stl/bracket.stl`
+- `./stl/aux_lower.stl`
+- `./stl/aux_upper.stl`
+- `./stl/cylinder_hole.stl`
+- `./stl/cylinder_lower.stl`
 - `./stl/cylinder_upper.stl`
 
 #### 3.0.2 物理场评估数据（TXT 文件）
@@ -175,7 +175,7 @@ tar -xvf bracket_dataset.tar
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[1.4.2 安装Mesh几何[可选]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/zh/install_setup/#142-mesh)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[1.4.2 安装Mesh几何[可选]](https://paddlescience-docs.readthedocs.io/zh-cn/latest/install_setup/#142-mesh)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 

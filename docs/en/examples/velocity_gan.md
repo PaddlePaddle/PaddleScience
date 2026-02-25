@@ -62,7 +62,7 @@ Where $w$ and $h$ are the width and height of the velocity map respectively, $v(
 
 ## 3. Model Construction
 
-Next, we will explain how to use the PaddleScience framework to implement VelocityGAN. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/en/latest/en/api/arch/).
+Next, we will explain how to use the PaddleScience framework to implement VelocityGAN. The following content only elaborates on key steps. For other details, please refer to [API Documentation](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/api/arch/).
 
 ### 3.1 Dataset Introduction
 
