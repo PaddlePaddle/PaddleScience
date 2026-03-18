@@ -1,0 +1,20 @@
+name: Dead Link Check
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  mkdocs-link-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: byrnereese/github-action-mkdocs-link-check@v1
+        with:
+          use-verbose-mode: 'yes'
+          folder-path: 'docs/'
+          recurse: 'true'
