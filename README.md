@@ -333,9 +333,10 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
 PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨AI for Science共创计划](https://aistudio.baidu.com/activitydetail/1502019365)。
 <!-- --8<-- [end:collaboration] -->
 
-<!-- --8<-- [start:thanks] -->
+
 ## ❤️致谢
 
+<!-- --8<-- [start:thanks] -->
 - PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
 <!-- --8<-- [end:thanks] -->
 - PaddleScience 的部分案例和代码由以下优秀社区开发者贡献，（完整的贡献者请参考: [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors)）：
