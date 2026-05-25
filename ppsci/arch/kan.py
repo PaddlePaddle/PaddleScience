@@ -14,17 +14,26 @@
 
 import math
 from typing import Callable
+from typing import Dict
+from typing import Optional
 from typing import Tuple
+from typing import Union
 
+import numpy as np
 import paddle
+import paddle.nn as nn
 
+from ppsci.arch import activation as act_mod
 from ppsci.arch import base
+from ppsci.arch.mlp import RandomWeightFactorization
+from ppsci.arch.mlp import WeightNormLinear
 from ppsci.utils import initializer
 
 """
 This is the paddle implementation of Korogonov-Arnold-Network (KAN)
-which is based on the torch implementation [efficient-kan] by Blealtan and akkashdash
+the bspline implementation is based on the torch implementation [efficient-kan] by Blealtan and akkashdash
 please refer to their work (https://github.com/Blealtan/efficient-kan)
+we also provide the fourier base, laplacian base, legendre polynominals implementation version of KAN, which are more efficient than the original KAN
 Authors: guhaohao0991(guhaohao@baidu.com)
 Date:    2025/04/
 """
@@ -247,7 +256,9 @@ class KANLinear(paddle.nn.Layer):
         ]
         uniform_step = (x_sorted[-1] - x_sorted[0] + 2 * margin) / self.grid_size
         grid_uniform = (
-            paddle.arange(dtype="float32", end=self.grid_size + 1).unsqueeze(axis=1)
+            paddle.arange(
+                dtype=paddle.get_default_dtype(), end=self.grid_size + 1
+            ).unsqueeze(axis=1)
             * uniform_step
             + x_sorted[0]
             - margin
@@ -259,13 +270,16 @@ class KANLinear(paddle.nn.Layer):
                 grid[:1]
                 - uniform_step
                 * paddle.arange(
-                    start=self.spline_order, end=0, step=-1, dtype="float32"
+                    start=self.spline_order,
+                    end=0,
+                    step=-1,
+                    dtype=paddle.get_default_dtype(),
                 ).unsqueeze(axis=1),
                 grid,
                 grid[-1:]
                 + uniform_step
                 * paddle.arange(
-                    start=1, end=self.spline_order + 1, dtype="float32"
+                    start=1, end=self.spline_order + 1, dtype=paddle.get_default_dtype()
                 ).unsqueeze(axis=1),
             ],
             axis=0,
@@ -383,3 +397,467 @@ def dim2perm(ndim, dim0, dim1):
     perm = list(range(ndim))
     perm[dim0], perm[dim1] = perm[dim1], perm[dim0]
     return perm
+
+
+class KAN_Legendre(paddle.nn.Layer):
+    def __init__(self, input_features, output_features, max_degree):
+
+        super(KAN_Legendre, self).__init__()
+        self.max_degree = max_degree
+        self.input_features = input_features
+        self.output_features = output_features
+
+        self.poly_weights = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.randn(
+                shape=[max_degree + 1, self.input_features, self.output_features]
+            )
+        )  # Legendre polynomicals weight matrix, coefficients of each polynominal terms
+        init_Orthogonal = nn.initializer.Orthogonal()
+        init_Orthogonal(
+            self.poly_weights
+        )  # Legendre polynominals satisfy Orthogonality and Completeness
+
+        self.dropout = nn.Dropout(p=0.1)
+        self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.zeros(shape=self.output_features)
+        )
+
+    def forward(self, x):
+        batch_size = tuple(x.shape)[0]
+        # Legendre polynominals are calculated by the Rodrigues' formula,
+        # given P0 and P1, any Pm can be recurrently calculated according to the ortogonal and complete conditions.
+        P_n_minus_2 = paddle.ones(shape=(batch_size, self.input_features))  # P_0
+        P_n_minus_1 = x.clone()
+        polys = [
+            P_n_minus_2.unsqueeze(axis=-1),
+            P_n_minus_1.unsqueeze(axis=-1),
+        ]  # lists of polynominals
+
+        for n in range(2, self.max_degree + 1):
+            P_n = ((2 * n - 1) * x * P_n_minus_1 - (n - 1) * P_n_minus_2) / n
+            polys.append(P_n.unsqueeze(axis=-1))
+            P_n_minus_2 = P_n_minus_1
+            P_n_minus_1 = P_n
+        polys = paddle.concat(
+            x=polys, axis=-1
+        )  # polynominal tensor, shape [batch_size, input_features, max_degree]
+        polys = self.dropout(polys)
+        output = paddle.einsum("bif, fio->bo", polys, self.poly_weights) + self.bias
+        return output
+
+
+class KAN_Laplace(paddle.nn.Layer):
+    def __init__(
+        self, input_features, output_features, initial_grid_size, addbias=True
+    ):
+        super(KAN_Laplace, self).__init__()
+        self.input_features = input_features
+        self.output_features = output_features
+        self.addbias = addbias
+        self.grid_size_param = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.to_tensor(
+                data=initial_grid_size, dtype=paddle.get_default_dtype()
+            )
+        )
+        self.laplace_coeffs = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.empty(
+                shape=[2, output_features, input_features, initial_grid_size]
+            )
+        )
+        init_XavierUniform = nn.initializer.XavierUniform()
+        init_XavierUniform(self.laplace_coeffs)
+        if self.addbias:
+            self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+                tensor=paddle.zeros(shape=[1, output_features])
+            )
+
+    def forward(self, x):
+        grid_size = paddle.clip(x=self.grid_size_param, min=1).round().astype("int32")
+        xshape = tuple(x.shape)
+        outshape = xshape[:-1] + (self.output_features,)
+        x = paddle.reshape(x=x, shape=(-1, self.input_features))
+        lambdas = paddle.reshape(
+            x=paddle.linspace(start=0.1, stop=1.0, num=grid_size),
+            shape=(1, 1, 1, grid_size),
+        )
+        x_rshape = paddle.reshape(
+            x=x, shape=(tuple(x.shape)[0], 1, tuple(x.shape)[1], 1)
+        )
+        exp_neg = paddle.exp(x=-lambdas * x_rshape)
+        exp_pos = paddle.exp(x=lambdas * x_rshape)
+        y = paddle.sum(
+            x=exp_neg * self.laplace_coeffs[0:1, :, :, :grid_size], axis=(-2, -1)
+        )
+        y += paddle.sum(
+            x=exp_pos * self.laplace_coeffs[0:1, :, :, :grid_size], axis=(-2, -1)
+        )
+        if self.addbias:
+            y += self.bias
+
+        y = paddle.reshape(x=y, shape=outshape)
+        return y
+
+
+class KAN_Fourier(paddle.nn.Layer):
+    def __init__(
+        self, input_features, output_features, initial_grid_size, addbias=True
+    ):
+        super(KAN_Fourier, self).__init__()
+        self.addbias = addbias
+        self.input_features = input_features
+        self.output_features = output_features
+        self.grid_size_param = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.to_tensor(
+                data=initial_grid_size, dtype=paddle.get_default_dtype()
+            )
+        )
+        self.fourier_coeffs = paddle.base.framework.EagerParamBase.from_tensor(
+            tensor=paddle.empty(
+                shape=[2, output_features, input_features, initial_grid_size]
+            )
+        )
+        # init_XavierUniform = nn.initializer.XavierUniform()
+        # init_XavierUniform(self.fourier_coeffs)
+        # initializer.glorot_normal_(self.fourier_coeffs)
+        initializer.xavier_uniform_(self.fourier_coeffs)
+        if self.addbias:
+            self.bias = paddle.base.framework.EagerParamBase.from_tensor(
+                tensor=paddle.zeros(
+                    shape=[1, output_features], dtype=paddle.get_default_dtype()
+                )
+            )
+
+    def forward(self, x):
+        # x = paddle.cast(x, "float32")
+        out_shape = tuple(x.shape)[:-1] + (self.output_features,)
+
+        grid_size = (
+            paddle.clip(x=self.grid_size_param, min=1).round().astype(dtype="int32")
+        )
+        k = paddle.arange(
+            start=1, end=grid_size + 1, dtype=paddle.get_default_dtype()
+        ).reshape((1, 1, 1, -1))
+
+        x_rshape = x.reshape((-1, 1, x.shape[-1], 1))
+
+        c = paddle.cos(x=k * x_rshape)
+        s = paddle.sin(x=k * x_rshape)
+
+        # coeffs = paddle.cast(self.fourier_coeffs[:, :, :, :grid_size], "float32")
+        coeffs = self.fourier_coeffs[:, :, :, :grid_size]
+
+        y = paddle.sum(x=c * coeffs[0:1], axis=(-2, -1)) + paddle.sum(
+            x=s * coeffs[1:2], axis=(-2, -1)
+        )
+
+        if self.addbias:
+            # y += paddle.cast(self.bias, "float32")
+            y += self.bias
+
+        y = paddle.reshape(x=y, shape=out_shape)
+
+        return y
+
+
+class RandomWeightKanFactorization(nn.Layer):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        init_grid_size: int = 10,
+        bias: bool = True,
+        mean: float = 0.5,
+        std: float = 0.1,
+    ):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.kan_layer = KAN_Fourier(
+            input_features=in_features,
+            output_features=out_features,
+            initial_grid_size=init_grid_size,
+            addbias=bias,
+        )
+        self.weight_g = self.create_parameter((out_features,))
+        # self.__init_weights(mean, std)
+
+    def _init_weights(self, mean, std):
+        with paddle.no_grad():
+            nn.initializer.Normal(mean, std)(self.weight_g)
+            paddle.assign(paddle.exp(self.weight_g), self.weight_g)
+
+        self.weight_g.stop_gradient = False
+        self.kan_layer.fourier_coeffs.stop_gradient = False
+        # self.kan_layer.grid_size_param.stop_gradient = False  # 需要测试是否需要训练，效果不知道
+        if hasattr(self.kan_layer, "bias") and self.kan_layer.bias is not None:
+            self.kan_layer.bias.stop_gradient = False
+
+    def forward(self, input):
+        return self.kan_layer(input) * self.weight_g.reshape((1, -1))
+
+
+class PeriodEmbedding(nn.Layer):
+    def __init__(self, periods: Dict[str, Tuple[float, bool]]):
+        super().__init__()
+        self.freqs_dict = {
+            k: self.create_parameter(
+                [],
+                attr=paddle.ParamAttr(trainable=trainable),
+                default_initializer=nn.initializer.Constant(2 * np.pi / float(p)),
+            )  # mu = 2*pi / period for sin/cos function
+            for k, (p, trainable) in periods.items()
+        }
+        self.freqs = nn.ParameterList(list(self.freqs_dict.values()))
+
+    def forward(self, x: Dict[str, paddle.Tensor]):
+        y = {k: v for k, v in x.items()}  # shallow copy to avoid modifying input dict
+
+        for k, w in self.freqs_dict.items():
+            y[k] = paddle.concat([paddle.cos(w * x[k]), paddle.sin(w * x[k])], axis=-1)
+
+        return y
+
+
+class FourierEmbedding(nn.Layer):
+    def __init__(self, in_features, out_features, scale):
+        super().__init__()
+        if out_features % 2 != 0:
+            raise ValueError(f"out_features must be even, but got {out_features}.")
+
+        self.kernel = self.create_parameter(
+            [in_features, out_features // 2],
+            default_initializer=nn.initializer.Normal(std=scale),
+        )
+
+    def forward(self, x: paddle.Tensor):
+        y = paddle.concat(
+            [
+                paddle.cos(x @ self.kernel),
+                paddle.sin(x @ self.kernel),
+            ],
+            axis=-1,
+        )
+        return y
+
+
+class PiraKanBlock(nn.Layer):
+    def __init__(
+        self,
+        embed_dim: int,
+        kan_grid_size: int = 10,
+        activation: str = "tanh",
+        random_weight: Optional[Dict[str, float]] = None,
+        alpha_init: float = 0.0,
+    ):
+        super().__init__()
+        self.kan_layer1 = (
+            KAN_Fourier(embed_dim, embed_dim, kan_grid_size)
+            if random_weight is None
+            else RandomWeightKanFactorization(
+                embed_dim,
+                embed_dim,
+                kan_grid_size,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.kan_layer2 = (
+            KAN_Fourier(embed_dim, embed_dim, kan_grid_size)
+            if random_weight is None
+            else RandomWeightKanFactorization(
+                embed_dim,
+                embed_dim,
+                kan_grid_size,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.kan_layer3 = (
+            KAN_Fourier(embed_dim, embed_dim, kan_grid_size)
+            if random_weight is None
+            else RandomWeightKanFactorization(
+                embed_dim,
+                embed_dim,
+                kan_grid_size,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        )
+        self.alpha = self.create_parameter(
+            [
+                1,
+            ],
+            default_initializer=nn.initializer.Constant(alpha_init),
+        )
+        self.act1 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act2 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+        self.act3 = (
+            act_mod.get_activation(activation)
+            if activation != "stan"
+            else act_mod.get_activation(activation)(embed_dim)
+        )
+
+    def forward(self, x, u, v):
+        f = self.act1(self.kan_layer1(x))
+        z1 = f * u + (1 - f) * v
+        g = self.act2(self.kan_layer2(z1))
+        z2 = g * u + (1 - g) * v
+        h = self.act3(self.kan_layer3(z2))
+        out = self.alpha * h + (1 - self.alpha) * x
+        return out
+
+
+class PiraKanNet(base.Arch):
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        num_blocks: int,
+        hidden_size: int,
+        activation: str = "tanh",
+        weight_norm: bool = False,
+        input_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
+        kan_grid_size: int = 10,
+        periods: Optional[Dict[int, Tuple[float, bool]]] = None,
+        fourier: Optional[Dict[str, Union[float, int]]] = None,
+        random_weight: Optional[Dict[str, float]] = None,
+        alpha_init: float = 0.0,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        self.blocks = []
+        self.periods = periods
+        self.fourier = fourier
+        if periods:
+            self.period_emb = PeriodEmbedding(periods)
+
+        if isinstance(hidden_size, int):
+            if not isinstance(num_blocks, int):
+                raise ValueError("num_blocks should be an int")
+            hidden_size = [hidden_size] * num_blocks
+        else:
+            raise ValueError(f"hidden_size should be int, but got {type(hidden_size)}")
+
+        # initialize FC layer(s)
+        cur_size = len(self.input_keys) if input_dim is None else input_dim
+        if input_dim is None and periods:
+            # period embeded channel(s) will be doubled automatically
+            # if input_dim is not specified
+            cur_size += len(periods)
+
+        if fourier:
+            self.fourier_emb = FourierEmbedding(
+                cur_size, fourier["dim"], fourier["scale"]
+            )
+            cur_size = fourier["dim"]
+
+        self.embed_u = nn.Sequential(
+            (
+                WeightNormLinear(cur_size, hidden_size[0])
+                if weight_norm
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
+            ),
+            (
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(hidden_size[0])
+            ),
+        )
+        self.embed_v = nn.Sequential(
+            (
+                WeightNormLinear(cur_size, hidden_size[0])
+                if weight_norm
+                else (
+                    nn.Linear(cur_size, hidden_size[0])
+                    if random_weight is None
+                    else RandomWeightFactorization(
+                        cur_size,
+                        hidden_size[0],
+                        mean=random_weight["mean"],
+                        std=random_weight["std"],
+                    )
+                )
+            ),
+            (
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(hidden_size[0])
+            ),
+        )
+
+        for i, _size in enumerate(hidden_size):
+            self.blocks.append(
+                PiraKanBlock(
+                    embed_dim=cur_size,
+                    kan_grid_size=kan_grid_size,
+                    activation=activation,
+                    random_weight=random_weight,
+                    alpha_init=alpha_init,
+                )
+            )
+            cur_size = _size
+
+        self.blocks = nn.LayerList(self.blocks)
+        if random_weight:
+            self.last_fc = RandomWeightFactorization(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+                mean=random_weight["mean"],
+                std=random_weight["std"],
+            )
+        else:
+            self.last_fc = nn.Linear(
+                cur_size,
+                len(self.output_keys) if output_dim is None else output_dim,
+            )
+
+    def forward_tensor(self, x):
+        u = self.embed_u(x)
+        v = self.embed_v(x)
+
+        y = x
+        for i, block in enumerate(self.blocks):
+            y = block(y, u, v)
+
+        y = self.last_fc(y)
+        return y
+
+    def forward(self, x):
+        if self._input_transform is not None:
+            x_ = self._input_transform(x)
+        else:
+            x_ = x
+
+        if self.periods:
+            x_ = self.period_emb(x_)
+
+        y = self.concat_to_tensor(x_, self.input_keys, axis=-1)
+
+        if self.fourier:
+            y = self.fourier_emb(y)
+
+        y = self.forward_tensor(y)
+        y = self.split_to_dict(y, self.output_keys, axis=-1)
+
+        if self._output_transform is not None:
+            y = self._output_transform(x, y)
+        return y
