@@ -433,7 +433,7 @@ examples/deephpms/burgers.py:322:338
 
 ### 3.10 可视化
 
-本问题训练结束后，可以在 `evalution` 中使用第三阶段网络 Net3 对模拟情况 2 的数据进行推理，结果为 $u|_{(x,t)}$ 值，同时输出 `l2 error` 的值。画图部分在 plotting.py 文件中。
+本问题训练结束后，可以在 `evaluation` 中使用第三阶段网络 Net3 对模拟情况 2 的数据进行推理，结果为 $u|_{(x,t)}$ 值，同时输出 `l2 error` 的值。画图部分在 plotting.py 文件中。
 
 ``` py linenums="385"
 --8<--

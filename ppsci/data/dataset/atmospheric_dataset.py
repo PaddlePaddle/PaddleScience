@@ -458,7 +458,7 @@ def get_relative_position_in_receiver_local_coordinates(
 
     The relative positions will be computed in a rotated space for a local
     coordinate system as defined by the receiver. The relative positions are
-    simply obtained by subtracting sender position minues receiver position in
+    simply obtained by subtracting sender position minus receiver position in
     that local coordinate system after the rotation in R^3.
 
     Args:
@@ -749,7 +749,7 @@ def get_bipartite_relative_position_in_receiver_local_coordinates(
 
     The relative positions will be computed in a rotated space for a local
     coordinate system as defined by the receiver. The relative positions are
-    simply obtained by subtracting sender position minues receiver position in
+    simply obtained by subtracting sender position minus receiver position in
     that local coordinate system after the rotation in R^3.
 
     Args:

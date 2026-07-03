@@ -169,9 +169,9 @@
     | Seismic Waveform Inversion | [VelocityGAN Seismic Waveform Inversion](./examples/velocity_gan.md) | Data-driven | VelocityGAN | Supervised Learning | [OpenFWI](https://openfwi-lanl.github.io/docs/data.html#vel) | [Paper](https://arxiv.org/abs/1809.10262v6) |
     | Remote Sensing Image Segmentation | [UNetFormer Image Segmentation](./examples/unetformer.md) | Data-driven | UNetformer | Supervised Learning | [Vaihingen](https://paperswithcode.com/dataset/isprs-vaihingen) | [Paper](https://github.com/WangLibo1995/GeoSeg) |
     | Traffic Prediction | [TGCN Traffic Flow Prediction](./examples/tgcn.md) | Data-driven | GCN & CNN | Supervised Learning | [PEMSD4 & PEMSD8](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tgcn/tgcn_data.zip) | - |
-    | Weather Forecasting | [Meteoformer Multi-Meteorological Element Prediction](./examples/meteoformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
-    | Weather Forecasting | [Preformer Short-Term Precipitation Prediction](./examples/preformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | [Paper](https://ieeexplore.ieee.org/document/10288072) |
-    | Weather Forecasting | [Climateformer Climate Prediction](./examples/climateformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
+    | Weather Forecasting | [Meteoformer Multi-Meteorological Element Prediction](./examples/meteoformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
+    | Weather Forecasting | [Preformer Short-Term Precipitation Prediction](./examples/preformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | [Paper](https://ieeexplore.ieee.org/document/10288072) |
+    | Weather Forecasting | [Climateformer Climate Prediction](./examples/climateformer.md) | Data-driven | Transformer | Supervised Learning | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
     | Generative Model | [Gradient Penalty Application in Image Generation](./examples/wgan_gp.md) | Data-driven | WGAN GP | Supervised Learning | [Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz) | [Paper](https://github.com/igul222/improved_wgan_training) |
     | Remote Sensing Image Segmentation | [UTAE Remote Sensing Time Series Semantic/Panoptic Segmentation](./examples/UTAE.md) | Data-driven | UTAE | Supervised Learning | [PASTIS](https://zenodo.org/records/5012942) | [Paper](https://arxiv.org/abs/2107.07933) |
 
@@ -179,7 +179,7 @@
 
     | Problem Type | Case Name | Optimization Method | Model Type | Training Method | Dataset | References |
     |-----|---------|-----|---------|----|---------|---------|
-    | Chemical Molecule Generation | [Moflow](./examples/moflow.md) | Data-driven | moflow | Supervised Learning | qm9/ zink250k | [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1) |
+    | Chemical Molecule Generation | [Moflow](./examples/moflow.md) | Data-driven | moflow | Supervised Learning | qm9/ zinc250k | [MoFlow: An Invertible Flow Model for Generating Molecular Graphs](https://arxiv.org/abs/2006.10137v1) |
     | Chemical Reaction Prediction | [IFM](./examples/ifm.md) | Data-driven | IFM-MLP | Supervised Learning | tox21/sider/hiv/bace/bbbp | [Understanding the Limitations of Deep Models for Molecular property prediction: Insights and Solutions](https://openreview.net/pdf?id=NLFqlDeuzt) |
 
 ## 🚀Quick Installation

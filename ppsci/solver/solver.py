@@ -953,7 +953,7 @@ class Solver:
             export_path (str): The path prefix to save model.
             with_onnx (bool, optional): Whether to export model into onnx after
                 paddle inference models are exported. Defaults to False.
-            skip_prune_program (bool, optional): Whether prune program, pruning program
+            skip_prune_program (bool, optional): Whether prune program, prunningprogram
                 may cause unexpectable result, e.g. llm-inference. Defaults to False.
             full_graph (bool, optional): Symbolic OpCode Translator(SOT) will be used
                 when set to True, where otherwise use Abstract Syntax Tree(AST) if False.

@@ -35,7 +35,7 @@
 
 该网络有以下优势：
 
-1、 使用ConvLSTM(enconder-decoder Convolutional Long Short-Term Memory network) 可以充分提取低维空间上的特征以及学习其时间上的变化。
+1、 使用ConvLSTM(encoder-decoder Convolutional Long Short-Term Memory network) 可以充分提取低维空间上的特征以及学习其时间上的变化。
 
 2、使用一个全局的残差迭代从而可以严格地执行时间上的迭代过程。
 

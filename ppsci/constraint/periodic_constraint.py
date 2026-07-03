@@ -110,7 +110,7 @@ class PeriodicConstraint(base.Constraint):
             else geom.dim_keys.index(periodic_key),
         )
         # concatenate original data next to periodic data, i.e.
-        # [orignal1, periodic1, orignal2, periodic2, ..., orignalN, periodicN]
+        # [original1, periodic1, original2, periodic2, ..., originalN, periodicN]
         mixed_input = {}
         for key in input:
             mixed_input[key] = []

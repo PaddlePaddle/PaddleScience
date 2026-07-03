@@ -70,7 +70,7 @@ if importlib.util.find_spec("pydantic") is not None:
                     )
                 if isinstance(v, tuple) and v[0] < 0:
                     raise ValueError(
-                        "The start epoch of 'swa.avg_range' should be a non-negtive integer"
+                        "The start epoch of 'swa.avg_range' should be a non-negative integer"
                         f" , but got {v[0]}."
                     )
                 return v
@@ -138,7 +138,7 @@ if importlib.util.find_spec("pydantic") is not None:
             def save_freq_check(cls, v):
                 if v < 0:
                     raise ValueError(
-                        "'TRAIN.save_freq' should be a non-negtive integer when is type of int"
+                        "'TRAIN.save_freq' should be a non-negative integer when is type of int"
                         f", but got {v}"
                     )
                 return v
@@ -332,7 +332,7 @@ if importlib.util.find_spec("pydantic") is not None:
             def log_freq_check(cls, v):
                 if v <= 0:
                     raise ValueError(
-                        "'log_freq' should be a non-negtive integer when is type of int"
+                        "'log_freq' should be a non-negative integer when is type of int"
                         f", but got {v}"
                     )
                 return v
@@ -341,7 +341,7 @@ if importlib.util.find_spec("pydantic") is not None:
             def seed_check(cls, v):
                 if v < 0:
                     raise ValueError(
-                        f"'seed' should be a non-negtive integer, but got {v}"
+                        f"'seed' should be a non-negative integer, but got {v}"
                     )
                 return v
 
@@ -462,4 +462,3 @@ else:
     logger.error(
         "paddlesci requires pydantic>=2.5.0; otherwise, built-in examples may not run properly."
     )
-

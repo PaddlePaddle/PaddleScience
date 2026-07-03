@@ -98,7 +98,7 @@ $$
 \end{aligned}
 $$
 
-Where: $x_{j}$ is material distribution; $c$ is compliance; $\mathbf{u}_{j}$ is element displacement vector; $\mathbf{k}_{0}$ is element stiffness matrix for an element with unit Youngs modulu; $\mathbf{U}$, $\mathbf{F}$ are global displacement and force vectors; $\mathbf{K}$ is global stiffness matrix; $V(\mathbf{x})$, $V_{0}$ are material volume and design area volume; $f_{0}$ is pre-specified volume ratio.
+Where: $x_{j}$ is material distribution; $c$ is compliance; $\mathbf{u}_{j}$ is element displacement vector; $\mathbf{k}_{0}$ is element stiffness matrix for an element with unit Young's modulus; $\mathbf{U}$, $\mathbf{F}$ are global displacement and force vectors; $\mathbf{K}$ is global stiffness matrix; $V(\mathbf{x})$, $V_{0}$ are material volume and design area volume; $f_{0}$ is pre-specified volume ratio.
 
 ## 3. Problem Solving
 

@@ -100,7 +100,7 @@ class FNO1d(nn.Layer):
     3. Project from the channel space to the output space by self.fc1 and self.fc2 .
 
     Args:
-        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("intput",).
+        input_key (Tuple[str, ...], optional): Key to get the input tensor from the dict. Defaults to ("input",).
         output_key (Tuple[str, ...], optional): Key to save the output tensor into the dict. Defaults to ("output",).
         modes (int, optional, optional): Number of Fourier modes to compute, it should be the same as
             that in fft part of the code below. Defaults to 64.

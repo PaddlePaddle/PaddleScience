@@ -33,7 +33,7 @@ from ppsci.utils import initializer
 This is the paddle implementation of Korogonov-Arnold-Network (KAN)
 the bspline implementation is based on the torch implementation [efficient-kan] by Blealtan and akkashdash
 please refer to their work (https://github.com/Blealtan/efficient-kan)
-we also provide the fourier base, laplacian base, legendre polynominals implementation version of KAN, which are more efficient than the original KAN
+we also provide the fourier base, laplacian base, legendre polynomials implementation version of KAN, which are more efficient than the original KAN
 Authors: guhaohao0991(guhaohao@baidu.com)
 Date:    2025/04/
 """
@@ -411,11 +411,11 @@ class KAN_Legendre(paddle.nn.Layer):
             tensor=paddle.randn(
                 shape=[max_degree + 1, self.input_features, self.output_features]
             )
-        )  # Legendre polynomicals weight matrix, coefficients of each polynominal terms
+        )  # Legendre polynomicals weight matrix, coefficients of each polynomial terms
         init_Orthogonal = nn.initializer.Orthogonal()
         init_Orthogonal(
             self.poly_weights
-        )  # Legendre polynominals satisfy Orthogonality and Completeness
+        )  # Legendre polynomials satisfy Orthogonality and Completeness
 
         self.dropout = nn.Dropout(p=0.1)
         self.bias = paddle.base.framework.EagerParamBase.from_tensor(
@@ -424,14 +424,14 @@ class KAN_Legendre(paddle.nn.Layer):
 
     def forward(self, x):
         batch_size = tuple(x.shape)[0]
-        # Legendre polynominals are calculated by the Rodrigues' formula,
-        # given P0 and P1, any Pm can be recurrently calculated according to the ortogonal and complete conditions.
+        # Legendre polynomials are calculated by the Rodrigues' formula,
+        # given P0 and P1, any Pm can be recurrently calculated according to the orthogonal and complete conditions.
         P_n_minus_2 = paddle.ones(shape=(batch_size, self.input_features))  # P_0
         P_n_minus_1 = x.clone()
         polys = [
             P_n_minus_2.unsqueeze(axis=-1),
             P_n_minus_1.unsqueeze(axis=-1),
-        ]  # lists of polynominals
+        ]  # lists of polynomials
 
         for n in range(2, self.max_degree + 1):
             P_n = ((2 * n - 1) * x * P_n_minus_1 - (n - 1) * P_n_minus_2) / n
@@ -440,7 +440,7 @@ class KAN_Legendre(paddle.nn.Layer):
             P_n_minus_1 = P_n
         polys = paddle.concat(
             x=polys, axis=-1
-        )  # polynominal tensor, shape [batch_size, input_features, max_degree]
+        )  # polynomial tensor, shape [batch_size, input_features, max_degree]
         polys = self.dropout(polys)
         output = paddle.einsum("bif, fio->bo", polys, self.poly_weights) + self.bias
         return output
@@ -751,7 +751,7 @@ class PiraKanNet(base.Arch):
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
         if input_dim is None and periods:
-            # period embeded channel(s) will be doubled automatically
+            # period embedded channel(s) will be doubled automatically
             # if input_dim is not specified
             cur_size += len(periods)
 
