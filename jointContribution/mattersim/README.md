@@ -33,7 +33,7 @@ pip install . -v
 
 ## **Pretained-Model Convert**
 
-Make sure you have already installed torch before runningbelow command:
+Make sure you have already installed torch before running below command:
 
 ```bash
 python src/mattersim/utils/convert_pretrained_model_utils.py

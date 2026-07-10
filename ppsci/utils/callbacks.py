@@ -40,7 +40,7 @@ class InitCallback(Callback):
     4. Enable prim mode if specified.
 
     NOTE: This callback is mainly for reducing unnecessary duplicate code in each
-    examples code when runningwith hydra.
+    examples code when running with hydra.
 
     This callback should be added to hydra config file as follows:
 
