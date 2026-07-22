@@ -140,15 +140,15 @@ class ProbAttention(paddle.nn.Layer):
         B, H, L_V, D = tuple(V.shape)
         if not self.mask_flag:
             V_sum = V.mean(axis=-2)
-            contex = (
+            context = (
                 V_sum.unsqueeze(axis=-2)
                 .expand(shape=[B, H, L_Q, tuple(V_sum.shape)[-1]])
                 .clone()
             )
         else:
             assert L_Q == L_V
-            contex = V.cumsum(axis=-2)
-        return contex
+            context = V.cumsum(axis=-2)
+        return context
 
     def _update_context(self, context_in, V, scores, index, L_Q, attn_mask):
         B, H, L_V, D = tuple(V.shape)

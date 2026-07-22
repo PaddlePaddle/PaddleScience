@@ -116,7 +116,7 @@ def test_ema_apply_restore():
         opt.clear_grad()
         avg_model.update()
 
-    orignal_param = {k: v.clone() for k, v in model.named_parameters()}
+    original_param = {k: v.clone() for k, v in model.named_parameters()}
 
     # test if stop_gradient are excluded
     assert model.linears[-1].weight.name not in avg_model.params_shadow
@@ -124,18 +124,18 @@ def test_ema_apply_restore():
 
     # test if model parameter == backup
     avg_model.apply_shadow()
-    for k in orignal_param:
-        if not orignal_param[k].stop_gradient:
+    for k in original_param:
+        if not original_param[k].stop_gradient:
             np.testing.assert_allclose(
-                avg_model.params_backup[k], orignal_param[k], 1e-7, 1e-7
+                avg_model.params_backup[k], original_param[k], 1e-7, 1e-7
             )
-        assert model.state_dict()[k].stop_gradient == orignal_param[k].stop_gradient
+        assert model.state_dict()[k].stop_gradient == original_param[k].stop_gradient
 
     # test if restored successfully
     avg_model.restore()
-    for k in orignal_param:
-        np.testing.assert_allclose(model.state_dict()[k], orignal_param[k], 1e-7, 1e-7)
-        assert model.state_dict()[k].stop_gradient == orignal_param[k].stop_gradient
+    for k in original_param:
+        np.testing.assert_allclose(model.state_dict()[k], original_param[k], 1e-7, 1e-7)
+        assert model.state_dict()[k].stop_gradient == original_param[k].stop_gradient
     assert len(avg_model.params_backup) == 0
 
 

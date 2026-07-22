@@ -909,14 +909,14 @@ PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-
 
 ### 3.4 预览文档
 
-假设撰写好的文档位置为 `PaddleScience/docs/zh/examples/your_exmaple.md`，为了让其在 PaddleScience 官网 [经典案例](https://paddlescience-docs.readthedocs.io/zh-cn/latest/examples/allen_cahn/) 左侧目录中展示，需要修改 `PaddleScience/mkdocs.yml`。将 `your_exmaple.md` 的相对路径仿照其他案例，添加到 `- 经典案例:` 下的列表中，如下高亮行所示。
+假设撰写好的文档位置为 `PaddleScience/docs/zh/examples/your_example.md`，为了让其在 PaddleScience 官网 [经典案例](https://paddlescience-docs.readthedocs.io/zh-cn/latest/examples/allen_cahn/) 左侧目录中展示，需要修改 `PaddleScience/mkdocs.yml`。将 `your_example.md` 的相对路径仿照其他案例，添加到 `- 经典案例:` 下的列表中，如下高亮行所示。
 
 ``` yaml hl_lines="23" title="PaddleScience/mkdocs.yml"
 ...
 --8<--
 mkdocs.yml:38:58
 --8<--
-        - EXAMPLE_NAME: docs/zh/examples/your_exmaple.md
+        - EXAMPLE_NAME: docs/zh/examples/your_example.md
 ...
 ```
 

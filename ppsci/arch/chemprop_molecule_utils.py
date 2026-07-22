@@ -2236,7 +2236,7 @@ class PredictArgs(CommonArgs):
     calibration_interval_percentile: float = 95
     """Sets the percentile used in the calibration methods. Must be in the range (1,100)."""
     regression_calibrator_metric: Literal["stdev", "interval"] = None
-    """Regression calibrators can output either a stdev or an inverval. """
+    """Regression calibrators can output either a stdev or an interval. """
     calibration_path: str = None
     """Path to data file to be used for uncertainty calibration."""
     calibration_features_path: str = None
@@ -2284,7 +2284,7 @@ class PredictArgs(CommonArgs):
                 self.uncertainty_method = "ensemble"
             else:
                 raise ValueError(
-                    f"Only one uncertainty method can be used at a time.                         The arguement `--ensemble_variance` was provided along                         with the uncertainty method {self.uncertainty_method}. The `--ensemble_variance`                         argument is deprecated and should be replaced with `--uncertainty_method ensemble`."
+                    f"Only one uncertainty method can be used at a time.                         The argument `--ensemble_variance` was provided along                         with the uncertainty method {self.uncertainty_method}. The `--ensemble_variance`                         argument is deprecated and should be replaced with `--uncertainty_method ensemble`."
                 )
         if (
             self.calibration_interval_percentile <= 1
@@ -2399,7 +2399,7 @@ class HyperoptArgs(TrainArgs):
             If either of the component words are entered in separately, both are searched independently.
         learning_rate - search for max_lr, init_lr, final_lr, and warmup_epochs. The search for init_lr and final_lr values
             are defined as fractions of the max_lr value. The search for warmup_epochs is as a fraction of the total epochs used.
-        all - include search for all 13 inidividual keyword options
+        all - include search for all 13 individual keyword options
 
     Individual supported parameters:
         activation, aggregation, aggregation_norm, batch_size, depth,

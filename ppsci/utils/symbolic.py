@@ -195,7 +195,7 @@ class OperatorNode(Node):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
-        self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
+        self.children = [_cvt_to_key(arg) for arg in self.expr.args]
 
         if self.expr.func == sp.Add:
             self._apply_func = self._add_operator_func
@@ -223,46 +223,46 @@ class OperatorNode(Node):
         return self._apply_func(data_dict)
 
     def _add_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = data_dict[self.childs[0]]
-        for p in self.childs[1:]:
+        data_dict[self.key] = data_dict[self.children[0]]
+        for p in self.children[1:]:
             data_dict[self.key] += data_dict[p]
         return data_dict
 
     def _mul_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = data_dict[self.childs[0]]
-        for child in self.childs[1:]:
+        data_dict[self.key] = data_dict[self.children[0]]
+        for child in self.children[1:]:
             data_dict[self.key] *= data_dict[child]
         return data_dict
 
     def _heaviside_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = self._auxiliary_func(data_dict[self.childs[0]])
+        data_dict[self.key] = self._auxiliary_func(data_dict[self.children[0]])
         return data_dict
 
     def _minimum_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = paddle.minimum(
-            data_dict[self.childs[0]], data_dict[self.childs[1]]
+            data_dict[self.children[0]], data_dict[self.children[1]]
         )
-        for i in range(2, len(self.childs)):
+        for i in range(2, len(self.children)):
             data_dict[self.key] = paddle.minimum(
                 data_dict[self.key],
-                data_dict[self.childs[i]],
+                data_dict[self.children[i]],
             )
         return data_dict
 
     def _maximum_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = paddle.maximum(
-            data_dict[self.childs[0]], data_dict[self.childs[1]]
+            data_dict[self.children[0]], data_dict[self.children[1]]
         )
-        for i in range(2, len(self.childs)):
+        for i in range(2, len(self.children)):
             data_dict[self.key] = paddle.maximum(
                 data_dict[self.key],
-                data_dict[self.childs[i]],
+                data_dict[self.children[i]],
             )
         return data_dict
 
     def _vanilla_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = self._auxiliary_func(
-            *tuple(data_dict[child] for child in self.childs)
+            *tuple(data_dict[child] for child in self.children)
         )
         return data_dict
 
@@ -292,7 +292,7 @@ class DerivativeNode(Node):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
-        self.childs = [_cvt_to_key(self.expr.args[0])] + [
+        self.children = [_cvt_to_key(self.expr.args[0])] + [
             (_cvt_to_key(arg), int(order)) for (arg, order) in self.expr.args[1:]
         ]
         self.create_graph = create_graph
@@ -312,8 +312,8 @@ class DerivativeNode(Node):
         # generated in 'data_dict' during points sampling using discrete difference
         # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
         # such as 'sdf__x', 'sdf__y'.
-        data_dict[self.key] = data_dict[self.childs[0]]
-        for child, order in self.childs[1:]:
+        data_dict[self.key] = data_dict[self.children[0]]
+        for child, order in self.children[1:]:
             if order & 1:
                 data_dict[self.key] = jacobian(
                     data_dict[self.key],
@@ -366,7 +366,7 @@ class FusedDerivativeNode(nn.Layer):
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         self.y_key: str = _cvt_to_key(f_x_tuples[0][0])
-        self.childs: List[str] = [_cvt_to_key(x) for _, x in f_x_tuples]
+        self.children: List[str] = [_cvt_to_key(x) for _, x in f_x_tuples]
         self._apply_func = self._parallel_derivate_operator_func
 
     def forward(self, data_dict: DATA_DICT):
@@ -382,7 +382,7 @@ class FusedDerivativeNode(nn.Layer):
         # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
         # such as 'sdf__x', 'sdf__y'.
         y_data: paddle.Tensor = data_dict[self.y_key]
-        xs_data: List[paddle.Tensor] = [data_dict[x_key] for x_key in self.childs]
+        xs_data: List[paddle.Tensor] = [data_dict[x_key] for x_key in self.children]
         y_wrt_xs_grad: List[paddle.Tensor] = jacobian(
             y_data,
             xs_data,
