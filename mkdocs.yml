@@ -114,6 +114,7 @@ nav:
         - MeteoFormer: examples/meteoformer.md
         - Preformer: examples/preformer.md
         - ClimateFormer: examples/climateformer.md
+        - ClimaX: examples/climax.md
         - GraphCast: examples/graphcast.md
         - GenCast: examples/gencast.md
         - VelocityGAN: examples/velocity_gan.md

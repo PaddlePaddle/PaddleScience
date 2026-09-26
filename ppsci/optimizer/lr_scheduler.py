@@ -33,6 +33,7 @@ __all__ = [
     "MultiStepDecay",
     "ExponentialDecay",
     "CosineWarmRestarts",
+    "LinearWarmupCosineAnnealingLR",
     "OneCycleLR",
     "LambdaDecay",
     "ReduceOnPlateau",
@@ -592,6 +593,86 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
                 self.T_cur = epoch
         self.last_epoch = math.floor(epoch)
         self.last_lr = self.get_lr()
+
+
+class LinearWarmupCosineAnnealingLR(lr.LRScheduler):
+    """Linear warmup followed by cosine annealing, in step units.
+
+    Every ``step()`` advances the schedule by one training iteration (the
+    original ClimaX setup runs this scheduler with ``interval="step"``):
+    lr rises linearly from ``warmup_start_lr`` to ``learning_rate`` over
+    ``warmup_epochs`` steps, then anneals towards ``eta_min`` over
+    ``max_epochs`` steps with SGDR-style restarts.
+
+    Adapted from https://github.com/microsoft/ClimaX (``lr_scheduler.py``):
+    each value is derived recursively from the previous ``last_lr`` exactly
+    like torch's chained scheduler, so step values match the original
+    implementation bit-for-bit. Instantiate with ``by_epoch`` left False so
+    the solver steps it per iteration.
+
+    Args:
+        learning_rate (float): Base learning rate reached at the end of warmup.
+        warmup_epochs (int): Number of warmup steps.
+        max_epochs (int): Total number of scheduled steps.
+        warmup_start_lr (float, optional): Learning rate at warmup start. Defaults to 0.0.
+        eta_min (float, optional): Minimum learning rate. Defaults to 0.0.
+        last_epoch (int, optional): The index of last epoch. Defaults to -1.
+        verbose (bool, optional): If ``True``, prints lr after each update. Defaults to False.
+    """
+
+    def __init__(
+        self,
+        learning_rate: float,
+        warmup_epochs: int,
+        max_epochs: int,
+        warmup_start_lr: float = 0.0,
+        eta_min: float = 0.0,
+        last_epoch: int = -1,
+        verbose: bool = False,
+    ):
+        self.warmup_epochs = warmup_epochs
+        self.max_epochs = max_epochs
+        self.warmup_start_lr = warmup_start_lr
+        self.eta_min = eta_min
+        # step-unit schedule: solver.train steps it once per iteration
+        self.by_epoch = False
+        super().__init__(learning_rate, last_epoch, verbose)
+
+    def get_lr(self):
+        if self.last_epoch == self.warmup_epochs:
+            return self.base_lr
+        if self.last_epoch == 0:
+            return self.warmup_start_lr
+        if self.last_epoch < self.warmup_epochs:
+            return self.last_lr + (self.base_lr - self.warmup_start_lr) / (
+                self.warmup_epochs - 1
+            )
+        if (self.last_epoch - 1 - self.max_epochs) % (
+            2 * (self.max_epochs - self.warmup_epochs)
+        ) == 0:
+            return (
+                self.last_lr
+                + (self.base_lr - self.eta_min)
+                * (1 - math.cos(math.pi / (self.max_epochs - self.warmup_epochs)))
+                / 2
+            )
+        return (
+            1
+            + math.cos(
+                math.pi
+                * (self.last_epoch - self.warmup_epochs)
+                / (self.max_epochs - self.warmup_epochs)
+            )
+        ) / (
+            1
+            + math.cos(
+                math.pi
+                * (self.last_epoch - self.warmup_epochs - 1)
+                / (self.max_epochs - self.warmup_epochs)
+            )
+        ) * (
+            self.last_lr - self.eta_min
+        ) + self.eta_min
 
 
 class CosineWarmRestarts(LRBase):
