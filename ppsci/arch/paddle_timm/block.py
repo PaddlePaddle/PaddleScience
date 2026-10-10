@@ -24,7 +24,7 @@ from ppsci.arch.paddle_timm.drop import DropPath
 from ppsci.arch.paddle_timm.mlp import Mlp
 
 
-class Block(paddle.nn.Module):
+class Block(paddle.nn.Layer):
     """Transformer block with pre-normalization."""
 
     def __init__(
@@ -38,8 +38,8 @@ class Block(paddle.nn.Module):
         attn_drop: float = 0.0,
         init_values: Optional[float] = None,
         drop_path: float = 0.0,
-        act_layer: Type[paddle.nn.Module] = paddle.nn.GELU,
-        norm_layer: Type[paddle.nn.Module] = paddle.nn.LayerNorm,
+        act_layer: Type[paddle.nn.Layer] = paddle.nn.GELU,
+        norm_layer: Type[paddle.nn.Layer] = paddle.nn.LayerNorm,
     ) -> None:
         """Initialize Block.
 

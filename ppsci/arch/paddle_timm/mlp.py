@@ -25,7 +25,7 @@ import paddle
 from ppsci.arch.paddle_timm.helpers import to_2tuple
 
 
-class Mlp(paddle.nn.Module):
+class Mlp(paddle.nn.Layer):
     """MLP as used in Vision Transformer, MLP-Mixer and related networks
 
     NOTE: When use_conv=True, expects 2D NCHW tensors, otherwise N*C expected.
@@ -36,8 +36,8 @@ class Mlp(paddle.nn.Module):
         in_features: int,
         hidden_features: Optional[int] = None,
         out_features: Optional[int] = None,
-        act_layer: Type[paddle.nn.Module] = paddle.nn.GELU,
-        norm_layer: Optional[Type[paddle.nn.Module]] = None,
+        act_layer: Type[paddle.nn.Layer] = paddle.nn.GELU,
+        norm_layer: Optional[Type[paddle.nn.Layer]] = None,
         bias: Union[bool, Tuple[bool, bool]] = True,
         drop: Union[float, Tuple[float, float]] = 0.0,
         use_conv: bool = False,

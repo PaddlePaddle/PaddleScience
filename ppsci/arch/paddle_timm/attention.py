@@ -25,7 +25,7 @@ def maybe_add_mask(scores, attn_mask: Optional = None):
     return scores if attn_mask is None else scores + attn_mask
 
 
-class Attention(paddle.nn.Module):
+class Attention(paddle.nn.Layer):
     """Standard Multi-head Self Attention module with QKV projection.
 
     This module implements the standard multi-head attention mechanism used in transformers.
@@ -46,7 +46,7 @@ class Attention(paddle.nn.Module):
         proj_bias: bool = True,
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
-        norm_layer: Optional[Type[paddle.nn.Module]] = None,
+        norm_layer: Optional[Type[paddle.nn.Layer]] = None,
     ) -> None:
         """Initialize the Attention module.
 

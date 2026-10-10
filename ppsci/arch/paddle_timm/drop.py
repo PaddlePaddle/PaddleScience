@@ -36,7 +36,7 @@ def drop_path(
     return x * random_tensor
 
 
-class DropPath(paddle.nn.Module):
+class DropPath(paddle.nn.Layer):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):

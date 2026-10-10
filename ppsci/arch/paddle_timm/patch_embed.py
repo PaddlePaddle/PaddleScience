@@ -30,7 +30,7 @@ from ppsci.arch.paddle_timm.helpers import to_2tuple
 from ppsci.arch.paddle_timm.trace_utils import _assert
 
 
-class PatchEmbed(paddle.nn.Module):
+class PatchEmbed(paddle.nn.Layer):
     """2D Image to Patch Embedding"""
 
     output_fmt: Format

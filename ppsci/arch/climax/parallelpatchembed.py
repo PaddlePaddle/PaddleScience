@@ -31,7 +31,7 @@ def _get_conv2d_biases(out_channels):
     return bias
 
 
-class ParallelVarPatchEmbed(paddle.nn.Module):
+class ParallelVarPatchEmbed(paddle.nn.Layer):
     """Variable to Patch Embedding with multiple variables in a single kernel.
     Key idea is to use Grouped Convolutions.
 
