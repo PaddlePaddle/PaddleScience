@@ -15,6 +15,8 @@ Hacked together by / Copyright 2020 Ross Wightman
 # Adapted from https://github.com/huggingface/pytorch-image-models (timm 1.0.24).
 """
 
+from __future__ import annotations
+
 import math
 from typing import Callable
 from typing import Optional
@@ -23,9 +25,9 @@ from typing import Union
 
 import paddle
 
-from .format import Format
-from .helpers import to_2tuple
-from .trace_utils import _assert
+from ppsci.arch.paddle_timm.format import Format
+from ppsci.arch.paddle_timm.helpers import to_2tuple
+from ppsci.arch.paddle_timm.trace_utils import _assert
 
 
 class PatchEmbed(paddle.nn.Module):

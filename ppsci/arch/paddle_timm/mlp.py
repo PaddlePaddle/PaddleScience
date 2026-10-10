@@ -12,6 +12,8 @@ Linear is native paddle.nn.Linear ([in, out] weight layout; torch Linear
 weights must be transposed when transferred).
 """
 
+from __future__ import annotations
+
 from functools import partial
 from typing import Optional
 from typing import Tuple
@@ -20,7 +22,7 @@ from typing import Union
 
 import paddle
 
-from .helpers import to_2tuple
+from ppsci.arch.paddle_timm.helpers import to_2tuple
 
 
 class Mlp(paddle.nn.Module):

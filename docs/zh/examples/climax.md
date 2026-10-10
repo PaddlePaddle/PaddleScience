@@ -54,25 +54,25 @@ ClimaX 的骨干是一个 ViT 编码器。与处理单一变量图像的普通 V
 
 各个模块的构建代码如下：
 
-```py linenums="108" title="ppsci/arch/climax/arch.py"
+```py linenums="110" title="ppsci/arch/climax/arch.py"
 --8<--
-ppsci/arch/climax/arch.py:108:126
+ppsci/arch/climax/arch.py:110:128
 --8<--
 ```
 
 变量聚合的代码如下：
 
-```py linenums="220" title="ppsci/arch/climax/arch.py"
+```py linenums="222" title="ppsci/arch/climax/arch.py"
 --8<--
-ppsci/arch/climax/arch.py:220:231
+ppsci/arch/climax/arch.py:222:233
 --8<--
 ```
 
 序列加上二维正弦位置 embedding 之后，还要加一个 lead time embedding：它由线性层把预报时效（lead time）标量映射到 embed_dim 维，让同一个网络处理不同时效的预测。之后就是标准的 Transformer encoder：
 
-```py linenums="233" title="ppsci/arch/climax/arch.py"
+```py linenums="235" title="ppsci/arch/climax/arch.py"
 --8<--
-ppsci/arch/climax/arch.py:233:258
+ppsci/arch/climax/arch.py:235:260
 --8<--
 ```
 
@@ -80,25 +80,25 @@ ppsci/arch/climax/arch.py:233:258
 
 气候投影任务的输入是 `[B, T, Vi, H, W]` 的五维张量：T 个连续历史时间步上 Vi 个变量的全球场。`ClimaXClimateBench` 在 ClimaX 主干之外增加了处理时间维的模块，并把原来的多变量解码头换成单个线性头：
 
-```py linenums="108" title="ppsci/arch/climax/climatebench.py"
+```py linenums="110" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:108:125
+ppsci/arch/climax/climatebench.py:110:127
 --8<--
 ```
 
 前向计算的主流程是：每个时间步分别完成 patch embedding、变量聚合与 Transformer 编码，得到各时间步的 token 序列；序列加上时间位置 embedding 后，各时间步的 token 取均值并按时间排开，用 `time_agg` 这一层 cross-attention 把整个时间窗口压缩成一个全局向量；最后由线性头直接回归出整幅 tas 场。
 
-```py linenums="134" title="ppsci/arch/climax/climatebench.py"
+```py linenums="136" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:134:169
+ppsci/arch/climax/climatebench.py:136:171
 --8<--
 ```
 
 线性头输出 32×64=2048 个值，reshape 成 `[B, 1, H, W]` 的预测场：
 
-```py linenums="186" title="ppsci/arch/climax/climatebench.py"
+```py linenums="188" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:186:194
+ppsci/arch/climax/climatebench.py:188:196
 --8<--
 ```
 
@@ -114,9 +114,9 @@ ppsci/arch/climax/climatebench.py:186:194
 
 数据集构建参数由 `_dataset_kwargs` 统一装配，train/val/test 三个分区共用同一组参数、只有 `partition` 不同：
 
-```py linenums="49" title="examples/climax/main.py"
+```py linenums="51" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:49:63
+examples/climax/main.py:51:65
 --8<--
 ```
 
@@ -126,15 +126,15 @@ examples/climax/main.py:49:63
 
 本案例基于数据驱动方法求解问题，训练约束用 `SupervisedConstraint` 构建。训练损失是普通 MSE（`utils.mse_loss`），数据加载配置如下：
 
-```py linenums="182" title="examples/climax/main.py"
+```py linenums="184" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:182:192
+examples/climax/main.py:184:194
 --8<--
 ```
 
-```py linenums="195" title="examples/climax/main.py"
+```py linenums="197" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:195:200
+examples/climax/main.py:197:202
 --8<--
 ```
 
@@ -144,9 +144,9 @@ examples/climax/main.py:195:200
 
 训练过程中每个 epoch 都要做验证，所以构建了两个 `SupervisedValidator`：`Val` 用验证集，`Test` 用测试集。两者的损失与指标一致：纬度加权 MSE 作为验证损失（`make_w_mse_loss`），指标为纬度加权的 `w_mse`、`w_rmse`、`w_nrmse`（`make_lat_weighted_metrics`），纬度权重按 `cos(lat) / mean(cos(lat))` 计算。`w_mse` 在归一化空间计算，`w_rmse` 与 `w_nrmse` 先做反归一化。这些函数在 `examples/climax/utils.py` 中实现。
 
-```py linenums="66" title="examples/climax/main.py"
+```py linenums="68" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:66:81
+examples/climax/main.py:68:83
 --8<--
 ```
 
@@ -156,9 +156,9 @@ examples/climax/main.py:66:81
 
 模型直接由配置文件实例化，本案例的全部模型超参（`img_size`、`patch_size`、`embed_dim`、`depth`、`num_heads` 等）都写在 `conf/climax.yaml` 的 `MODEL` 段：
 
-```py linenums="226" title="examples/climax/main.py"
+```py linenums="228" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:226:234
+examples/climax/main.py:228:236
 --8<--
 ```
 
@@ -170,9 +170,9 @@ examples/climax/main.py:226:234
 
 优化器是 AdamW，参数分成两组：名称含 `var_embed`、`pos_embed`、`time_pos_embed` 的参数不做权重衰减，其余参数按 `weight_decay: 1e-5` 衰减。被 `freeze_encoder` 冻结的参数（`stop_gradient` 为真）不进入优化器：
 
-```py linenums="154" title="examples/climax/main.py"
+```py linenums="156" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:154:177
+examples/climax/main.py:156:179
 --8<--
 ```
 
@@ -180,9 +180,9 @@ examples/climax/main.py:154:177
 
 上述对象按顺序传给 `ppsci.solver.Solver`，然后启动训练。训练结束后会自动对测试集做一次评估：
 
-```py linenums="242" title="examples/climax/main.py"
+```py linenums="244" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:242:262
+examples/climax/main.py:244:264
 --8<--
 ```
 
@@ -194,9 +194,9 @@ examples/climax/main.py:242:262
 
 `mode=eval` 路径只构建测试集评估器。归一化统计量仍然在训练分区上重新拟合（与训练时同一套逻辑），保证评估口径不变：
 
-```py linenums="267" title="examples/climax/main.py"
+```py linenums="269" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:267:276
+examples/climax/main.py:269:278
 --8<--
 ```
 
@@ -204,9 +204,9 @@ examples/climax/main.py:267:276
 
 待评估的 checkpoint 由 `EVAL.pretrained_model_path` 指定，用 `_load_weights_strict` 严格加载。Solver 内置的加载函数无法解开 `{"state_dict": ...}` 包装结构，所以结构判断放在 `main.py` 里做：
 
-```py linenums="279" title="examples/climax/main.py"
+```py linenums="281" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:279:297
+examples/climax/main.py:281:299
 --8<--
 ```
 

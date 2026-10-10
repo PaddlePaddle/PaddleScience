@@ -9,6 +9,8 @@
 trimmed to the _assert helper used by patch_embed.
 """
 
+from __future__ import annotations
+
 
 def _assert(condition: bool, message: str):
     assert condition, message

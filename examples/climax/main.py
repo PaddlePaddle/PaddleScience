@@ -18,6 +18,8 @@ Set CLIMAX_USE_CINN=1 to run under to_static+CINN: the env var toggles both
 the CINN FLAGS below and the `to_static` flag passed to Solver.
 """
 
+from __future__ import annotations
+
 import os
 
 # CINN switch: a single env var toggles both the CINN FLAGS below and the

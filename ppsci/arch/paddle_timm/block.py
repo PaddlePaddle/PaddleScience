@@ -12,14 +12,16 @@ Attention is constructed directly (no attn-layer indirection) and
 init_values must be None (LayerScale is Identity).
 """
 
+from __future__ import annotations
+
 from typing import Optional
 from typing import Type
 
 import paddle
 
-from .attention import Attention
-from .drop import DropPath
-from .mlp import Mlp
+from ppsci.arch.paddle_timm.attention import Attention
+from ppsci.arch.paddle_timm.drop import DropPath
+from ppsci.arch.paddle_timm.mlp import Mlp
 
 
 class Block(paddle.nn.Module):

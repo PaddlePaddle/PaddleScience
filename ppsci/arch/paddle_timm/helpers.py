@@ -9,6 +9,8 @@ Hacked together by / Copyright 2020 Ross Wightman
 # Adapted from https://github.com/huggingface/pytorch-image-models (timm 1.0.24).
 """
 
+from __future__ import annotations
+
 import collections.abc
 from itertools import repeat
 

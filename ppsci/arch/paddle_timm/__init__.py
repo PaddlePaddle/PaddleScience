@@ -9,19 +9,18 @@
 exercises (manual attention branch, no qk-norm / layer scale).
 """
 
+from ppsci.arch.paddle_timm.attention import Attention
+from ppsci.arch.paddle_timm.block import Block
+from ppsci.arch.paddle_timm.drop import DropPath
+from ppsci.arch.paddle_timm.drop import drop_path
+from ppsci.arch.paddle_timm.format import Format
+from ppsci.arch.paddle_timm.helpers import to_1tuple
+from ppsci.arch.paddle_timm.helpers import to_2tuple
+from ppsci.arch.paddle_timm.helpers import to_ntuple
+from ppsci.arch.paddle_timm.mlp import Mlp
+from ppsci.arch.paddle_timm.patch_embed import PatchEmbed
+from ppsci.arch.paddle_timm.trace_utils import _assert
 from ppsci.utils.initializer import trunc_normal_
-
-from .attention import Attention
-from .block import Block
-from .drop import DropPath
-from .drop import drop_path
-from .format import Format
-from .helpers import to_1tuple
-from .helpers import to_2tuple
-from .helpers import to_ntuple
-from .mlp import Mlp
-from .patch_embed import PatchEmbed
-from .trace_utils import _assert
 
 __all__ = [
     "Attention",

@@ -58,9 +58,9 @@ The case uses the climate-projection variant `ClimaXClimateBench`, whose forward
 
 The input of the climate-projection task is a `[B, T, Vi, H, W]` tensor, i.e. `T` consecutive time steps of `Vi` variables on an `H x W` grid. Each time step is flattened into the batch dimension, every variable is tokenized by its own `PatchEmbed`, a learned variable embedding is added to the tokens of the corresponding variable, the per-variable sequences are aggregated by `aggregate_variables` (see 2.2), and a 2D sincos positional embedding is added:
 
-```py linenums="137" title="ppsci/arch/climax/climatebench.py"
+```py linenums="139" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:137:154
+ppsci/arch/climax/climatebench.py:139:156
 --8<--
 ```
 
@@ -68,9 +68,9 @@ ppsci/arch/climax/climatebench.py:137:154
 
 The per-variable token sequences are pooled into one sequence by a cross-attention layer, where a learned query attends over the tokens of all variables:
 
-```py linenums="220" title="ppsci/arch/climax/arch.py"
+```py linenums="222" title="ppsci/arch/climax/arch.py"
 --8<--
-ppsci/arch/climax/arch.py:220:231
+ppsci/arch/climax/arch.py:222:233
 --8<--
 ```
 
@@ -78,9 +78,9 @@ ppsci/arch/climax/arch.py:220:231
 
 The aggregated sequence is unflattened back to `(B, T)` time steps, a time positional embedding is added, the lead time is embedded by a linear layer and added to every token, and the sequence is encoded by the ViT transformer blocks:
 
-```py linenums="155" title="ppsci/arch/climax/climatebench.py"
+```py linenums="157" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:155:165
+ppsci/arch/climax/climatebench.py:157:167
 --8<--
 ```
 
@@ -88,17 +88,17 @@ ppsci/arch/climax/climatebench.py:155:165
 
 The encoded time steps are averaged over the time dimension, and a cross-attention layer with a learned time query pools the result into a single token per sample:
 
-```py linenums="166" title="ppsci/arch/climax/climatebench.py"
+```py linenums="168" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:166:169
+ppsci/arch/climax/climatebench.py:168:171
 --8<--
 ```
 
 Finally, a linear head (`Linear(embed_dim, H * W)`) maps the pooled token to the predicted `tas` map:
 
-```py linenums="191" title="ppsci/arch/climax/climatebench.py"
+```py linenums="193" title="ppsci/arch/climax/climatebench.py"
 --8<--
-ppsci/arch/climax/climatebench.py:191:194
+ppsci/arch/climax/climatebench.py:193:196
 --8<--
 ```
 
@@ -118,9 +118,9 @@ Input normalization statistics are fitted on the training partition only and sha
 
 This case is implemented based on the `ClimaXClimateBench` model, configured from the `MODEL` section of `conf/climax.yaml`: `img_size=[32, 64]` (the 5.625 degree grid), `time_history=10`, `patch_size=2`, `embed_dim=1024`, `depth=8`, `num_heads=16`, and `freeze_encoder=true` (the transformer blocks are frozen except their normalization parameters). Expressed in PaddleScience code as follows:
 
-```py linenums="226" title="examples/climax/main.py"
+```py linenums="228" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:226:234
+examples/climax/main.py:228:236
 --8<--
 ```
 
@@ -130,17 +130,17 @@ The initial weights are loaded before the solver is built: `TRAIN.init_state_pat
 
 This case solves the problem based on data-driven methods, so it is necessary to use `SupervisedConstraint` built in PaddleScience to construct a supervised constraint. Before defining the constraint, you need to first specify the training dataloader configuration, whose `dataset` entry names the dataset class `ClimateBenchDataset` built in PaddleScience together with its constructor arguments taken from the `DATA` section of the config file:
 
-```py linenums="182" title="examples/climax/main.py"
+```py linenums="184" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:182:192
+examples/climax/main.py:184:194
 --8<--
 ```
 
 The training loss is a plain mean squared error on the normalized fields, wrapped by `ppsci.loss.FunctionalLoss`. The code for defining supervised constraint is as follows:
 
-```py linenums="194" title="examples/climax/main.py"
+```py linenums="196" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:194:200
+examples/climax/main.py:196:202
 --8<--
 ```
 
@@ -148,17 +148,17 @@ examples/climax/main.py:194:200
 
 In this case, the training process will use the validation set to evaluate the training status of the current model at a certain training epoch interval, and `SupervisedValidator` needs to be used to construct the validator. The validator loss is the latitude-weighted MSE `w_mse`, and the metrics are the latitude-weighted family `w_mse`, `w_rmse` and `w_nrmse` (the latter combining the spread and grid nrmse variants), where `w_rmse` and `w_nrmse` are computed after denormalization. The code for defining the validator is as follows:
 
-```py linenums="66" title="examples/climax/main.py"
+```py linenums="68" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:66:81
+examples/climax/main.py:68:83
 --8<--
 ```
 
 The validation and test datasets reuse the normalization statistics fitted on the training partition (via `set_normalize`), and two validators are registered: `Val` for evaluation during training and `Test` for `mode=eval` and the post-training evaluation. The code for assembling them is as follows:
 
-```py linenums="205" title="examples/climax/main.py"
+```py linenums="207" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:205:224
+examples/climax/main.py:207:226
 --8<--
 ```
 
@@ -168,17 +168,17 @@ examples/climax/main.py:205:224
 
 The learning rate follows a step-unit linear-warmup cosine schedule, `LinearWarmupCosineAnnealingLR`: `learning_rate=5e-4`, `warmup_epochs=60`, `eta_min=1e-8`. Both `warmup_epochs` and `max_epochs` count optimizer steps (793 per epoch), and the schedule restarts SGDR-style once `max_epochs=600` steps are exceeded. The optimizer uses `AdamW` (`beta_1=0.9`, `beta_2=0.999`) with two parameter groups: parameters named `var_embed` / `pos_embed` / `time_pos_embed` get no weight decay, the remaining trainable parameters get `weight_decay=1e-5`, and frozen parameters (excluded from gradient updates when `freeze_encoder=true`) are left out. The code for defining the optimizer is as follows:
 
-```py linenums="154" title="examples/climax/main.py"
+```py linenums="156" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:154:177
+examples/climax/main.py:156:179
 --8<--
 ```
 
 The code for initializing the learning rate scheduler and the optimizer is as follows:
 
-```py linenums="236" title="examples/climax/main.py"
+```py linenums="238" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:236:240
+examples/climax/main.py:238:242
 --8<--
 ```
 
@@ -186,9 +186,9 @@ examples/climax/main.py:236:240
 
 After completing the above settings, you only need to pass the instantiated objects to `ppsci.solver.Solver` in order, and then start training. `to_static` is controlled by the `CLIMAX_USE_CINN` environment variable. After training finishes, the model is evaluated on both the validation and the test set:
 
-```py linenums="242" title="examples/climax/main.py"
+```py linenums="244" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:242:262
+examples/climax/main.py:244:264
 --8<--
 ```
 
@@ -196,9 +196,9 @@ examples/climax/main.py:242:262
 
 By setting the `eval_during_train` and `eval_freq` parameters in `ppsci.solver.Solver`, the model is evaluated on the validators once per epoch (`eval_freq=1`) during training, and the model parameters with the best effect on the validation set are automatically saved.
 
-```py linenums="251" title="examples/climax/main.py"
+```py linenums="253" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:251:252
+examples/climax/main.py:253:254
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/climax/main.py:251:252
 
 For standalone evaluation (`mode=eval`), the test dataset is constructed in the same way as in training, reusing the normalization statistics fitted on the training partition, and a `Test` validator is built over it:
 
-```py linenums="266" title="examples/climax/main.py"
+```py linenums="268" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:266:276
+examples/climax/main.py:268:278
 --8<--
 ```
 
@@ -218,9 +218,9 @@ examples/climax/main.py:266:276
 
 The evaluation checkpoint given by `EVAL.pretrained_model_path` is loaded strictly before the solver is built (the `{"state_dict": ...}` wrapper and the `net.` key prefix are unwrapped automatically), then `ppsci.solver.Solver` is instantiated and evaluation starts:
 
-```py linenums="278" title="examples/climax/main.py"
+```py linenums="280" title="examples/climax/main.py"
 --8<--
-examples/climax/main.py:278:297
+examples/climax/main.py:280:299
 --8<--
 ```
 

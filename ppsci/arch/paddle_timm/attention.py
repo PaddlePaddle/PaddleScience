@@ -13,6 +13,8 @@ weights must be transposed when transferred). Attention is computed with
 the manual q*scale @ k^T -> softmax -> @ v branch.
 """
 
+from __future__ import annotations
+
 from typing import Optional
 from typing import Type
 
