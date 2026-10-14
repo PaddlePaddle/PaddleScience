@@ -14,7 +14,11 @@ The regrid script additionally uses `xesmf`, which is installed with `conda inst
 
 Because the test partition concatenates the historical period with `ssp245`, `inputs_historical.nc` and `outputs_historical.nc` from the regridded `train_val` directory must also be symlinked or copied into `data/climatebench/5.625deg/test/`.
 
+The regridded data produced by the steps above is also available on AI Studio: [ClimateBench_5.625_degree](https://aistudio.baidu.com/dataset/detail/401312/intro).
+
 Before starting training, please prepare the pretrained weights. The released ClimaX checkpoint is hosted on HuggingFace ([tungnd/climax](https://huggingface.co/tungnd/climax)); its `5.625deg.ckpt` file (412 MB) matches the grid used by this case. The `.ckpt` file must be converted to a `.pdparams` file before use. The converted checkpoint wraps the parameters as `{"state_dict": ...}` with keys prefixed by `net.`, and is loaded through `TRAIN.init_state_path`.
+
+Converted weights that load directly in this case are likewise hosted on AI Studio: [Climax](https://aistudio.baidu.com/modelsdetail/54857?modelId=54857). The page provides two weight files corresponding to the official checkpoint; see the model card for their differences and how each is loaded.
 
 === "Model Training Command"
 

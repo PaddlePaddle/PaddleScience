@@ -14,15 +14,19 @@ conda install -c conda-forge xesmf
 python regrid_climatebench.py <解压后的数据目录> --save_path <重采样输出目录> --ddeg_out 5.625
 ```
 
-test 的 ssp245 数据要与历史期拼接才能构成完整样本，而 ClimateBench 发布包里 `inputs_historical.nc`、`outputs_historical.nc` 只在 train_val 目录中。请把这两个文件软链或复制到 test 目录，否则会导致加载测试集时文件缺失。
+test 的 ssp245 数据要与历史期拼接才能构成完整样本，而 ClimateBench 发布包里 `inputs_historical.nc`、`outputs_historical.nc` 只在 train_val 目录中。需要把这两个文件软链或复制到 test 目录，否则会导致加载测试集时文件缺失。
 
-运行本案例还需安装以下依赖：
+对原始数据集经过上述处理后，直接可用于本案例的数据在 AI Studio 上可用：[ClimateBench_5.625_degree](https://aistudio.baidu.com/dataset/detail/401312/intro)
+
+运行本案例还需要额外安装以下依赖：
 
 ```sh
 pip install -r examples/climax/requirements.txt
 ```
 
 权重方面，ClimaX 官方在 [Hugging Face tungnd/climax](https://huggingface.co/tungnd/climax) 发布的 5.625° checkpoint（`5.625deg.ckpt`，412 MB）需要转换成 `.pdparams` 格式。转换后的 checkpoint 结构为 `{"state_dict": {"net.*": ...}}`，配置项 `TRAIN.init_state_path` 指向它即可完成严格加载（见 `examples/climax/main.py` 中的 `_load_weights_strict`）。
+
+已经转换好，并支持在本案例中直接加载的权重同样在 AI Studio 上可用：[Climax](https://aistudio.baidu.com/modelsdetail/54857?modelId=54857)，该模型中的两个权重分别对应官方权重，具体差异和使用方式详见模型介绍。
 
 === "模型训练命令"
 
