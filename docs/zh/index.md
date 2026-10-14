@@ -172,6 +172,7 @@
     | 天气预报 | [Meteoformer 多气象要素预测](./examples/meteoformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
     | 天气预报 | [Preformer 短时降水预测](./examples/preformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | [Paper](https://ieeexplore.ieee.org/document/10288072) |
     | 天气预报 | [Climateformer 气候预测](./examples/climateformer.md) | 数据驱动 | Transformer | 监督学习 | [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=download) | - |
+    | 天气预报 | [ClimaX 气候预测](./examples/climax.md) | 数据驱动 | Transformer | 监督学习 | [ClimateBench](https://zenodo.org/record/7064308) | [Paper](https://arxiv.org/abs/2301.10343) |
     | 生成模型| [图像生成中的梯度惩罚应用](./examples/wgan_gp.md)|数据驱动|WGAN GP|监督学习|[Data1](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)<br>[Data2](http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz)| [Paper](https://github.com/igul222/improved_wgan_training) |
     | 遥感图像分割 | [UTAE 遥感时序语义/全景分割](./examples/UTAE.md) | 数据驱动 | UTAE | 监督学习 | [PASTIS](https://zenodo.org/records/5012942) | [Paper](https://arxiv.org/abs/2107.07933) |
 

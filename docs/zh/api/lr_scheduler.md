@@ -9,6 +9,7 @@
         - ExponentialDecay
         - LambdaDecay
         - Linear
+        - LinearWarmupCosineAnnealingLR
         - MultiStepDecay
         - OneCycleLR
         - Piecewise

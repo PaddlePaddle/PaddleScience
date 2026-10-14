@@ -10,6 +10,8 @@
         - AutoEncoder
         - ChipDeepONets
         - Climateformer
+        - ClimaX
+        - ClimaXClimateBench
         - CrystalGraphConvNet
         - CuboidTransformer
         - CVit1D

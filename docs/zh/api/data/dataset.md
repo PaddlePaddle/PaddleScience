@@ -7,6 +7,7 @@
         - build_dataset
         - CGCNNDataset
         - ChipHeatDataset
+        - ClimateBenchDataset
         - ContinuousNamedArrayDataset
         - CSVDataset
         - CylinderDataset
