@@ -58,6 +58,7 @@ from ppsci.arch.tfnonet import TFNO1dNet, TFNO2dNet, TFNO3dNet  # isort:skip
 from ppsci.arch.transformer import Transformer  # isort:skip
 from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.unonet import UNONet  # isort:skip
+from ppsci.arch.ucast import UCast  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.arch.velocitygan import VelocityDiscriminator  # isort:skip
@@ -128,6 +129,7 @@ __all__ = [
     "Transformer",
     "UNetEx",
     "UNONet",
+    "UCast",
     "USCNN",
     "VelocityDiscriminator",
     "VelocityGenerator",
