@@ -1,0 +1,21 @@
+defaults:
+  - aurora
+  - _self_
+
+output_dir: outputs/aurora-tiny
+MODEL:
+  model_type: AuroraSmallPretrained
+  model_kwargs:
+    encoder_depths: [2, 2, 2]
+    decoder_depths: [2, 2, 2]
+    encoder_num_heads: [2, 4, 8]
+    decoder_num_heads: [8, 4, 2]
+    embed_dim: 32
+    num_heads: 2
+DATA:
+  input: data/aurora-demo/input.nc
+  target: data/aurora-demo/truth_001.nc
+  spatial_stride: 1
+TRAIN:
+  allow_random_init: true
+  iters_per_epoch: 2

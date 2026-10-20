@@ -1,0 +1,304 @@
+{
+  "cases": [
+    {
+      "date": "20230101",
+      "existing": true,
+      "first_forward_max_abs_normalized": 2.0103548139169156e-05,
+      "first_forward_max_relative_l2_normalized": 7.879972301176215e-07,
+      "hours": 12,
+      "independently_evolved_rollout_pointwise_failures": 0,
+      "independently_evolved_rollout_pointwise_status": "passed",
+      "max_rmse_relative_difference": 8.750683407419795e-07,
+      "points_compared": 143078400,
+      "report": "validation/acceptance/20230101/metrics.json",
+      "rollout_first_pointwise_failure_lead_hours": null,
+      "rollout_max_abs_normalized": 7.738463703157117e-05,
+      "rollout_worst_lead_hours": 12,
+      "rollout_worst_variable": "atmos_q",
+      "same_input_first_forward": "passed",
+      "status": "passed",
+      "steps": 2,
+      "weather_metric_failures": 0,
+      "weather_metric_rows": 138
+    },
+    {
+      "date": "20220101",
+      "first_forward_max_abs_normalized": 2.3837606920591233e-05,
+      "first_forward_max_relative_l2_normalized": 7.567918082589286e-07,
+      "hours": 240,
+      "independently_evolved_rollout_pointwise_failures": 2858712,
+      "independently_evolved_rollout_pointwise_status": "failed",
+      "max_rmse_relative_difference": 9.433617974520288e-06,
+      "points_compared": 2861568000,
+      "report": "validation/acceptance/20220101/metrics.json",
+      "rollout_first_pointwise_failure_lead_hours": 54,
+      "rollout_max_abs_normalized": 0.029545753731824744,
+      "rollout_worst_lead_hours": 222,
+      "rollout_worst_variable": "atmos_q",
+      "same_input_first_forward": "passed",
+      "status": "passed",
+      "steps": 40,
+      "weather_metric_failures": 0,
+      "weather_metric_rows": 2760
+    },
+    {
+      "date": "20220401",
+      "first_forward_max_abs_normalized": 2.8194700366304432e-05,
+      "first_forward_max_relative_l2_normalized": 7.60742088350233e-07,
+      "hours": 72,
+      "independently_evolved_rollout_pointwise_failures": 122,
+      "independently_evolved_rollout_pointwise_status": "failed",
+      "max_rmse_relative_difference": 1.5880124892231747e-06,
+      "points_compared": 858470400,
+      "report": "validation/acceptance/20220401/metrics.json",
+      "rollout_first_pointwise_failure_lead_hours": 60,
+      "rollout_max_abs_normalized": 0.0011001447345196397,
+      "rollout_worst_lead_hours": 72,
+      "rollout_worst_variable": "atmos_q",
+      "same_input_first_forward": "passed",
+      "status": "passed",
+      "steps": 12,
+      "weather_metric_failures": 0,
+      "weather_metric_rows": 828
+    },
+    {
+      "date": "20220701",
+      "first_forward_max_abs_normalized": 4.210028805046119e-05,
+      "first_forward_max_relative_l2_normalized": 7.78504170271313e-07,
+      "hours": 72,
+      "independently_evolved_rollout_pointwise_failures": 39,
+      "independently_evolved_rollout_pointwise_status": "failed",
+      "max_rmse_relative_difference": 3.3209363165536553e-06,
+      "points_compared": 858470400,
+      "report": "validation/acceptance/20220701/metrics.json",
+      "rollout_first_pointwise_failure_lead_hours": 60,
+      "rollout_max_abs_normalized": 0.0005615318590513305,
+      "rollout_worst_lead_hours": 72,
+      "rollout_worst_variable": "atmos_q",
+      "same_input_first_forward": "passed",
+      "status": "passed",
+      "steps": 12,
+      "weather_metric_failures": 0,
+      "weather_metric_rows": 828
+    }
+  ],
+  "max_weather_metric_relative_difference": 9.433617974520288e-06,
+  "native_checkpoint_reload": "passed",
+  "official_checkpoint_sha256": "64e6c62a7043498292a6462e8c3a08171300bc166cba6b2b557021c4b684a4c9",
+  "protocol": {
+    "additional_checks": [
+      "Original LFS SHA256",
+      "Native checkpoint exact reload",
+      "Complete coordinates, levels and timestamps",
+      "Finite forecasts at every step",
+      "CPU and GPU regression tests"
+    ],
+    "cases": [
+      {
+        "date": "20230101",
+        "existing": true,
+        "hours": 12,
+        "steps": 2
+      },
+      {
+        "date": "20220101",
+        "hours": 240,
+        "steps": 40
+      },
+      {
+        "date": "20220401",
+        "hours": 72,
+        "steps": 12
+      },
+      {
+        "date": "20220701",
+        "hours": 72,
+        "steps": 12
+      }
+    ],
+    "checkpoint_revision": "0be7e57c685dac86b78c4a19a3ab149d13c6a3dd",
+    "forecast_metrics": {
+      "aggregation": "Every variable, pressure level and forecast lead must pass separately",
+      "long_rollout_note": "Later inputs evolve independently in each framework; pointwise output errors are still reported using the original rtol=atol=0.0002 without relaxation. Long-rollout task acceptance uses RMSE alignment and finite complete fields.",
+      "maximum_relative_difference_from_torch": 0.01,
+      "metric": "cosine latitude weighted RMSE in native physical units"
+    },
+    "limitations": [
+      "Three seasonal dates are a bounded migration check, not a statistical forecast benchmark",
+      "No ACC without climatology",
+      "No full-resolution training reproduction claim"
+    ],
+    "model": "AuroraPretrained",
+    "precision": "float32, TF32 disabled, no autocast",
+    "purpose": "Aurora Torch to Paddle migration numerical and forecast acceptance",
+    "same_input_first_forward": {
+      "max_abs_official_normalized": 0.0001,
+      "max_variable_relative_l2_official_normalized": 1e-05
+    },
+    "threshold_origin": "Project criteria agreed with user; not a universal PaddleScience requirement",
+    "training_updates": {
+      "all_gradients_global_relative_l2": 0.0001,
+      "all_updated_parameters_global_relative_l2": 1e-05,
+      "iterations": 3,
+      "learning_rate": 0.001,
+      "loss_relative_difference": 0.0001,
+      "momentum": 0,
+      "optimizer": "SGD",
+      "sampling": "17x32 global spatial subsample of ERA5, all 13 pressure levels, full pretrained architecture",
+      "scope": "Numerical backward/update alignment only; does not establish full-resolution training convergence",
+      "weight_decay": 0
+    },
+    "version": 1
+  },
+  "raw_artifacts": "Workspace: validation/acceptance and outputs/acceptance",
+  "status": "passed",
+  "tests": {
+    "cpu": {
+      "log": "logs/acceptance/pytest-cpu.log",
+      "passed": 33,
+      "skipped": 3,
+      "status": "passed"
+    },
+    "gpu": {
+      "log": "logs/acceptance/pytest-gpu.log",
+      "passed": 36,
+      "skipped": 0,
+      "status": "passed"
+    }
+  },
+  "total_weather_metric_rows": 4554,
+  "training": {
+    "framework": "paddle",
+    "input_grid": [
+      17,
+      32
+    ],
+    "iterations": [
+      {
+        "gradient_parameter_count": 668,
+        "gradients": {
+          "elements": 1256300176,
+          "error_squared": 1.8146359557078536e-08,
+          "max_abs": 5.781650543212891e-06,
+          "reference_squared": 48.35505413408449,
+          "relative_l2": 1.9371971391873238e-05,
+          "worst_parameter": {
+            "max_abs": 5.781650543212891e-06,
+            "name": "backbone.encoder_layers.1.downsample.norm.weight"
+          }
+        },
+        "iteration": 1,
+        "loss": 0.6391159296035767,
+        "loss_relative_error": 2.7978317549987227e-07,
+        "passed": true,
+        "seconds_including_reference_io": 137.29133423999883,
+        "unused_parameters": [],
+        "updated_parameters": {
+          "elements": 1256300176,
+          "error_squared": 1.3564366421399708e-12,
+          "max_abs": 2.9802322387695312e-08,
+          "reference_squared": 4603657.096774031,
+          "relative_l2": 5.42810540880629e-10,
+          "worst_parameter": {
+            "max_abs": 2.9802322387695312e-08,
+            "name": "encoder.atmos_latents"
+          }
+        }
+      },
+      {
+        "gradient_parameter_count": 668,
+        "gradients": {
+          "elements": 1256300176,
+          "error_squared": 1.396599386715912e-08,
+          "max_abs": 4.458706825971603e-06,
+          "reference_squared": 34.26340181087536,
+          "relative_l2": 2.0189273149955074e-05,
+          "worst_parameter": {
+            "max_abs": 4.458706825971603e-06,
+            "name": "encoder.atmos_latents"
+          }
+        },
+        "iteration": 2,
+        "loss": 0.5946176648139954,
+        "loss_relative_error": 1.0024027594143161e-07,
+        "passed": true,
+        "seconds_including_reference_io": 136.5142966620042,
+        "unused_parameters": [],
+        "updated_parameters": {
+          "elements": 1256300176,
+          "error_squared": 2.7093981775573956e-12,
+          "max_abs": 1.1920928955078125e-07,
+          "reference_squared": 4603657.09733144,
+          "relative_l2": 7.671582031469757e-10,
+          "worst_parameter": {
+            "max_abs": 1.1920928955078125e-07,
+            "name": "encoder.level_agg.layers.0.2.weight"
+          }
+        }
+      },
+      {
+        "gradient_parameter_count": 668,
+        "gradients": {
+          "elements": 1256300176,
+          "error_squared": 1.2700267204874923e-08,
+          "max_abs": 3.927852958440781e-06,
+          "reference_squared": 23.809007268572135,
+          "relative_l2": 2.3095947589629472e-05,
+          "worst_parameter": {
+            "max_abs": 3.927852958440781e-06,
+            "name": "encoder.atmos_latents"
+          }
+        },
+        "iteration": 3,
+        "loss": 0.5632745027542114,
+        "loss_relative_error": 1.0581812382984996e-07,
+        "passed": true,
+        "seconds_including_reference_io": 136.4145957569708,
+        "unused_parameters": [],
+        "updated_parameters": {
+          "elements": 1256300176,
+          "error_squared": 4.027178780540399e-12,
+          "max_abs": 1.1920928955078125e-07,
+          "reference_squared": 4603657.097859947,
+          "relative_l2": 9.352957717641941e-10,
+          "worst_parameter": {
+            "max_abs": 1.1920928955078125e-07,
+            "name": "encoder.level_agg.layers.0.2.weight"
+          }
+        }
+      }
+    ],
+    "levels": [
+      50,
+      100,
+      150,
+      200,
+      250,
+      300,
+      400,
+      500,
+      600,
+      700,
+      850,
+      925,
+      1000
+    ],
+    "loss": "Mean of nine per-variable MSEs in official normalized units",
+    "model": "AuroraPretrained",
+    "optimizer": {
+      "learning_rate": 0.001,
+      "momentum": 0,
+      "type": "SGD",
+      "weight_decay": 0
+    },
+    "parameter_count": 1256300176,
+    "precision": "float32; TF32 disabled; no autocast",
+    "scope": "Full pretrained parameter updates on spatially sampled ERA5; not a full training reproduction",
+    "status": "passed",
+    "thresholds": {
+      "gradient_global_relative_l2": 0.0001,
+      "loss_relative": 0.0001,
+      "updated_parameter_global_relative_l2": 1e-05
+    }
+  }
+}

@@ -1,0 +1,887 @@
+"""Copyright (c) Microsoft Corporation. Licensed under the MIT license.
+
+Code adapted from
+
+    https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py
+
+"""
+
+from __future__ import annotations
+
+import itertools
+import warnings
+from functools import lru_cache
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+import einops
+import paddle
+from paddle.base import core
+
+from ppsci.arch.aurora._layers import DropPath
+from ppsci.arch.aurora._layers import to_3tuple
+from ppsci.arch.aurora._random import randn
+from ppsci.arch.aurora.model.film import AdaptiveLayerNorm
+from ppsci.arch.aurora.model.fourier import lead_time_expansion
+from ppsci.arch.aurora.model.fourier import lead_time_expansion_v3
+from ppsci.arch.aurora.model.lora import LoRAMode
+from ppsci.arch.aurora.model.lora import LoRARollout
+from ppsci.arch.aurora.model.util import fp16_safe_scaled_dot_product_attention
+from ppsci.arch.aurora.model.util import init_weights
+from ppsci.arch.aurora.model.util import maybe_adjust_windows
+from ppsci.arch.aurora.model.util import scaled_dot_product_attention
+
+__all__ = ["Swin3DTransformerBackbone", "NoiseGenerator"]
+NoiseGenerator = Optional[Union[core.Generator, Tuple[Optional[core.Generator], ...]]]
+
+
+class MLP(paddle.nn.Layer):
+    """A one-hidden-layer MLP with dropout after the hidden layer and at the end."""
+
+    def __init__(
+        self,
+        in_features: int,
+        hidden_features: Optional[int] = None,
+        out_features: Optional[int] = None,
+        act_layer: type = paddle.nn.GELU,
+        drop: float = 0.0,
+    ) -> None:
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        self.fc1 = paddle.nn.Linear(in_features, hidden_features)
+        self.act = act_layer()
+        self.fc2 = paddle.nn.Linear(hidden_features, out_features)
+        self.drop = paddle.nn.Dropout(drop)
+
+    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+        """Run the MLP."""
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.fc2(x)
+        x = self.drop(x)
+        return x
+
+
+class WindowAttention(paddle.nn.Layer):
+    """Window-based multi-head self-attention (W-MSA).
+
+    It supports both shifted and non-shifted windows.
+    """
+
+    def __init__(
+        self,
+        dim: int,
+        window_size: tuple[int, int, int],
+        num_heads: int,
+        qkv_bias: bool = True,
+        qk_scale: Optional[float] = None,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        lora_r: int = 8,
+        lora_alpha: int = 8,
+        lora_dropout: float = 0.0,
+        lora_steps: int = 40,
+        lora_mode: LoRAMode = "single",
+        use_lora: bool = False,
+    ) -> None:
+        super().__init__()
+        self.dim = dim
+        self.window_size = window_size
+        self.num_heads = num_heads
+        assert (
+            dim % num_heads == 0
+        ), f"dim ({dim}) should be divisible by num_heads ({num_heads})."
+        self.head_dim = dim // num_heads
+        self.attn_drop = attn_drop
+        self.qkv = paddle.nn.Linear(dim, dim * 3, bias_attr=qkv_bias)
+        self.proj = paddle.nn.Linear(dim, dim)
+        self.proj_drop = paddle.nn.Dropout(proj_drop)
+        self.use_fp16_safe_attention = False
+        if use_lora:
+            self.lora_proj = LoRARollout(
+                dim, dim, lora_r, lora_alpha, lora_dropout, lora_steps, lora_mode
+            )
+            self.lora_qkv = LoRARollout(
+                dim, dim * 3, lora_r, lora_alpha, lora_dropout, lora_steps, lora_mode
+            )
+        else:
+            self.lora_proj = lambda *args, **kwargs: 0
+            self.lora_qkv = lambda *args, **kwargs: 0
+
+    def forward(
+        self,
+        x: paddle.Tensor,
+        mask: (paddle.Tensor | None) = None,
+        rollout_step: int = 0,
+    ) -> paddle.Tensor:
+        """Run the forward pass of the window-based multi-head self-attention layer.
+
+        Args:
+            x (paddle.Tensor): Input features with shape of `(nW*B, N, C)`.
+            mask (paddle.Tensor, optional): Attention mask of floating points in the range
+                `[-inf, 0)` with shape of `(nW, ws, ws)`, where `nW` is the number of windows,
+                and `ws` is the window size (i.e. total tokens inside the window).
+            rollout_step (int, optional): Roll-out step. Defaults to `0`.
+
+        Returns:
+            paddle.Tensor: Output of shape `(nW*B, N, C)`.
+        """
+        qkv = self.qkv(x) + self.lora_qkv(x, rollout_step)
+        qkv = einops.rearrange(
+            qkv, "B N (qkv H D) -> qkv B H N D", H=self.num_heads, qkv=3
+        )
+        q, k, v = qkv[0], qkv[1], qkv[2]
+        attn_dropout = self.attn_drop if self.training else 0.0
+        if mask is not None:
+            mask = mask.unsqueeze(1).unsqueeze(0)
+            B = q.shape[0] // mask.shape[1]
+            mask = mask.repeat(B, 1, 1, 1, 1).reshape(-1, *mask.shape[2:])
+        sdpa = (
+            fp16_safe_scaled_dot_product_attention
+            if self.use_fp16_safe_attention
+            else scaled_dot_product_attention
+        )
+        if mask is not None:
+            x = sdpa(q, k, v, attn_mask=mask, dropout_p=attn_dropout)
+        else:
+            x = sdpa(q, k, v, dropout_p=attn_dropout)
+        x = einops.rearrange(x, "B H N D -> B N (H D)")
+        x = self.proj(x) + self.lora_proj(x, rollout_step)
+        x = self.proj_drop(x)
+        return x
+
+    def extra_repr(self) -> str:
+        return f"dim={self.dim}, window_size={self.window_size}, num_heads={self.num_heads}"
+
+
+def get_two_sidded_padding(H_padding: int, W_padding: int) -> tuple[int, int, int, int]:
+    """Returns the padding for the left, right, top, and bottom sides, in exactly that order."""
+    assert H_padding >= 0, f"H_padding ({H_padding}) must be >= 0."
+    assert W_padding >= 0, f"W_padding ({W_padding}) must be >= 0."
+    if H_padding:
+        padding_top = H_padding // 2
+        padding_bottom = H_padding - padding_top
+    else:
+        padding_top = padding_bottom = 0
+    if W_padding:
+        padding_left = W_padding // 2
+        padding_right = W_padding - padding_left
+    else:
+        padding_left = padding_right = 0
+    return padding_left, padding_right, padding_top, padding_bottom
+
+
+def window_partition_3d(x: paddle.Tensor, ws: tuple[int, int, int]) -> paddle.Tensor:
+    """Partition into windows.
+
+    Args:
+        x (paddle.Tensor): Input tensor of shape `(B, C, H, W, D)`.
+        ws (tuple[int, int, int]): A 3D window size `(Wc, Wh, Ww)`.
+
+    Returns:
+        paddle.Tensor: Partitioning of shape `(num_windows*B, Wc, Wh, Ww, D)`.
+    """
+    B, C, H, W, D = x.shape
+    assert C % ws[0] == 0, f"C ({C}) % window_size ({ws[0]}) must be 0."
+    assert H % ws[1] == 0, f"H ({H}) % window_size ({ws[1]}) must be 0."
+    assert W % ws[2] == 0, f"W ({W}) % window_size ({ws[2]}) must be 0."
+    x = x.view(B, C // ws[0], ws[0], H // ws[1], ws[1], W // ws[2], ws[2], D)
+    windows = einops.rearrange(x, "B C1 Wc H1 Wh W1 Ww D -> (B C1 H1 W1) Wc Wh Ww D")
+    return windows
+
+
+def window_reverse_3d(
+    windows: paddle.Tensor, ws: tuple[int, int, int], C: int, H: int, W: int
+):
+    """Unpartition a partitioning.
+
+    Args:
+        windows (paddle.Tensor): Partitioning of shape `(num_windows*B, Wc, Wh, Ww, D)`.
+        ws (tuple[int, int, int]): The 3D window size.
+        C (int): Number of levels.
+        H (int): Height of image.
+        W (int): Width of image.
+
+    Returns:
+        paddle.Tensor: Unpartitioned input of shape `(B, C, H, W, D)`.
+    """
+    assert C % ws[0] == 0, f"D ({C}) % window_size ({ws[0]}) must be 0."
+    assert H % ws[1] == 0, f"H ({H}) % window_size ({ws[1]}) must be 0."
+    assert W % ws[2] == 0, f"W ({W}) % window_size ({ws[2]}) must be 0."
+    C1, H1, W1 = C // ws[0], H // ws[1], W // ws[2]
+    B = int(windows.shape[0] / (C1 * H1 * W1))
+    x = einops.rearrange(
+        windows,
+        "(B C1 H1 W1) Wc Wh Ww D -> B (C1 Wc) (H1 Wh) (W1 Ww) D",
+        B=B,
+        C1=C1,
+        H1=H1,
+        W1=W1,
+        Wc=ws[0],
+        Wh=ws[1],
+        Ww=ws[2],
+    )
+    return x
+
+
+def get_three_sidded_padding(
+    C_padding: int, H_padding: int, W_padding: int
+) -> tuple[int, int, int, int, int, int]:
+    """Returns the padding for the left, right, top, bottom, front, and back sides, in exactly that
+    order."""
+    assert C_padding >= 0, f"C_padding ({C_padding}) must be >= 0"
+    if C_padding:
+        pad_front = C_padding // 2
+        pad_back = C_padding - pad_front
+    else:
+        pad_front = pad_back = 0
+    return *get_two_sidded_padding(H_padding, W_padding), pad_front, pad_back
+
+
+def pad_3d(
+    x: paddle.Tensor, pad_size: tuple[int, int, int], value: float = 0.0
+) -> paddle.Tensor:
+    """Pads the input with value to the specified size."""
+    return paddle.nn.functional.pad(
+        x, get_three_sidded_padding(*pad_size), value=value, data_format="NDHWC"
+    )
+
+
+def crop_3d(x: paddle.Tensor, pad_size: tuple[int, int, int]) -> paddle.Tensor:
+    """Undoes the `pad_3d` function by cropping the padded values."""
+    B, C, H, W, D = x.shape
+    Cp, Hp, Wp = pad_size
+    pleft, pright, ptop, pbottom, pfront, pback = get_three_sidded_padding(Cp, Hp, Wp)
+    x = x[:, pfront : C - pback, ptop : H - pbottom, pleft : W - pright, :]
+    return x
+
+
+def get_3d_merge_groups() -> list[tuple[int, int]]:
+    """Returns the groups to be merged for the 3D case to obtain left-right connectivity."""
+    merge_groups_2d = [(1, 2), (4, 5), (7, 8)]
+    merge_groups_3d = []
+    for i_c_slice in range(3):
+        for grp1_2d, grp2_2d in merge_groups_2d:
+            offset = i_c_slice * 9
+            grp1_3d, grp2_3d = grp1_2d + offset, grp2_2d + offset
+            merge_groups_3d.append((grp1_3d, grp2_3d))
+    return merge_groups_3d
+
+
+@lru_cache
+def compute_3d_shifted_window_mask(
+    C: int,
+    H: int,
+    W: int,
+    ws: tuple[int, int, int],
+    ss: tuple[int, int, int],
+    device: paddle.device,
+    dtype: paddle.dtype = paddle.bfloat16,
+    warped: bool = True,
+) -> tuple[paddle.Tensor, paddle.Tensor]:
+    """Computes the mask of each window for the shifted-window attention.
+
+    Args:
+        C (int): Number of levels.
+        H (int): Height of the image.
+        W (int): Width of the image.
+        ws (tuple[int, int, int]): Window sizes of the form `(Wc, Wh, Ww)`.
+        ss (tuple[int, int, int]): Shift sizes of the form `(Sc, Sh, Sw)`.
+        device (paddle.Place): Device of the mask.
+        dtype (paddle.dtype, optional): Data type of the mask. Defaults to `paddle.bfloat16`.
+        warped (bool): If `True`,assume that the left and right sides of the image are connected.
+            Defaults to `True`.
+
+    Returns:
+        paddle.Tensor: Attention mask for each window. Masked entries are -100 and non-masked
+            entries are 0. This matrix is added to the attention matrix before softmax.
+        paddle.Tensor: Image mask splitting the input patches into groups. Used for debugging
+            purposes.
+    """
+    img_mask = paddle.zeros((1, C, H, W, 1), device=device, dtype=dtype)
+    c_slices = slice(0, -ws[0]), slice(-ws[0], -ss[0]), slice(-ss[0], None)
+    h_slices = slice(0, -ws[1]), slice(-ws[1], -ss[1]), slice(-ss[1], None)
+    w_slices = slice(0, -ws[2]), slice(-ws[2], -ss[2]), slice(-ss[2], None)
+    cnt = 0
+    for c, h, w in itertools.product(c_slices, h_slices, w_slices):
+        img_mask[:, c, h, w, :] = cnt
+        cnt += 1
+    if warped:
+        for grp1, grp2 in get_3d_merge_groups():
+            img_mask = img_mask.masked_fill(img_mask == grp1, grp2)
+    pad_size = ws[0] - C % ws[0], ws[1] - H % ws[1], ws[2] - W % ws[2]
+    pad_size = pad_size[0] % ws[0], pad_size[1] % ws[1], pad_size[2] % ws[2]
+    img_mask = pad_3d(img_mask, pad_size, value=cnt)
+    mask_windows = window_partition_3d(img_mask, ws)
+    mask_windows = mask_windows.view(-1, ws[0] * ws[1] * ws[2])
+    attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
+    attn_mask = attn_mask.masked_fill(attn_mask != 0, -100.0).masked_fill(
+        attn_mask == 0, 0.0
+    )
+    return attn_mask, img_mask
+
+
+class Swin3DTransformerBlock(paddle.nn.Layer):
+    """3D Swin Transformer block."""
+
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int,
+        time_dim: int,
+        window_size: tuple[int, int, int] = (2, 7, 7),
+        shift_size: tuple[int, int, int] = (0, 0, 0),
+        mlp_ratio: float = 4.0,
+        qkv_bias: bool = True,
+        drop: float = 0.0,
+        attn_drop: float = 0.0,
+        drop_path: float = 0.0,
+        act_layer: type = paddle.nn.GELU,
+        scale_bias: float = 0.0,
+        lora_steps: int = 40,
+        lora_mode: LoRAMode = "single",
+        use_lora: bool = False,
+    ) -> None:
+        super().__init__()
+        self.dim = dim
+        self.window_size = window_size
+        self.shift_size = shift_size
+        self.num_heads = num_heads
+        self.mlp_ratio = mlp_ratio
+        self.norm1 = AdaptiveLayerNorm(dim, time_dim, scale_bias=scale_bias)
+        self.attn = WindowAttention(
+            dim,
+            window_size=self.window_size,
+            num_heads=num_heads,
+            qkv_bias=qkv_bias,
+            attn_drop=attn_drop,
+            proj_drop=drop,
+            lora_steps=lora_steps,
+            use_lora=use_lora,
+            lora_mode=lora_mode,
+        )
+        self.drop_path = (
+            DropPath(drop_path) if drop_path > 0.0 else paddle.nn.Identity()
+        )
+        self.norm2 = AdaptiveLayerNorm(dim, time_dim, scale_bias=scale_bias)
+        mlp_hidden_dim = int(dim * mlp_ratio)
+        self.mlp = MLP(
+            in_features=dim,
+            hidden_features=mlp_hidden_dim,
+            act_layer=act_layer,
+            drop=drop,
+        )
+
+    def forward(
+        self,
+        x: paddle.Tensor,
+        c: paddle.Tensor,
+        res: tuple[int, int, int],
+        rollout_step: int,
+        warped: bool = True,
+    ) -> paddle.Tensor:
+        """Run the block.
+
+        Args:
+            x (paddle.Tensor): Input tokens of shape `(B, L, D)`.
+            c (paddle.Tensor): Conditioning context of shape `(B, D)`.
+            res (tuple[int, int, int]): Resolution of the input `x`.
+            rollout_step (int): Roll-out step.
+            warped (bool, optional): Connect the left and right sides. Defaults to `True`.
+
+        Returns:
+            paddle.Tensor: Output tokens.
+        """
+        C, H, W = res
+        B, L, D = x.shape
+        assert L == C * H * W, f"Wrong feature size: {L} vs {C}x{H}x{W}={C * H * W}"
+        ws, ss = maybe_adjust_windows(self.window_size, self.shift_size, res)
+        shortcut = x
+        x = x.view(B, C, H, W, D)
+        if not all(s == 0 for s in ss):
+            shifted_x = paddle.roll(x, shifts=(-ss[0], -ss[1], -ss[2]), axis=(1, 2, 3))
+            attn_mask, _ = compute_3d_shifted_window_mask(
+                C, H, W, ws, ss, x.device, x.dtype, warped=warped
+            )
+        else:
+            shifted_x = x
+            attn_mask = None
+        pad_size = -C % ws[0], -H % ws[1], -W % ws[2]
+        shifted_x = pad_3d(shifted_x, pad_size)
+        x_windows = window_partition_3d(shifted_x, ws)
+        x_windows = x_windows.view(-1, ws[0] * ws[1] * ws[2], D)
+        attn_windows = self.attn(x_windows, mask=attn_mask, rollout_step=rollout_step)
+        attn_windows = attn_windows.view(-1, ws[0], ws[1], ws[2], D)
+        _, pad_C, pad_H, pad_W, _ = shifted_x.shape
+        shifted_x = window_reverse_3d(attn_windows, ws, pad_C, pad_H, pad_W)
+        shifted_x = crop_3d(shifted_x, pad_size)
+        if not all(s == 0 for s in ss):
+            x = paddle.roll(shifted_x, shifts=(ss[0], ss[1], ss[2]), axis=(1, 2, 3))
+        else:
+            x = shifted_x
+        x = x.reshape(B, C * H * W, D)
+        x = shortcut + self.drop_path(self.norm1(x, c))
+        x = x + self.drop_path(self.norm2(self.mlp(x), c))
+        return x
+
+
+class PatchMerging3D(paddle.nn.Layer):
+    """Patch merging layer."""
+
+    def __init__(
+        self, dim: int, out_dim: (int | None) = None, norm: bool = True
+    ) -> None:
+        super().__init__()
+        self.dim = dim
+        out_dim = out_dim or 2 * dim
+        self.reduction = paddle.nn.Linear(4 * dim, out_dim, bias_attr=False)
+        if norm:
+            self.norm = paddle.nn.LayerNorm(4 * dim)
+        else:
+            self.norm = paddle.nn.Identity()
+
+    def _merge(self, x: paddle.Tensor, res: tuple[int, int, int]) -> paddle.Tensor:
+        C, H, W = res
+        B, L, D = x.shape
+        assert L == C * H * W, f"Wrong feature size: {L} vs {C}*{H}*{W}={C * H * W}."
+        assert H > 1, f"Height ({H}) must be larger than 1."
+        assert W > 1, f"Width ({W}) must be larger than 1."
+        x = x.view(B, C, H, W, D)
+        x = pad_3d(x, (0, H % 2, W % 2))
+        new_H, new_W = x.shape[2], x.shape[3]
+        assert x.shape[2] % 2 == 0, f"({new_H}) % 2 != 0."
+        assert x.shape[3] % 2 == 0, f"({new_W}) % 2 != 0."
+        x = x.reshape(B, C, new_H // 2, 2, new_W // 2, 2, D)
+        return einops.rearrange(x, "B C H h W w D -> B (C H W) (h w D)")
+
+    def forward(
+        self, x: paddle.Tensor, input_resolution: tuple[int, int, int]
+    ) -> paddle.Tensor:
+        """Perform the path merging operation.
+
+        Args:
+            x (paddle.Tensor): Input tokens of shape `(B, C*H*W, D)`.
+            input_resolution (tuple[int, int, int]): Resolution of `x` of the form `(C, H, W)`.
+
+        Returns:
+            paddle.Tensor: Merged tokens of shape `(B, C*H/2*W/2, 2*D)`.
+        """
+        x = self._merge(x, input_resolution)
+        x = self.norm(x)
+        x = self.reduction(x)
+        return x
+
+
+class PatchSplitting3D(paddle.nn.Layer):
+    """Patch splitting layer."""
+
+    def __init__(self, dim: int, out_dim: (int | None) = None) -> None:
+        super().__init__()
+        self.dim = dim
+        assert dim % 2 == 0, f"`dim` ({dim}) should be divisible by 2."
+        out_dim = out_dim or dim // 2
+        self.lin1 = paddle.nn.Linear(dim, out_dim * 4, bias_attr=False)
+        self.lin2 = paddle.nn.Linear(out_dim, out_dim, bias_attr=False)
+        self.norm = paddle.nn.LayerNorm(out_dim)
+
+    def _split(
+        self, x: paddle.Tensor, res: tuple[int, int, int], crop: tuple[int, int, int]
+    ) -> paddle.Tensor:
+        C, H, W = res
+        B, L, D = x.shape
+        assert (
+            L == C * H * W
+        ), f"Wrong number of tokens: {L} != {C}*{H}*{W}={C * H * W}."
+        assert D % 4 == 0, f"Number of input features ({D}) is not a multiple of 4."
+        x = x.view(B, C, H, W, 2, 2, D // 4)
+        x = einops.rearrange(x, "B C H W h w D -> B C (H h) (W w) D")
+        x = crop_3d(x, crop)
+        return x.reshape(B, -1, D // 4)
+
+    def forward(
+        self,
+        x: paddle.Tensor,
+        input_resolution: tuple[int, int, int],
+        crop: tuple[int, int, int] = (0, 0, 0),
+    ) -> paddle.Tensor:
+        """Perform the patch splitting.
+
+        Quadruples the number of patches by doubling in the `H` and `W` dimensions.
+
+        Args:
+            x (paddle.Tensor): Input tokens of shape `(B, C*H*W, D)`.
+            input_resolution (tuple[int, int, int]): Resolution of `x` of the form `(C, H, W)`.
+            crop (tuple[int, int, int], optional): Cropping for every dimension. Defaults to
+                no cropping.
+
+        Returns:
+            paddle.Tensor: Splitted tokens of shape `(B, C*(2*H)*(2*W), D/2)`.
+        """
+        x = self.lin1(x)
+        x = self._split(x, input_resolution, crop)
+        x = self.norm(x)
+        x = self.lin2(x)
+        return x
+
+
+class BasicLayer3D(paddle.nn.Layer):
+    """A basic 3D Swin Transformer layer for one stage."""
+
+    def __init__(
+        self,
+        dim: int,
+        depth: int,
+        num_heads: int,
+        ws: tuple[int, int, int],
+        time_dim: int,
+        mlp_ratio: float = 4.0,
+        qkv_bias: bool = True,
+        drop: float = 0.0,
+        attn_drop: float = 0.0,
+        drop_path: (float | list[float]) = 0.0,
+        downsample: (type[PatchMerging3D] | None) = None,
+        upsample: (type[PatchSplitting3D] | None) = None,
+        scale_bias: float = 0.0,
+        lora_steps: int = 40,
+        lora_mode: LoRAMode = "single",
+        use_lora: bool = False,
+    ) -> None:
+        super().__init__()
+        if downsample is not None and upsample is not None:
+            raise ValueError("Cannot set both `downsample` and `upsample`.")
+        self.dim = dim
+        self.depth = depth
+        self.blocks = paddle.nn.LayerList(
+            [
+                Swin3DTransformerBlock(
+                    dim=dim,
+                    num_heads=num_heads,
+                    window_size=ws,
+                    shift_size=(0, 0, 0)
+                    if i % 2 == 0
+                    else (ws[0] // 2, ws[1] // 2, ws[2] // 2),
+                    time_dim=time_dim,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    drop=drop,
+                    attn_drop=attn_drop,
+                    drop_path=drop_path[i]
+                    if isinstance(drop_path, list)
+                    else drop_path,
+                    scale_bias=scale_bias,
+                    use_lora=use_lora,
+                    lora_steps=lora_steps,
+                    lora_mode=lora_mode,
+                )
+                for i in range(depth)
+            ]
+        )
+        if downsample is not None:
+            self.downsample: PatchMerging3D | None = downsample(dim=dim)
+        else:
+            self.downsample = None
+        if upsample is not None:
+            self.upsample: PatchSplitting3D | None = upsample(dim=dim)
+        else:
+            self.upsample = None
+
+    def forward(
+        self,
+        x: paddle.Tensor,
+        c: paddle.Tensor,
+        res: tuple[int, int, int],
+        crop: tuple[int, int, int] = (0, 0, 0),
+        rollout_step: int = 0,
+    ) -> tuple[paddle.Tensor, paddle.Tensor | None]:
+        """Run the basic layer.
+
+        Args:
+            x (paddle.Tensor): Input tokens of shape `(B, L, D)`.
+            c (paddle.Tensor): Conditioning context of shape `(B, D)`.
+            res (tuple[int, int, int]): Resolution of the input `x`.
+            crop (tuple[int, int, int]): Cropping for every dimension.
+            rollout_step (int): Roll-out step.
+
+        Returns:
+            paddle.Tensor: Output tokens.
+        """
+        for blk in self.blocks:
+            x = blk(x, c, res, rollout_step)
+        if self.downsample is not None:
+            x_scaled = self.downsample(x, res)
+            return x_scaled, x
+        if self.upsample is not None:
+            x_scaled = self.upsample(x, res, crop)
+            return x_scaled, x
+        return x, None
+
+    def init_respostnorm(self):
+        """Initialise the post-normalisation layers in the residual connection of the windowed
+        attention mechanism."""
+        for blk in self.blocks:
+            blk.norm1.init_weights()
+            blk.norm2.init_weights()
+
+
+class Basic3DEncoderLayer(BasicLayer3D):
+    """A basic 3D Swin Transformer encoder layer. Used for FSDP, which requires a subclass."""
+
+
+class Basic3DDecoderLayer(BasicLayer3D):
+    """A basic 3D Swin Transformer decoder layer. Used for FSDP, which requires a subclass."""
+
+
+class Swin3DTransformerBackbone(paddle.nn.Layer):
+    """Swin 3D Transformer backbone."""
+
+    def __init__(
+        self,
+        embed_dim: int = 96,
+        encoder_depths: tuple[int, ...] = (2, 2, 6, 2),
+        encoder_num_heads: tuple[int, ...] = (3, 6, 12, 24),
+        decoder_depths: tuple[int, ...] = (2, 6, 2, 2),
+        decoder_num_heads: tuple[int, ...] = (24, 12, 6, 3),
+        window_size: (int | tuple[int, int, int]) = 7,
+        mlp_ratio: float = 4.0,
+        qkv_bias: bool = True,
+        drop_rate: float = 0.0,
+        attn_drop_rate: float = 0.0,
+        drop_path_rate: float = 0.0,
+        lora_steps: int = 40,
+        lora_mode: LoRAMode = "single",
+        use_lora: bool = False,
+        stochastic: bool = False,
+        use_updated_lead_time_embedding: bool = False,
+    ) -> None:
+        super().__init__()
+        self.window_size = to_3tuple(window_size)
+        self.num_encoder_layers = len(encoder_depths)
+        self.num_decoder_layers = len(decoder_depths)
+        self.embed_dim = embed_dim
+        self.mlp_ratio = mlp_ratio
+        self.time_mlp = paddle.nn.Sequential(
+            paddle.nn.Linear(embed_dim, embed_dim, bias_attr=True),
+            paddle.nn.SiLU(),
+            paddle.nn.Linear(embed_dim, embed_dim, bias_attr=True),
+        )
+        self.use_updated_lead_time_embedding = use_updated_lead_time_embedding
+        self.stochastic = stochastic
+        if stochastic:
+            self.noise_mlp = paddle.nn.Sequential(
+                paddle.nn.Linear(embed_dim, embed_dim, bias_attr=True),
+                paddle.nn.SiLU(),
+                paddle.nn.Linear(embed_dim, embed_dim, bias_attr=True),
+            )
+            self._noise_cache: list[paddle.Tensor] = []
+            self._noise_cache_size: int = 0
+            self._accumulate_noise: bool = False
+        assert sum(encoder_depths) == sum(decoder_depths)
+        dpr: list[float] = [
+            x.item() for x in paddle.linspace(0, drop_path_rate, sum(encoder_depths))
+        ]
+        self.encoder_layers = paddle.nn.LayerList()
+        if self.stochastic:
+            self.context_down_layers = paddle.nn.LayerList()
+        for i_layer in range(self.num_encoder_layers):
+            downsample = (
+                PatchMerging3D if i_layer < self.num_encoder_layers - 1 else None
+            )
+            layer = Basic3DEncoderLayer(
+                dim=int(embed_dim * 2**i_layer),
+                depth=encoder_depths[i_layer],
+                num_heads=encoder_num_heads[i_layer],
+                ws=self.window_size,
+                mlp_ratio=self.mlp_ratio,
+                time_dim=embed_dim,
+                qkv_bias=qkv_bias,
+                drop=drop_rate,
+                attn_drop=attn_drop_rate,
+                drop_path=dpr[
+                    sum(encoder_depths[:i_layer]) : sum(encoder_depths[: i_layer + 1])
+                ],
+                downsample=downsample,
+                use_lora=use_lora,
+                lora_steps=lora_steps,
+                lora_mode=lora_mode,
+            )
+            self.encoder_layers.append(layer)
+            if self.stochastic and downsample is not None:
+                self.context_down_layers.append(
+                    downsample(embed_dim, embed_dim, norm=False)
+                )
+        self.decoder_layers = paddle.nn.LayerList()
+        for i_layer in range(self.num_decoder_layers):
+            exponent = self.num_decoder_layers - i_layer - 1
+            layer = Basic3DDecoderLayer(
+                dim=int(embed_dim * 2**exponent),
+                depth=decoder_depths[i_layer],
+                num_heads=decoder_num_heads[i_layer],
+                ws=self.window_size,
+                mlp_ratio=self.mlp_ratio,
+                time_dim=embed_dim,
+                qkv_bias=qkv_bias,
+                drop=drop_rate,
+                attn_drop=attn_drop_rate,
+                drop_path=dpr[
+                    sum(decoder_depths[:i_layer]) : sum(decoder_depths[: i_layer + 1])
+                ],
+                upsample=PatchSplitting3D
+                if i_layer < self.num_decoder_layers - 1
+                else None,
+                use_lora=use_lora,
+                lora_steps=lora_steps,
+                lora_mode=lora_mode,
+            )
+            self.decoder_layers.append(layer)
+        self.apply(init_weights)
+        for bly in self.encoder_layers:
+            bly.init_respostnorm()
+        for bly in self.decoder_layers:
+            bly.init_respostnorm()
+
+    def reset_noise(self) -> None:
+        """Flush the noise cache.
+
+        Call this to clear all cached noise tensors, e.g. at the beginning of a new forecast issue
+        time. After reset, the next forward call starts building the cache afresh.
+        """
+        if self.stochastic:
+            self._noise_cache.clear()
+
+    def set_noise_accumulation(self, n: int = 0) -> None:
+        """Enable or disable noise caching across forward calls.
+
+        When enabled with cache size `n > 0`, the backbone maintains a FIFO cache of the last `n`
+        noise tensors.  On each forward call a new noise tensor is generated and appended to the
+        cache; if the cache already contains `n` entries the oldest one is evicted. The effective
+        noise is `sum(cache) / sqrt(len(cache))`.
+
+        When disabled (the default) or when `n == 0`, each forward call uses a fresh independent
+        noise sample without any caching.
+
+        Calling this method also flushes any previously cached noise so that caching always starts
+        clean.
+        """
+        if self.stochastic:
+            self._noise_cache.clear()
+            self._noise_cache_size = max(n, 0)
+            self._accumulate_noise = self._noise_cache_size > 0
+
+    def _sample_noise(
+        self,
+        shape: tuple[int, ...],
+        device: paddle.device,
+        dtype: paddle.dtype,
+        generator: NoiseGenerator = None,
+    ) -> paddle.Tensor:
+        """Draw noise of shape `shape`, one draw per batch element if `generator` is a tuple."""
+        if isinstance(generator, tuple):
+            if len(generator) != shape[0]:
+                raise ValueError(
+                    f"Expected one generator per batch element, but got `{len(generator)}` generators for a batch of size `{shape[0]}`."
+                )
+            return paddle.stack(
+                [
+                    randn(shape[1:], device=device, dtype=dtype, generator=g)
+                    for g in generator
+                ]
+            )
+        return randn(shape, device=device, dtype=dtype, generator=generator)
+
+    def get_encoder_specs(
+        self, patch_res: tuple[int, int, int]
+    ) -> tuple[list[tuple[int, int, int]], list[tuple[int, int, int]]]:
+        """Gets the input resolution and output padding of each encoder layer."""
+        all_res = [patch_res]
+        padded_outs = []
+        for _ in range(1, self.num_encoder_layers):
+            C, H, W = all_res[-1]
+            pad_H, pad_W = H % 2, W % 2
+            padded_outs.append((0, pad_H, pad_W))
+            all_res.append((C, (H + pad_H) // 2, (W + pad_W) // 2))
+        padded_outs.append((0, 0, 0))
+        return all_res, padded_outs
+
+    def forward(
+        self,
+        x: paddle.Tensor,
+        lead_times: paddle.Tensor,
+        rollout_step: int,
+        patch_res: tuple[int, int, int],
+        generator: NoiseGenerator = None,
+    ) -> paddle.Tensor:
+        """Run the backbone.
+
+        Args:
+            x (paddle.Tensor): Input tokens of shape `(B, L, D)`.
+            lead_times (paddle.Tensor): Lead times of shape `(batch,)` in hours.
+            rollout_step (int): Roll-out step.
+            patch_res (tuple[int, int, int]): Patch resolution of the form `(C, H, W)`.
+            generator (paddle.base.core.Generator or tuple[paddle.base.core.Generator | None, ...], optional): Generator
+                for the noise in stochastic mode. See :meth:`Aurora.forward`. Defaults to `None`.
+
+        Returns:
+            paddle.Tensor: Output tokens of shape `(B, L, D)`.
+        """
+        _msg = "Input shape does not match patch size."
+        assert x.shape[1] == patch_res[0] * patch_res[1] * patch_res[2], _msg
+        _msg = f"Patch height ({patch_res[0]}) must be divisible by ws[0] ({self.window_size[0]})"
+        assert patch_res[0] % self.window_size[0] == 0, _msg
+        all_enc_res, padded_outs = self.get_encoder_specs(patch_res)
+        expansion = (
+            lead_time_expansion_v3
+            if self.use_updated_lead_time_embedding
+            else lead_time_expansion
+        )
+        c = self.time_mlp(expansion(lead_times, self.embed_dim).to(dtype=x.dtype))
+        if self.stochastic:
+            noise_shape = x.shape[:-1] + (self.embed_dim,)
+            noise = self._sample_noise(noise_shape, x.device, x.dtype, generator)
+            if self._accumulate_noise:
+                if self._noise_cache and self._noise_cache[0].shape != noise.shape:
+                    warnings.warn(
+                        f"Noise shape changed from {self._noise_cache[0].shape} to {noise.shape}; clearing noise cache.",
+                        stacklevel=2,
+                    )
+                    self._noise_cache.clear()
+                if len(self._noise_cache) >= self._noise_cache_size:
+                    self._noise_cache.pop(0)
+                self._noise_cache.append(noise)
+                while len(self._noise_cache) < self._noise_cache_size:
+                    self._noise_cache.append(
+                        self._sample_noise(noise_shape, x.device, x.dtype, generator)
+                    )
+                effective_noise = (
+                    paddle.stack(self._noise_cache).sum(dim=0)
+                    / self._noise_cache_size**0.5
+                )
+            else:
+                effective_noise = noise
+            c = c.unsqueeze(1) + self.noise_mlp(effective_noise)
+        skips = []
+        saved_cs = []
+        for i, layer in enumerate(self.encoder_layers):
+            saved_cs.append(c)
+            x, x_unscaled = layer(x, c, all_enc_res[i], rollout_step=rollout_step)
+            if self.stochastic and i < self.num_encoder_layers - 1:
+                c = self.context_down_layers[i](c, all_enc_res[i])
+            skips.append(x_unscaled)
+        for i, layer in enumerate(self.decoder_layers):
+            index = self.num_decoder_layers - i - 1
+            x, _ = layer(
+                x,
+                c,
+                all_enc_res[index],
+                padded_outs[index - 1],
+                rollout_step=rollout_step,
+            )
+            if 0 < i < self.num_decoder_layers - 1:
+                x = x + skips[index - 1]
+            elif i == self.num_decoder_layers - 1:
+                x = paddle.cat([x, skips[0]], axis=-1)
+            if self.stochastic:
+                c = saved_cs[index - 1]
+        return x

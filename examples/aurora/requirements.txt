@@ -1,0 +1,4 @@
+huggingface-hub
+netCDF4
+numcodecs
+xarray
