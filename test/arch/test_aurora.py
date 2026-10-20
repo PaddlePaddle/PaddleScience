@@ -1,4 +1,4 @@
-"""Aurora migration regressions: layouts, gradients, checkpoints, and rollout."""
+"""Aurora model and PaddleScience integration tests."""
 
 import dataclasses
 import inspect
@@ -529,6 +529,94 @@ def test_paddlescience_solver_training(tmp_path):
     solver.train()
     assert np.isfinite(parameter.numpy()).all()
     assert not np.array_equal(parameter.numpy(), before)
+
+
+def test_framework_factory_and_transform_hooks():
+    batch = make_batch(paddle, Batch, Metadata)
+    model = ppsci.arch.build_model(
+        {
+            "name": "AuroraArch",
+            "model_kwargs": small_config(),
+            "metadata": batch.metadata,
+            "static_vars": batch.static_vars,
+            "output_keys": ("surf_2t",),
+        }
+    )
+    assert isinstance(model, ppsci.arch.base.Arch)
+    inputs = {f"surf_{k}": v for k, v in batch.surf_vars.items()}
+    inputs.update({f"atmos_{k}": v for k, v in batch.atmos_vars.items()})
+    model.eval()
+    with paddle.no_grad():
+        expected = model(inputs)["surf_2t"]
+        model.register_input_transform(
+            lambda values: {**values, "surf_2t": batch.surf_vars["2t"]}
+        )
+        model.register_output_transform(
+            lambda _, values: {"surf_2t": values["surf_2t"] + 1}
+        )
+        incomplete = {k: v for k, v in inputs.items() if k != "surf_2t"}
+        actual = model(incomplete)["surf_2t"]
+    np.testing.assert_array_equal(actual.numpy(), (expected + 1).numpy())
+
+
+@pytest.mark.parametrize("keys", [(), ("surf_2t", "surf_2t"), ("unknown",)])
+def test_adapter_rejects_invalid_output_contract(keys):
+    with pytest.raises(ValueError, match="output"):
+        AuroraArch(model_kwargs=small_config(), output_keys=keys)
+
+
+@pytest.mark.parametrize("missing", ["dynamic", "static"])
+def test_adapter_rejects_missing_fields_before_forward(missing):
+    batch = make_batch(paddle, Batch, Metadata)
+    static = dict(batch.static_vars)
+    if missing == "static":
+        static.pop("z")
+    model = AuroraArch(
+        model_kwargs=small_config(), metadata=batch.metadata, static_vars=static
+    )
+    inputs = {f"surf_{k}": v for k, v in batch.surf_vars.items()}
+    inputs.update({f"atmos_{k}": v for k, v in batch.atmos_vars.items()})
+    if missing == "dynamic":
+        inputs.pop("surf_2t")
+    with pytest.raises(ValueError, match=f"Missing {missing}"):
+        model(inputs)
+
+
+def test_adapter_rejects_unknown_static_fields():
+    with pytest.raises(ValueError, match="Unknown static"):
+        AuroraArch(
+            model_kwargs=small_config(), static_vars={"unknown": paddle.zeros([2, 2])}
+        )
+
+
+def test_metadata_rejects_ascending_matrix_latitudes():
+    batch = make_batch(paddle, Batch, Metadata)
+    with pytest.raises(ValueError, match="Latitudes must be strictly decreasing"):
+        Metadata(
+            lat=paddle.to_tensor([[-10.0, -10.0], [10.0, 10.0]]),
+            lon=paddle.to_tensor([[0.0, 180.0], [0.0, 180.0]]),
+            time=batch.metadata.time,
+            atmos_levels=batch.metadata.atmos_levels,
+        )
+
+
+def test_supervised_eval_requires_checkpoint():
+    from omegaconf import OmegaConf
+
+    from examples.aurora.finetune import main
+
+    cfg = OmegaConf.create(
+        {
+            "mode": "eval",
+            "MODEL": {
+                "name": "AuroraArch",
+                "model_type": "AuroraSmallPretrained",
+                "checkpoint": None,
+            },
+        }
+    )
+    with pytest.raises(ValueError, match="Evaluation requires"):
+        main.__wrapped__(cfg)
 
 
 def test_supervised_loss_uses_each_official_pressure_level_scale():

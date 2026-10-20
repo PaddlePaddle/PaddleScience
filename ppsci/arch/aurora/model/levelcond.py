@@ -20,14 +20,6 @@ class LevelConditioned(paddle.nn.Layer):
         levels: tuple[int | float, ...],
         levels_dim: int,
     ) -> None:
-        """Instantiate.
-
-        Args:
-            construct_module (Callable[[], :class:`nn.Module`]): Function that construct a new
-                instance of the module that should have pressure-level-specific parameters.
-            levels (tuple[int | float, ...]): All possible pressure levels
-            levels_dim (int): Dimension of the input that ranges of pressure levels.
-        """
         super().__init__()
         self.levels_dim = levels_dim
         self.layers = paddle.nn.LayerDict(

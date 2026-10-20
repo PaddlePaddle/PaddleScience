@@ -71,13 +71,6 @@ class MLP(paddle.nn.Layer):
     """A simple one-hidden-layer MLP."""
 
     def __init__(self, dim: int, hidden_features: int, dropout: float = 0.0) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Input dimensionality.
-            hidden_features (int): Width of the hidden layer.
-            dropout (float, optional): Drop-out rate. Defaults to no drop-out.
-        """
         super().__init__()
         self.net = paddle.nn.Sequential(
             paddle.nn.Linear(dim, hidden_features),
@@ -102,15 +95,6 @@ class PerceiverAttention(paddle.nn.Layer):
         num_heads: int = 8,
         ln_k_q: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            latent_dim (int): Dimensionality of the latent features given as input.
-            context_dim (int): Dimensionality of the context features also given as input.
-            head_dim (int): Attention head dimensionality.
-            num_heads (int): Number of heads.
-            ln_k_q (bool): Apply an extra layer norm. to the keys and queries.
-        """
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = head_dim
@@ -172,24 +156,6 @@ class PerceiverResampler(paddle.nn.Layer):
         ln_eps: float = 1e-05,
         ln_k_q: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            latent_dim (int): Dimensionality of the latent features given as input.
-            context_dim (int): Dimensionality of the context features also given as input.
-            depth (int, optional): Number of attention layers.
-            head_dim (int, optional): Attention head dimensionality. Defaults to `64`.
-            num_heads (int, optional): Number of heads. Defaults to `16`
-            mlp_ratio (float, optional): Rimensionality of the hidden layer divided by that of the
-                input for all MLPs. Defaults to `4.0`.
-            drop (float, optional): Drop-out rate. Defaults to no drop-out.
-            residual_latent (bool, optional): Use residual attention w.r.t. the latent features.
-                Defaults to `True`.
-            ln_eps (float, optional): Epsilon in the layer normalisation layers. Defaults to
-                `1e-5`.
-            ln_k_q (bool, optional): Apply an extra layer norm. to the keys and queries of the first
-                resampling layer. Defaults to `False`.
-        """
         super().__init__()
         self.residual_latent = residual_latent
         self.layers = paddle.nn.LayerList([])

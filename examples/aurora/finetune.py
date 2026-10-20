@@ -1,8 +1,4 @@
-"""Train/evaluate one six-hour forecast pair through PaddleScience Solver.
-
-This bounded single-pair example demonstrates supervised integration. It does
-not reproduce global training convergence or substitute for held-out evaluation.
-"""
+"""Train or evaluate a six-hour forecast pair with PaddleScience Solver."""
 
 import dataclasses
 import json
@@ -13,14 +9,9 @@ import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-
-if __package__:
-    from .sample import small_config
-else:
-    from sample import small_config
+from omegaconf import OmegaConf
 
 import ppsci
-from ppsci.arch.aurora import AuroraArch
 from ppsci.arch.aurora import Batch
 from ppsci.arch.aurora.normalisation import level_to_str
 from ppsci.arch.aurora.normalisation import scales
@@ -61,14 +52,14 @@ def validate_pair(batch, target, timestep, patch_size):
         raise ValueError("Target time must be exactly one model timestep after input")
     if tuple(batch.metadata.atmos_levels) != tuple(target.metadata.atmos_levels):
         raise ValueError("Input and target pressure levels differ")
-    # Both 721-row truth and already-cropped 720-row truth are accepted.
     cropped = batch.crop(patch_size)
     target = target.crop(patch_size)
     for name in ("lat", "lon"):
-        np.testing.assert_array_equal(
+        if not np.array_equal(
             getattr(cropped.metadata, name).numpy(),
             getattr(target.metadata, name).numpy(),
-        )
+        ):
+            raise ValueError(f"Input and target {name} coordinates differ")
     for kind in ("surf_vars", "atmos_vars"):
         if set(getattr(batch, kind)) != set(getattr(target, kind)):
             raise ValueError(f"Input and target {kind} differ")
@@ -102,14 +93,16 @@ def normalized_mse(levels):
 def main(cfg: DictConfig):
     if cfg.mode not in ("train", "eval"):
         raise ValueError("mode must be train or eval")
-    if cfg.MODEL.name not in ("AuroraPretrained", "AuroraSmallPretrained"):
+    if cfg.MODEL.name != "AuroraArch":
+        raise ValueError("MODEL.name must be AuroraArch")
+    if cfg.MODEL.model_type not in ("AuroraPretrained", "AuroraSmallPretrained"):
         raise ValueError(
             "This six-hour example supports Pretrained and SmallPretrained"
         )
-    if not cfg.MODEL.tiny and not cfg.MODEL.checkpoint:
+    if cfg.mode == "eval" and not cfg.MODEL.checkpoint:
+        raise ValueError("Evaluation requires MODEL.checkpoint")
+    if not cfg.MODEL.checkpoint and not cfg.TRAIN.allow_random_init:
         raise ValueError("Set MODEL.checkpoint to converted native weights")
-    if cfg.MODEL.tiny and cfg.MODEL.checkpoint and cfg.mode == "train":
-        raise ValueError("Published full checkpoints are incompatible with MODEL.tiny")
     if min(cfg.TRAIN.epochs, cfg.TRAIN.iters_per_epoch) < 1:
         raise ValueError("Training epochs and iterations must be positive")
     paddle.set_device(cfg.device)
@@ -119,14 +112,12 @@ def main(cfg: DictConfig):
     ppsci.utils.logger.init_logger("ppsci", str(output / f"{cfg.mode}.log"), "info")
     batch = spatial_sample(Batch.from_netcdf(cfg.DATA.input), cfg.DATA.spatial_stride)
     target = spatial_sample(Batch.from_netcdf(cfg.DATA.target), cfg.DATA.spatial_stride)
-    model = AuroraArch(
-        model_type=cfg.MODEL.name,
-        model_kwargs=small_config() if cfg.MODEL.tiny else {},
-        metadata=batch.metadata,
-        static_vars=batch.static_vars,
-    )
-    if cfg.MODEL.checkpoint:
-        model.model.load_checkpoint_local(str(cfg.MODEL.checkpoint))
+    model_cfg = OmegaConf.to_container(cfg.MODEL, resolve=True)
+    checkpoint = model_cfg.pop("checkpoint")
+    model_cfg.update(metadata=batch.metadata, static_vars=batch.static_vars)
+    model = ppsci.arch.build_model(model_cfg)
+    if checkpoint:
+        model.model.load_checkpoint_local(str(checkpoint))
     target = validate_pair(batch, target, model.model.timestep, model.model.patch_size)
     inputs = {f"surf_{k}": v.numpy() for k, v in batch.surf_vars.items()}
     inputs.update({f"atmos_{k}": v.numpy() for k, v in batch.atmos_vars.items()})
@@ -174,8 +165,7 @@ def main(cfg: DictConfig):
         raise ValueError("Non-finite evaluation metric")
     summary = {
         "mode": cfg.mode,
-        "model": cfg.MODEL.name,
-        "tiny": cfg.MODEL.tiny,
+        "model": cfg.MODEL.model_type,
         "input_grid": list(batch.spatial_shape),
         "pressure_levels_hpa": [float(level) for level in batch.metadata.atmos_levels],
         "loss": "Mean per-variable official-scale normalized MSE",

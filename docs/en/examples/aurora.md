@@ -100,6 +100,11 @@ evaluates **one forecast pair**; it does not establish convergence or held-out
 skill. Native `model.pdparams` can be reused for inference. Solver also saves
 its own training state.
 
+`MODEL.name=AuroraArch` uses the standard `ppsci.arch.build_model` factory.
+Choose the variant through `MODEL.model_type` and dimensions through `MODEL.model_kwargs`.
+Random initialization requires `TRAIN.allow_random_init=true`; evaluation always
+requires a checkpoint.
+
 After producing Torch and Paddle forecasts in separate environments,
 `evaluate_era5.py` computes cosine-latitude-weighted RMSE independently for each
 variable, pressure level and lead. See `examples/aurora/README.md` for commands.
@@ -119,8 +124,7 @@ Training alignment uses all pretrained parameters, a 17x32 spatial sampling,
 13 levels and three consecutive SGD updates. Forecast validation includes three
 seasonal dates up to 240h and an existing two-step case. Independent long-rollout
 pointwise checks retain `rtol=atol=2e-4` and **fail** at some leads. Weather metric
-success does not change that result. The experimental FP32 fused attention backend
-is excluded. ACC was not computed without climatology; full paper training and
+success does not change that result. ACC was not computed without climatology; full paper training and
 statistical forecast-skill reproduction are not claimed. Portable results are
 stored in `examples/aurora/validation/acceptance.json`.
 

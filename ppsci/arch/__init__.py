@@ -77,16 +77,14 @@ from ppsci.arch.resnet import ResNet  # isort:skip
 from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 from ppsci.arch.preformer import Preformer  # isort:skip
 from ppsci.arch.transolver import Transolver  # isort:skip
-from ppsci.arch.aurora import Aurora, AuroraArch, AuroraSmallPretrained  # isort:skip
+from ppsci.arch.aurora import AuroraArch  # isort:skip
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
 
 __all__ = [
-    "Aurora",
     "AuroraArch",
-    "AuroraSmallPretrained",
     "MoFlowNet",
     "MoFlowProp",
     "AFNONet",

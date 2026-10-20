@@ -52,44 +52,6 @@ class Perceiver3DEncoder(paddle.nn.Layer):
         simulate_indexing_bug: bool = False,
         use_updated_lead_time_embedding: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            surf_vars (tuple[str, ...]): All supported surface-level variables.
-            static_vars (tuple[str, ...], optional): All supported static variables.
-            atmos_vars (tuple[str, ...]): All supported atmospheric variables.
-            patch_size (int, optional): Patch size. Defaults to `4`.
-            latent_levels (int): Number of latent pressure levels. Defaults to `8`.
-            embed_dim (int, optional): Embedding dim. used in the aggregation blocks. Defaults
-                to `1024`.
-            num_heads (int, optional): Number of attention heads used in aggregation blocks.
-                Defaults to `16`.
-            head_dim (int, optional): Dimension of attention heads used in aggregation blocks.
-                Defaults to `64`.
-            drop_rate (float, optional): Drop out rate for input patches. Defaults to `0.0`.
-            depth (int, optional): Number of Perceiver cross-attention and feed-forward blocks.
-                Defaults to `2`.
-            mlp_ratio (float, optional): Ratio of hidden dimensionality to embedding dimensionality
-                for MLPs. Defaults to `4.0`.
-            max_history_size (int, optional): Maximum number of history steps to consider. Defaults
-                to `2`.
-            perceiver_ln_eps (float, optional): Epsilon value for layer normalisation in the
-                Perceiver. Defaults to `1e-5`.
-            stabilise_level_agg (bool, optional): Stabilise the level aggregation by inserting an
-                additional layer normalisation. Defaults to `False`.
-            level_condition (tuple[int | float, ...], optional): Make the patch embeddings dependent
-                on pressure level. If you want to enable this feature, provide a tuple of all
-                possible pressure levels.
-            dynamic_vars (bool, optional): Use dynamically generated static variables, like time
-                of day. Defaults to `False`.
-            atmos_static_vars (bool, optional): Also concatenate the static variables to the
-                atmospheric variables. Defaults to `False`.
-            simulate_indexing_bug (bool, optional): Simulate an indexing bug that's present for the
-                air pollution version of Aurora. This is necessary to obtain numerical equivalence
-                to the original implementation. Defaults to `False`.
-            use_updated_lead_time_embedding (bool, optional): Whether to use the updated lead time
-                embedding with a minimum wavelength of 6 hours. Defaults to `False`.
-        """
         super().__init__()
         self.drop_rate = drop_rate
         self.embed_dim = embed_dim

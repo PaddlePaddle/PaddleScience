@@ -31,14 +31,6 @@ class FourierExpansion(paddle.nn.Layer):
     """
 
     def __init__(self, lower: float, upper: float, assert_range: bool = True) -> None:
-        """Initialise.
-
-        Args:
-            lower (float): Lower wavelength.
-            upper (float): Upper wavelength.
-            assert_range (bool, optional): Assert that the encoded tensor is within the specified
-                wavelength range. Defaults to `True`.
-        """
         super().__init__()
         self.lower = lower
         self.upper = upper
@@ -121,9 +113,7 @@ class FourierExpansionWithLinear(FourierExpansion):
 
 
 _delta = 0.01
-# Preserve the Torch implementation's CPU float64 calibration constant. The
-# near-pole area calculation suffers cancellation: an O(1e-8) relative change
-# alters the phase of the highest-frequency spatial features significantly.
+# Fixed FP64 calibration prevents phase drift in high-frequency spatial features.
 _min_patch_area: float = 0.00010814085263058073
 _area_earth = 4 * np.pi * radius_earth * radius_earth
 pos_expansion = FourierExpansion(_delta, 720)

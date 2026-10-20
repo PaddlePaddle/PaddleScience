@@ -25,18 +25,6 @@ class LevelPatchEmbed(paddle.nn.Layer):
         norm_layer: Optional[paddle.nn.Layer] = None,
         flatten: bool = True,
     ) -> None:
-        """Initialise.
-
-        Args:
-            var_names (tuple[str, ...]): Variables to embed.
-            patch_size (int): Patch size.
-            embed_dim (int): Embedding dimensionality.
-            history_size (int, optional): Number of history dimensions. Defaults to `1`.
-            norm_layer (paddle.nn.Layer, optional): Normalisation layer to be applied at the very
-                end. Defaults to no normalisation layer.
-            flatten (bool): At the end of the forward pass, flatten the two spatial dimensions
-                into a single dimension. See :meth:`LevelPatchEmbed.forward` for more details.
-        """
         super().__init__()
         self.var_names = var_names
         self.kernel_size = (history_size,) + to_2tuple(patch_size)

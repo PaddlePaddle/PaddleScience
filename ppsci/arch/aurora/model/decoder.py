@@ -43,36 +43,6 @@ class Perceiver3DDecoder(paddle.nn.Layer):
         separate_perceiver: tuple[str, ...] = (),
         modulation_heads: tuple[str, ...] = (),
     ) -> None:
-        """Initialise.
-
-        Args:
-            surf_vars (tuple[str, ...]): All supported surface-level variables.
-            atmos_vars (tuple[str, ...]): All supported atmospheric variables.
-            patch_size (int, optional): Patch size. Defaults to `4`.
-            embed_dim (int, optional): Embedding dim.. Defaults to `1024`.
-            depth (int, optional): Number of Perceiver cross-attention and feed-forward blocks.
-                Defaults to `1`.
-            head_dim (int, optional): Dimension of the attention heads used in the aggregation
-                blocks. Defaults to `64`.
-            num_heads (int, optional): Number of attention heads used in the aggregation blocks.
-                Defaults to `8`.
-            mlp_ratio (float, optional): Ratio of MLP hidden dimension to embedding dimensionality.
-                Defaults to `4.0`.
-            drop_rate (float, optional): Drop-out rate for input patches. Defaults to `0.0`.
-            perceiver_ln_eps (float, optional): Layer norm. epsilon for the Perceiver blocks.
-                Defaults to `1e-5`.
-            level_condition (tuple[int | float, ...], optional): Make the patch embeddings dependent
-                on pressure level. If you want to enable this feature, provide a tuple of all
-                possible pressure levels.
-            separate_perceiver (tuple[str, ...], optional): In the decoder, use a separate Perceiver
-                for specific atmospheric variables. This can be helpful at fine-tuning time to deal
-                with variables that have a significantly different behaviour. If you want to enable
-                this features, set this to the collection of variables that should be run on a
-                separate Perceiver.
-            modulation_heads (tuple[str, ...], optional): Names of every variable for which to
-                enable an additional head, the so-called modulation head, that can be used to
-                predict the difference.
-        """
         super().__init__()
         surf_vars += tuple(
             f"{name}_mod" for name in surf_vars if name in modulation_heads
@@ -165,9 +135,7 @@ class Perceiver3DDecoder(paddle.nn.Layer):
             len(level_embed.shape) == 3
         ), f"Expected 3 dims, found {level_embed.dims()}."
         assert x.dim() == 3, f"Expected 3 dims, found {x.dim()}."
-        # Grid locations are independent in this Perceiver. Bound the entire
-        # evaluation batch including its MLP/normalisation activations, keeping
-        # all pressure levels and context latents at every location.
+        # Chunk independent locations while retaining all levels and context tokens.
         if (
             not level_decoder.training
             and not paddle.is_grad_enabled()

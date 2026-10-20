@@ -38,13 +38,13 @@ def weighted_rmse(actual, expected, latitude):
 
 
 def align_grid(dataset, forecast, check_time=True):
-    # Select the forecast grid explicitly: Aurora commonly crops 721 to 720
-    # latitudes. Never compare arrays by position without coordinate checks.
     selected = dataset.sel(latitude=forecast.latitude, longitude=forecast.longitude)
-    np.testing.assert_array_equal(selected.latitude, forecast.latitude)
-    np.testing.assert_array_equal(selected.longitude, forecast.longitude)
-    if check_time:
-        np.testing.assert_array_equal(selected.time, forecast.time)
+    coordinates = (
+        ("latitude", "longitude", "time") if check_time else ("latitude", "longitude")
+    )
+    for name in coordinates:
+        if not np.array_equal(selected[name], forecast[name]):
+            raise ValueError(f"Forecast {name} coordinates differ from data")
     return selected
 
 
@@ -128,8 +128,10 @@ def main():
                 truth = align_grid(truth_source, paddle)
                 torch = align_grid(torch, paddle)
                 persistence = align_grid(initial, paddle, check_time=False)
-                np.testing.assert_array_equal(truth.level, paddle.level)
-                np.testing.assert_array_equal(torch.level, paddle.level)
+                if not np.array_equal(truth.level, paddle.level) or not np.array_equal(
+                    torch.level, paddle.level
+                ):
+                    raise ValueError("Forecast and truth pressure levels differ")
                 names = sorted(
                     n for n in paddle.data_vars if n.startswith(("surf_", "atmos_"))
                 )

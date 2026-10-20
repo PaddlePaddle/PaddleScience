@@ -12,7 +12,7 @@ radius_earth = 6378137 / 1000
 def area(polygon: paddle.Tensor) -> paddle.Tensor:
     """Compute the area of a polygon specified by latitudes and longitudes in degrees.
 
-    This function is a PyTorch port of the PyPI package `area`. In particular, it is heavily
+    This function is a Paddle port of the PyPI package `area`. In particular, it is heavily
     inspired by the following file:
 
         https://github.com/scisco/area/blob/9d9549d6ebffcbe4bffe11b71efa2d406d1c9fe9/area/__init__.py

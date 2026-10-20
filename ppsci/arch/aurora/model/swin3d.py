@@ -47,18 +47,6 @@ class MLP(paddle.nn.Layer):
         act_layer: type = paddle.nn.GELU,
         drop: float = 0.0,
     ) -> None:
-        """Initialise.
-
-        Args:
-            in_features (int): Input dimensionality.
-            hidden_features (int, optional): Hidden layer dimensionality. Defaults to the input
-                dimensionality.
-            out_features (int, optional): Output dimensionality. Defaults to the input
-                dimensionality.
-            act_layer (type, optional): Activation function to use. Will be instantiated as
-                `act_layer()`. Defaults to `paddle.nn.GELU`.
-            drop (float, optional): Drop-out rate. Defaults to no drop-out.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -99,27 +87,6 @@ class WindowAttention(paddle.nn.Layer):
         lora_mode: LoRAMode = "single",
         use_lora: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Number of input channels.
-            window_size (tuple[int, int, int]): The size of the windows.
-            num_heads (int): Number of attention heads.
-            qkv_bias (bool, optional): If `True`, add a learnable bias to the query, key, dn value.
-                Defaults to `True`.
-            qk_scale (float, optional): If set, overrides the default query-key scale of
-                `1/sqrt(head_dim)`.
-            attn_drop (float, optional): Drop-out rate of attention weights. Default to `0.0`.
-            proj_drop (float, optional): Drop-out rate of the output. Default to `0.0`.
-            lora_r (int, optional): LoRA rank. Defaults to `8`.
-            lora_alpha (int, optional): LoRA alpha. Defaults to `8`.
-            lora_dropout (float, optional): LoRA drop-out rate. Defaults to `0.0`.
-            lora_steps (int, optional): Maximum number of LoRA roll-out steps. Defaults to `40`.
-            lora_mode (str, optional): LoRA mode. `"single"` uses the same LoRA for all roll-out
-                steps, `"from_second"` uses the same LoRA from the second roll-out step on,
-                and `"all"` uses a different LoRA for every roll-out step. Defaults to `"single"`.
-            use_lora (bool, optional): Enable LoRA. By default, LoRA is disabled.
-        """
         super().__init__()
         self.dim = dim
         self.window_size = window_size
@@ -378,32 +345,6 @@ class Swin3DTransformerBlock(paddle.nn.Layer):
         lora_mode: LoRAMode = "single",
         use_lora: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Number of input channels.
-            input_resolution (tuple[int, int]): Input resolution.
-            num_heads (int): Number of attention heads.
-            time_dim (int): Dimension of the lead time embedding.
-            window_size (tuple[int, int, int]): Window size. Defaults to `(2, 7, 7)`.
-            shift_size (tuple[int, int, int]): Shift size for SW-MSA. Defaults to `(0, 0, 0)`.
-            mlp_ratio (float): Hidden layer dimensionality divided by that of the input for all
-                MLPs. Defaults to `4.0`.
-            qkv_bias (bool, optional): If `True,` add a learnable bias to each query, key, and
-                value. Defaults to `True`.
-            drop (float, optional): Drop-out rate. Defaults to `0.0`.
-            attn_drop (float, optional): Attention drop-out rate. Defaults to `0.0`.
-            drop_path (float, optional): Stochastic depth rate. Defaults to `0.0`
-            act_layer (type, optional): Activation function to use. Will be instantiated as
-                `act_layer()`. Defaults to `paddle.nn.GELU`.
-            scale_bias (float, optional): Scale bias for
-                :class:`aurora.model.film.AdaptiveLayerNorm`. Defaults to `0`.
-            lora_steps (int, optional): Maximum number of LoRA roll-out steps. Defaults to `40`.
-            lora_mode (str, optional): LoRA mode. `"single"` uses the same LoRA for all roll-out
-                steps, `"from_second"` uses the same LoRA from the second roll-out step on,
-                and `"all"` uses a different LoRA for every roll-out step. Defaults to `"single"`.
-            use_lora (bool): Enable LoRA. By default, LoRA is disabled.
-        """
         super().__init__()
         self.dim = dim
         self.window_size = window_size
@@ -493,15 +434,6 @@ class PatchMerging3D(paddle.nn.Layer):
     def __init__(
         self, dim: int, out_dim: (int | None) = None, norm: bool = True
     ) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Number of input channels.
-            out_dim (int, optional): Number of output channels. Defaults to `2 * dim`.
-
-            norm (bool, optional): If `True`, apply LayerNorm before channel reduction. Defaults
-                to `True`.
-        """
         super().__init__()
         self.dim = dim
         out_dim = out_dim or 2 * dim
@@ -547,13 +479,6 @@ class PatchSplitting3D(paddle.nn.Layer):
     """Patch splitting layer."""
 
     def __init__(self, dim: int, out_dim: (int | None) = None) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Number of input channels.
-            out_dim (int, optional): Number of output channels. Defaults to `dim // 2`.
-
-        """
         super().__init__()
         self.dim = dim
         assert dim % 2 == 0, f"`dim` ({dim}) should be divisible by 2."
@@ -624,31 +549,6 @@ class BasicLayer3D(paddle.nn.Layer):
         lora_mode: LoRAMode = "single",
         use_lora: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Number of input channels.
-            depth (int): Number of blocks.
-            num_heads (int): Number of attention heads.
-            ws (tuple[int, int, int]): Window size.
-            time_dim (int): Dimension of the lead time embedding.
-            mlp_ratio (float): Hidden layer dimensionality divided by that of the input for all
-                MLPs. Defaults to `4.0`.
-            qkv_bias (bool): If `True`, add a learnable bias to the query, key, and value. Defaults
-                to `True`.
-            drop (float): Drop-out rate. Defaults to `0.0`.
-            attn_drop (float): Attention drop-out rate. Defaults to `0.0`.
-            drop_path (float): Stochastic depth rate. Defaults to `0.0`.
-            downsample (PatchMerging3D, optional): Downsampling layer. Defaults to no downsampling.
-            upsample (PatchSplitting3D, optional): Upsampling layer. Defaults to no upsampling.
-            scale_bias (float, optional): Scale bias for
-                :class:`aurora.model.film.AdaptiveLayerNorm`. Default: 0
-            lora_steps (int, optional): Maximum number of LoRA roll-out steps. Defaults to `40`.
-            lora_mode (str, optional): LoRA mode. `"single"` uses the same LoRA for all roll-out
-                steps, `"from_second"` uses the same LoRA from the second roll-out step on,
-                and `"all"` uses a different LoRA for every roll-out step. Defaults to `"single"`.
-            use_lora (bool): Enable LoRA. By default, LoRA is disabled.
-        """
         super().__init__()
         if downsample is not None and upsample is not None:
             raise ValueError("Cannot set both `downsample` and `upsample`.")
@@ -756,36 +656,6 @@ class Swin3DTransformerBackbone(paddle.nn.Layer):
         stochastic: bool = False,
         use_updated_lead_time_embedding: bool = False,
     ) -> None:
-        """Initialise.
-
-        Args:
-            embed_dim (int): Patch embedding dimension. Default to `96`.
-            encoder_depths (tuple[int, ...]): Number of blocks in each encoder layer. Defaults to
-                `(2, 2, 6, 2)`.
-            encoder_num_heads (tuple[int, ...]): Number of attention heads in each encoder layer.
-                Default to `(3, 6, 12, 24)`.
-            decoder_depths (tuple[int, ...]): Number of blocks in each decoder layer. Defaults to
-                `(2, 6, 2, 2)`.
-            decoder_num_heads (tuple[int, ...]): Number of attention heads in each decoder layer.
-                Defaults to `(24, 12, 6, 3)`.
-            window_size (int | tuple[int, int, int]): Window size. Defaults to `7`.
-            mlp_ratio (float): Hidden layer dimensionality divided by that of the input for all
-                MLPs. Defaults to `4.0`.
-            qkv_bias (bool): If `True`, add a learnable bias to the query, key, and value. Defaults
-                to `True`.
-            drop_rate (float): Drop-out rate. Defaults to `0.0`.
-            attn_drop_rate (float): Attention drop-out rate. Defaults to `0.0`.
-            drop_path_rate (float): Stochastic depth rate. Defaults to `0.0`.
-            lora_steps (int, optional): Maximum number of LoRA roll-out steps. Defaults to `40`.
-            lora_mode (str, optional): LoRA mode. `"single"` uses the same LoRA for all roll-out
-                steps, `"from_second"` uses the same LoRA from the second roll-out step on,
-                and `"all"` uses a different LoRA for every roll-out step. Defaults to `"single"`.
-            use_lora (bool, optional): Enable LoRA. By default, LoRA is disabled.
-            stochastic (bool, optional): If `True`, enable stochastic mode with noise injection.
-                Defaults to `False`.
-            use_updated_lead_time_embedding (bool, optional): Whether to use the updated lead time
-                embedding with a minimum wavelength of 6 hours. Defaults to `False`.
-        """
         super().__init__()
         self.window_size = to_3tuple(window_size)
         self.num_encoder_layers = len(encoder_depths)

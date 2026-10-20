@@ -4,8 +4,9 @@ device: cpu
 output_dir: outputs/aurora-finetune
 
 MODEL:
-  name: AuroraPretrained
-  tiny: false
+  name: AuroraArch
+  model_type: AuroraPretrained
+  model_kwargs: {}
   checkpoint: null
 
 DATA:
@@ -15,6 +16,7 @@ DATA:
   spatial_stride: 45
 
 TRAIN:
+  allow_random_init: false
   epochs: 1
   iters_per_epoch: 3
   learning_rate: 0.00001

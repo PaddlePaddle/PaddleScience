@@ -39,15 +39,24 @@ def main():
     with xr.open_dataset(root / "surface.nc") as surf, xr.open_dataset(
         root / "atmospheric.nc"
     ) as atmos, xr.open_dataset(root / "static.nc") as static:
-        assert surf.sizes["time"] == atmos.sizes["time"]
-        assert surf.sizes["time"] >= 3
-        assert (surf.sizes["latitude"], surf.sizes["longitude"]) == (721, 1440)
-        assert tuple(atmos.level.values) == LEVELS
+        if surf.sizes["time"] != atmos.sizes["time"] or surf.sizes["time"] < 3:
+            raise ValueError(
+                "Surface and atmosphere require matching times and at least three frames"
+            )
+        if (surf.sizes["latitude"], surf.sizes["longitude"]) != (721, 1440):
+            raise ValueError("Expected the global 0.25-degree ERA5 grid (721, 1440)")
+        if tuple(atmos.level.values) != LEVELS:
+            raise ValueError("ERA5 pressure levels do not match the required 13 levels")
         for ds in (atmos, static):
-            np.testing.assert_array_equal(surf.latitude, ds.latitude)
-            np.testing.assert_array_equal(surf.longitude, ds.longitude)
-        np.testing.assert_array_equal(surf.time, atmos.time)
-        assert np.all(np.diff(surf.time.values) == np.timedelta64(6, "h"))
+            for name in ("latitude", "longitude"):
+                if not np.array_equal(surf[name], ds[name]):
+                    raise ValueError(
+                        f"ERA5 {name} coordinates differ across source files"
+                    )
+        if not np.array_equal(surf.time, atmos.time):
+            raise ValueError("ERA5 surface and atmosphere times differ")
+        if not np.all(np.diff(surf.time.values) == np.timedelta64(6, "h")):
+            raise ValueError("ERA5 timestamps must be spaced six hours apart")
         expected_units = {
             "2m_temperature": "K",
             "mean_sea_level_pressure": "Pa",
@@ -59,11 +68,13 @@ def main():
         for ds in (surf, atmos, static):
             for name in ds.data_vars:
                 if name in expected_units:
-                    assert ds[name].attrs["units"] == expected_units[name], name
+                    if ds[name].attrs.get("units") != expected_units[name]:
+                        raise ValueError(f"Unexpected ERA5 units for {name}")
 
         def tensor(values):
             values = np.asarray(values, dtype="float32")
-            assert np.isfinite(values).all()
+            if not np.isfinite(values).all():
+                raise ValueError("ERA5 fields must contain only finite values")
             return paddle.to_tensor(values)
 
         static_tensors = {

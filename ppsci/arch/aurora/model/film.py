@@ -16,13 +16,6 @@ class AdaptiveLayerNorm(paddle.nn.Layer):
     """Adaptive layer normalisation with scale and shift modulation."""
 
     def __init__(self, dim: int, context_dim: int, scale_bias: float = 0) -> None:
-        """Initialise.
-
-        Args:
-            dim (int): Input dimension.
-            context_dim (int): Dimension of the conditioning signal.
-            scale_bias (float, optional): Scale bias to add to the scaling factor. Defaults to `0`.
-        """
         super().__init__()
         self.ln = paddle.nn.LayerNorm(dim, elementwise_affine=False)
         self.ln_modulation = paddle.nn.Sequential(

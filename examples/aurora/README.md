@@ -120,6 +120,12 @@ updates and same-pair evaluation do not establish convergence or held-out skill.
 `model.pdparams` contains native underlying-model weights for subsequent inference;
 Solver also saves its own training checkpoints.
 
+`MODEL.name=AuroraArch` uses the standard `ppsci.arch.build_model` factory.
+Select the variant with `MODEL.model_type` and dimensions with `MODEL.model_kwargs`.
+Random initialization requires `TRAIN.allow_random_init=true`; evaluation always
+requires a checkpoint. The `tiny` configuration enables random initialization
+for the offline workflow check.
+
 ## Migration validation
 
 [Portable acceptance results](validation/acceptance.json) record the frozen
@@ -141,7 +147,6 @@ Independent long-rollout pointwise checks retain `rtol=atol=2e-4` and **fail** a
 some leads; weather metric success does not turn those checks into passes.
 Other variants (12h, HighRes, AirPollution, Wave, 1.5 and ensemble) are ported but
 have only lightweight structure checks, not full published-checkpoint acceptance.
-The experimental FP32 memory-efficient backend is excluded from this submission.
 
 The pinned upstream Small regression fixture can be prepared separately. Its
 target is an official model output, not ERA5 ground truth:
@@ -168,8 +173,3 @@ python examples/aurora/evaluate_era5.py --data data/aurora \
   --torch outputs/aurora-era5/torch --paddle outputs/aurora-era5/paddle \
   --steps 2 --output outputs/aurora-era5/metrics --enforce-acceptance
 ```
-
-The native implementation does not enable global `paddle.enable_compat()`.
-PaConvert initially handled 751/758 API occurrences (99.08% syntax coverage);
-manual changes cover layouts, attention, gradients, recomputation, RNG, pooling,
-UTC time handling and checkpoint conversion. This percentage is not model accuracy.

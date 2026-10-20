@@ -22,15 +22,6 @@ class LoRA(paddle.nn.Layer):
         alpha: int = 1,
         dropout: float = 0.0,
     ) -> None:
-        """Initialise.
-
-        Args:
-            in_features (int): Number of input features.
-            out_features (int): Number of output features.
-            r (int, optional): Rank. Defaults to `4`.
-            alpha (int, optional): Alpha. Defaults to `1`.
-            dropout (float, optional): Drop-out rate. Defaults to `0.0`.
-        """
         super().__init__()
         assert r > 0, "The rank must be strictly positive."
         self.lora_alpha = alpha
@@ -76,19 +67,6 @@ class LoRARollout(paddle.nn.Layer):
         max_steps: int = 40,
         mode: LoRAMode = "single",
     ) -> None:
-        """Initialise.
-
-        Args:
-            in_features (int): Number of input features.
-            out_features (int): Number of output features.
-            r (int, optional): Rank. Defaults to `4`.
-            alpha (int, optional): Alpha. Defaults to `1`.
-            dropout (float, optional): Drop-out rate. Defaults to `0.0`.
-            max_steps (int, optional): Maximum number of roll-out steps. Defaults to `40`.
-            mode (str, optional): Mode. `"single"` uses the same LoRA for all roll-out steps,
-                `"from_second"` uses the same LoRA from the second roll-out step on, and `"all"`
-                uses a different LoRA for every roll-out step. Defaults to `"single"`.
-        """
         super().__init__()
         self.mode = mode
         self.max_steps = max_steps

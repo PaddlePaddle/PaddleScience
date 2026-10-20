@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Tuple
 from typing import TypeVar
 
 import einops
@@ -107,7 +108,7 @@ def check_lat_lon_dtype(lat: paddle.Tensor, lon: paddle.Tensor) -> None:
     ], f"Longitude num. unstable: {lon.dtype}."
 
 
-T = TypeVar("T", tuple[int, int], tuple[int, int, int])
+T = TypeVar("T", Tuple[int, int], Tuple[int, int, int])
 
 
 def maybe_adjust_windows(window_size: T, shift_size: T, res: T) -> tuple[T, T]:

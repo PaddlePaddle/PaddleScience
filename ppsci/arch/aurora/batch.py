@@ -54,7 +54,7 @@ class Metadata:
             if not paddle.all(self.lon[1:] - self.lon[:-1] > 0):
                 raise ValueError("Longitudes must be strictly increasing.")
         elif self.lat.dim() == self.lon.dim() == 2:
-            if not paddle.all(self.lat[1:, :] - self.lat[:-1, :]):
+            if not paddle.all(self.lat[1:, :] - self.lat[:-1, :] < 0):
                 raise ValueError(
                     "Latitudes must be strictly decreasing along every column."
                 )

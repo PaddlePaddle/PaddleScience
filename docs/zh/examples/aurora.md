@@ -91,6 +91,10 @@ python examples/aurora/finetune.py mode=eval \
 该示例重复训练并评估同一对样本，用于验证完整工作流，不代表独立验证集精度或训练收敛。
 原生 `model.pdparams` 可直接用于推理，Solver 还会独立保存训练状态。
 
+`MODEL.name=AuroraArch` 通过标准 `ppsci.arch.build_model` 构建模型；
+`MODEL.model_type` 选择变体，`MODEL.model_kwargs` 配置模型结构。
+随机初始化需显式设置 `TRAIN.allow_random_init=true`，评估始终要求提供权重。
+
 Torch 与 Paddle 预测分别在独立环境生成后，用 `evaluate_era5.py` 计算纬度余弦加权 RMSE。
 每个变量、层和时效分别比较，不能以平均指标掩盖单项失败。
 完整命令见仓库 `examples/aurora/README.md`。
@@ -109,7 +113,7 @@ Torch 与 Paddle 预测分别在独立环境生成后，用 `evaluate_era5.py` �
 训练对齐覆盖完整预训练参数、17×32 空间采样、13 层和连续 3 次 SGD 更新。
 预报覆盖三个季节日期、最长 240 小时，另含原有两步案例。
 独立长时滚动逐点容差 `rtol=atol=2e-4` 在部分时效仍有超差；
-天气指标通过不代表全部格点逐点通过。实验性 FP32 融合注意力优化不包含在默认实现中。
+天气指标通过不代表全部格点逐点通过。
 未计算缺少气候态的 ACC，也未声称论文完整训练或统计预报技巧复现。
 机器可读记录位于 `examples/aurora/validation/acceptance.json`。
 

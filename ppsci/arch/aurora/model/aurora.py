@@ -347,9 +347,7 @@ class Aurora(paddle.nn.Layer):
         """
         batch = self.batch_transform_hook(batch)
         p = next(iter(self.parameters()))
-        # DataLoader may provide CUDA-pinned host tensors, whose .device alias
-        # cannot be queried. Move to the model's native Place before statistics
-        # tensors are created during normalisation.
+        # Move pinned host tensors before creating normalization statistics.
         batch = batch.to(p.place).type(p.dtype)
         batch = self._pre_norm_hook(batch)
         batch = batch.normalise(surf_stats=self.surf_stats)
@@ -563,9 +561,7 @@ class Aurora(paddle.nn.Layer):
             with np.load(path, allow_pickle=False) as archive:
                 d = {k: archive[k] for k in archive.files if not k.startswith("__")}
         else:
-            # PyTorch is only needed once when importing an original .ckpt file.
-            # Exporting to NPZ in a reference environment avoids a Torch runtime
-            # dependency in Paddle inference/training environments.
+            # Legacy import only; native weights and NPZ arrays do not need Torch.
             try:
                 import torch
             except ImportError as error:
@@ -718,8 +714,7 @@ class Aurora(paddle.nn.Layer):
             layer.forward = forward
             layer._aurora_recompute = True
 
-        # Paddle's saved-tensor hooks cannot nest. Choose the deepest matching
-        # layers, rather than wrapping both a block and its enclosing backbone.
+        # Saved-tensor hooks cannot nest; wrap only the deepest matching layers.
         for layer in self.sublayers(include_self=True):
             selected = check(layer)
             has_selected_child = any(

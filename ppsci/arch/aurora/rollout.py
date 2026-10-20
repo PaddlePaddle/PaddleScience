@@ -39,8 +39,7 @@ def _advance_batch(batch: Batch, pred: Batch) -> Batch:
     """
 
     def concatenate(history, prediction):
-        # Torch cat promotes mixed floating dtypes. Aurora always returns
-        # float32 forecasts, even when its parameters/history are float64.
+        # Preserve promotion when FP32 forecasts enter a higher-precision history.
         if history.dtype != prediction.dtype:
             dtype = (
                 paddle.float64
