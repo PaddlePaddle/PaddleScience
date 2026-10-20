@@ -1,0 +1,409 @@
+{
+  "checkpoint": "synthetic",
+  "device": "gpu:0",
+  "framework": "3.4.0",
+  "results": {
+    "backbone.0": {
+      "max_abs": 1.430511474609375e-06,
+      "relative_l2": 2.09230779312076e-07
+    },
+    "backbone.1": {
+      "max_abs": 1.1920928955078125e-06,
+      "relative_l2": 2.0026123391439906e-07
+    },
+    "decoder.0.atmos_vars.q": {
+      "max_abs": 2.8312206268310547e-07,
+      "relative_l2": 3.668168213032952e-07
+    },
+    "decoder.0.atmos_vars.t": {
+      "max_abs": 2.980232238769531e-07,
+      "relative_l2": 3.4264082653982477e-07
+    },
+    "decoder.0.atmos_vars.u": {
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 3.4945870879259613e-07
+    },
+    "decoder.0.atmos_vars.v": {
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 3.479715257985895e-07
+    },
+    "decoder.0.atmos_vars.z": {
+      "max_abs": 3.3527612686157227e-07,
+      "relative_l2": 3.878307744444886e-07
+    },
+    "decoder.0.surf_vars.10u": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 1.0810797775949474e-07
+    },
+    "decoder.0.surf_vars.10v": {
+      "max_abs": 1.1920928955078125e-07,
+      "relative_l2": 8.842647066924565e-08
+    },
+    "decoder.0.surf_vars.2t": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 1.1173595013664691e-07
+    },
+    "decoder.0.surf_vars.msl": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 1.0040672297722565e-07
+    },
+    "decoder.1.atmos_vars.q": {
+      "max_abs": 2.8312206268310547e-07,
+      "relative_l2": 3.7630623054376725e-07
+    },
+    "decoder.1.atmos_vars.t": {
+      "max_abs": 2.980232238769531e-07,
+      "relative_l2": 3.933449958110875e-07
+    },
+    "decoder.1.atmos_vars.u": {
+      "max_abs": 2.8312206268310547e-07,
+      "relative_l2": 2.9000778196776853e-07
+    },
+    "decoder.1.atmos_vars.v": {
+      "max_abs": 2.7194619178771973e-07,
+      "relative_l2": 3.7614176867865104e-07
+    },
+    "decoder.1.atmos_vars.z": {
+      "max_abs": 2.980232238769531e-07,
+      "relative_l2": 3.4249486214119954e-07
+    },
+    "decoder.1.surf_vars.10u": {
+      "max_abs": 1.7881393432617188e-07,
+      "relative_l2": 2.4087372951204967e-07
+    },
+    "decoder.1.surf_vars.10v": {
+      "max_abs": 1.4901161193847656e-07,
+      "relative_l2": 1.9983109612681601e-07
+    },
+    "decoder.1.surf_vars.2t": {
+      "max_abs": 1.7881393432617188e-07,
+      "relative_l2": 2.3067465592829582e-07
+    },
+    "decoder.1.surf_vars.msl": {
+      "max_abs": 1.7881393432617188e-07,
+      "relative_l2": 2.3662344779632518e-07
+    },
+    "encoder.0": {
+      "max_abs": 1.430511474609375e-06,
+      "relative_l2": 2.0384932197821322e-07
+    },
+    "encoder.1": {
+      "max_abs": 1.1920928955078125e-06,
+      "relative_l2": 1.9644484524035375e-07
+    },
+    "encoder.absolute_time_embed.0": {
+      "max_abs": 1.4901161193847656e-08,
+      "relative_l2": 7.579776235950161e-08
+    },
+    "encoder.absolute_time_embed.1": {
+      "max_abs": 9.313225746154785e-09,
+      "relative_l2": 5.692867527044803e-08
+    },
+    "encoder.atmos_levels_embed.0": {
+      "max_abs": 2.9802322387695312e-08,
+      "relative_l2": 1.0055468654351791e-07
+    },
+    "encoder.atmos_levels_embed.1": {
+      "max_abs": 2.9802322387695312e-08,
+      "relative_l2": 1.0055468654351791e-07
+    },
+    "encoder.atmos_token_embeds.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.atmos_token_embeds.1": {
+      "max_abs": 0.000244140625,
+      "relative_l2": 3.7448887191949435e-09
+    },
+    "encoder.atmos_token_embeds.norm.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.atmos_token_embeds.norm.1": {
+      "max_abs": 0.000244140625,
+      "relative_l2": 3.7448887191949435e-09
+    },
+    "encoder.lead_time_embed.0": {
+      "max_abs": 7.450580596923828e-09,
+      "relative_l2": 5.490475051417008e-08
+    },
+    "encoder.lead_time_embed.1": {
+      "max_abs": 7.450580596923828e-09,
+      "relative_l2": 5.490475051417008e-08
+    },
+    "encoder.level_agg.0": {
+      "max_abs": 1.430511474609375e-06,
+      "relative_l2": 2.288032565788909e-07
+    },
+    "encoder.level_agg.1": {
+      "max_abs": 1.1920928955078125e-06,
+      "relative_l2": 1.953836108766809e-07
+    },
+    "encoder.level_agg.layers.0.0.0": {
+      "max_abs": 1.1444091796875e-05,
+      "relative_l2": 2.126897421292531e-07
+    },
+    "encoder.level_agg.layers.0.0.1": {
+      "max_abs": 9.5367431640625e-06,
+      "relative_l2": 2.0751839654446433e-07
+    },
+    "encoder.level_agg.layers.0.0.to_kv.0": {
+      "max_abs": 4.76837158203125e-07,
+      "relative_l2": 2.5950795035484067e-10
+    },
+    "encoder.level_agg.layers.0.0.to_kv.1": {
+      "max_abs": 3.0517578125e-05,
+      "relative_l2": 4.544490413847948e-09
+    },
+    "encoder.level_agg.layers.0.0.to_out.0": {
+      "max_abs": 1.1444091796875e-05,
+      "relative_l2": 2.126897421292531e-07
+    },
+    "encoder.level_agg.layers.0.0.to_out.1": {
+      "max_abs": 9.5367431640625e-06,
+      "relative_l2": 2.0751839654446433e-07
+    },
+    "encoder.level_agg.layers.0.0.to_q.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.level_agg.layers.0.0.to_q.1": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.level_agg.layers.0.1.0": {
+      "max_abs": 1.4901161193847656e-08,
+      "relative_l2": 2.6398454522803883e-07
+    },
+    "encoder.level_agg.layers.0.1.1": {
+      "max_abs": 1.4435499906539917e-08,
+      "relative_l2": 2.384726091055117e-07
+    },
+    "encoder.level_agg.layers.0.1.net.0": {
+      "max_abs": 1.4901161193847656e-08,
+      "relative_l2": 2.6398454522803883e-07
+    },
+    "encoder.level_agg.layers.0.1.net.0.0": {
+      "max_abs": 1.341104507446289e-07,
+      "relative_l2": 2.3641091120754402e-07
+    },
+    "encoder.level_agg.layers.0.1.net.0.1": {
+      "max_abs": 1.1920928955078125e-07,
+      "relative_l2": 2.1399833874095302e-07
+    },
+    "encoder.level_agg.layers.0.1.net.1": {
+      "max_abs": 1.4435499906539917e-08,
+      "relative_l2": 2.384726091055117e-07
+    },
+    "encoder.level_agg.layers.0.1.net.1.0": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 2.42225822146991e-07
+    },
+    "encoder.level_agg.layers.0.1.net.1.1": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 2.1717839905316863e-07
+    },
+    "encoder.level_agg.layers.0.1.net.2.0": {
+      "max_abs": 1.4901161193847656e-08,
+      "relative_l2": 2.6398454522803883e-07
+    },
+    "encoder.level_agg.layers.0.1.net.2.1": {
+      "max_abs": 1.4435499906539917e-08,
+      "relative_l2": 2.384726091055117e-07
+    },
+    "encoder.level_agg.layers.0.1.net.3.0": {
+      "max_abs": 1.4901161193847656e-08,
+      "relative_l2": 2.6398454522803883e-07
+    },
+    "encoder.level_agg.layers.0.1.net.3.1": {
+      "max_abs": 1.4435499906539917e-08,
+      "relative_l2": 2.384726091055117e-07
+    },
+    "encoder.level_agg.layers.0.2.0": {
+      "max_abs": 8.940696716308594e-07,
+      "relative_l2": 2.0239918272427043e-07
+    },
+    "encoder.level_agg.layers.0.2.1": {
+      "max_abs": 9.5367431640625e-07,
+      "relative_l2": 1.7579921520652652e-07
+    },
+    "encoder.level_agg.layers.0.3.0": {
+      "max_abs": 1.0728836059570312e-06,
+      "relative_l2": 2.602319482458645e-07
+    },
+    "encoder.level_agg.layers.0.3.1": {
+      "max_abs": 9.834766387939453e-07,
+      "relative_l2": 2.3718328901701073e-07
+    },
+    "encoder.pos_drop.0": {
+      "max_abs": 1.430511474609375e-06,
+      "relative_l2": 2.0384932197821322e-07
+    },
+    "encoder.pos_drop.1": {
+      "max_abs": 1.1920928955078125e-06,
+      "relative_l2": 1.9644484524035375e-07
+    },
+    "encoder.pos_embed.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.pos_embed.1": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.scale_embed.0": {
+      "max_abs": 7.450580596923828e-09,
+      "relative_l2": 3.1544978587927814e-09
+    },
+    "encoder.scale_embed.1": {
+      "max_abs": 7.450580596923828e-09,
+      "relative_l2": 3.1544978587927814e-09
+    },
+    "encoder.surf_mlp.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.1": {
+      "max_abs": 9.313225746154785e-09,
+      "relative_l2": 1.8101957461984254e-07
+    },
+    "encoder.surf_mlp.net.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.net.0.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.net.0.1": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 1.6504761432612612e-07
+    },
+    "encoder.surf_mlp.net.1": {
+      "max_abs": 9.313225746154785e-09,
+      "relative_l2": 1.8101957461984254e-07
+    },
+    "encoder.surf_mlp.net.1.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.net.1.1": {
+      "max_abs": 5.960464477539063e-08,
+      "relative_l2": 1.656954415955383e-07
+    },
+    "encoder.surf_mlp.net.2.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.net.2.1": {
+      "max_abs": 9.313225746154785e-09,
+      "relative_l2": 1.8101957461984254e-07
+    },
+    "encoder.surf_mlp.net.3.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_mlp.net.3.1": {
+      "max_abs": 9.313225746154785e-09,
+      "relative_l2": 1.8101957461984254e-07
+    },
+    "encoder.surf_norm.0": {
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 4.4350484183043064e-08
+    },
+    "encoder.surf_norm.1": {
+      "max_abs": 9.5367431640625e-07,
+      "relative_l2": 1.9761469800164534e-07
+    },
+    "encoder.surf_token_embeds.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_token_embeds.1": {
+      "max_abs": 4.76837158203125e-07,
+      "relative_l2": 1.3889462199226165e-07
+    },
+    "encoder.surf_token_embeds.norm.0": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "encoder.surf_token_embeds.norm.1": {
+      "max_abs": 4.76837158203125e-07,
+      "relative_l2": 1.3889462199226165e-07
+    },
+    "normalized.0.atmos_vars.q": {
+      "max_abs": 4.172325134277344e-07,
+      "relative_l2": 5.486698967594238e-07
+    },
+    "normalized.0.atmos_vars.t": {
+      "max_abs": 2.3245811462402344e-06,
+      "relative_l2": 1.4170620125044907e-06
+    },
+    "normalized.0.atmos_vars.u": {
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 3.6456171341685794e-07
+    },
+    "normalized.0.atmos_vars.v": {
+      "max_abs": 2.682209014892578e-07,
+      "relative_l2": 3.5044090059416274e-07
+    },
+    "normalized.0.atmos_vars.z": {
+      "max_abs": 2.8461217880249023e-06,
+      "relative_l2": 1.6294857681491782e-06
+    },
+    "normalized.0.surf_vars.10u": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 1.1398998960290486e-07
+    },
+    "normalized.0.surf_vars.10v": {
+      "max_abs": 8.940696716308594e-08,
+      "relative_l2": 9.355559097736386e-08
+    },
+    "normalized.0.surf_vars.2t": {
+      "max_abs": 1.4454126358032227e-06,
+      "relative_l2": 1.105169655754307e-06
+    },
+    "normalized.0.surf_vars.msl": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "normalized.1.atmos_vars.q": {
+      "max_abs": 4.172325134277344e-07,
+      "relative_l2": 5.333395049474449e-07
+    },
+    "normalized.1.atmos_vars.t": {
+      "max_abs": 2.3543834686279297e-06,
+      "relative_l2": 1.5202921090909944e-06
+    },
+    "normalized.1.atmos_vars.u": {
+      "max_abs": 3.2782554626464844e-07,
+      "relative_l2": 3.074339649721966e-07
+    },
+    "normalized.1.atmos_vars.v": {
+      "max_abs": 2.8312206268310547e-07,
+      "relative_l2": 3.776114213476297e-07
+    },
+    "normalized.1.atmos_vars.z": {
+      "max_abs": 2.8461217880249023e-06,
+      "relative_l2": 1.57062033052256e-06
+    },
+    "normalized.1.surf_vars.10u": {
+      "max_abs": 1.7881393432617188e-07,
+      "relative_l2": 2.4416020420594143e-07
+    },
+    "normalized.1.surf_vars.10v": {
+      "max_abs": 1.4901161193847656e-07,
+      "relative_l2": 2.1039304456539727e-07
+    },
+    "normalized.1.surf_vars.2t": {
+      "max_abs": 1.4603137969970703e-06,
+      "relative_l2": 1.3775397131507917e-06
+    },
+    "normalized.1.surf_vars.msl": {
+      "max_abs": 5.865469574928284e-06,
+      "relative_l2": 3.7229310759913777e-06
+    }
+  },
+  "status": "passed",
+  "tensors_compared": 100
+}

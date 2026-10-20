@@ -1,0 +1,425 @@
+"""Copyright (c) Microsoft Corporation. Licensed under the MIT license."""
+
+from __future__ import annotations
+
+import dataclasses
+from datetime import datetime
+from functools import partial
+from pathlib import Path
+from typing import Callable
+from typing import List
+
+import numpy as np
+import paddle
+from scipy.interpolate import RegularGridInterpolator as RGI
+
+from ppsci.arch.aurora.normalisation import normalise_atmos_var
+from ppsci.arch.aurora.normalisation import normalise_surf_var
+from ppsci.arch.aurora.normalisation import unnormalise_atmos_var
+from ppsci.arch.aurora.normalisation import unnormalise_surf_var
+
+__all__ = ["Metadata", "Batch", "tile_batch", "split_batch"]
+
+
+@dataclasses.dataclass
+class Metadata:
+    """Metadata in a batch.
+
+    Args:
+        lat (:class:`paddle.Tensor`): Latitudes.
+        lon (:class:`paddle.Tensor`): Longitudes.
+        time (tuple[datetime, ...]): For every batch element, the time.
+        atmos_levels (tuple[int | float, ...]): Pressure levels for the atmospheric variables in
+            hPa.
+        rollout_step (int, optional): How many roll-out steps were used to produce this prediction.
+            If equal to `0`, which is the default, then this means that this is not a prediction,
+            but actual data. This field is automatically populated by the model and used to use a
+            separate LoRA for every roll-out step. Generally, you are safe to ignore this field.
+    """
+
+    lat: paddle.Tensor
+    lon: paddle.Tensor
+    time: tuple[datetime, ...]
+    atmos_levels: tuple[int | float, ...]
+    rollout_step: int = 0
+
+    def __post_init__(self):
+        if not (paddle.all(self.lat <= 90) and paddle.all(self.lat >= -90)):
+            raise ValueError("Latitudes must be in the range [-90, 90].")
+        if not (paddle.all(self.lon >= 0) and paddle.all(self.lon < 360)):
+            raise ValueError("Longitudes must be in the range [0, 360).")
+        if self.lat.dim() == self.lon.dim() == 1:
+            if not paddle.all(self.lat[1:] - self.lat[:-1] < 0):
+                raise ValueError("Latitudes must be strictly decreasing.")
+            if not paddle.all(self.lon[1:] - self.lon[:-1] > 0):
+                raise ValueError("Longitudes must be strictly increasing.")
+        elif self.lat.dim() == self.lon.dim() == 2:
+            if not paddle.all(self.lat[1:, :] - self.lat[:-1, :]):
+                raise ValueError(
+                    "Latitudes must be strictly decreasing along every column."
+                )
+            if not paddle.all(self.lon[:, 1:] - self.lon[:, :-1] > 0):
+                raise ValueError(
+                    "Longitudes must be strictly increasing along every row."
+                )
+        else:
+            raise ValueError(
+                "The latitudes and longitudes must either both be vectors or both be matrices."
+            )
+
+
+@dataclasses.dataclass
+class Batch:
+    """A batch of data.
+
+    Args:
+        surf_vars (dict[str, :class:`paddle.Tensor`]): Surface-level variables with shape
+            `(b, t, h, w)`.
+        static_vars (dict[str, :class:`paddle.Tensor`]): Static variables with shape `(h, w)`.
+        atmos_vars (dict[str, :class:`paddle.Tensor`]): Atmospheric variables with shape
+            `(b, t, c, h, w)`.
+        metadata (:class:`Metadata`): Metadata associated to this batch.
+    """
+
+    surf_vars: dict[str, paddle.Tensor]
+    static_vars: dict[str, paddle.Tensor]
+    atmos_vars: dict[str, paddle.Tensor]
+    metadata: Metadata
+
+    @property
+    def spatial_shape(self) -> tuple[int, int]:
+        """Get the spatial shape from an arbitrary surface-level variable."""
+        return next(iter(self.surf_vars.values())).shape[-2:]
+
+    def normalise(self, surf_stats: dict[str, tuple[float, float]]) -> "Batch":
+        """Normalise all variables in the batch.
+
+        Args:
+            surf_stats (dict[str, tuple[float, float]]): For these surface-level variables, adjust
+                the normalisation to the given tuple consisting of a new location and scale.
+
+        Returns:
+            :class:`.Batch`: Normalised batch.
+        """
+        return Batch(
+            surf_vars={
+                k: normalise_surf_var(v, k, stats=surf_stats)
+                for k, v in self.surf_vars.items()
+            },
+            static_vars={
+                k: normalise_surf_var(v, k, stats=surf_stats)
+                for k, v in self.static_vars.items()
+            },
+            atmos_vars={
+                k: normalise_atmos_var(v, k, self.metadata.atmos_levels)
+                for k, v in self.atmos_vars.items()
+            },
+            metadata=self.metadata,
+        )
+
+    def unnormalise(self, surf_stats: dict[str, tuple[float, float]]) -> "Batch":
+        """Unnormalise all variables in the batch.
+
+        Args:
+            surf_stats (dict[str, tuple[float, float]]): For these surface-level variables, adjust
+                the normalisation to the given tuple consisting of a new location and scale.
+
+        Returns:
+            :class:`.Batch`: Unnormalised batch.
+        """
+        return Batch(
+            surf_vars={
+                k: unnormalise_surf_var(v, k, stats=surf_stats)
+                for k, v in self.surf_vars.items()
+            },
+            static_vars={
+                k: unnormalise_surf_var(v, k, stats=surf_stats)
+                for k, v in self.static_vars.items()
+            },
+            atmos_vars={
+                k: unnormalise_atmos_var(v, k, self.metadata.atmos_levels)
+                for k, v in self.atmos_vars.items()
+            },
+            metadata=self.metadata,
+        )
+
+    def crop(self, patch_size: int) -> "Batch":
+        """Crop the variables in the batch to patch size `patch_size`."""
+        h, w = self.spatial_shape
+        if w % patch_size != 0:
+            raise ValueError("Width of the data must be a multiple of the patch size.")
+        if h % patch_size == 0:
+            return self
+        elif h % patch_size == 1:
+            return Batch(
+                surf_vars={k: v[..., :-1, :] for k, v in self.surf_vars.items()},
+                static_vars={k: v[..., :-1, :] for k, v in self.static_vars.items()},
+                atmos_vars={k: v[..., :-1, :] for k, v in self.atmos_vars.items()},
+                metadata=Metadata(
+                    lat=self.metadata.lat[:-1],
+                    lon=self.metadata.lon,
+                    atmos_levels=self.metadata.atmos_levels,
+                    time=self.metadata.time,
+                    rollout_step=self.metadata.rollout_step,
+                ),
+            )
+        else:
+            raise ValueError(
+                f"There can at most be one latitude too many, but there are {h % patch_size} too many."
+            )
+
+    def _fmap(self, f: Callable[[paddle.Tensor], paddle.Tensor]) -> "Batch":
+        return Batch(
+            surf_vars={k: f(v) for k, v in self.surf_vars.items()},
+            static_vars={k: f(v) for k, v in self.static_vars.items()},
+            atmos_vars={k: f(v) for k, v in self.atmos_vars.items()},
+            metadata=Metadata(
+                lat=f(self.metadata.lat),
+                lon=f(self.metadata.lon),
+                atmos_levels=self.metadata.atmos_levels,
+                time=self.metadata.time,
+                rollout_step=self.metadata.rollout_step,
+            ),
+        )
+
+    def to(self, device: (str | paddle.device)) -> "Batch":
+        """Move the batch to another device."""
+        return self._fmap(lambda x: x.to(device))
+
+    def type(self, t: type) -> "Batch":
+        """Convert everything to type `t`."""
+        return self._fmap(lambda x: x.astype(t))
+
+    def regrid(self, res: float) -> "Batch":
+        """Regrid the batch to a `res` degrees resolution.
+
+        This results in `float32` data on the CPU.
+
+        This function is not optimised for either speed or accuracy. Use at your own risk.
+        """
+        shape = round(180 / res) + 1, round(360 / res)
+        lat_new = paddle.from_numpy(np.linspace(90, -90, shape[0]))
+        lon_new = paddle.from_numpy(np.linspace(0, 360, shape[1], endpoint=False))
+        interpolate_res = partial(
+            interpolate,
+            lat=self.metadata.lat,
+            lon=self.metadata.lon,
+            lat_new=lat_new,
+            lon_new=lon_new,
+        )
+        return Batch(
+            surf_vars={k: interpolate_res(v) for k, v in self.surf_vars.items()},
+            static_vars={k: interpolate_res(v) for k, v in self.static_vars.items()},
+            atmos_vars={k: interpolate_res(v) for k, v in self.atmos_vars.items()},
+            metadata=Metadata(
+                lat=lat_new,
+                lon=lon_new,
+                atmos_levels=self.metadata.atmos_levels,
+                time=self.metadata.time,
+                rollout_step=self.metadata.rollout_step,
+            ),
+        )
+
+    def to_netcdf(self, path: (str | Path)) -> None:
+        """Write the batch to a file.
+
+        This requires `xarray` and `netcdf4` to be installed.
+        """
+        try:
+            import xarray as xr
+        except ImportError as e:
+            raise RuntimeError("`xarray` must be installed.") from e
+        ds = xr.Dataset(
+            {
+                **{
+                    f"surf_{k}": (("batch", "history", "latitude", "longitude"), _np(v))
+                    for k, v in self.surf_vars.items()
+                },
+                **{
+                    f"static_{k}": (("latitude", "longitude"), _np(v))
+                    for k, v in self.static_vars.items()
+                },
+                **{
+                    f"atmos_{k}": (
+                        ("batch", "history", "level", "latitude", "longitude"),
+                        _np(v),
+                    )
+                    for k, v in self.atmos_vars.items()
+                },
+            },
+            coords={
+                "latitude": _np(self.metadata.lat),
+                "longitude": _np(self.metadata.lon),
+                "time": list(self.metadata.time),
+                "level": list(self.metadata.atmos_levels),
+                "rollout_step": self.metadata.rollout_step,
+            },
+        )
+        encoding = {}
+        for name, var in ds.data_vars.items():
+            enc: dict = {"zlib": True, "complevel": 4}
+            dims = var.dims
+            chunks: dict = {}
+            if "history" in dims:
+                chunks["history"] = 1
+            if "level" in dims:
+                chunks["level"] = 1
+            if chunks:
+                enc["chunksizes"] = tuple(
+                    chunks.get(d, s) for d, s in zip(dims, var.shape)
+                )
+            encoding[name] = enc
+        ds.to_netcdf(path, encoding=encoding)
+
+    @classmethod
+    def from_netcdf(cls, path: (str | Path)) -> "Batch":
+        """Load a batch from a file."""
+        try:
+            import xarray as xr
+        except ImportError as e:
+            raise RuntimeError("`xarray` must be installed.") from e
+        ds = xr.load_dataset(path, engine="netcdf4")
+        surf_vars: List[str] = []
+        static_vars: List[str] = []
+        atmos_vars: List[str] = []
+        for k in ds:
+            if k.startswith("surf_"):
+                surf_vars.append(k[len("surf_") :])
+            elif k.startswith("static_"):
+                static_vars.append(k[len("static_") :])
+            elif k.startswith("atmos_"):
+                atmos_vars.append(k[len("atmos_") :])
+        return Batch(
+            surf_vars={k: paddle.from_numpy(ds[f"surf_{k}"].values) for k in surf_vars},
+            static_vars={
+                k: paddle.from_numpy(ds[f"static_{k}"].values) for k in static_vars
+            },
+            atmos_vars={
+                k: paddle.from_numpy(ds[f"atmos_{k}"].values) for k in atmos_vars
+            },
+            metadata=Metadata(
+                lat=paddle.from_numpy(ds.latitude.values),
+                lon=paddle.from_numpy(ds.longitude.values),
+                time=tuple(ds.time.values.astype("datetime64[s]").tolist()),
+                atmos_levels=tuple(ds.level.values),
+                rollout_step=int(ds.rollout_step.values),
+            ),
+        )
+
+    def __post_init__(self):
+        b = next(iter(self.surf_vars.values())).shape[0]
+        c = next(iter(self.atmos_vars.values())).shape[-3]
+        if len(self.metadata.time) != b:
+            raise ValueError(
+                f"`time` has length {len(self.metadata.time)}, but the batch size is {b}. `time` must contain exactly one entry per batch element."
+            )
+        if len(self.metadata.atmos_levels) != c:
+            raise ValueError(
+                f"`atmos_levels` has length {len(self.metadata.atmos_levels)}, but the atmospheric variables have {c} pressure levels. These must be equal."
+            )
+
+
+def tile_batch(batch: Batch, n: int) -> Batch:
+    """Tile `batch` along the batch dimension `n` times.
+
+    Use `split_batch` to split the tiled batch, or a prediction for it, back into `n` batches.
+
+    Args:
+        batch (:class:`aurora.Batch`): The batch to tile.
+        n (int): Number of times to tile.
+
+    Returns:
+        :class:`aurora.Batch`: `batch` tiled `n` times along the batch dimension.
+    """
+    return dataclasses.replace(
+        batch,
+        surf_vars={
+            k: v.repeat(n, *([1] * (v.dim() - 1))) for k, v in batch.surf_vars.items()
+        },
+        atmos_vars={
+            k: v.repeat(n, *([1] * (v.dim() - 1))) for k, v in batch.atmos_vars.items()
+        },
+        metadata=dataclasses.replace(batch.metadata, time=batch.metadata.time * n),
+    )
+
+
+def split_batch(batch: Batch, n: int) -> list[Batch]:
+    """Split `batch` into `n` equally sized batches along the batch dimension.
+
+    This undoes `tile_batch`.
+
+    Args:
+        batch (:class:`aurora.Batch`): The batch to split.
+        n (int): Number of batches to split into.
+
+    Returns:
+        list[:class:`aurora.Batch`]: `batch` split into `n` equally sized batches.
+
+    Raises:
+        ValueError: If the batch size of `batch` is not divisible by `n`.
+    """
+    batch_size = next(iter(batch.surf_vars.values())).shape[0]
+    b, remainder = divmod(batch_size, n)
+    if remainder != 0:
+        raise ValueError(f"Batch size `{batch_size}` must be divisible by `n = {n}`.")
+    time = batch.metadata.time
+    return [
+        dataclasses.replace(
+            batch,
+            surf_vars={k: v[m * b : (m + 1) * b] for k, v in batch.surf_vars.items()},
+            atmos_vars={k: v[m * b : (m + 1) * b] for k, v in batch.atmos_vars.items()},
+            metadata=dataclasses.replace(
+                batch.metadata, time=time[m * b : (m + 1) * b]
+            ),
+        )
+        for m in range(n)
+    ]
+
+
+def _np(x: paddle.Tensor) -> np.ndarray:
+    return x.detach().cpu().numpy()
+
+
+def interpolate(
+    v: paddle.Tensor,
+    lat: paddle.Tensor,
+    lon: paddle.Tensor,
+    lat_new: paddle.Tensor,
+    lon_new: paddle.Tensor,
+) -> paddle.Tensor:
+    """Interpolate a variable `v` with latitudes `lat` and longitudes `lon` to new latitudes
+    `lat_new` and new longitudes `lon_new`."""
+    return paddle.from_numpy(
+        interpolate_numpy(
+            v.double().numpy(),
+            lat.double().numpy(),
+            lon.double().numpy(),
+            lat_new.double().numpy(),
+            lon_new.double().numpy(),
+        )
+    ).float()
+
+
+def interpolate_numpy(
+    v: np.ndarray,
+    lat: np.ndarray,
+    lon: np.ndarray,
+    lat_new: np.ndarray,
+    lon_new: np.ndarray,
+) -> np.ndarray:
+    """Like :func:`.interpolate`, but for NumPy tensors."""
+    assert (np.diff(lon) > 0).all()
+    lon = np.concatenate((lon[-1:] - 360, lon, lon[:1] + 360))
+    batch_shape = v.shape[:-2]
+    v = v.reshape(-1, *v.shape[-2:])
+    vs_regridded = []
+    for vi in v:
+        vi = np.concatenate((vi[:, -1:], vi, vi[:, :1]), axis=1)
+        rgi = RGI((lat, lon), vi, method="linear", bounds_error=False, fill_value=None)
+        lat_new_grid, lon_new_grid = np.meshgrid(
+            lat_new, lon_new, indexing="ij", sparse=True
+        )
+        vs_regridded.append(rgi((lat_new_grid, lon_new_grid)))
+    v_regridded = np.stack(vs_regridded, axis=0)
+    v_regridded = v_regridded.reshape(*batch_shape, lat_new.shape[0], lon_new.shape[0])
+    return v_regridded

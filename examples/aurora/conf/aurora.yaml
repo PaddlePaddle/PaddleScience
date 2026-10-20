@@ -1,0 +1,26 @@
+mode: train
+seed: 42
+device: cpu
+output_dir: outputs/aurora-finetune
+
+MODEL:
+  name: AuroraPretrained
+  tiny: false
+  checkpoint: null
+
+DATA:
+  input: data/aurora/input.nc
+  target: data/aurora/truth_001.nc
+  # A bounded-memory numerical demonstration, not full-resolution training.
+  spatial_stride: 45
+
+TRAIN:
+  epochs: 1
+  iters_per_epoch: 3
+  learning_rate: 0.00001
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: ${output_dir}/hydra

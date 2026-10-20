@@ -1,0 +1,14 @@
+defaults:
+  - aurora
+  - _self_
+
+output_dir: outputs/aurora-tiny
+MODEL:
+  name: AuroraSmallPretrained
+  tiny: true
+DATA:
+  input: data/aurora-demo/input.nc
+  target: data/aurora-demo/truth_001.nc
+  spatial_stride: 1
+TRAIN:
+  iters_per_epoch: 2
