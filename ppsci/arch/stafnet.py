@@ -50,7 +50,10 @@ class Inception_Block_V1(paddle.nn.Layer):
         res_list = []
         for i in range(self.num_kernels):
             res_list.append(self.kernels[i](x))
-        res = paddle.stack(x=res_list, axis=-1).mean(axis=-1)
+        # Equivalent to paddle.stack(res_list, axis=-1).mean(axis=-1), but avoids
+        # materializing the stacked [..., num_kernels] tensor. CINN fuses the
+        # stack+mean spelling into a kernel ~2x slower than eager execution.
+        res = sum(res_list) / self.num_kernels
         return res
 
 
