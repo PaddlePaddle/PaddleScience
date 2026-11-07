@@ -16,6 +16,7 @@ Usage:
     python test/cinn/run_cinn_test.py                          # all cases, GPU 0
     python test/cinn/run_cinn_test.py --cases ldc,laplace --devices 0,1,2,3
     python test/cinn/run_cinn_test.py --iters 50 --warmup 10 --stages infer
+    python test/cinn/run_cinn_test.py --cases ntopo --output-dir copied --reuse-inputs
 """
 import argparse
 import concurrent.futures
@@ -149,8 +150,11 @@ def time_stats(times, warmup):
     }
 
 
-def worker(case_name, mode, stages, iters, warmup, work_dir):
-    """Run one case in one mode and print its result as a JSON line."""
+def worker(case_name, mode, stages, iters, warmup, work_dir, reuse_inputs=False):
+    """Run one case in one mode and print its result as a JSON line.
+
+    With reuse_inputs the dynamic worker also loads init.pdparams / batch.npz from
+    work_dir instead of regenerating them, e.g. files copied from another machine."""
     import paddle
 
     case = importlib.import_module(f"cases.{case_name}")
@@ -187,7 +191,7 @@ def worker(case_name, mode, stages, iters, warmup, work_dir):
     dropout_layers = disable_dropout(model)
     init_path = work_dir / "init.pdparams"
     batch_path = work_dir / "batch.npz"
-    if mode == "dynamic":
+    if mode == "dynamic" and not reuse_inputs:
         inputs, labels = case.build_batch()
         paddle.save(model.state_dict(), str(init_path))
         save_batch(batch_path, inputs, labels)
@@ -278,6 +282,8 @@ def run_worker(case_name, mode, args, device, work_dir):
         "--work-dir",
         str(work_dir),
     ]
+    if args.reuse_inputs:
+        command.append("--reuse-inputs")
     log_path = work_dir / f"{mode}.log"
     result = None
     started = time.perf_counter()
@@ -465,6 +471,11 @@ def parse_args():
     parser.add_argument("--train-first-rtol", type=float, default=1e-3)
     parser.add_argument("--train-final-rtol", type=float, default=1e-2)
     parser.add_argument("--output-dir", help="defaults to test/cinn/outputs/<stamp>")
+    parser.add_argument(
+        "--reuse-inputs",
+        action="store_true",
+        help="load <output-dir>/<case>/init.pdparams + batch.npz instead of regenerating",
+    )
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--worker", choices=["dynamic", "cinn"], help=argparse.SUPPRESS)
     parser.add_argument("--work-dir", help=argparse.SUPPRESS)
@@ -485,6 +496,7 @@ def main():
             args.iters,
             args.warmup,
             Path(args.work_dir),
+            args.reuse_inputs,
         )
         return
     if args.list:

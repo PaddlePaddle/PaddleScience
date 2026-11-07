@@ -182,9 +182,11 @@ class HEDeepONets(base.Arch):
         )
         # Add bias
         if self.use_bias:
-            G_u_h += self.b[0]
-            G_u_c += self.b[1]
-            G_u_w += self.b[2]
+            # slice instead of integer index: under paddle.jit.to_static the backward
+            # of `self.b[i]` (0-D result) gives a wrong gradient for self.b
+            G_u_h = G_u_h + self.b[0:1]
+            G_u_c = G_u_c + self.b[1:2]
+            G_u_w = G_u_w + self.b[2:3]
 
         result_dict = {
             self.output_keys[0]: G_u_h,
