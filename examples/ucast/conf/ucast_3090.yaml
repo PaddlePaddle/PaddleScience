@@ -1,0 +1,14 @@
+defaults:
+  - ucast
+  - _self_
+
+mode: train
+
+MODEL:
+  use_recompute: true
+
+TRAIN:
+  batch_size: 1
+  eval_batch_size: 1
+  eval_forward_batch_size: 1
+  update_freq: 48

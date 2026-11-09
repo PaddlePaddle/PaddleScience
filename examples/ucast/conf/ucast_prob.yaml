@@ -1,0 +1,24 @@
+defaults:
+  - ucast
+  - _self_
+
+mode: train
+
+MODEL:
+  training_ensemble_size: 2
+  eval_ensemble_size: 5
+
+TRAIN:
+  stage: probabilistic
+  epochs: 12
+  batch_size: 4
+  eval_batch_size: 4
+  update_freq: 12
+  loss: wcrps
+  pretrained_model_path: ???
+  optimizer:
+    learning_rate: 7.0e-5
+    weight_decay: 0.1
+    use_muon: true
+    muon_learning_rate: 0.007
+    muon_weight_decay: 0.0
