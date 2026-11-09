@@ -83,7 +83,7 @@
 
 ## 1. 背景简介
 
-拓扑优化 (Topolgy Optimization) 是一种数学方法，针对给定的一组负载、边界条件和约束，在给定的设计区域内，以最大化系统性能为目标优化材料的分布。这个问题很有挑战性因为它要求解决方案是二元的，即应该说明设计区域的每个部分是否存在材料或不存在。这种优化的一个常见例子是在给定总重量和边界条件下最小化物体的弹性应变能。随着20世纪汽车和航空航天工业的发展，拓扑优化已经将应用扩展到很多其他学科：如流体、声学、电磁学、光学及其组合。SIMP (Simplied Isotropic Material with Penalization) 是目前广泛传播的一种简单而高效的拓扑优化求解方法。它通过对材料密度的中间值进行惩罚，提高了二元解的收敛性。
+拓扑优化 (Topology Optimization) 是一种数学方法，针对给定的一组负载、边界条件和约束，在给定的设计区域内，以最大化系统性能为目标优化材料的分布。这个问题很有挑战性因为它要求解决方案是二元的，即应该说明设计区域的每个部分是否存在材料或不存在。这种优化的一个常见例子是在给定总重量和边界条件下最小化物体的弹性应变能。随着20世纪汽车和航空航天工业的发展，拓扑优化已经将应用扩展到很多其他学科：如流体、声学、电磁学、光学及其组合。SIMP (Simplied Isotropic Material with Penalization) 是目前广泛传播的一种简单而高效的拓扑优化求解方法。它通过对材料密度的中间值进行惩罚，提高了二元解的收敛性。
 
 ## 2. 问题定义
 
@@ -98,7 +98,7 @@ $$
 \end{aligned}
 $$
 
-其中：$x_{j}$ 是材料分布 (material distribution)；$c$ 指可塑性 (compliance)；$\mathbf{u}_{j}$ 是 element displacement vector；$\mathbf{k}_{0}$ 是 element stiffness matrix for an element with unit Youngs modulu；$\mathbf{U}$, $\mathbf{F}$ 是 global displacement and force vectors；$\mathbf{K}$ 是 global stiffness matrix；$V(\mathbf{x})$, $V_{0}$ 是材料体积和设计区域的体积；$f_{0}$ 是预先指定的体积比。
+其中：$x_{j}$ 是材料分布 (material distribution)；$c$ 指可塑性 (compliance)；$\mathbf{u}_{j}$ 是 element displacement vector；$\mathbf{k}_{0}$ 是 element stiffness matrix for an element with unit Young's modulus；$\mathbf{U}$, $\mathbf{F}$ 是 global displacement and force vectors；$\mathbf{K}$ 是 global stiffness matrix；$V(\mathbf{x})$, $V_{0}$ 是材料体积和设计区域的体积；$f_{0}$ 是预先指定的体积比。
 
 ## 3. 问题求解
 

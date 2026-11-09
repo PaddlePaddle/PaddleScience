@@ -433,7 +433,7 @@ examples/deephpms/burgers.py:322:338
 
 ### 3.10 Visualization
 
-After training this problem, you can use the third stage network Net3 to infer the data of simulation case 2 in `evalution`, and the result is the value of $u|_{(x,t)}$, and output the value of `l2 error`. The drawing part is in plotting.py file.
+After training this problem, you can use the third stage network Net3 to infer the data of simulation case 2 in `evaluation`, and the result is the value of $u|_{(x,t)}$, and output the value of `l2 error`. The drawing part is in plotting.py file.
 
 ``` py linenums="385"
 --8<--

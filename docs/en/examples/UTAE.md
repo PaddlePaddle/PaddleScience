@@ -130,7 +130,7 @@ examples/UTAE/src/backbones/utae.py:12:177
 ## Visualization Results
 On the PASTIS dataset, this case reproduces the visualization results of panoptic segmentation prediction and semantic segmentation prediction as shown in the figure:
 
-![rusult](https://paddle-org.bj.bcebos.com/paddlescience/docs/utae/rusult.png)
+![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/utae/result.png)
 
 (a) Original image (b) Annotation (Ground Truth) (c) Panoptic segmentation prediction (d) Semantic segmentation prediction
 

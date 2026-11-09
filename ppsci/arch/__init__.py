@@ -71,6 +71,8 @@ from ppsci.arch.ifm_mlp import IFMMLP  # isort:skip
 from ppsci.arch.stafnet import STAFNet  # isort:skip
 from ppsci.arch.meteoformer import Meteoformer  # isort:skip
 from ppsci.arch.climateformer import Climateformer  # isort:skip
+from ppsci.arch.climax import ClimaX  # isort:skip
+from ppsci.arch.climax import ClimaXClimateBench  # isort:skip
 from ppsci.arch.resnet import ResNet  # isort:skip
 from ppsci.arch.chemprop_molecule import MoleculeModel  # isort:skip
 from ppsci.arch.preformer import Preformer  # isort:skip
@@ -91,6 +93,8 @@ __all__ = [
     "CFDGCN",
     "SuzukiMiyauraModel",
     "ChipDeepONets",
+    "ClimaX",
+    "ClimaXClimateBench",
     "CrystalGraphConvNet",
     "CuboidTransformer",
     "CVit",

@@ -901,14 +901,14 @@ If your development environment is VSCode, it is recommended to install the [mar
 
 ### 3.4 Preview Document
 
-Assuming the location of the written document is `PaddleScience/docs/en/examples/your_exmaple.md`, in order to display it in the left directory of PaddleScience official website [Classic Cases](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/examples/allen_cahn/), you need to modify `PaddleScience/mkdocs.yml`. Add the relative path of `your_exmaple.md` to the list under `- Classic Cases:` following other cases, as shown in the highlighted line below.
+Assuming the location of the written document is `PaddleScience/docs/en/examples/your_example.md`, in order to display it in the left directory of PaddleScience official website [Classic Cases](https://paddlescience-docs.readthedocs.io/zh-cn/latest/en/examples/allen_cahn/), you need to modify `PaddleScience/mkdocs.yml`. Add the relative path of `your_example.md` to the list under `- Classic Cases:` following other cases, as shown in the highlighted line below.
 
 ``` yaml hl_lines="23" title="PaddleScience/mkdocs.yml"
 ...
 --8<--
 mkdocs.yml:38:58
 --8<--
-        - EXAMPLE_NAME: docs/en/examples/your_exmaple.md
+        - EXAMPLE_NAME: docs/en/examples/your_example.md
 ...
 ```
 

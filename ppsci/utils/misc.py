@@ -220,7 +220,7 @@ class RankZeroFirst(ContextDecorator):
 
     def __enter__(self):
         if self.world_size > 1 and not self.is_master:
-            dist.barrier()  # Non-master processs wait for master to finish
+            dist.barrier()  # Non-master process wait for master to finish
 
     def __exit__(self, type, value, traceback):
         if self.world_size > 1 and self.is_master:

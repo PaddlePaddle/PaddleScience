@@ -464,7 +464,7 @@ def validate_scaling_factor(
 
 
 def resample(x, res_scale, axis, output_shape=None):
-    """A module for generic n-dimentional interpolation (Fourier resampling).
+    """A module for generic n-dimensional interpolation (Fourier resampling).
 
     Args:
         x (paddle.Tensor): Input activation of size (batch_size, channels, d1, ..., dN).
@@ -675,7 +675,7 @@ class FactorizedSpectralConv(nn.Layer):
             n_modes = [n_modes]
         else:
             n_modes = list(n_modes)
-        # The last mode has a redundacy as we use real FFT
+        # The last mode has a redundancy as we use real FFT
         # As a design choice we do the operation here to avoid users dealing with the +1
         n_modes[-1] = n_modes[-1] // 2 + 1
         self._n_modes = n_modes
@@ -1263,7 +1263,7 @@ class FNOBlocks(nn.Layer):
             n_modes = [n_modes]
         else:
             n_modes = list(n_modes)
-        # The last mode has a redundacy as we use real FFT
+        # The last mode has a redundancy as we use real FFT
         # As a design choice we do the operation here to avoid users dealing with the +1
         n_modes[-1] = n_modes[-1] // 2 + 1
         self._n_modes = n_modes

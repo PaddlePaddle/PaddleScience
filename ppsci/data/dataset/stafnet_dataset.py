@@ -116,23 +116,23 @@ class STAFNetDataset(io.Dataset):
         if file_path.endswith(".pkl"):
             with open(file_path, "rb") as f:
                 self.data = pandas.read_pickle(f)
-        self.metedata = self.data["metedata"]
+        self.metadata = self.data["metadata"]
         self.AQdata = self.data["AQdata"]
-        self.AQStation_imformation = self.data["AQStation_imformation"]
-        self.meteStation_imformation = self.data["meteStation_imformation"]
+        self.AQStation_information = self.data["AQStation_information"]
+        self.meteStation_information = self.data["meteStation_information"]
         mete_coords = np.array(
-            self.meteStation_imformation.loc[:, ["经度", "纬度"]],
+            self.meteStation_information.loc[:, ["经度", "纬度"]],
         ).astype("float32")
-        AQ_coords = np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float32")
+        AQ_coords = np.array(self.AQStation_information.iloc[:, -2:]).astype("float32")
         self.aq_edge_index, self.aq_edge_attr, self.aq_node_coords = self.get_edge_attr(
-            np.array(self.AQStation_imformation.iloc[:, -2:]).astype("float32")
+            np.array(self.AQStation_information.iloc[:, -2:]).astype("float32")
         )
         (
             self.mete_edge_index,
             self.mete_edge_attr,
             self.mete_node_coords,
         ) = self.get_edge_attr(
-            np.array(self.meteStation_imformation.loc[:, ["经度", "纬度"]]).astype(
+            np.array(self.meteStation_information.loc[:, ["经度", "纬度"]]).astype(
                 "float32"
             )
         )
@@ -148,7 +148,7 @@ class STAFNetDataset(io.Dataset):
             dtype="float32",
         )
         mete_train_data = paddle.to_tensor(
-            data=self.metedata[idx : idx + self.seq_len + self.pred_len],
+            data=self.metadata[idx : idx + self.seq_len + self.pred_len],
             dtype="float32",
         )
 

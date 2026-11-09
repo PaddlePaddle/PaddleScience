@@ -114,6 +114,7 @@ nav:
         - MeteoFormer: examples/meteoformer.md
         - Preformer: examples/preformer.md
         - ClimateFormer: examples/climateformer.md
+        - ClimaX: examples/climax.md
         - GraphCast: examples/graphcast.md
         - GenCast: examples/gencast.md
         - VelocityGAN: examples/velocity_gan.md
@@ -315,7 +316,6 @@ extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
   - javascripts/contributors.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 # Extra css

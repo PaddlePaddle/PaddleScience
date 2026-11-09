@@ -51,7 +51,7 @@ class GaussianRandomFieldS2(nn.Layer):
     Args:
         nlat (int): Number of latitudinal modes.longitudinal modes are 2*nlat.
         alpha (float, optional): Regularity parameter. Larger means smoother. Defaults to 2.0.
-        tau (float, optional): Lenght-scale parameter. Larger means more scales. Defaults to 3.0.
+        tau (float, optional): Length-scale parameter. Larger means more scales. Defaults to 3.0.
         sigma (float, optional): Scale parameter. Larger means bigger.
             If None, sigma = tau**(0.5*(2*alpha - 2.0)). Defaults to None.
         radius (float, optional): Radius of the sphere. Defaults to 1.0.
