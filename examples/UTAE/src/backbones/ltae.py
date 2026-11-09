@@ -111,7 +111,15 @@ class LTAE2d(nn.Layer):
 
         out = out.transpose([1, 0, 2]).reshape([sz_b * h * w, -1])  # Concatenate heads
         out = self.dropout(self.mlp(out))
-        out = self.out_norm(out) if self.out_norm is not None else out
+        # GroupNorm is fed a rank-3 [N, C, 1] instead of rank-2 [N, C]: the
+        # normalization is identical (groups and statistics are unchanged), but the
+        # prim decomposition rule of group_norm only covers rank >= 3, so the rank-2
+        # spelling fails under paddle.jit.to_static with FLAGS_prim_all.
+        out = (
+            self.out_norm(out.unsqueeze(-1)).squeeze(-1)
+            if self.out_norm is not None
+            else out
+        )
         out = out.reshape([sz_b, h, w, -1]).transpose([0, 3, 1, 2])
 
         attn = attn.reshape([self.n_head, sz_b, h, w, seq_len]).transpose(

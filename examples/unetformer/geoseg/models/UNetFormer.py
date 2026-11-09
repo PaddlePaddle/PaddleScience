@@ -326,8 +326,8 @@ class GlobalLocalAttention(paddle.nn.Layer):
         dots = q @ k.transpose(perm=dim2perm(k.ndim, -2, -1)) * self.scale
         if self.relative_pos_embedding:
             relative_position_bias = self.relative_position_bias_table[
-                self.relative_position_index.view(-1)
-            ].view(self.ws * self.ws, self.ws * self.ws, -1)
+                self.relative_position_index.reshape([-1])
+            ].reshape([self.ws * self.ws, self.ws * self.ws, -1])
             relative_position_bias = relative_position_bias.transpose(
                 perm=[2, 0, 1]
             ).contiguous()

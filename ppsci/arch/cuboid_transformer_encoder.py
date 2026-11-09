@@ -728,9 +728,10 @@ class CuboidSelfAttentionLayer(nn.Layer):
 
         q, k, v = qkv[0], qkv[1], qkv[2]
         q = q * self.scale
+        # keep perm non-negative: CINN's transpose signature does not normalize
+        # negative axes and reads out of bounds when compiling the graph
         perm_0 = list(range(k.ndim))
-        perm_0[-2] = -1
-        perm_0[-1] = -2
+        perm_0[-2], perm_0[-1] = perm_0[-1], perm_0[-2]
         attn_score = q @ k.transpose(perm=perm_0)
 
         if self.use_relative_pos:
@@ -810,8 +811,7 @@ class CuboidSelfAttentionLayer(nn.Layer):
                     )
 
             perm_1 = list(range(l2g_global_k.ndim))
-            perm_1[-2] = -1
-            perm_1[-1] = -2
+            perm_1[-2], perm_1[-1] = perm_1[-1], perm_1[-2]
             l2g_attn_score = l2g_q @ l2g_global_k.transpose(perm=perm_1)
             attn_score_l2l_l2g = paddle.concat(x=(attn_score, l2g_attn_score), axis=-1)
 
@@ -867,14 +867,12 @@ class CuboidSelfAttentionLayer(nn.Layer):
                 [B, self.num_heads, num_cuboids * cuboid_volume, head_C]
             )
             perm_2 = list(range(temp.ndim))
-            perm_2[-2] = -1
-            perm_2[-1] = -2
+            perm_2[-2], perm_2[-1] = perm_2[-1], perm_2[-2]
             g2l_attn_score = g2l_global_q @ temp.transpose(perm=perm_2)
             if self.use_global_self_attn:
                 temp = g2g_global_k.squeeze(axis=2)
                 perm_3 = list(range(temp.ndim))
-                perm_3[-2] = -1
-                perm_3[-1] = -2
+                perm_3[-2], perm_3[-1] = perm_3[-1], perm_3[-2]
                 g2g_attn_score = g2g_global_q @ temp.transpose(perm=perm_3)
                 g2all_attn_score = paddle.concat(
                     x=(g2l_attn_score, g2g_attn_score), axis=-1
