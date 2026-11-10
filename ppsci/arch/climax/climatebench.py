@@ -21,6 +21,8 @@ import paddle
 
 from ppsci.arch.climax.arch import ClimaX
 from ppsci.arch.climax.pos_embed import get_1d_sincos_pos_embed_from_grid
+from ppsci.arch.climax.traceable import TraceableLinear
+from ppsci.arch.climax.traceable import TraceableMultiheadAttention
 
 
 class ClimaXClimateBench(ClimaX):
@@ -112,7 +114,7 @@ class ClimaXClimateBench(ClimaX):
         self.time_pos_embed = paddle.nn.Parameter(
             paddle.zeros(1, time_history, embed_dim), requires_grad=True
         )
-        self.time_agg = paddle.compat.nn.MultiheadAttention(
+        self.time_agg = TraceableMultiheadAttention(
             embed_dim, num_heads, batch_first=True
         )
         self.time_query = paddle.nn.Parameter(
@@ -124,7 +126,7 @@ class ClimaXClimateBench(ClimaX):
         self.time_pos_embed.data.copy_(
             paddle.from_numpy(time_pos_embed).float().unsqueeze(0)
         )
-        self.head = paddle.compat.nn.Linear(embed_dim, img_size[0] * img_size[1])
+        self.head = TraceableLinear(embed_dim, img_size[0] * img_size[1])
         if freeze_encoder:
             for name, p in self.blocks.named_parameters():
                 name = name.lower()

@@ -285,3 +285,10 @@ examples/climax/conf/climax.yaml
 | w_nrmse_tas                  | 0.34945            | 0.34081        |
 | w_nrmses_tas                 | 0.17455            | 0.17788        |
 | w_nrmseg_tas                 | 0.03498            | 0.03258        |
+
+CINN 训练加速：CINN 由环境变量 `CLIMAX_USE_CINN=1` 开启，模型遵循框架统一调度，`to_static` 由 Solver 传入，`full_graph` 取缺省值（SOT 模式）。前向推理是计算密集型负载，CINN 并没有带来端到端加速；而在训练达到稳定后则有端到端加速效果。在RTX 4060 Ti上实测数据如下（FP32、batch_size=1）：
+
+| 阶段                   | 动态图   | CINN     | 提速  |
+| :--------------------- | :------- | :------- | :---- |
+| 前向耗时（batch 1）    | 128.4 ms | 137.9 ms | −6.9% |
+| 训练稳定后平均每步耗时 | 346.4 ms | 332.0 ms | +4.3% |
