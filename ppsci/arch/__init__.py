@@ -23,6 +23,7 @@ from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.base import Arch  # isort:skip
+from ppsci.arch.mosaic import Mosaic  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.arch.smc_reac import SuzukiMiyauraModel  # isort:skip
 from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
@@ -88,6 +89,7 @@ __all__ = [
     "AFNONet",
     "AMGNet",
     "Arch",
+    "Mosaic",
     "AutoEncoder",
     "build_model",
     "CFDGCN",
