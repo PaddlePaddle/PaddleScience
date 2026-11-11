@@ -36,7 +36,7 @@ def scaled_dot_product_attention(
     FP32/FP64 window batches are evaluated in independent chunks to bound the
     temporary score matrix; token interactions within each window are unchanged.
     """
-    if query.place.is_gpu_place() and query.dtype in (paddle.float16, paddle.bfloat16):
+    if query.dtype in (paddle.float16, paddle.bfloat16) and query.place.is_gpu_place():
         out = paddle.nn.functional.scaled_dot_product_attention(
             query.transpose([0, 2, 1, 3]),
             key.transpose([0, 2, 1, 3]),
@@ -146,8 +146,10 @@ def fp16_safe_scaled_dot_product_attention(
     attention weights when running in float16 to prevent overflow or inf values that can appear with
     large sequence lengths.
     """
-    scale_factor = 1 / math.sqrt(query.size(-1)) if scale is None else scale
-    attn_weight = query @ (key.transpose(-2, -1) * scale_factor)
+    scale_factor = 1 / math.sqrt(query.shape[-1]) if scale is None else scale
+    permutation = list(range(key.ndim))
+    permutation[-2], permutation[-1] = permutation[-1], permutation[-2]
+    attn_weight = query @ (key.transpose(permutation) * scale_factor)
     if attn_weight.dtype == paddle.float16:
         max_val = paddle.finfo(attn_weight.dtype).max
         clamp_value = paddle.where(

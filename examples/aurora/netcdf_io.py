@@ -1,4 +1,4 @@
-"""Framework-neutral, lossless Batch serialization for long verification runs."""
+"""Lossless NetCDF serialization with independently readable pressure levels."""
 
 import xarray as xr
 

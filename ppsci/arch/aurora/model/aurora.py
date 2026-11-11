@@ -13,10 +13,6 @@ import paddle
 
 from ppsci.arch.aurora.batch import Batch
 from ppsci.arch.aurora.insolation import insolation
-from ppsci.arch.aurora.model.compat import _adapt_checkpoint_air_pollution
-from ppsci.arch.aurora.model.compat import _adapt_checkpoint_pretrained
-from ppsci.arch.aurora.model.compat import _adapt_checkpoint_v1p5
-from ppsci.arch.aurora.model.compat import _adapt_checkpoint_wave
 from ppsci.arch.aurora.model.decoder import Perceiver3DDecoder
 from ppsci.arch.aurora.model.encoder import Perceiver3DEncoder
 from ppsci.arch.aurora.model.lora import LoRAMode
@@ -48,13 +44,6 @@ class Aurora(paddle.nn.Layer):
 
     Also supports ensemble forecasts.
     """
-
-    default_checkpoint_repo = "microsoft/aurora"
-    """str: Name of the HuggingFace repository to load the default checkpoint from."""
-    default_checkpoint_name = "aurora-0.25-finetuned.ckpt"
-    """str: Name of the default checkpoint."""
-    default_checkpoint_revision = "0be7e57c685dac86b78c4a19a3ab149d13c6a3dd"
-    """str: Commit hash of the default checkpoint."""
 
     def __init__(
         self,
@@ -518,33 +507,8 @@ class Aurora(paddle.nn.Layer):
             pred, surf_vars=clipped_surf, atmos_vars=clipped_atmos
         )
 
-    def load_checkpoint(
-        self,
-        repo: Optional[str] = None,
-        name: Optional[str] = None,
-        revision: Optional[str] = None,
-        strict: bool = True,
-    ) -> None:
-        """Load a checkpoint from HuggingFace.
-
-        Args:
-            repo (str, optional): Name of the repository of the form `user/repo`.
-            name (str, optional): Path to the checkpoint relative to the root of the repository,
-                e.g. `checkpoint.cpkt`.
-            revision (str, optional): Version hash of the Huggingface git repository commit.
-            strict (bool, optional): Error if the model parameters are not exactly equal to the
-                parameters in the checkpoint. Defaults to `True`.
-        """
-        repo = repo or self.default_checkpoint_repo
-        name = name or self.default_checkpoint_name
-        revision = revision or self.default_checkpoint_revision
-        from huggingface_hub import hf_hub_download
-
-        path = hf_hub_download(repo_id=repo, filename=name, revision=revision)
-        self.load_checkpoint_local(path, strict=strict)
-
     def load_checkpoint_local(self, path: str, strict: bool = True) -> None:
-        """Load a checkpoint directly from a file.
+        """Load native Paddle parameters from a local .pdparams file.
 
         Args:
             path (str): Path to the checkpoint.
@@ -554,49 +518,9 @@ class Aurora(paddle.nn.Layer):
         from pathlib import Path
 
         path = Path(path)
-        if path.suffix == ".pdparams":
-            self._load_native_state_dict(paddle.load(str(path)), strict=strict)
-            return
-        if path.suffix == ".npz":
-            with np.load(path, allow_pickle=False) as archive:
-                d = {k: archive[k] for k in archive.files if not k.startswith("__")}
-        else:
-            # Legacy import only; native weights and NPZ arrays do not need Torch.
-            try:
-                import torch
-            except ImportError as error:
-                raise ImportError(
-                    "Export the original checkpoint with examples/aurora/export_torch_checkpoint.py "
-                    "in a PyTorch environment, then load the resulting .npz here. "
-                    "Native .pdparams files need only Paddle."
-                ) from error
-            d = torch.load(str(path), map_location="cpu", weights_only=True)
-            d = d.get("state_dict", d)
-            d = {k: v.detach().cpu().numpy() for k, v in d.items()}
-        self.load_torch_state_dict(d, strict=strict)
-
-    def load_torch_state_dict(self, state_dict, strict: bool = True):
-        """Import Torch-layout arrays, adapting published legacy checkpoint keys.
-
-        Only native Linear weights are transposed. Convolution kernels, learned
-        latents, and the manually multiplied LoRA matrices retain their layout.
-        """
-        d = {k: paddle.to_tensor(v) for k, v in state_dict.items()}
-        d = self._adapt_checkpoint(d)
-        current_history_size = d["encoder.surf_token_embeds.weights.2t"].shape[2]
-        if self.max_history_size > current_history_size:
-            self.adapt_checkpoint_max_history_size(d)
-        elif self.max_history_size < current_history_size:
-            raise AssertionError(
-                f"Cannot load checkpoint with `max_history_size` {current_history_size} into model with `max_history_size` {self.max_history_size}."
-            )
-        linear_weights = {
-            f"{name}.weight" if name else "weight"
-            for name, layer in self.named_sublayers(include_self=True)
-            if isinstance(layer, paddle.nn.Linear)
-        }
-        d = {k: v.transpose([1, 0]) if k in linear_weights else v for k, v in d.items()}
-        return self._load_native_state_dict(d, strict=strict)
+        if path.suffix != ".pdparams":
+            raise ValueError("Aurora requires native Paddle .pdparams weights")
+        self._load_native_state_dict(paddle.load(str(path)), strict=strict)
 
     def _load_native_state_dict(self, state_dict, strict=True):
         expected = self.state_dict()
@@ -614,55 +538,6 @@ class Aurora(paddle.nn.Layer):
                 )
         self.set_state_dict({k: v for k, v in state_dict.items() if k in expected})
         return missing, unexpected
-
-    def _adapt_checkpoint(
-        self, d: dict[str, paddle.Tensor]
-    ) -> dict[str, paddle.Tensor]:
-        """Adapt an existing checkpoint to make it compatible with the current version of the model.
-
-        Args:
-            d (dict[str, paddle.Tensor]): Checkpoint.
-
-        Return:
-            dict[str, paddle.Tensor]: Adapted checkpoint.
-        """
-        return _adapt_checkpoint_pretrained(self.patch_size, d)
-
-    def adapt_checkpoint_max_history_size(
-        self, checkpoint: dict[str, paddle.Tensor]
-    ) -> None:
-        """Adapt a checkpoint with smaller `max_history_size` to a model with a larger
-        `max_history_size` than the current model.
-
-        If a checkpoint was trained with a larger `max_history_size` than the current model,
-        this function will assert fail to prevent loading the checkpoint. This is to
-        prevent loading a checkpoint which will likely cause the checkpoint to degrade its
-        performance.
-
-        This implementation copies weights from the checkpoint to the model and fills zeros
-        for the new history width dimension. It mutates `checkpoint`.
-        """
-        for name, weight in list(checkpoint.items()):
-            enc_surf_embedding = name.startswith("encoder.surf_token_embeds.weights.")
-            enc_atmos_embedding = name.startswith("encoder.atmos_token_embeds.weights.")
-            if enc_surf_embedding or enc_atmos_embedding:
-                if not weight.shape[2] <= self.max_history_size:
-                    raise AssertionError(
-                        f"Cannot load checkpoint with `max_history_size` {weight.shape[2]} into model with `max_history_size` {self.max_history_size}."
-                    )
-                new_weight = paddle.zeros(
-                    (
-                        weight.shape[0],
-                        1,
-                        self.max_history_size,
-                        weight.shape[3],
-                        weight.shape[4],
-                    ),
-                    device=weight.device,
-                    dtype=weight.dtype,
-                )
-                new_weight[:, :, : weight.shape[2]] = weight
-                checkpoint[name] = new_weight
 
     def configure_activation_checkpointing(
         self,
@@ -735,9 +610,6 @@ class Aurora(paddle.nn.Layer):
 class AuroraPretrained(Aurora):
     """Pretrained version of Aurora."""
 
-    default_checkpoint_name = "aurora-0.25-pretrained.ckpt"
-    default_checkpoint_revision = "0be7e57c685dac86b78c4a19a3ab149d13c6a3dd"
-
     def __init__(self, *, use_lora: bool = False, **kw_args) -> None:
         super().__init__(use_lora=use_lora, **kw_args)
 
@@ -747,9 +619,6 @@ class AuroraSmallPretrained(Aurora):
 
     Should only be used for debugging.
     """
-
-    default_checkpoint_name = "aurora-0.25-small-pretrained.ckpt"
-    default_checkpoint_revision = "0be7e57c685dac86b78c4a19a3ab149d13c6a3dd"
 
     def __init__(
         self,
@@ -781,9 +650,6 @@ AuroraSmall = AuroraSmallPretrained
 class Aurora12hPretrained(Aurora):
     """Pretrained version of Aurora with time step 12 hours."""
 
-    default_checkpoint_name = "aurora-0.25-12h-pretrained.ckpt"
-    default_checkpoint_revision = "15e76e47b65bf4b28fd2246b7b5b951d6e2443b9"
-
     def __init__(
         self,
         *,
@@ -796,9 +662,6 @@ class Aurora12hPretrained(Aurora):
 
 class AuroraHighRes(Aurora):
     """High-resolution version of Aurora."""
-
-    default_checkpoint_name = "aurora-0.1-finetuned.ckpt"
-    default_checkpoint_revision = "0be7e57c685dac86b78c4a19a3ab149d13c6a3dd"
 
     def __init__(
         self,
@@ -819,8 +682,6 @@ class AuroraHighRes(Aurora):
 class AuroraAirPollution(Aurora):
     """Fine-tuned version of Aurora for air pollution."""
 
-    default_checkpoint_name = "aurora-0.4-air-pollution.ckpt"
-    default_checkpoint_revision = "1764d5630a53d3d7a7d169ca335236fc343e4bfc"
     _predict_difference_history_dim_lookup = {
         "pm1": 0,
         "pm2p5": 0,
@@ -1000,19 +861,9 @@ class AuroraAirPollution(Aurora):
             pred.atmos_vars["so2"] = paddle.stack(parts, axis=-3)
         return pred
 
-    def _adapt_checkpoint(
-        self, d: dict[str, paddle.Tensor]
-    ) -> dict[str, paddle.Tensor]:
-        d = Aurora._adapt_checkpoint(self, d)
-        d = _adapt_checkpoint_air_pollution(self.patch_size, d)
-        return d
-
 
 class AuroraWave(Aurora):
     """Version of Aurora fined-tuned to HRES-WAM ocean wave data."""
-
-    default_checkpoint_name = "aurora-0.25-wave.ckpt"
-    default_checkpoint_revision = "74598e8c65d53a96077c08bb91acdfa5525340c9"
 
     def __init__(
         self,
@@ -1076,13 +927,6 @@ class AuroraWave(Aurora):
         )
         self.density_channel_surf_vars = density_channel_surf_vars
         self.angle_surf_vars = angle_surf_vars
-
-    def _adapt_checkpoint(
-        self, d: dict[str, paddle.Tensor]
-    ) -> dict[str, paddle.Tensor]:
-        d = Aurora._adapt_checkpoint(self, d)
-        d = _adapt_checkpoint_wave(self.patch_size, d)
-        return d
 
     def batch_transform_hook(self, batch: Batch) -> Batch:
         batch = dataclasses.replace(batch, surf_vars=dict(batch.surf_vars))
@@ -1166,9 +1010,6 @@ class AuroraV1p5(Aurora):
     embeddings, enabling sub-6-hour prediction steps. Seven surface variables are output-only (not
     present in the real input data) and are zero-padded during autoregressive rollout.
     """
-
-    default_checkpoint_name = "aurora-0.25-v1.5.ckpt"
-    default_checkpoint_revision = "a96afd7ee6d65e3bd2d476f3be798a25a56f2296"
 
     def __init__(
         self,
@@ -1345,19 +1186,9 @@ class AuroraV1p5(Aurora):
             },
         )
 
-    def _adapt_checkpoint(
-        self, d: dict[str, paddle.Tensor]
-    ) -> dict[str, paddle.Tensor]:
-        return _adapt_checkpoint_v1p5(
-            self.patch_size, self.surf_vars, self.static_vars, self.atmos_vars, d
-        )
-
 
 class AuroraV1p5Ensemble(AuroraV1p5):
     """Aurora 1.5 ensemble version with stochastic noise injection."""
-
-    default_checkpoint_name = "aurora-0.25-v1.5-ensemble.ckpt"
-    default_checkpoint_revision = "a96afd7ee6d65e3bd2d476f3be798a25a56f2296"
 
     def __init__(self, *, stochastic: bool = True, **kw_args) -> None:
         super().__init__(stochastic=stochastic, **kw_args)

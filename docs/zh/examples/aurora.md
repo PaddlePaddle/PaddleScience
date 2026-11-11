@@ -1,23 +1,20 @@
 # Aurora
 
-## 1. 背景与实现范围
+## 1. 模型与实现范围
 
-[Microsoft Aurora](https://github.com/microsoft/aurora) 是面向地球系统预测的基础模型。
-本案例将其移植到原生 Paddle，并通过 `AuroraArch` 接入 PaddleScience 的字典接口和 `Solver`。
-参考源码固定为 `85dd3880683f0ac19aa8fe4386c5dcacfec99892`，保留原 MIT 许可证。
+[Microsoft Aurora](https://github.com/microsoft/aurora) 是地球系统预测基础模型。
+本例使用原生 Paddle 实现变量 Patch Embedding、Perceiver 编解码、3D Swin U-Net
+及自回归预报，通过 `AuroraArch` 接入 PaddleScience 字典接口和 `Solver`。
+参考源码固定为 `85dd3880683f0ac19aa8fe4386c5dcacfec99892`，保留上游 MIT 许可证。
 
-模型使用变量 Patch Embedding 和 Perceiver 编码气象场，通过 3D Swin U-Net
-建模空间及垂直层之间的关系，再用 Perceiver 解码到指定气压层和变量。
-自回归预测把前一步预报作为后一步历史输入。
+完整权重验证覆盖 **AuroraPretrained，1,256,300,176 参数**。
+其他变体保留结构实现，但未验证各自完整预训练权重。
+以下命令均在 PaddleScience 仓库根目录执行。
 
-完整权重验收以 **AuroraPretrained** 为主，参数量为 **1,256,300,176**。
-Small 用于调试和权重对齐；12h、HighRes、AirPollution、Wave、1.5 及集合变体
-仅完成轻量结构检查，未验收各自完整预训练权重。
-
-## 2. 安装与离线运行
+## 2. 安装与离线示例
 
 已验证环境为 Python 3.10、PaddlePaddle GPU 3.4.0、CUDA 12.9、RTX 3090。
-先按飞桨官方说明安装 PaddlePaddle，再从 PaddleScience 仓库根目录执行：
+按飞桨官方说明安装 PaddlePaddle 后执行：
 
 ```sh
 python -m pip install -e .
@@ -26,57 +23,77 @@ python examples/aurora/prepare_demo.py
 python examples/aurora/finetune.py --config-name tiny
 python examples/aurora/finetune.py --config-name tiny mode=eval \
   MODEL.checkpoint=outputs/aurora-tiny/model.pdparams
+python examples/aurora/predict.py --tiny --output outputs/aurora-demo
 ```
 
-上述离线流程使用合成数据和缩小架构，用于检查训练、评估与权重保存重载。
-Tiny 权重不能加载到正式完整模型，也不能用于衡量真实预报能力。
-原生 `.pdparams` 推理和训练不依赖 PyTorch；权重导出在独立 Torch 环境执行。
+Tiny 使用缩小架构和合成数据，检查前向、反向及权重重载。
+其结果不用于衡量气象预报能力，Tiny 权重也不能加载到完整模型。
 
-## 3. 数据与权重准备
+## 3. 权重与数据
 
-本例下载公开 WeatherBench2 ERA5 的 0.25°、13 气压层子集。
-源数据时间截至 2023-01-10 18:00 UTC。起报输入包含两个历史时刻；
-`--steps` 指定未来真值帧数，每步间隔 6 小时。
+使用原生 `aurora-pretrained.pdparams`，大小为 5,025,272,922 字节，约 4.68 GiB。
+SHA256 为 `eb586812d66fea058522700165b2858540bb8b15144390f9255fae434cd44d81`。
+**星河社区公开权重地址待发布。** 下列命令要求将该文件放在
+`checkpoints/aurora-pretrained.pdparams`。模型直接加载原生 Paddle 参数。
+
+本例使用公开 WeatherBench2 ERA5 的 0.25°、13 气压层子集。
+源数据截至 2023-01-10 18:00 UTC。`--start` 按 UTC 解释，下载两帧历史与
+`--steps` 帧未来真值，相邻帧间隔 6 小时。
 
 ```sh
 python examples/aurora/download_era5.py --start 2023-01-01 --steps 2 \
   --directory data/aurora
 python examples/aurora/prepare_era5.py --directory data/aurora
-python examples/aurora/download_checkpoint.py --directory checkpoints
 ```
 
-下载脚本记录 SHA256、源对象 ETag 及输出清单，支持校验后复用缓存。
-完整权重约 4.68 GiB，另需预留压缩数据、原始 NetCDF、转换数据及权重的磁盘空间。
-将 `TORCH_PYTHON` 替换成独立 Torch 环境的 Python 可执行文件：
-
-```sh
-TORCH_PYTHON examples/aurora/export_torch_checkpoint.py \
-  checkpoints/aurora-0.25-pretrained.ckpt checkpoints/aurora-torch.npz
-python examples/aurora/convert_checkpoint.py --input checkpoints/aurora-torch.npz \
-  --output checkpoints/aurora-pretrained.pdparams
-```
+下载器校验缓存，记录 SHA256 和源对象 ETag。需为源数据块及 NetCDF 文件预留空间。
+默认使用代理环境配置，`--direct` 使用直连，`--request-bytes 4194304` 启用分段请求。
 
 地表变量为 `2t, 10u, 10v, msl`，大气变量为 `z, u, v, t, q`，
-静态变量为 `lsm, z, slt`。地表输入形状为 `(B,T,H,W)`，大气为 `(B,T,C,H,W)`，
-静态场为 `(H,W)`；输入历史长度为 2，真值长度为 1。
-气压层单位为 hPa，经度在 `[0,360)` 内，纬度递减；元数据时间表示最后一帧历史的 UTC 时间。
-模型裁剪不能组成完整 Patch 的纬度行，常见 `721 -> 720`；指标计算严格对齐时间和空间坐标。
+静态变量为 `lsm, z, slt`。气压层单位为 hPa，共
+`50,100,150,200,250,300,400,500,600,700,850,925,1000`。
+地表形状为 `(B,T,H,W)`，大气为 `(B,T,C,H,W)`，静态场为 `(H,W)`；
+输入 `T=2`，真值 `T=1`。纬度递减，经度在 `[0,360)` 内，
+元数据时间为最后一帧历史的 UTC 时间。模型裁剪不完整纬度 Patch，常见 `721 -> 720`；
+评估严格对齐时间与空间坐标。
 
-## 4. 推理、训练与评估
-
-完整模型全球推理：
+## 4. 推理与效果展示
 
 ```sh
-CUDA_VISIBLE_DEVICES=0 NVIDIA_TF32_OVERRIDE=0 python examples/aurora/run_era5.py \
-  --framework paddle --device gpu:0 --steps 2 \
-  --checkpoint checkpoints/aurora-pretrained.pdparams \
-  --input data/aurora/input.nc --output outputs/aurora-era5/paddle
+CUDA_VISIBLE_DEVICES=0 NVIDIA_TF32_OVERRIDE=0 python examples/aurora/predict.py \
+  --device gpu:0 --steps 2 --checkpoint checkpoints/aurora-pretrained.pdparams \
+  --input data/aurora/input.nc --output outputs/aurora-era5
+python examples/aurora/evaluate_era5.py --data data/aurora \
+  --prediction outputs/aurora-era5 --steps 2 --output outputs/aurora-era5/metrics
+python examples/aurora/plot_era5.py --data data/aurora \
+  --prediction outputs/aurora-era5 --steps 2 --output outputs/aurora-era5/figures
 ```
 
-FP32 推理对独立注意力窗口和解码器网格位置分批，默认解码批量为 2048。
-已测峰值分配显存为 17.83 GiB；训练显存需求更大，尚未验证全球全分辨率训练。
+FP32 注意力窗口和解码器位置独立分批处理，解码批量默认为 2048。
+完整全球推理此前测得峰值分配显存为 17.83 GiB；全球全分辨率训练尚未验证。
 
-基于真实 ERA5 一对输入/真值的监督微调：
+下表为 2023-01-01 06:00 UTC 起报、720×1440 预报网格、13 气压层的结果。
+指标采用纬度余弦加权 RMSE，保留物理单位；持续性基线将最后一帧输入保持不变。
+
+| 变量 | 单位 | +6h RMSE | +6h 持续性 | +12h RMSE | +12h 持续性 |
+| --- | --- | --- | --- | --- | --- |
+| 2 m 温度 | K | 0.491621 | 2.82432 | 0.612136 | 3.25386 |
+| 10 m 纬向风 | m/s | 0.523374 | 1.95561 | 0.636562 | 2.77033 |
+| 10 m 经向风 | m/s | 0.533163 | 2.31386 | 0.655754 | 3.38663 |
+| 海平面气压 | Pa | 31.9165 | 264.613 | 38.4941 | 358.009 |
+| 850 hPa 温度 | K | 0.432024 | 1.49239 | 0.485647 | 2.07166 |
+| 500 hPa 位势 | m²/s² | 23.9960 | 222.807 | 29.2050 | 338.332 |
+
+[![2 m 温度：ERA5、Paddle 预报与误差](../../images/aurora/temperature.png)](../../images/aurora/temperature.png)
+
+[![500 hPa 位势高度：ERA5、Paddle 预报与误差](../../images/aurora/z500.png)](../../images/aurora/z500.png)
+
+两行分别为 +6h、+12h，三列分别为 ERA5、Paddle 和 Paddle−ERA5。
+温度图使用摄氏度；位势图除以 9.80665 m/s² 后显示位势高度，单位为米，表格仍使用位势原单位。
+气象场色标取真值的 1%–99% 分位，误差色标取绝对误差的 99% 分位，极值可能饱和。
+上述结果仅代表单一起报案例，不代表统计基准或论文完整预报技巧复现；未计算缺少气候态的 ACC。
+
+## 5. 监督微调
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 NVIDIA_TF32_OVERRIDE=0 python examples/aurora/finetune.py \
@@ -85,40 +102,41 @@ python examples/aurora/finetune.py mode=eval \
   MODEL.checkpoint=outputs/aurora-finetune/model.pdparams
 ```
 
-`conf/aurora.yaml` 连接 `NamedArrayDataset → SupervisedConstraint → Solver`，
-使用 Adam 及 `SupervisedValidator`。损失为各变量误差除以官方变量/气压层尺度后的 MSE，
-再对九个变量取平均。默认空间采样步长为 45，保留全部 13 气压层。
-该示例重复训练并评估同一对样本，用于验证完整工作流，不代表独立验证集精度或训练收敛。
-原生 `model.pdparams` 可直接用于推理，Solver 还会独立保存训练状态。
+`conf/aurora.yaml` 通过 `ppsci.arch.build_model` 构建 `AuroraArch`，连接
+`NamedArrayDataset → SupervisedConstraint → Adam → Solver`，并使用 `SupervisedValidator`。
+损失为各变量误差除以官方变量/气压层尺度后的 MSE，再对九个变量取平均。
+默认 `DATA.spatial_stride=45`，保留全部气压层，在有限网格上演示训练。
+输入与真值的时间、气压层和坐标必须一致。
 
-`MODEL.name=AuroraArch` 通过标准 `ppsci.arch.build_model` 构建模型；
-`MODEL.model_type` 选择变体，`MODEL.model_kwargs` 配置模型结构。
-随机初始化需显式设置 `TRAIN.allow_random_init=true`，评估始终要求提供权重。
+示例训练并评估同一对样本，仅验证工作流，不代表独立验证集精度或训练收敛。
+随机初始化需设置 `TRAIN.allow_random_init=true`，评估必须提供权重。
+`model.pdparams` 保存原生模型参数，Solver 另存训练状态。
 
-Torch 与 Paddle 预测分别在独立环境生成后，用 `evaluate_era5.py` 计算纬度余弦加权 RMSE。
-每个变量、层和时效分别比较，不能以平均指标掩盖单项失败。
-完整命令见仓库 `examples/aurora/README.md`。
+## 6. CINN 编译验证
 
-## 5. 验收结果与限制
-
-| 检查 | 最大观测误差 | 项目阈值 |
-| --- | --- | --- |
-| 同输入前向：标准化最大绝对误差 | 4.21e-5 | 1e-4 |
-| 同输入前向：变量相对 L2 | 7.88e-7 | 1e-5 |
-| 全部梯度整体相对 L2 | 2.31e-5 | 1e-4 |
-| 更新后参数整体相对 L2 | 9.35e-10 | 1e-5 |
-| 4,554 组天气 RMSE 的最大相对差异 | 0.000943% | 每组 1% |
-
-这些是本项目约定的迁移阈值，不是 PaddleScience 通用门槛。
-训练对齐覆盖完整预训练参数、17×32 空间采样、13 层和连续 3 次 SGD 更新。
-预报覆盖三个季节日期、最长 240 小时，另含原有两步案例。
-独立长时滚动逐点容差 `rtol=atol=2e-4` 在部分时效仍有超差；
-天气指标通过不代表全部格点逐点通过。
-未计算缺少气候态的 ACC，也未声称论文完整训练或统计预报技巧复现。
-机器可读记录位于 `examples/aurora/validation/acceptance.json`。
+入口脚本在导入 Paddle 前启用 CINN，并对 Swin3D 骨干调用
+`paddle.jit.to_static(backend="CINN", full_graph=False)`。
+编解码器、元数据和 NetCDF 处理仍使用动态图，不支持的算子可由原生 Paddle 内核执行。
+这是子图编译，不代表整模型全图编译。
 
 ```sh
-python -m pytest test/arch/test_aurora.py -q
-CUDA_VISIBLE_DEVICES=0 AURORA_TEST_DEVICE=gpu:0 NVIDIA_TF32_OVERRIDE=0 \
-  python -m pytest test/arch/test_aurora.py -q
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --tiny \
+  --input data/aurora-demo/input.nc --target data/aurora-demo/truth_001.nc \
+  --output outputs/aurora-cinn-tiny
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh \
+  --checkpoint checkpoints/aurora-pretrained.pdparams --input data/aurora/input.nc \
+  --train-steps 0 --output outputs/aurora-cinn-full
 ```
+
+可设置 `PYTHON` 指定当前环境的解释器。完整模型默认采样 17×32 网格，保留全部 13 层，
+只检查推理；Tiny 另执行两次 SGD 更新并检查梯度、损失有限。
+输出 `cinn.json` 和 `execution.paddle_trace.json`。通过条件包含 profiler 中实际执行的
+`cinn_jit` 算子，以及逐变量相对动态图的标准化最大绝对误差 ≤1e-4、相对 L2 ≤1e-5。
+
+| 配置 | 训练更新 | 最大标准化绝对误差 | 最大相对 L2 | 记录的 CINN 算子执行次数 |
+| --- | --- | --- | --- | --- |
+| Tiny，17×32 合成网格，4 层 | 2 | 2.84e-6 | 9.05e-7 | 16 |
+| 完整预训练模型，17×32 ERA5 网格，13 层 | 0 | 1.26e-5 | 2.87e-6 | 6 |
+
+次数仅对应被记录的执行阶段，不代表生成内核数量或编译覆盖率。
+两项均在上述环境通过；尚未验收整模型全图编译、全球全分辨率 CINN 训练或性能加速。

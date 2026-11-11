@@ -1,8 +1,12 @@
-"""Small reproducible inputs shared by the example and cross-framework checks."""
+"""Synthetic physical-scale fields for the offline workflow example."""
 
 from datetime import datetime
 
 import numpy as np
+import paddle
+
+from ppsci.arch.aurora import Batch
+from ppsci.arch.aurora import Metadata
 
 
 def small_config():
@@ -17,16 +21,15 @@ def small_config():
     )
 
 
-def make_batch(framework, batch_class, metadata_class, seed=7, batch_size=1):
-    """Use identical NumPy draws for both frameworks; no framework RNG involved."""
+def make_batch(seed=7, batch_size=1):
     rng = np.random.default_rng(seed)
 
     def tensor(shape, location=0.0, scale=1.0):
-        return framework.tensor(
+        return paddle.to_tensor(
             (location + scale * rng.standard_normal(shape)).astype("float32")
         )
 
-    return batch_class(
+    return Batch(
         surf_vars={
             k: tensor((batch_size, 2, 17, 32), *stats)
             for k, stats in {
@@ -54,9 +57,9 @@ def make_batch(framework, batch_class, metadata_class, seed=7, batch_size=1):
                 "q": (0.003, 0.0001),
             }.items()
         },
-        metadata=metadata_class(
-            lat=framework.tensor(np.linspace(90, -90, 17, dtype="float32")),
-            lon=framework.tensor(np.arange(32, dtype="float32") * 11.25),
+        metadata=Metadata(
+            lat=paddle.to_tensor(np.linspace(90, -90, 17, dtype="float32")),
+            lon=paddle.to_tensor(np.arange(32, dtype="float32") * 11.25),
             time=(datetime(2020, 6, 1, 12),) * batch_size,
             atmos_levels=(100, 250, 500, 850),
         ),

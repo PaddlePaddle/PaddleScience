@@ -15,7 +15,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import einops
 import paddle
 from paddle.base import core
 
@@ -130,9 +129,11 @@ class WindowAttention(paddle.nn.Layer):
             paddle.Tensor: Output of shape `(nW*B, N, C)`.
         """
         qkv = self.qkv(x) + self.lora_qkv(x, rollout_step)
-        qkv = einops.rearrange(
-            qkv, "B N (qkv H D) -> qkv B H N D", H=self.num_heads, qkv=3
+        batch_size, num_tokens, _ = qkv.shape
+        qkv = qkv.reshape(
+            [batch_size, num_tokens, 3, self.num_heads, self.dim // self.num_heads]
         )
+        qkv = qkv.transpose([2, 0, 3, 1, 4])
         q, k, v = qkv[0], qkv[1], qkv[2]
         attn_dropout = self.attn_drop if self.training else 0.0
         if mask is not None:
@@ -148,7 +149,7 @@ class WindowAttention(paddle.nn.Layer):
             x = sdpa(q, k, v, attn_mask=mask, dropout_p=attn_dropout)
         else:
             x = sdpa(q, k, v, dropout_p=attn_dropout)
-        x = einops.rearrange(x, "B H N D -> B N (H D)")
+        x = x.transpose([0, 2, 1, 3]).reshape([batch_size, num_tokens, self.dim])
         x = self.proj(x) + self.lora_proj(x, rollout_step)
         x = self.proj_drop(x)
         return x
@@ -188,8 +189,8 @@ def window_partition_3d(x: paddle.Tensor, ws: tuple[int, int, int]) -> paddle.Te
     assert C % ws[0] == 0, f"C ({C}) % window_size ({ws[0]}) must be 0."
     assert H % ws[1] == 0, f"H ({H}) % window_size ({ws[1]}) must be 0."
     assert W % ws[2] == 0, f"W ({W}) % window_size ({ws[2]}) must be 0."
-    x = x.view(B, C // ws[0], ws[0], H // ws[1], ws[1], W // ws[2], ws[2], D)
-    windows = einops.rearrange(x, "B C1 Wc H1 Wh W1 Ww D -> (B C1 H1 W1) Wc Wh Ww D")
+    x = x.reshape([B, C // ws[0], ws[0], H // ws[1], ws[1], W // ws[2], ws[2], D])
+    windows = x.transpose([0, 1, 3, 5, 2, 4, 6, 7]).reshape([-1, *ws, D])
     return windows
 
 
@@ -213,17 +214,8 @@ def window_reverse_3d(
     assert W % ws[2] == 0, f"W ({W}) % window_size ({ws[2]}) must be 0."
     C1, H1, W1 = C // ws[0], H // ws[1], W // ws[2]
     B = int(windows.shape[0] / (C1 * H1 * W1))
-    x = einops.rearrange(
-        windows,
-        "(B C1 H1 W1) Wc Wh Ww D -> B (C1 Wc) (H1 Wh) (W1 Ww) D",
-        B=B,
-        C1=C1,
-        H1=H1,
-        W1=W1,
-        Wc=ws[0],
-        Wh=ws[1],
-        Ww=ws[2],
-    )
+    x = windows.reshape([B, C1, H1, W1, *ws, -1])
+    x = x.transpose([0, 1, 4, 2, 5, 3, 6, 7]).reshape([B, C, H, W, -1])
     return x
 
 
@@ -316,7 +308,7 @@ def compute_3d_shifted_window_mask(
     pad_size = pad_size[0] % ws[0], pad_size[1] % ws[1], pad_size[2] % ws[2]
     img_mask = pad_3d(img_mask, pad_size, value=cnt)
     mask_windows = window_partition_3d(img_mask, ws)
-    mask_windows = mask_windows.view(-1, ws[0] * ws[1] * ws[2])
+    mask_windows = mask_windows.reshape([-1, ws[0] * ws[1] * ws[2]])
     attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
     attn_mask = attn_mask.masked_fill(attn_mask != 0, -100.0).masked_fill(
         attn_mask == 0, 0.0
@@ -400,7 +392,7 @@ class Swin3DTransformerBlock(paddle.nn.Layer):
         assert L == C * H * W, f"Wrong feature size: {L} vs {C}x{H}x{W}={C * H * W}"
         ws, ss = maybe_adjust_windows(self.window_size, self.shift_size, res)
         shortcut = x
-        x = x.view(B, C, H, W, D)
+        x = x.reshape([B, C, H, W, D])
         if not all(s == 0 for s in ss):
             shifted_x = paddle.roll(x, shifts=(-ss[0], -ss[1], -ss[2]), axis=(1, 2, 3))
             attn_mask, _ = compute_3d_shifted_window_mask(
@@ -412,9 +404,9 @@ class Swin3DTransformerBlock(paddle.nn.Layer):
         pad_size = -C % ws[0], -H % ws[1], -W % ws[2]
         shifted_x = pad_3d(shifted_x, pad_size)
         x_windows = window_partition_3d(shifted_x, ws)
-        x_windows = x_windows.view(-1, ws[0] * ws[1] * ws[2], D)
+        x_windows = x_windows.reshape([-1, ws[0] * ws[1] * ws[2], D])
         attn_windows = self.attn(x_windows, mask=attn_mask, rollout_step=rollout_step)
-        attn_windows = attn_windows.view(-1, ws[0], ws[1], ws[2], D)
+        attn_windows = attn_windows.reshape([-1, ws[0], ws[1], ws[2], D])
         _, pad_C, pad_H, pad_W, _ = shifted_x.shape
         shifted_x = window_reverse_3d(attn_windows, ws, pad_C, pad_H, pad_W)
         shifted_x = crop_3d(shifted_x, pad_size)
@@ -449,13 +441,15 @@ class PatchMerging3D(paddle.nn.Layer):
         assert L == C * H * W, f"Wrong feature size: {L} vs {C}*{H}*{W}={C * H * W}."
         assert H > 1, f"Height ({H}) must be larger than 1."
         assert W > 1, f"Width ({W}) must be larger than 1."
-        x = x.view(B, C, H, W, D)
+        x = x.reshape([B, C, H, W, D])
         x = pad_3d(x, (0, H % 2, W % 2))
         new_H, new_W = x.shape[2], x.shape[3]
         assert x.shape[2] % 2 == 0, f"({new_H}) % 2 != 0."
         assert x.shape[3] % 2 == 0, f"({new_W}) % 2 != 0."
         x = x.reshape(B, C, new_H // 2, 2, new_W // 2, 2, D)
-        return einops.rearrange(x, "B C H h W w D -> B (C H W) (h w D)")
+        return x.transpose([0, 1, 2, 4, 3, 5, 6]).reshape(
+            [B, C * new_H * new_W // 4, 4 * D]
+        )
 
     def forward(
         self, x: paddle.Tensor, input_resolution: tuple[int, int, int]
@@ -496,8 +490,8 @@ class PatchSplitting3D(paddle.nn.Layer):
             L == C * H * W
         ), f"Wrong number of tokens: {L} != {C}*{H}*{W}={C * H * W}."
         assert D % 4 == 0, f"Number of input features ({D}) is not a multiple of 4."
-        x = x.view(B, C, H, W, 2, 2, D // 4)
-        x = einops.rearrange(x, "B C H W h w D -> B C (H h) (W w) D")
+        x = x.reshape([B, C, H, W, 2, 2, D // 4])
+        x = x.transpose([0, 1, 2, 4, 3, 5, 6]).reshape([B, C, H * 2, W * 2, D // 4])
         x = crop_3d(x, crop)
         return x.reshape(B, -1, D // 4)
 

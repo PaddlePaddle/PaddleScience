@@ -8,17 +8,14 @@ from pathlib import Path
 import paddle
 from sample import make_batch
 
-from ppsci.arch.aurora import Batch
-from ppsci.arch.aurora import Metadata
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=Path("data/aurora-demo"))
     args = parser.parse_args()
     paddle.set_device("cpu")
-    batch = make_batch(paddle, Batch, Metadata)
-    next_batch = make_batch(paddle, Batch, Metadata, seed=8)
+    batch = make_batch()
+    next_batch = make_batch(seed=8)
     target = dataclasses.replace(
         next_batch,
         surf_vars={k: v[:, -1:] for k, v in next_batch.surf_vars.items()},

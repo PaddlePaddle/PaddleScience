@@ -48,8 +48,8 @@ class LoRA(paddle.nn.Layer):
         """
         x = (
             self.lora_dropout(x)
-            @ self.lora_A.transpose(0, 1)
-            @ self.lora_B.transpose(0, 1)
+            @ self.lora_A.transpose([1, 0])
+            @ self.lora_B.transpose([1, 0])
         )
         return x * self.scaling
 
