@@ -198,10 +198,6 @@ class TemporallySharedBlock(nn.Layer):
         else:
             b, t, c, h, w = input.shape
 
-            if self.pad_value is not None:
-                dummy = paddle.zeros(input.shape).astype("float32")
-                self.out_shape = self.forward(dummy.reshape([b * t, c, h, w])).shape
-
             out = input.reshape([b * t, c, h, w])
             if self.pad_value is not None:
                 pad_value_tensor = paddle.to_tensor(self.pad_value, dtype=out.dtype)
@@ -211,12 +207,26 @@ class TemporallySharedBlock(nn.Layer):
                     mask_step1, axis=-1
                 )  # Reduce second-to-last dim
                 pad_mask = paddle.all(mask_step2, axis=-1)  # Reduce third-to-last dim
-                if pad_mask.any():
-                    temp = paddle.ones(self.out_shape) * self.pad_value
-                    temp[~pad_mask] = self.forward(out[~pad_mask])
-                    out = temp
-                else:
-                    out = self.forward(out)
+                # Equivalent to the previous
+                #     if pad_mask.any():
+                #         temp = paddle.ones(self.out_shape) * self.pad_value
+                #         temp[~pad_mask] = self.forward(out[~pad_mask])
+                #     else:
+                #         out = self.forward(out)
+                # but expressed with paddle.where: the boolean masked assignment
+                # `temp[~pad_mask] = ...` makes CINN emit a `>=` comparing a bool
+                # against an int32 bound and abort during codegen, and the
+                # data-dependent `if pad_mask.any()` forces dy2static to trace both
+                # arms anyway. Padded positions still end up filled with pad_value;
+                # they are now computed and discarded instead of being skipped, which
+                # also removes the dummy forward pass that only existed to learn the
+                # output shape.
+                out = self.forward(out)
+                out = paddle.where(
+                    pad_mask.reshape([b * t, 1, 1, 1]),
+                    paddle.full_like(out, self.pad_value),
+                    out,
+                )
             else:
                 out = self.forward(out)
             _, c, h, w = out.shape

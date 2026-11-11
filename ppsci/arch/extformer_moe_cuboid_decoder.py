@@ -455,9 +455,10 @@ class CuboidCrossAttentionLayer(nn.Layer):
             .transpose(perm=[0, 3, 1, 2, 4])
         )
         q = q * self.scale
+        # keep perm non-negative: CINN's transpose signature does not normalize
+        # negative axes and reads out of bounds when compiling the graph
         perm_4 = list(range(k.ndim))
-        perm_4[-2] = -1
-        perm_4[-1] = -2
+        perm_4[-2], perm_4[-1] = perm_4[-1], perm_4[-2]
         attn_score = q @ k.transpose(perm=perm_4)
         if self.use_relative_pos:
             relative_position_bias = self.relative_position_bias_table[
@@ -492,8 +493,7 @@ class CuboidCrossAttentionLayer(nn.Layer):
                 l2g_global_k, l2g_global_v = kv_global[0], kv_global[1]
                 l2g_q = q
             perm_5 = list(range(l2g_global_k.ndim))
-            perm_5[-2] = -1
-            perm_5[-1] = -2
+            perm_5[-2], perm_5[-1] = perm_5[-1], perm_5[-2]
             l2g_attn_score = l2g_q @ l2g_global_k.transpose(perm=perm_5)
             attn_score_l2l_l2g = paddle.concat(x=(attn_score, l2g_attn_score), axis=-1)
             if attn_mask.ndim == 5:
