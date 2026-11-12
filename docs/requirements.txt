@@ -13,6 +13,8 @@ mkdocs-video
 mkdocstrings==0.29.0
 mkdocstrings-python==1.16.12
 numpy>=1.20.0,<2.0.0
+# mkdocstrings 0.29.0 uses the pre-12 Highlight constructor.
+pymdown-extensions<12
 pyyaml
 scipy
 sympy

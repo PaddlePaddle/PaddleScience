@@ -67,5 +67,8 @@ version_scheme = "no-guess-dev"
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
+[tool.setuptools.package-data]
+"ppsci.arch.aurora" = ["LICENSE.txt"]
+
 [tool.isort]
 profile = "black"
