@@ -84,9 +84,9 @@ FP32 注意力窗口和解码器位置独立分批处理，解码批量默认为
 | 850 hPa 温度 | K | 0.432024 | 1.49239 | 0.485647 | 2.07166 |
 | 500 hPa 位势 | m²/s² | 23.9960 | 222.807 | 29.2050 | 338.332 |
 
-[![2 m 温度：ERA5、Paddle 预报与误差](../../images/aurora/temperature.png)](../../images/aurora/temperature.png)
+[![2 m 温度：ERA5、Paddle 预报与误差](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/temperature.png)](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/temperature.png)
 
-[![500 hPa 位势高度：ERA5、Paddle 预报与误差](../../images/aurora/z500.png)](../../images/aurora/z500.png)
+[![500 hPa 位势高度：ERA5、Paddle 预报与误差](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/z500.png)](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/z500.png)
 
 两行分别为 +6h、+12h，三列分别为 ERA5、Paddle 和 Paddle−ERA5。
 温度图使用摄氏度；位势图除以 9.80665 m/s² 后显示位势高度，单位为米，表格仍使用位势原单位。

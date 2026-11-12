@@ -90,9 +90,9 @@ last input state constant. Results below use initialization 2023-01-01 06:00 UTC
 | Temperature at 850 hPa | K | 0.432024 | 1.49239 | 0.485647 | 2.07166 |
 | Geopotential at 500 hPa | m²/s² | 23.9960 | 222.807 | 29.2050 | 338.332 |
 
-[![2 m temperature: ERA5, Paddle, and forecast error](../../images/aurora/temperature.png)](../../images/aurora/temperature.png)
+[![2 m temperature: ERA5, Paddle, and forecast error](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/temperature.png)](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/temperature.png)
 
-[![500 hPa geopotential height: ERA5, Paddle, and forecast error](../../images/aurora/z500.png)](../../images/aurora/z500.png)
+[![500 hPa geopotential height: ERA5, Paddle, and forecast error](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/z500.png)](https://paddle-org.bj.bcebos.com/paddlescience/docs/aurora/z500.png)
 
 Rows show +6h and +12h; columns show ERA5, Paddle and Paddle minus ERA5.
 The temperature plot uses degrees Celsius. The geopotential plot divides by
