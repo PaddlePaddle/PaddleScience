@@ -33,8 +33,10 @@ Tiny 使用缩小架构和合成数据，检查前向、反向及权重重载。
 
 使用原生 `aurora-pretrained.pdparams`，大小为 5,025,272,922 字节，约 4.68 GiB。
 SHA256 为 `eb586812d66fea058522700165b2858540bb8b15144390f9255fae434cd44d81`。
-**星河社区公开权重地址待发布。** 下列命令要求将该文件放在
-`checkpoints/aurora-pretrained.pdparams`。模型直接加载原生 Paddle 参数。
+权重发布于[星河社区模型页](https://aistudio.baidu.com/modelsdetail/55897)。
+下载[原生 Paddle 权重](https://git.aistudio.baidu.com/api/v1/repos/yubb/aurora-paddle-pretrained/media/aurora-pretrained.pdparams)，
+保存为 `checkpoints/aurora-pretrained.pdparams` 后运行下列命令。
+模型直接加载原生 Paddle 参数。
 
 本例使用公开 WeatherBench2 ERA5 的 0.25°、13 气压层子集。
 源数据截至 2023-01-10 18:00 UTC。`--start` 按 UTC 解释，下载两帧历史与

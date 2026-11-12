@@ -32,8 +32,9 @@ Tiny weights are incompatible with the complete pretrained model.
 
 Use `aurora-pretrained.pdparams` (5,025,272,922 bytes, approximately 4.68 GiB).
 Its SHA256 is `eb586812d66fea058522700165b2858540bb8b15144390f9255fae434cd44d81`.
-**Public checkpoint hosting on AI Studio is pending.** The commands below require
-this native checkpoint at `checkpoints/aurora-pretrained.pdparams`.
+The checkpoint is hosted on [AI Studio](https://aistudio.baidu.com/modelsdetail/55897).
+Download the [native Paddle weights](https://git.aistudio.baidu.com/api/v1/repos/yubb/aurora-paddle-pretrained/media/aurora-pretrained.pdparams)
+to `checkpoints/aurora-pretrained.pdparams` before running the commands below.
 The implementation loads native Paddle parameters directly.
 
 ## ERA5 data
