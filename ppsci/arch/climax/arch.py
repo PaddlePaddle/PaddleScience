@@ -24,6 +24,8 @@ from ppsci.arch import base
 from ppsci.arch.climax.parallelpatchembed import ParallelVarPatchEmbed
 from ppsci.arch.climax.pos_embed import get_1d_sincos_pos_embed_from_grid
 from ppsci.arch.climax.pos_embed import get_2d_sincos_pos_embed
+from ppsci.arch.climax.traceable import TraceableLinear
+from ppsci.arch.climax.traceable import TraceableMultiheadAttention
 from ppsci.arch.paddle_timm import Block
 from ppsci.arch.paddle_timm import PatchEmbed
 from ppsci.arch.paddle_timm import trunc_normal_
@@ -119,13 +121,13 @@ class ClimaX(base.Arch):
         self.var_query = paddle.nn.Parameter(
             paddle.zeros(1, 1, embed_dim), requires_grad=True
         )
-        self.var_agg = paddle.compat.nn.MultiheadAttention(
+        self.var_agg = TraceableMultiheadAttention(
             embed_dim, num_heads, batch_first=True
         )
         self.pos_embed = paddle.nn.Parameter(
             paddle.zeros(1, self.num_patches, embed_dim), requires_grad=True
         )
-        self.lead_time_embed = paddle.compat.nn.Linear(1, embed_dim)
+        self.lead_time_embed = TraceableLinear(1, embed_dim)
         self.pos_drop = paddle.nn.Dropout(p=drop_rate)
         dpr = [x.item() for x in paddle.linspace(0, drop_path, depth)]
         self.blocks = paddle.nn.ModuleList(
@@ -145,10 +147,10 @@ class ClimaX(base.Arch):
         self.norm = paddle.nn.LayerNorm(embed_dim)
         self.head = paddle.nn.ModuleList()
         for _ in range(decoder_depth):
-            self.head.append(paddle.compat.nn.Linear(embed_dim, embed_dim))
+            self.head.append(TraceableLinear(embed_dim, embed_dim))
             self.head.append(paddle.nn.GELU())
         self.head.append(
-            paddle.compat.nn.Linear(embed_dim, len(self.default_vars) * patch_size**2)
+            TraceableLinear(embed_dim, len(self.default_vars) * patch_size**2)
         )
         self.head = paddle.nn.Sequential(*self.head)
         self.initialize_weights()
@@ -176,7 +178,7 @@ class ClimaX(base.Arch):
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
-        if isinstance(m, paddle.compat.nn.Linear):
+        if isinstance(m, TraceableLinear):
             trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
                 paddle.nn.init.constant_(m.bias, 0)
