@@ -137,7 +137,10 @@ class Jacobians:
                 self.Js[key] = _Jacobian(ys, xs)
             return self.Js[key](i, j, retain_graph, create_graph)
         else:
-            xs_require = [xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js]
+            # NOTE: do not name the comprehension variable `i`: dy2static rewrites
+            # comprehensions into loops, which leaks the name into the enclosing
+            # scope and shadows the `i` argument used below (NameError on py3.13)
+            xs_require = [x for x in xs if (ys, x) not in self.Js]
             grads_require = paddle.grad(
                 ys,
                 xs_require,
