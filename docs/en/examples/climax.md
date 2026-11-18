@@ -286,3 +286,10 @@ The latitude-weighted test metrics of the 5-epoch run (best checkpoint) are:
 | w_nrmse_tas                                | 0.34081        | 0.34945             |
 | w_nrmses_tas                               | 0.17788        | 0.17455             |
 | w_nrmseg_tas                               | 0.03258        | 0.03498             |
+
+CINN acceleration: CINN is enabled by the `CLIMAX_USE_CINN=1` environment variable. The model follows the framework's unified scheduling: `to_static` is passed by the `Solver` and `full_graph` keeps its default (SOT mode). Forward inference is compute-intensive and gains no end-to-end speedup from CINN, while training shows an end-to-end speedup once it stabilizes. Measured on an RTX 4060 Ti (FP32, batch_size=1):
+
+| Phase                                           | Dynamic graph | CINN     | Speedup |
+| ----------------------------------------------- | ------------- | -------- | ------- |
+| Forward time (batch 1)                          | 128.4 ms      | 137.9 ms | −6.9%   |
+| Average per-step time after training stabilizes | 346.4 ms      | 332.0 ms | +4.3%   |
