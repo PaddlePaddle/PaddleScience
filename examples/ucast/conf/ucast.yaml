@@ -1,0 +1,111 @@
+defaults:
+  - ppsci_default
+  - TRAIN: train_default
+  - TRAIN/ema: ema_default
+  - TRAIN/swa: swa_default
+  - EVAL: eval_default
+  - hydra/job/config/override_dirname/exclude_keys: exclude_keys_default
+  - _self_
+
+hydra:
+  run:
+    dir: ./outputs_ucast
+  job:
+    name: ${mode}
+    chdir: false
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+
+mode: infer
+seed: 77
+device: gpu
+output_dir: ${hydra:run.dir}
+log_freq: 20
+use_amp: true
+amp_level: O1
+
+MODEL:
+  input_keys: [input, dynamical_condition, static_condition]
+  output_keys: [output]
+  in_channels: 172
+  out_channels: 83
+  model_channels: 320
+  channel_mult: [1, 2, 3, 4]
+  num_blocks: 4
+  attn_levels: [2, 3]
+  channels_per_head: 64
+  dropout: 0.1
+  image_resolution: 240
+  training_ensemble_size: 1
+  eval_ensemble_size: 1
+  use_recompute: false
+
+DATA:
+  data_dir: gs://weatherbench2/datasets/era5
+  dataset: 1959-2023_01_10-6h-240x121_equiangular_with_poles_conservative.zarr
+  cache_dir: null
+  stats_dir: ../../../u-cast/data/stats
+  window: 2
+  horizon: 1
+  hourly_resolution: 12
+  static_fields: [land_sea_mask, geopotential_at_surface]
+
+TRAIN:
+  stage: deterministic
+  epochs: 100
+  batch_size: 8
+  eval_batch_size: 12
+  eval_forward_batch_size: null
+  update_freq: 6
+  num_workers: 0
+  loss: wmae
+  train_time_slices:
+    - ["1979-01-01T00:00:00", "2019-12-31T23:00:00"]
+    - ["1979-01-01T06:00:00", "2019-12-31T23:00:00"]
+  val_time_slice: ["2020-01-01T00:00:00", "2020-12-31T23:59:59"]
+  possible_initial_hours_eval: [0, 12]
+  max_train_samples: null
+  max_val_samples: 36
+  prediction_horizon: 4
+  # Protect tiny attention gradients during AMP backward. Scaler still adapts.
+  amp_init_loss_scaling: 65536.0
+  grad_clip: 1.0
+  stop_after_epoch: null
+  save_freq: 1
+  eval_during_train: true
+  start_eval_epoch: 1
+  eval_freq: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+  optimizer:
+    learning_rate: 3.0e-4
+    weight_decay: 0.1
+    beta1: 0.9
+    beta2: 0.95
+    epsilon: 1.0e-8
+    use_muon: true
+    muon_learning_rate: 0.003
+    muon_weight_decay: 0.03
+    muon_momentum: 0.95
+    muon_ns_steps: 5
+    # Source arithmetic; float32 is an opt-in stability variant.
+    muon_ns_dtype: bfloat16
+  scheduler:
+    warmup_steps: 1500
+    warmup_start_lr: 1.0e-8
+    eta_min: 1.0e-8
+  ema:
+    use_ema: true
+    decay: 0.9999
+    avg_freq: 1
+
+INFER:
+  # Path may include or omit the .pdparams suffix.
+  pretrained_model_path: ./checkpoints/ucast
+  prediction_horizon: 30
+  ensemble_size: 5
+  ic_start_dates: [2020-01-01]
+  use_amp: true
+  score: true
+  output_path: null

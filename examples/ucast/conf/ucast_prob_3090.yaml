@@ -1,0 +1,12 @@
+defaults:
+  - ucast_prob
+  - _self_
+
+MODEL:
+  use_recompute: true
+
+TRAIN:
+  batch_size: 1
+  eval_batch_size: 1
+  eval_forward_batch_size: 1
+  update_freq: 48
