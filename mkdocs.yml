@@ -116,6 +116,7 @@ nav:
         - ClimateFormer: examples/climateformer.md
         - ClimaX: examples/climax.md
         - GraphCast: examples/graphcast.md
+        - Mosaic: examples/mosaic.md
         - GenCast: examples/gencast.md
         - VelocityGAN: examples/velocity_gan.md
         - TGCN: examples/tgcn.md
