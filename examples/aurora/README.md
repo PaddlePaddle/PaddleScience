@@ -220,8 +220,8 @@ model. Each backend warms up for 10 steps and runs three consecutive rounds of
 Training executes 161 parameter updates without a preceding inference pass.
 Maximum normalized absolute error is 1.99e-5 and maximum relative L2 is 2.59e-6.
 First-step sampled-gradient relative L2 is 1.26e-5; final sampled-parameter
-relative L2 is 7.50e-11. Inference maximum normalized absolute error is 1.52e-5
-and maximum relative L2 is 3.52e-6. Training and inference diagnostic traces
+relative L2 is 7.50e-11. Inference maximum normalized absolute error is 1.51e-5
+and maximum relative L2 is 3.51e-6. Training and inference diagnostic traces
 record 1,113 and 466 CINN operator executions, respectively. Tiny direct
 training matches both eager losses exactly: sampled-gradient relative L2 is
 5.93e-8, maximum normalized absolute error is 2.84e-6 and maximum relative L2 is
