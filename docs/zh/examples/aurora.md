@@ -114,31 +114,97 @@ python examples/aurora/finetune.py mode=eval \
 随机初始化需设置 `TRAIN.allow_random_init=true`，评估必须提供权重。
 `model.pdparams` 保存原生模型参数，Solver 另存训练状态。
 
-## 6. CINN 编译验证
+## 6. CINN 训练与性能验证
 
-入口脚本在导入 Paddle 前启用 CINN，并对 Swin3D 骨干调用
-`paddle.jit.to_static(backend="CINN", full_graph=False)`。
-编解码器、元数据和 NetCDF 处理仍使用动态图，不支持的算子可由原生 Paddle 内核执行。
-这是子图编译，不代表整模型全图编译。
+`run_cinn.sh` 提供 `--mode inference`、`--mode train` 和 `--mode benchmark`。
+默认进入直接训练：先设置训练模式，再执行前向、反向与 SGD 更新，不需要先做推理。
+`--train-steps` 接受任意正整数，包括单步训练。
+
+动态图和 CINN 分别在独立进程中运行，使用相同随机种子、原生权重、输入、FP32 精度和
+SGD 配置。两种后端均在导入 Paddle 前设置 `FLAGS_new_executor_serial_run=true`，
+固定 PIR 执行器的调度方式，报告中记录实际开关值。CINN 进程另设置编译开关，
+对 Swin 骨干的各个编码/解码 stage 调用
+`paddle.jit.to_static(backend="CINN", full_graph=True)`。动态图进程关闭 CINN 和组合算子。
+特征展开、时间条件、模型编解码器及 Batch 处理仍使用动态图。每个 stage 完整捕图后，
+由 CINN 编译支持的子图；不代表整模型全图编译。注意力掩码的分区和经度连通关系
+只依赖网格配置，使用 NumPy 生成常量，避免在每次执行时重复切片赋值和填充。
+动态图缓存掩码张量，静态程序各自持有常量，避免复用其他程序的中间值。
 
 ```sh
-CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --tiny \
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --mode train --tiny \
   --input data/aurora-demo/input.nc --target data/aurora-demo/truth_001.nc \
-  --output outputs/aurora-cinn-tiny
-CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh \
+  --train-steps 2 --output outputs/aurora-cinn-tiny
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --mode train \
   --checkpoint checkpoints/aurora-pretrained.pdparams --input data/aurora/input.nc \
-  --train-steps 0 --output outputs/aurora-cinn-full
+  --target data/aurora/truth_001.nc --train-steps 2 --output outputs/aurora-cinn-train
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --mode inference \
+  --checkpoint checkpoints/aurora-pretrained.pdparams --input data/aurora/input.nc \
+  --output outputs/aurora-cinn-inference
 ```
 
-可设置 `PYTHON` 指定当前环境的解释器。完整模型默认采样 17×32 网格，保留全部 13 层，
-只检查推理；Tiny 另执行两次 SGD 更新并检查梯度、损失有限。
-输出 `cinn.json` 和 `execution.paddle_trace.json`。通过条件包含 profiler 中实际执行的
-`cinn_jit` 算子，以及逐变量相对动态图的标准化最大绝对误差 ≤1e-4、相对 L2 ≤1e-5。
+可设置 `PYTHON` 指定解释器。完整模型默认 `--spatial-stride 45`，得到 17×32 网格，保留
+全部 13 个气压层；可根据显存调小采样步长。`--backend eager` 或 `--backend cinn` 可独立运行
+某一后端；省略时自动运行并比较两者。
 
-| 配置 | 训练更新 | 最大标准化绝对误差 | 最大相对 L2 | 记录的 CINN 算子执行次数 |
-| --- | --- | --- | --- | --- |
-| Tiny，17×32 合成网格，4 层 | 2 | 2.84e-6 | 9.05e-7 | 16 |
-| 完整预训练模型，17×32 ERA5 网格，13 层 | 0 | 1.26e-5 | 2.87e-6 | 6 |
+输出根目录的 `cinn.json` 汇总两种后端的结果。子目录保存运行日志、预测和 `result.json`，
+CINN 子目录另存 `execution.paddle_trace.json`。推理和训练均检查实际 `cinn_jit` 执行，
+逐变量标准化最大绝对误差 ≤1e-4、相对 L2 ≤1e-5。训练另检查全部已有梯度有限、参数确有更新，
+各步 loss 满足 `rtol=1e-5, atol=1e-6`；每个参数最多抽样 64 个位置比较首步梯度和最终参数，
+抽样向量相对 L2 ≤1e-4。抽样检查不代表全量梯度逐点对齐。
 
-次数仅对应被记录的执行阶段，不代表生成内核数量或编译覆盖率。
-两项均在上述环境通过；尚未验收整模型全图编译、全球全分辨率 CINN 训练或性能加速。
+性能测试使用已驻留显存的相同输入，分别测量推理和包含前向、loss、反向、SGD、清梯度的训练步：
+
+```sh
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --mode benchmark \
+  --benchmark-task train --checkpoint checkpoints/aurora-pretrained.pdparams \
+  --input data/aurora/input.nc --target data/aurora/truth_001.nc \
+  --spatial-stride 20 --warmup 10 --iterations 50 --repeat 3 \
+  --output outputs/aurora-benchmark-train
+CUDA_VISIBLE_DEVICES=0 bash examples/aurora/run_cinn.sh --mode benchmark \
+  --benchmark-task inference --checkpoint checkpoints/aurora-pretrained.pdparams \
+  --input data/aurora/input.nc --spatial-stride 20 \
+  --warmup 10 --iterations 50 --repeat 3 --output outputs/aurora-benchmark-inference
+```
+
+性能模式的训练预热中，最初 `--train-steps` 步（不超过预热步数）同时检查 loss 和梯度；
+计时结束后另做一次不计时的诊断更新。训练的首步耗时包含这些检查。
+首步耗时单独记录，包含按需捕获、编译和执行，可能命中编译缓存；首次编译可能需要数分钟。
+稳态计时在预热后进行，
+每步通过 GPU 同步界定边界，排除编译、检查、profiler、NumPy 拷贝和文件读写。
+每个后端使用独立进程，预热后连续测量 `--repeat` 轮；训练在轮次间继续更新参数，
+两种后端使用相同更新步数。报告包含逐步耗时、均值、中位数、P95、
+步吞吐和本进程峰值分配显存；加速比为各轮中位数的中位数之比 `eager / CINN`，大于 1 表示提速。
+性能测试通过表示数值检查通过，不要求加速比大于 1。请在无其他计算负载的 GPU 上复测。
+
+采样网格的结果不代表全球全分辨率训练性能或整模型全图编译能力。
+
+### 采样网格测量结果
+
+以下为 RTX 3090 独占卡、PaddlePaddle 3.4.0 / CUDA 12.9、FP32、batch size 1 的测量，
+两种后端均设置 `FLAGS_new_executor_serial_run=true`。
+使用完整的 1,256,300,176 参数原生权重和 ERA5 全部 13 个气压层，
+`--spatial-stride 20` 得到 37×72 输入，模型裁剪后为 36×72。
+每个后端预热 10 步，连续测量 3 轮、每轮 50 步；训练使用 SGD，学习率 1e-6。
+
+| 任务 | 动态图稳态耗时 (ms/步) | CINN 稳态耗时 (ms/步) | 加速比 | 动态图 / CINN 峰值分配显存 (GiB) |
+| --- | ---: | ---: | ---: | ---: |
+| 训练 | 186.54 | 131.96 | 1.414× | 10.38 / 11.43 |
+| 推理 | 76.30 | 48.03 | 1.588× | 4.74 / 4.81 |
+
+训练累计执行 161 次参数更新，首两次更新前无推理调用。
+最大标准化绝对误差为 1.99e-5、最大相对 L2 为 2.59e-6，
+首步抽样梯度相对 L2 为 1.26e-5，最终抽样参数相对 L2 为 7.50e-11。
+推理最大标准化绝对误差为 1.52e-5、最大相对 L2 为 3.52e-6。
+训练与推理的诊断 trace 分别记录 1,113 和 466 次 CINN 算子执行。
+Tiny 直接训练的两步 loss 与动态图完全一致，抽样梯度相对 L2 为 5.93e-8，
+最大标准化绝对误差为 2.84e-6、最大相对 L2 为 9.32e-7。
+
+CINN 首次训练步为 347.36 秒，包含捕获、编译、执行与梯度检查；
+动态图为 5.23 秒。CINN 首次推理步为 199.55 秒，动态图为 0.57 秒。
+稳态提速伴随更高的显存使用，短任务总耗时可能更长。
+这些结果仅对应上述环境和采样网格，不能外推为全球全分辨率的加速保证。
+
+此前多线程执行器配置曾在 Paddle profiler 收尾时出现
+`HostEventRecorder::GatherEvents` 崩溃或 `vector::reserve` 异常。
+本入口固定使用串行 PIR 调度；Tiny 训练、完整训练和完整推理的 trace 导出及数值检查均通过。
+切换执行器配置后应重新验证稳定性与性能，进程异常退出不能视为验收通过。

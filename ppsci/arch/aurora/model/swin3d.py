@@ -15,6 +15,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import numpy as np
 import paddle
 from paddle.base import core
 
@@ -263,8 +264,24 @@ def get_3d_merge_groups() -> list[tuple[int, int]]:
     return merge_groups_3d
 
 
-@lru_cache
 def compute_3d_shifted_window_mask(
+    C: int,
+    H: int,
+    W: int,
+    ws: tuple[int, int, int],
+    ss: tuple[int, int, int],
+    device: paddle.device,
+    dtype: paddle.dtype = paddle.bfloat16,
+    warped: bool = True,
+) -> tuple[paddle.Tensor, paddle.Tensor]:
+    # Static graph values belong to their program; cache eager tensors only.
+    if paddle.in_dynamic_mode():
+        return _cached_window_mask(C, H, W, ws, ss, device, dtype, warped)
+    return _build_window_mask(C, H, W, ws, ss, device, dtype, warped)
+
+
+@paddle.jit.not_to_static
+def _build_window_mask(
     C: int,
     H: int,
     W: int,
@@ -293,7 +310,7 @@ def compute_3d_shifted_window_mask(
         paddle.Tensor: Image mask splitting the input patches into groups. Used for debugging
             purposes.
     """
-    img_mask = paddle.zeros((1, C, H, W, 1), device=device, dtype=dtype)
+    img_mask = np.zeros((1, C, H, W, 1), dtype="int32")
     c_slices = slice(0, -ws[0]), slice(-ws[0], -ss[0]), slice(-ss[0], None)
     h_slices = slice(0, -ws[1]), slice(-ws[1], -ss[1]), slice(-ss[1], None)
     w_slices = slice(0, -ws[2]), slice(-ws[2], -ss[2]), slice(-ss[2], None)
@@ -303,17 +320,29 @@ def compute_3d_shifted_window_mask(
         cnt += 1
     if warped:
         for grp1, grp2 in get_3d_merge_groups():
-            img_mask = img_mask.masked_fill(img_mask == grp1, grp2)
+            img_mask[img_mask == grp1] = grp2
     pad_size = ws[0] - C % ws[0], ws[1] - H % ws[1], ws[2] - W % ws[2]
     pad_size = pad_size[0] % ws[0], pad_size[1] % ws[1], pad_size[2] % ws[2]
-    img_mask = pad_3d(img_mask, pad_size, value=cnt)
-    mask_windows = window_partition_3d(img_mask, ws)
-    mask_windows = mask_windows.reshape([-1, ws[0] * ws[1] * ws[2]])
-    attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
-    attn_mask = attn_mask.masked_fill(attn_mask != 0, -100.0).masked_fill(
-        attn_mask == 0, 0.0
+    left, right, top, bottom, front, back = get_three_sidded_padding(*pad_size)
+    img_mask = np.pad(
+        img_mask,
+        ((0, 0), (front, back), (top, bottom), (left, right), (0, 0)),
+        constant_values=cnt,
     )
-    return attn_mask, img_mask
+    _, C, H, W, _ = img_mask.shape
+    mask_windows = (
+        img_mask.reshape(1, C // ws[0], ws[0], H // ws[1], ws[1], W // ws[2], ws[2], 1)
+        .transpose(0, 1, 3, 5, 2, 4, 6, 7)
+        .reshape(-1, ws[0] * ws[1] * ws[2])
+    )
+    attn_mask = np.where(mask_windows[:, None, :] == mask_windows[:, :, None], 0, -100)
+    return (
+        paddle.to_tensor(attn_mask, dtype=dtype, place=device),
+        paddle.to_tensor(img_mask, dtype=dtype, place=device),
+    )
+
+
+_cached_window_mask = lru_cache(_build_window_mask)
 
 
 class Swin3DTransformerBlock(paddle.nn.Layer):
