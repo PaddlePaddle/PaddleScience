@@ -1,0 +1,6 @@
+einops>=0.8,<0.9
+fsspec[http]>=2024.6
+healpy>=1.19,<2
+pandas>=2.2
+scikit-learn>=1.4,<2
+zarr>=2.18,<3
