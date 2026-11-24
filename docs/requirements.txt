@@ -13,6 +13,7 @@ mkdocs-video
 mkdocstrings==0.29.0
 mkdocstrings-python==1.16.12
 numpy>=1.20.0,<2.0.0
+pymdown-extensions>=10,<11
 pyyaml
 scipy
 sympy
