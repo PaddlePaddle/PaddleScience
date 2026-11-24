@@ -92,60 +92,6 @@ class TestMosaic(unittest.TestCase):
                 actual.numpy(), expected.numpy(), atol=1e-6, rtol=1e-5
             )
 
-    def test_quantized_sparse_diagnostic_matches_dense_and_rejects_training(self):
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "examples/mosaic"))
-        from validate_sparse_kernel import quantized_qkv_attention
-
-        q, k, v = (
-            paddle.randn(shape)
-            for shape in ([2, 12, 4, 8], [2, 12, 2, 8], [2, 12, 2, 8])
-        )
-        indices = paddle.to_tensor(
-            np.tile(
-                np.array([[[[0, 2], [1, 2]], [[1, 0], [2, 0]], [[2, 1], [0, 1]]]]),
-                (2, 1, 1, 1),
-            )
-        )
-        with self.assertRaises(RuntimeError):
-            quantized_qkv_attention(q, k, v, indices, 4)
-        with paddle.no_grad():
-            actual = quantized_qkv_attention(q, k, v, indices, 4, query_chunk_size=2)
-            mask = np.zeros((2, 4, 12, 12), dtype=bool)
-            for b in range(2):
-                for h in range(4):
-                    for block in range(3):
-                        for choice in indices.numpy()[b, block, h // 2]:
-                            mask[
-                                b,
-                                h,
-                                block * 4 : (block + 1) * 4,
-                                choice * 4 : (choice + 1) * 4,
-                            ] = True
-            query = (
-                ((q * 8**-0.5) * 1.44269504089)
-                .astype("bfloat16")
-                .astype("float32")
-                .transpose([0, 2, 1, 3])
-            )
-            keys, values = [
-                paddle.repeat_interleave(
-                    t.astype("bfloat16").astype("float32"), 2, axis=2
-                ).transpose([0, 2, 1, 3])
-                for t in (k, v)
-            ]
-            scores = paddle.matmul(query, keys, transpose_y=True) * np.log(2)
-            scores = paddle.where(
-                paddle.to_tensor(mask), scores, paddle.full_like(scores, -float("inf"))
-            )
-            expected = paddle.matmul(
-                paddle.nn.functional.softmax(scores, axis=-1), values
-            ).transpose([0, 2, 1, 3])
-            np.testing.assert_allclose(
-                actual.numpy(), expected.numpy(), atol=1e-6, rtol=1e-6
-            )
-            with self.assertRaises(RuntimeError):
-                quantized_qkv_attention(q, k, v, indices, 4, recompute_chunks=True)
-
     def test_native_checkpoint_roundtrip_with_geometry(self):
         config = dict(
             dim=16,

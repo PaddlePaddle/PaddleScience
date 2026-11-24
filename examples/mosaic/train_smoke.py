@@ -28,12 +28,12 @@ from pathlib import Path
 
 import numpy as np
 import paddle
-from convert_checkpoint import initialize_model
 from lora import adapter_state
 from lora import inject_lora
 from lora import load_adapter
 from losses import ensemble_forecast
 from losses import weighted_loss
+from model_utils import initialize_model
 from presets import LEVELS
 from presets import PRESSURE_VARIABLES
 from presets import SURFACE_VARIABLES

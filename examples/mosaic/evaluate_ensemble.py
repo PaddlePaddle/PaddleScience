@@ -24,12 +24,12 @@ from pathlib import Path
 
 import numpy as np
 import paddle
-from convert_checkpoint import initialize_model
 from evaluate_weather import weighted_mse
 from lora import inject_lora
 from lora import load_adapter
 from losses import ensemble_forecast
 from losses import weighted_loss
+from model_utils import initialize_model
 from train_smoke import variable_weights
 
 

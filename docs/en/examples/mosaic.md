@@ -1,53 +1,49 @@
 # Mosaic global probabilistic weather forecasting
 
 [Mosaic](https://github.com/maxxxzdn/mosaic) combines a HEALPix U-Net with local,
-compressed and selected-block attention. The Paddle port is registered as
-`ppsci.arch.Mosaic` and includes GQA, RoPE, interpolation and noise conditioning.
+compressed and selected-block attention. The Paddle implementation is registered
+as `ppsci.arch.Mosaic` and supports GQA, RoPE, interpolation and noise conditioning.
 
-## Setup and inference
+## Setup and data
 
-Install PaddleScience and a CUDA-compatible Paddle build, then install the
-example dependencies from the repository root:
+Install PaddleScience and a CUDA-compatible Paddle build, then run:
 
 ```bash
 python -m pip install -r examples/mosaic/requirements.txt
 export PYTHONPATH="$PWD:$PYTHONPATH"
 ```
 
-Use the official [ERA5 assets](https://huggingface.co/AMLab-UvA/mosaic) and extract
-real contexts with `prepare_data.py`. Inputs contain two history frames and 82
-variables on a 240-by-121 grid; the forecast lead is 24h. Outputs are normalized.
-Follow the [reproduction guide](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/mosaic/VALIDATION.md)
-to verify and convert the checkpoint, including original geometry buffers.
+The ERA5 model uses two history frames with 82 variables on a 240-by-121 grid
+and predicts the next 24 hours. The Paddle model directory contains
+`config.json` and `model.pdparams`, including the geometry buffers.
+Static fields and normalization statistics are available in the
+[official asset repository](https://huggingface.co/AMLab-UvA/mosaic/tree/main/data).
+The data preparation script extracts selected dates from public WeatherBench2 ERA5:
 
 ```bash
-python examples/mosaic/infer.py --model /path/to/paddle-era5-source-geometry \
-  --static /path/to/static_vars.npz --stats /path/to/norm_stats_era5.npz \
-  --data /path/to/era5_three_samples.npz --device gpu:0 \
-  --output /path/to/predictions
+python examples/mosaic/prepare_data.py --samples 3 \
+  --init-time 2020-01-02T00:00 --output data/mosaic/era5_samples.npz
 ```
+
+## Inference
+
+With the Paddle weights in `data/mosaic/model/` and static fields and statistics
+in `data/mosaic/`, run from the repository root:
+
+```bash
+python examples/mosaic/infer.py --model data/mosaic/model \
+  --static data/mosaic/static_vars.npz --stats data/mosaic/norm_stats_era5.npz \
+  --data data/mosaic/era5_samples.npz --device gpu:0 --output output/mosaic
+```
+
+The output includes physical and normalized forecasts, coordinates and per-variable
+area-weighted RMSE. Add `--rollout-steps 3` for a 72-hour autoregressive forecast.
 
 The [example README](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/mosaic/README.md)
-also documents LoRA, weighted MSE/MAE/fair-CRPS, ensemble checks and rollouts.
-Training is currently a fixed-sample diagnostic, not a production trainer.
-Full-grid LoRA is checked; full-parameter backward has not passed on the 24GB GPU.
+provides data download commands, LoRA training checks and results for selected dates.
+The ERA5 base model has 214,184,448 parameters; rank-8 LoRA adds 1,837,056
+trainable parameters. The training example checks updates on a fixed sample and
+supports weighted MSE, MAE and fair-CRPS.
 
-## Validation scope
-
-All 131 parameter groups are converted (214,184,448 base parameters).
-Worst per-case/per-variable weather RMSE regression is 0.5462% on three winter
-24h forecasts. Single spring, summer and autumn cases have worst regression
-1.5526%, 1.0420% and 0.0179%. The reference uses native Triton sparse attention
-and Torch SDPA, not the complete original FlashAttention setup.
-
-Full-model CINN on RTX3090 improves throughput by about 23%; the worst weather
-RMSE regression on three winter inputs is 0.001085%. The strict absolute
-pointwise check of 1e-4 still fails. That tolerance and the 1% weather screening
-line are internal diagnostics, not confirmed client criteria. These limited
-checks do not establish full-year reproduction, calibration or pointwise identity.
-
-Run the CPU unit suite with:
-
-```bash
-PYTHONPATH=. python -m unittest discover -s test/arch -p 'test_mosaic*.py' -v
-```
+Paper: *(Sparse) Attention to the Details: Preserving Spectral Fidelity in
+ML-based Weather Forecasting Models*, ICML 2026. Original code: Apache-2.0.

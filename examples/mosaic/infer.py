@@ -21,8 +21,7 @@ from pathlib import Path
 
 import numpy as np
 import paddle
-from convert_checkpoint import initialize_model
-from mosaic_trace import Trace
+from model_utils import initialize_model
 from rollout import forecast_rollout
 from rollout import validate_era5_sequence
 
@@ -30,10 +29,6 @@ from rollout import validate_era5_sequence
 def main(args):
     if args.rollout_steps < 1:
         raise ValueError("rollout-steps must be positive")
-    if args.rollout_steps > 1 and (
-        args.trace or args.reference_routes or args.reference_trace
-    ):
-        raise ValueError("Rollout evaluation must not use trace or reference overrides")
     paddle.set_device("cpu")
     config = json.loads((args.model / "config.json").read_text())
     model = initialize_model(config, args.static)
@@ -54,28 +49,9 @@ def main(args):
         if adapter_manifest != manifest:
             raise ValueError("LoRA manifest does not match model targets")
         load_adapter(model, args.adapter / "adapter.pdparams")
-    if args.reference_trace:
-        # Diagnostic only: isolate regenerated geometry from forward arithmetic.
-        reference = np.load(args.reference_trace)
-        for name, buffer in model.named_buffers():
-            value = reference["buffer." + name]
-            if list(value.shape) != list(buffer.shape):
-                raise ValueError(f"Reference buffer shape mismatch: {name}")
-            buffer.set_value(value)
     model.eval()
     model.to(device=args.device)
     paddle.set_device(args.device)
-    if args.sparse_backend in ("native-emulation", "qkv-bf16"):
-        from validate_sparse_kernel import online_sparse_attention
-        from validate_sparse_kernel import quantized_qkv_attention
-
-        from ppsci.arch import mosaic_attention
-
-        mosaic_attention.sparse_attention = (
-            online_sparse_attention
-            if args.sparse_backend == "native-emulation"
-            else quantized_qkv_attention
-        )
     sample, stats, static = (
         np.load(args.data),
         np.load(args.stats),
@@ -104,30 +80,6 @@ def main(args):
             .astype("float32")
         ),
     }
-    trace = Trace(args.output / "trace") if args.trace else None
-    if trace is not None:
-        trace.install_paddle(model)
-    if trace is not None or args.reference_routes:
-        from ppsci.arch import mosaic_attention
-
-        original_topk = mosaic_attention.attn_topk
-        calls = []
-        routes = np.load(args.reference_routes) if args.reference_routes else None
-
-        def traced_topk(q, k, count):
-            result = original_topk(q, k, count)
-            name = f"route_{len(calls)}"
-            if routes is not None:
-                value = routes[name]
-                if list(value.shape) != list(result.shape):
-                    raise ValueError(f"Reference routing shape mismatch: {name}")
-                result = paddle.to_tensor(value, place=result.place)
-            if trace is not None:
-                trace.record(name, result, full=True)
-            calls.append(None)
-            return result
-
-        mosaic_attention.attn_topk = traced_topk
     if args.device.startswith("gpu"):
         paddle.device.synchronize()
     start = time.perf_counter()
@@ -196,10 +148,7 @@ def main(args):
         finite=True,
         sample_count=1,
         compiler="dynamic",
-        sparse_backend=args.sparse_backend,
         amp_dtype=args.amp_dtype,
-        reference_geometry=str(args.reference_trace) if args.reference_trace else None,
-        reference_routes=str(args.reference_routes) if args.reference_routes else None,
         variant_history=config["num_history_steps"],
         normalized_min=float(normalized.min()),
         normalized_max=float(normalized.max()),
@@ -209,8 +158,6 @@ def main(args):
         scope="full-resolution real-input diagnostic; lead count in rollout_steps; not full evaluation or speed benchmark",
     )
     args.output.mkdir(parents=True, exist_ok=True)
-    if trace is not None:
-        trace.save()
     np.savez(
         args.output / "prediction.npz",
         forecast=prediction,
@@ -234,22 +181,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--sample-index", type=int, default=0)
     parser.add_argument("--rollout-steps", type=int, default=1)
-    parser.add_argument("--trace", action="store_true")
     parser.add_argument(
         "--amp-dtype", choices=("float32", "float16"), default="float32"
-    )
-    parser.add_argument(
-        "--sparse-backend",
-        choices=("math", "native-emulation", "qkv-bf16"),
-        default="math",
-        help="native-emulation and qkv-bf16 are inference-only diagnostics, not training backends",
-    )
-    parser.add_argument(
-        "--reference-trace", type=Path, help="Diagnostic geometry replay only"
-    )
-    parser.add_argument(
-        "--reference-routes",
-        type=Path,
-        help="Diagnostic frozen routing only; not independent inference",
     )
     main(parser.parse_args())

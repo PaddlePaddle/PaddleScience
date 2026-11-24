@@ -133,7 +133,7 @@ def main(args):
 
 
 def full_model(args):
-    from convert_checkpoint import initialize_model
+    from model_utils import initialize_model
 
     if args.static is None or args.stats is None or args.data is None:
         raise ValueError("Full-model benchmark requires --static --stats --data")
