@@ -7,9 +7,15 @@ FLAGS must be set before paddle is imported. Both workers start from the same
 initial weights and the same synthetic batch (the dynamic worker dumps them,
 the CINN worker loads them) and measure:
 
-    infer  model forward under no_grad: output diff and per-iteration time
-    train  forward + loss (incl. PDE residuals) + backward + Adam step:
-           per-step loss diff and per-iteration time
+    infer  model forward under no_grad: the largest output diff, which must stay
+           within --infer-rtol (1e-2)
+    train  forward + loss (incl. PDE residuals) + backward + Adam step: the loss
+           of every step is compared over the acceptance window (steps 400-500 by
+           default). A step counts as an outlier when its diff exceeds --train-tol
+           (1e-2); at most --max-outliers (10) outliers are allowed. Losses above
+           1 are compared with the relative diff, losses at or below 1 with the
+           absolute diff, because the relative diff explodes once a loss
+           approaches zero.
 
 Usage:
     python test/cinn/run_cinn_test.py --list
@@ -323,6 +329,17 @@ def rel_diff(a, b):
     return abs(a - b) / max(abs(a), 1e-12)
 
 
+def loss_diff(ref, out):
+    """Per-step loss diff: relative where |ref| > 1, absolute where |ref| <= 1.
+
+    Once a loss approaches zero the relative diff says nothing about the quality
+    of the match (xrdmatch reaches exactly 0, perovskite_solar_cells settles at
+    6e-8), so below 1 the absolute diff is the meaningful quantity. This is the
+    allclose form |ref - out| <= atol + rtol * |ref| with atol = rtol = tol.
+    """
+    return [rel_diff(a, b) if abs(a) > 1.0 else abs(a - b) for a, b in zip(ref, out)]
+
+
 def compare_infer(work_dir):
     with np.load(work_dir / "infer_dynamic.npz") as ref, np.load(
         work_dir / "infer_cinn.npz"
@@ -352,17 +369,26 @@ def compare_case(dynamic, cinn, work_dir, args):
         report["infer"] = acc
     if "train" in dynamic:
         ref, out = dynamic["train"]["losses"], cinn["train"]["losses"]
-        diffs = [rel_diff(a, b) for a, b in zip(ref, out)]
+        lo, hi = args.window
+        # the window is 1-based on training steps and excludes the warmup iters
+        window = slice(lo - 1, hi)
+        diffs = loss_diff(ref, out)
+        w_diffs = diffs[window] or diffs
+        outliers = [
+            {"step": lo + i, "diff": d}
+            for i, d in enumerate(w_diffs)
+            if d > args.train_tol
+        ]
         finite = all(np.isfinite(out)) or not all(np.isfinite(ref))
         report["train"] = {
-            "first_loss_rel_diff": diffs[0],
-            "final_loss_rel_diff": diffs[-1],
-            "max_loss_rel_diff": max(diffs),
-            "pass": bool(
-                finite
-                and diffs[0] <= args.train_first_rtol
-                and diffs[-1] <= args.train_final_rtol
-            ),
+            "window": [lo, min(hi, len(diffs))],
+            "window_max_diff": max(w_diffs),
+            "window_mean_diff": float(np.mean(w_diffs)),
+            "outliers": len(outliers),
+            "outlier_steps": [o["step"] for o in outliers[:20]],
+            "first_loss_diff": diffs[0],
+            "final_loss_diff": diffs[-1],
+            "pass": bool(finite and len(outliers) <= args.max_outliers),
         }
     for stage in report:
         speedup = (
@@ -414,7 +440,7 @@ def fmt_stage(summary, stage):
     if stage == "infer":
         acc = s.get("error") or f"{s['max_rel_diff']:.1e}"
     else:
-        acc = f"{s['first_loss_rel_diff']:.1e}/{s['final_loss_rel_diff']:.1e}"
+        acc = f"{s['window_max_diff']:.1e} ({s['outliers']})"
     return [
         acc,
         f"{s['dynamic_seconds'] * 1e3:.2f}/{s['cinn_seconds'] * 1e3:.2f}",
@@ -425,7 +451,11 @@ def fmt_stage(summary, stage):
 def write_summary(summaries, out_dir, args):
     header = ["case", "status"]
     for stage in args.stages:
-        acc = "infer rel diff" if stage == "infer" else "train loss diff first/final"
+        if stage == "infer":
+            acc = "infer rel diff"
+        else:
+            lo, hi = args.window
+            acc = f"train diff {lo}-{hi} max (outliers)"
         header += [acc, f"{stage} ms dyn/cinn", f"{stage} speedup"]
     rows = []
     for s in sorted(summaries, key=lambda x: x["case"]):
@@ -458,7 +488,7 @@ def parse_args():
     parser.add_argument("--cases", default="all", help="comma separated, or 'all'")
     parser.add_argument("--list", action="store_true", help="list cases and exit")
     parser.add_argument("--stages", default="infer,train", help="infer,train")
-    parser.add_argument("--iters", type=int, default=20, help="timed iters per stage")
+    parser.add_argument("--iters", type=int, default=600, help="timed iters per stage")
     parser.add_argument(
         "--warmup",
         type=int,
@@ -467,9 +497,29 @@ def parse_args():
     )
     parser.add_argument("--devices", default="0", help="GPU ids, one case per GPU")
     parser.add_argument("--timeout", type=int, default=1800, help="seconds per worker")
-    parser.add_argument("--infer-rtol", type=float, default=1e-3)
-    parser.add_argument("--train-first-rtol", type=float, default=1e-3)
-    parser.add_argument("--train-final-rtol", type=float, default=1e-2)
+    parser.add_argument(
+        "--infer-rtol",
+        type=float,
+        default=1e-2,
+        help="largest allowed relative diff between the inference outputs",
+    )
+    parser.add_argument(
+        "--train-tol",
+        type=float,
+        default=1e-2,
+        help="a training step counts as an outlier above this diff",
+    )
+    parser.add_argument(
+        "--max-outliers",
+        type=int,
+        default=10,
+        help="allowed number of outlier steps inside the acceptance window",
+    )
+    parser.add_argument(
+        "--window",
+        default="400,500",
+        help="training steps compared for accuracy, 1-based and inclusive",
+    )
     parser.add_argument("--output-dir", help="defaults to test/cinn/outputs/<stamp>")
     parser.add_argument(
         "--reuse-inputs",
@@ -483,6 +533,18 @@ def parse_args():
     args.stages = [s for s in args.stages.split(",") if s]
     if not set(args.stages) <= set(STAGES):
         parser.error(f"--stages must be a subset of {STAGES}")
+    try:
+        lo, hi = (int(x) for x in args.window.split(","))
+    except ValueError:
+        parser.error("--window must be two comma separated step numbers, e.g. 400,500")
+    if not 1 <= lo <= hi:
+        parser.error("--window must satisfy 1 <= lo <= hi")
+    args.window = (lo, hi)
+    if not args.worker and "train" in args.stages and args.iters < hi:
+        parser.error(
+            f"--iters {args.iters} is below the acceptance window end {hi}; "
+            f"raise --iters or lower --window"
+        )
     return args
 
 
