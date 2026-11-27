@@ -118,6 +118,7 @@ nav:
         - ClimaX: examples/climax.md
         - GraphCast: examples/graphcast.md
         - GenCast: examples/gencast.md
+        - U-Cast: examples/ucast.md
         - VelocityGAN: examples/velocity_gan.md
         - TGCN: examples/tgcn.md
         - IOPS: examples/iops.md

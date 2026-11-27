@@ -49,6 +49,7 @@
         - Transolver
         - UNetEx
         - UNONet
+        - UCast
         - USCNN
       show_root_heading: true
       heading_level: 3
