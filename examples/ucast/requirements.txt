@@ -1,0 +1,6 @@
+xarray>=2025.6
+zarr>=2.18,<3
+gcsfs
+netCDF4
+safetensors
+dask[array]>=2024.1

@@ -20,163 +20,167 @@ import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from ucast_utils import SURFACE_VARIABLES
-from ucast_utils import VARIABLE_NAMES
-from ucast_utils import UCastERA5Dataset
-from ucast_utils import autoregressive_inference
-from ucast_utils import build_xarray_dataset
-from ucast_utils import ensure_latitude_is_ascending
-from ucast_utils import extract_batch_for_initial_condition
-from ucast_utils import load_normalizer
-from ucast_utils import load_static_conditions
-from ucast_utils import load_static_conditions_numpy
-from ucast_utils import open_era5_zarr
-from ucast_utils import score_forecast
+from ucast_utils import (
+    SURFACE_VARIABLES,
+    VARIABLE_NAMES,
+    autoregressive_inference,
+    build_xarray_dataset,
+    ensure_latitude_is_ascending,
+    extract_batch_for_initial_condition,
+    load_normalizer,
+    load_static_conditions,
+    open_era5_zarr,
+    score_forecast,
+)
 
 import ppsci
 from ppsci.utils import logger
-from ppsci.utils import save_load
-
-
-def train(cfg: DictConfig):
-    """Train either stage with the original optimizer and validation semantics."""
-    from ucast_training import UCastSolver
-    from ucast_training import validate_training_config
-
-    validate_training_config(cfg)
-    paddle.seed(cfg.seed)
-    np.random.seed(cfg.seed)
-    paddle.set_device(cfg.device)
-    dataset = ensure_latitude_is_ascending(
-        open_era5_zarr(cfg.DATA.data_dir, cfg.DATA.dataset, cfg.DATA.get("cache_dir"))
-    )
-    normalizer = load_normalizer(cfg.DATA.stats_dir, dataset, VARIABLE_NAMES)
-    static_condition = load_static_conditions_numpy(dataset, cfg.DATA.static_fields)
-    train_dataset = UCastERA5Dataset(
-        dataset,
-        normalizer,
-        static_condition,
-        cfg.TRAIN.train_time_slices,
-        window=cfg.DATA.window,
-        horizon=cfg.DATA.horizon,
-        hourly_resolution=cfg.DATA.hourly_resolution,
-        max_samples=cfg.TRAIN.max_train_samples,
-    )
-    val_dataset = UCastERA5Dataset(
-        dataset,
-        normalizer,
-        static_condition,
-        [cfg.TRAIN.val_time_slice],
-        window=cfg.DATA.window,
-        horizon=cfg.DATA.horizon,
-        hourly_resolution=cfg.DATA.hourly_resolution,
-        possible_initial_hours=cfg.TRAIN.possible_initial_hours_eval,
-        max_samples=cfg.TRAIN.max_val_samples,
-        prediction_horizon=cfg.TRAIN.prediction_horizon,
-        validation=True,
-    )
-    model = ppsci.arch.UCast(**cfg.MODEL)
-    solver = UCastSolver(
-        cfg, model, train_dataset, val_dataset, normalizer, dataset.latitude.values
-    )
-    solver.train()
-    return solver
 
 
 def infer(cfg: DictConfig):
-    """Run released-checkpoint U-Cast inference with PaddlePaddle."""
+    """MC-Dropout and deep-ensemble inference with sequential weight loading."""
+    import gc
+    import json
+
+    from ucast_training import load_weights
+
     paddle.seed(cfg.seed)
     np.random.seed(cfg.seed)
     paddle.set_device(cfg.device)
-
-    model = ppsci.arch.UCast(**cfg.MODEL)
-    save_load.load_pretrain(model, cfg.INFER.pretrained_model_path)
+    paths = cfg.INFER.get("pretrained_model_paths") or [cfg.INFER.pretrained_model_path]
+    if isinstance(paths, str):
+        paths = [paths]
     use_amp = bool(cfg.INFER.use_amp) and paddle.get_device().startswith("gpu")
-    if cfg.INFER.use_amp and not use_amp:
-        logger.warning("U-Cast FP16 inference is only enabled on GPU; using FP32")
-    if use_amp:
-        model.prepare_for_inference_amp()
-    model.enable_mc_dropout()
-    logger.info(
-        f"Loaded U-Cast with {sum(parameter.numel() for parameter in model.parameters()):,} parameters"
-    )
-
     dataset = ensure_latitude_is_ascending(
         open_era5_zarr(cfg.DATA.data_dir, cfg.DATA.dataset, cfg.DATA.get("cache_dir"))
     )
-    logger.info(f"Opened {cfg.DATA.dataset} with {len(dataset.time):,} time steps")
     normalizer = load_normalizer(cfg.DATA.stats_dir, dataset, VARIABLE_NAMES)
     static_condition = load_static_conditions(dataset, cfg.DATA.static_fields)
-
     initial_conditions = [np.datetime64(value) for value in cfg.INFER.ic_start_dates]
-    forecast_datasets = []
-    all_scores = []
-    for index, initial_condition in enumerate(initial_conditions, start=1):
-        logger.info(
-            f"Initial condition {index}/{len(initial_conditions)}: {initial_condition}"
+    if not initial_conditions:
+        raise ValueError("INFER.ic_start_dates must contain at least one timestamp")
+    base_members, remainder = divmod(int(cfg.INFER.ensemble_size), len(paths))
+    members_per_model = [
+        base_members + (index < remainder) for index in range(len(paths))
+    ]
+    if min(members_per_model) < 1:
+        raise ValueError(
+            "INFER.ensemble_size must be at least the number of checkpoints"
         )
-        batch = extract_batch_for_initial_condition(
-            dataset,
-            initial_condition,
-            VARIABLE_NAMES,
-            normalizer,
-            cfg.DATA.window,
-            cfg.INFER.prediction_horizon,
-            cfg.DATA.hourly_resolution,
-        )
-        result = autoregressive_inference(
-            model,
-            batch,
-            static_condition,
-            normalizer,
-            cfg.DATA.window,
-            cfg.INFER.prediction_horizon,
-            cfg.INFER.ensemble_size,
-            use_amp,
-        )
-        forecast_datasets.append(
-            build_xarray_dataset(
-                result,
-                batch,
+    per_initial_condition = [[] for _ in initial_conditions]
+    for model_index, path in enumerate(paths):
+        model = ppsci.arch.UCast(**cfg.MODEL)
+        load_weights(model, path, use_ema=True)
+        if use_amp:
+            model.prepare_for_inference_amp()
+        model.enable_mc_dropout()
+        logger.info(f"Loaded ensemble model {model_index + 1}/{len(paths)}: {path}")
+        for index, initial_condition in enumerate(initial_conditions):
+            batch = extract_batch_for_initial_condition(
+                dataset,
                 initial_condition,
-                cfg.DATA.hourly_resolution,
                 VARIABLE_NAMES,
-            ).expand_dims("init_time")
+                normalizer,
+                cfg.DATA.window,
+                cfg.INFER.prediction_horizon,
+                cfg.DATA.hourly_resolution,
+            )
+            result = autoregressive_inference(
+                model,
+                batch,
+                static_condition,
+                normalizer,
+                cfg.DATA.window,
+                cfg.INFER.prediction_horizon,
+                members_per_model[model_index],
+                use_amp,
+                cfg.INFER.get("ensemble_chunk_size"),
+            )
+            per_initial_condition[index].append(result)
+        del model
+        gc.collect()
+        if paddle.get_device().startswith("gpu"):
+            paddle.device.cuda.empty_cache()
+    forecast_datasets, all_scores = [], []
+    for index, initial_condition in enumerate(initial_conditions):
+        parts = per_initial_condition[index]
+        result = {
+            "predictions": paddle.concat(
+                [part["predictions"] for part in parts], axis=0
+            ),
+            "targets": parts[0]["targets"],
+        }
+        batch_coords = {
+            "longitude": dataset.longitude.values,
+            "latitude": dataset.latitude.values,
+        }
+        forecast = build_xarray_dataset(
+            result,
+            batch_coords,
+            initial_condition,
+            cfg.DATA.hourly_resolution,
+            VARIABLE_NAMES,
         )
+        forecast = forecast.assign_coords(
+            source_model=(
+                "ensemble_member",
+                np.repeat(np.arange(len(paths)), members_per_model),
+            ),
+            mc_member=(
+                "ensemble_member",
+                np.concatenate([np.arange(count) for count in members_per_model]),
+            ),
+        )
+        forecast.attrs["checkpoint_paths"] = json.dumps([str(path) for path in paths])
+        forecast_datasets.append(forecast.expand_dims("init_time"))
         if cfg.INFER.score:
-            all_scores.append(score_forecast(result, batch["latitude"], VARIABLE_NAMES))
-
+            all_scores.append(
+                score_forecast(result, dataset.latitude.values, VARIABLE_NAMES)
+            )
     if cfg.INFER.score:
-        lead_hours = (
-            np.arange(1, cfg.INFER.prediction_horizon + 1) * cfg.DATA.hourly_resolution
-        )
-        for variable in SURFACE_VARIABLES:
-            crps = np.mean([score["crps"][variable] for score in all_scores], axis=0)
-            rmse = np.mean([score["rmse"][variable] for score in all_scores], axis=0)
-            logger.info(f"Scores for {variable}")
-            for lead_hour, crps_value, rmse_value in zip(lead_hours, crps, rmse):
-                logger.info(
-                    f"  {lead_hour:3d}h: CRPS={crps_value:.4f}, RMSE={rmse_value:.4f}"
-                )
-
+        scores = {
+            metric: {
+                name: np.mean(
+                    [score[metric][name] for score in all_scores], axis=0
+                ).tolist()
+                for name in VARIABLE_NAMES
+            }
+            for metric in ("rmse", "crps")
+        }
+        for name in SURFACE_VARIABLES:
+            logger.info(
+                f"{name}: RMSE={scores['rmse'][name]}, fair CRPS={scores['crps'][name]}"
+            )
+        if cfg.INFER.get("score_output_path"):
+            score_path = Path(cfg.INFER.score_output_path)
+            score_path.parent.mkdir(parents=True, exist_ok=True)
+            score_path.write_text(json.dumps(scores, indent=2))
     if cfg.INFER.output_path:
         import xarray as xr
 
         output_path = Path(cfg.INFER.output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        xr.concat(forecast_datasets, dim="init_time").to_netcdf(output_path)
+        xr.concat(forecast_datasets, dim="init_time").to_netcdf(
+            output_path, encoding={"lead_time": {"dtype": "int64", "units": "hours"}}
+        )
         logger.info(f"Saved forecasts to {output_path}")
     return forecast_datasets
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="ucast.yaml")
 def main(cfg: DictConfig):
-    if cfg.mode == "train":
-        train(cfg)
-    elif cfg.mode == "infer":
+    if cfg.mode == "infer":
         infer(cfg)
+    elif cfg.mode == "eval":
+        from ucast_training import evaluate_checkpoint
+
+        evaluate_checkpoint(cfg)
+    elif cfg.mode == "train":
+        from ucast_training import train
+
+        train(cfg)
     else:
-        raise ValueError(f"cfg.mode should be 'train' or 'infer', but got {cfg.mode!r}")
+        raise ValueError(f"Unknown U-Cast mode: {cfg.mode!r}")
 
 
 if __name__ == "__main__":

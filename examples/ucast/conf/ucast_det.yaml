@@ -1,0 +1,5 @@
+defaults:
+  - ucast
+  - _self_
+
+mode: train

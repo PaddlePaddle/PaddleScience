@@ -12,8 +12,7 @@ import os
 import time
 import uuid
 from collections.abc import MutableMapping
-from pathlib import Path
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 
 class ERA5Cache(MutableMapping):

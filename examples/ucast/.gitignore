@@ -1,3 +1,5 @@
 checkpoints/
-outputs_ucast/
+outputs_ucast*/
+__pycache__/
+*.pyc
 *.nc

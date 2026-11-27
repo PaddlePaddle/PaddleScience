@@ -7,11 +7,14 @@
 - WeatherBench-2 ERA5 数据读取、归一化、周期边界卷积；
 - MC-Dropout 集成、自回归预报、fair CRPS 和 RMSE；
 - ERA5 单步训练数据集、WMAE 第一阶段和 fair-CRPS 第二阶段；
-- PaddleScience Solver、Muon+AdamW、梯度累积、warmup+cosine 和全局梯度裁剪；
+- 原生 `ppsci.solver.Solver.train()` / `Solver.eval()`、Muon+AdamW、梯度累积、warmup+cosine 和全局梯度裁剪；
 - 与原版一致的逐 batch EMA、多步自回归验证和完整训练状态恢复；
 - NetCDF 预报结果导出。
 
 当前入口覆盖发布权重推理、第一阶段确定性训练和第二阶段概率微调。
+训练使用 `SupervisedConstraint` + `FunctionalLoss`，验证使用 `SupervisedValidator` +
+`FunctionalMetric`；通用 Solver、训练 epoch 函数和验证函数均保持不变。
+U-Cast 的调度、逐 microbatch EMA 和精确中途恢复通过官方回调接入。
 
 ## 环境
 
@@ -101,7 +104,7 @@ CUDA_VISIBLE_DEVICES=7 conda run --no-capture-output -n paddlescience \
   python ucast.py --config-name ucast_prob_3090 \
   hydra.run.dir=./outputs_ucast/stage2 seed=11 \
   DATA.data_dir=/path/to/era5 \
-  TRAIN.pretrained_model_path=./outputs_ucast/stage1/checkpoints/latest
+  TRAIN.pretrained_model_path=./outputs_ucast/stage1/checkpoints/best_raw.pdparams
 ```
 
 显存更大的设备可以使用 `ucast.yaml mode=train` / `ucast_prob.yaml`，按需覆盖
@@ -119,23 +122,51 @@ MC-Dropout（包括确定性阶段的单成员验证），默认自回归 4 步�
 ### 恢复训练
 
 `TRAIN.pretrained_model_path` 只加载模型，用于 warm-start；
-`TRAIN.checkpoint_path` 恢复同一训练任务，同时加载 Muon 动量、AdamW 状态、
-学习率位置、AMP scaler、EMA 权重及更新次数，以及 Python / NumPy / Paddle
-CPU / CUDA 随机数状态。路径可以带 `.pdparams` 后缀。
+`TRAIN.checkpoint_path`（或兼容别名 `TRAIN.resume_path`）恢复同一训练任务。
+恢复包括 Muon/AdamW 状态、调度位置、AMP scaler、EMA、随机数和 epoch 内的数据位置。
 
 ```bash
-CUDA_VISIBLE_DEVICES=6 conda run --no-capture-output -n paddlescience \
-  python ucast.py --config-name ucast_3090 \
+python ucast.py --config-name ucast_3090 \
   hydra.run.dir=./outputs_ucast/stage1 seed=11 \
   DATA.data_dir=/path/to/era5 \
-  TRAIN.checkpoint_path=./outputs_ucast/stage1/checkpoints/latest
+  TRAIN.checkpoint_path=./outputs_ucast/stage1/checkpoints/last_raw
 ```
 
 恢复时保持原模型、优化器、总 epochs、训练数据及 batch/累积配置一致。
-先试跑一个 epoch 时可保持总 epochs 不变并设置 `TRAIN.stop_after_epoch=1`，
-恢复时将其设回 `null`。checkpoint 保存于 epoch 边界；每组包含 `.pdparams`、
-`.pdopt`、`.pdstates`、`.pdtrain`，AMP 对应 `.pdscaler`，EMA 对应 `_ema.pdparams`。
-`best_model_ema.pdparams` 可以直接用于推理。
+恢复会还原完整训练状态；GPU AMP/BF16 运算仍可能出现浮点归约差异，不保证逐 bit
+复现。回归测试的 FP32 容差为 `2e-6`，GPU 混合精度容差为 `1e-3`；详细实测见
+[MIGRATION_REPORT.md](MIGRATION_REPORT.md)。
+保持总 epochs 不变，可用 `TRAIN.stop_after_epoch=1` 先跑一个 epoch，恢复时设回 `null`；
+也可设置 `TRAIN.max_steps` 在指定优化器步数后保存并停止，或设置
+`TRAIN.save_freq_steps` 在优化器更新边界保存。
+
+- `last_raw` / `best_raw`：PaddleScience 原生 `.pdparams`、`.pdopt`、`.pdstates`，
+  AMP 对应 `.pdscaler`。`.pdstates` 扩展保存 U-Cast 的 EMA、随机数和采样器位置。
+- `last.pdparams` / `best.pdparams`：可直接用于推理的 EMA 权重。
+- `last.pdckpt` / `best.pdckpt`：指向对应原生文件组的轻量清单，恢复时保留整个文件组。
+- Solver 自动保存的 `latest.*` 是通用任务快照；精确恢复请使用 `last_raw` / `best_raw`。
+- 旧 PR 的 `.pdtrain` 训练状态与新优化器布局不同，可用其 `.pdparams` 做 warm-start；
+  不能将它当作新格式的精确恢复断点。
+
+### 评估、深度集成和数据缓存
+
+```bash
+# 使用官方 Solver.eval()，评估单个确定性模型
+python ucast.py mode=eval \
+  INFER.pretrained_model_path=./outputs_ucast/stage1/checkpoints/best.pdparams
+
+# 多 checkpoint 深度集成；ensemble_size 是总成员数，按模型均分余数
+python ucast.py \
+  'INFER.pretrained_model_paths=[/path/model1.pdparams,/path/model2.pdparams]' \
+  INFER.ensemble_size=7 INFER.ensemble_chunk_size=1 \
+  INFER.output_path=./outputs_ucast/forecast.nc \
+  INFER.score_output_path=./outputs_ucast/scores.json
+```
+
+`DATA.cache_dir=/path/to/cache` 启用 PR 原有的原子 ERA5 只读缓存。
+NetCDF 预报采用显式 CF 小时编码；读取时使用
+`xr.open_dataset(path, decode_timedelta=True)`。
+
 
 ## 实现说明
 
@@ -144,7 +175,9 @@ CUDA_VISIBLE_DEVICES=6 conda run --no-capture-output -n paddlescience \
 - 每一步先把网络输出从 residual-normalized 空间转换回 normalized 空间，再加到
   最近一帧状态上。
 - 推理时仅 Dropout 层处于训练状态，其余层保持评估状态。
-- 概率训练把 ensemble 维放在输出首维，形状为 `(member, batch, channel, lon, lat)`。
+- 原生模型的集成输出形状为 `(member, batch, channel, lon, lat)`；
+  Solver 任务将 batch 放在首维，便于官方 DataParallel/验证器收集。
+  任务内部只扩展一次成员，保留 PR 的混合精度注意力和重计算实现。
 - 数据读取会先裁剪到所需变量和时间，再执行 `.load()`，避免原独立脚本将无关变量
   一并拉取到内存。
 

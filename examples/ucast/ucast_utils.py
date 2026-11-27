@@ -133,6 +133,12 @@ class UCastNormalizer:
         sst_fill_value: float,
         variable_names: Sequence[str] = VARIABLE_NAMES,
     ):
+        if not all(
+            np.all(np.isfinite(value) & (value > 0)) for value in (std, residual_std)
+        ):
+            raise ValueError(
+                "Normalization standard deviations must be finite and positive"
+            )
         self.variable_names = tuple(variable_names)
         self.sst_index = self.variable_names.index("sea_surface_temperature")
         self.mean_numpy = mean.reshape([1, -1, 1, 1]).astype(np.float32)
@@ -174,6 +180,9 @@ class UCastNormalizer:
 
     def denormalize(self, normalized: paddle.Tensor) -> paddle.Tensor:
         return self._fill_sst(normalized * self.std + self.mean)
+
+    def normalized_to_residual(self, residual: paddle.Tensor) -> paddle.Tensor:
+        return residual.astype(self.residual_scale.dtype) / self.residual_scale
 
     def residual_to_normalized(self, residual: paddle.Tensor) -> paddle.Tensor:
         return residual.astype(self.residual_scale.dtype) * self.residual_scale
@@ -228,6 +237,10 @@ def load_static_conditions_numpy(dataset, static_fields: Sequence[str]) -> np.nd
     stacked = np.stack(arrays)
     mean = stacked.mean(axis=(-2, -1), keepdims=True)
     std = stacked.std(axis=(-2, -1), keepdims=True)
+    if not np.all(np.isfinite(std) & (std > 0)):
+        raise ValueError(
+            "Static fields must be finite and have nonzero spatial variance"
+        )
     return ((stacked - mean) / std).astype(np.float32)
 
 
@@ -578,7 +591,7 @@ def extract_batch_for_initial_condition(
 
 
 @paddle.no_grad()
-def autoregressive_inference(
+def _autoregressive_inference_chunk(
     model,
     batch: dict[str, object],
     static_condition: paddle.Tensor,
@@ -611,15 +624,12 @@ def autoregressive_inference(
             level="O2",
             dtype="float16",
         ):
-            residual = model(
-                {
-                    "input": inputs,
-                    "dynamical_condition": forcing,
-                    "static_condition": static_batch,
-                }
-            )["output"]
-        if bool(paddle.any(paddle.isnan(residual))):
-            raise FloatingPointError(f"NaN in model output at lead {lead_time + 1}")
+            # Member trajectories are already expanded. Bypass the model's
+            # standalone ensemble wrapper so each trajectory advances once.
+            packed = paddle.concat([inputs, forcing, static_batch], axis=1)
+            residual = model.forward_tensor(packed)
+        if not bool(paddle.all(paddle.isfinite(residual))):
+            raise FloatingPointError(f"Non-finite model output at lead {lead_time + 1}")
         prediction_normalized = normalizer.residual_to_normalized(residual) + frames[-1]
         predictions.append(normalizer.denormalize(prediction_normalized).cpu())
         targets.append(batch["dynamics_raw"][forcing_index].cpu())
@@ -628,6 +638,48 @@ def autoregressive_inference(
     return {
         "predictions": paddle.stack(predictions, axis=1),
         "targets": paddle.stack(targets),
+    }
+
+
+@paddle.no_grad()
+def autoregressive_inference(
+    model,
+    batch,
+    static_condition,
+    normalizer,
+    window,
+    prediction_horizon,
+    ensemble_size,
+    use_amp=True,
+    ensemble_chunk_size=None,
+):
+    """Forecast independent MC members in bounded-memory sub-batches."""
+    if min(window, prediction_horizon, ensemble_size) < 1:
+        raise ValueError(
+            "window, prediction_horizon and ensemble_size must be positive"
+        )
+    chunk_size = (
+        ensemble_size if ensemble_chunk_size is None else int(ensemble_chunk_size)
+    )
+    if chunk_size < 1:
+        raise ValueError("ensemble_chunk_size must be positive")
+    chunks = []
+    for start in range(0, ensemble_size, chunk_size):
+        chunks.append(
+            _autoregressive_inference_chunk(
+                model,
+                batch,
+                static_condition,
+                normalizer,
+                window,
+                prediction_horizon,
+                min(chunk_size, ensemble_size - start),
+                use_amp,
+            )
+        )
+    return {
+        "predictions": paddle.concat([part["predictions"] for part in chunks], axis=0),
+        "targets": chunks[0]["targets"],
     }
 
 
@@ -667,7 +719,9 @@ def build_xarray_dataset(
                 "latitude": batch["latitude"],
             },
         )
-    return xr.Dataset(data_vars).assign_coords(init_time=initial_condition)
+    forecast = xr.Dataset(data_vars).assign_coords(init_time=initial_condition)
+    forecast["lead_time"].encoding.update(dtype="int64", units="hours")
+    return forecast
 
 
 def score_forecast(
